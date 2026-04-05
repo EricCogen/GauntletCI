@@ -1,0 +1,53 @@
+# origin: real
+# source: https://github.com/danielaase1337/shoppinglist/pull/36
+# expected: fire
+# reason: HTTP handler behavior changes status semantics and error handling flow without API signature changes, creating a caller-visible response contract regression.
+
+--- a/Api/Controllers/ShopsController.cs
++++ b/Api/Controllers/ShopsController.cs
+@@ -47,9 +47,12 @@ public async Task<HttpResponseData> Run([HttpTrigger] HttpRequestData req, strin
+             }
+             else
+             {
+-                var newShop = await req.ReadFromJsonAsync<ShopModel>();
+-                if (newShop == null) return await GetErroRespons("No content in shop body", req);
+-                Shop updatOrInsert = mapper.Map<Shop>(newShop);
++                var newShop = req.ReadFromJsonAsync<ShopModel>();
++                if (newShop.Result == null) return await GetErroRespons("No content in shop body", req);
++                Shop updatOrInsert = mapper.Map<Shop>(newShop.Result);
+                 if (req.Method == "POST")
+                 {
+                     updatOrInsert = await repository.Insert(updatOrInsert);
+
+--- a/Api/Controllers/ShopItemCategoryController.cs
++++ b/Api/Controllers/ShopItemCategoryController.cs
+@@ -74,19 +74,15 @@ public async Task<HttpResponseData> Run([HttpTrigger] HttpRequestData req, strin
+     public async Task<HttpResponseData> RunOne([HttpTrigger] HttpRequestData req, object id)
+     {
+-        try
+-        {
+-            var okRespons = req.CreateResponse(HttpStatusCode.OK);
+-            if (req.Method == "GET")
+-            {
+-                var itemCategory = await repository.Get(id);
+-                if (itemCategory == null)
+-                    return await GetErroRespons("Could not load items categorys", req);
+-                await okRespons.WriteAsJsonAsync(mapper.Map<ItemCategory>(itemCategory));
+-                return okRespons;
+-            }
+-            return req.CreateResponse(HttpStatusCode.NotFound);
+-        }
+-        catch (System.Exception e)
++        var okRespons = req.CreateResponse(HttpStatusCode.OK);
++        if (req.Method == "GET")
+         {
+-            _logger.LogError(e, "Unexpected error");
+-            return await GetErroRespons("An unexpected error occurred", req);
++            var itemCategories = await repository.Get(id);
++            if (itemCategories == null)
++                return await GetErroRespons("Could not load items categorys", req);
++            await okRespons.WriteAsJsonAsync(mapper.Map<ItemCategory>(itemCategories));
+         }
++        return req.CreateResponse(HttpStatusCode.NoContent);
+     }
+ }
