@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Elastic-2.0
+// Copyright (c) Eric Cogen. All rights reserved.
+
 namespace GauntletCI.Core.Models;
 
 public sealed record GateResult(string GateName, bool Passed, string Summary, string? Output = null)

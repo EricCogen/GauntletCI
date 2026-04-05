@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Elastic-2.0
+// Copyright (c) Eric Cogen. All rights reserved.
+
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;

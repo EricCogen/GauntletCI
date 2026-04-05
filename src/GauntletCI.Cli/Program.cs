@@ -1,4 +1,7 @@
-﻿using System.Diagnostics;
+// SPDX-License-Identifier: Elastic-2.0
+// Copyright (c) Eric Cogen. All rights reserved.
+
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using GauntletCI.Core.Configuration;

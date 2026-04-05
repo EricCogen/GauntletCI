@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Elastic-2.0
+// Copyright (c) Eric Cogen. All rights reserved.
+
 using System.Security.Cryptography;
 using System.Text;
 using GauntletCI.PrIntegration;

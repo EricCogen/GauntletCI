@@ -1,5 +1,7 @@
 # GauntletCI
 
+[![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic_2.0-blue.svg)](LICENSE)
+
 GauntletCI is a pre-commit code review tool that runs a single LLM-backed audit over a changeset before commit. It applies 18 evidence-driven rules, blocks on deterministic pre-flight failures first, and returns structured findings using `GCI001` through `GCI018`.
 
 ## What Is In This Repo

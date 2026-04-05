@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Elastic-2.0
+// Copyright (c) Eric Cogen. All rights reserved.
+
 using GauntletCI.Core.Infrastructure;
 using GauntletCI.Core.Models;
 
