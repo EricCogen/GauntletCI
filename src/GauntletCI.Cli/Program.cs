@@ -10,6 +10,13 @@ using GauntletCI.Core.Telemetry;
 
 CliOptions options = CliOptions.Parse(args);
 
+using CancellationTokenSource cts = new();
+Console.CancelKeyPress += (_, e) =>
+{
+	e.Cancel = true;
+	cts.Cancel();
+};
+
 if (options.ShowHelp)
 {
 	Console.WriteLine(CliOptions.HelpText);
@@ -58,7 +65,7 @@ EvaluationRequest request = new(
 	NoTelemetry: options.NoTelemetry,
 	ExplicitTestCommand: options.TestCommandOverride);
 
-EvaluationResult result = await engine.EvaluateAsync(request, CancellationToken.None);
+EvaluationResult result = await engine.EvaluateAsync(request, cts.Token);
 RenderResult(result, options.JsonOutput);
 Environment.Exit(result.ExitCode);
 
