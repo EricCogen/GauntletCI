@@ -144,7 +144,7 @@ public sealed class EvaluationEngine(
             return 0;
         }
 
-        HashSet<string> blocked = [.. blockingRules];
+        HashSet<string> blocked = new(blockingRules, StringComparer.OrdinalIgnoreCase);
         return findings.Any(finding => blocked.Contains(finding.RuleId)) ? 1 : 0;
     }
 }
