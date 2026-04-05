@@ -3,6 +3,7 @@
     <Project Path="src/GauntletCI.Cli/GauntletCI.Cli.csproj" />
     <Project Path="src/GauntletCI.CopilotExtension/GauntletCI.CopilotExtension.csproj" />
     <Project Path="src/GauntletCI.Core/GauntletCI.Core.csproj" />
+    <Project Path="src/GauntletCI.PrIntegration.Host/GauntletCI.PrIntegration.Host.csproj" />
     <Project Path="src/GauntletCI.PrIntegration/GauntletCI.PrIntegration.csproj" />
   </Folder>
   <Folder Name="/tests/">
