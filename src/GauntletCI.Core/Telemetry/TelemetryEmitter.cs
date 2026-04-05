@@ -12,7 +12,23 @@ public sealed class TelemetryEmitter(HttpClient httpClient)
 
     public async Task EmitAsync(EvaluationResult result, GauntletConfig config, CancellationToken cancellationToken)
     {
-        DiffMetadata metadata = result.DiffMetadata ?? new DiffMetadata(0, 0, 0, false, [], false, 0);
+        DiffMetadata metadata = result.DiffMetadata ?? new DiffMetadata(
+            0,
+            0,
+            0,
+            false,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            false,
+            false,
+            [],
+            false,
+            0);
         object payload = new
         {
             session_id = Guid.NewGuid(),
@@ -36,6 +52,15 @@ public sealed class TelemetryEmitter(HttpClient httpClient)
                 lines_removed = metadata.LinesRemoved,
                 files_changed = metadata.FilesChanged,
                 test_files_touched = metadata.TestFilesTouched,
+                test_files_changed = metadata.TestFilesChanged,
+                test_files_with_content_changes = metadata.TestFilesWithContentChanges,
+                test_files_rename_only = metadata.TestFilesRenameOnly,
+                test_lines_added = metadata.TestLinesAdded,
+                test_lines_removed = metadata.TestLinesRemoved,
+                test_assertion_lines_added = metadata.TestAssertionLinesAdded,
+                test_setup_lines_added = metadata.TestSetupLinesAdded,
+                tests_changed_without_assertions = metadata.TestsChangedWithoutAssertions,
+                test_changes_are_rename_or_setup_churn = metadata.TestChangesAreRenameOrSetupChurn,
                 languages = metadata.Languages,
                 diff_trimmed = metadata.DiffTrimmed,
             },
