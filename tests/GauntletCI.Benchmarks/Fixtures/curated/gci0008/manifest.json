@@ -3,6 +3,63 @@
     "GCI008"
   ],
   "description": "Complexity Control: Detect disproportionate complexity relative to the problem being solved.",
-  "fixtures": []
+  "fixtures": [
+    {
+      "id": "gci0008-01",
+      "diff_file": "01_real_true_positive_multi_concern_lockfile_change_set.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI008"
+      ],
+      "notes": "A small tooling correction is bundled with broad lockfile churn and new bypass controls, creating disproportionate review complexity for the stated task.",
+      "origin": "real",
+      "source_url": "https://github.com/rust-lang/rust/pull/154641"
+    },
+    {
+      "id": "gci0008-02",
+      "diff_file": "02_real_true_positive_bugfix_plus_large_test_bundle.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI008"
+      ],
+      "notes": "A targeted container bugfix is mixed with a large new integration-test payload in the same change set, increasing cognitive load beyond the core fix.",
+      "origin": "real",
+      "source_url": "https://github.com/spring-projects/spring-framework/pull/22260"
+    },
+    {
+      "id": "gci0008-03",
+      "diff_file": "03_real_true_positive_extra_error_path_workflow_complexity.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI008"
+      ],
+      "notes": "Error-path observability behavior is altered across multiple sites, increasing troubleshooting complexity while not simplifying the core workflow.",
+      "origin": "real",
+      "source_url": "https://github.com/grafana/grafana/pull/119491"
+    },
+    {
+      "id": "gci0008-04",
+      "diff_file": "04_real_false_positive_log_visibility_level_tuning.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Changing debug logs to info increases visibility but does not add structural branching or algorithmic complexity.",
+      "origin": "real",
+      "source_url": "https://github.com/prometheus/prometheus/pull/16000"
+    },
+    {
+      "id": "gci0008-05",
+      "diff_file": "05_real_edge_parallelism_setting_reduces_state_surface.diff",
+      "category": "edge-case",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Setting PARALLEL_UPDATES to zero reduces concurrent state surface area and simplifies execution semantics in an edge deployment path.",
+      "origin": "real",
+      "source_url": "https://github.com/home-assistant/core/pull/162499"
+    }
+  ]
 }
 
