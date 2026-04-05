@@ -1,8 +1,8 @@
 {
-  "source_pcg_rule": "",
   "mapped_gci_rules": [
     "GCI007"
   ],
   "description": "Error Handling Integrity: Detect swallowed exceptions and lost error context.",
   "fixtures": []
 }
+

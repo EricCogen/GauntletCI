@@ -1,8 +1,8 @@
 {
-  "source_pcg_rule": "",
   "mapped_gci_rules": [
     "GCI006"
   ],
   "description": "Edge Case Handling: Detect unhandled nulls, boundaries, and invalid input.",
   "fixtures": []
 }
+

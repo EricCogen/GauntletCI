@@ -1,8 +1,8 @@
 {
-  "source_pcg_rule": "",
   "mapped_gci_rules": [
     "GCI015"
   ],
   "description": "Data Integrity Risk: Detect silent corruption, mapping errors, and partial-write hazards.",
   "fixtures": []
 }
+

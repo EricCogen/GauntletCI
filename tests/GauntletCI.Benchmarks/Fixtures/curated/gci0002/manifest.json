@@ -1,8 +1,8 @@
 {
-  "source_pcg_rule": "",
   "mapped_gci_rules": [
     "GCI002"
   ],
   "description": "Goal Alignment: Verify implementation behavior aligns with apparent intent.",
   "fixtures": []
 }
+

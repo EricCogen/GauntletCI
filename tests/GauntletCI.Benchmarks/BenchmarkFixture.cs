@@ -22,7 +22,6 @@ public sealed record BenchmarkFixture(
 }
 
 public sealed record BenchmarkManifest(
-    [property: JsonPropertyName("source_pcg_rule")] string SourcePcgRule,
     [property: JsonPropertyName("mapped_gci_rules")] IReadOnlyList<string> MappedGciRules,
     [property: JsonPropertyName("description")] string Description,
     [property: JsonPropertyName("fixtures")] IReadOnlyList<BenchmarkFixture> Fixtures);
