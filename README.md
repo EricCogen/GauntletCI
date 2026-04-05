@@ -149,7 +149,7 @@ Does not replace code review or tests
 
 ## Docs
 
-- [Change Risk Thesis](./docs/change-risk-thesis-clean.md)  
+- [Change Risk Thesis](./docs/change-risk-thesis.md)  
 - [Change Risk Research](./docs/change-risk-research.md)
 
 ---
