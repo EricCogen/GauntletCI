@@ -40,12 +40,22 @@ public sealed class EvaluationEngine(
             return new EvaluationResult(1, branchResult, testResult, [], testResult.Output ?? testResult.Summary, false, config.Model, null, (int)sw.ElapsedMilliseconds);
         }
 
-        string diffCommand = request.FullMode ? "git diff HEAD" : "git diff --staged";
-        CommandResult diffResult = await commandRunner.RunShellAsync(diffCommand, request.WorkingDirectory, cancellationToken).ConfigureAwait(false);
-        if (!diffResult.IsSuccess)
+        string diffText;
+        if (!string.IsNullOrWhiteSpace(request.ProvidedDiff))
         {
-            sw.Stop();
-            return new EvaluationResult(3, branchResult, testResult, [], "Unable to collect git diff for evaluation.", false, config.Model, null, (int)sw.ElapsedMilliseconds);
+            diffText = request.ProvidedDiff;
+        }
+        else
+        {
+            string diffCommand = request.FullMode ? "git diff HEAD" : "git diff --staged";
+            CommandResult diffResult = await commandRunner.RunShellAsync(diffCommand, request.WorkingDirectory, cancellationToken).ConfigureAwait(false);
+            if (!diffResult.IsSuccess)
+            {
+                sw.Stop();
+                return new EvaluationResult(3, branchResult, testResult, [], "Unable to collect git diff for evaluation.", false, config.Model, null, (int)sw.ElapsedMilliseconds);
+            }
+
+            diffText = diffResult.StandardOutput;
         }
 
         CommandResult commitsResult = await commandRunner.RunProcessAsync("git", "log -n 3 --pretty=%s", request.WorkingDirectory, cancellationToken).ConfigureAwait(false);
@@ -53,7 +63,7 @@ public sealed class EvaluationEngine(
             ? commitsResult.StandardOutput.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
             : [];
 
-        AssembledContext assembled = contextAssembler.Assemble(branchResult, testResult, diffResult.StandardOutput, config, recentCommits);
+        AssembledContext assembled = contextAssembler.Assemble(branchResult, testResult, diffText, config, recentCommits);
 
         ModelSelection selection = modelSelector.Select(config, request.FastMode);
         if (!selection.IsConfigured)

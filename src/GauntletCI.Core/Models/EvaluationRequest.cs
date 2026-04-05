@@ -7,4 +7,5 @@ public sealed record EvaluationRequest(
     string? Rule,
     bool JsonOutput,
     bool NoTelemetry,
-    string? ExplicitTestCommand = null);
+    string? ExplicitTestCommand = null,
+    string? ProvidedDiff = null);
