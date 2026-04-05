@@ -29,6 +29,7 @@ public sealed class PrReviewOrchestrator(IGitHubClient gitHubClient)
             new TestPassageGate(commandRunner),
             commandRunner,
             new ContextAssembler(),
+            new DeterministicAnalysisRunner(),
             new PromptBuilder(),
             new FindingParser(),
             new RulesTextProvider(),

@@ -31,6 +31,9 @@ public sealed record GauntletConfig
     [JsonPropertyName("base_url")]
     public string BaseUrl { get; init; } = "";
 
+    [JsonPropertyName("model_required")]
+    public bool ModelRequired { get; init; }
+
     [JsonPropertyName("telemetry_consent_recorded")]
     public bool TelemetryConsentRecorded { get; init; }
 

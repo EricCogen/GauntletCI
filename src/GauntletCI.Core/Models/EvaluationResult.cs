@@ -12,7 +12,9 @@ public sealed record EvaluationResult(
     bool DiffTrimmed,
     string Model,
     DiffMetadata? DiffMetadata,
-    int EvaluationDurationMs)
+    int EvaluationDurationMs,
+    string? WarningMessage = null,
+    bool ModelStepSkipped = false)
 {
     public bool HasHighSeverity => Findings.Any(static finding => finding.Severity.Equals("high", StringComparison.OrdinalIgnoreCase));
 }
