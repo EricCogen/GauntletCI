@@ -44,7 +44,7 @@ EvaluationEngine engine = new(
 	new FindingParser(),
 	new RulesTextProvider(),
 	new ModelSelector(),
-	new HttpLlmClient(new HttpClient { Timeout = TimeSpan.FromSeconds(8) }),
+	new HttpLlmClient(new HttpClient { Timeout = TimeSpan.FromSeconds(120) }),
 	new TelemetryEmitter());
 
 EvaluationRequest request = new(
