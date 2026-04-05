@@ -73,7 +73,7 @@ public sealed class CopilotCommandProcessor
             {
                 capturing = true;
             }
-            else if (capturing && line.StartsWith("FL", StringComparison.OrdinalIgnoreCase) && line.Length >= 5 && char.IsDigit(line[2]))
+            else if (capturing && line.StartsWith("GCI", StringComparison.OrdinalIgnoreCase) && line.Length >= 6 && char.IsDigit(line[3]))
             {
                 break;
             }
