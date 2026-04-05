@@ -123,12 +123,14 @@ public static class CopilotRenderer
 {
     public static string Render(EvaluationResult result)
     {
-        string verdict = result.Findings.Any(static finding => finding.RuleId == "GCI017")
-            ? "Needs Work"
-            : (result.ExitCode == 0 ? "Ready" : "High Risk");
+        string verdict = result.ExitCode == 0
+            ? "Ready"
+            : (result.Findings.Any(static finding => finding.Severity.Equals("high", StringComparison.OrdinalIgnoreCase))
+                ? "High Risk"
+                : "Needs Work");
 
         StringBuilder sb = new();
-        sb.AppendLine($"## GCI017 Verdict: {verdict}");
+        sb.AppendLine($"## GauntletCI Verdict: {verdict}");
 
         if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
         {
