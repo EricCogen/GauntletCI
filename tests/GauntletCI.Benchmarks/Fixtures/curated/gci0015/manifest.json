@@ -4,7 +4,6 @@
     "GCI015"
   ],
   "description": "Data Integrity Risk: Detect silent corruption, mapping errors, and partial-write hazards.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0015-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI015"
       ],
-      "notes": "Updates 3 fields of a record in 3 separate DB calls with no transaction, risking partial-write corruption."
+      "notes": "Updates 3 fields of a record in 3 separate DB calls with no transaction, risking partial-write corruption.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0015-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI015"
       ],
-      "notes": "Maps incoming DTO to entity but silently drops the auditFields sub-object, losing audit trail data."
+      "notes": "Maps incoming DTO to entity but silently drops the auditFields sub-object, losing audit trail data.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0015-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Wraps all DB updates in a transaction with proper rollback on any exception — data integrity preserved."
+      "notes": "Wraps all DB updates in a transaction with proper rollback on any exception — data integrity preserved.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0015-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Entity mapper explicitly maps every field including audit metadata — no data is dropped."
+      "notes": "Entity mapper explicitly maps every field including audit metadata — no data is dropped.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0015-05",
@@ -50,7 +53,8 @@
       "expected_gci_rules": [
         "GCI015"
       ],
-      "notes": "Uses a transaction but catches the exception and commits anyway on a specific error code, defeating rollback."
+      "notes": "Uses a transaction but catches the exception and commits anyway on a specific error code, defeating rollback.",
+      "origin": "synthetic"
     }
   ]
 }

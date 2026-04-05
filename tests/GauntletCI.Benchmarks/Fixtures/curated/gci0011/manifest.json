@@ -4,7 +4,6 @@
     "GCI011"
   ],
   "description": "Performance Risk: Detect runtime performance regressions such as N+1 queries and hot-path inefficiencies.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0011-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI011"
       ],
-      "notes": "Calls .Where().ToList() inside a foreach loop over a large product catalog, creating an N+1 query pattern."
+      "notes": "Calls .Where().ToList() inside a foreach loop over a large product catalog, creating an N+1 query pattern.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0011-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI011"
       ],
-      "notes": "Calls repository.FindAll() (full table scan) inside a per-item processing loop, causing O(n²) database calls."
+      "notes": "Calls repository.FindAll() (full table scan) inside a per-item processing loop, causing O(n²) database calls.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0011-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Single O(1) dictionary lookup in a non-hot initialization path — no performance concern."
+      "notes": "Single O(1) dictionary lookup in a non-hot initialization path — no performance concern.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0011-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Adds an in-memory cache that reduces repeated expensive computations — this is a performance improvement."
+      "notes": "Adds an in-memory cache that reduces repeated expensive computations — this is a performance improvement.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0011-05",
@@ -50,7 +53,8 @@
       "expected_gci_rules": [
         "GCI011"
       ],
-      "notes": "Uses LINQ .Count() > 0 instead of .Any() inside a loop, causing unnecessary full enumeration each iteration."
+      "notes": "Uses LINQ .Count() > 0 instead of .Any() inside a loop, causing unnecessary full enumeration each iteration.",
+      "origin": "synthetic"
     }
   ]
 }

@@ -8,21 +8,21 @@ public sealed record BenchmarkFixture(
     [property: JsonPropertyName("category")] string Category,
     [property: JsonPropertyName("expected_outcome")] string ExpectedOutcome,
     [property: JsonPropertyName("expected_gci_rules")] IReadOnlyList<string> ExpectedGciRules,
-    [property: JsonPropertyName("notes")] string Notes)
+    [property: JsonPropertyName("notes")] string Notes,
+    [property: JsonPropertyName("origin")] string Origin = "synthetic",
+    [property: JsonPropertyName("source_url")] string? SourceUrl = null)
 {
     public bool ShouldFire => string.Equals(ExpectedOutcome, "fire", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// True when the diff was hand-authored for harness validation rather than sourced from a real commit.
+    /// Synthetic fixtures cannot be used to measure model accuracy.
+    /// </summary>
+    public bool IsSynthetic => string.Equals(Origin, "synthetic", StringComparison.OrdinalIgnoreCase);
 }
 
 public sealed record BenchmarkManifest(
     [property: JsonPropertyName("source_pcg_rule")] string SourcePcgRule,
     [property: JsonPropertyName("mapped_gci_rules")] IReadOnlyList<string> MappedGciRules,
     [property: JsonPropertyName("description")] string Description,
-    [property: JsonPropertyName("origin")] string Origin,
-    [property: JsonPropertyName("fixtures")] IReadOnlyList<BenchmarkFixture> Fixtures)
-{
-    /// <summary>
-    /// Returns true when the fixture set was hand-authored rather than sourced from a real PR or commit.
-    /// Synthetic fixtures are useful for harness validation but should not be used to measure model accuracy.
-    /// </summary>
-    public bool IsSynthetic => string.Equals(Origin, "synthetic", StringComparison.OrdinalIgnoreCase);
-}
+    [property: JsonPropertyName("fixtures")] IReadOnlyList<BenchmarkFixture> Fixtures);

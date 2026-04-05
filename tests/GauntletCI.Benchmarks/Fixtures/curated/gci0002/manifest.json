@@ -4,7 +4,6 @@
     "GCI002"
   ],
   "description": "Goal Alignment: Verify implementation behavior aligns with apparent intent.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0002-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI002"
       ],
-      "notes": "Commit says 'fix null check' but diff adds unrelated Redis caching logic instead of addressing null safety."
+      "notes": "Commit says 'fix null check' but diff adds unrelated Redis caching logic instead of addressing null safety.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0002-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI002"
       ],
-      "notes": "Method is renamed to ValidateAndSave but the validation logic is absent — it only saves without validating."
+      "notes": "Method is renamed to ValidateAndSave but the validation logic is absent — it only saves without validating.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0002-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Method named 'add retry logic' and the diff clearly implements exponential backoff retry as advertised."
+      "notes": "Method named 'add retry logic' and the diff clearly implements exponential backoff retry as advertised.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0002-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Docstring says 'normalize whitespace' and the implementation correctly trims and lowercases the string."
+      "notes": "Docstring says 'normalize whitespace' and the implementation correctly trims and lowercases the string.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0002-05",
@@ -50,7 +53,8 @@
       "expected_gci_rules": [
         "GCI002"
       ],
-      "notes": "Some validation is added but the documented requirement lists four checks and only two are implemented."
+      "notes": "Some validation is added but the documented requirement lists four checks and only two are implemented.",
+      "origin": "synthetic"
     }
   ]
 }

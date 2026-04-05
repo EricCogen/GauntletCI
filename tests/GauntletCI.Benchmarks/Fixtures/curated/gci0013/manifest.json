@@ -4,7 +4,6 @@
     "GCI013"
   ],
   "description": "Observability and Debuggability: Detect loss of critical logs, traces, and correlation context.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0013-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI013"
       ],
-      "notes": "Removes the logger.error() call that was on the exception handling path, making failures invisible in production."
+      "notes": "Removes the logger.error() call that was on the exception handling path, making failures invisible in production.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0013-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI013"
       ],
-      "notes": "Removes correlationId from the structured log entry on the payment flow, breaking distributed trace correlation."
+      "notes": "Removes correlationId from the structured log entry on the payment flow, breaking distributed trace correlation.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0013-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Adds additional console.log calls to an existing function — observability is improved not degraded."
+      "notes": "Adds additional console.log calls to an existing function — observability is improved not degraded.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0013-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Keeps all existing log statements and adds a new debug log for a new code path — no loss of observability."
+      "notes": "Keeps all existing log statements and adds a new debug log for a new code path — no loss of observability.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0013-05",
@@ -48,7 +51,8 @@
       "category": "edge-case",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Reduces log verbosity by removing a noisy debug log but all error and warn level logs remain intact."
+      "notes": "Reduces log verbosity by removing a noisy debug log but all error and warn level logs remain intact.",
+      "origin": "synthetic"
     }
   ]
 }

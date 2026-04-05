@@ -4,7 +4,6 @@
     "GCI014"
   ],
   "description": "Rollback Safety: Detect irreversible deployment and rollback behavior in migrations and data paths.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0014-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI014"
       ],
-      "notes": "Migration drops the 'legacy_code' column from the orders table — this is irreversible once deployed."
+      "notes": "Migration drops the 'legacy_code' column from the orders table — this is irreversible once deployed.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0014-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI014"
       ],
-      "notes": "Writes user data to a new blob storage path without maintaining a backward-compatible read from the old path."
+      "notes": "Writes user data to a new blob storage path without maintaining a backward-compatible read from the old path.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0014-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Additive migration that adds a nullable column with no data changes — fully reversible."
+      "notes": "Additive migration that adds a nullable column with no data changes — fully reversible.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0014-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Feature flag controlled rollout with explicit fallback to old code path when the flag is disabled."
+      "notes": "Feature flag controlled rollout with explicit fallback to old code path when the flag is disabled.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0014-05",
@@ -50,7 +53,8 @@
       "expected_gci_rules": [
         "GCI014"
       ],
-      "notes": "Migration renames a column via drop-and-add which is destructive even though data appears preserved."
+      "notes": "Migration renames a column via drop-and-add which is destructive even though data appears preserved.",
+      "origin": "synthetic"
     }
   ]
 }

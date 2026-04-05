@@ -4,7 +4,6 @@
     "GCI001"
   ],
   "description": "Diff Integrity and Scope: Detect mixed concerns, incomplete changesets, and scope creep.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0001-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI001"
       ],
-      "notes": "Single commit bundles an unrelated caching feature into OrderService alongside a rename refactor of UserService to AccountService."
+      "notes": "Single commit bundles an unrelated caching feature into OrderService alongside a rename refactor of UserService to AccountService.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0001-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI001"
       ],
-      "notes": "New config key 'FeatureFlags:EnableDarkMode' is consumed in code but appsettings.json schema is never updated."
+      "notes": "New config key 'FeatureFlags:EnableDarkMode' is consumed in code but appsettings.json schema is never updated.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0001-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "UserRepository is renamed to AccountRepository consistently across all files with no unrelated changes."
+      "notes": "UserRepository is renamed to AccountRepository consistently across all files with no unrelated changes.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0001-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "New /products endpoint coherently touches controller, service, and model — all changes are directly related."
+      "notes": "New /products endpoint coherently touches controller, service, and model — all changes are directly related.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0001-05",
@@ -50,7 +53,8 @@
       "expected_gci_rules": [
         "GCI001"
       ],
-      "notes": "Payment route is wired up in the router but the handler is a stub containing only a TODO comment."
+      "notes": "Payment route is wired up in the router but the handler is a stub containing only a TODO comment.",
+      "origin": "synthetic"
     }
   ]
 }

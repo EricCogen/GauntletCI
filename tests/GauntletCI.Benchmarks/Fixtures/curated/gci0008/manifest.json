@@ -4,7 +4,6 @@
     "GCI008"
   ],
   "description": "Complexity Control: Detect disproportionate complexity relative to the problem being solved.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0008-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI008"
       ],
-      "notes": "Adds a deeply nested 5-level if/else decision tree for a simple request routing case that needs at most 2."
+      "notes": "Adds a deeply nested 5-level if/else decision tree for a simple request routing case that needs at most 2.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0008-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI008"
       ],
-      "notes": "Introduces an abstract base class and two interfaces for what is effectively a single boolean conditional."
+      "notes": "Introduces an abstract base class and two interfaces for what is effectively a single boolean conditional.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0008-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Single clean if/else branch for a new feature flag — complexity is proportionate to the requirement."
+      "notes": "Single clean if/else branch for a new feature flag — complexity is proportionate to the requirement.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0008-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Extracts a complex inline expression into a clearly-named helper function, reducing overall complexity."
+      "notes": "Extracts a complex inline expression into a clearly-named helper function, reducing overall complexity.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0008-05",
@@ -48,7 +51,8 @@
       "category": "edge-case",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Moderate 3-level nesting but each level has a clearly distinct business meaning that justifies the structure."
+      "notes": "Moderate 3-level nesting but each level has a clearly distinct business meaning that justifies the structure.",
+      "origin": "synthetic"
     }
   ]
 }

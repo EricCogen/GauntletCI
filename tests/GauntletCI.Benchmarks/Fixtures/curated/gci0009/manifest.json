@@ -4,7 +4,6 @@
     "GCI009"
   ],
   "description": "Consistency with Existing Patterns: Detect dangerous deviations from established codebase patterns.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0009-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI009"
       ],
-      "notes": "Uses raw string SQL concatenation where the rest of the codebase exclusively uses parameterized queries."
+      "notes": "Uses raw string SQL concatenation where the rest of the codebase exclusively uses parameterized queries.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0009-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI009"
       ],
-      "notes": "New async handler doesn't accept ctx context.Context, breaking the repo-wide pattern for all handlers."
+      "notes": "New async handler doesn't accept ctx context.Context, breaking the repo-wide pattern for all handlers.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0009-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "New repository method correctly uses the established db.QueryContext(ctx, ...) pattern."
+      "notes": "New repository method correctly uses the established db.QueryContext(ctx, ...) pattern.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0009-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "New standalone utility function is clearly isolated and does not interact with any existing patterns."
+      "notes": "New standalone utility function is clearly isolated and does not interact with any existing patterns.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0009-05",
@@ -50,7 +53,8 @@
       "expected_gci_rules": [
         "GCI009"
       ],
-      "notes": "Uses db.QueryContext but passes context.Background() instead of propagating the caller's ctx parameter."
+      "notes": "Uses db.QueryContext but passes context.Background() instead of propagating the caller's ctx parameter.",
+      "origin": "synthetic"
     }
   ]
 }

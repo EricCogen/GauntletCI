@@ -4,7 +4,6 @@
     "GCI018"
   ],
   "description": "Accountability Standard: Apply senior ownership bar — no known bugs shipped, no dead code, no deferred correctness.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0018-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI018"
       ],
-      "notes": "Adds a FIXME comment explicitly noting 'crashes on empty input, shipping anyway for deadline' — known defect shipped."
+      "notes": "Adds a FIXME comment explicitly noting 'crashes on empty input, shipping anyway for deadline' — known defect shipped.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0018-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI018"
       ],
-      "notes": "Leaves an entire else branch that can never execute due to an invariant — dead unreachable code added."
+      "notes": "Leaves an entire else branch that can never execute due to an invariant — dead unreachable code added.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0018-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Clean implementation with no TODOs or FIXMEs, all edge cases handled — meets the senior ownership bar."
+      "notes": "Clean implementation with no TODOs or FIXMEs, all edge cases handled — meets the senior ownership bar.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0018-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Removes old dead code and replaces it with a clean implementation — improves code quality."
+      "notes": "Removes old dead code and replaces it with a clean implementation — improves code quality.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0018-05",
@@ -50,7 +53,8 @@
       "expected_gci_rules": [
         "GCI018"
       ],
-      "notes": "Has a TODO for a 'performance optimization' that on review is actually a correctness bug being deferred."
+      "notes": "Has a TODO for a 'performance optimization' that on review is actually a correctness bug being deferred.",
+      "origin": "synthetic"
     }
   ]
 }

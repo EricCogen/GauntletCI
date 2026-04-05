@@ -4,7 +4,6 @@
     "GCI007"
   ],
   "description": "Error Handling Integrity: Detect swallowed exceptions and lost error context.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0007-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI007"
       ],
-      "notes": "Catch block contains only 'pass', silently swallowing an IOError with no logging or re-raise."
+      "notes": "Catch block contains only 'pass', silently swallowing an IOError with no logging or re-raise.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0007-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI007"
       ],
-      "notes": "Catches Exception and raises a new RuntimeError without chaining, destroying the original traceback."
+      "notes": "Catches Exception and raises a new RuntimeError without chaining, destroying the original traceback.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0007-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Catch block logs the full traceback with logger.exception() and then re-raises the original error."
+      "notes": "Catch block logs the full traceback with logger.exception() and then re-raises the original error.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0007-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Specific ValueError caught, handled gracefully with a user-friendly message and logged at WARNING level."
+      "notes": "Specific ValueError caught, handled gracefully with a user-friendly message and logged at WARNING level.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0007-05",
@@ -50,7 +53,8 @@
       "expected_gci_rules": [
         "GCI007"
       ],
-      "notes": "Error is logged but only at DEBUG level on a critical payment processing path where ERROR is required."
+      "notes": "Error is logged but only at DEBUG level on a critical payment processing path where ERROR is required.",
+      "origin": "synthetic"
     }
   ]
 }

@@ -4,7 +4,6 @@
     "GCI005"
   ],
   "description": "Test Coverage Relevance: Assess whether tests verify changed behavior.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0005-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI005"
       ],
-      "notes": "Adds complex CSV parsing with custom quote-escaping logic, but no test file is touched in the diff."
+      "notes": "Adds complex CSV parsing with custom quote-escaping logic, but no test file is touched in the diff.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0005-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI005"
       ],
-      "notes": "Removes a null-check guard from a public API method without updating any corresponding test."
+      "notes": "Removes a null-check guard from a public API method without updating any corresponding test.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0005-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Trivial version label string constant update — no behavioral logic changed, test coverage not required."
+      "notes": "Trivial version label string constant update — no behavioral logic changed, test coverage not required.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0005-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Adds a new parsing method and a corresponding JUnit test that thoroughly exercises it."
+      "notes": "Adds a new parsing method and a corresponding JUnit test that thoroughly exercises it.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0005-05",
@@ -50,7 +53,8 @@
       "expected_gci_rules": [
         "GCI005"
       ],
-      "notes": "A test is added but only covers the happy path, leaving the new error branch introduced in the same diff untested."
+      "notes": "A test is added but only covers the happy path, leaving the new error branch introduced in the same diff untested.",
+      "origin": "synthetic"
     }
   ]
 }

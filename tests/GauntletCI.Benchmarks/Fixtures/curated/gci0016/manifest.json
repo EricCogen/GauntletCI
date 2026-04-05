@@ -4,7 +4,6 @@
     "GCI016"
   ],
   "description": "Concurrency and State Risk: Detect race conditions, improper async usage, and shared state hazards.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0016-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI016"
       ],
-      "notes": "Calls asyncMethod().Result in an async context, which can cause a deadlock on ASP.NET synchronization contexts."
+      "notes": "Calls asyncMethod().Result in an async context, which can cause a deadlock on ASP.NET synchronization contexts.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0016-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI016"
       ],
-      "notes": "Modifies a static Dictionary<string,int> counter from multiple code paths without any locking or atomic operations."
+      "notes": "Modifies a static Dictionary<string,int> counter from multiple code paths without any locking or atomic operations.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0016-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Properly uses await for all async calls with no blocking .Result or .Wait() — no concurrency issue."
+      "notes": "Properly uses await for all async calls with no blocking .Result or .Wait() — no concurrency issue.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0016-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Uses ConcurrentDictionary and Interlocked.Increment for the shared counter — thread-safe implementation."
+      "notes": "Uses ConcurrentDictionary and Interlocked.Increment for the shared counter — thread-safe implementation.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0016-05",
@@ -50,7 +53,8 @@
       "expected_gci_rules": [
         "GCI016"
       ],
-      "notes": "Uses lock() correctly but holds the lock while making an outbound HTTP call, risking contention and deadlock."
+      "notes": "Uses lock() correctly but holds the lock while making an outbound HTTP call, risking contention and deadlock.",
+      "origin": "synthetic"
     }
   ]
 }

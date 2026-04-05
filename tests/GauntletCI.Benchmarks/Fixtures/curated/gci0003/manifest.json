@@ -4,7 +4,6 @@
     "GCI003"
   ],
   "description": "Behavioral Change Detection: Detect material runtime behavior changes.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0003-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI003"
       ],
-      "notes": "Modifying an elif/else error-routing branch causes a previously-handled error code to fall through unhandled."
+      "notes": "Modifying an elif/else error-routing branch causes a previously-handled error code to fall through unhandled.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0003-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI003"
       ],
-      "notes": "Return type changes from Optional[str] to str, removing the None return path and breaking callers that guard against None."
+      "notes": "Return type changes from Optional[str] to str, removing the None return path and breaking callers that guard against None.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0003-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Pure docstring and comment update with no logic change — no observable behavior is altered."
+      "notes": "Pure docstring and comment update with no logic change — no observable behavior is altered.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0003-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Internal variable renamed from 'tmp' to 'result' with no change to logic or observable behavior."
+      "notes": "Internal variable renamed from 'tmp' to 'result' with no change to logic or observable behavior.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0003-05",
@@ -48,7 +51,8 @@
       "category": "edge-case",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Refactors a list comprehension to an equivalent for-loop — output is identical so no behavioral change."
+      "notes": "Refactors a list comprehension to an equivalent for-loop — output is identical so no behavioral change.",
+      "origin": "synthetic"
     }
   ]
 }

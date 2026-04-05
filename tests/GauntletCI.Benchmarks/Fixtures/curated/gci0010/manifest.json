@@ -4,7 +4,6 @@
     "GCI010"
   ],
   "description": "Hardcoding and Configuration: Detect hardcoded values, secrets, and brittle assumptions.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0010-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI010"
       ],
-      "notes": "Hardcodes the Stripe API base URL as a string literal instead of reading it from configuration."
+      "notes": "Hardcodes the Stripe API base URL as a string literal instead of reading it from configuration.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0010-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI010"
       ],
-      "notes": "Hardcodes a JDBC connection string with username and password directly in source code."
+      "notes": "Hardcodes a JDBC connection string with username and password directly in source code.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0010-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Reads the API URL from an environment variable with a safe localhost default for local development."
+      "notes": "Reads the API URL from an environment variable with a safe localhost default for local development.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0010-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "All external service URLs are injected via application.properties and Spring @Value annotation."
+      "notes": "All external service URLs are injected via application.properties and Spring @Value annotation.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0010-05",
@@ -50,7 +53,8 @@
       "expected_gci_rules": [
         "GCI010"
       ],
-      "notes": "Hardcodes the production hostname alongside port 443 — the hostname makes this a brittle production assumption."
+      "notes": "Hardcodes the production hostname alongside port 443 — the hostname makes this a brittle production assumption.",
+      "origin": "synthetic"
     }
   ]
 }

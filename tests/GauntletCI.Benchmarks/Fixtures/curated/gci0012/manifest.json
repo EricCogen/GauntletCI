@@ -4,7 +4,6 @@
     "GCI012"
   ],
   "description": "Security Risk: Detect introduced vulnerabilities or weakened security safeguards.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0012-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI012"
       ],
-      "notes": "Concatenates user-supplied username directly into a SQL query string, introducing SQL injection vulnerability."
+      "notes": "Concatenates user-supplied username directly into a SQL query string, introducing SQL injection vulnerability.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0012-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI012"
       ],
-      "notes": "Stores password in plaintext in the database with no hashing, violating basic security requirements."
+      "notes": "Stores password in plaintext in the database with no hashing, violating basic security requirements.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0012-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Uses parameterized query with psycopg2 %s placeholders — user input is safely separated from SQL."
+      "notes": "Uses parameterized query with psycopg2 %s placeholders — user input is safely separated from SQL.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0012-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Uses bcrypt.hashpw() for password hashing before storage — proper security practice."
+      "notes": "Uses bcrypt.hashpw() for password hashing before storage — proper security practice.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0012-05",
@@ -50,7 +53,8 @@
       "expected_gci_rules": [
         "GCI012"
       ],
-      "notes": "Sanitizes input by stripping quotes but doesn't handle SQL comment injection via --, leaving a bypass vector."
+      "notes": "Sanitizes input by stripping quotes but doesn't handle SQL comment injection via --, leaving a bypass vector.",
+      "origin": "synthetic"
     }
   ]
 }

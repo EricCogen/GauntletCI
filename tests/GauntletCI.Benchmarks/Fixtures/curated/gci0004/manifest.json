@@ -4,7 +4,6 @@
     "GCI004"
   ],
   "description": "Breaking Change Risk: Detect caller-facing contract breaks and integration risk.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0004-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI004"
       ],
-      "notes": "Removes the 'timeout int' parameter from the exported function GetUser, breaking all existing callers."
+      "notes": "Removes the 'timeout int' parameter from the exported function GetUser, breaking all existing callers.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0004-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI004"
       ],
-      "notes": "Exported function return type changes from (User, error) to (UserResponse, error), breaking callers that reference User fields."
+      "notes": "Exported function return type changes from (User, error) to (UserResponse, error), breaking callers that reference User fields.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0004-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Adds a new optional parameter via the variadic options pattern — all existing call sites remain valid."
+      "notes": "Adds a new optional parameter via the variadic options pattern — all existing call sites remain valid.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0004-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Adds a brand-new exported function without modifying any existing function signatures or types."
+      "notes": "Adds a brand-new exported function without modifying any existing function signatures or types.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0004-05",
@@ -50,7 +53,8 @@
       "expected_gci_rules": [
         "GCI004"
       ],
-      "notes": "Renames exported struct field 'ID' to 'UserId', silently breaking JSON marshaling contracts for all API consumers."
+      "notes": "Renames exported struct field 'ID' to 'UserId', silently breaking JSON marshaling contracts for all API consumers.",
+      "origin": "synthetic"
     }
   ]
 }

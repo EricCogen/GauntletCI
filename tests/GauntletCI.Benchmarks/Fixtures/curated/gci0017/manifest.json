@@ -4,7 +4,6 @@
     "GCI017"
   ],
   "description": "Production Readiness: Synthesis verdict — aggregate multiple high-severity risk signals.",
-  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0017-01",
@@ -14,7 +13,8 @@
       "expected_gci_rules": [
         "GCI017"
       ],
-      "notes": "Diff introduces SQL injection risk, removes error handling, and touches no test files — three high-severity signals."
+      "notes": "Diff introduces SQL injection risk, removes error handling, and touches no test files — three high-severity signals.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0017-02",
@@ -24,7 +24,8 @@
       "expected_gci_rules": [
         "GCI017"
       ],
-      "notes": "Hardcodes production API key, lacks null guards on user input, and ships with multiple TODO markers."
+      "notes": "Hardcodes production API key, lacks null guards on user input, and ships with multiple TODO markers.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0017-03",
@@ -32,7 +33,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Clean single-concern change with tests, proper error handling, no hardcoding — passes all production readiness checks."
+      "notes": "Clean single-concern change with tests, proper error handling, no hardcoding — passes all production readiness checks.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0017-04",
@@ -40,7 +42,8 @@
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Well-scoped refactor with all tests passing, no security issues, and proper structured logging throughout."
+      "notes": "Well-scoped refactor with all tests passing, no security issues, and proper structured logging throughout.",
+      "origin": "synthetic"
     },
     {
       "id": "gci0017-05",
@@ -48,7 +51,8 @@
       "category": "edge-case",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "One minor style concern present but no material risk indicators — does not meet the production readiness bar."
+      "notes": "One minor style concern present but no material risk indicators — does not meet the production readiness bar.",
+      "origin": "synthetic"
     }
   ]
 }
