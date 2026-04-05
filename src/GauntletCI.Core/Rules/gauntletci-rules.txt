@@ -30,7 +30,7 @@ Standard Output Requirement
 Each finding object must contain:
 rule_id, rule_name, severity, finding, evidence, why_it_matters, suggested_action, confidence
 
-FL001 - Diff Integrity and Scope
+GCI001 - Diff Integrity and Scope
 Intent:
 Detect mixed concerns, incomplete changesets, and scope creep that weaken reviewability and increase defect risk.
 Must Do:
@@ -41,7 +41,7 @@ Must Not Do:
 Output Requirement:
 - Cite at least one concrete location showing mixed or incomplete scope.
 
-FL002 - Goal Alignment
+GCI002 - Goal Alignment
 Intent:
 Verify implementation behavior aligns with the apparent intent of the change.
 Must Do:
@@ -52,7 +52,7 @@ Must Not Do:
 Output Requirement:
 - State intent mismatch with explicit code evidence.
 
-FL003 - Behavioral Change Detection
+GCI003 - Behavioral Change Detection
 Intent:
 Detect material runtime behavior changes, intended or accidental.
 Must Do:
@@ -62,7 +62,7 @@ Must Not Do:
 Output Requirement:
 - Explain before/after behavior with specific evidence.
 
-FL004 - Breaking Change Risk
+GCI004 - Breaking Change Risk
 Intent:
 Detect caller-facing contract breaks and integration risk.
 Must Do:
@@ -72,7 +72,7 @@ Must Not Do:
 Output Requirement:
 - Name impacted contract and probable caller impact.
 
-FL005 - Test Coverage Relevance
+GCI005 - Test Coverage Relevance
 Intent:
 Assess whether tests are present and meaningfully verify changed behavior.
 Must Do:
@@ -83,7 +83,7 @@ Must Not Do:
 Output Requirement:
 - Identify specific missing or weak test behavior.
 
-FL006 - Edge Case Handling
+GCI006 - Edge Case Handling
 Intent:
 Detect unhandled nulls, boundaries, invalid input, and state extremes.
 Must Do:
@@ -93,7 +93,7 @@ Must Not Do:
 Output Requirement:
 - Cite exact edge path and failure mode.
 
-FL007 - Error Handling Integrity
+GCI007 - Error Handling Integrity
 Intent:
 Detect swallowed exceptions, lost context, and weakened diagnostics.
 Must Do:
@@ -103,7 +103,7 @@ Must Not Do:
 Output Requirement:
 - Show exact error path and lost signal.
 
-FL008 - Complexity Control
+GCI008 - Complexity Control
 Intent:
 Detect disproportionate complexity that increases maintenance and defect risk.
 Must Do:
@@ -113,7 +113,7 @@ Must Not Do:
 Output Requirement:
 - Point to concrete complexity hotspot.
 
-FL009 - Consistency with Existing Patterns
+GCI009 - Consistency with Existing Patterns
 Intent:
 Detect dangerous deviations from established repo patterns.
 Must Do:
@@ -123,7 +123,7 @@ Must Not Do:
 Output Requirement:
 - Identify pattern mismatch and defect risk.
 
-FL010 - Hardcoding and Configuration
+GCI010 - Hardcoding and Configuration
 Intent:
 Detect hardcoded values, secrets, and brittle environment assumptions.
 Must Do:
@@ -133,7 +133,7 @@ Must Not Do:
 Output Requirement:
 - Cite hardcoded value and required configuration path.
 
-FL011 - Performance Risk
+GCI011 - Performance Risk
 Intent:
 Detect obvious runtime performance regressions.
 Must Do:
@@ -143,7 +143,7 @@ Must Not Do:
 Output Requirement:
 - Describe the performance pitfall and likely operational impact.
 
-FL012 - Security Risk
+GCI012 - Security Risk
 Intent:
 Detect introduced vulnerabilities or weakened safeguards.
 Must Do:
@@ -153,7 +153,7 @@ Must Not Do:
 Output Requirement:
 - Provide concrete exploit surface and mitigation.
 
-FL013 - Observability and Debuggability
+GCI013 - Observability and Debuggability
 Intent:
 Detect loss of critical logs, traces, and correlation context.
 Must Do:
@@ -163,7 +163,7 @@ Must Not Do:
 Output Requirement:
 - Identify what signal was lost and why it matters.
 
-FL014 - Rollback Safety
+GCI014 - Rollback Safety
 Intent:
 Detect irreversible or unsafe deployment/rollback behavior.
 Must Do:
@@ -173,7 +173,7 @@ Must Not Do:
 Output Requirement:
 - Explain rollback failure mode and safer alternative.
 
-FL015 - Data Integrity Risk
+GCI015 - Data Integrity Risk
 Intent:
 Detect silent corruption, mapping errors, or partial-write hazards.
 Must Do:
@@ -183,7 +183,7 @@ Must Not Do:
 Output Requirement:
 - Cite integrity risk path and affected data surface.
 
-FL016 - Concurrency and State Risk
+GCI016 - Concurrency and State Risk
 Intent:
 Detect race conditions, improper async usage, and shared state hazards.
 Must Do:
@@ -193,7 +193,7 @@ Must Not Do:
 Output Requirement:
 - Show concurrency hazard with concrete path.
 
-FL017 - Production Readiness
+GCI017 - Production Readiness
 Intent:
 Provide synthesis verdict: Ready, Needs Work, or High Risk.
 Must Do:
@@ -203,7 +203,7 @@ Must Not Do:
 Output Requirement:
 - Emit only when at least one substantive risk supports verdict.
 
-FL018 - Accountability Standard
+GCI018 - Accountability Standard
 Intent:
 Apply senior ownership bar: would this change be personally approvable.
 Must Do:

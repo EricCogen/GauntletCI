@@ -190,7 +190,7 @@ public sealed record CliOptions(
 gauntletci              evaluates staged changes
 gauntletci --full       evaluates all changes since last commit
 gauntletci --fast       uses speed-tier model
-gauntletci --rule FL005 runs a single rule only
+gauntletci --rule GCI005 runs a single rule only
 gauntletci --format json machine-readable output
 gauntletci --no-telemetry disable telemetry for this run
 gauntletci install      installs git pre-commit hook

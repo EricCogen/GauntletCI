@@ -12,7 +12,7 @@ public class UnitTest1
             """
             [
               {
-                "rule_id": "FL003",
+                "rule_id": "GCI003",
                 "rule_name": "Behavioral Change Detection",
                 "severity": "high",
                 "finding": "OrderProcessor now swallows exception and changes caller behavior.",
@@ -28,7 +28,7 @@ public class UnitTest1
         IReadOnlyList<Finding> findings = parser.Parse(rawJson);
 
         Assert.Single(findings);
-        Assert.Equal("FL003", findings[0].RuleId);
+        Assert.Equal("GCI003", findings[0].RuleId);
         Assert.Equal("high", findings[0].Severity);
     }
 
@@ -54,7 +54,7 @@ public class UnitTest1
             """
             [
               {
-                "rule_id": "FL007",
+                "rule_id": "GCI007",
                 "rule_name": "Error Handling Integrity",
                 "severity": "medium",
                 "finding": "Error handling may need review",

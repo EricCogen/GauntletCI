@@ -59,7 +59,7 @@ public sealed class CopilotCommandProcessor
     {
         if (string.IsNullOrWhiteSpace(command.Rule))
         {
-            return Task.FromResult("Usage: @gauntletci explain FL007");
+            return Task.FromResult("Usage: @gauntletci explain GCI007");
         }
 
         string rules = new RulesTextProvider().LoadRulesText();
@@ -123,12 +123,12 @@ public static class CopilotRenderer
 {
     public static string Render(EvaluationResult result)
     {
-        string verdict = result.Findings.Any(static finding => finding.RuleId == "FL017")
+        string verdict = result.Findings.Any(static finding => finding.RuleId == "GCI017")
             ? "Needs Work"
             : (result.ExitCode == 0 ? "Ready" : "High Risk");
 
         StringBuilder sb = new();
-        sb.AppendLine($"## FL017 Verdict: {verdict}");
+        sb.AppendLine($"## GCI017 Verdict: {verdict}");
 
         if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
         {
