@@ -10,35 +10,35 @@ namespace GauntletCI.Benchmarks;
 public sealed class CuratedFixtureStructureTests
 {
     [Fact]
-    public void Load_Pcg0001_ReturnsAllTwelveFixtures()
+    public void Load_Gci0001_ReturnsAllTwelveFixtures()
     {
-        var (manifest, diffs) = FixtureLoader.Load("pcg0001");
+        var (manifest, diffs) = FixtureLoader.Load("gci0001");
 
         Assert.Equal(12, manifest.Fixtures.Count);
         Assert.Equal(12, diffs.Count);
     }
 
     [Fact]
-    public void Load_Pcg0001_ManifestMappedToGciRules()
+    public void Load_Gci0001_ManifestMappedToGciRules()
     {
-        var (manifest, _) = FixtureLoader.Load("pcg0001");
+        var (manifest, _) = FixtureLoader.Load("gci0001");
 
         Assert.Contains("GCI006", manifest.MappedGciRules);
         Assert.Contains("GCI005", manifest.MappedGciRules);
     }
 
     [Theory]
-    [InlineData("pcg0001-01", "fire")]
-    [InlineData("pcg0001-02", "fire")]
-    [InlineData("pcg0001-03", "fire")]
-    [InlineData("pcg0001-04", "do-not-fire")]
-    [InlineData("pcg0001-05", "do-not-fire")]
-    [InlineData("pcg0001-07", "fire")]
-    [InlineData("pcg0001-11", "do-not-fire")]
-    [InlineData("pcg0001-12", "do-not-fire")]
+    [InlineData("gci0001-01", "fire")]
+    [InlineData("gci0001-02", "fire")]
+    [InlineData("gci0001-03", "fire")]
+    [InlineData("gci0001-04", "do-not-fire")]
+    [InlineData("gci0001-05", "do-not-fire")]
+    [InlineData("gci0001-07", "fire")]
+    [InlineData("gci0001-11", "do-not-fire")]
+    [InlineData("gci0001-12", "do-not-fire")]
     public void Manifest_ExpectedOutcome_MatchesDiffHeader(string fixtureId, string expectedOutcome)
     {
-        var (manifest, diffs) = FixtureLoader.Load("pcg0001");
+        var (manifest, diffs) = FixtureLoader.Load("gci0001");
 
         BenchmarkFixture fixture = manifest.Fixtures.Single(f => f.Id == fixtureId);
         string headerOutcome = FixtureLoader.ReadExpectedOutcome(diffs[fixtureId])!;
@@ -49,12 +49,12 @@ public sealed class CuratedFixtureStructureTests
     }
 
     [Theory]
-    [InlineData("pcg0001-01")]
-    [InlineData("pcg0001-04")]
-    [InlineData("pcg0001-12")]
+    [InlineData("gci0001-01")]
+    [InlineData("gci0001-04")]
+    [InlineData("gci0001-12")]
     public void StripHeader_RemovesCommentLines_LeavingValidUnifiedDiff(string fixtureId)
     {
-        var (_, diffs) = FixtureLoader.Load("pcg0001");
+        var (_, diffs) = FixtureLoader.Load("gci0001");
 
         string stripped = FixtureLoader.StripHeader(diffs[fixtureId]);
         string firstLine = stripped.TrimStart().Split('\n').First(l => !string.IsNullOrWhiteSpace(l));
@@ -63,12 +63,12 @@ public sealed class CuratedFixtureStructureTests
     }
 
     [Theory]
-    [InlineData("pcg0001-01")]
-    [InlineData("pcg0001-04")]
-    [InlineData("pcg0001-08")]
+    [InlineData("gci0001-01")]
+    [InlineData("gci0001-04")]
+    [InlineData("gci0001-08")]
     public void PromptBuilder_ProducesNonEmptySystemPrompt_FromCuratedDiff(string fixtureId)
     {
-        var (_, diffs) = FixtureLoader.Load("pcg0001");
+        var (_, diffs) = FixtureLoader.Load("gci0001");
 
         string diff = FixtureLoader.StripHeader(diffs[fixtureId]);
         PromptBuilder pb = new();
@@ -133,7 +133,7 @@ public sealed class CuratedFixtureStructureTests
     [Fact]
     public void AllCuratedDiffs_HaveValidExpectedHeader()
     {
-        var (manifest, diffs) = FixtureLoader.Load("pcg0001");
+        var (manifest, diffs) = FixtureLoader.Load("gci0001");
 
         foreach (BenchmarkFixture fixture in manifest.Fixtures)
         {

@@ -32,7 +32,7 @@ public sealed class LiveEvaluationBenchmarkTests
     /// least one of the expected GCI rules appears in the findings.
     /// </summary>
     [SkippableTheory]
-    [MemberData(nameof(Pcg0001FireFixtures))]
+    [MemberData(nameof(Gci0001FireFixtures))]
     public async Task LiveEval_FireFixture_ProducesAtLeastOneExpectedRule(
         string fixtureId,
         string diff,
@@ -55,7 +55,7 @@ public sealed class LiveEvaluationBenchmarkTests
     /// that none of the mapped GCI rules appear in the findings.
     /// </summary>
     [SkippableTheory]
-    [MemberData(nameof(Pcg0001DoNotFireFixtures))]
+    [MemberData(nameof(Gci0001DoNotFireFixtures))]
     public async Task LiveEval_DoNotFireFixture_ProducesNoMappedRuleFindings(
         string fixtureId,
         string diff,
@@ -73,9 +73,9 @@ public sealed class LiveEvaluationBenchmarkTests
             $"but got: [{string.Join(", ", unexpectedFired)}]");
     }
 
-    public static IEnumerable<object[]> Pcg0001FireFixtures()
+    public static IEnumerable<object[]> Gci0001FireFixtures()
     {
-        var (manifest, diffs) = FixtureLoader.Load("pcg0001");
+        var (manifest, diffs) = FixtureLoader.Load("gci0001");
         return manifest.Fixtures
             .Where(f => f.ShouldFire)
             .Select(f => new object[]
@@ -86,9 +86,9 @@ public sealed class LiveEvaluationBenchmarkTests
             });
     }
 
-    public static IEnumerable<object[]> Pcg0001DoNotFireFixtures()
+    public static IEnumerable<object[]> Gci0001DoNotFireFixtures()
     {
-        var (manifest, diffs) = FixtureLoader.Load("pcg0001");
+        var (manifest, diffs) = FixtureLoader.Load("gci0001");
         return manifest.Fixtures
             .Where(f => !f.ShouldFire)
             .Select(f => new object[]
