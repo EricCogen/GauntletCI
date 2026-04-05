@@ -1,0 +1,19 @@
+# origin: real
+# source: https://github.com/alexsiri7/word-coach-annie/pull/384
+# expected: do-not-fire
+# reason: Migration intentionally removes destructive DROP TABLE statements because the runner blocks drops on live datasets.
+
+diff --git a/prisma/migrations/20260404_replace_medium_with_hashnode/migration.sql b/prisma/migrations/20260404_replace_medium_with_hashnode/migration.sql
+index 64d16c75..10de84f2 100644
+--- a/prisma/migrations/20260404_replace_medium_with_hashnode/migration.sql
++++ b/prisma/migrations/20260404_replace_medium_with_hashnode/migration.sql
+@@ -41,6 +41,6 @@ ALTER TABLE "HashnodeExport" ADD CONSTRAINT "HashnodeExport_projectId_fkey" FORE
+ -- AddForeignKey: HashnodeExport -> HashnodeCredential
+ ALTER TABLE "HashnodeExport" ADD CONSTRAINT "HashnodeExport_credentialId_fkey" FOREIGN KEY ("credentialId") REFERENCES "HashnodeCredential"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ 
+--- Step 3: Drop old tables (no data migration needed — Medium tokens are unusable for Hashnode)
+-DROP TABLE IF EXISTS "MediumExport";
+-DROP TABLE IF EXISTS "MediumCredential";
++-- Note: old MediumCredential/MediumExport tables left in place.
++-- The migration runner blocks DROP on databases with live data.
++-- These tables are empty/unused and harmless.
