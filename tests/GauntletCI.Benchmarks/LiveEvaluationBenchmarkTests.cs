@@ -31,7 +31,7 @@ public sealed class LiveEvaluationBenchmarkTests(ITestOutputHelper output)
     private static (string Model, string ApiKey) ResolveModelAndKey()
     {
         if (!string.IsNullOrWhiteSpace(AnthropicKey))
-            return ("claude-sonnet-4-5", AnthropicKey!);
+            return ("claude-sonnet-4-6", AnthropicKey!);
         if (!string.IsNullOrWhiteSpace(OpenAiKey))
             return ("gpt-4o", OpenAiKey!);
         throw new InvalidOperationException("No API key available.");

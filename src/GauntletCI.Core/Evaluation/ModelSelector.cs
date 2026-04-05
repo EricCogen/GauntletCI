@@ -28,7 +28,7 @@ public sealed class ModelSelector
                 ]
                 :
                 [
-                    ("claude-sonnet-4-5", "ANTHROPIC_API_KEY"),
+                    ("claude-sonnet-4-6", "ANTHROPIC_API_KEY"),
                     ("gpt-4o", "OPENAI_API_KEY"),
                 ];
 
