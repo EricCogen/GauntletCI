@@ -82,8 +82,16 @@ public sealed class ConfigLoader
         }
 
         string content = File.ReadAllText(repoConfigPath);
-        RepoConfigFile? config = JsonSerializer.Deserialize<RepoConfigFile>(content, JsonOptions);
-        return config ?? new RepoConfigFile();
+        try
+        {
+            RepoConfigFile? config = JsonSerializer.Deserialize<RepoConfigFile>(content, JsonOptions);
+            return config ?? new RepoConfigFile();
+        }
+        catch (JsonException ex)
+        {
+            Console.Error.WriteLine($"Warning: .gauntletci.json is malformed and will be ignored: {ex.Message}");
+            return new RepoConfigFile();
+        }
     }
 
     public sealed record UserConfigFile(
