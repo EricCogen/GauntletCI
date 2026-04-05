@@ -22,7 +22,11 @@ public sealed class GitHubApiClient(HttpClient httpClient, string token) : IGitH
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3.diff"));
         using HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
         string body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException($"GitHub API error fetching PR diff ({(int)response.StatusCode}): {body}");
+        }
+
         return body;
     }
 
@@ -40,7 +44,11 @@ public sealed class GitHubApiClient(HttpClient httpClient, string token) : IGitH
 
         request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
         using HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        _ = response.IsSuccessStatusCode;
+        if (!response.IsSuccessStatusCode)
+        {
+            string errorBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            throw new HttpRequestException($"GitHub API error publishing review comment ({(int)response.StatusCode}): {errorBody}");
+        }
     }
 
     public async Task PublishStatusCheckAsync(PrEventContext context, string verdict, EvaluationResult result, CancellationToken cancellationToken)
@@ -62,7 +70,11 @@ public sealed class GitHubApiClient(HttpClient httpClient, string token) : IGitH
 
         request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
         using HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
-        _ = response.IsSuccessStatusCode;
+        if (!response.IsSuccessStatusCode)
+        {
+            string errorBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            throw new HttpRequestException($"GitHub API error publishing status check ({(int)response.StatusCode}): {errorBody}");
+        }
     }
 
     private HttpRequestMessage CreateRequest(HttpMethod method, string uri)
