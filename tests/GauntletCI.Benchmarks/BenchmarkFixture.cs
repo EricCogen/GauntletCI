@@ -10,7 +10,8 @@ public sealed record BenchmarkFixture(
     [property: JsonPropertyName("expected_gci_rules")] IReadOnlyList<string> ExpectedGciRules,
     [property: JsonPropertyName("notes")] string Notes,
     [property: JsonPropertyName("origin")] string Origin = "synthetic",
-    [property: JsonPropertyName("source_url")] string? SourceUrl = null)
+    [property: JsonPropertyName("source_url")] string? SourceUrl = null,
+    [property: JsonPropertyName("runtime_state_condition")] string? RuntimeStateCondition = null)
 {
     public bool ShouldFire => string.Equals(ExpectedOutcome, "fire", StringComparison.OrdinalIgnoreCase);
 
