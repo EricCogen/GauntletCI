@@ -134,6 +134,18 @@ public sealed class CuratedFixtureStructureTests
             "Expected at least three true-positive state-sensitive fixtures in gci0015.");
     }
 
+    [Fact]
+    public void Gci0016_ExpandedCoverage_ContainsSubtleAsyncPatterns()
+    {
+        var (manifest, _) = FixtureLoader.Load("gci0016");
+
+        Assert.True(manifest.Fixtures.Count >= 14, "Expected expanded async/concurrency fixture coverage in gci0016.");
+        Assert.Contains(manifest.Fixtures, f => f.Id == "gci0016-16" && f.ShouldFire);
+        Assert.Contains(manifest.Fixtures, f => f.Id == "gci0016-17" && !f.ShouldFire);
+        Assert.Contains(manifest.Fixtures, f => f.Id == "gci0016-18" && !f.ShouldFire);
+        Assert.Contains(manifest.Fixtures, f => f.Id == "gci0016-19" && f.ShouldFire);
+    }
+
     private static IEnumerable<string> GetCuratedFixtureSetNames()
     {
         string curatedRoot = Path.Combine(AppContext.BaseDirectory, "Fixtures", "curated");
