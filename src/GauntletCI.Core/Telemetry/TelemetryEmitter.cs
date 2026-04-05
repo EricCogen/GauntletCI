@@ -38,7 +38,6 @@ public sealed class TelemetryEmitter(HttpClient httpClient)
             },
             model = result.Model,
             action = "evaluated",
-            time_to_action_seconds = 0,
             evaluation_duration_ms = result.EvaluationDurationMs,
         };
 
