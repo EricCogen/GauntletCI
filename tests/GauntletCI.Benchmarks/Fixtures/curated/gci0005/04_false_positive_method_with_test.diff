@@ -1,0 +1,40 @@
+# expected: do-not-fire
+# reason: Adds a new parseIso8601 method and a corresponding JUnit test that thoroughly exercises it including edge cases.
+
+--- a/src/main/java/com/example/DateParser.java
++++ b/src/main/java/com/example/DateParser.java
+@@ -5,6 +5,14 @@ import java.time.LocalDate;
+ 
+ public class DateParser {
++
++    public static LocalDate parseIso8601(String text) {
++        if (text == null || text.isBlank()) {
++            throw new IllegalArgumentException("date text must not be blank");
++        }
++        return LocalDate.parse(text);
++    }
++
+ }
+
+--- a/src/test/java/com/example/DateParserTest.java
++++ b/src/test/java/com/example/DateParserTest.java
+@@ -0,0 +1,22 @@
++package com.example;
++
++import org.junit.jupiter.api.Test;
++import static org.junit.jupiter.api.Assertions.*;
++
++class DateParserTest {
++
++    @Test void parsesValidDate() {
++        assertEquals(LocalDate.of(2024, 1, 15), DateParser.parseIso8601("2024-01-15"));
++    }
++
++    @Test void throwsOnNull() {
++        assertThrows(IllegalArgumentException.class, () -> DateParser.parseIso8601(null));
++    }
++
++    @Test void throwsOnBlank() {
++        assertThrows(IllegalArgumentException.class, () -> DateParser.parseIso8601("  "));
++    }
++}

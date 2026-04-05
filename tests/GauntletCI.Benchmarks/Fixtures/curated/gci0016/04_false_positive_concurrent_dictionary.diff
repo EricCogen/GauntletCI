@@ -1,0 +1,18 @@
+# expected: do-not-fire
+# reason: Uses ConcurrentDictionary and Interlocked.Increment for a shared counter — thread-safe implementation.
+
+--- a/src/Metrics/ApiMetrics.cs
++++ b/src/Metrics/ApiMetrics.cs
+@@ -5,10 +5,14 @@ public static class ApiMetrics
+ {
++    private static readonly ConcurrentDictionary<string, long> _counters = new();
++
+     public static void RecordCall(string operation)
+     {
+-        // TODO: implement thread-safe counter
++        _counters.AddOrUpdate(operation, 1L, (_, current) => Interlocked.Increment(ref current));
+     }
++
++    public static long GetCount(string operation) =>
++        _counters.GetValueOrDefault(operation, 0L);
+ }

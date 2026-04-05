@@ -1,0 +1,27 @@
+# expected: fire
+# reason: Uses lock() correctly but holds the lock while making an outbound HTTP call, causing contention and potential deadlock.
+
+--- a/src/Services/RateLimiter.cs
++++ b/src/Services/RateLimiter.cs
+@@ -12,12 +12,14 @@ public class RateLimiter
+ 
+     public async Task<bool> AllowAsync(string clientId)
+     {
+-        int current;
+-        lock (_lock)
+-        {
+-            current = _counts.GetValueOrDefault(clientId);
+-            _counts[clientId] = current + 1;
+-        }
+-        await _auditLog.RecordAsync(clientId, current);
+-        return current < _limit;
++        lock (_lock)
++        {
++            int current = _counts.GetValueOrDefault(clientId);
++            _counts[clientId] = current + 1;
++            // records audit log while holding the lock — outbound HTTP call inside lock
++            _auditLog.RecordAsync(clientId, current).GetAwaiter().GetResult();
++            return current < _limit;
++        }
+     }
+ }

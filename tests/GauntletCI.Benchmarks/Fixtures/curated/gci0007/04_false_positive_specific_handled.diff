@@ -1,0 +1,14 @@
+# expected: do-not-fire
+# reason: Specific ValueError caught, handled gracefully with a user-friendly message and logged at WARNING level.
+
+--- a/api/handlers/registration_handler.py
++++ b/api/handlers/registration_handler.py
+@@ -12,6 +12,12 @@ class RegistrationHandler:
+ 
+     def handle(self, request: dict) -> Response:
+-        return self.service.register(request)
++        try:
++            return self.service.register(request)
++        except ValueError as e:
++            logger.warning("Invalid registration payload: %s", e)
++            return Response(status=400, body={"error": str(e)})

@@ -1,0 +1,15 @@
+# expected: fire
+# reason: Hardcodes the production hostname alongside port 443 — the hostname makes this a brittle production-only assumption.
+
+--- a/src/main/java/com/example/TlsClient.java
++++ b/src/main/java/com/example/TlsClient.java
+@@ -6,7 +6,8 @@ public class TlsClient {
+ 
+     public URI buildEndpoint(String path) {
+-        String host = config.getRequiredValue("tls.host");
+-        int port = config.getInt("tls.port", 443);
++        String host = "api.prod.example.com";
++        int port = 443;
+         return URI.create("https://" + host + ":" + port + path);
+     }
+ }

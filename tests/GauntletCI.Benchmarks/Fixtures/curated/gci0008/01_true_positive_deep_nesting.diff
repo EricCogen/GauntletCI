@@ -1,0 +1,29 @@
+# expected: fire
+# reason: Adds a 5-level deeply nested if/else decision tree for a simple request routing case that needs at most one level.
+
+--- a/src/router/requestRouter.ts
++++ b/src/router/requestRouter.ts
+@@ -4,7 +4,28 @@ export function routeRequest(req: Request): string {
+-    return req.method === "GET" ? "read" : "write";
++    if (req.method === "GET") {
++        if (req.headers["x-version"]) {
++            if (req.headers["x-version"] === "v2") {
++                if (req.query.format) {
++                    if (req.query.format === "json") {
++                        return "read-v2-json";
++                    } else {
++                        return "read-v2-other";
++                    }
++                } else {
++                    return "read-v2";
++                }
++            } else {
++                return "read-v1";
++            }
++        } else {
++            return "read";
++        }
++    } else {
++        return "write";
++    }
+ }

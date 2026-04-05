@@ -1,0 +1,55 @@
+{
+  "source_pcg_rule": "",
+  "mapped_gci_rules": [
+    "GCI016"
+  ],
+  "description": "Concurrency and State Risk: Detect race conditions, improper async usage, and shared state hazards.",
+  "fixtures": [
+    {
+      "id": "gci0016-01",
+      "diff_file": "01_true_positive_blocking_async_result.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI016"
+      ],
+      "notes": "Calls asyncMethod().Result in an async context, which can cause a deadlock on ASP.NET synchronization contexts."
+    },
+    {
+      "id": "gci0016-02",
+      "diff_file": "02_true_positive_unprotected_static_dict.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI016"
+      ],
+      "notes": "Modifies a static Dictionary<string,int> counter from multiple code paths without any locking or atomic operations."
+    },
+    {
+      "id": "gci0016-03",
+      "diff_file": "03_false_positive_proper_await.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Properly uses await for all async calls with no blocking .Result or .Wait() — no concurrency issue."
+    },
+    {
+      "id": "gci0016-04",
+      "diff_file": "04_false_positive_concurrent_dictionary.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Uses ConcurrentDictionary and Interlocked.Increment for the shared counter — thread-safe implementation."
+    },
+    {
+      "id": "gci0016-05",
+      "diff_file": "05_edge_lock_with_io_inside.diff",
+      "category": "edge-case",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI016"
+      ],
+      "notes": "Uses lock() correctly but holds the lock while making an outbound HTTP call, risking contention and deadlock."
+    }
+  ]
+}

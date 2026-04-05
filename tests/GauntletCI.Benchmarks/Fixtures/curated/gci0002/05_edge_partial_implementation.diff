@@ -1,0 +1,26 @@
+# expected: fire
+# reason: Only two of the four documented validation rules are implemented, leaving the implementation half-done.
+
+--- a/services/registration_service.py
++++ b/services/registration_service.py
+@@ -1,9 +1,20 @@
+ class RegistrationService:
+-    def register(self, payload: dict):
+-        """Validate and register user. Rules: non-empty email, valid email format,
+-        password min 8 chars, username alphanumeric only."""
++    def register(self, payload: dict):
++        """Validate and register user.
++
++        Rules:
++          1. email must not be empty          [IMPLEMENTED]
++          2. email must match valid format    [IMPLEMENTED]
++          3. password must be >= 8 chars      [TODO]
++          4. username must be alphanumeric    [TODO]
++        """
++        email = payload.get("email", "")
++        if not email:
++            raise ValueError("email is required")
++        if "@" not in email:
++            raise ValueError("email format is invalid")
++
+         self.repo.create(payload)

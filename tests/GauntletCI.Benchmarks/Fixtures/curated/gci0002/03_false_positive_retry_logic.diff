@@ -1,0 +1,25 @@
+# expected: do-not-fire
+# reason: Method named 'add retry logic' and the diff clearly implements exponential backoff retry as documented.
+
+--- a/services/payment_client.py
++++ b/services/payment_client.py
+@@ -1,9 +1,21 @@
++import time
++
+ class PaymentClient:
+     def __init__(self, http):
+         self.http = http
+ 
+     def charge(self, amount: float, token: str) -> dict:
+-        return self.http.post("/charge", {"amount": amount, "token": token})
++        max_retries = 3
++        delay = 0.5
++        for attempt in range(max_retries):
++            try:
++                return self.http.post("/charge", {"amount": amount, "token": token})
++            except TransientError as e:
++                if attempt == max_retries - 1:
++                    raise
++                time.sleep(delay)
++                delay *= 2
++        raise RuntimeError("unreachable")

@@ -1,0 +1,55 @@
+{
+  "source_pcg_rule": "",
+  "mapped_gci_rules": [
+    "GCI006"
+  ],
+  "description": "Edge Case Handling: Detect unhandled nulls, boundaries, and invalid input.",
+  "fixtures": [
+    {
+      "id": "gci0006-01",
+      "diff_file": "01_true_positive_divide_by_zero.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI006"
+      ],
+      "notes": "Divides total by count without checking whether count is zero, introducing a divide-by-zero exception."
+    },
+    {
+      "id": "gci0006-02",
+      "diff_file": "02_true_positive_unbounded_index.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI006"
+      ],
+      "notes": "Accesses items[index] using a user-supplied index without any bounds checking, risking IndexOutOfRangeException."
+    },
+    {
+      "id": "gci0006-03",
+      "diff_file": "03_false_positive_explicit_null_guard.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Adds an explicit null guard at method entry before using the parameter — edge case is properly handled."
+    },
+    {
+      "id": "gci0006-04",
+      "diff_file": "04_false_positive_factory_guaranteed.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Method only called with the result of a factory method that guarantees a non-null return value."
+    },
+    {
+      "id": "gci0006-05",
+      "diff_file": "05_edge_empty_string_not_checked.diff",
+      "category": "edge-case",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI006"
+      ],
+      "notes": "Checks for null but not for empty string, then passes the potentially empty string directly to an external API."
+    }
+  ]
+}

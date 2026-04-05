@@ -1,0 +1,22 @@
+# expected: do-not-fire
+# reason: Clean implementation with no TODOs or FIXMEs, all edge cases handled — meets the senior ownership bar.
+
+--- a/src/utils/emailValidator.ts
++++ b/src/utils/emailValidator.ts
+@@ -0,0 +1,18 @@
++const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
++
++/**
++ * Validates an email address string.
++ * Returns true for valid RFC-5321-compatible addresses.
++ */
++export function isValidEmail(email: string | null | undefined): boolean {
++    if (!email || typeof email !== "string") {
++        return false;
++    }
++    const trimmed = email.trim();
++    if (trimmed.length === 0 || trimmed.length > 254) {
++        return false;
++    }
++    return EMAIL_REGEX.test(trimmed);
++}

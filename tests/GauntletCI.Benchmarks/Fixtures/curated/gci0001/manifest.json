@@ -1,103 +1,55 @@
 {
-  "source_pcg_rule": "PCG0001",
-  "mapped_gci_rules": ["GCI006", "GCI005"],
-  "description": "New Guard Clause Without Validation — null/empty/range guard patterns added without accompanying test coverage",
+  "source_pcg_rule": "",
+  "mapped_gci_rules": [
+    "GCI001"
+  ],
+  "description": "Diff Integrity and Scope: Detect mixed concerns, incomplete changesets, and scope creep.",
   "fixtures": [
     {
       "id": "gci0001-01",
-      "diff_file": "01_true_positive_method_entry_null_guard.diff",
+      "diff_file": "01_true_positive_mixed_concerns.diff",
       "category": "true-positive",
       "expected_outcome": "fire",
-      "expected_gci_rules": ["GCI006", "GCI005"],
-      "notes": "New method-entry null guard introduces throw-based early exit with no visible validation tests."
+      "expected_gci_rules": [
+        "GCI001"
+      ],
+      "notes": "Single commit bundles an unrelated caching feature into OrderService alongside a rename refactor of UserService to AccountService."
     },
     {
       "id": "gci0001-02",
-      "diff_file": "02_true_positive_count_guard.diff",
+      "diff_file": "02_true_positive_missing_config_schema.diff",
       "category": "true-positive",
       "expected_outcome": "fire",
-      "expected_gci_rules": ["GCI006"],
-      "notes": "Added entry guard with return changes accepted input domain for empty collection case."
+      "expected_gci_rules": [
+        "GCI001"
+      ],
+      "notes": "New config key 'FeatureFlags:EnableDarkMode' is consumed in code but appsettings.json schema is never updated."
     },
     {
       "id": "gci0001-03",
-      "diff_file": "03_true_positive_inline_throw_guard.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": ["GCI006"],
-      "notes": "Inline guard at method start introduces immediate throw path."
+      "diff_file": "03_false_positive_coherent_rename.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "UserRepository is renamed to AccountRepository consistently across all files with no unrelated changes."
     },
     {
       "id": "gci0001-04",
-      "diff_file": "04_false_positive_branching_logic.diff",
+      "diff_file": "04_false_positive_coherent_endpoint.diff",
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Added conditional branch is business logic and not an entry guard with early exit."
+      "notes": "New /products endpoint coherently touches controller, service, and model — all changes are directly related."
     },
     {
       "id": "gci0001-05",
-      "diff_file": "05_false_positive_nested_conditional.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Nested conditional inside existing branch is not a method-entry guard."
-    },
-    {
-      "id": "gci0001-06",
-      "diff_file": "06_edge_multi_hunk_same_method.diff",
-      "category": "edge",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Diff contains distant edits and no tight method-entry condition-to-exit linkage."
-    },
-    {
-      "id": "gci0001-07",
-      "diff_file": "07_edge_guard_with_tests_touched.diff",
-      "category": "edge",
+      "diff_file": "05_edge_stub_implementation.diff",
+      "category": "edge-case",
       "expected_outcome": "fire",
-      "expected_gci_rules": ["GCI006"],
-      "notes": "Guard is present; tests were touched so GCI005 should not fire, but GCI006 still should."
-    },
-    {
-      "id": "gci0001-08",
-      "diff_file": "08_edge_large_refactor_noisy.diff",
-      "category": "edge",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Large noisy hunk with incidental if/return should be suppressed."
-    },
-    {
-      "id": "gci0001-09",
-      "diff_file": "09_edge_deep_guard_not_entry.diff",
-      "category": "edge",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Added guard is deep inside method logic and not near method entry."
-    },
-    {
-      "id": "gci0001-10",
-      "diff_file": "10_edge_equivalent_guard_replaced.diff",
-      "category": "edge",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Guard condition already existed; replacement should not count as new validation boundary."
-    },
-    {
-      "id": "gci0001-11",
-      "diff_file": "11_adversarial_comment_contains_if_return.diff",
-      "category": "adversarial",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Comment text containing if/return tokens must not trigger guard detection."
-    },
-    {
-      "id": "gci0001-12",
-      "diff_file": "12_adversarial_string_contains_guard_tokens.diff",
-      "category": "adversarial",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "String literals that mention if/return should not be interpreted as executable guard logic."
+      "expected_gci_rules": [
+        "GCI001"
+      ],
+      "notes": "Payment route is wired up in the router but the handler is a stub containing only a TODO comment."
     }
   ]
 }

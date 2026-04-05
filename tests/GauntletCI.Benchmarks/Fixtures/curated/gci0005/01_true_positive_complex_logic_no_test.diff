@@ -1,0 +1,40 @@
+# expected: fire
+# reason: Adds complex CSV parsing with custom quote-escaping logic but no test file is touched anywhere in the diff.
+
+--- a/src/main/java/com/example/CsvParser.java
++++ b/src/main/java/com/example/CsvParser.java
+@@ -3,6 +3,34 @@ package com.example;
+ 
+ public class CsvParser {
++
++    /**
++     * Parses a CSV line handling quoted fields with embedded commas and escaped quotes.
++     */
++    public static List<String> parseLine(String line) {
++        List<String> fields = new ArrayList<>();
++        StringBuilder field = new StringBuilder();
++        boolean inQuotes = false;
++        for (int i = 0; i < line.length(); i++) {
++            char c = line.charAt(i);
++            if (c == '"') {
++                if (inQuotes && i + 1 < line.length() && line.charAt(i + 1) == '"') {
++                    field.append('"');
++                    i++;
++                } else {
++                    inQuotes = !inQuotes;
++                }
++            } else if (c == ',' && !inQuotes) {
++                fields.add(field.toString());
++                field.setLength(0);
++            } else {
++                field.append(c);
++            }
++        }
++        fields.add(field.toString());
++        return fields;
++    }
++
+     public List<List<String>> parse(InputStream input) throws IOException {
+         // existing simple parser omitted
+     }
+ }

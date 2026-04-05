@@ -1,8 +1,0 @@
-# expected: do-not-fire
-# reason: String literals that mention if/return should not be interpreted as executable guard logic.
-
---- a/src/TemplateBuilder.cs
-+++ b/src/TemplateBuilder.cs
-@@ -12,3 +12,5 @@ public class TemplateBuilder
-+    var text = "if (user == null) return;";
-+    Write(text);

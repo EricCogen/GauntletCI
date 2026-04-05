@@ -1,0 +1,11 @@
+# expected: do-not-fire
+# reason: Trivial version label string constant change — no behavioral logic changed, test coverage is not required.
+
+--- a/src/main/java/com/example/AppInfo.java
++++ b/src/main/java/com/example/AppInfo.java
+@@ -3,5 +3,5 @@ package com.example;
+ 
+ public class AppInfo {
+-    public static final String VERSION = "2.3.0";
++    public static final String VERSION = "2.4.0";
+ }

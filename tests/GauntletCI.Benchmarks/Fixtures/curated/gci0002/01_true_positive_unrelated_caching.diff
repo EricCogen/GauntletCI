@@ -1,0 +1,23 @@
+# expected: fire
+# reason: Commit message says 'fix null check' but the diff adds Redis caching logic entirely unrelated to null safety.
+
+--- a/services/order_service.py
++++ b/services/order_service.py
+@@ -1,8 +1,15 @@
++import redis
++
+ class OrderService:
+-    def __init__(self, repo):
++    def __init__(self, repo, redis_client: redis.Redis):
+         self.repo = repo
++        self.redis = redis_client
+ 
+     def get_order(self, order_id: int):
+-        return self.repo.find_by_id(order_id)
++        cache_key = f"order:{order_id}"
++        cached = self.redis.get(cache_key)
++        if cached:
++            return cached
++        order = self.repo.find_by_id(order_id)
++        self.redis.setex(cache_key, 300, order)
++        return order

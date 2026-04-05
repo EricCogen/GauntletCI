@@ -1,0 +1,53 @@
+{
+  "source_pcg_rule": "",
+  "mapped_gci_rules": [
+    "GCI008"
+  ],
+  "description": "Complexity Control: Detect disproportionate complexity relative to the problem being solved.",
+  "fixtures": [
+    {
+      "id": "gci0008-01",
+      "diff_file": "01_true_positive_deep_nesting.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI008"
+      ],
+      "notes": "Adds a deeply nested 5-level if/else decision tree for a simple request routing case that needs at most 2."
+    },
+    {
+      "id": "gci0008-02",
+      "diff_file": "02_true_positive_overengineered_abstraction.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI008"
+      ],
+      "notes": "Introduces an abstract base class and two interfaces for what is effectively a single boolean conditional."
+    },
+    {
+      "id": "gci0008-03",
+      "diff_file": "03_false_positive_simple_feature_flag.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Single clean if/else branch for a new feature flag — complexity is proportionate to the requirement."
+    },
+    {
+      "id": "gci0008-04",
+      "diff_file": "04_false_positive_extracted_helper.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Extracts a complex inline expression into a clearly-named helper function, reducing overall complexity."
+    },
+    {
+      "id": "gci0008-05",
+      "diff_file": "05_edge_moderate_nesting_clear_meaning.diff",
+      "category": "edge-case",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Moderate 3-level nesting but each level has a clearly distinct business meaning that justifies the structure."
+    }
+  ]
+}

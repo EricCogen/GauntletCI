@@ -1,0 +1,55 @@
+{
+  "source_pcg_rule": "",
+  "mapped_gci_rules": [
+    "GCI009"
+  ],
+  "description": "Consistency with Existing Patterns: Detect dangerous deviations from established codebase patterns.",
+  "fixtures": [
+    {
+      "id": "gci0009-01",
+      "diff_file": "01_true_positive_raw_sql_concatenation.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI009"
+      ],
+      "notes": "Uses raw string SQL concatenation where the rest of the codebase exclusively uses parameterized queries."
+    },
+    {
+      "id": "gci0009-02",
+      "diff_file": "02_true_positive_missing_context_param.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI009"
+      ],
+      "notes": "New async handler doesn't accept ctx context.Context, breaking the repo-wide pattern for all handlers."
+    },
+    {
+      "id": "gci0009-03",
+      "diff_file": "03_false_positive_correct_query_pattern.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "New repository method correctly uses the established db.QueryContext(ctx, ...) pattern."
+    },
+    {
+      "id": "gci0009-04",
+      "diff_file": "04_false_positive_isolated_utility.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "New standalone utility function is clearly isolated and does not interact with any existing patterns."
+    },
+    {
+      "id": "gci0009-05",
+      "diff_file": "05_edge_context_background_instead_of_ctx.diff",
+      "category": "edge-case",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI009"
+      ],
+      "notes": "Uses db.QueryContext but passes context.Background() instead of propagating the caller's ctx parameter."
+    }
+  ]
+}

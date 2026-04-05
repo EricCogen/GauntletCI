@@ -1,0 +1,18 @@
+# expected: fire
+# reason: Code reads configuration key 'FeatureFlags:EnableDarkMode' but appsettings.json is never updated with that key.
+
+--- a/src/UI/ThemeController.cs
++++ b/src/UI/ThemeController.cs
+@@ -8,6 +8,12 @@ public class ThemeController : ControllerBase
+     private readonly IConfiguration _config;
+ 
++    [HttpGet("theme")]
++    public IActionResult GetTheme()
++    {
++        var darkMode = _config.GetValue<bool>("FeatureFlags:EnableDarkMode");
++        return Ok(new { darkMode });
++    }
++
+     [HttpGet("version")]
+     public IActionResult GetVersion() => Ok("1.0");
+ }

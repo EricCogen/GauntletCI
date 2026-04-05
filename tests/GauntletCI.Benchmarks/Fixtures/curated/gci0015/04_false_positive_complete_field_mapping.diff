@@ -1,0 +1,20 @@
+# expected: do-not-fire
+# reason: Entity mapper explicitly maps every field including audit metadata — no data is silently dropped.
+
+--- a/src/main/java/com/example/InvoiceMapper.java
++++ b/src/main/java/com/example/InvoiceMapper.java
+@@ -8,10 +8,13 @@ public class InvoiceMapper {
+ 
+     public Invoice toEntity(InvoiceDto dto) {
+         return Invoice.builder()
+             .id(dto.getId())
+             .customerId(dto.getCustomerId())
+             .lineItems(mapLineItems(dto.getLineItems()))
+             .totalAmount(dto.getTotalAmount())
+             .currency(dto.getCurrency())
++            .createdAt(dto.getAuditFields().getCreatedAt())
++            .createdBy(dto.getAuditFields().getCreatedBy())
++            .lastModifiedAt(dto.getAuditFields().getLastModifiedAt())
+             .build();
+     }
+ }

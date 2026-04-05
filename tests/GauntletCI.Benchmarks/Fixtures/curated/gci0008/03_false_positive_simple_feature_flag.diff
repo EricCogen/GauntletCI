@@ -1,0 +1,16 @@
+# expected: do-not-fire
+# reason: Single clean if/else for a new feature flag — complexity is entirely proportionate to the requirement.
+
+--- a/src/services/searchService.ts
++++ b/src/services/searchService.ts
+@@ -8,6 +8,12 @@ export class SearchService {
+ 
+     async search(query: string): Promise<Result[]> {
+-        return this.legacySearch(query);
++        if (this.featureFlags.isEnabled("new-search-engine")) {
++            return this.newSearch(query);
++        } else {
++            return this.legacySearch(query);
++        }
+     }
+ }

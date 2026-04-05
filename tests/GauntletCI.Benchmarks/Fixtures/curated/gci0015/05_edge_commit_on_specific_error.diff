@@ -1,0 +1,26 @@
+# expected: fire
+# reason: Uses a transaction but catches the exception and commits anyway on error code DUPLICATE_KEY, defeating rollback semantics.
+
+--- a/src/main/java/com/example/SubscriptionService.java
++++ b/src/main/java/com/example/SubscriptionService.java
+@@ -12,14 +12,17 @@ public class SubscriptionService {
+ 
+     public void subscribe(int userId, int planId) {
+         try (var tx = dataSource.getConnection()) {
+             tx.setAutoCommit(false);
+             subscriptionRepo.insert(tx, userId, planId);
+             billingRepo.createSchedule(tx, userId, planId);
+             tx.commit();
+         } catch (SQLException e) {
+-            tx.rollback();
+-            throw new SubscriptionException("Subscribe failed", e);
++            if ("23505".equals(e.getSQLState())) {
++                // duplicate — treat as success, commit partial state
++                tx.commit();
++            } else {
++                tx.rollback();
++                throw new SubscriptionException("Subscribe failed", e);
++            }
+         }
+     }
+ }

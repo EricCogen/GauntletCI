@@ -1,0 +1,33 @@
+# expected: do-not-fire
+# reason: Adds an in-memory cache with expiry to avoid repeated expensive external API calls — a performance improvement.
+
+--- a/src/Services/ExchangeRateService.cs
++++ b/src/Services/ExchangeRateService.cs
+@@ -5,13 +5,23 @@ public class ExchangeRateService
+ {
+     private readonly IHttpClientFactory _httpFactory;
++    private readonly IMemoryCache _cache;
++    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(30);
+ 
++    public ExchangeRateService(IHttpClientFactory httpFactory, IMemoryCache cache)
++    {
++        _httpFactory = httpFactory;
++        _cache = cache;
++    }
++
+     public async Task<decimal> GetRateAsync(string from, string to)
+     {
+-        var client = _httpFactory.CreateClient();
+-        var resp = await client.GetFromJsonAsync<RateResponse>(
+-            $"https://rates-api.example.com/{from}/{to}");
+-        return resp!.Rate;
++        var key = $"rate:{from}:{to}";
++        if (_cache.TryGetValue(key, out decimal cached))
++            return cached;
++        var client = _httpFactory.CreateClient();
++        var resp = await client.GetFromJsonAsync<RateResponse>(
++            $"{_ratesUrl}/{from}/{to}");
++        _cache.Set(key, resp!.Rate, CacheDuration);
++        return resp.Rate;
+     }
+ }

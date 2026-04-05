@@ -1,0 +1,21 @@
+# expected: do-not-fire
+# reason: Extracts a complex inline expression into a clearly-named helper function, reducing overall complexity.
+
+--- a/src/utils/priceCalculator.ts
++++ b/src/utils/priceCalculator.ts
+@@ -3,9 +3,14 @@ export function calculateFinalPrice(
+     basePrice: number,
+     discountPct: number,
+     taxRate: number
+ ): number {
+-    return Math.round((basePrice * (1 - discountPct / 100) * (1 + taxRate / 100)) * 100) / 100;
++    return applyTax(applyDiscount(basePrice, discountPct), taxRate);
++}
++
++function applyDiscount(price: number, discountPct: number): number {
++    return price * (1 - discountPct / 100);
++}
++
++function applyTax(price: number, taxRate: number): number {
++    return Math.round(price * (1 + taxRate / 100) * 100) / 100;
+ }

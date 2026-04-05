@@ -1,0 +1,42 @@
+# expected: fire
+# reason: Introduces an abstract base class and two interfaces for what is effectively a single boolean conditional check.
+
+--- a/src/utils/formatter.ts
++++ b/src/utils/formatter.ts
+@@ -1,5 +1,34 @@
+-export function formatValue(value: number, asPercent: boolean): string {
+-    return asPercent ? `${(value * 100).toFixed(1)}%` : value.toFixed(2);
+-}
++export interface IFormatter {
++    format(value: number): string;
++}
++
++export interface IFormatterFactory {
++    create(options: FormatterOptions): IFormatter;
++}
++
++export abstract class BaseFormatter implements IFormatter {
++    abstract format(value: number): string;
++}
++
++export class PercentFormatter extends BaseFormatter {
++    format(value: number): string {
++        return `${(value * 100).toFixed(1)}%`;
++    }
++}
++
++export class DecimalFormatter extends BaseFormatter {
++    format(value: number): string {
++        return value.toFixed(2);
++    }
++}
++
++export class FormatterFactory implements IFormatterFactory {
++    create(options: { asPercent: boolean }): IFormatter {
++        return options.asPercent ? new PercentFormatter() : new DecimalFormatter();
++    }
++}
++
++export function formatValue(value: number, asPercent: boolean): string {
++    return new FormatterFactory().create({ asPercent }).format(value);
++}

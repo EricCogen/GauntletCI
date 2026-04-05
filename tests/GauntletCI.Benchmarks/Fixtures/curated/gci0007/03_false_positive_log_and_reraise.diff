@@ -1,0 +1,14 @@
+# expected: do-not-fire
+# reason: Catch block logs the full traceback with logger.exception() and then re-raises the original error properly.
+
+--- a/services/inventory_service.py
++++ b/services/inventory_service.py
+@@ -10,6 +10,10 @@ class InventoryService:
+ 
+     def reserve(self, sku: str, qty: int) -> bool:
+-        return self.db.reserve_stock(sku, qty)
++        try:
++            return self.db.reserve_stock(sku, qty)
++        except DatabaseError as e:
++            logger.exception("Failed to reserve %d units of %s", qty, sku)
++            raise

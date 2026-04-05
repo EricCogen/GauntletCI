@@ -99,6 +99,78 @@ public sealed class LiveEvaluationBenchmarkTests
             });
     }
 
+    public static IEnumerable<object[]> AllFireFixtures()
+    {
+        foreach (string dir in Directory.EnumerateDirectories(
+            Path.Combine(AppContext.BaseDirectory, "Fixtures", "curated")))
+        {
+            string setName = Path.GetFileName(dir);
+            var (manifest, diffs) = FixtureLoader.Load(setName);
+            foreach (var f in manifest.Fixtures.Where(x => x.ShouldFire))
+                yield return new object[] { setName, f.Id, FixtureLoader.StripHeader(diffs[f.Id]), f.ExpectedGciRules };
+        }
+    }
+
+    public static IEnumerable<object[]> AllDoNotFireFixtures()
+    {
+        foreach (string dir in Directory.EnumerateDirectories(
+            Path.Combine(AppContext.BaseDirectory, "Fixtures", "curated")))
+        {
+            string setName = Path.GetFileName(dir);
+            var (manifest, diffs) = FixtureLoader.Load(setName);
+            foreach (var f in manifest.Fixtures.Where(x => !x.ShouldFire))
+                yield return new object[] { setName, f.Id, FixtureLoader.StripHeader(diffs[f.Id]), manifest.MappedGciRules };
+        }
+    }
+
+    /// <summary>
+    /// Evaluates every "fire" fixture across all corpora (gci0001–gci0018) and asserts
+    /// that at least one of the expected GCI rules appears in the findings.
+    /// </summary>
+    [SkippableTheory]
+    [MemberData(nameof(AllFireFixtures))]
+    public async Task LiveEval_AllCorpora_FireFixture_ProducesAtLeastOneExpectedRule(
+        string fixtureSetName,
+        string fixtureId,
+        string diff,
+        IReadOnlyList<string> expectedGciRules)
+    {
+        Skip.IfNot(LiveTestsEnabled, "Skipped: no ANTHROPIC_API_KEY or OPENAI_API_KEY set.");
+
+        IReadOnlyList<Finding> findings = await EvaluateDiffAsync(diff);
+
+        IEnumerable<string> firedRuleIds = findings.Select(f => f.RuleId);
+        bool anyExpectedRuleFired = expectedGciRules.Any(r => firedRuleIds.Contains(r));
+
+        Assert.True(anyExpectedRuleFired,
+            $"[{fixtureSetName}] Fixture {fixtureId}: expected one of [{string.Join(", ", expectedGciRules)}] to fire, " +
+            $"but got: [{string.Join(", ", firedRuleIds)}]");
+    }
+
+    /// <summary>
+    /// Evaluates every "do-not-fire" fixture across all corpora (gci0001–gci0018) and asserts
+    /// that none of the mapped GCI rules appear in the findings.
+    /// </summary>
+    [SkippableTheory]
+    [MemberData(nameof(AllDoNotFireFixtures))]
+    public async Task LiveEval_AllCorpora_DoNotFireFixture_ProducesNoMappedRuleFindings(
+        string fixtureSetName,
+        string fixtureId,
+        string diff,
+        IReadOnlyList<string> mappedGciRules)
+    {
+        Skip.IfNot(LiveTestsEnabled, "Skipped: no ANTHROPIC_API_KEY or OPENAI_API_KEY set.");
+
+        IReadOnlyList<Finding> findings = await EvaluateDiffAsync(diff);
+
+        IEnumerable<string> firedRuleIds = findings.Select(f => f.RuleId);
+        IEnumerable<string> unexpectedFired = mappedGciRules.Where(r => firedRuleIds.Contains(r));
+
+        Assert.True(!unexpectedFired.Any(),
+            $"[{fixtureSetName}] Fixture {fixtureId}: expected none of [{string.Join(", ", mappedGciRules)}] to fire, " +
+            $"but got: [{string.Join(", ", unexpectedFired)}]");
+    }
+
     private static async Task<IReadOnlyList<Finding>> EvaluateDiffAsync(string diff)
     {
         (string model, string apiKey) = ResolveModelAndKey();

@@ -1,0 +1,25 @@
+# expected: fire
+# reason: Migration renames a column via drop-and-add which is destructive — any data in the column is permanently lost.
+
+--- a/migrations/0047_rename_ref_to_external_ref.go
++++ b/migrations/0047_rename_ref_to_external_ref.go
+@@ -0,0 +1,19 @@
++package migrations
++
++import "database/sql"
++
++// Migration0047 renames the 'ref' column to 'external_ref' on the transactions table.
++type Migration0047 struct{}
++
++func (m Migration0047) Up(db *sql.DB) error {
++    _, err := db.Exec(`
++        ALTER TABLE transactions DROP COLUMN ref;
++        ALTER TABLE transactions ADD COLUMN external_ref VARCHAR(255);
++    `)
++    return err
++}
++
++func (m Migration0047) Down(db *sql.DB) error {
++    // no rollback — original ref data lost on Up
++    return nil
++}

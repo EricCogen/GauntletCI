@@ -1,0 +1,55 @@
+{
+  "source_pcg_rule": "",
+  "mapped_gci_rules": [
+    "GCI010"
+  ],
+  "description": "Hardcoding and Configuration: Detect hardcoded values, secrets, and brittle assumptions.",
+  "fixtures": [
+    {
+      "id": "gci0010-01",
+      "diff_file": "01_true_positive_hardcoded_api_url.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI010"
+      ],
+      "notes": "Hardcodes the Stripe API base URL as a string literal instead of reading it from configuration."
+    },
+    {
+      "id": "gci0010-02",
+      "diff_file": "02_true_positive_hardcoded_jdbc_credentials.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI010"
+      ],
+      "notes": "Hardcodes a JDBC connection string with username and password directly in source code."
+    },
+    {
+      "id": "gci0010-03",
+      "diff_file": "03_false_positive_env_var_with_default.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Reads the API URL from an environment variable with a safe localhost default for local development."
+    },
+    {
+      "id": "gci0010-04",
+      "diff_file": "04_false_positive_config_injection.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "All external service URLs are injected via application.properties and Spring @Value annotation."
+    },
+    {
+      "id": "gci0010-05",
+      "diff_file": "05_edge_hardcoded_hostname_with_port.diff",
+      "category": "edge-case",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI010"
+      ],
+      "notes": "Hardcodes the production hostname alongside port 443 — the hostname makes this a brittle production assumption."
+    }
+  ]
+}

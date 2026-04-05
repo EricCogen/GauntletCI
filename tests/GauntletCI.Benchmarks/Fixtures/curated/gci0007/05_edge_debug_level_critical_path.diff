@@ -1,0 +1,13 @@
+# expected: fire
+# reason: Payment processing failure is logged at DEBUG level instead of ERROR, making critical failures invisible in production.
+
+--- a/services/payment_processor.py
++++ b/services/payment_processor.py
+@@ -15,7 +15,7 @@ class PaymentProcessor:
+     def process(self, order_id: str, amount: float) -> Receipt:
+         try:
+             return self.gateway.charge(amount)
+         except GatewayError as e:
+-            logger.error("Payment failed for order %s: %s", order_id, e)
++            logger.debug("Payment failed for order %s: %s", order_id, e)
+             raise PaymentFailedError(order_id) from e

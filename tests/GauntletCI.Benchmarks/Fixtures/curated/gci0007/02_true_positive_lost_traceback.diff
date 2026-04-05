@@ -1,0 +1,14 @@
+# expected: fire
+# reason: Catches Exception and raises a new RuntimeError without chaining, destroying the original traceback context.
+
+--- a/services/payment_service.py
++++ b/services/payment_service.py
+@@ -8,8 +8,7 @@ class PaymentService:
+     def charge(self, amount: float, token: str) -> dict:
+         try:
+             return self.client.post("/charge", {"amount": amount, "token": token})
+-        except Exception as e:
+-            logger.exception("Charge failed for token %s", token)
+-            raise PaymentError("Charge failed") from e
++        except Exception:
++            raise RuntimeError("Charge failed")

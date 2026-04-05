@@ -1,0 +1,25 @@
+# expected: do-not-fire
+# reason: Uses variadic options pattern to add optional config — all existing callers pass zero options and remain valid.
+
+--- a/user/client.go
++++ b/user/client.go
+@@ -1,8 +1,19 @@
+ package user
+ 
++type Option func(*options)
++type options struct{ timeout time.Duration }
++
++func WithTimeout(d time.Duration) Option {
++    return func(o *options) { o.timeout = d }
++}
++
+-func GetUser(ctx context.Context, id int) (*User, error) {
++func GetUser(ctx context.Context, id int, opts ...Option) (*User, error) {
++    o := &options{timeout: 5 * time.Second}
++    for _, fn := range opts {
++        fn(o)
++    }
++    ctx, cancel := context.WithTimeout(ctx, o.timeout)
++    defer cancel()
+     return fetchUserFromDB(ctx, id)
+ }

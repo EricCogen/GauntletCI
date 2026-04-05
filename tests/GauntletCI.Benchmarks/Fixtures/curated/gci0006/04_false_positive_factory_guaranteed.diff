@@ -1,0 +1,27 @@
+# expected: do-not-fire
+# reason: Method only receives output from a factory that guarantees a non-null instance, so null guard is not needed.
+
+--- a/src/Factories/ConnectionFactory.cs
++++ b/src/Factories/ConnectionFactory.cs
+@@ -5,6 +5,9 @@ public static class ConnectionFactory
+ {
++    /// <summary>Always returns a fully-initialized SqlConnection. Never returns null.</summary>
+     public static SqlConnection Create(string connectionString)
+     {
+         var conn = new SqlConnection(connectionString);
+         conn.Open();
+         return conn;
+     }
+ }
+
+--- a/src/Repositories/OrderRepository.cs
++++ b/src/Repositories/OrderRepository.cs
+@@ -8,6 +8,7 @@ public class OrderRepository
+ 
+     public Order GetById(int id)
+     {
++        // conn is guaranteed non-null by ConnectionFactory.Create
+         using var conn = ConnectionFactory.Create(_connStr);
+         return conn.QueryFirstOrDefault<Order>("SELECT * FROM Orders WHERE Id=@id", new { id });
+     }
+ }

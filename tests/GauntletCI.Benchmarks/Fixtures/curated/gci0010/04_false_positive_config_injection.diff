@@ -1,0 +1,23 @@
+# expected: do-not-fire
+# reason: All external service URLs are injected via application.properties and Spring @Value annotation.
+
+--- a/src/main/java/com/example/NotificationClient.java
++++ b/src/main/java/com/example/NotificationClient.java
+@@ -5,8 +5,12 @@ import org.springframework.beans.factory.annotation.Value;
+ 
+ @Component
+ public class NotificationClient {
++
++    @Value("${notification.service.url}")
++    private String serviceUrl;
++
++    @Value("${notification.service.api-key}")
++    private String apiKey;
+ 
+     public void sendAlert(String message) {
+-        // TODO: inject url and key
++        httpClient.post(serviceUrl + "/alerts",
++            Map.of("message", message),
++            Map.of("X-Api-Key", apiKey));
+     }
+ }

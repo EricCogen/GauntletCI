@@ -1,0 +1,16 @@
+# expected: do-not-fire
+# reason: Uses bcrypt.hashpw() for password hashing before storage — proper security practice applied correctly.
+
+--- a/services/user_service.py
++++ b/services/user_service.py
+@@ -1,10 +1,12 @@
++import bcrypt
++
+ class UserService:
+     def __init__(self, repo):
+         self.repo = repo
+ 
+     def create_user(self, username: str, password: str) -> None:
+-        self.repo.insert(username, password)
++        hashed = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
++        self.repo.insert(username, hashed)

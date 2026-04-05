@@ -1,0 +1,55 @@
+{
+  "source_pcg_rule": "",
+  "mapped_gci_rules": [
+    "GCI005"
+  ],
+  "description": "Test Coverage Relevance: Assess whether tests verify changed behavior.",
+  "fixtures": [
+    {
+      "id": "gci0005-01",
+      "diff_file": "01_true_positive_complex_logic_no_test.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI005"
+      ],
+      "notes": "Adds complex CSV parsing with custom quote-escaping logic, but no test file is touched in the diff."
+    },
+    {
+      "id": "gci0005-02",
+      "diff_file": "02_true_positive_removed_guard_no_test.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI005"
+      ],
+      "notes": "Removes a null-check guard from a public API method without updating any corresponding test."
+    },
+    {
+      "id": "gci0005-03",
+      "diff_file": "03_false_positive_trivial_string_change.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Trivial version label string constant update — no behavioral logic changed, test coverage not required."
+    },
+    {
+      "id": "gci0005-04",
+      "diff_file": "04_false_positive_method_with_test.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Adds a new parsing method and a corresponding JUnit test that thoroughly exercises it."
+    },
+    {
+      "id": "gci0005-05",
+      "diff_file": "05_edge_happy_path_only_test.diff",
+      "category": "edge-case",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI005"
+      ],
+      "notes": "A test is added but only covers the happy path, leaving the new error branch introduced in the same diff untested."
+    }
+  ]
+}

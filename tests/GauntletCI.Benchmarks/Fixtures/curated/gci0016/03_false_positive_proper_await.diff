@@ -1,0 +1,21 @@
+# expected: do-not-fire
+# reason: Properly uses await for all async calls — no blocking .Result or .Wait() calls anywhere in the diff.
+
+--- a/src/Services/EmailService.cs
++++ b/src/Services/EmailService.cs
+@@ -10,8 +10,14 @@ public class EmailService
+ 
+     public async Task SendWelcomeEmailAsync(string to, string name)
+     {
+-        await _smtpClient.SendAsync(BuildWelcome(to, name));
++        var template = await _templateRepo.GetAsync("welcome");
++        var body = template.Render(new { Name = name });
++        var message = new MailMessage
++        {
++            To = to,
++            Subject = "Welcome!",
++            Body = body,
++        };
++        await _smtpClient.SendAsync(message);
+     }
+ }

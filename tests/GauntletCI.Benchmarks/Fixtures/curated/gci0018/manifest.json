@@ -1,0 +1,55 @@
+{
+  "source_pcg_rule": "",
+  "mapped_gci_rules": [
+    "GCI018"
+  ],
+  "description": "Accountability Standard: Apply senior ownership bar — no known bugs shipped, no dead code, no deferred correctness.",
+  "fixtures": [
+    {
+      "id": "gci0018-01",
+      "diff_file": "01_true_positive_fixme_ships_known_crash.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI018"
+      ],
+      "notes": "Adds a FIXME comment explicitly noting 'crashes on empty input, shipping anyway for deadline' — known defect shipped."
+    },
+    {
+      "id": "gci0018-02",
+      "diff_file": "02_true_positive_dead_code_else_branch.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI018"
+      ],
+      "notes": "Leaves an entire else branch that can never execute due to an invariant — dead unreachable code added."
+    },
+    {
+      "id": "gci0018-03",
+      "diff_file": "03_false_positive_clean_no_todos.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Clean implementation with no TODOs or FIXMEs, all edge cases handled — meets the senior ownership bar."
+    },
+    {
+      "id": "gci0018-04",
+      "diff_file": "04_false_positive_removes_dead_code.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Removes old dead code and replaces it with a clean implementation — improves code quality."
+    },
+    {
+      "id": "gci0018-05",
+      "diff_file": "05_edge_todo_is_correctness_bug.diff",
+      "category": "edge-case",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI018"
+      ],
+      "notes": "Has a TODO for a 'performance optimization' that on review is actually a correctness bug being deferred."
+    }
+  ]
+}

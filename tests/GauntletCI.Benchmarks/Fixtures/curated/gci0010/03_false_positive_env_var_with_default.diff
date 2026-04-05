@@ -1,0 +1,15 @@
+# expected: do-not-fire
+# reason: Reads the API URL from an environment variable with a safe localhost default for local development.
+
+--- a/src/main/java/com/example/PaymentGatewayClient.java
++++ b/src/main/java/com/example/PaymentGatewayClient.java
+@@ -8,6 +8,8 @@ public class PaymentGatewayClient {
+ 
++    private static final String BASE_URL =
++        System.getenv().getOrDefault("PAYMENT_GATEWAY_URL", "http://localhost:8081");
++
+     public PaymentResponse submit(PaymentRequest req) {
+-        return httpClient.post("http://localhost:8081/pay", req);
++        return httpClient.post(BASE_URL + "/pay", req);
+     }
+ }

@@ -1,0 +1,17 @@
+# expected: fire
+# reason: Maps incoming OrderDto to Order entity but silently drops the auditFields sub-object, losing audit trail data.
+
+--- a/src/main/java/com/example/OrderMapper.java
++++ b/src/main/java/com/example/OrderMapper.java
+@@ -8,10 +8,9 @@ public class OrderMapper {
+ 
+     public Order toEntity(OrderDto dto) {
+         return Order.builder()
+             .id(dto.getId())
+             .customerId(dto.getCustomerId())
+             .items(mapItems(dto.getItems()))
+             .totalAmount(dto.getTotalAmount())
+-            .auditFields(mapAudit(dto.getAuditFields()))
+             .build();
+     }
+ }

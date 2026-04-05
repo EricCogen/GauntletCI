@@ -1,0 +1,20 @@
+# expected: fire
+# reason: Updates 3 fields of a record in 3 separate DB calls with no transaction, risking partial-write corruption on failure.
+
+--- a/src/main/java/com/example/UserProfileService.java
++++ b/src/main/java/com/example/UserProfileService.java
+@@ -10,10 +10,12 @@ public class UserProfileService {
+ 
+     public void updateProfile(int userId, ProfileDto dto) {
+-        try (var tx = dataSource.getConnection()) {
+-            tx.setAutoCommit(false);
+-            userRepo.updateName(tx, userId, dto.getName());
+-            userRepo.updateEmail(tx, userId, dto.getEmail());
+-            userRepo.updatePhone(tx, userId, dto.getPhone());
+-            tx.commit();
+-        }
++        userRepo.updateName(userId, dto.getName());
++        userRepo.updateEmail(userId, dto.getEmail());
++        userRepo.updatePhone(userId, dto.getPhone());
+     }
+ }

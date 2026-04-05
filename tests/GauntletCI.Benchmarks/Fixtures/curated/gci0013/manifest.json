@@ -1,0 +1,53 @@
+{
+  "source_pcg_rule": "",
+  "mapped_gci_rules": [
+    "GCI013"
+  ],
+  "description": "Observability and Debuggability: Detect loss of critical logs, traces, and correlation context.",
+  "fixtures": [
+    {
+      "id": "gci0013-01",
+      "diff_file": "01_true_positive_removed_error_log.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI013"
+      ],
+      "notes": "Removes the logger.error() call that was on the exception handling path, making failures invisible in production."
+    },
+    {
+      "id": "gci0013-02",
+      "diff_file": "02_true_positive_removed_correlation_id.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI013"
+      ],
+      "notes": "Removes correlationId from the structured log entry on the payment flow, breaking distributed trace correlation."
+    },
+    {
+      "id": "gci0013-03",
+      "diff_file": "03_false_positive_added_logging.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Adds additional console.log calls to an existing function — observability is improved not degraded."
+    },
+    {
+      "id": "gci0013-04",
+      "diff_file": "04_false_positive_new_debug_log.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Keeps all existing log statements and adds a new debug log for a new code path — no loss of observability."
+    },
+    {
+      "id": "gci0013-05",
+      "diff_file": "05_edge_removed_noisy_debug_log.diff",
+      "category": "edge-case",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Reduces log verbosity by removing a noisy debug log but all error and warn level logs remain intact."
+    }
+  ]
+}

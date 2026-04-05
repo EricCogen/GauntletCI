@@ -1,0 +1,25 @@
+# expected: fire
+# reason: Return type of exported GetUser changes from (User, error) to (UserResponse, error), breaking all callers that use User fields directly.
+
+--- a/user/service.go
++++ b/user/service.go
+@@ -3,9 +3,9 @@ package user
+ 
+-type User struct {
++type UserResponse struct {
+     ID   int
+     Name string
++    Href string
+ }
+ 
+-func GetUser(id int) (User, error) {
++func GetUser(id int) (UserResponse, error) {
+-    u, err := db.QueryUser(id)
++    u, err := db.QueryUser(id)
+     if err != nil {
+-        return User{}, err
++        return UserResponse{}, err
+     }
+-    return u, nil
++    return UserResponse{ID: u.ID, Name: u.Name, Href: fmt.Sprintf("/users/%d", u.ID)}, nil
+ }

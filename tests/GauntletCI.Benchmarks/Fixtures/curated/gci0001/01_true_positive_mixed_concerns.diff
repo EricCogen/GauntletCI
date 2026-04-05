@@ -1,0 +1,33 @@
+# expected: fire
+# reason: A single commit bundles two unrelated concerns: adding Redis caching to OrderService and renaming UserService to AccountService.
+
+--- a/src/Services/OrderService.cs
++++ b/src/Services/OrderService.cs
+@@ -1,6 +1,8 @@
+ using System.Collections.Generic;
++using Microsoft.Extensions.Caching.Memory;
+ 
+ public class OrderService
+ {
++    private readonly IMemoryCache _cache;
+     private readonly IOrderRepository _repo;
+@@ -10,6 +12,14 @@ public class OrderService
+     public Order GetOrder(int id)
+     {
+-        return _repo.GetById(id);
++        if (_cache.TryGetValue($"order:{id}", out Order cached))
++            return cached;
++        var order = _repo.GetById(id);
++        _cache.Set($"order:{id}", order, TimeSpan.FromMinutes(5));
++        return order;
+     }
+ }
+
+--- a/src/Services/UserService.cs
++++ b/src/Services/AccountService.cs
+@@ -1,5 +1,5 @@
+-public class UserService
++public class AccountService
+ {
+     public User GetUser(int id) => _repo.GetById(id);
+ }

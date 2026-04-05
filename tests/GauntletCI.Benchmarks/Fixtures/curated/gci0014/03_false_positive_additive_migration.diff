@@ -1,0 +1,21 @@
+# expected: do-not-fire
+# reason: Additive migration that adds a nullable column with no data changes — fully reversible by dropping the column.
+
+--- a/migrations/0046_add_preferred_language.go
++++ b/migrations/0046_add_preferred_language.go
+@@ -0,0 +1,17 @@
++package migrations
++
++import "database/sql"
++
++type Migration0046 struct{}
++
++func (m Migration0046) Up(db *sql.DB) error {
++    _, err := db.Exec(`ALTER TABLE users ADD COLUMN preferred_language VARCHAR(10) DEFAULT NULL`)
++    return err
++}
++
++func (m Migration0046) Down(db *sql.DB) error {
++    _, err := db.Exec(`ALTER TABLE users DROP COLUMN preferred_language`)
++    return err
++}

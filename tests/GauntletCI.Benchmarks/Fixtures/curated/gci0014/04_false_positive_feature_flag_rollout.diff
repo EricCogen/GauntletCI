@@ -1,0 +1,17 @@
+# expected: do-not-fire
+# reason: Feature flag controlled rollout with an explicit fallback to old code path when the flag is disabled.
+
+--- a/handler/checkout_handler.go
++++ b/handler/checkout_handler.go
+@@ -10,7 +10,13 @@ func (h *CheckoutHandler) Handle(ctx context.Context, req CheckoutRequest) (*CheckoutResponse, error) {
+-    return h.legacyCheckout(ctx, req)
++    if h.flags.IsEnabled(ctx, "new-checkout-v2") {
++        resp, err := h.newCheckout(ctx, req)
++        if err != nil {
++            // fall back gracefully on error
++            return h.legacyCheckout(ctx, req)
++        }
++        return resp, nil
++    }
++    return h.legacyCheckout(ctx, req)
+ }

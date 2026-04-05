@@ -1,0 +1,15 @@
+# expected: fire
+# reason: Removes the logger.error() call from the exception handler, making payment failures invisible in production logs.
+
+--- a/src/services/paymentService.ts
++++ b/src/services/paymentService.ts
+@@ -12,9 +12,7 @@ export class PaymentService {
+     async charge(amount: number, token: string): Promise<Receipt> {
+         try {
+             return await this.gateway.charge(amount, token);
+         } catch (err) {
+-            logger.error("Payment charge failed", { amount, token, err });
+             throw new PaymentError("Charge failed", { cause: err });
+         }
+     }
+ }

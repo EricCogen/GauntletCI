@@ -1,0 +1,20 @@
+# expected: fire
+# reason: Hardcodes the Stripe API base URL as a string literal rather than reading it from configuration.
+
+--- a/src/main/java/com/example/StripeClient.java
++++ b/src/main/java/com/example/StripeClient.java
+@@ -5,8 +5,8 @@ public class StripeClient {
+ 
+-    private final String baseUrl;
++    private static final String BASE_URL = "https://api.stripe.com/v1";
+ 
+-    public StripeClient(String baseUrl) {
+-        this.baseUrl = baseUrl;
++    public StripeClient() {
+     }
+ 
+     public ChargeResponse charge(ChargeRequest req) {
+-        return httpClient.post(baseUrl + "/charges", req);
++        return httpClient.post(BASE_URL + "/charges", req);
+     }
+ }

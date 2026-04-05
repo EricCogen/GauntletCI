@@ -1,0 +1,53 @@
+{
+  "source_pcg_rule": "",
+  "mapped_gci_rules": [
+    "GCI017"
+  ],
+  "description": "Production Readiness: Synthesis verdict — aggregate multiple high-severity risk signals.",
+  "fixtures": [
+    {
+      "id": "gci0017-01",
+      "diff_file": "01_true_positive_three_high_severity_issues.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI017"
+      ],
+      "notes": "Diff introduces SQL injection risk, removes error handling, and touches no test files — three high-severity signals."
+    },
+    {
+      "id": "gci0017-02",
+      "diff_file": "02_true_positive_secrets_todos_no_guards.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI017"
+      ],
+      "notes": "Hardcodes production API key, lacks null guards on user input, and ships with multiple TODO markers."
+    },
+    {
+      "id": "gci0017-03",
+      "diff_file": "03_false_positive_clean_single_concern.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Clean single-concern change with tests, proper error handling, no hardcoding — passes all production readiness checks."
+    },
+    {
+      "id": "gci0017-04",
+      "diff_file": "04_false_positive_well_scoped_refactor.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Well-scoped refactor with all tests passing, no security issues, and proper structured logging throughout."
+    },
+    {
+      "id": "gci0017-05",
+      "diff_file": "05_edge_minor_style_no_material_risk.diff",
+      "category": "edge-case",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "One minor style concern present but no material risk indicators — does not meet the production readiness bar."
+    }
+  ]
+}

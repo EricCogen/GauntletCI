@@ -1,0 +1,17 @@
+# expected: do-not-fire
+# reason: Docstring says 'normalize whitespace' and the implementation correctly strips and lowercases the string.
+
+--- a/utils/text_utils.py
++++ b/utils/text_utils.py
+@@ -1,6 +1,13 @@
+ def normalize_whitespace(text: str) -> str:
+-    """Placeholder for text normalization."""
+-    return text
++    """Normalize whitespace: strip leading/trailing spaces and lowercase the result.
++
++    Returns:
++        str: The normalized string.
++    """
++    if text is None:
++        return ""
++    return " ".join(text.strip().lower().split())

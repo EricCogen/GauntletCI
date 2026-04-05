@@ -10,12 +10,12 @@ namespace GauntletCI.Benchmarks;
 public sealed class CuratedFixtureStructureTests
 {
     [Fact]
-    public void Load_Gci0001_ReturnsAllTwelveFixtures()
+    public void Load_Gci0001_ReturnsAllFiveFixtures()
     {
         var (manifest, diffs) = FixtureLoader.Load("gci0001");
 
-        Assert.Equal(12, manifest.Fixtures.Count);
-        Assert.Equal(12, diffs.Count);
+        Assert.Equal(5, manifest.Fixtures.Count);
+        Assert.Equal(5, diffs.Count);
     }
 
     [Fact]
@@ -23,19 +23,15 @@ public sealed class CuratedFixtureStructureTests
     {
         var (manifest, _) = FixtureLoader.Load("gci0001");
 
-        Assert.Contains("GCI006", manifest.MappedGciRules);
-        Assert.Contains("GCI005", manifest.MappedGciRules);
+        Assert.Contains("GCI001", manifest.MappedGciRules);
     }
 
     [Theory]
     [InlineData("gci0001-01", "fire")]
     [InlineData("gci0001-02", "fire")]
-    [InlineData("gci0001-03", "fire")]
+    [InlineData("gci0001-03", "do-not-fire")]
     [InlineData("gci0001-04", "do-not-fire")]
-    [InlineData("gci0001-05", "do-not-fire")]
-    [InlineData("gci0001-07", "fire")]
-    [InlineData("gci0001-11", "do-not-fire")]
-    [InlineData("gci0001-12", "do-not-fire")]
+    [InlineData("gci0001-05", "fire")]
     public void Manifest_ExpectedOutcome_MatchesDiffHeader(string fixtureId, string expectedOutcome)
     {
         var (manifest, diffs) = FixtureLoader.Load("gci0001");
@@ -50,8 +46,8 @@ public sealed class CuratedFixtureStructureTests
 
     [Theory]
     [InlineData("gci0001-01")]
+    [InlineData("gci0001-03")]
     [InlineData("gci0001-04")]
-    [InlineData("gci0001-12")]
     public void StripHeader_RemovesCommentLines_LeavingValidUnifiedDiff(string fixtureId)
     {
         var (_, diffs) = FixtureLoader.Load("gci0001");
@@ -65,7 +61,7 @@ public sealed class CuratedFixtureStructureTests
     [Theory]
     [InlineData("gci0001-01")]
     [InlineData("gci0001-04")]
-    [InlineData("gci0001-08")]
+    [InlineData("gci0001-05")]
     public void PromptBuilder_ProducesNonEmptySystemPrompt_FromCuratedDiff(string fixtureId)
     {
         var (_, diffs) = FixtureLoader.Load("gci0001");

@@ -1,0 +1,55 @@
+{
+  "source_pcg_rule": "",
+  "mapped_gci_rules": [
+    "GCI012"
+  ],
+  "description": "Security Risk: Detect introduced vulnerabilities or weakened security safeguards.",
+  "fixtures": [
+    {
+      "id": "gci0012-01",
+      "diff_file": "01_true_positive_sql_injection.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI012"
+      ],
+      "notes": "Concatenates user-supplied username directly into a SQL query string, introducing SQL injection vulnerability."
+    },
+    {
+      "id": "gci0012-02",
+      "diff_file": "02_true_positive_plaintext_password.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI012"
+      ],
+      "notes": "Stores password in plaintext in the database with no hashing, violating basic security requirements."
+    },
+    {
+      "id": "gci0012-03",
+      "diff_file": "03_false_positive_parameterized_query.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Uses parameterized query with psycopg2 %s placeholders — user input is safely separated from SQL."
+    },
+    {
+      "id": "gci0012-04",
+      "diff_file": "04_false_positive_bcrypt_hashing.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Uses bcrypt.hashpw() for password hashing before storage — proper security practice."
+    },
+    {
+      "id": "gci0012-05",
+      "diff_file": "05_edge_incomplete_sanitization.diff",
+      "category": "edge-case",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI012"
+      ],
+      "notes": "Sanitizes input by stripping quotes but doesn't handle SQL comment injection via --, leaving a bypass vector."
+    }
+  ]
+}

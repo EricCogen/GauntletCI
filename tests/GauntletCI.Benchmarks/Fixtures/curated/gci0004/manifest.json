@@ -1,0 +1,55 @@
+{
+  "source_pcg_rule": "",
+  "mapped_gci_rules": [
+    "GCI004"
+  ],
+  "description": "Breaking Change Risk: Detect caller-facing contract breaks and integration risk.",
+  "fixtures": [
+    {
+      "id": "gci0004-01",
+      "diff_file": "01_true_positive_removed_parameter.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI004"
+      ],
+      "notes": "Removes the 'timeout int' parameter from the exported function GetUser, breaking all existing callers."
+    },
+    {
+      "id": "gci0004-02",
+      "diff_file": "02_true_positive_return_type_change.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI004"
+      ],
+      "notes": "Exported function return type changes from (User, error) to (UserResponse, error), breaking callers that reference User fields."
+    },
+    {
+      "id": "gci0004-03",
+      "diff_file": "03_false_positive_variadic_option.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Adds a new optional parameter via the variadic options pattern — all existing call sites remain valid."
+    },
+    {
+      "id": "gci0004-04",
+      "diff_file": "04_false_positive_new_function.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Adds a brand-new exported function without modifying any existing function signatures or types."
+    },
+    {
+      "id": "gci0004-05",
+      "diff_file": "05_edge_struct_field_rename.diff",
+      "category": "edge-case",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI004"
+      ],
+      "notes": "Renames exported struct field 'ID' to 'UserId', silently breaking JSON marshaling contracts for all API consumers."
+    }
+  ]
+}

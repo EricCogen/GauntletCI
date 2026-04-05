@@ -1,0 +1,16 @@
+# expected: fire
+# reason: Calls asyncMethod().Result in an async context, which deadlocks on ASP.NET's synchronization context.
+
+--- a/src/Controllers/ReportController.cs
++++ b/src/Controllers/ReportController.cs
+@@ -10,8 +10,8 @@ public class ReportController : ControllerBase
+ 
+     [HttpGet("{id}")]
+-    public async Task<IActionResult> GetReport(int id)
++    public IActionResult GetReport(int id)
+     {
+-        var report = await _reportService.GenerateAsync(id);
++        var report = _reportService.GenerateAsync(id).Result;
+         return Ok(report);
+     }
+ }

@@ -1,0 +1,14 @@
+# expected: fire
+# reason: Adds a FIXME comment explicitly acknowledging a known crash on empty input and ships it anyway to meet a deadline.
+
+--- a/src/parsers/commandParser.ts
++++ b/src/parsers/commandParser.ts
+@@ -3,6 +3,9 @@ export function parseCommand(input: string): Command {
++    // FIXME: this crashes on empty input, shipping anyway for deadline
++    // Tracked in JIRA: APP-4521
+     const parts = input.split(" ");
+     return {
+         verb: parts[0],
+         args: parts.slice(1),
+     };
+ }

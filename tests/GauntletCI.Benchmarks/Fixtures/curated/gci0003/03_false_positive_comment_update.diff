@@ -1,0 +1,13 @@
+# expected: do-not-fire
+# reason: Only the docstring and inline comment are updated; no logic, control flow, or observable behavior changes.
+
+--- a/src/utils/formatter.ts
++++ b/src/utils/formatter.ts
+@@ -1,7 +1,7 @@
+-// Format a currency value to 2 decimal places
++// Format a currency value to 2 decimal places using locale-aware formatting
+ export function formatCurrency(amount: number): string {
+-    // simple toFixed
++    // uses toFixed for consistent output across environments
+     return amount.toFixed(2);
+ }

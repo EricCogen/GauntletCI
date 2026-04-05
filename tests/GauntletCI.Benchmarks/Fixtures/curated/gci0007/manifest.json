@@ -1,0 +1,55 @@
+{
+  "source_pcg_rule": "",
+  "mapped_gci_rules": [
+    "GCI007"
+  ],
+  "description": "Error Handling Integrity: Detect swallowed exceptions and lost error context.",
+  "fixtures": [
+    {
+      "id": "gci0007-01",
+      "diff_file": "01_true_positive_swallowed_ioerror.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI007"
+      ],
+      "notes": "Catch block contains only 'pass', silently swallowing an IOError with no logging or re-raise."
+    },
+    {
+      "id": "gci0007-02",
+      "diff_file": "02_true_positive_lost_traceback.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI007"
+      ],
+      "notes": "Catches Exception and raises a new RuntimeError without chaining, destroying the original traceback."
+    },
+    {
+      "id": "gci0007-03",
+      "diff_file": "03_false_positive_log_and_reraise.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Catch block logs the full traceback with logger.exception() and then re-raises the original error."
+    },
+    {
+      "id": "gci0007-04",
+      "diff_file": "04_false_positive_specific_handled.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Specific ValueError caught, handled gracefully with a user-friendly message and logged at WARNING level."
+    },
+    {
+      "id": "gci0007-05",
+      "diff_file": "05_edge_debug_level_critical_path.diff",
+      "category": "edge-case",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI007"
+      ],
+      "notes": "Error is logged but only at DEBUG level on a critical payment processing path where ERROR is required."
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+# expected: do-not-fire
+# reason: Removes old dead code that was commented out and replaces it with a clean, tested implementation.
+
+--- a/src/services/notificationService.ts
++++ b/src/services/notificationService.ts
+@@ -5,20 +5,12 @@ export class NotificationService {
+-    // OLD implementation — kept for reference, never called
+-    // private async sendV1(userId: string, msg: string) {
+-    //   const user = await db.query("SELECT email FROM users WHERE id = " + userId);
+-    //   await smtp.send(user.email, msg);
+-    // }
+-
+-    // TODO: replace with sendV2 once tested
+-    async send(userId: string, message: string): Promise<void> {
+-        // placeholder
+-    }
++    async send(userId: string, message: string): Promise<void> {
++        const user = await this.userRepo.getById(userId);
++        if (!user) throw new NotFoundError(`User ${userId} not found`);
++        await this.emailClient.send({
++            to: user.email,
++            subject: "Notification",
++            body: message,
++        });
++    }
+ }

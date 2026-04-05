@@ -1,0 +1,55 @@
+{
+  "source_pcg_rule": "",
+  "mapped_gci_rules": [
+    "GCI011"
+  ],
+  "description": "Performance Risk: Detect runtime performance regressions such as N+1 queries and hot-path inefficiencies.",
+  "fixtures": [
+    {
+      "id": "gci0011-01",
+      "diff_file": "01_true_positive_query_inside_loop.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI011"
+      ],
+      "notes": "Calls .Where().ToList() inside a foreach loop over a large product catalog, creating an N+1 query pattern."
+    },
+    {
+      "id": "gci0011-02",
+      "diff_file": "02_true_positive_findall_in_loop.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI011"
+      ],
+      "notes": "Calls repository.FindAll() (full table scan) inside a per-item processing loop, causing O(n²) database calls."
+    },
+    {
+      "id": "gci0011-03",
+      "diff_file": "03_false_positive_dict_lookup_init.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Single O(1) dictionary lookup in a non-hot initialization path — no performance concern."
+    },
+    {
+      "id": "gci0011-04",
+      "diff_file": "04_false_positive_in_memory_cache.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Adds an in-memory cache that reduces repeated expensive computations — this is a performance improvement."
+    },
+    {
+      "id": "gci0011-05",
+      "diff_file": "05_edge_count_instead_of_any.diff",
+      "category": "edge-case",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI011"
+      ],
+      "notes": "Uses LINQ .Count() > 0 instead of .Any() inside a loop, causing unnecessary full enumeration each iteration."
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+# expected: fire
+# reason: Concatenates user-supplied username directly into a SQL query string, introducing a SQL injection vulnerability.
+
+--- a/repositories/user_repository.py
++++ b/repositories/user_repository.py
+@@ -5,7 +5,7 @@ class UserRepository:
+ 
+     def find_by_username(self, username: str):
+-        return self.db.execute(
+-            "SELECT * FROM users WHERE username = %s", (username,)
+-        ).fetchone()
++        query = "SELECT * FROM users WHERE username = '" + username + "'"
++        return self.db.execute(query).fetchone()
