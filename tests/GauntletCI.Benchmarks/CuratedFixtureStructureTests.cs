@@ -119,6 +119,21 @@ public sealed class CuratedFixtureStructureTests
         });
     }
 
+    [Fact]
+    public void Gci0015_StateSensitiveFixtures_DeclareRuntimeConditions()
+    {
+        var (manifest, _) = FixtureLoader.Load("gci0015");
+
+        Assert.True(manifest.Fixtures.Count >= 5, "Expected expanded state-sensitive coverage in gci0015.");
+        Assert.All(manifest.Fixtures, fixture =>
+        {
+            Assert.False(string.IsNullOrWhiteSpace(fixture.RuntimeStateCondition),
+                $"Fixture {fixture.Id} must define runtime_state_condition.");
+        });
+        Assert.True(manifest.Fixtures.Count(f => f.ShouldFire) >= 3,
+            "Expected at least three true-positive state-sensitive fixtures in gci0015.");
+    }
+
     private static IEnumerable<string> GetCuratedFixtureSetNames()
     {
         string curatedRoot = Path.Combine(AppContext.BaseDirectory, "Fixtures", "curated");
