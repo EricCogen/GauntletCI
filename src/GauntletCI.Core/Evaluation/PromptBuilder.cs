@@ -8,7 +8,7 @@ public sealed class PromptBuilder
         public string BuildSystemPrompt(string fullRulesText, string? singleRule)
     {
                 string ruleHint = string.IsNullOrWhiteSpace(singleRule)
-                        ? "Evaluate all rules GCI001 through GCI018."
+                        ? "Evaluate all rules GCI001 through GCI020."
                         : $"Evaluate only rule {singleRule}. Omit all other rules.";
 
                 return $@"GauntletCI is a pre-commit review system. You run rigorous engineering review on staged or full changesets before commit. You are direct, precise, evidence-based, and intolerant of vague criticism.

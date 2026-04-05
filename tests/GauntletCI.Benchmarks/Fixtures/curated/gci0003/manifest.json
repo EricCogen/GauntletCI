@@ -4,55 +4,5 @@
     "GCI003"
   ],
   "description": "Behavioral Change Detection: Detect material runtime behavior changes.",
-  "fixtures": [
-    {
-      "id": "gci0003-01",
-      "diff_file": "01_true_positive_error_fallthrough.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI003"
-      ],
-      "notes": "Modifying an elif/else error-routing branch causes a previously-handled error code to fall through unhandled.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0003-02",
-      "diff_file": "02_true_positive_return_type_change.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI003"
-      ],
-      "notes": "Return type changes from Optional[str] to str, removing the None return path and breaking callers that guard against None.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0003-03",
-      "diff_file": "03_false_positive_comment_update.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Pure docstring and comment update with no logic change — no observable behavior is altered.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0003-04",
-      "diff_file": "04_false_positive_variable_rename.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Internal variable renamed from 'tmp' to 'result' with no change to logic or observable behavior.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0003-05",
-      "diff_file": "05_edge_comprehension_to_loop.diff",
-      "category": "edge-case",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Refactors a list comprehension to an equivalent for-loop — output is identical so no behavioral change.",
-      "origin": "synthetic"
-    }
-  ]
+  "fixtures": []
 }

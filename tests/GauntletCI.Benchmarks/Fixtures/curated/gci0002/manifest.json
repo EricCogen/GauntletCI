@@ -4,57 +4,5 @@
     "GCI002"
   ],
   "description": "Goal Alignment: Verify implementation behavior aligns with apparent intent.",
-  "fixtures": [
-    {
-      "id": "gci0002-01",
-      "diff_file": "01_true_positive_unrelated_caching.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI002"
-      ],
-      "notes": "Commit says 'fix null check' but diff adds unrelated Redis caching logic instead of addressing null safety.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0002-02",
-      "diff_file": "02_true_positive_missing_validation.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI002"
-      ],
-      "notes": "Method is renamed to ValidateAndSave but the validation logic is absent — it only saves without validating.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0002-03",
-      "diff_file": "03_false_positive_retry_logic.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Method named 'add retry logic' and the diff clearly implements exponential backoff retry as advertised.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0002-04",
-      "diff_file": "04_false_positive_normalize_whitespace.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Docstring says 'normalize whitespace' and the implementation correctly trims and lowercases the string.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0002-05",
-      "diff_file": "05_edge_partial_implementation.diff",
-      "category": "edge-case",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI002"
-      ],
-      "notes": "Some validation is added but the documented requirement lists four checks and only two are implemented.",
-      "origin": "synthetic"
-    }
-  ]
+  "fixtures": []
 }

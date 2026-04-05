@@ -4,57 +4,5 @@
     "GCI014"
   ],
   "description": "Rollback Safety: Detect irreversible deployment and rollback behavior in migrations and data paths.",
-  "fixtures": [
-    {
-      "id": "gci0014-01",
-      "diff_file": "01_true_positive_drop_column_migration.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI014"
-      ],
-      "notes": "Migration drops the 'legacy_code' column from the orders table — this is irreversible once deployed.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0014-02",
-      "diff_file": "02_true_positive_no_backward_compat_read.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI014"
-      ],
-      "notes": "Writes user data to a new blob storage path without maintaining a backward-compatible read from the old path.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0014-03",
-      "diff_file": "03_false_positive_additive_migration.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Additive migration that adds a nullable column with no data changes — fully reversible.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0014-04",
-      "diff_file": "04_false_positive_feature_flag_rollout.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Feature flag controlled rollout with explicit fallback to old code path when the flag is disabled.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0014-05",
-      "diff_file": "05_edge_column_rename_migration.diff",
-      "category": "edge-case",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI014"
-      ],
-      "notes": "Migration renames a column via drop-and-add which is destructive even though data appears preserved.",
-      "origin": "synthetic"
-    }
-  ]
+  "fixtures": []
 }

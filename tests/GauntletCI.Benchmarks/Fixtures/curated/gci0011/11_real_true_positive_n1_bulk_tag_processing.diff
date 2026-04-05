@@ -1,0 +1,25 @@
+# origin: real
+# source: https://github.com/anchapin/ResumeAI/pull/1135
+# expected: fire
+# reason: Bulk-operation tag endpoint issues one SELECT per tag name inside a loop instead of a single IN query.
+
+--- a/resume-api/api/advanced_routes.py
++++ b/resume-api/api/advanced_routes.py
+@@ -992,15 +992,10 @@ async def _process_bulk_operation(
+         return True, ""
+ 
+     if operation == "tag" and tags:
+-        existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(tags)))
+-        existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
+         for tag_name in tags:
++            tag = await db.execute(select(Tag).where(Tag.name == tag_name))
++            existing_tag = tag.scalar_one_or_none()
+-            existing_tag = existing_tags_dict.get(tag_name)
+             if not existing_tag:
+                 existing_tag = Tag(name=tag_name)
+                 db.add(existing_tag)
+                 await db.flush()
+-            if existing_tag not in resume.tags:
+-                resume.tags.append(existing_tag)
++            resume.tags.append(existing_tag)
+         return True, ""

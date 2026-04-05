@@ -10,12 +10,12 @@ namespace GauntletCI.Benchmarks;
 public sealed class CuratedFixtureStructureTests
 {
     [Fact]
-    public void Load_Gci0001_ReturnsAllFiveFixtures()
+    public void Load_Gci0001_ReturnsFixtureManifestAndDiffs()
     {
         var (manifest, diffs) = FixtureLoader.Load("gci0001");
 
-        Assert.Equal(5, manifest.Fixtures.Count);
-        Assert.Equal(5, diffs.Count);
+        Assert.Equal(manifest.Fixtures.Count, diffs.Count);
+        Assert.All(manifest.Fixtures, f => Assert.True(diffs.ContainsKey(f.Id), $"Missing diff content for fixture {f.Id}."));
     }
 
     [Fact]
@@ -26,57 +26,57 @@ public sealed class CuratedFixtureStructureTests
         Assert.Contains("GCI001", manifest.MappedGciRules);
     }
 
-    [Theory]
-    [InlineData("gci0001-01", "fire")]
-    [InlineData("gci0001-02", "fire")]
-    [InlineData("gci0001-03", "do-not-fire")]
-    [InlineData("gci0001-04", "do-not-fire")]
-    [InlineData("gci0001-05", "fire")]
-    public void Manifest_ExpectedOutcome_MatchesDiffHeader(string fixtureId, string expectedOutcome)
+    [Fact]
+    public void Manifest_ExpectedOutcome_MatchesDiffHeader_ForAllGci0001Fixtures()
     {
         var (manifest, diffs) = FixtureLoader.Load("gci0001");
 
-        BenchmarkFixture fixture = manifest.Fixtures.Single(f => f.Id == fixtureId);
-        string headerOutcome = FixtureLoader.ReadExpectedOutcome(diffs[fixtureId])!;
-
-        // Manifest and diff header must agree
-        Assert.Equal(expectedOutcome, fixture.ExpectedOutcome);
-        Assert.Equal(expectedOutcome, headerOutcome);
+        foreach (BenchmarkFixture fixture in manifest.Fixtures)
+        {
+            string headerOutcome = FixtureLoader.ReadExpectedOutcome(diffs[fixture.Id])!;
+            Assert.Equal(fixture.ExpectedOutcome, headerOutcome);
+        }
     }
 
-    [Theory]
-    [InlineData("gci0001-01")]
-    [InlineData("gci0001-03")]
-    [InlineData("gci0001-04")]
-    public void StripHeader_RemovesCommentLines_LeavingValidUnifiedDiff(string fixtureId)
+    [Fact]
+    public void StripHeader_RemovesCommentLines_LeavingValidUnifiedDiff()
     {
-        var (_, diffs) = FixtureLoader.Load("gci0001");
+        var (manifest, diffs) = FixtureLoader.Load("gci0001");
 
-        string stripped = FixtureLoader.StripHeader(diffs[fixtureId]);
-        string firstLine = stripped.TrimStart().Split('\n').First(l => !string.IsNullOrWhiteSpace(l));
+        foreach (BenchmarkFixture fixture in manifest.Fixtures)
+        {
+            string stripped = FixtureLoader.StripHeader(diffs[fixture.Id]);
+            string firstLine = stripped.TrimStart().Split('\n').First(l => !string.IsNullOrWhiteSpace(l));
 
-        Assert.StartsWith("---", firstLine);
+            Assert.StartsWith("---", firstLine);
+        }
     }
 
-    [Theory]
-    [InlineData("gci0001-01")]
-    [InlineData("gci0001-04")]
-    [InlineData("gci0001-05")]
-    public void PromptBuilder_ProducesNonEmptySystemPrompt_FromCuratedDiff(string fixtureId)
+    [Fact]
+    public void PromptBuilder_ProducesNonEmptySystemPrompt_FromCuratedDiffs()
     {
-        var (_, diffs) = FixtureLoader.Load("gci0001");
-
-        string diff = FixtureLoader.StripHeader(diffs[fixtureId]);
         PromptBuilder pb = new();
-        string systemPrompt = pb.BuildSystemPrompt("(rules placeholder)", singleRule: null);
-        string userPrompt = pb.BuildUserPrompt(diff);
+        int checkedDiffs = 0;
+        foreach (string fixtureSetName in GetCuratedFixtureSetNames())
+        {
+            var (_, diffs) = FixtureLoader.Load(fixtureSetName);
+            foreach (string rawDiff in diffs.Values)
+            {
+                string diff = FixtureLoader.StripHeader(rawDiff);
+                string systemPrompt = pb.BuildSystemPrompt("(rules placeholder)", singleRule: null);
+                string userPrompt = pb.BuildUserPrompt(diff);
 
-        Assert.NotEmpty(systemPrompt);
-        Assert.Contains("GCI001", systemPrompt);
-        Assert.NotEmpty(userPrompt);
-        // User prompt should contain at least one diff marker
-        Assert.True(userPrompt.Contains("---") || userPrompt.Contains("@@"),
-            "User prompt should contain unified diff content");
+                Assert.NotEmpty(systemPrompt);
+                Assert.Contains("GCI001", systemPrompt);
+                Assert.NotEmpty(userPrompt);
+                Assert.True(userPrompt.Contains("---") || userPrompt.Contains("@@"),
+                    "User prompt should contain unified diff content");
+
+                checkedDiffs++;
+            }
+        }
+
+        Assert.True(checkedDiffs > 0, "Expected at least one curated diff to validate prompt assembly.");
     }
 
     [Theory]
@@ -129,14 +129,25 @@ public sealed class CuratedFixtureStructureTests
     [Fact]
     public void AllCuratedDiffs_HaveValidExpectedHeader()
     {
-        var (manifest, diffs) = FixtureLoader.Load("gci0001");
-
-        foreach (BenchmarkFixture fixture in manifest.Fixtures)
+        foreach (string fixtureSetName in GetCuratedFixtureSetNames())
         {
-            string? headerOutcome = FixtureLoader.ReadExpectedOutcome(diffs[fixture.Id]);
-            Assert.True(
-                headerOutcome == "fire" || headerOutcome == "do-not-fire",
-                $"Fixture {fixture.Id} has invalid or missing # expected header: '{headerOutcome}'");
+            var (manifest, diffs) = FixtureLoader.Load(fixtureSetName);
+            foreach (BenchmarkFixture fixture in manifest.Fixtures)
+            {
+                string? headerOutcome = FixtureLoader.ReadExpectedOutcome(diffs[fixture.Id]);
+                Assert.True(
+                    headerOutcome == "fire" || headerOutcome == "do-not-fire",
+                    $"Fixture {fixture.Id} has invalid or missing # expected header: '{headerOutcome}'");
+            }
+        }
+    }
+
+    private static IEnumerable<string> GetCuratedFixtureSetNames()
+    {
+        string curatedRoot = Path.Combine(AppContext.BaseDirectory, "Fixtures", "curated");
+        foreach (string dir in Directory.EnumerateDirectories(curatedRoot))
+        {
+            yield return Path.GetFileName(dir);
         }
     }
 

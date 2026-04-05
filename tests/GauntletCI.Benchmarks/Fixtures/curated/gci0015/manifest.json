@@ -4,57 +4,5 @@
     "GCI015"
   ],
   "description": "Data Integrity Risk: Detect silent corruption, mapping errors, and partial-write hazards.",
-  "fixtures": [
-    {
-      "id": "gci0015-01",
-      "diff_file": "01_true_positive_no_transaction.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI015"
-      ],
-      "notes": "Updates 3 fields of a record in 3 separate DB calls with no transaction, risking partial-write corruption.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0015-02",
-      "diff_file": "02_true_positive_dropped_audit_fields.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI015"
-      ],
-      "notes": "Maps incoming DTO to entity but silently drops the auditFields sub-object, losing audit trail data.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0015-03",
-      "diff_file": "03_false_positive_wrapped_in_transaction.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Wraps all DB updates in a transaction with proper rollback on any exception — data integrity preserved.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0015-04",
-      "diff_file": "04_false_positive_complete_field_mapping.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Entity mapper explicitly maps every field including audit metadata — no data is dropped.",
-      "origin": "synthetic"
-    },
-    {
-      "id": "gci0015-05",
-      "diff_file": "05_edge_commit_on_specific_error.diff",
-      "category": "edge-case",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI015"
-      ],
-      "notes": "Uses a transaction but catches the exception and commits anyway on a specific error code, defeating rollback.",
-      "origin": "synthetic"
-    }
-  ]
+  "fixtures": []
 }

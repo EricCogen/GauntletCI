@@ -1,0 +1,19 @@
+# origin: real
+# source: https://github.com/Shooshpanius/Pullenti.Core/pull/4
+# expected: fire
+# reason: Blocks the async thread-pool by calling .Result on a Task inside an ASP.NET controller, causing deadlock under the synchronization context.
+
+--- a/PullentiAPI/Controllers/NerController.cs
++++ b/PullentiAPI/Controllers/NerController.cs
+@@ -23,10 +23,10 @@ public class Ner() : ControllerBase
+     [HttpPost("getNer")]
+     [Authorize(AuthenticationSchemes = "BasicAuthentication")]
+ 
+-    public async Task<string> getNerPOST([FromBody] RequestData requestData)
++    public string getNerPOST([FromBody] RequestData requestData)
+     {
+-        return await getNerAsync(requestData.text);
++        Task<string> nerAsync = getNerAsync(requestData.text);
++        return nerAsync.Result;
+     }
+ }

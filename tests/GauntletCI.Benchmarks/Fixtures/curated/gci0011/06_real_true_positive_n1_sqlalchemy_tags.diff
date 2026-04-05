@@ -1,0 +1,23 @@
+# origin: real
+# source: https://github.com/anchapin/ResumeAI/pull/1135
+# expected: fire
+# reason: Individual SQLAlchemy SELECT issued per tag inside a for-loop, creating N+1 async database queries.
+
+--- a/resume-api/api/advanced_routes.py
++++ b/resume-api/api/advanced_routes.py
+@@ -100,15 +100,10 @@ async def create_resume(
+ 
+         # Add tags
+         if request.tags:
+-            existing_tags_result = await db.execute(select(Tag).where(Tag.name.in_(request.tags)))
+-            existing_tags_dict = {t.name: t for t in existing_tags_result.scalars().all()}
+             for tag_name in request.tags:
++                tag = await db.execute(select(Tag).where(Tag.name == tag_name))
++                existing_tag = tag.scalar_one_or_none()
+-                existing_tag = existing_tags_dict.get(tag_name)
+                 if not existing_tag:
+                     existing_tag = Tag(name=tag_name)
+                     db.add(existing_tag)
+                     await db.flush()
+-                    existing_tags_dict[tag_name] = existing_tag
+                 resume.tags.append(existing_tag)

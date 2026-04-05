@@ -1,0 +1,17 @@
+# origin: real
+# source: https://github.com/Slivoc/crm/pull/111
+# expected: fire
+# reason: Exchange rate API key hardcoded as string literal in config; inline comment does not remove the credential.
+
+--- a/app.py
++++ b/app.py
+@@ -96,8 +96,8 @@
+ app.config['TICKETS_HUB_API_KEY'] = os.getenv('TICKETS_HUB_API_KEY', '')
+ app.config['TICKETS_BASE_URL'] = os.getenv('TICKETS_BASE_URL', '')
+ app.config['APOLLO_BASE_URL'] = 'https://api.apollo.io/v1'
+-app.config['EXCHANGE_RATE_API_KEY'] = os.getenv('EXCHANGE_RATE_API_KEY', '')
++app.config['EXCHANGE_RATE_API_KEY'] = 'dca912446be60b1b0aa83a4f'  # Get this from exchangerate-api.com
+ app.config['SESSION_TYPE'] = 'filesystem'
+-app.secret_key = os.getenv('SECRET_KEY', app.config['SECRET_KEY'])
++app.secret_key = 'your-secret-key-here'
+ Session(app)

@@ -1,0 +1,20 @@
+# origin: real
+# source: https://github.com/syabiladham20/ERP-SLH/pull/417
+# expected: fire
+# reason: DailyLog.query.filter_by() issued for every row inside a spreadsheet-save loop, creating N+1 queries.
+
+--- a/app.py
++++ b/app.py
+@@ -3226,10 +3226,11 @@ def flock_spreadsheet_save(flock_id):
+                     continue
+ 
+                 # Check if it exists
++                log = DailyLog.query.filter_by(flock_id=flock_id, date=log_date).first()
+-                log = existing_logs_by_date.get(log_date)
+                 if not log:
+                     log = DailyLog(flock_id=flock_id, date=log_date)
+                     db.session.add(log)
+-                    existing_logs_by_date[log_date] = log
+                     is_new = True
+             else:
+                 if log_id not in logs:

@@ -1,0 +1,20 @@
+# origin: real
+# source: https://github.com/SameerAliKhan-git/IntyerviewBit/pull/4
+# expected: do-not-fire
+# reason: API key is read from environment variable; missing key raises EnvironmentError at startup with no hardcoded fallback.
+
+--- a/interviewace/list_models.py
++++ b/interviewace/list_models.py
+@@ -1,6 +1,11 @@
+ import os
+ from google import genai
+-client = genai.Client(api_key="AIzaSyC9--PzoZPrSCIsRO3PcwWCEIYwcQVwT34")
++
++api_key = os.environ.get("GEMINI_API_KEY")
++if not api_key:
++    raise EnvironmentError("GEMINI_API_KEY environment variable is not set. "
++                           "Copy .env.example to .env and add your key.")
++client = genai.Client(api_key=api_key)
+ for m in client.models.list():
+     if 'bidi' in m.name or 'live' in m.name:
+         print(m.name)

@@ -1,0 +1,39 @@
+{
+  "source_pcg_rule": "",
+  "mapped_gci_rules": [
+    "GCI019"
+  ],
+  "description": "Duplication and DRY Discipline: Detect copy-paste logic growth that increases divergence and maintenance risk.",
+  "fixtures": [
+    {
+      "id": "gci0019-01",
+      "diff_file": "01_real_false_positive_duplicate_constants_extracted.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Refactor replaces duplicated literal arrays and local macro blocks with shared constants/macros, reducing duplication.",
+      "origin": "real",
+      "source_url": "https://github.com/z-alzayer/PixelPix3D/pull/22"
+    },
+    {
+      "id": "gci0019-02",
+      "diff_file": "02_real_false_positive_path_validation_deduplicated.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Repeated path validation and error-handling blocks are consolidated into a single helper used by multiple API endpoints.",
+      "origin": "real",
+      "source_url": "https://github.com/mkaraki/cbzViewer/pull/57"
+    },
+    {
+      "id": "gci0019-03",
+      "diff_file": "03_real_false_positive_duplicate_tool_removed.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "A duplicated tool implementation file is removed as part of duplication cleanup.",
+      "origin": "real",
+      "source_url": "https://github.com/hxcan/sisterfuture/pull/249"
+    }
+  ]
+}

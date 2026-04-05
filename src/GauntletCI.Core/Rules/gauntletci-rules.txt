@@ -213,5 +213,27 @@ Must Not Do:
 Output Requirement:
 - Tie accountability concern to concrete unresolved risk.
 
+GCI019 - Duplication and DRY Discipline
+Intent:
+Detect copy-paste logic growth that increases divergence, maintenance burden, and latent defect risk.
+Must Do:
+- Flag materially duplicated logic introduced across multiple files or functions in the same diff.
+- Flag duplicated blocks that already show drift (inconsistent guards, retries, validation, or error handling).
+Must Not Do:
+- Do not flag intentional boundary duplication (small adapters, protocol shims, generated code) when risk is minimal.
+Output Requirement:
+- Cite at least two duplicated code locations and the concrete divergence or maintenance risk.
+
+GCI020 - Dependency and Supply Chain Risk
+Intent:
+Detect dependency changes that materially increase security, reliability, or operational risk.
+Must Do:
+- Flag vulnerable or suspicious dependency additions/changes (unsafe versions, unpinned ranges, mutable git refs, removed lock/integrity controls).
+- Flag compatibility-risky version changes without evidence of safe migration handling.
+Must Not Do:
+- Do not flag routine low-risk upgrades that remain pinned and preserve lockfile/integrity guarantees.
+Output Requirement:
+- Identify the exact dependency change and a concrete downstream risk with actionable mitigation.
+
 Final Instruction
 Return only a JSON array. Omit non-fired rules. Every emitted finding must be specific, evidenced, and actionable.

@@ -13,7 +13,7 @@ public static class FixtureLoader
     };
 
     /// <summary>
-    /// Loads the manifest and all diff content for a named fixture set (e.g. "pcg0001").
+    /// Loads the manifest and all diff content for a named fixture set (e.g. "gci0001").
     /// Returns (manifest, dictionary of fixture id → diff text).
     /// </summary>
     public static (BenchmarkManifest Manifest, IReadOnlyDictionary<string, string> Diffs)
@@ -26,6 +26,7 @@ public static class FixtureLoader
         string json = File.ReadAllText(manifestPath);
         BenchmarkManifest manifest = JsonSerializer.Deserialize<BenchmarkManifest>(json, JsonOptions)
             ?? throw new InvalidOperationException($"Failed to deserialize manifest: {manifestPath}");
+        manifest = manifest with { Fixtures = manifest.Fixtures ?? Array.Empty<BenchmarkFixture>() };
 
         string fixtureDir = Path.GetDirectoryName(manifestPath)!;
         Dictionary<string, string> diffs = [];

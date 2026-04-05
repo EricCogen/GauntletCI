@@ -1,0 +1,51 @@
+# origin: real
+# source: https://github.com/mkaraki/cbzViewer/pull/57
+# expected: do-not-fire
+# reason: Repeated get_real_path/get_virtual_path validation logic is extracted into a shared helper and reused across endpoints.
+
+diff --git a/api/list.php b/api/list.php
+index 77569f7..2f6bcc3 100644
+--- a/api/list.php
++++ b/api/list.php
+@@ -4,21 +4,7 @@
+ $transaction = init_sentry_tracing('/api/list');
+ 
+ $path = check_path_query();
+-$real_path = get_real_path($path);
+-
+-if ($real_path === false) {
+-    http_response_code(400);
+-    $transaction->finish();
+-    die('Invalid path');
+-}
+-
+-$virtual_path = get_virtual_path($real_path);
+-
+-if ($virtual_path === false) {
+-    http_response_code(400);
+-    $transaction->finish();
+-    die('Unable to find relative path');
+-}
++[$real_path, $virtual_path] = get_real_and_virtual_path_from_path($path, $transaction);
+diff --git a/internals/_init.php b/internals/_init.php
+index 5a867bc..227ca51 100644
+--- a/internals/_init.php
++++ b/internals/_init.php
+@@ -272,4 +272,22 @@ function process_last_modified(string $real_path) {
++function get_real_and_virtual_path_from_path(string $path, \Sentry\Tracing\Transaction $transaction): array {
++    $real_path = get_real_path($path);
++    if ($real_path === false) {
++        http_response_code(400);
++        $transaction->finish();
++        die('Invalid path');
++    }
++
++    $virtual_path = get_virtual_path($real_path);
++    if ($virtual_path === false) {
++        http_response_code(400);
++        $transaction->finish();
++        die('Unable to find relative path');
++    }
++    
++    return [$real_path, $virtual_path];
++}

@@ -6,55 +6,118 @@
   "description": "Concurrency and State Risk: Detect race conditions, improper async usage, and shared state hazards.",
   "fixtures": [
     {
-      "id": "gci0016-01",
-      "diff_file": "01_true_positive_blocking_async_result.diff",
+      "id": "gci0016-06",
+      "diff_file": "06_real_true_positive_result_blocking_api.diff",
       "category": "true-positive",
       "expected_outcome": "fire",
       "expected_gci_rules": [
         "GCI016"
       ],
-      "notes": "Calls asyncMethod().Result in an async context, which can cause a deadlock on ASP.NET synchronization contexts.",
-      "origin": "synthetic"
+      "notes": "Blocks the async thread-pool by calling .Result on a Task inside an ASP.NET controller, causing deadlock under the synchronization context.",
+      "origin": "real",
+      "source_url": "https://github.com/Shooshpanius/Pullenti.Core/pull/4"
     },
     {
-      "id": "gci0016-02",
-      "diff_file": "02_true_positive_unprotected_static_dict.diff",
+      "id": "gci0016-07",
+      "diff_file": "07_real_true_positive_task_run_result_property.diff",
       "category": "true-positive",
       "expected_outcome": "fire",
       "expected_gci_rules": [
         "GCI016"
       ],
-      "notes": "Modifies a static Dictionary<string,int> counter from multiple code paths without any locking or atomic operations.",
-      "origin": "synthetic"
+      "notes": "Property getter calls Task.Run().Result, blocking the thread-pool thread for synchronous I/O inside an async-capable MAUI app — classic deadlock anti-pattern.",
+      "origin": "real",
+      "source_url": "https://github.com/CoraCodeDev/PdfSplitter/pull/3"
     },
     {
-      "id": "gci0016-03",
-      "diff_file": "03_false_positive_proper_await.diff",
+      "id": "gci0016-08",
+      "diff_file": "08_real_true_positive_sync_requests_in_async.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI016"
+      ],
+      "notes": "Calls blocking requests.get() inside an async method, stalling the event loop for the full HTTP round-trip duration.",
+      "origin": "real",
+      "source_url": "https://github.com/steq98ai-githng/GY-langchain/pull/22"
+    },
+    {
+      "id": "gci0016-09",
+      "diff_file": "09_real_true_positive_run_in_executor_sync_io.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI016"
+      ],
+      "notes": "Uses loop.run_in_executor() to wrap a synchronous requests.get() call, which is Task.Run wrapping sync I/O pretending to be async — the executor threads are still blocked.",
+      "origin": "real",
+      "source_url": "https://github.com/htchan/home_assistant__kobo_os_checker/pull/3"
+    },
+    {
+      "id": "gci0016-10",
+      "diff_file": "10_real_true_positive_time_sleep_in_async.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI016"
+      ],
+      "notes": "Calls blocking time.sleep() inside an async polling function, stalling the entire event loop for each retry interval.",
+      "origin": "real",
+      "source_url": "https://github.com/MoonLadderStudios/MoonMind/pull/488"
+    },
+    {
+      "id": "gci0016-11",
+      "diff_file": "11_real_true_positive_asyncio_race_condition.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI016"
+      ],
+      "notes": "Concurrent battle message handlers run without any asyncio.Lock, so two tasks for the same battle can interleave state updates — classic async race condition.",
+      "origin": "real",
+      "source_url": "https://github.com/hsahovic/poke-env/pull/858"
+    },
+    {
+      "id": "gci0016-12",
+      "diff_file": "12_real_false_positive_proper_await_fix.diff",
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Properly uses await for all async calls with no blocking .Result or .Wait() — no concurrency issue.",
-      "origin": "synthetic"
+      "notes": "Correctly replaces .Result blocking with async/await — no concurrency hazard introduced.",
+      "origin": "real",
+      "source_url": "https://github.com/Shooshpanius/Pullenti.Core/pull/4"
     },
     {
-      "id": "gci0016-04",
-      "diff_file": "04_false_positive_concurrent_dictionary.diff",
+      "id": "gci0016-13",
+      "diff_file": "13_real_false_positive_asyncio_lock_added.diff",
       "category": "false-positive",
       "expected_outcome": "do-not-fire",
       "expected_gci_rules": [],
-      "notes": "Uses ConcurrentDictionary and Interlocked.Increment for the shared counter — thread-safe implementation.",
-      "origin": "synthetic"
+      "notes": "Introduces per-battle asyncio.Lock objects to serialize concurrent message handlers — this is the correct thread-safe fix.",
+      "origin": "real",
+      "source_url": "https://github.com/hsahovic/poke-env/pull/858"
     },
     {
-      "id": "gci0016-05",
-      "diff_file": "05_edge_lock_with_io_inside.diff",
+      "id": "gci0016-14",
+      "diff_file": "14_real_false_positive_aiohttp_replaces_blocking.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Replaces run_in_executor-wrapped sync HTTP with native aiohttp async session — proper async I/O with no thread blocking.",
+      "origin": "real",
+      "source_url": "https://github.com/htchan/home_assistant__kobo_os_checker/pull/3"
+    },
+    {
+      "id": "gci0016-15",
+      "diff_file": "15_real_edge_getawaiter_getresult_on_whenall.diff",
       "category": "edge-case",
       "expected_outcome": "fire",
       "expected_gci_rules": [
         "GCI016"
       ],
-      "notes": "Uses lock() correctly but holds the lock while making an outbound HTTP call, risking contention and deadlock.",
-      "origin": "synthetic"
+      "notes": "GetAwaiter().GetResult() blocks the calling thread, but the overall fix reads stdout and stderr concurrently via Task.WhenAll — debatable: avoids the pipe deadlock but still blocks the outer thread.",
+      "origin": "real",
+      "source_url": "https://github.com/abpframework/abp/pull/25155"
     }
   ]
 }

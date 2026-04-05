@@ -1,0 +1,14 @@
+# origin: real
+# source: https://github.com/Abhijithsp/laravel12_vue_demo/pull/7
+# expected: fire
+# reason: Live xAI bearer token hardcoded directly in a committed HTTP client request file.
+
+--- a/grok_curl_shell.http
++++ b/grok_curl_shell.http
+@@ -3,7 +3,7 @@ GET https://examples.http-client.intellij.net/get
+ ###
+ 
+ POST https://api.x.ai/v1/chat/completions
+-Authorization: Bearer {{GROK_API_KEY}}
++Authorization: Bearer xai-BdyT4eKdPJrJuonFN16U8OATFN5k2iVAcTAANMIVrhgShQ0wGqcJY7absP3QFnYNXcG6zhwSRaj8LPUJ
+ Content-Type: application/json

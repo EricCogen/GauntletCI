@@ -1,0 +1,26 @@
+# origin: real
+# source: https://github.com/hsahovic/poke-env/pull/858
+# expected: fire
+# reason: Concurrent battle message handlers run without any asyncio.Lock, so two tasks for the same battle can interleave state updates — classic async race condition.
+
+--- a/src/poke_env/ps_client/ps_client.py
++++ b/src/poke_env/ps_client/ps_client.py
+@@ -69,7 +69,6 @@ def __init__(
+         :type ping_timeout: float, optional
+         """
+         self._active_tasks: Set[asyncio.Task] = set()
+-        self._battle_locks: dict[str, asyncio.Lock] = {}
+         self._open_timeout = open_timeout
+         self._ping_interval = ping_interval
+         self._ping_timeout = ping_timeout
+@@ -139,11 +138,7 @@ async def _handle_message(self, message: str):
+             if split_messages[0][0].startswith(">battle"):
+                 # Battle update
+                 battle_tag = split_messages[0][0][1:]
+-                if battle_tag not in self._battle_locks:
+-                    self._battle_locks[battle_tag] = asyncio.Lock()
+-                async with self._battle_locks[battle_tag]:
+-                    await self._handle_battle_message(split_messages)
++                await self._handle_battle_message(split_messages)
+             elif split_messages[0][1] == "challstr":
+                 await self.log_in(split_messages[0])
