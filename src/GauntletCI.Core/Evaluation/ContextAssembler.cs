@@ -51,6 +51,14 @@ public sealed class ContextAssembler
         }
 
         lines.Add(string.Empty);
+        lines.Add("Test change signals:");
+        lines.Add($"- test_files_changed: {trimResult.Metadata.TestFilesChanged} (content_changes={trimResult.Metadata.TestFilesWithContentChanges}, rename_only={trimResult.Metadata.TestFilesRenameOnly})");
+        lines.Add($"- test_lines_added: {trimResult.Metadata.TestLinesAdded}, test_lines_removed: {trimResult.Metadata.TestLinesRemoved}");
+        lines.Add($"- assertion_like_test_lines_added: {trimResult.Metadata.TestAssertionLinesAdded}");
+        lines.Add($"- setup_like_test_lines_added: {trimResult.Metadata.TestSetupLinesAdded}");
+        lines.Add($"- tests_changed_without_new_assertions: {trimResult.Metadata.TestsChangedWithoutAssertions}");
+        lines.Add($"- tests_look_like_rename_or_setup_churn: {trimResult.Metadata.TestChangesAreRenameOrSetupChurn}");
+        lines.Add(string.Empty);
         if (trimResult.Trimmed)
         {
             lines.Add($"[Note: diff trimmed from {trimResult.OriginalTokens} to {trimResult.TrimmedTokens} tokens. Some context omitted. State uncertainty where relevant.]");
@@ -85,6 +93,32 @@ public sealed record AssembledContext(string Context, bool DiffTrimmed, DiffMeta
 public sealed class DiffContextTrimmer
 {
     private static readonly string[] GeneratedMarkers = [".Designer.cs", ".g.cs", "Migrations/", "migrations/"];
+    private static readonly string[] AssertionMarkers =
+    [
+        "assert",
+        "expect(",
+        ".should(",
+        "verify(",
+        "toequal(",
+        "tobe(",
+        "assertthat",
+    ];
+    private static readonly string[] SetupMarkers =
+    [
+        "setup",
+        "fixture",
+        "beforeeach",
+        "aftereach",
+        "arrange",
+        "mock",
+        "stub",
+        "builder",
+        "[fact]",
+        "[theory]",
+        "[test]",
+        "describe(",
+        "it(",
+    ];
 
     public TrimResult Trim(string diff, int maxDiffTokens)
     {
@@ -133,12 +167,26 @@ public sealed class DiffContextTrimmer
         int linesRemoved = 0;
         HashSet<string> languages = [];
         bool testTouched = false;
+        int testFilesChanged = 0;
+        int testFilesWithContentChanges = 0;
+        int testFilesRenameOnly = 0;
+        int testLinesAdded = 0;
+        int testLinesRemoved = 0;
+        int testAssertionLinesAdded = 0;
+        int testSetupLinesAdded = 0;
+        int testNonCommentLinesAdded = 0;
 
         foreach (DiffFile file in files.Where(static f => !f.Excluded))
         {
-            if (file.FilePath.Contains("test", StringComparison.OrdinalIgnoreCase))
+            bool isTestFile = IsTestPath(file.FilePath);
+            if (isTestFile)
             {
                 testTouched = true;
+                testFilesChanged++;
+                if (file.IsRenameOnly)
+                {
+                    testFilesRenameOnly++;
+                }
             }
 
             string extension = Path.GetExtension(file.FilePath).TrimStart('.').ToLowerInvariant();
@@ -156,16 +204,74 @@ public sealed class DiffContextTrimmer
 
             foreach (DiffHunk hunk in file.Hunks.Where(static h => !h.Excluded))
             {
-                linesAdded += hunk.Lines.Count(static line => line.StartsWith('+') && !line.StartsWith("+++", StringComparison.Ordinal));
-                linesRemoved += hunk.Lines.Count(static line => line.StartsWith('-') && !line.StartsWith("---", StringComparison.Ordinal));
+                int fileAdded = hunk.Lines.Count(static line => line.StartsWith('+') && !line.StartsWith("+++", StringComparison.Ordinal));
+                int fileRemoved = hunk.Lines.Count(static line => line.StartsWith('-') && !line.StartsWith("---", StringComparison.Ordinal));
+
+                linesAdded += fileAdded;
+                linesRemoved += fileRemoved;
+
+                if (!isTestFile)
+                {
+                    continue;
+                }
+
+                testLinesAdded += fileAdded;
+                testLinesRemoved += fileRemoved;
+
+                foreach (string line in hunk.Lines.Where(static line => line.StartsWith('+') && !line.StartsWith("+++", StringComparison.Ordinal)))
+                {
+                    if (IsAssertionLine(line))
+                    {
+                        testAssertionLinesAdded++;
+                    }
+
+                    if (IsSetupLine(line))
+                    {
+                        testSetupLinesAdded++;
+                    }
+
+                    if (!IsCommentOrWhitespace(line))
+                    {
+                        testNonCommentLinesAdded++;
+                    }
+                }
+            }
+
+            if (isTestFile)
+            {
+                bool hasContentChanges = file.Hunks
+                    .Where(static h => !h.Excluded)
+                    .SelectMany(static h => h.Lines)
+                    .Any(static line =>
+                        (line.StartsWith('+') && !line.StartsWith("+++", StringComparison.Ordinal)) ||
+                        (line.StartsWith('-') && !line.StartsWith("---", StringComparison.Ordinal)));
+                if (hasContentChanges)
+                {
+                    testFilesWithContentChanges++;
+                }
             }
         }
+
+        bool testsChangedWithoutAssertions = testFilesChanged > 0 && testAssertionLinesAdded == 0;
+        bool testChangesAreRenameOrSetupChurn =
+            testsChangedWithoutAssertions &&
+            (testFilesWithContentChanges == 0 ||
+             (testNonCommentLinesAdded > 0 && testNonCommentLinesAdded == testSetupLinesAdded));
 
         return new DiffMetadata(
             LinesAdded: linesAdded,
             LinesRemoved: linesRemoved,
             FilesChanged: files.Count(static f => !f.Excluded),
             TestFilesTouched: testTouched,
+            TestFilesChanged: testFilesChanged,
+            TestFilesWithContentChanges: testFilesWithContentChanges,
+            TestFilesRenameOnly: testFilesRenameOnly,
+            TestLinesAdded: testLinesAdded,
+            TestLinesRemoved: testLinesRemoved,
+            TestAssertionLinesAdded: testAssertionLinesAdded,
+            TestSetupLinesAdded: testSetupLinesAdded,
+            TestsChangedWithoutAssertions: testsChangedWithoutAssertions,
+            TestChangesAreRenameOrSetupChurn: testChangesAreRenameOrSetupChurn,
             Languages: [.. languages.OrderBy(static l => l)],
             DiffTrimmed: trimmed,
             EstimatedTokens: EstimateTokens(rendered));
@@ -174,6 +280,38 @@ public sealed class DiffContextTrimmer
     private static bool IsGenerated(string filePath)
     {
         return GeneratedMarkers.Any(marker => filePath.Contains(marker, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsTestPath(string filePath)
+    {
+        return filePath.Contains("test", StringComparison.OrdinalIgnoreCase) ||
+               filePath.Contains("spec", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsAssertionLine(string line)
+    {
+        string candidate = line[1..].Trim().ToLowerInvariant();
+        return AssertionMarkers.Any(marker => candidate.Contains(marker, StringComparison.Ordinal));
+    }
+
+    private static bool IsSetupLine(string line)
+    {
+        string candidate = line[1..].Trim().ToLowerInvariant();
+        return SetupMarkers.Any(marker => candidate.Contains(marker, StringComparison.Ordinal));
+    }
+
+    private static bool IsCommentOrWhitespace(string line)
+    {
+        string candidate = line[1..].Trim();
+        if (string.IsNullOrWhiteSpace(candidate))
+        {
+            return true;
+        }
+
+        return candidate.StartsWith("//", StringComparison.Ordinal) ||
+               candidate.StartsWith("#", StringComparison.Ordinal) ||
+               candidate.StartsWith("/*", StringComparison.Ordinal) ||
+               candidate.StartsWith("*", StringComparison.Ordinal);
     }
 
     private static List<string> TrimContextLines(IReadOnlyList<string> lines, int contextLimit)
@@ -305,6 +443,11 @@ public sealed class DiffContextTrimmer
         public bool IsBinary { get; set; }
 
         public bool Excluded { get; set; }
+
+        public bool IsRenameOnly =>
+            Hunks.Count == 0 &&
+            PreambleLines.Any(static line => line.StartsWith("rename from ", StringComparison.Ordinal)) &&
+            PreambleLines.Any(static line => line.StartsWith("rename to ", StringComparison.Ordinal));
     }
 
     private sealed class DiffHunk(string header)
