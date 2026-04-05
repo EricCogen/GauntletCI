@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: The rename of UserRepository to AccountRepository is applied consistently in the repository class, its interface, and every injection site.
 

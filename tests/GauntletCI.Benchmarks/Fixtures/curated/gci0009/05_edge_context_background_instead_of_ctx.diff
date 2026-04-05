@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: fire
 # reason: Uses db.QueryContext but passes context.Background() instead of propagating the caller's ctx, breaking trace propagation.
 

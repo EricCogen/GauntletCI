@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: fire
 # reason: Checks for null but not for empty string, then passes the potentially empty value directly to an external geocoding API.
 

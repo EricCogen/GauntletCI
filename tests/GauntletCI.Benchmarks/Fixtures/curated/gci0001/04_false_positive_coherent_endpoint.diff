@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: All changes belong to a single coherent feature: adding a /products endpoint across controller, service interface, and model.
 

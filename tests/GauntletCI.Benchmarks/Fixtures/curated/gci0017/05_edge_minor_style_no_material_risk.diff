@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: One minor style concern (variable name 'x') but no material risk indicators — does not meet the production readiness bar for GCI017.
 

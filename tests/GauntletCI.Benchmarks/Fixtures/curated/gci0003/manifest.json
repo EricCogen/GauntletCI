@@ -4,6 +4,7 @@
     "GCI003"
   ],
   "description": "Behavioral Change Detection: Detect material runtime behavior changes.",
+  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0003-01",

@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Uses bcrypt.hashpw() for password hashing before storage — proper security practice applied correctly.
 

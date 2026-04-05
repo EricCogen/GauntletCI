@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Entity mapper explicitly maps every field including audit metadata — no data is silently dropped.
 

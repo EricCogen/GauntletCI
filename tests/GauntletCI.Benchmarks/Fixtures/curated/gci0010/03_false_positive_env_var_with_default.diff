@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Reads the API URL from an environment variable with a safe localhost default for local development.
 

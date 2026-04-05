@@ -4,6 +4,7 @@
     "GCI005"
   ],
   "description": "Test Coverage Relevance: Assess whether tests verify changed behavior.",
+  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0005-01",

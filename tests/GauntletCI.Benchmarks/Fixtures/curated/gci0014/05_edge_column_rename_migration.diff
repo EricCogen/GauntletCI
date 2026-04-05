@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: fire
 # reason: Migration renames a column via drop-and-add which is destructive — any data in the column is permanently lost.
 

@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: fire
 # reason: Adds an else branch that can never execute because the prior condition covers all possible cases — dead unreachable code.
 

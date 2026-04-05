@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Properly uses await for all async calls — no blocking .Result or .Wait() calls anywhere in the diff.
 

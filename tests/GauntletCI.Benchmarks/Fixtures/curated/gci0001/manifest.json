@@ -4,6 +4,7 @@
     "GCI001"
   ],
   "description": "Diff Integrity and Scope: Detect mixed concerns, incomplete changesets, and scope creep.",
+  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0001-01",

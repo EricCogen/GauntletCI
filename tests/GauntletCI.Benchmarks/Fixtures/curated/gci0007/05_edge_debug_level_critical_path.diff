@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: fire
 # reason: Payment processing failure is logged at DEBUG level instead of ERROR, making critical failures invisible in production.
 

@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Internal variable renamed from 'tmp' to 'result' with no change to logic — all observable behavior is identical.
 

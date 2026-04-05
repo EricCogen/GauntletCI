@@ -4,6 +4,7 @@
     "GCI002"
   ],
   "description": "Goal Alignment: Verify implementation behavior aligns with apparent intent.",
+  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0002-01",

@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Removes a noisy debug-level log, but all error and warn level logs remain intact — observability is not degraded.
 

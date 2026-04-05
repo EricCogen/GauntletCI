@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Feature flag controlled rollout with an explicit fallback to old code path when the flag is disabled.
 

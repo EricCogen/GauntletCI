@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Uses ConcurrentDictionary and Interlocked.Increment for a shared counter — thread-safe implementation.
 

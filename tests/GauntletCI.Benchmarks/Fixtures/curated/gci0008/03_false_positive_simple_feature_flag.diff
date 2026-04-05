@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Single clean if/else for a new feature flag — complexity is entirely proportionate to the requirement.
 

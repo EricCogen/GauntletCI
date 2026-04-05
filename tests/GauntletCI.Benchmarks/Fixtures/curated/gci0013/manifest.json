@@ -4,6 +4,7 @@
     "GCI013"
   ],
   "description": "Observability and Debuggability: Detect loss of critical logs, traces, and correlation context.",
+  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0013-01",

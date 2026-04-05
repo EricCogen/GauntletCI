@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Additive migration that adds a nullable column with no data changes — fully reversible by dropping the column.
 

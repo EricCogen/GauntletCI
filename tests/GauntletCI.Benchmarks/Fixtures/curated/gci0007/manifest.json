@@ -4,6 +4,7 @@
     "GCI007"
   ],
   "description": "Error Handling Integrity: Detect swallowed exceptions and lost error context.",
+  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0007-01",

@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Method only receives output from a factory that guarantees a non-null instance, so null guard is not needed.
 

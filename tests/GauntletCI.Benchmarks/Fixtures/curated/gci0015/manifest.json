@@ -4,6 +4,7 @@
     "GCI015"
   ],
   "description": "Data Integrity Risk: Detect silent corruption, mapping errors, and partial-write hazards.",
+  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0015-01",

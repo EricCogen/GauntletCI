@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Adds an explicit null guard at method entry before using the parameter — the edge case is properly handled.
 

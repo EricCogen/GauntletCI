@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Uses variadic options pattern to add optional config — all existing callers pass zero options and remain valid.
 

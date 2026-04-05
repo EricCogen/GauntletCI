@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: fire
 # reason: Return type of exported GetUser changes from (User, error) to (UserResponse, error), breaking all callers that use User fields directly.
 

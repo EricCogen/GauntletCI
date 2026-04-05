@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: All external service URLs are injected via application.properties and Spring @Value annotation.
 

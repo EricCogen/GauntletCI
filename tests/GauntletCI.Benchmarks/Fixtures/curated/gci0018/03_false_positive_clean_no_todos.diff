@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Clean implementation with no TODOs or FIXMEs, all edge cases handled — meets the senior ownership bar.
 

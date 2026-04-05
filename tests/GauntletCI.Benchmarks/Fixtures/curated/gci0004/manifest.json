@@ -4,6 +4,7 @@
     "GCI004"
   ],
   "description": "Breaking Change Risk: Detect caller-facing contract breaks and integration risk.",
+  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0004-01",

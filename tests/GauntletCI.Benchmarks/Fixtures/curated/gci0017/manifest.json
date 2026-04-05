@@ -4,6 +4,7 @@
     "GCI017"
   ],
   "description": "Production Readiness: Synthesis verdict — aggregate multiple high-severity risk signals.",
+  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0017-01",

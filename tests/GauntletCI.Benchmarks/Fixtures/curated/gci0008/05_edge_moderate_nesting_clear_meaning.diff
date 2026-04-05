@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Moderate 3-level nesting but each level has a clearly distinct business meaning that justifies the structure.
 

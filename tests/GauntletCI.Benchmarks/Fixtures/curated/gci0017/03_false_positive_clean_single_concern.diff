@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Clean single-concern change with tests, proper error handling, no hardcoding — passes all production readiness checks.
 

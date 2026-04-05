@@ -4,6 +4,7 @@
     "GCI016"
   ],
   "description": "Concurrency and State Risk: Detect race conditions, improper async usage, and shared state hazards.",
+  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0016-01",

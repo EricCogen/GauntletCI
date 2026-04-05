@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: New standalone utility function is clearly isolated and does not interact with database or HTTP patterns.
 

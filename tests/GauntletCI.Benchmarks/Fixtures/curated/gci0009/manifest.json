@@ -4,6 +4,7 @@
     "GCI009"
   ],
   "description": "Consistency with Existing Patterns: Detect dangerous deviations from established codebase patterns.",
+  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0009-01",

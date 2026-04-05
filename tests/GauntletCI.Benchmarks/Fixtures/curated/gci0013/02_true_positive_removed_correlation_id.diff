@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: fire
 # reason: Removes the correlationId field from the structured log entry on the payment flow, breaking distributed trace correlation.
 

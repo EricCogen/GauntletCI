@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: fire
 # reason: Calls asyncMethod().Result in an async context, which deadlocks on ASP.NET's synchronization context.
 

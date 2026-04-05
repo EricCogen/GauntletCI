@@ -4,6 +4,7 @@
     "GCI014"
   ],
   "description": "Rollback Safety: Detect irreversible deployment and rollback behavior in migrations and data paths.",
+  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0014-01",

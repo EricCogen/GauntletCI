@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Docstring says 'normalize whitespace' and the implementation correctly strips and lowercases the string.
 

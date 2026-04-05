@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Adds additional console.log/logger calls to an existing function — observability is improved, not degraded.
 

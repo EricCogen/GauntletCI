@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Single O(1) dictionary lookup in a non-hot initialization path — no performance concern.
 

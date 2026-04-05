@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Trivial version label string constant change — no behavioral logic changed, test coverage is not required.
 

@@ -4,6 +4,7 @@
     "GCI008"
   ],
   "description": "Complexity Control: Detect disproportionate complexity relative to the problem being solved.",
+  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0008-01",

@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Catch block logs the full traceback with logger.exception() and then re-raises the original error properly.
 

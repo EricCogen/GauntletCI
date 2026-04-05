@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: fire
 # reason: Uses lock() correctly but holds the lock while making an outbound HTTP call, causing contention and potential deadlock.
 

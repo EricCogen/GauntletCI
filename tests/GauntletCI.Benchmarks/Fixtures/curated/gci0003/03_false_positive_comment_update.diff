@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Only the docstring and inline comment are updated; no logic, control flow, or observable behavior changes.
 

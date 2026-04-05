@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: fire
 # reason: Divides total by count without checking whether count is zero, introducing a divide-by-zero exception.
 

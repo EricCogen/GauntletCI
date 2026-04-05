@@ -4,6 +4,7 @@
     "GCI006"
   ],
   "description": "Edge Case Handling: Detect unhandled nulls, boundaries, and invalid input.",
+  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0006-01",

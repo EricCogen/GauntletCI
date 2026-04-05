@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: fire
 # reason: A single commit bundles two unrelated concerns: adding Redis caching to OrderService and renaming UserService to AccountService.
 

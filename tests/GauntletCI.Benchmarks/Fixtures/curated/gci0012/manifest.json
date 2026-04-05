@@ -4,6 +4,7 @@
     "GCI012"
   ],
   "description": "Security Risk: Detect introduced vulnerabilities or weakened security safeguards.",
+  "origin": "synthetic",
   "fixtures": [
     {
       "id": "gci0012-01",

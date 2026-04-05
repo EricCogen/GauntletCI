@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Adds an in-memory cache with expiry to avoid repeated expensive external API calls — a performance improvement.
 

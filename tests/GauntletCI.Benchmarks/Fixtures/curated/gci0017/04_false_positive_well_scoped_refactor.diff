@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Well-scoped refactor with all tests passing, no security issues, and proper structured logging throughout.
 

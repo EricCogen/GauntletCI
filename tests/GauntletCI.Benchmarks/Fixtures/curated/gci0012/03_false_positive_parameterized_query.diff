@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Uses psycopg2 parameterized query with %s placeholder — user input is safely separated from the SQL statement.
 

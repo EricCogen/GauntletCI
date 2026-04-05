@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: New repository method correctly follows the established db.QueryContext(ctx, ...) parameterized query pattern.
 

@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Refactors a filter+map list comprehension to an equivalent for-loop — output is identical and no behavior changes.
 

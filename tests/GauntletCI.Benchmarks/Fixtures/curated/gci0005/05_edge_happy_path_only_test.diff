@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: fire
 # reason: A test is added but it only covers the happy path; the new IOException error branch introduced in the same diff has no test coverage.
 

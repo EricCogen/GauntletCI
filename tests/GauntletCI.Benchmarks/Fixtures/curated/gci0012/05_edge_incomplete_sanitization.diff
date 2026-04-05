@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: fire
 # reason: Sanitizes input by stripping single quotes but doesn't handle SQL comment injection via --, leaving a bypass vector.
 

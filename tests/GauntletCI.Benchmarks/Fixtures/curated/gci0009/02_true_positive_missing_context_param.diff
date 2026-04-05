@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: fire
 # reason: New async handler does not accept ctx context.Context, breaking the repo-wide convention for all HTTP handlers.
 

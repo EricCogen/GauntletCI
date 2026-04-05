@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Removes old dead code that was commented out and replaces it with a clean, tested implementation.
 

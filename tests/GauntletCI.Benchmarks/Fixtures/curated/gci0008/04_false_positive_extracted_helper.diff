@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Extracts a complex inline expression into a clearly-named helper function, reducing overall complexity.
 

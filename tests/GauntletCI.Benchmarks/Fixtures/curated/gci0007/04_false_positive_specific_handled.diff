@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Specific ValueError caught, handled gracefully with a user-friendly message and logged at WARNING level.
 

@@ -17,4 +17,12 @@ public sealed record BenchmarkManifest(
     [property: JsonPropertyName("source_pcg_rule")] string SourcePcgRule,
     [property: JsonPropertyName("mapped_gci_rules")] IReadOnlyList<string> MappedGciRules,
     [property: JsonPropertyName("description")] string Description,
-    [property: JsonPropertyName("fixtures")] IReadOnlyList<BenchmarkFixture> Fixtures);
+    [property: JsonPropertyName("origin")] string Origin,
+    [property: JsonPropertyName("fixtures")] IReadOnlyList<BenchmarkFixture> Fixtures)
+{
+    /// <summary>
+    /// Returns true when the fixture set was hand-authored rather than sourced from a real PR or commit.
+    /// Synthetic fixtures are useful for harness validation but should not be used to measure model accuracy.
+    /// </summary>
+    public bool IsSynthetic => string.Equals(Origin, "synthetic", StringComparison.OrdinalIgnoreCase);
+}

@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Adds a brand-new exported function DeleteUser without modifying any existing function signatures or types.
 

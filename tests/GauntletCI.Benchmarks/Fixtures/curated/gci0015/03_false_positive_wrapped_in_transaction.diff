@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Wraps all DB updates in a transaction with proper rollback on any exception — data integrity is preserved.
 

@@ -1,3 +1,4 @@
+# origin: synthetic
 # expected: do-not-fire
 # reason: Keeps all existing log statements and adds a new debug log for a new code path — no loss of observability.
 
