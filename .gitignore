@@ -20,6 +20,6 @@
 artifacts/
 .tmp-tools/
 
-# Markdown policy: only allow README.md to be committed
+# Markdown policy: only README.md is committed; all others stay local
 *.md
 !README.md
