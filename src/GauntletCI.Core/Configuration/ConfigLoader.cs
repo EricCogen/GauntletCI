@@ -38,6 +38,7 @@ public sealed class ConfigLoader
             ApiKeyEnv = user.ApiKeyEnv ?? "",
             DefaultMode = user.DefaultMode ?? "staged",
             BaseUrl = user.BaseUrl ?? "",
+            ModelRequired = repo.ModelRequired ?? false,
         };
     }
 
@@ -110,5 +111,6 @@ public sealed class ConfigLoader
         [property: JsonPropertyName("disabled_rules")] IReadOnlyList<string>? DisabledRules = null,
         [property: JsonPropertyName("blocking_rules")] IReadOnlyList<string>? BlockingRules = null,
         [property: JsonPropertyName("telemetry")] bool? Telemetry = null,
-        [property: JsonPropertyName("model")] string? Model = null);
+        [property: JsonPropertyName("model")] string? Model = null,
+        [property: JsonPropertyName("model_required")] bool? ModelRequired = null);
 }

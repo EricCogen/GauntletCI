@@ -2,6 +2,7 @@
 // Copyright (c) Eric Cogen. All rights reserved.
 
 using System.Diagnostics;
+using System.Text;
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Gates;
 using GauntletCI.Core.Infrastructure;
@@ -17,6 +18,7 @@ public sealed class EvaluationEngine(
     TestPassageGate testPassageGate,
     ICommandRunner commandRunner,
     ContextAssembler contextAssembler,
+    DeterministicAnalysisRunner deterministicAnalysisRunner,
     PromptBuilder promptBuilder,
     FindingParser findingParser,
     RulesTextProvider rulesTextProvider,
@@ -76,12 +78,60 @@ public sealed class EvaluationEngine(
             : [];
 
         AssembledContext assembled = contextAssembler.Assemble(branchResult, testResult, diffText, config, recentCommits);
+        IReadOnlyList<Finding> deterministicFindings = ApplyRuleScopeAndDisabledRules(
+            deterministicAnalysisRunner.Analyze(diffText, assembled.Metadata),
+            request.Rule,
+            config.DisabledRules);
+
+        if (deterministicFindings.Count == 0)
+        {
+            sw.Stop();
+            EvaluationResult cleanResult = new(
+                ExitCode: 0,
+                BranchCurrencyGate: branchResult,
+                TestPassageGate: testResult,
+                Findings: [],
+                ErrorMessage: null,
+                DiffTrimmed: assembled.DiffTrimmed,
+                Model: config.Model,
+                DiffMetadata: assembled.Metadata,
+                EvaluationDurationMs: (int)sw.ElapsedMilliseconds,
+                ModelStepSkipped: true);
+            return await FinalizeResultAsync(cleanResult, config, request, cancellationToken).ConfigureAwait(false);
+        }
 
         ModelSelection selection = modelSelector.Select(config, request.FastMode);
         if (!selection.IsConfigured)
         {
             sw.Stop();
-            return new EvaluationResult(2, branchResult, testResult, [], $"No API key configured. Set {selection.ApiKeyEnv} environment variable, or configure a local endpoint with base_url in ~/.gauntletci/config.json.", assembled.DiffTrimmed, selection.Model, assembled.Metadata, (int)sw.ElapsedMilliseconds);
+            if (config.ModelRequired)
+            {
+                return new EvaluationResult(
+                    ExitCode: 1,
+                    BranchCurrencyGate: branchResult,
+                    TestPassageGate: testResult,
+                    Findings: deterministicFindings,
+                    ErrorMessage: BuildStrictModelError(selection.ApiKeyEnv),
+                    DiffTrimmed: assembled.DiffTrimmed,
+                    Model: selection.Model,
+                    DiffMetadata: assembled.Metadata,
+                    EvaluationDurationMs: (int)sw.ElapsedMilliseconds);
+            }
+
+            int deterministicExit = ComputeExitCode(deterministicFindings, config.BlockingRules);
+            EvaluationResult deterministicResult = new(
+                ExitCode: deterministicExit,
+                BranchCurrencyGate: branchResult,
+                TestPassageGate: testResult,
+                Findings: deterministicFindings,
+                ErrorMessage: null,
+                DiffTrimmed: assembled.DiffTrimmed,
+                Model: selection.Model,
+                DiffMetadata: assembled.Metadata,
+                EvaluationDurationMs: (int)sw.ElapsedMilliseconds,
+                WarningMessage: "Model unavailable. Showing deterministic findings only.",
+                ModelStepSkipped: true);
+            return await FinalizeResultAsync(deterministicResult, config, request, cancellationToken).ConfigureAwait(false);
         }
 
         string rulesText;
@@ -92,7 +142,34 @@ public sealed class EvaluationEngine(
         catch (Exception ex)
         {
             sw.Stop();
-            return new EvaluationResult(2, branchResult, testResult, [], $"Rules loading failed: {ex.Message}", assembled.DiffTrimmed, selection.Model, assembled.Metadata, (int)sw.ElapsedMilliseconds);
+            if (config.ModelRequired)
+            {
+                return new EvaluationResult(
+                    ExitCode: 1,
+                    BranchCurrencyGate: branchResult,
+                    TestPassageGate: testResult,
+                    Findings: deterministicFindings,
+                    ErrorMessage: BuildStrictModelError(selection.ApiKeyEnv, $"Rules loading failed: {ex.Message}"),
+                    DiffTrimmed: assembled.DiffTrimmed,
+                    Model: selection.Model,
+                    DiffMetadata: assembled.Metadata,
+                    EvaluationDurationMs: (int)sw.ElapsedMilliseconds);
+            }
+
+            int deterministicExit = ComputeExitCode(deterministicFindings, config.BlockingRules);
+            EvaluationResult deterministicResult = new(
+                ExitCode: deterministicExit,
+                BranchCurrencyGate: branchResult,
+                TestPassageGate: testResult,
+                Findings: deterministicFindings,
+                ErrorMessage: null,
+                DiffTrimmed: assembled.DiffTrimmed,
+                Model: selection.Model,
+                DiffMetadata: assembled.Metadata,
+                EvaluationDurationMs: (int)sw.ElapsedMilliseconds,
+                WarningMessage: "Model enrichment failed. Showing deterministic findings only.",
+                ModelStepSkipped: true);
+            return await FinalizeResultAsync(deterministicResult, config, request, cancellationToken).ConfigureAwait(false);
         }
 
         string systemPrompt = promptBuilder.BuildSystemPrompt(rulesText, request.Rule);
@@ -102,31 +179,90 @@ public sealed class EvaluationEngine(
         if (!modelResponse.Success)
         {
             sw.Stop();
-            return new EvaluationResult(3, branchResult, testResult, [], modelResponse.ErrorMessage ?? "Model call failed.", assembled.DiffTrimmed, selection.Model, assembled.Metadata, (int)sw.ElapsedMilliseconds);
+            if (config.ModelRequired)
+            {
+                return new EvaluationResult(
+                    ExitCode: 1,
+                    BranchCurrencyGate: branchResult,
+                    TestPassageGate: testResult,
+                    Findings: deterministicFindings,
+                    ErrorMessage: BuildStrictModelError(selection.ApiKeyEnv, modelResponse.ErrorMessage ?? "Model call failed."),
+                    DiffTrimmed: assembled.DiffTrimmed,
+                    Model: selection.Model,
+                    DiffMetadata: assembled.Metadata,
+                    EvaluationDurationMs: (int)sw.ElapsedMilliseconds);
+            }
+
+            int deterministicExit = ComputeExitCode(deterministicFindings, config.BlockingRules);
+            EvaluationResult deterministicResult = new(
+                ExitCode: deterministicExit,
+                BranchCurrencyGate: branchResult,
+                TestPassageGate: testResult,
+                Findings: deterministicFindings,
+                ErrorMessage: null,
+                DiffTrimmed: assembled.DiffTrimmed,
+                Model: selection.Model,
+                DiffMetadata: assembled.Metadata,
+                EvaluationDurationMs: (int)sw.ElapsedMilliseconds,
+                WarningMessage: "Model unavailable. Showing deterministic findings only.",
+                ModelStepSkipped: true);
+            return await FinalizeResultAsync(deterministicResult, config, request, cancellationToken).ConfigureAwait(false);
         }
 
-        IReadOnlyList<Finding> findings;
+        IReadOnlyList<Finding> modelFindings;
         try
         {
-            findings = findingParser.Parse(modelResponse.RawResponse);
+            modelFindings = findingParser.Parse(modelResponse.RawResponse);
         }
         catch (FormatException ex)
         {
             sw.Stop();
-            return new EvaluationResult(3, branchResult, testResult, [], ex.Message, assembled.DiffTrimmed, selection.Model, assembled.Metadata, (int)sw.ElapsedMilliseconds);
+            if (config.ModelRequired)
+            {
+                return new EvaluationResult(
+                    ExitCode: 1,
+                    BranchCurrencyGate: branchResult,
+                    TestPassageGate: testResult,
+                    Findings: deterministicFindings,
+                    ErrorMessage: BuildStrictModelError(selection.ApiKeyEnv, ex.Message),
+                    DiffTrimmed: assembled.DiffTrimmed,
+                    Model: selection.Model,
+                    DiffMetadata: assembled.Metadata,
+                    EvaluationDurationMs: (int)sw.ElapsedMilliseconds);
+            }
+
+            int deterministicExit = ComputeExitCode(deterministicFindings, config.BlockingRules);
+            EvaluationResult deterministicResult = new(
+                ExitCode: deterministicExit,
+                BranchCurrencyGate: branchResult,
+                TestPassageGate: testResult,
+                Findings: deterministicFindings,
+                ErrorMessage: null,
+                DiffTrimmed: assembled.DiffTrimmed,
+                Model: selection.Model,
+                DiffMetadata: assembled.Metadata,
+                EvaluationDurationMs: (int)sw.ElapsedMilliseconds,
+                WarningMessage: "Model response could not be parsed. Showing deterministic findings only.",
+                ModelStepSkipped: true);
+            return await FinalizeResultAsync(deterministicResult, config, request, cancellationToken).ConfigureAwait(false);
         }
 
-        IReadOnlyList<Finding> filtered = ApplyRuleScopeAndDisabledRules(findings, request.Rule, config.DisabledRules);
+        IReadOnlyList<Finding> filtered = ApplyRuleScopeAndDisabledRules(modelFindings, request.Rule, config.DisabledRules);
         int exitCode = ComputeExitCode(filtered, config.BlockingRules);
 
         sw.Stop();
         EvaluationResult evaluationResult = new(exitCode, branchResult, testResult, filtered, null, assembled.DiffTrimmed, selection.Model, assembled.Metadata, (int)sw.ElapsedMilliseconds);
-        if (config.ShouldEmitTelemetry(request.NoTelemetry))
+        return await FinalizeResultAsync(evaluationResult, config, request, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<EvaluationResult> FinalizeResultAsync(EvaluationResult result, GauntletConfig config, EvaluationRequest request, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(result.ErrorMessage) && config.ShouldEmitTelemetry(request.NoTelemetry))
         {
-            await telemetryEmitter.EmitAsync(evaluationResult, config, cancellationToken).ConfigureAwait(false);
+            await telemetryEmitter.EmitAsync(result, config, cancellationToken).ConfigureAwait(false);
         }
 
-        return evaluationResult;
+        return result;
     }
 
     private static IReadOnlyList<Finding> ApplyRuleScopeAndDisabledRules(IReadOnlyList<Finding> findings, string? requestedRule, IReadOnlyList<string> disabledRules)
@@ -156,5 +292,20 @@ public sealed class EvaluationEngine(
 
         HashSet<string> blocked = new(blockingRules, StringComparer.OrdinalIgnoreCase);
         return findings.Any(finding => blocked.Contains(finding.RuleId)) ? 1 : 0;
+    }
+
+    private static string BuildStrictModelError(string apiKeyEnv, string? detail = null)
+    {
+        StringBuilder builder = new();
+        builder.AppendLine("Model enrichment is required by configuration, but no model provider is available.");
+        builder.Append($"Set {apiKeyEnv}, configure a compatible local endpoint, or disable model-required mode.");
+        if (!string.IsNullOrWhiteSpace(detail))
+        {
+            builder.AppendLine();
+            builder.Append("Details: ");
+            builder.Append(detail.Trim());
+        }
+
+        return builder.ToString();
     }
 }

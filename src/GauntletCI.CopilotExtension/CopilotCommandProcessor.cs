@@ -38,6 +38,7 @@ public sealed class CopilotCommandProcessor
             new TestPassageGate(commandRunner),
             commandRunner,
             new ContextAssembler(),
+            new DeterministicAnalysisRunner(),
             new PromptBuilder(),
             new FindingParser(),
             new RulesTextProvider(),
@@ -97,6 +98,7 @@ public sealed class CopilotCommandProcessor
         StringBuilder sb = new();
         sb.AppendLine("GauntletCI status");
         sb.AppendLine($"- Model: {config.Model}");
+        sb.AppendLine($"- Model required: {config.ModelRequired}");
         sb.AppendLine($"- Telemetry enabled: {config.Telemetry}");
         sb.AppendLine($"- Telemetry consent recorded: {config.TelemetryConsentRecorded}");
         sb.AppendLine($"- Test command: {config.TestCommand}");
@@ -143,6 +145,13 @@ public static class CopilotRenderer
             return sb.ToString().Trim();
         }
 
+        if (!string.IsNullOrWhiteSpace(result.WarningMessage))
+        {
+            sb.AppendLine();
+            sb.AppendLine("Warning");
+            sb.AppendLine(result.WarningMessage);
+        }
+
         foreach (Finding finding in result.Findings)
         {
             bool isHigh = finding.Severity.Equals("high", StringComparison.OrdinalIgnoreCase);
@@ -162,7 +171,11 @@ public static class CopilotRenderer
         if (result.Findings.Count == 0)
         {
             sb.AppendLine();
-            sb.AppendLine("No findings.");
+            sb.AppendLine("No change-risk signals detected.");
+            if (result.ModelStepSkipped)
+            {
+                sb.AppendLine("Model step skipped.");
+            }
         }
 
         return sb.ToString().Trim();

@@ -52,6 +52,7 @@ EvaluationEngine engine = new(
 	new TestPassageGate(commandRunner),
 	commandRunner,
 	new ContextAssembler(),
+	new DeterministicAnalysisRunner(),
 	new PromptBuilder(),
 	new FindingParser(),
 	new RulesTextProvider(),
@@ -130,6 +131,8 @@ static void RenderResult(EvaluationResult result, bool jsonOutput)
 			branch_currency = result.BranchCurrencyGate,
 			test_passage = result.TestPassageGate,
 			error = result.ErrorMessage,
+			warning = result.WarningMessage,
+			model_step_skipped = result.ModelStepSkipped,
 			findings = result.Findings,
 		};
 		Console.WriteLine(JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true }));
@@ -149,6 +152,13 @@ static void RenderResult(EvaluationResult result, bool jsonOutput)
 		Console.WriteLine(result.ErrorMessage);
 	}
 
+	if (!string.IsNullOrWhiteSpace(result.WarningMessage))
+	{
+		Console.WriteLine();
+		Console.WriteLine("Warning:");
+		Console.WriteLine(result.WarningMessage);
+	}
+
 	foreach (Finding finding in result.Findings)
 	{
 		Console.WriteLine();
@@ -158,6 +168,16 @@ static void RenderResult(EvaluationResult result, bool jsonOutput)
 		Console.WriteLine($"Why: {finding.WhyItMatters}");
 		Console.WriteLine($"Action: {finding.SuggestedAction}");
 		Console.WriteLine($"Confidence: {finding.Confidence}");
+	}
+
+	if (result.Findings.Count == 0 && string.IsNullOrWhiteSpace(result.ErrorMessage))
+	{
+		Console.WriteLine();
+		Console.WriteLine("No change-risk signals detected.");
+		if (result.ModelStepSkipped)
+		{
+			Console.WriteLine("Model step skipped.");
+		}
 	}
 }
 
