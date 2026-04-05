@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GauntletCI.Cli/GauntletCI.Cli.csproj" />
+    <Project Path="src/GauntletCI.CopilotExtension/GauntletCI.CopilotExtension.csproj" />
+    <Project Path="src/GauntletCI.Core/GauntletCI.Core.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GauntletCI.Cli.Tests/GauntletCI.Cli.Tests.csproj" />
+    <Project Path="tests/GauntletCI.Core.Tests/GauntletCI.Core.Tests.csproj" />
+  </Folder>
+</Solution>

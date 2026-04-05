@@ -1,0 +1,23 @@
+# Build outputs
+**/bin/
+**/obj/
+
+# User and IDE files
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Test results and coverage
+**/TestResults/
+*.coverage
+*.coveragexml
+
+# Local tool artifacts
+.artifacts/
+
+# Markdown policy: only allow README.md to be committed
+*.md
+!README.md
