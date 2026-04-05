@@ -25,6 +25,9 @@ public sealed record GauntletConfig
     [JsonPropertyName("default_mode")]
     public string DefaultMode { get; init; } = "staged";
 
+    [JsonPropertyName("base_url")]
+    public string BaseUrl { get; init; } = "";
+
     [JsonPropertyName("telemetry_consent_recorded")]
     public bool TelemetryConsentRecorded { get; init; }
 

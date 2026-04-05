@@ -8,4 +8,5 @@ public sealed record EvaluationRequest(
     bool JsonOutput,
     bool NoTelemetry,
     string? ExplicitTestCommand = null,
-    string? ProvidedDiff = null);
+    string? ProvidedDiff = null,
+    string? LocalEndpoint = null);

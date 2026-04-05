@@ -6,14 +6,64 @@ namespace GauntletCI.Core.Evaluation;
 
 public sealed class HttpLlmClient(HttpClient httpClient) : ILlmClient
 {
-    public async Task<LlmResponse> EvaluateAsync(string model, string systemPrompt, string userPrompt, string apiKey, CancellationToken cancellationToken)
+    public async Task<LlmResponse> EvaluateAsync(string model, string systemPrompt, string userPrompt, string apiKey, CancellationToken cancellationToken, string? baseUrl = null)
     {
+        if (!string.IsNullOrWhiteSpace(baseUrl))
+        {
+            return await CallOpenAiCompatibleAsync(model, systemPrompt, userPrompt, apiKey, baseUrl, cancellationToken).ConfigureAwait(false);
+        }
+
         if (model.StartsWith("claude", StringComparison.OrdinalIgnoreCase))
         {
             return await CallAnthropicAsync(model, systemPrompt, userPrompt, apiKey, cancellationToken).ConfigureAwait(false);
         }
 
         return await CallOpenAiAsync(model, systemPrompt, userPrompt, apiKey, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<LlmResponse> CallOpenAiCompatibleAsync(string model, string systemPrompt, string userPrompt, string apiKey, string baseUrl, CancellationToken cancellationToken)
+    {
+        string endpoint = baseUrl.TrimEnd('/') + "/chat/completions";
+        using HttpRequestMessage request = new(HttpMethod.Post, endpoint);
+        if (!string.IsNullOrWhiteSpace(apiKey))
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+        }
+
+        var payload = new
+        {
+            model,
+            temperature = 0,
+            messages = new object[]
+            {
+                new { role = "system", content = systemPrompt },
+                new { role = "user", content = userPrompt },
+            },
+        };
+
+        request.Content = new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json");
+        using HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        string body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return new LlmResponse(false, "", $"Local endpoint call failed ({(int)response.StatusCode}): {body}");
+        }
+
+        using JsonDocument doc = JsonDocument.Parse(body);
+        JsonElement root = doc.RootElement;
+        if (!root.TryGetProperty("choices", out JsonElement choices) || choices.ValueKind != JsonValueKind.Array || choices.GetArrayLength() == 0)
+        {
+            return new LlmResponse(false, "", "Local endpoint response missing choices.");
+        }
+
+        JsonElement first = choices[0];
+        if (!first.TryGetProperty("message", out JsonElement message) || !message.TryGetProperty("content", out JsonElement content))
+        {
+            return new LlmResponse(false, "", "Local endpoint response missing message content.");
+        }
+
+        return new LlmResponse(true, content.GetString() ?? "[]");
     }
 
     private async Task<LlmResponse> CallAnthropicAsync(string model, string systemPrompt, string userPrompt, string apiKey, CancellationToken cancellationToken)

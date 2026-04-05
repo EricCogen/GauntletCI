@@ -6,6 +6,16 @@ public sealed class ModelSelector
 {
     public ModelSelection Select(GauntletConfig config, bool fastMode)
     {
+        // Local/offline endpoint takes priority when configured.
+        if (!string.IsNullOrWhiteSpace(config.BaseUrl))
+        {
+            string model = !string.IsNullOrWhiteSpace(config.Model) ? config.Model : "local";
+            // Resolve an optional API key for local servers that require auth (e.g. LM Studio with auth enabled).
+            string keyEnv = !string.IsNullOrWhiteSpace(config.ApiKeyEnv) ? config.ApiKeyEnv : "LOCAL_API_KEY";
+            string? apiKey = Environment.GetEnvironmentVariable(keyEnv);
+            return new ModelSelection(model, keyEnv, apiKey, config.BaseUrl);
+        }
+
         List<(string Model, string KeyEnv)> preferred =
             fastMode
                 ?
@@ -46,7 +56,7 @@ public sealed class ModelSelector
     }
 }
 
-public sealed record ModelSelection(string Model, string ApiKeyEnv, string? ApiKey)
+public sealed record ModelSelection(string Model, string ApiKeyEnv, string? ApiKey, string? BaseUrl = null)
 {
-    public bool IsConfigured => !string.IsNullOrWhiteSpace(ApiKey);
+    public bool IsConfigured => !string.IsNullOrWhiteSpace(ApiKey) || !string.IsNullOrWhiteSpace(BaseUrl);
 }

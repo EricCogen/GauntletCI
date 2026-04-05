@@ -34,6 +34,7 @@ public sealed class ConfigLoader
             Model = repo.Model ?? user.Model ?? "claude-sonnet-4-5",
             ApiKeyEnv = user.ApiKeyEnv ?? "",
             DefaultMode = user.DefaultMode ?? "staged",
+            BaseUrl = user.BaseUrl ?? "",
         };
     }
 
@@ -98,7 +99,8 @@ public sealed class ConfigLoader
         [property: JsonPropertyName("telemetry")] bool? Telemetry = null,
         [property: JsonPropertyName("model")] string? Model = null,
         [property: JsonPropertyName("api_key_env")] string? ApiKeyEnv = "ANTHROPIC_API_KEY",
-        [property: JsonPropertyName("default_mode")] string? DefaultMode = "staged");
+        [property: JsonPropertyName("default_mode")] string? DefaultMode = "staged",
+        [property: JsonPropertyName("base_url")] string? BaseUrl = null);
 
     private sealed record RepoConfigFile(
         [property: JsonPropertyName("test_command")] string? TestCommand = null,

@@ -63,7 +63,8 @@ EvaluationRequest request = new(
 	Rule: options.Rule,
 	JsonOutput: options.JsonOutput,
 	NoTelemetry: options.NoTelemetry,
-	ExplicitTestCommand: options.TestCommandOverride);
+	ExplicitTestCommand: options.TestCommandOverride,
+	LocalEndpoint: options.LocalEndpoint);
 
 EvaluationResult result = await engine.EvaluateAsync(request, cts.Token);
 RenderResult(result, options.JsonOutput);
@@ -198,20 +199,27 @@ public sealed record CliOptions(
 	bool NoTelemetry,
 	bool ShowHelp,
 	bool? SetTelemetry,
-	string? TestCommandOverride)
+	string? TestCommandOverride,
+	string? LocalEndpoint)
 {
 	public static string HelpText =>
 		"""
-gauntletci              evaluates staged changes
-gauntletci --full       evaluates all changes since last commit
-gauntletci --fast       uses speed-tier model
-gauntletci --rule GCI005 runs a single rule only
-gauntletci --format json machine-readable output
-gauntletci --no-telemetry disable telemetry for this run
-gauntletci install      installs git pre-commit hook
-gauntletci config       prints user config path
-gauntletci config --no-telemetry persists telemetry opt-out
-gauntletci config --telemetry persists telemetry opt-in
+gauntletci                        evaluates staged changes
+gauntletci --full                 evaluates all changes since last commit
+gauntletci --fast                 uses speed-tier model
+gauntletci --local [url]          use a local OpenAI-compatible endpoint
+                                  (default: http://localhost:11434/v1)
+gauntletci --rule GCI005          runs a single rule only
+gauntletci --format json          machine-readable output
+gauntletci --no-telemetry         disable telemetry for this run
+gauntletci install                installs git pre-commit hook
+gauntletci config                 prints user config path
+gauntletci config --no-telemetry  persists telemetry opt-out
+gauntletci config --telemetry     persists telemetry opt-in
+
+Local/offline usage (Ollama example):
+  ollama pull llama3.2
+  gauntletci --local
 """;
 
 	public static CliOptions Parse(string[] args)
@@ -225,6 +233,7 @@ gauntletci config --telemetry persists telemetry opt-in
 		bool help = false;
 		bool? setTelemetry = null;
 		string? testCommand = null;
+		string? localEndpoint = null;
 
 		for (int i = 0; i < args.Length; i++)
 		{
@@ -240,6 +249,12 @@ gauntletci config --telemetry persists telemetry opt-in
 					break;
 				case "--fast":
 					fast = true;
+					break;
+				case "--local":
+					// Optional URL argument; falls back to Ollama default
+					localEndpoint = i + 1 < args.Length && !args[i + 1].StartsWith('-')
+						? args[++i]
+						: "http://localhost:11434/v1";
 					break;
 				case "--no-telemetry":
 					noTelemetry = true;
@@ -270,6 +285,6 @@ gauntletci config --telemetry persists telemetry opt-in
 			}
 		}
 
-		return new CliOptions(command, full, fast, rule, json, noTelemetry, help, setTelemetry, testCommand);
+		return new CliOptions(command, full, fast, rule, json, noTelemetry, help, setTelemetry, testCommand, localEndpoint);
 	}
 }

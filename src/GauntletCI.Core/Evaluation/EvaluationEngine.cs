@@ -25,6 +25,13 @@ public sealed class EvaluationEngine(
     {
         Stopwatch sw = Stopwatch.StartNew();
         GauntletConfig config = configLoader.LoadEffective(request.WorkingDirectory);
+
+        // CLI --local flag overrides base_url from config file
+        if (!string.IsNullOrWhiteSpace(request.LocalEndpoint))
+        {
+            config = config with { BaseUrl = request.LocalEndpoint };
+        }
+
         string? configuredTestCommand = string.IsNullOrWhiteSpace(request.ExplicitTestCommand) ? config.TestCommand : request.ExplicitTestCommand;
         string testCommand = testCommandResolver.Resolve(request.WorkingDirectory, configuredTestCommand);
 
@@ -71,7 +78,7 @@ public sealed class EvaluationEngine(
         if (!selection.IsConfigured)
         {
             sw.Stop();
-            return new EvaluationResult(2, branchResult, testResult, [], $"No API key configured. Set {selection.ApiKeyEnv} environment variable.", assembled.DiffTrimmed, selection.Model, assembled.Metadata, (int)sw.ElapsedMilliseconds);
+            return new EvaluationResult(2, branchResult, testResult, [], $"No API key configured. Set {selection.ApiKeyEnv} environment variable, or configure a local endpoint with base_url in ~/.gauntletci/config.json.", assembled.DiffTrimmed, selection.Model, assembled.Metadata, (int)sw.ElapsedMilliseconds);
         }
 
         string rulesText;
@@ -88,7 +95,7 @@ public sealed class EvaluationEngine(
         string systemPrompt = promptBuilder.BuildSystemPrompt(rulesText, request.Rule);
         string userPrompt = promptBuilder.BuildUserPrompt(assembled.Context);
 
-        LlmResponse modelResponse = await llmClient.EvaluateAsync(selection.Model, systemPrompt, userPrompt, selection.ApiKey!, cancellationToken).ConfigureAwait(false);
+        LlmResponse modelResponse = await llmClient.EvaluateAsync(selection.Model, systemPrompt, userPrompt, selection.ApiKey ?? "", cancellationToken, selection.BaseUrl).ConfigureAwait(false);
         if (!modelResponse.Success)
         {
             sw.Stop();
