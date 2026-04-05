@@ -1,8 +1,8 @@
 {
-  "source_pcg_rule": "",
   "mapped_gci_rules": [
     "GCI004"
   ],
   "description": "Breaking Change Risk: Detect caller-facing contract breaks and integration risk.",
   "fixtures": []
 }
+

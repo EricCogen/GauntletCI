@@ -1,5 +1,4 @@
 {
-  "source_pcg_rule": "",
   "mapped_gci_rules": [
     "GCI001"
   ],
@@ -55,3 +54,4 @@
     }
   ]
 }
+

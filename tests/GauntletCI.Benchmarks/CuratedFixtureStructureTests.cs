@@ -5,7 +5,7 @@ namespace GauntletCI.Benchmarks;
 
 /// <summary>
 /// Structural tests that verify fixture loading, header parsing, prompt assembly,
-/// and the PCG→GCI rule mapping — no live LLM calls required.
+/// and manifest consistency — no live LLM calls required.
 /// </summary>
 public sealed class CuratedFixtureStructureTests
 {
@@ -79,51 +79,15 @@ public sealed class CuratedFixtureStructureTests
         Assert.True(checkedDiffs > 0, "Expected at least one curated diff to validate prompt assembly.");
     }
 
-    [Theory]
-    [InlineData("PCG0001", "GCI005")]
-    [InlineData("PCG0002", "GCI003")]
-    [InlineData("PCG0003", "GCI006")]
-    [InlineData("PCG0004", "GCI016")]
-    [InlineData("PCG0005", "GCI004")]
-    [InlineData("PCG0006", "GCI006")]
-    [InlineData("PCG0007", "GCI007")]
-    [InlineData("PCG0008", "GCI008")]
-    [InlineData("PCG0009", "GCI009")]
-    [InlineData("PCG0010", "GCI010")]
-    [InlineData("PCG0011", "GCI011")]
-    [InlineData("PCG0012", "GCI012")]
-    [InlineData("PCG0013", "GCI013")]
-    [InlineData("PCG0014", "GCI014")]
-    [InlineData("PCG0015", "GCI015")]
-    [InlineData("PCG0016", "GCI016")]
-    [InlineData("PCG0017", "GCI001")]
-    [InlineData("PCG0018", "GCI017")]
-    [InlineData("PCG0019", "GCI005")]
-    [InlineData("PCG0020", "GCI018")]
-    public void PcgToGciMap_AllTwentyRulesMapped(string pcgId, string expectedGciId)
-    {
-        string actual = PcgToGciRuleMap.ToGci(pcgId)!;
-        Assert.Equal(expectedGciId, actual);
-    }
-
     [Fact]
-    public void PcgToGciMap_Normalize_PassthroughForGciIds()
+    public void AllManifests_UseGciRuleIdentifiers()
     {
-        Assert.Equal("GCI007", PcgToGciRuleMap.Normalize("GCI007"));
-        Assert.Equal("GCI001", PcgToGciRuleMap.Normalize("GCI001"));
-    }
-
-    [Fact]
-    public void PcgToGciMap_Normalize_ConvertsPcgIds()
-    {
-        Assert.Equal("GCI007", PcgToGciRuleMap.Normalize("PCG0007"));
-        Assert.Equal("GCI016", PcgToGciRuleMap.Normalize("PCG0004"));
-    }
-
-    [Fact]
-    public void PcgToGciMap_ToGci_ReturnsNullForUnknownId()
-    {
-        Assert.Null(PcgToGciRuleMap.ToGci("PCG9999"));
+        foreach (string fixtureSetName in GetCuratedFixtureSetNames())
+        {
+            var (manifest, _) = FixtureLoader.Load(fixtureSetName);
+            Assert.NotEmpty(manifest.MappedGciRules);
+            Assert.All(manifest.MappedGciRules, static rule => Assert.Matches("^GCI\\d{3}$", rule));
+        }
     }
 
     [Fact]
