@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Text.Json;
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Evaluation;
 using GauntletCI.Core.Gates;
@@ -170,6 +172,12 @@ static async Task<int> InstallHookAsync(string workingDirectory)
 	string hookPath = Path.Combine(hooksDir, "pre-commit");
 	string script = "#!/usr/bin/env sh\ngauntletci\nexit $?\n";
 	await File.WriteAllTextAsync(hookPath, script);
+
+	if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+	{
+		Process.Start(new ProcessStartInfo("chmod", $"+x \"{hookPath}\"") { UseShellExecute = false })?.WaitForExit();
+	}
+
 	Console.WriteLine($"Installed pre-commit hook at {hookPath}");
 	return 0;
 }
