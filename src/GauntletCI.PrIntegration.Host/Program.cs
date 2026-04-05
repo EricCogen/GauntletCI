@@ -3,11 +3,13 @@ using System.Text;
 using GauntletCI.PrIntegration;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddSingleton<HttpClient>();
+builder.Services.AddSingleton<PrIntegrationHost>();
 var app = builder.Build();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
-app.MapPost("/github/webhooks/pull_request", async (HttpRequest request, IWebHostEnvironment environment, CancellationToken cancellationToken) =>
+app.MapPost("/github/webhooks/pull_request", async (HttpRequest request, PrIntegrationHost host, IWebHostEnvironment environment, CancellationToken cancellationToken) =>
 {
 	string? eventName = request.Headers["X-GitHub-Event"].FirstOrDefault();
 	if (!string.Equals(eventName, "pull_request", StringComparison.OrdinalIgnoreCase))
@@ -31,7 +33,6 @@ app.MapPost("/github/webhooks/pull_request", async (HttpRequest request, IWebHos
 
 	string workingDirectory = environment.ContentRootPath;
 
-	PrIntegrationHost host = new();
 	PrEvaluationSummary summary = await host.ProcessWebhookAsync(payload, workingDirectory, cancellationToken);
 	return Results.Ok(summary);
 });

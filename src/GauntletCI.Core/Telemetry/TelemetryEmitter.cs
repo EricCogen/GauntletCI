@@ -4,9 +4,8 @@ using GauntletCI.Core.Models;
 
 namespace GauntletCI.Core.Telemetry;
 
-public sealed class TelemetryEmitter
+public sealed class TelemetryEmitter(HttpClient httpClient)
 {
-    private readonly HttpClient _httpClient = new() { Timeout = TimeSpan.FromSeconds(2) };
 
     public async Task EmitAsync(EvaluationResult result, GauntletConfig config, CancellationToken cancellationToken)
     {
@@ -51,7 +50,7 @@ public sealed class TelemetryEmitter
 
         try
         {
-            using HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
+            using HttpResponseMessage response = await httpClient.SendAsync(request, cancellationToken).ConfigureAwait(false);
             _ = response.IsSuccessStatusCode;
         }
         catch

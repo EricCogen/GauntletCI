@@ -21,7 +21,7 @@ public static class GitHubWebhookParser
     }
 }
 
-public sealed class PrIntegrationHost
+public sealed class PrIntegrationHost(HttpClient httpClient)
 {
     public async Task<PrEvaluationSummary> ProcessWebhookAsync(string payloadJson, string workingDirectory, CancellationToken cancellationToken)
     {
@@ -32,7 +32,6 @@ public sealed class PrIntegrationHost
         }
 
         PrEventContext context = GitHubWebhookParser.ParsePullRequestEvent(payloadJson, workingDirectory);
-        using HttpClient httpClient = new();
         IGitHubClient github = new GitHubApiClient(httpClient, token);
         PrReviewOrchestrator orchestrator = new(github);
         return await orchestrator.EvaluateAndPublishAsync(context, cancellationToken).ConfigureAwait(false);

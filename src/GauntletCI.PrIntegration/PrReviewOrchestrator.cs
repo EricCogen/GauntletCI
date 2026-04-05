@@ -31,7 +31,7 @@ public sealed class PrReviewOrchestrator(IGitHubClient gitHubClient)
             new RulesTextProvider(),
             new ModelSelector(),
             new HttpLlmClient(new HttpClient { Timeout = TimeSpan.FromSeconds(120) }),
-            new TelemetryEmitter());
+            new TelemetryEmitter(new HttpClient { Timeout = TimeSpan.FromSeconds(2) }));
 
         EvaluationRequest request = new(
             WorkingDirectory: context.WorkingDirectory,
