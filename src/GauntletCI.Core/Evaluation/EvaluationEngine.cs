@@ -9,6 +9,7 @@ namespace GauntletCI.Core.Evaluation;
 
 public sealed class EvaluationEngine(
     ConfigLoader configLoader,
+    TestCommandResolver testCommandResolver,
     BranchCurrencyGate branchCurrencyGate,
     TestPassageGate testPassageGate,
     ICommandRunner commandRunner,
@@ -24,7 +25,8 @@ public sealed class EvaluationEngine(
     {
         Stopwatch sw = Stopwatch.StartNew();
         GauntletConfig config = configLoader.LoadEffective(request.WorkingDirectory);
-        string testCommand = string.IsNullOrWhiteSpace(request.ExplicitTestCommand) ? config.TestCommand : request.ExplicitTestCommand;
+        string? configuredTestCommand = string.IsNullOrWhiteSpace(request.ExplicitTestCommand) ? config.TestCommand : request.ExplicitTestCommand;
+        string testCommand = testCommandResolver.Resolve(request.WorkingDirectory, configuredTestCommand);
 
         GateResult branchResult = await branchCurrencyGate.ExecuteAsync(request.WorkingDirectory, cancellationToken).ConfigureAwait(false);
         if (!branchResult.Passed)

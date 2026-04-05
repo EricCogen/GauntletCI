@@ -30,6 +30,7 @@ public sealed class CopilotCommandProcessor
         ICommandRunner commandRunner = new ProcessCommandRunner();
         EvaluationEngine engine = new(
             configLoader,
+            new TestCommandResolver(),
             new BranchCurrencyGate(commandRunner),
             new TestPassageGate(commandRunner),
             commandRunner,

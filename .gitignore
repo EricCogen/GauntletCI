@@ -17,6 +17,8 @@
 
 # Local tool artifacts
 .artifacts/
+artifacts/
+.tmp-tools/
 
 # Markdown policy: only allow README.md to be committed
 *.md
