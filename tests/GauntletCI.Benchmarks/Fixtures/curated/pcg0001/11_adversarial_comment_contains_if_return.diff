@@ -1,0 +1,8 @@
+# expected: do-not-fire
+# reason: Comment text containing if/return tokens must not trigger guard detection.
+
+--- a/src/Diagnostics.cs
++++ b/src/Diagnostics.cs
+@@ -3,3 +3,5 @@ public class Diagnostics
++    // if (user == null) return;
++    Log("done");

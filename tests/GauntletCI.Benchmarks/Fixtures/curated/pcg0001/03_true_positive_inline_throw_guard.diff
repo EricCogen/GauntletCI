@@ -1,0 +1,11 @@
+# expected: fire
+# reason: Inline guard at method start introduces immediate throw path.
+
+--- a/src/OrderValidator.cs
++++ b/src/OrderValidator.cs
+@@ -5,4 +5,5 @@ public class OrderValidator
+     public void Validate(Order order)
+     {
++        if (order is null) throw new InvalidOperationException("order required");
+         ValidateItems(order);
+     }

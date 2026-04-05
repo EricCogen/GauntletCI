@@ -1,0 +1,13 @@
+# expected: do-not-fire
+# reason: Added conditional branch is business logic and not an entry guard with early exit.
+
+--- a/src/PricingService.cs
++++ b/src/PricingService.cs
+@@ -40,5 +40,9 @@ public class PricingService
+     public decimal Compute(Order order)
+     {
++        if (order.IsPremium)
++            total += 10;
++
+         return total;
+     }

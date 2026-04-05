@@ -1,0 +1,103 @@
+{
+  "source_pcg_rule": "PCG0001",
+  "mapped_gci_rules": ["GCI006", "GCI005"],
+  "description": "New Guard Clause Without Validation — null/empty/range guard patterns added without accompanying test coverage",
+  "fixtures": [
+    {
+      "id": "pcg0001-01",
+      "diff_file": "01_true_positive_method_entry_null_guard.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": ["GCI006", "GCI005"],
+      "notes": "New method-entry null guard introduces throw-based early exit with no visible validation tests."
+    },
+    {
+      "id": "pcg0001-02",
+      "diff_file": "02_true_positive_count_guard.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": ["GCI006"],
+      "notes": "Added entry guard with return changes accepted input domain for empty collection case."
+    },
+    {
+      "id": "pcg0001-03",
+      "diff_file": "03_true_positive_inline_throw_guard.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": ["GCI006"],
+      "notes": "Inline guard at method start introduces immediate throw path."
+    },
+    {
+      "id": "pcg0001-04",
+      "diff_file": "04_false_positive_branching_logic.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Added conditional branch is business logic and not an entry guard with early exit."
+    },
+    {
+      "id": "pcg0001-05",
+      "diff_file": "05_false_positive_nested_conditional.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Nested conditional inside existing branch is not a method-entry guard."
+    },
+    {
+      "id": "pcg0001-06",
+      "diff_file": "06_edge_multi_hunk_same_method.diff",
+      "category": "edge",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Diff contains distant edits and no tight method-entry condition-to-exit linkage."
+    },
+    {
+      "id": "pcg0001-07",
+      "diff_file": "07_edge_guard_with_tests_touched.diff",
+      "category": "edge",
+      "expected_outcome": "fire",
+      "expected_gci_rules": ["GCI006"],
+      "notes": "Guard is present; tests were touched so GCI005 should not fire, but GCI006 still should."
+    },
+    {
+      "id": "pcg0001-08",
+      "diff_file": "08_edge_large_refactor_noisy.diff",
+      "category": "edge",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Large noisy hunk with incidental if/return should be suppressed."
+    },
+    {
+      "id": "pcg0001-09",
+      "diff_file": "09_edge_deep_guard_not_entry.diff",
+      "category": "edge",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Added guard is deep inside method logic and not near method entry."
+    },
+    {
+      "id": "pcg0001-10",
+      "diff_file": "10_edge_equivalent_guard_replaced.diff",
+      "category": "edge",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Guard condition already existed; replacement should not count as new validation boundary."
+    },
+    {
+      "id": "pcg0001-11",
+      "diff_file": "11_adversarial_comment_contains_if_return.diff",
+      "category": "adversarial",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Comment text containing if/return tokens must not trigger guard detection."
+    },
+    {
+      "id": "pcg0001-12",
+      "diff_file": "12_adversarial_string_contains_guard_tokens.diff",
+      "category": "adversarial",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "String literals that mention if/return should not be interpreted as executable guard logic."
+    }
+  ]
+}
