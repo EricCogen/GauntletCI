@@ -1,16 +1,17 @@
 # Benchmark Corpus
 
 This corpus is intentionally **real-only** (`origin: real`) and designed to measure whether GauntletCI catches subtle production-risk changes that standard review and test checks can miss.
+Public-facing examples are selected from repositories with at least one GitHub star.
 
-## Example 1: Contract Change Without Signature Change
+## Example 1: Mixed-Concern Change Set With Hidden Dependency Risk
 
-- Fixture: `Fixtures/curated/gci0017/07_real_true_positive_blocking_plus_missing_error_handling.diff`
-- Rule: `GCI017`
-- Source PR: <https://github.com/danielaase1337/shoppinglist/pull/36>
+- Fixture: `Fixtures/curated/gci0001/09_real_true_positive_rust_yarn_check.diff`
+- Rule: `GCI001`
+- Source PR: <https://github.com/rust-lang/rust/pull/154641>
 
-The diff removes `await` and introduces `.Result` in request body handling, drops the catch/log error path in one controller, and changes a non-GET fallback response from `NotFound` to `NoContent`.
+The diff combines three distinct concerns in one review unit: a flag correctness fix (`--frozen` -> `--frozen-lockfile`), a new lockfile-integrity enforcement path, and a broad dependency lockfile churn.
 
-**Why this is high-signal:** method signatures do not change, but runtime contract and failure semantics do.
+**Why this is high-signal:** each change can look valid in isolation, but bundling them raises review complexity and makes regressions easier to miss.
 
 ## Example 2: Async Race Condition From Lock Removal
 

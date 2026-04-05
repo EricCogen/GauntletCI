@@ -69,9 +69,9 @@ gauntletci --format json
 
 ## Real benchmark examples
 
-- **Contract change without signature change**  
-  `tests/GauntletCI.Benchmarks/Fixtures/curated/gci0017/07_real_true_positive_blocking_plus_missing_error_handling.diff`  
-  [Full analysis](tests/GauntletCI.Benchmarks/README.md#example-1-contract-change-without-signature-change)
+- **Mixed-concern change set with hidden dependency risk**  
+  `tests/GauntletCI.Benchmarks/Fixtures/curated/gci0001/09_real_true_positive_rust_yarn_check.diff`  
+  [Full analysis](tests/GauntletCI.Benchmarks/README.md#example-1-mixed-concern-change-set-with-hidden-dependency-risk)
 
 - **Async race condition from lock removal**  
   `tests/GauntletCI.Benchmarks/Fixtures/curated/gci0017/09_real_true_positive_race_condition_state_corruption.diff`  
