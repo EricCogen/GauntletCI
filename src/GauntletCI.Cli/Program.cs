@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Evaluation;
 using GauntletCI.Core.Gates;
 using GauntletCI.Core.Infrastructure;
@@ -21,19 +22,28 @@ if (options.Command == "install")
 
 if (options.Command == "config")
 {
-	ShowConfigPath();
+	await HandleConfigCommandAsync(options);
 	return;
+}
+
+ConfigLoader configLoader = new();
+if (!options.NoTelemetry)
+{
+	EnsureTelemetryConsent(configLoader);
 }
 
 ICommandRunner commandRunner = new ProcessCommandRunner();
 EvaluationEngine engine = new(
+	configLoader,
 	new BranchCurrencyGate(commandRunner),
 	new TestPassageGate(commandRunner),
 	commandRunner,
 	new ContextAssembler(),
 	new PromptBuilder(),
 	new FindingParser(),
-	new NoOpLlmClient(),
+	new RulesTextProvider(),
+	new ModelSelector(),
+	new HttpLlmClient(new HttpClient { Timeout = TimeSpan.FromSeconds(8) }),
 	new TelemetryEmitter());
 
 EvaluationRequest request = new(
@@ -56,6 +66,42 @@ static void ShowConfigPath()
 	Console.WriteLine(configPath);
 }
 
+static async Task HandleConfigCommandAsync(CliOptions options)
+{
+	ConfigLoader loader = new();
+	if (options.SetTelemetry is not null)
+	{
+		loader.SaveTelemetryConsent(options.SetTelemetry.Value);
+		Console.WriteLine($"Telemetry {(options.SetTelemetry.Value ? "enabled" : "disabled")} in {loader.UserConfigPath}");
+		return;
+	}
+
+	ShowConfigPath();
+	await Task.CompletedTask;
+}
+
+static void EnsureTelemetryConsent(ConfigLoader configLoader)
+{
+	if (configLoader.HasTelemetryConsentRecorded())
+	{
+		return;
+	}
+
+	if (Console.IsInputRedirected)
+	{
+		configLoader.SaveTelemetryConsent(false);
+		return;
+	}
+
+	Console.WriteLine("GauntletCI is free.");
+	Console.WriteLine("In exchange, anonymized metrics about which rules fired and whether you acted on them are sent back to improve the product.");
+	Console.WriteLine("No code content is ever transmitted. Run 'gauntletci config --no-telemetry' to opt out at any time.");
+	Console.Write("Collect anonymized usage metrics? [Y/n]: ");
+	string? input = Console.ReadLine();
+	bool enabled = string.IsNullOrWhiteSpace(input) || input.Trim().Equals("y", StringComparison.OrdinalIgnoreCase);
+	configLoader.SaveTelemetryConsent(enabled);
+}
+
 static void RenderResult(EvaluationResult result, bool jsonOutput)
 {
 	if (jsonOutput)
@@ -65,6 +111,8 @@ static void RenderResult(EvaluationResult result, bool jsonOutput)
 			exit_code = result.ExitCode,
 			model = result.Model,
 			diff_trimmed = result.DiffTrimmed,
+			evaluation_duration_ms = result.EvaluationDurationMs,
+			diff_metadata = result.DiffMetadata,
 			branch_currency = result.BranchCurrencyGate,
 			test_passage = result.TestPassageGate,
 			error = result.ErrorMessage,
@@ -75,9 +123,11 @@ static void RenderResult(EvaluationResult result, bool jsonOutput)
 	}
 
 	Console.WriteLine("GauntletCI");
+	Console.WriteLine($"- Model: {result.Model}");
 	Console.WriteLine($"- Branch currency: {RenderGate(result.BranchCurrencyGate)}");
 	Console.WriteLine($"- Test passage: {RenderGate(result.TestPassageGate)}");
 	Console.WriteLine($"- Findings: {result.Findings.Count}");
+	Console.WriteLine($"- Duration: {result.EvaluationDurationMs} ms");
 
 	if (!string.IsNullOrWhiteSpace(result.ErrorMessage))
 	{
@@ -117,7 +167,7 @@ static async Task<int> InstallHookAsync(string workingDirectory)
 	}
 
 	string hookPath = Path.Combine(hooksDir, "pre-commit");
-	string script = "#!/usr/bin/env sh\ngauntletci\n";
+	string script = "#!/usr/bin/env sh\ngauntletci\nexit $?\n";
 	await File.WriteAllTextAsync(hookPath, script);
 	Console.WriteLine($"Installed pre-commit hook at {hookPath}");
 	return 0;
@@ -131,6 +181,7 @@ public sealed record CliOptions(
 	bool JsonOutput,
 	bool NoTelemetry,
 	bool ShowHelp,
+	bool? SetTelemetry,
 	string? TestCommandOverride)
 {
 	public static string HelpText =>
@@ -143,6 +194,8 @@ gauntletci --format json machine-readable output
 gauntletci --no-telemetry disable telemetry for this run
 gauntletci install      installs git pre-commit hook
 gauntletci config       prints user config path
+gauntletci config --no-telemetry persists telemetry opt-out
+gauntletci config --telemetry persists telemetry opt-in
 """;
 
 	public static CliOptions Parse(string[] args)
@@ -154,6 +207,7 @@ gauntletci config       prints user config path
 		bool json = false;
 		bool noTelemetry = false;
 		bool help = false;
+		bool? setTelemetry = null;
 		string? testCommand = null;
 
 		for (int i = 0; i < args.Length; i++)
@@ -173,6 +227,16 @@ gauntletci config       prints user config path
 					break;
 				case "--no-telemetry":
 					noTelemetry = true;
+					if (command == "config")
+					{
+						setTelemetry = false;
+					}
+					break;
+				case "--telemetry":
+					if (command == "config")
+					{
+						setTelemetry = true;
+					}
 					break;
 				case "--help":
 				case "-h":
@@ -190,6 +254,6 @@ gauntletci config       prints user config path
 			}
 		}
 
-		return new CliOptions(command, full, fast, rule, json, noTelemetry, help, testCommand);
+		return new CliOptions(command, full, fast, rule, json, noTelemetry, help, setTelemetry, testCommand);
 	}
 }

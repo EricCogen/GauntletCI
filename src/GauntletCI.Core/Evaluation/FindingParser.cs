@@ -1,10 +1,13 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using GauntletCI.Core.Models;
 
 namespace GauntletCI.Core.Evaluation;
 
 public sealed class FindingParser
 {
+    private static readonly Regex EvidenceRegex = new(@"([A-Za-z0-9_\-/]+\.[A-Za-z0-9]+(:\d+)?|[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*)", RegexOptions.Compiled);
+
     public IReadOnlyList<Finding> Parse(string rawJson)
     {
         try
@@ -29,7 +32,7 @@ public sealed class FindingParser
                     !string.IsNullOrWhiteSpace(finding.FindingText) &&
                     !string.IsNullOrWhiteSpace(finding.Evidence);
 
-                if (!hasRequiredFields)
+                if (!hasRequiredFields || IsVague(finding))
                 {
                     continue;
                 }
@@ -43,5 +46,18 @@ public sealed class FindingParser
         {
             throw new FormatException("Model response was not valid finding JSON.", ex);
         }
+    }
+
+    private static bool IsVague(Finding finding)
+    {
+        if (!EvidenceRegex.IsMatch(finding.Evidence))
+        {
+            return true;
+        }
+
+        string lowered = finding.FindingText.Trim().ToLowerInvariant();
+        return lowered.Contains("may need review", StringComparison.Ordinal) ||
+               lowered.Contains("consider reviewing", StringComparison.Ordinal) ||
+               lowered.Length < 20;
     }
 }

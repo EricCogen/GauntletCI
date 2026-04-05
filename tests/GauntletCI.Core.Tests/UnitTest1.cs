@@ -15,7 +15,7 @@ public class UnitTest1
                 "rule_id": "FL003",
                 "rule_name": "Behavioral Change Detection",
                 "severity": "high",
-                "finding": "Behavior changed.",
+                "finding": "OrderProcessor now swallows exception and changes caller behavior.",
                 "evidence": "OrderProcessor.cs:47",
                 "why_it_matters": "Contract changed.",
                 "suggested_action": "Restore throw behavior.",
@@ -41,9 +41,34 @@ public class UnitTest1
         GauntletConfig config = new();
         string diff = string.Join('\n', Enumerable.Range(1, 100).Select(static i => $"+ line {i}"));
 
-        (string context, bool trimmed) = assembler.Assemble(branch, test, diff, config, ["feat: setup"], 20);
+        AssembledContext assembled = assembler.Assemble(branch, test, diff, config, ["feat: setup"], 20);
 
-        Assert.True(trimmed);
-        Assert.Contains("diff trimmed", context, StringComparison.OrdinalIgnoreCase);
+        Assert.True(assembled.DiffTrimmed);
+        Assert.Contains("diff trimmed", assembled.Context, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public void FindingParser_DropsVagueFindingWithoutConcreteEvidence()
+    {
+        string rawJson =
+            """
+            [
+              {
+                "rule_id": "FL007",
+                "rule_name": "Error Handling Integrity",
+                "severity": "medium",
+                "finding": "Error handling may need review",
+                "evidence": "something unclear",
+                "why_it_matters": "might be bad",
+                "suggested_action": "review it",
+                "confidence": "Low"
+              }
+            ]
+            """;
+
+        FindingParser parser = new();
+        IReadOnlyList<Finding> findings = parser.Parse(rawJson);
+
+        Assert.Empty(findings);
     }
 }
