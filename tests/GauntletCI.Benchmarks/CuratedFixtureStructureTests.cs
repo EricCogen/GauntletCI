@@ -106,6 +106,19 @@ public sealed class CuratedFixtureStructureTests
         }
     }
 
+    [Fact]
+    public void Gci0005_FalsificationLane_UsesFireFixturesWithWeakTestSignals()
+    {
+        var (manifest, _) = FixtureLoader.Load("gci0005");
+
+        Assert.True(manifest.Fixtures.Count >= 3, "Expected at least three falsification fixtures in gci0005.");
+        Assert.All(manifest.Fixtures, fixture =>
+        {
+            Assert.True(fixture.ShouldFire, $"Fixture {fixture.Id} should be a fire case.");
+            Assert.Contains("test", fixture.Notes, StringComparison.OrdinalIgnoreCase);
+        });
+    }
+
     private static IEnumerable<string> GetCuratedFixtureSetNames()
     {
         string curatedRoot = Path.Combine(AppContext.BaseDirectory, "Fixtures", "curated");

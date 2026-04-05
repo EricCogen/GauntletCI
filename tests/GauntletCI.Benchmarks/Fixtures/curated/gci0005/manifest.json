@@ -3,6 +3,43 @@
     "GCI005"
   ],
   "description": "Test Coverage Relevance: Assess whether tests verify changed behavior.",
-  "fixtures": []
+  "fixtures": [
+    {
+      "id": "gci0005-01",
+      "diff_file": "01_real_true_positive_tests_added_missing_critical_path_assertion.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI005"
+      ],
+      "notes": "A new integration test is added, but it only validates a happy-path bean retrieval and does not assert the changed missing-bean-name fallback behavior or new property autowire branch.",
+      "origin": "real",
+      "source_url": "https://github.com/spring-projects/spring-framework/pull/22260"
+    },
+    {
+      "id": "gci0005-02",
+      "diff_file": "02_real_true_positive_test_file_touched_without_new_assertions_dump_all.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI005"
+      ],
+      "notes": "Core dump_all behavior is changed to dedupe schemas across configs, but the test delta is only helper include churn and adds no assertions for the new branch behavior.",
+      "origin": "real",
+      "source_url": "https://github.com/rails/rails/pull/55713"
+    },
+    {
+      "id": "gci0005-03",
+      "diff_file": "03_real_true_positive_test_file_touched_without_new_assertions_dump_schema.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI005"
+      ],
+      "notes": "dump_schema execution is refactored to use with_temporary_pool and connection-scoped schema version writes, while test changes remain setup-only with no assertion coverage for the altered execution path.",
+      "origin": "real",
+      "source_url": "https://github.com/rails/rails/pull/55713"
+    }
+  ]
 }
 
