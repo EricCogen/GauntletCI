@@ -34,7 +34,7 @@ public sealed class ConfigLoader
             BlockingRules = repo.BlockingRules ?? [],
             Telemetry = telemetry,
             TelemetryConsentRecorded = consentRecorded,
-            Model = repo.Model ?? user.Model ?? "claude-sonnet-4-5",
+            Model = repo.Model ?? user.Model ?? "claude-sonnet-4-6",
             ApiKeyEnv = user.ApiKeyEnv ?? "",
             DefaultMode = user.DefaultMode ?? "staged",
             BaseUrl = user.BaseUrl ?? "",

@@ -20,7 +20,7 @@ public sealed record GauntletConfig
     public bool Telemetry { get; init; } = true;
 
     [JsonPropertyName("model")]
-    public string Model { get; init; } = "claude-sonnet-4-5";
+    public string Model { get; init; } = "claude-sonnet-4-6";
 
     [JsonPropertyName("api_key_env")]
     public string ApiKeyEnv { get; init; } = "";
