@@ -1,0 +1,30 @@
+# origin: real
+# source: https://github.com/grafana/grafana/pull/119491
+# expected: do-not-fire
+# reason: The diff strengthens error handling visibility by adding error logs on provisioning failure paths instead of removing or swallowing error context.
+
+--- a/pkg/services/provisioning/provisioning.go
++++ b/pkg/services/provisioning/provisioning.go
+@@ -134,6 +134,7 @@ func (ps *ProvisioningServiceImpl) runJob(ctx context.Context, job provisioningM
+ 	ctx, span := ps.tracer.Start(ctx, "ProvisioningService.runJob")
+ 	defer span.End()
+
+ 	if err := ps.applyChanges(ctx, job); err != nil {
++		ps.log.Error("failed to apply provisioning job", "namespace", job.Namespace, "jobType", job.Type, "err", err)
+ 		ps.mutex.Lock()
+ 		ps.runningJobs[job.Namespace] = jobStatusFailed
+ 		ps.mutex.Unlock()
+@@ -152,6 +153,10 @@ func (ps *ProvisioningServiceImpl) scheduleJob(ctx context.Context, job provisio
+ 	ticker := time.NewTicker(job.Interval)
+ 	defer ticker.Stop()
+
++	ps.log.Info("starting scheduled provisioning job", "namespace", job.Namespace, "interval", job.Interval)
++
+ 	for {
+ 		select {
+ 		case <-ticker.C:
+ 			if err := ps.runJob(ctx, job); err != nil {
++				ps.log.Error("scheduled job failed", "namespace", job.Namespace, "err", err)
+ 			}
+ 		case <-ctx.Done():
+ 			return
