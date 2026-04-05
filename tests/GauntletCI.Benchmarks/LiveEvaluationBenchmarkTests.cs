@@ -106,7 +106,7 @@ public sealed class LiveEvaluationBenchmarkTests
         RulesTextProvider rulesTextProvider = new();
         PromptBuilder promptBuilder = new();
         FindingParser findingParser = new();
-        HttpClient httpClient = new();
+        HttpClient httpClient = new() { Timeout = TimeSpan.FromSeconds(120) };
         ILlmClient llmClient = new HttpLlmClient(httpClient);
 
         string rulesText = rulesTextProvider.LoadRulesText();
