@@ -16,6 +16,9 @@ public sealed record GauntletConfig
     [JsonPropertyName("blocking_rules")]
     public IReadOnlyList<string> BlockingRules { get; init; } = [];
 
+    [JsonPropertyName("policy_refs")]
+    public IReadOnlyList<string> PolicyReferences { get; init; } = [];
+
     [JsonPropertyName("telemetry")]
     public bool Telemetry { get; init; } = true;
 

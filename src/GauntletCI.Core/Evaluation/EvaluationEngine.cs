@@ -44,14 +44,16 @@ public sealed class EvaluationEngine(
         if (!branchResult.Passed)
         {
             sw.Stop();
-            return new EvaluationResult(1, branchResult, null, [], branchResult.Output ?? branchResult.Summary, false, config.Model, null, (int)sw.ElapsedMilliseconds);
+            EvaluationResult branchFailure = new(1, branchResult, null, [], branchResult.Output ?? branchResult.Summary, false, config.Model, null, (int)sw.ElapsedMilliseconds);
+            return await FinalizeResultAsync(branchFailure, config, request, cancellationToken).ConfigureAwait(false);
         }
 
         GateResult testResult = await testPassageGate.ExecuteAsync(request.WorkingDirectory, testCommand!, cancellationToken).ConfigureAwait(false);
         if (!testResult.Passed)
         {
             sw.Stop();
-            return new EvaluationResult(1, branchResult, testResult, [], testResult.Output ?? testResult.Summary, false, config.Model, null, (int)sw.ElapsedMilliseconds);
+            EvaluationResult testFailure = new(1, branchResult, testResult, [], testResult.Output ?? testResult.Summary, false, config.Model, null, (int)sw.ElapsedMilliseconds);
+            return await FinalizeResultAsync(testFailure, config, request, cancellationToken).ConfigureAwait(false);
         }
 
         string diffText;
@@ -66,7 +68,8 @@ public sealed class EvaluationEngine(
             if (!diffResult.IsSuccess)
             {
                 sw.Stop();
-                return new EvaluationResult(3, branchResult, testResult, [], "Unable to collect git diff for evaluation.", false, config.Model, null, (int)sw.ElapsedMilliseconds);
+                EvaluationResult diffFailure = new(3, branchResult, testResult, [], "Unable to collect git diff for evaluation.", false, config.Model, null, (int)sw.ElapsedMilliseconds);
+                return await FinalizeResultAsync(diffFailure, config, request, cancellationToken).ConfigureAwait(false);
             }
 
             diffText = diffResult.StandardOutput;
@@ -106,7 +109,7 @@ public sealed class EvaluationEngine(
             sw.Stop();
             if (config.ModelRequired)
             {
-                return new EvaluationResult(
+                EvaluationResult strictUnavailable = new(
                     ExitCode: 1,
                     BranchCurrencyGate: branchResult,
                     TestPassageGate: testResult,
@@ -116,6 +119,7 @@ public sealed class EvaluationEngine(
                     Model: selection.Model,
                     DiffMetadata: assembled.Metadata,
                     EvaluationDurationMs: (int)sw.ElapsedMilliseconds);
+                return await FinalizeResultAsync(strictUnavailable, config, request, cancellationToken).ConfigureAwait(false);
             }
 
             int deterministicExit = ComputeExitCode(deterministicFindings, config.BlockingRules);
@@ -144,7 +148,7 @@ public sealed class EvaluationEngine(
             sw.Stop();
             if (config.ModelRequired)
             {
-                return new EvaluationResult(
+                EvaluationResult strictRulesLoadFailure = new(
                     ExitCode: 1,
                     BranchCurrencyGate: branchResult,
                     TestPassageGate: testResult,
@@ -154,6 +158,7 @@ public sealed class EvaluationEngine(
                     Model: selection.Model,
                     DiffMetadata: assembled.Metadata,
                     EvaluationDurationMs: (int)sw.ElapsedMilliseconds);
+                return await FinalizeResultAsync(strictRulesLoadFailure, config, request, cancellationToken).ConfigureAwait(false);
             }
 
             int deterministicExit = ComputeExitCode(deterministicFindings, config.BlockingRules);
@@ -181,7 +186,7 @@ public sealed class EvaluationEngine(
             sw.Stop();
             if (config.ModelRequired)
             {
-                return new EvaluationResult(
+                EvaluationResult strictModelFailure = new(
                     ExitCode: 1,
                     BranchCurrencyGate: branchResult,
                     TestPassageGate: testResult,
@@ -191,6 +196,7 @@ public sealed class EvaluationEngine(
                     Model: selection.Model,
                     DiffMetadata: assembled.Metadata,
                     EvaluationDurationMs: (int)sw.ElapsedMilliseconds);
+                return await FinalizeResultAsync(strictModelFailure, config, request, cancellationToken).ConfigureAwait(false);
             }
 
             int deterministicExit = ComputeExitCode(deterministicFindings, config.BlockingRules);
@@ -219,7 +225,7 @@ public sealed class EvaluationEngine(
             sw.Stop();
             if (config.ModelRequired)
             {
-                return new EvaluationResult(
+                EvaluationResult strictParseFailure = new(
                     ExitCode: 1,
                     BranchCurrencyGate: branchResult,
                     TestPassageGate: testResult,
@@ -229,6 +235,7 @@ public sealed class EvaluationEngine(
                     Model: selection.Model,
                     DiffMetadata: assembled.Metadata,
                     EvaluationDurationMs: (int)sw.ElapsedMilliseconds);
+                return await FinalizeResultAsync(strictParseFailure, config, request, cancellationToken).ConfigureAwait(false);
             }
 
             int deterministicExit = ComputeExitCode(deterministicFindings, config.BlockingRules);
@@ -257,12 +264,13 @@ public sealed class EvaluationEngine(
 
     private async Task<EvaluationResult> FinalizeResultAsync(EvaluationResult result, GauntletConfig config, EvaluationRequest request, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(result.ErrorMessage) && config.ShouldEmitTelemetry(request.NoTelemetry))
+        EvaluationResult auditedResult = result with { AuditTrail = BuildAuditTrail(result, config) };
+        if (string.IsNullOrWhiteSpace(auditedResult.ErrorMessage) && config.ShouldEmitTelemetry(request.NoTelemetry))
         {
-            await telemetryEmitter.EmitAsync(result, config, cancellationToken).ConfigureAwait(false);
+            await telemetryEmitter.EmitAsync(auditedResult, config, cancellationToken).ConfigureAwait(false);
         }
 
-        return result;
+        return auditedResult;
     }
 
     private static IReadOnlyList<Finding> ApplyRuleScopeAndDisabledRules(IReadOnlyList<Finding> findings, string? requestedRule, IReadOnlyList<string> disabledRules)
@@ -292,6 +300,55 @@ public sealed class EvaluationEngine(
 
         HashSet<string> blocked = new(blockingRules, StringComparer.OrdinalIgnoreCase);
         return findings.Any(finding => blocked.Contains(finding.RuleId)) ? 1 : 0;
+    }
+
+    private static EvaluationAuditTrail BuildAuditTrail(EvaluationResult result, GauntletConfig config)
+    {
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        ConfigResolvedEvent configResolved = new(
+            EventId: Guid.NewGuid().ToString("N"),
+            OccurredAtUtc: now,
+            ConfigFormat: ".gauntletci.json",
+            Model: config.Model,
+            ModelRequired: config.ModelRequired,
+            TelemetryEnabled: config.Telemetry,
+            TelemetryConsentRecorded: config.TelemetryConsentRecorded,
+            DisabledRules: [.. config.DisabledRules],
+            BlockingRules: [.. config.BlockingRules],
+            PolicyReferences: [.. config.PolicyReferences]);
+
+        AnalysisCompletedEvent analysisCompleted = new(
+            EventId: Guid.NewGuid().ToString("N"),
+            OccurredAtUtc: now,
+            ExitCode: result.ExitCode,
+            ModelStepSkipped: result.ModelStepSkipped,
+            DiffTrimmed: result.DiffTrimmed,
+            HasError: !string.IsNullOrWhiteSpace(result.ErrorMessage),
+            EvaluationDurationMs: result.EvaluationDurationMs,
+            Model: result.Model,
+            BranchCurrencyPassed: result.BranchCurrencyGate?.Passed == true,
+            TestPassagePassed: result.TestPassageGate?.Passed == true,
+            FindingCount: result.Findings.Count,
+            DiffMetadata: result.DiffMetadata);
+
+        IReadOnlyList<RuleFiredEvent> ruleFirings = result.Findings
+            .Select(finding => new RuleFiredEvent(
+                EventId: Guid.NewGuid().ToString("N"),
+                OccurredAtUtc: now,
+                RuleId: finding.RuleId,
+                RuleName: finding.RuleName,
+                Severity: finding.Severity,
+                Confidence: finding.Confidence,
+                Evidence: finding.Evidence))
+            .ToArray();
+
+        return new EvaluationAuditTrail(
+            SchemaVersion: "1",
+            EvaluationId: Guid.NewGuid(),
+            CapturedAtUtc: now,
+            ConfigResolved: configResolved,
+            AnalysisCompleted: analysisCompleted,
+            RuleFirings: ruleFirings);
     }
 
     private static string BuildStrictModelError(string apiKeyEnv, string? detail = null)

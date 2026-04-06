@@ -282,6 +282,52 @@ public sealed class EvaluationEngineModelOptionalityTests
         Assert.Equal(1, llmClient.CallCount);
     }
 
+    [Fact]
+    public async Task EvaluateAsync_DeterministicFallback_AttachesAuditTrailWithPolicyReferences()
+    {
+        using EnvironmentVariableScope env = new("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "LOCAL_API_KEY");
+        env.ClearAll();
+        using TemporaryDirectory repo = TemporaryDirectory.CreateWithConfig(
+            """
+            {
+              "test_command": "dotnet test",
+              "blocking_rules": ["GCI016"],
+              "policy_refs": ["policy://security/baseline@v1"],
+              "model_required": false,
+              "model": "claude-sonnet-4-6"
+            }
+            """);
+
+        const string diff = """
+            diff --git a/src/OrderController.cs b/src/OrderController.cs
+            index 1111111..2222222 100644
+            --- a/src/OrderController.cs
+            +++ b/src/OrderController.cs
+            @@ -10,0 +11,1 @@
+            +var order = repository.LoadAsync(id).Result;
+            """;
+
+        FakeCommandRunner commandRunner = new();
+        FakeLlmClient llmClient = new(new LlmResponse(true, "[]"));
+        EvaluationEngine engine = CreateEngine(commandRunner, llmClient);
+        EvaluationRequest request = new(
+            WorkingDirectory: repo.Path,
+            FullMode: false,
+            FastMode: false,
+            Rule: null,
+            JsonOutput: false,
+            NoTelemetry: true,
+            ExplicitTestCommand: "fake-test",
+            ProvidedDiff: diff);
+
+        EvaluationResult result = await engine.EvaluateAsync(request, CancellationToken.None);
+
+        Assert.NotNull(result.AuditTrail);
+        Assert.Equal(".gauntletci.json", result.AuditTrail!.ConfigResolved.ConfigFormat);
+        Assert.Contains("policy://security/baseline@v1", result.AuditTrail.ConfigResolved.PolicyReferences);
+        Assert.Contains(result.AuditTrail.RuleFirings, ruleEvent => ruleEvent.RuleId == "GCI016");
+    }
+
     private static EvaluationEngine CreateEngine(FakeCommandRunner commandRunner, FakeLlmClient llmClient)
     {
         return new EvaluationEngine(

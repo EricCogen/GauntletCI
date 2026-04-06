@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 // Copyright (c) Eric Cogen. All rights reserved.
 
+using System.Text.Json.Serialization;
+
 namespace GauntletCI.Core.Models;
 
 public sealed record EvaluationResult(
@@ -16,5 +18,8 @@ public sealed record EvaluationResult(
     string? WarningMessage = null,
     bool ModelStepSkipped = false)
 {
+    [JsonIgnore]
+    public EvaluationAuditTrail? AuditTrail { get; init; }
+
     public bool HasHighSeverity => Findings.Any(static finding => finding.Severity.Equals("high", StringComparison.OrdinalIgnoreCase));
 }

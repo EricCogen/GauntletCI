@@ -176,6 +176,7 @@ Works with local models for offline or cost-controlled usage.
   "test_command": "dotnet test",
   "disabled_rules": [],
   "blocking_rules": ["GCI012", "GCI004"],
+  "policy_refs": ["policy://security/baseline@v1"],
   "model_required": false,
   "telemetry": true,
   "model": "claude-sonnet-4-6"

@@ -33,6 +33,19 @@ public sealed class ConfigLoaderModelRequiredTests : IDisposable
         Assert.True(config.ModelRequired);
     }
 
+    [Fact]
+    public void LoadEffective_ReadsPolicyReferencesFromRepoConfig()
+    {
+        File.WriteAllText(Path.Combine(_tempDirectory, ".gauntletci.json"), """{ "policy_refs": ["policy://security/baseline@v1", "policy://reliability/default@v2"] }""");
+        ConfigLoader loader = new();
+
+        var config = loader.LoadEffective(_tempDirectory);
+
+        Assert.Equal(
+            ["policy://security/baseline@v1", "policy://reliability/default@v2"],
+            config.PolicyReferences);
+    }
+
     public void Dispose()
     {
         if (Directory.Exists(_tempDirectory))
