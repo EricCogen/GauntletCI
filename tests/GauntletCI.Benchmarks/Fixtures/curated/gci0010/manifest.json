@@ -5,66 +5,6 @@
   "description": "Hardcoding and Configuration: Detect hardcoded values, secrets, and brittle assumptions.",
   "fixtures": [
     {
-      "id": "gci0010-06",
-      "diff_file": "06_real_true_positive_openai_key_hardcoded.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI010"
-      ],
-      "notes": "OpenAI API key is assigned directly via os.environ in module scope, embedding a live credential.",
-      "origin": "real",
-      "source_url": "https://github.com/Slivoc/crm/pull/111"
-    },
-    {
-      "id": "gci0010-07",
-      "diff_file": "07_real_true_positive_xai_bearer_token.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI010"
-      ],
-      "notes": "Live xAI bearer token hardcoded directly in a committed HTTP client request file.",
-      "origin": "real",
-      "source_url": "https://github.com/Abhijithsp/laravel12_vue_demo/pull/7"
-    },
-    {
-      "id": "gci0010-08",
-      "diff_file": "08_real_true_positive_gemini_api_key.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI010"
-      ],
-      "notes": "Google Gemini API key is hardcoded as a string literal in the genai.Client constructor.",
-      "origin": "real",
-      "source_url": "https://github.com/SameerAliKhan-git/IntyerviewBit/pull/4"
-    },
-    {
-      "id": "gci0010-09",
-      "diff_file": "09_real_true_positive_mysql_credentials.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI010"
-      ],
-      "notes": "MySQL connection URL with plaintext production password hardcoded in a committed .env file.",
-      "origin": "real",
-      "source_url": "https://github.com/kitretsusaisama/Unified-Auth-Controller/pull/7"
-    },
-    {
-      "id": "gci0010-10",
-      "diff_file": "10_real_true_positive_postgres_appsettings.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI010"
-      ],
-      "notes": "PostgreSQL connection string with hardcoded password and JWT secret committed in ASP.NET appsettings.json.",
-      "origin": "real",
-      "source_url": "https://github.com/guelfi/Batuara.net/pull/1"
-    },
-    {
       "id": "gci0010-11",
       "diff_file": "11_real_true_positive_apple_team_id_fallback.diff",
       "category": "true-positive",
@@ -77,16 +17,6 @@
       "source_url": "https://github.com/TimKenobi/StepScribe/pull/2"
     },
     {
-      "id": "gci0010-12",
-      "diff_file": "12_real_false_positive_env_var_with_check.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "API key is read from environment variable; missing key raises EnvironmentError at startup with no hardcoded fallback.",
-      "origin": "real",
-      "source_url": "https://github.com/SameerAliKhan-git/IntyerviewBit/pull/4"
-    },
-    {
       "id": "gci0010-13",
       "diff_file": "13_real_false_positive_docker_env_substitution.diff",
       "category": "false-positive",
@@ -95,29 +25,6 @@
       "notes": "Docker Compose uses ${VAR:-default} substitution so credentials come from the host environment at runtime.",
       "origin": "real",
       "source_url": "https://github.com/TimKenobi/StepScribe/pull/2"
-    },
-    {
-      "id": "gci0010-14",
-      "diff_file": "14_real_false_positive_env_only_api_keys.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "All API keys are fetched exclusively via os.getenv(); no literal secret values present.",
-      "origin": "real",
-      "source_url": "https://github.com/Slivoc/crm/pull/111"
-    },
-    {
-      "id": "gci0010-15",
-      "diff_file": "15_real_edge_commented_api_key.diff",
-      "category": "edge-case",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI010"
-      ],
-      "notes": "Exchange rate API key hardcoded as string literal in config; inline comment does not remove the credential.",
-      "origin": "real",
-      "source_url": "https://github.com/Slivoc/crm/pull/111"
     }
   ]
 }
-

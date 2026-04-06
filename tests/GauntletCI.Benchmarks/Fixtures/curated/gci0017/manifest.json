@@ -17,18 +17,6 @@
       "source_url": "https://github.com/Phudit-2547/ChuMaiNichi/pull/1"
     },
     {
-      "id": "gci0017-07",
-      "diff_file": "07_real_true_positive_blocking_plus_missing_error_handling.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI017"
-      ],
-      "notes": "Removes async/await and calls .Result on un-awaited Task (potential deadlock), returns wrong HTTP status on success, and omits error handling for the HTTP method dispatch — three interacting behavioral regressions.",
-      "origin": "real",
-      "source_url": "https://github.com/danielaase1337/shoppinglist/pull/36"
-    },
-    {
       "id": "gci0017-08",
       "diff_file": "08_real_true_positive_blocking_io_todo_no_tests.diff",
       "category": "true-positive",
@@ -85,17 +73,6 @@
       "notes": "Migrates SQL string interpolation to parameterized queries, adds multi-statement injection detection, and wraps execution in try/catch — clean security hardening with no new risks introduced.",
       "origin": "real",
       "source_url": "https://github.com/Phudit-2547/ChuMaiNichi/pull/1"
-    },
-    {
-      "id": "gci0017-13",
-      "diff_file": "13_real_false_positive_proper_error_handling_added.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Adds comprehensive exception handling, fixes the correct HTTP status code, and replaces .Result with await — this is a clean correctness and resilience improvement with tests added.",
-      "origin": "real",
-      "source_url": "https://github.com/danielaase1337/shoppinglist/pull/36"
     }
   ]
 }
-

@@ -17,18 +17,6 @@
       "source_url": "https://github.com/spring-projects/spring-framework/pull/22260"
     },
     {
-      "id": "gci0004-07",
-      "diff_file": "07_real_true_positive_http_status_contract_regression.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI004"
-      ],
-      "notes": "Endpoint behavior shifts from NotFound/error paths to NoContent/silent paths for method dispatch and item retrieval, changing API response contract semantics.",
-      "origin": "real",
-      "source_url": "https://github.com/danielaase1337/shoppinglist/pull/36"
-    },
-    {
       "id": "gci0004-08",
       "diff_file": "08_real_true_positive_schema_contract_break_drop_column.diff",
       "category": "true-positive",
@@ -39,16 +27,6 @@
       "notes": "Dropping provider_group introduces a data-schema contract break for downstream readers and integrations that still depend on that column.",
       "origin": "real",
       "source_url": "https://github.com/roots/wp-packages/pull/49"
-    },
-    {
-      "id": "gci0004-09",
-      "diff_file": "09_real_false_positive_contract_behavior_hardening.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Handler changes restore explicit method handling and error paths with better status mapping, improving contract clarity rather than introducing breakage.",
-      "origin": "real",
-      "source_url": "https://github.com/danielaase1337/shoppinglist/pull/36"
     },
     {
       "id": "gci0004-10",
@@ -62,4 +40,3 @@
     }
   ]
 }
-

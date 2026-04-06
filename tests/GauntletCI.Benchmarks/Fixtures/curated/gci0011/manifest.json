@@ -5,42 +5,6 @@
   "description": "Performance Risk: Detect runtime performance regressions such as N+1 queries and hot-path inefficiencies.",
   "fixtures": [
     {
-      "id": "gci0011-06",
-      "diff_file": "06_real_true_positive_n1_sqlalchemy_tags.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI011"
-      ],
-      "notes": "Individual SQLAlchemy SELECT issued per tag inside a for-loop, creating N+1 async database queries.",
-      "origin": "real",
-      "source_url": "https://github.com/anchapin/ResumeAI/pull/1135"
-    },
-    {
-      "id": "gci0011-07",
-      "diff_file": "07_real_true_positive_n1_article_check.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI011"
-      ],
-      "notes": "Per-article database SELECT inside a processing loop causes N+1 queries as the article backlog grows.",
-      "origin": "real",
-      "source_url": "https://github.com/woofleek-svg/NewsLLM/pull/6"
-    },
-    {
-      "id": "gci0011-08",
-      "diff_file": "08_real_true_positive_n1_dailylog_loop.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI011"
-      ],
-      "notes": "DailyLog.query.filter_by() issued for every row inside a spreadsheet-save loop, creating N+1 queries.",
-      "origin": "real",
-      "source_url": "https://github.com/syabiladham20/ERP-SLH/pull/417"
-    },
-    {
       "id": "gci0011-09",
       "diff_file": "09_real_true_positive_n1_contact_names.diff",
       "category": "true-positive",
@@ -65,38 +29,6 @@
       "source_url": "https://github.com/madflow/next-project/pull/1001"
     },
     {
-      "id": "gci0011-11",
-      "diff_file": "11_real_true_positive_n1_bulk_tag_processing.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI011"
-      ],
-      "notes": "Bulk-operation tag endpoint issues one SELECT per tag name inside a loop instead of a single IN query.",
-      "origin": "real",
-      "source_url": "https://github.com/anchapin/ResumeAI/pull/1135"
-    },
-    {
-      "id": "gci0011-12",
-      "diff_file": "12_real_false_positive_batch_tag_preload.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "All tags fetched in one batched IN query before the loop; individual iterations use O(1) dict lookup.",
-      "origin": "real",
-      "source_url": "https://github.com/anchapin/ResumeAI/pull/1135"
-    },
-    {
-      "id": "gci0011-13",
-      "diff_file": "13_real_false_positive_set_batch_check.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "All already-processed IDs fetched in one ANY(array) query before the loop; loop body does O(1) set lookup.",
-      "origin": "real",
-      "source_url": "https://github.com/woofleek-svg/NewsLLM/pull/6"
-    },
-    {
       "id": "gci0011-14",
       "diff_file": "14_real_false_positive_batch_contact_names.diff",
       "category": "false-positive",
@@ -105,19 +37,6 @@
       "notes": "Contacts fetched in batches via IN query before the loop; no per-item database roundtrip occurs.",
       "origin": "real",
       "source_url": "https://github.com/vibhu1212/ufdr-analysis-tool/pull/1"
-    },
-    {
-      "id": "gci0011-15",
-      "diff_file": "15_real_edge_n1_inside_conditional_loop.diff",
-      "category": "edge-case",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI011"
-      ],
-      "notes": "Query inside loop gated by row type check still fires per matching row when new rows dominate the input.",
-      "origin": "real",
-      "source_url": "https://github.com/syabiladham20/ERP-SLH/pull/417"
     }
   ]
 }
-

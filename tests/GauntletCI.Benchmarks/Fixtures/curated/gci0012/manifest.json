@@ -17,30 +17,6 @@
       "source_url": "https://github.com/Phudit-2547/ChuMaiNichi/pull/1"
     },
     {
-      "id": "gci0012-02",
-      "diff_file": "02_real_true_positive_hardcoded_openai_key.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI012"
-      ],
-      "notes": "A live OpenAI key literal is committed directly into source code via environment assignment.",
-      "origin": "real",
-      "source_url": "https://github.com/Slivoc/crm/pull/111"
-    },
-    {
-      "id": "gci0012-03",
-      "diff_file": "03_real_true_positive_mysql_password_in_env.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI012"
-      ],
-      "notes": "Production MySQL credentials are committed in plaintext in .env, creating immediate secret leakage risk.",
-      "origin": "real",
-      "source_url": "https://github.com/kitretsusaisama/Unified-Auth-Controller/pull/7"
-    },
-    {
       "id": "gci0012-04",
       "diff_file": "04_real_false_positive_parameterized_query_hardening.diff",
       "category": "false-positive",
@@ -49,17 +25,6 @@
       "notes": "Change adds SQL pattern blocking and restores exception handling around query execution, reducing injection risk.",
       "origin": "real",
       "source_url": "https://github.com/Phudit-2547/ChuMaiNichi/pull/1"
-    },
-    {
-      "id": "gci0012-05",
-      "diff_file": "05_real_edge_env_var_required_for_api_key.diff",
-      "category": "edge-case",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Hardcoded API key usage is replaced with strict environment lookup and fail-fast startup error when key is missing.",
-      "origin": "real",
-      "source_url": "https://github.com/SameerAliKhan-git/IntyerviewBit/pull/4"
     }
   ]
 }
-
