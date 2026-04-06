@@ -23,6 +23,8 @@ artifacts/
 # Markdown policy: only README.md is committed; all others stay local
 *.md
 !README.md
+!docs/change-risk-thesis.md
+!docs/change-risk-research.md
 !.github/CONTRIBUTING.md
 !.github/ISSUE_TEMPLATE/bug_report.md
 !.github/ISSUE_TEMPLATE/rule_feedback.md
