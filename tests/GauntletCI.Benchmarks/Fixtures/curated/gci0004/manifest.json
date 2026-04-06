@@ -37,6 +37,28 @@
       "notes": "Logging API is refactored from Errorf to ErrorS while method returns and external behavior stay contract-compatible.",
       "origin": "real",
       "source_url": "https://github.com/kubernetes/kubernetes/pull/136395"
+    },
+    {
+      "id": "gci0004-11",
+      "diff_file": "11_real_true_positive_alias_quoting_contract_shift.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI004"
+      ],
+      "notes": "SQL alias quoting semantics change and release notes call out raw SQL alias adjustments, creating caller-integration contract risk.",
+      "origin": "real",
+      "source_url": "https://github.com/django/django/pull/20587"
+    },
+    {
+      "id": "gci0004-12",
+      "diff_file": "12_real_false_positive_quote_name_unless_alias_deprecation_shim.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Existing quote_name_unless_alias path remains available as a deprecation shim that forwards to quote_name, preserving compatibility.",
+      "origin": "real",
+      "source_url": "https://github.com/django/django/pull/20587"
     }
   ]
 }

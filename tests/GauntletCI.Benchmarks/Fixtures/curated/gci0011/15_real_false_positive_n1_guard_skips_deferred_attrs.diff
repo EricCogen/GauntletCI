@@ -1,0 +1,20 @@
+# origin: real
+# source: https://github.com/django/django/pull/20495
+# expected: do-not-fire
+# reason: The iteration path adds a guard to avoid deferred-attribute lookups that previously caused N+1 query behavior.
+
+--- a/django/db/models/query.py
++++ b/django/db/models/query.py
+@@ -133,10 +132,14 @@ def __iter__(self):
+-            for field, rel_objs, rel_getter in known_related_objects:
++            for field, rel_objs, rel_attnames, rel_getter in known_related_objects:
+                 # Avoid overwriting objects loaded by, e.g., select_related().
+                 if field.is_cached(obj):
+                     continue
++                # Avoid fetching potentially deferred attributes that would
++                # result in unexpected queries.
++                if any(attname not in obj.__dict__ for attname in rel_attnames):
++                    continue
+                 rel_obj_id = rel_getter(obj)
+                 try:
+                     rel_obj = rel_objs[rel_obj_id]
