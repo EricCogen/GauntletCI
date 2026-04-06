@@ -27,5 +27,5 @@ artifacts/
 !docs/change-risk-thesis.md
 !docs/change-risk-research.md
 !.github/CONTRIBUTING.md
-!.github/ISSUE_TEMPLATE/bug_report.md
-!.github/ISSUE_TEMPLATE/rule_feedback.md
+!.github/CODE_OF_CONDUCT.md
+!.github/SECURITY.md

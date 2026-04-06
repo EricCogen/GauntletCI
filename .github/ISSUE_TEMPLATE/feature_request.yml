@@ -1,0 +1,52 @@
+name: Feature request
+description: Propose an enhancement to GauntletCI.
+title: "[Feature]: "
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing an improvement. Focus on user value, acceptance criteria, and tradeoffs.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What user or team problem does this solve?
+      placeholder: Describe the current pain point and who is affected.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed_solution
+    attributes:
+      label: Proposed solution
+      description: Describe the desired behavior and interface.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches were considered and why were they not chosen?
+    validations:
+      required: false
+
+  - type: textarea
+    id: definition_of_done
+    attributes:
+      label: Definition of done
+      description: What must be true for this request to be considered complete?
+      placeholder: |
+        - [ ] Behavior implemented
+        - [ ] Tests updated
+        - [ ] Docs updated
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      description: Links, screenshots, or related issues.

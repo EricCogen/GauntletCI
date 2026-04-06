@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability report
+    url: https://github.com/EricCogen/GauntletCI/security/advisories/new
+    about: Report vulnerabilities privately through GitHub Security Advisories.
+  - name: Documentation
+    url: https://github.com/EricCogen/GauntletCI/blob/main/README.md
+    about: Read setup and usage details before opening an issue.

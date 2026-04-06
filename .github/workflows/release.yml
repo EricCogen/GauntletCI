@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (without leading v)"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Resolve release version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            version="${{ inputs.version }}"
+          else
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          if [ -z "$version" ]; then
+            echo "Version was empty." >&2
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Restore
+        run: dotnet restore GauntletCI.slnx
+
+      - name: Build
+        run: dotnet build GauntletCI.slnx --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test GauntletCI.slnx --no-build --configuration Release --verbosity normal
+
+      - name: Pack tool
+        run: dotnet pack src/GauntletCI.Cli/GauntletCI.Cli.csproj --configuration Release --no-build -p:PackageVersion=${{ steps.version.outputs.version }} --output artifacts/release
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          generate_release_notes: true
+          files: |
+            artifacts/release/*.nupkg

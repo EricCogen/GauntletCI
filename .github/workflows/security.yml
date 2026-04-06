@@ -1,0 +1,57 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  dependency-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore GauntletCI.slnx
+
+      - name: Audit NuGet dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r project; do
+            echo "Auditing $project"
+            dotnet list "$project" package --vulnerable --include-transitive
+          done < <(find src tests -name '*.csproj' | sort)
+
+  codeql:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build
+        run: dotnet build GauntletCI.slnx --configuration Release
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@v3

@@ -1,6 +1,6 @@
 namespace GauntletCI.Cli.Tests;
 
-public class UnitTest1
+public sealed class CliOptionsParseTests
 {
     [Fact]
     public void Parse_RecognizesInstallCommand()
