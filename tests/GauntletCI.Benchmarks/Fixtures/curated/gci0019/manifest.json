@@ -33,6 +33,26 @@
       "notes": "A duplicated tool implementation file is removed as part of duplication cleanup.",
       "origin": "real",
       "source_url": "https://github.com/hxcan/sisterfuture/pull/249"
+    },
+    {
+      "id": "gci0019-04",
+      "diff_file": "04_real_false_positive_structured_logging_refactor.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Errorf-to-ErrorS migration standardizes logging API style and does not introduce copy-pasted control-flow branches.",
+      "origin": "real",
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/136395"
+    },
+    {
+      "id": "gci0019-05",
+      "diff_file": "05_real_false_positive_log_level_tuning.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Debug-to-info log level tuning changes verbosity only and does not add duplicated logic blocks.",
+      "origin": "real",
+      "source_url": "https://github.com/prometheus/prometheus/pull/16000"
     }
   ]
 }
