@@ -43,6 +43,50 @@
       "notes": "Debug-to-info log level tuning changes verbosity only and does not add duplicated logic blocks.",
       "origin": "real",
       "source_url": "https://github.com/prometheus/prometheus/pull/16000"
+    },
+    {
+      "id": "gci0019-06",
+      "diff_file": "06_real_true_positive_placement_score_path_duplicates_score_flow.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI019"
+      ],
+      "notes": "A second placement scoring pipeline is introduced with explicit duplicate-flow coupling to RunScorePlugins, raising divergence risk.",
+      "origin": "real",
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/137201"
+    },
+    {
+      "id": "gci0019-07",
+      "diff_file": "07_real_true_positive_podgroup_selection_reimplements_scoring_loop.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI019"
+      ],
+      "notes": "Pod-group scheduling adds bespoke score aggregation and tie-break loops instead of shared scorer reuse, increasing duplicate logic maintenance risk.",
+      "origin": "real",
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/137489"
+    },
+    {
+      "id": "gci0019-08",
+      "diff_file": "08_real_false_positive_delegate_list_helper_reduces_duplication.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Shared shouldDelegateList helper removes duplicated list-delegation branches across cacher list paths.",
+      "origin": "real",
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/103537"
+    },
+    {
+      "id": "gci0019-09",
+      "diff_file": "09_real_false_positive_todo_trigger_base_extracts_common_logic.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Todo item trigger logic is consolidated into an abstract base, reducing repeated branch implementations.",
+      "origin": "real",
+      "source_url": "https://github.com/home-assistant/core/pull/166640"
     }
   ]
 }

@@ -117,6 +117,28 @@
       "notes": "The DI factory call keeps synchronous GetAwaiter().GetResult and only adds ConfigureAwait(false); deadlock likelihood drops but sync-over-async blocking remains.",
       "origin": "real",
       "source_url": "https://github.com/microsoft/teams.net/pull/402"
+    },
+    {
+      "id": "gci0016-20",
+      "diff_file": "20_real_true_positive_modbus_lock_removed.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI016"
+      ],
+      "notes": "Shared modbus client call path removes asyncio.Lock serialization, increasing concurrent request interleaving risk.",
+      "origin": "real",
+      "source_url": "https://github.com/home-assistant/core/pull/151997"
+    },
+    {
+      "id": "gci0016-21",
+      "diff_file": "21_real_false_positive_incremental_join_avoids_race.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Speaker grouping is applied incrementally with per-step waits, explicitly reducing topology race hazards.",
+      "origin": "real",
+      "source_url": "https://github.com/home-assistant/core/pull/159106"
     }
   ]
 }

@@ -1,0 +1,16 @@
+# origin: real
+# source: https://github.com/django/django/pull/20587
+# expected: do-not-fire
+# reason: Identifier rendering is switched to strict quote_name usage to harden SQL construction against alias-injection edge cases.
+
+--- a/django/db/models/expressions.py
++++ b/django/db/models/expressions.py
+@@ -1366,7 +1366,7 @@ def __repr__(self):
+     def as_sql(self, compiler, connection):
+         alias, column = self.alias, self.target.column
+         identifiers = (alias, column) if alias else (column,)
+-        sql = ".".join(map(compiler.quote_name_unless_alias, identifiers))
++        sql = ".".join(map(compiler.quote_name, identifiers))
+         return sql, ()
+ 
+     def relabeled_clone(self, relabels):

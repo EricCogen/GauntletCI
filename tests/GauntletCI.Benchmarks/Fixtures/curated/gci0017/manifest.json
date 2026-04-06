@@ -73,6 +73,16 @@
       "notes": "Migrates SQL string interpolation to parameterized queries, adds multi-statement injection detection, and wraps execution in try/catch — clean security hardening with no new risks introduced.",
       "origin": "real",
       "source_url": "https://github.com/Phudit-2547/ChuMaiNichi/pull/1"
+    },
+    {
+      "id": "gci0017-13",
+      "diff_file": "13_real_false_positive_deadlock_guard_for_listener_start.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Listener registration now guards startup sequencing to avoid deadlocks without introducing additional high-severity production risk signals.",
+      "origin": "real",
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/137296"
     }
   ]
 }

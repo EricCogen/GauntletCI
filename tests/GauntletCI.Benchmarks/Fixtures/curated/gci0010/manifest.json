@@ -25,6 +25,36 @@
       "notes": "Docker Compose uses ${VAR:-default} substitution so credentials come from the host environment at runtime.",
       "origin": "real",
       "source_url": "https://github.com/TimKenobi/StepScribe/pull/2"
+    },
+    {
+      "id": "gci0010-14",
+      "diff_file": "14_real_false_positive_hardcoded_message_const_refactor.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "A runtime message check is refactored to a constant without introducing secrets or brittle fallback defaults.",
+      "origin": "real",
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/137714"
+    },
+    {
+      "id": "gci0010-15",
+      "diff_file": "15_real_false_positive_file_watcher_uses_configured_value.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Routes reloader wiring replaces a hardcoded watcher choice with a configured file_watcher value.",
+      "origin": "real",
+      "source_url": "https://github.com/rails/rails/pull/55709"
+    },
+    {
+      "id": "gci0010-16",
+      "diff_file": "16_real_false_positive_test_pk_no_longer_hardcoded.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Admin test expectations switch from a literal primary key to a fixture-driven value, removing hardcoded test data.",
+      "origin": "real",
+      "source_url": "https://github.com/django/django/pull/21050"
     }
   ]
 }

@@ -1,0 +1,16 @@
+# origin: real
+# source: https://github.com/rails/rails/pull/55709
+# expected: do-not-fire
+# reason: Route reload behavior is switched from a hardcoded default watcher to the configured watcher, improving configurability.
+
+--- a/railties/lib/rails/application.rb
++++ b/railties/lib/rails/application.rb
+@@ -419,7 +419,7 @@ def require_environment! # :nodoc:
+     end
+ 
+     def routes_reloader # :nodoc:
+-      @routes_reloader ||= RoutesReloader.new
++      @routes_reloader ||= RoutesReloader.new(file_watcher: config.file_watcher)
+     end
+ 
+     # Returns an array of file paths appended with a hash of
