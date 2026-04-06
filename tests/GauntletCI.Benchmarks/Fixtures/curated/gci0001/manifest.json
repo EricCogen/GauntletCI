@@ -51,6 +51,18 @@
       "notes": "Three unrelated concerns bundled together: (1) correcting a broken --frozen flag to --frozen-lockfile, (2) adding a new post-install lockfile integrity check, and (3) bumping dozens of yarn.lock dependency versions.",
       "origin": "real",
       "source_url": "https://github.com/rust-lang/rust/pull/154641"
+    },
+    {
+      "id": "gci0001-10",
+      "diff_file": "10_real_true_positive_behavior_change_plus_test_helper_churn.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI001"
+      ],
+      "notes": "Schema-dedupe behavior changes are bundled with unrelated test-helper include churn in the same PR, increasing scope beyond a single cohesive objective.",
+      "origin": "real",
+      "source_url": "https://github.com/rails/rails/pull/55713"
     }
   ]
 }

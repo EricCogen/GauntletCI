@@ -39,6 +39,30 @@
       "notes": "dump_schema execution is refactored to use with_temporary_pool and connection-scoped schema version writes, while test changes remain setup-only with no assertion coverage for the altered execution path.",
       "origin": "real",
       "source_url": "https://github.com/rails/rails/pull/55713"
+    },
+    {
+      "id": "gci0005-04",
+      "diff_file": "04_real_true_positive_prod_path_changed_without_test_assertions.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI005"
+      ],
+      "notes": "Provisioning failure-path behavior and diagnostics are changed, but no corresponding test assertions are added to validate the modified error path.",
+      "origin": "real",
+      "source_url": "https://github.com/grafana/grafana/pull/119491"
+    },
+    {
+      "id": "gci0005-05",
+      "diff_file": "05_real_true_positive_retry_semantics_changed_without_test_delta.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI005"
+      ],
+      "notes": "Retry-adjacent rescue-path diagnostics are removed without adding tests that assert the changed failure-observability behavior.",
+      "origin": "real",
+      "source_url": "https://github.com/mastodon/mastodon/pull/34743"
     }
   ]
 }
