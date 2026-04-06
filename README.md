@@ -1,7 +1,6 @@
 # GauntletCI
 
 [![CI](https://github.com/EricCogen/GauntletCI/actions/workflows/ci.yml/badge.svg)](https://github.com/EricCogen/GauntletCI/actions/workflows/ci.yml)
-[![NuGet](https://img.shields.io/nuget/v/GauntletCI.svg)](https://www.nuget.org/packages/GauntletCI)
 [![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic_2.0-blue.svg)](LICENSE)
 
 Pre-commit change-risk detection for pull requests.
