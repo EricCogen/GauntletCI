@@ -84,6 +84,86 @@ public sealed class DeterministicAnalysisRunnerTests
         Assert.Contains(findings, finding => finding.RuleId == "GCI012");
     }
 
+    [Fact]
+    public void Analyze_FlagsWeakCryptoPattern()
+    {
+        const string diff = """
+            diff --git a/src/Security/Crypto.cs b/src/Security/Crypto.cs
+            index 1111111..2222222 100644
+            --- a/src/Security/Crypto.cs
+            +++ b/src/Security/Crypto.cs
+            @@ -3,0 +4,1 @@
+            +var digest = MD5.Create();
+            """;
+
+        DeterministicAnalysisRunner runner = new();
+        DiffMetadata metadata = CreateMetadata(languages: ["csharp"]);
+
+        IReadOnlyList<Finding> findings = runner.Analyze(diff, metadata);
+
+        Assert.Contains(findings, finding => finding.Evidence.Contains("signal=DET-SEC-003", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Analyze_DoesNotFlagSecretPlaceholderPattern()
+    {
+        const string diff = """
+            diff --git a/src/AppConfig.cs b/src/AppConfig.cs
+            index 1111111..2222222 100644
+            --- a/src/AppConfig.cs
+            +++ b/src/AppConfig.cs
+            @@ -1,0 +1,1 @@
+            +const string apiKey = "YOUR_API_KEY";
+            """;
+
+        DeterministicAnalysisRunner runner = new();
+        DiffMetadata metadata = CreateMetadata(languages: ["csharp"]);
+
+        IReadOnlyList<Finding> findings = runner.Analyze(diff, metadata);
+
+        Assert.DoesNotContain(findings, finding => finding.Evidence.Contains("signal=DET-SEC-001", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Analyze_FlagsSqlStringConcatenationPattern()
+    {
+        const string diff = """
+            diff --git a/src/Data/UserRepository.cs b/src/Data/UserRepository.cs
+            index 1111111..2222222 100644
+            --- a/src/Data/UserRepository.cs
+            +++ b/src/Data/UserRepository.cs
+            @@ -8,0 +9,1 @@
+            +var sql = "SELECT * FROM users WHERE id = " + userId;
+            """;
+
+        DeterministicAnalysisRunner runner = new();
+        DiffMetadata metadata = CreateMetadata(languages: ["csharp"]);
+
+        IReadOnlyList<Finding> findings = runner.Analyze(diff, metadata);
+
+        Assert.Contains(findings, finding => finding.Evidence.Contains("signal=DET-SEC-002", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Analyze_FlagsEmptyCatchPattern()
+    {
+        const string diff = """
+            diff --git a/src/Workers/SyncWorker.cs b/src/Workers/SyncWorker.cs
+            index 1111111..2222222 100644
+            --- a/src/Workers/SyncWorker.cs
+            +++ b/src/Workers/SyncWorker.cs
+            @@ -12,0 +13,1 @@
+            +try { Sync(); } catch (Exception ex) { }
+            """;
+
+        DeterministicAnalysisRunner runner = new();
+        DiffMetadata metadata = CreateMetadata(languages: ["csharp"]);
+
+        IReadOnlyList<Finding> findings = runner.Analyze(diff, metadata);
+
+        Assert.Contains(findings, finding => finding.Evidence.Contains("signal=DET-REL-001", StringComparison.Ordinal));
+    }
+
     private static DiffMetadata CreateMetadata(
         int linesAdded = 8,
         int linesRemoved = 2,
