@@ -34,6 +34,7 @@ public sealed class ContextAssembler
             $"- telemetry: {config.Telemetry}",
             $"- test_command: {config.TestCommand}",
             $"- blocking_rules: {(config.BlockingRules.Count == 0 ? "[]" : string.Join(',', config.BlockingRules))}",
+            $"- policy_refs: {(config.PolicyReferences.Count == 0 ? "[]" : string.Join(',', config.PolicyReferences))}",
             string.Empty,
             "Recent commits:",
         ];

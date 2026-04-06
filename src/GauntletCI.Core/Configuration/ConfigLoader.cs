@@ -32,6 +32,7 @@ public sealed class ConfigLoader
             TestCommand = repo.TestCommand ?? "dotnet test",
             DisabledRules = repo.DisabledRules ?? [],
             BlockingRules = repo.BlockingRules ?? [],
+            PolicyReferences = repo.PolicyReferences ?? [],
             Telemetry = telemetry,
             TelemetryConsentRecorded = consentRecorded,
             Model = repo.Model ?? user.Model ?? "claude-sonnet-4-6",
@@ -52,11 +53,25 @@ public sealed class ConfigLoader
         return LoadUserConfig().Telemetry;
     }
 
-    public void SaveTelemetryConsent(bool enabled)
+    public ConfigChangedEvent SaveTelemetryConsent(bool enabled)
     {
         UserConfigFile user = LoadUserConfig();
+        string? previousValue = user.Telemetry switch
+        {
+            true => "true",
+            false => "false",
+            null => null,
+        };
         UserConfigFile updated = user with { Telemetry = enabled };
         SaveUserConfig(updated);
+
+        return new ConfigChangedEvent(
+            EventId: Guid.NewGuid().ToString("N"),
+            OccurredAtUtc: DateTimeOffset.UtcNow,
+            Setting: "telemetry",
+            PreviousValue: previousValue,
+            NewValue: enabled ? "true" : "false",
+            Source: "user_config");
     }
 
     public void SaveUserConfig(UserConfigFile config)
@@ -110,6 +125,7 @@ public sealed class ConfigLoader
         [property: JsonPropertyName("test_command")] string? TestCommand = null,
         [property: JsonPropertyName("disabled_rules")] IReadOnlyList<string>? DisabledRules = null,
         [property: JsonPropertyName("blocking_rules")] IReadOnlyList<string>? BlockingRules = null,
+        [property: JsonPropertyName("policy_refs")] IReadOnlyList<string>? PolicyReferences = null,
         [property: JsonPropertyName("telemetry")] bool? Telemetry = null,
         [property: JsonPropertyName("model")] string? Model = null,
         [property: JsonPropertyName("model_required")] bool? ModelRequired = null);
