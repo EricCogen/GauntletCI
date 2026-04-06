@@ -3,7 +3,7 @@ using GauntletCI.Core.Models;
 
 namespace GauntletCI.Core.Tests;
 
-public class UnitTest1
+public sealed class FindingParserAndContextAssemblerTests
 {
     [Fact]
     public void FindingParser_Parses_ValidFindingArray()

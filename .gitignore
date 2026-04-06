@@ -19,6 +19,7 @@
 .artifacts/
 artifacts/
 .tmp-tools/
+.misc/
 
 # Markdown policy: only README.md is committed; all others stay local
 *.md
