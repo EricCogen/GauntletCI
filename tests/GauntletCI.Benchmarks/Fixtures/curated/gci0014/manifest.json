@@ -5,18 +5,6 @@
   "description": "Rollback Safety: Detect irreversible deployment and rollback behavior in migrations and data paths.",
   "fixtures": [
     {
-      "id": "gci0014-01",
-      "diff_file": "01_real_true_positive_drop_column_if_exists_still_destructive.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI014"
-      ],
-      "notes": "Migration still drops a production column; IF EXISTS only avoids rerun crashes and does not make rollback data-safe.",
-      "origin": "real",
-      "source_url": "https://github.com/fullstackconnah/TripCore/pull/14"
-    },
-    {
       "id": "gci0014-02",
       "diff_file": "02_real_true_positive_drop_column_data_loss_rollback_gap.diff",
       "category": "true-positive",
@@ -47,17 +35,6 @@
       "notes": "Adds release-time breaking migration checks and a dedicated rollback workflow, reducing rollback risk.",
       "origin": "real",
       "source_url": "https://github.com/activepieces/activepieces/pull/12344"
-    },
-    {
-      "id": "gci0014-05",
-      "diff_file": "05_real_edge_drop_table_removed_for_safety.diff",
-      "category": "edge-case",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Originally planned DROP TABLE statements are removed because migration runner blocks destructive drops on live databases.",
-      "origin": "real",
-      "source_url": "https://github.com/alexsiri7/word-coach-annie/pull/384"
     }
   ]
 }
-

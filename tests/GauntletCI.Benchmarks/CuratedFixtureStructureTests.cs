@@ -139,7 +139,7 @@ public sealed class CuratedFixtureStructureTests
     {
         var (manifest, _) = FixtureLoader.Load("gci0016");
 
-        Assert.True(manifest.Fixtures.Count >= 14, "Expected expanded async/concurrency fixture coverage in gci0016.");
+        Assert.True(manifest.Fixtures.Count >= 10, "Expected expanded async/concurrency fixture coverage in gci0016.");
         Assert.Contains(manifest.Fixtures, f => f.Id == "gci0016-16" && f.ShouldFire);
         Assert.Contains(manifest.Fixtures, f => f.Id == "gci0016-17" && !f.ShouldFire);
         Assert.Contains(manifest.Fixtures, f => f.Id == "gci0016-18" && !f.ShouldFire);

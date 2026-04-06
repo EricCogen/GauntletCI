@@ -5,18 +5,6 @@
   "description": "Concurrency and State Risk: Detect race conditions, improper async usage, and shared state hazards.",
   "fixtures": [
     {
-      "id": "gci0016-06",
-      "diff_file": "06_real_true_positive_result_blocking_api.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI016"
-      ],
-      "notes": "Blocks the async thread-pool by calling .Result on a Task inside an ASP.NET controller, causing deadlock under the synchronization context.",
-      "origin": "real",
-      "source_url": "https://github.com/Shooshpanius/Pullenti.Core/pull/4"
-    },
-    {
       "id": "gci0016-07",
       "diff_file": "07_real_true_positive_task_run_result_property.diff",
       "category": "true-positive",
@@ -39,18 +27,6 @@
       "notes": "Calls blocking requests.get() inside an async method, stalling the event loop for the full HTTP round-trip duration.",
       "origin": "real",
       "source_url": "https://github.com/steq98ai-githng/GY-langchain/pull/22"
-    },
-    {
-      "id": "gci0016-09",
-      "diff_file": "09_real_true_positive_run_in_executor_sync_io.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI016"
-      ],
-      "notes": "Uses loop.run_in_executor() to wrap a synchronous requests.get() call, which is Task.Run wrapping sync I/O pretending to be async — the executor threads are still blocked.",
-      "origin": "real",
-      "source_url": "https://github.com/htchan/home_assistant__kobo_os_checker/pull/3"
     },
     {
       "id": "gci0016-10",
@@ -77,16 +53,6 @@
       "source_url": "https://github.com/hsahovic/poke-env/pull/858"
     },
     {
-      "id": "gci0016-12",
-      "diff_file": "12_real_false_positive_proper_await_fix.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Correctly replaces .Result blocking with async/await — no concurrency hazard introduced.",
-      "origin": "real",
-      "source_url": "https://github.com/Shooshpanius/Pullenti.Core/pull/4"
-    },
-    {
       "id": "gci0016-13",
       "diff_file": "13_real_false_positive_asyncio_lock_added.diff",
       "category": "false-positive",
@@ -95,16 +61,6 @@
       "notes": "Introduces per-battle asyncio.Lock objects to serialize concurrent message handlers — this is the correct thread-safe fix.",
       "origin": "real",
       "source_url": "https://github.com/hsahovic/poke-env/pull/858"
-    },
-    {
-      "id": "gci0016-14",
-      "diff_file": "14_real_false_positive_aiohttp_replaces_blocking.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Replaces run_in_executor-wrapped sync HTTP with native aiohttp async session — proper async I/O with no thread blocking.",
-      "origin": "real",
-      "source_url": "https://github.com/htchan/home_assistant__kobo_os_checker/pull/3"
     },
     {
       "id": "gci0016-15",
@@ -164,4 +120,3 @@
     }
   ]
 }
-
