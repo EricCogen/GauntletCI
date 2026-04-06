@@ -150,6 +150,9 @@ Does not replace code review or tests
 
 - [Change Risk Thesis](./docs/change-risk-thesis.md)  
 - [Change Risk Research](./docs/change-risk-research.md)
+- [Contributing Guide](./.github/CONTRIBUTING.md)
+- [Code of Conduct](./.github/CODE_OF_CONDUCT.md)
+- [Security Policy](./.github/SECURITY.md)
 
 ---
 
