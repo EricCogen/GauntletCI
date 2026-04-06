@@ -164,6 +164,106 @@ public sealed class DeterministicAnalysisRunnerTests
         Assert.Contains(findings, finding => finding.Evidence.Contains("signal=DET-REL-001", StringComparison.Ordinal));
     }
 
+    [Fact]
+    public void Analyze_FlagsAsyncVoidMethodPattern()
+    {
+        const string diff = """
+            diff --git a/src/Api/OrdersController.cs b/src/Api/OrdersController.cs
+            index 1111111..2222222 100644
+            --- a/src/Api/OrdersController.cs
+            +++ b/src/Api/OrdersController.cs
+            @@ -11,0 +12,1 @@
+            +public async void SubmitOrder(Guid id) { await _service.SubmitAsync(id); }
+            """;
+
+        DeterministicAnalysisRunner runner = new();
+        DiffMetadata metadata = CreateMetadata(languages: ["csharp"]);
+
+        IReadOnlyList<Finding> findings = runner.Analyze(diff, metadata);
+
+        Assert.Contains(findings, finding => finding.Evidence.Contains("signal=DET-CONC-002", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Analyze_DoesNotFlagAsyncTaskMethodPattern()
+    {
+        const string diff = """
+            diff --git a/src/Api/OrdersController.cs b/src/Api/OrdersController.cs
+            index 1111111..2222222 100644
+            --- a/src/Api/OrdersController.cs
+            +++ b/src/Api/OrdersController.cs
+            @@ -11,0 +12,1 @@
+            +public async Task SubmitOrder(Guid id) { await _service.SubmitAsync(id); }
+            """;
+
+        DeterministicAnalysisRunner runner = new();
+        DiffMetadata metadata = CreateMetadata(languages: ["csharp"]);
+
+        IReadOnlyList<Finding> findings = runner.Analyze(diff, metadata);
+
+        Assert.DoesNotContain(findings, finding => finding.Evidence.Contains("signal=DET-CONC-002", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Analyze_FlagsTlsValidationBypassPattern()
+    {
+        const string diff = """
+            diff --git a/src/Networking/HttpClientFactory.cs b/src/Networking/HttpClientFactory.cs
+            index 1111111..2222222 100644
+            --- a/src/Networking/HttpClientFactory.cs
+            +++ b/src/Networking/HttpClientFactory.cs
+            @@ -6,0 +7,1 @@
+            +handler.ServerCertificateCustomValidationCallback = (_, _, _, _) => true;
+            """;
+
+        DeterministicAnalysisRunner runner = new();
+        DiffMetadata metadata = CreateMetadata(languages: ["csharp"]);
+
+        IReadOnlyList<Finding> findings = runner.Analyze(diff, metadata);
+
+        Assert.Contains(findings, finding => finding.Evidence.Contains("signal=DET-SEC-005", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Analyze_FlagsInsecureDeserializerPattern()
+    {
+        const string diff = """
+            diff --git a/src/Serialization/LegacyDeserializer.cs b/src/Serialization/LegacyDeserializer.cs
+            index 1111111..2222222 100644
+            --- a/src/Serialization/LegacyDeserializer.cs
+            +++ b/src/Serialization/LegacyDeserializer.cs
+            @@ -4,0 +5,1 @@
+            +var formatter = new BinaryFormatter();
+            """;
+
+        DeterministicAnalysisRunner runner = new();
+        DiffMetadata metadata = CreateMetadata(languages: ["csharp"]);
+
+        IReadOnlyList<Finding> findings = runner.Analyze(diff, metadata);
+
+        Assert.Contains(findings, finding => finding.Evidence.Contains("signal=DET-SEC-006", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Analyze_FlagsJwtValidationDisabledPattern()
+    {
+        const string diff = """
+            diff --git a/src/Auth/JwtSetup.cs b/src/Auth/JwtSetup.cs
+            index 1111111..2222222 100644
+            --- a/src/Auth/JwtSetup.cs
+            +++ b/src/Auth/JwtSetup.cs
+            @@ -8,0 +9,1 @@
+            +tokenValidationParameters.ValidateLifetime = false;
+            """;
+
+        DeterministicAnalysisRunner runner = new();
+        DiffMetadata metadata = CreateMetadata(languages: ["csharp"]);
+
+        IReadOnlyList<Finding> findings = runner.Analyze(diff, metadata);
+
+        Assert.Contains(findings, finding => finding.Evidence.Contains("signal=DET-SEC-007", StringComparison.Ordinal));
+    }
+
     private static DiffMetadata CreateMetadata(
         int linesAdded = 8,
         int linesRemoved = 2,

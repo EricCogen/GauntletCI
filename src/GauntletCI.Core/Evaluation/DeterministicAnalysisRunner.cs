@@ -215,6 +215,11 @@ public sealed class DeterministicAnalysisRunner
         [
             @"(^|/)(test|tests|benchmark|benchmarks?)/"
         ];
+        IReadOnlyList<string> desktopUiPathExclusions =
+        [
+            @"\.xaml\.cs$",
+            @"(^|/)(winforms|wpf|maui)/"
+        ];
         IReadOnlyList<string> placeholderSecretSnippetExclusions =
         [
             @"\b(example|sample|placeholder|dummy|changeme)\b",
@@ -237,6 +242,20 @@ public sealed class DeterministicAnalysisRunner
                 Pattern: @"(\.Result\b|GetAwaiter\(\)\.GetResult\(|\.Wait\(\)|Thread\.Sleep\(|time\.sleep\()",
                 PatternOptions: RegexOptions.Compiled | RegexOptions.IgnoreCase,
                 ExcludedFilePathPatterns: commonPathExclusions,
+                ExcludedSnippetPatterns: []),
+            new DeterministicSignalSpec(
+                SignalId: "DET-CONC-002",
+                RuleId: "GCI016",
+                RuleName: "Concurrency and State Risk",
+                Severity: "high",
+                Confidence: "Medium",
+                FindingText: "An async void method declaration was introduced in changed runtime code.",
+                WhyItMatters: "async void methods cannot be awaited and can surface exceptions outside normal async request flow.",
+                SuggestedAction: "Return Task/Task<T> for async methods so errors and completion are observable by callers.",
+                Kind: DeterministicSignalKind.AddedLineRegex,
+                Pattern: @"\basync\s+void\s+[A-Za-z_][A-Za-z0-9_]*\s*\(",
+                PatternOptions: RegexOptions.Compiled | RegexOptions.IgnoreCase,
+                ExcludedFilePathPatterns: commonPathExclusions.Concat(testAndBenchmarkPathExclusions).Concat(desktopUiPathExclusions).ToArray(),
                 ExcludedSnippetPatterns: []),
             new DeterministicSignalSpec(
                 SignalId: "DET-ROLL-001",
@@ -307,6 +326,48 @@ public sealed class DeterministicAnalysisRunner
                 Pattern: @"\bAllowAny(Origin|Method|Header)\s*\(",
                 PatternOptions: RegexOptions.Compiled | RegexOptions.IgnoreCase,
                 ExcludedFilePathPatterns: commonPathExclusions,
+                ExcludedSnippetPatterns: []),
+            new DeterministicSignalSpec(
+                SignalId: "DET-SEC-005",
+                RuleId: "GCI012",
+                RuleName: "Security Risk",
+                Severity: "high",
+                Confidence: "High",
+                FindingText: "TLS certificate validation appears to be explicitly bypassed in changed code.",
+                WhyItMatters: "Disabling certificate validation can allow man-in-the-middle interception of sensitive traffic.",
+                SuggestedAction: "Remove permissive certificate callbacks and rely on trusted certificates and proper validation.",
+                Kind: DeterministicSignalKind.AddedLineRegex,
+                Pattern: @"(\bDangerousAcceptAnyServerCertificateValidator\b|\bServerCertificateCustomValidationCallback\s*=\s*(?:[^;]*=>\s*true\b|delegate\s*\([^)]*\)\s*\{\s*return\s+true\s*;\s*\}))",
+                PatternOptions: RegexOptions.Compiled | RegexOptions.IgnoreCase,
+                ExcludedFilePathPatterns: commonPathExclusions.Concat(testAndBenchmarkPathExclusions).ToArray(),
+                ExcludedSnippetPatterns: []),
+            new DeterministicSignalSpec(
+                SignalId: "DET-SEC-006",
+                RuleId: "GCI012",
+                RuleName: "Security Risk",
+                Severity: "high",
+                Confidence: "High",
+                FindingText: "Legacy insecure deserialization primitive usage was introduced in changed code.",
+                WhyItMatters: "BinaryFormatter-style serializers have known exploitation paths when processing untrusted payloads.",
+                SuggestedAction: "Use safe serializers such as System.Text.Json with explicit trusted type boundaries.",
+                Kind: DeterministicSignalKind.AddedLineRegex,
+                Pattern: @"\b(BinaryFormatter|NetDataContractSerializer)\b",
+                PatternOptions: RegexOptions.Compiled | RegexOptions.IgnoreCase,
+                ExcludedFilePathPatterns: commonPathExclusions.Concat(testAndBenchmarkPathExclusions).ToArray(),
+                ExcludedSnippetPatterns: []),
+            new DeterministicSignalSpec(
+                SignalId: "DET-SEC-007",
+                RuleId: "GCI012",
+                RuleName: "Security Risk",
+                Severity: "high",
+                Confidence: "Medium",
+                FindingText: "JWT token validation appears to disable key integrity or lifetime checks.",
+                WhyItMatters: "Disabled token validation can allow forged or expired tokens to be accepted.",
+                SuggestedAction: "Keep ValidateIssuerSigningKey and ValidateLifetime enabled outside tightly controlled test-only code.",
+                Kind: DeterministicSignalKind.AddedLineRegex,
+                Pattern: @"\b(ValidateLifetime|ValidateIssuerSigningKey)\s*=\s*false\b",
+                PatternOptions: RegexOptions.Compiled | RegexOptions.IgnoreCase,
+                ExcludedFilePathPatterns: commonPathExclusions.Concat(testAndBenchmarkPathExclusions).ToArray(),
                 ExcludedSnippetPatterns: []),
             new DeterministicSignalSpec(
                 SignalId: "DET-PERF-001",
