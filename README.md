@@ -1,3 +1,5 @@
+<img src="GauntletCI.png" alt="GauntletCI Logo" width="200" align="right"/>
+
 # GauntletCI
 
 [![CI](https://github.com/EricCogen/GauntletCI/actions/workflows/ci.yml/badge.svg)](https://github.com/EricCogen/GauntletCI/actions/workflows/ci.yml)
@@ -184,3 +186,4 @@ Works with local models for offline or cost-controlled usage.
   "telemetry": true,
   "model": "claude-sonnet-4-6"
 }
+```
