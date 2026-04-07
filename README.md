@@ -12,7 +12,7 @@ Pre-commit change-risk detection for pull requests.
 
 ## The idea in one sentence
 
-You changed what the code does.\
+You changed what the code does.
 Nothing proves it still works.
 
 ------------------------------------------------------------------------
@@ -53,7 +53,7 @@ gauntletci
 
 ## Why this exists
 
-Code review checks intent.\
+Code review checks intent.
 Tests check correctness.
 
 Neither answers:
@@ -84,9 +84,9 @@ Most tools analyze code.
 
 GauntletCI analyzes what changed.
 
--   Tests verify outcomes\
--   Linters enforce rules\
--   Static analysis inspects structure\
+-   Tests verify outcomes
+-   Linters enforce rules
+-   Static analysis inspects structure
 -   AI tools suggest improvements
 
 GauntletCI highlights where behavior may have changed without
@@ -96,9 +96,9 @@ validation.
 
 ## What it returns
 
--   Evidence-backed findings\
--   Affected files and locations\
--   Why the change matters\
+-   Evidence-backed findings
+-   Affected files and locations
+-   Why the change matters
 -   Suggested validation actions
 
 ------------------------------------------------------------------------
@@ -107,8 +107,8 @@ validation.
 
 The model is optional.
 
-It is used to: - interpret diffs in context\
-- explain behavioral impact\
+It is used to: - interpret diffs in context
+- explain behavioral impact
 - suggest validation steps
 
 Deterministic rules run first.
@@ -121,9 +121,9 @@ GauntletCI is diff-first and language-agnostic.
 
 Supported via extension normalization:
 
--   .cs → csharp\
--   .ts/.tsx → typescript\
--   .js → javascript\
+-   .cs → csharp
+-   .ts/.tsx → typescript
+-   .js → javascript
 -   .py → python
 
 Actively exercised languages:
@@ -142,8 +142,8 @@ validated.
 
 ## What this is not
 
-Not a linter\
-Not static analysis\
+Not a linter
+Not static analysis
 Not code generation
 
 Does not replace tests or code review
