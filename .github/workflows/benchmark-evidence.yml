@@ -1,0 +1,50 @@
+name: Benchmark Evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      include_synthetic:
+        description: "Include synthetic fixtures in report generation"
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    - cron: "0 5 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  benchmark-evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore GauntletCI.slnx
+
+      - name: Build benchmark reporter
+        run: dotnet build src/GauntletCI.BenchmarkReporter/GauntletCI.BenchmarkReporter.csproj --configuration Release --no-restore
+
+      - name: Generate benchmark evidence artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=("--repo-root" "${GITHUB_WORKSPACE}" "--output-dir" "${GITHUB_WORKSPACE}/docs/benchmarks")
+          if [ "${{ github.event.inputs.include_synthetic || 'false' }}" = "true" ]; then
+            args+=("--include-synthetic")
+          fi
+          dotnet run --project src/GauntletCI.BenchmarkReporter/GauntletCI.BenchmarkReporter.csproj --configuration Release -- "${args[@]}"
+
+      - name: Upload benchmark evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: gauntletci-benchmark-evidence
+          path: |
+            docs/benchmarks/latest.json
+            docs/benchmarks/latest.csv
