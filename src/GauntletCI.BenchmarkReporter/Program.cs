@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Elastic-2.0
+// Copyright (c) Eric Cogen. All rights reserved.
+
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
@@ -71,8 +74,8 @@ Usage:
   dotnet run --project src/GauntletCI.BenchmarkReporter -- [options]
 
 Options:
-  --repo-root <path>         Repository root (default: current directory)
-  --fixtures-root <path>     Curated fixtures root (default: ../tests/GauntletCI.Benchmarks/Fixtures/curated)
+  --repo-root <path>         Repository root (default: walks up from CWD to find repo root)
+  --fixtures-root <path>     Curated fixtures root (default: <repo-root>/tests/GauntletCI.Benchmarks/Fixtures/curated)
   --output-dir <path>        Output directory (default: docs/benchmarks)
   --include-synthetic        Include synthetic fixtures in metrics (default: false)
   --help, -h                 Show help
@@ -95,10 +98,10 @@ Options:
                     repoRoot = Path.GetFullPath(args[++i]);
                     break;
                 case "--fixtures-root" when i + 1 < args.Length:
-                    fixturesRoot = Path.GetFullPath(args[++i]);
+                    fixturesRoot = args[++i];
                     break;
                 case "--output-dir" when i + 1 < args.Length:
-                    outputDirectory = Path.GetFullPath(args[++i]);
+                    outputDirectory = args[++i];
                     break;
                 case "--include-synthetic":
                     includeSynthetic = true;
@@ -113,8 +116,12 @@ Options:
             }
         }
 
-        fixturesRoot ??= Path.Combine(repoRoot, "tests", "GauntletCI.Benchmarks", "Fixtures", "curated");
-        outputDirectory ??= Path.Combine(repoRoot, "docs", "benchmarks");
+        fixturesRoot = fixturesRoot is null
+            ? Path.Combine(repoRoot, "tests", "GauntletCI.Benchmarks", "Fixtures", "curated")
+            : Path.IsPathRooted(fixturesRoot) ? Path.GetFullPath(fixturesRoot) : Path.GetFullPath(Path.Combine(repoRoot, fixturesRoot));
+        outputDirectory = outputDirectory is null
+            ? Path.Combine(repoRoot, "docs", "benchmarks")
+            : Path.IsPathRooted(outputDirectory) ? Path.GetFullPath(outputDirectory) : Path.GetFullPath(Path.Combine(repoRoot, outputDirectory));
         return new ReporterOptions(repoRoot, fixturesRoot, outputDirectory, includeSynthetic, showHelp);
     }
 
