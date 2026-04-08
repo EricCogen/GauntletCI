@@ -1,0 +1,120 @@
+// SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Diff;
+using GauntletCI.Core.Model;
+using GauntletCI.Core.StaticAnalysis;
+
+namespace GauntletCI.Core.Rules.Implementations;
+
+/// <summary>
+/// GCI0011 – Performance Risk
+/// Detects common performance anti-patterns in added code.
+/// </summary>
+public class GCI0011_PerformanceRisk : RuleBase
+{
+    public override string Id => "GCI0011";
+    public override string Name => "Performance Risk";
+
+    public override Task<List<Finding>> EvaluateAsync(
+        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+    {
+        var findings = new List<Finding>();
+
+        foreach (var file in diff.Files)
+        {
+            CheckPerformanceAntiPatterns(file, findings);
+        }
+
+        return Task.FromResult(findings);
+    }
+
+    private void CheckPerformanceAntiPatterns(DiffFile file, List<Finding> findings)
+    {
+        var addedLines = file.AddedLines.ToList();
+        int loopDepth = 0;
+
+        for (int i = 0; i < addedLines.Count; i++)
+        {
+            var content = addedLines[i].Content;
+            var trimmed = content.Trim();
+
+            // Track loop context
+            bool isLoopLine = trimmed.StartsWith("for ", StringComparison.Ordinal) ||
+                              trimmed.StartsWith("foreach ", StringComparison.Ordinal) ||
+                              trimmed.StartsWith("while ", StringComparison.Ordinal);
+            if (isLoopLine) loopDepth++;
+            if (trimmed == "}") loopDepth = Math.Max(0, loopDepth - 1);
+
+            // .ToList()/.ToArray() inside loop
+            if (loopDepth > 0 && (content.Contains(".ToList()", StringComparison.Ordinal) ||
+                                   content.Contains(".ToArray()", StringComparison.Ordinal)))
+            {
+                findings.Add(CreateFinding(
+                    summary: $"Materializing collection inside loop in {file.NewPath}.",
+                    evidence: $"Line {addedLines[i].LineNumber}: {trimmed}",
+                    whyItMatters: ".ToList()/.ToArray() inside loops can cause O(n²) allocations.",
+                    suggestedAction: "Materialize the collection outside the loop.",
+                    confidence: Confidence.Medium));
+            }
+
+            // .Count() instead of .Any()
+            if (content.Contains(".Count() > 0", StringComparison.Ordinal) ||
+                content.Contains(".Count() == 0", StringComparison.Ordinal) ||
+                content.Contains(".Count() >= 1", StringComparison.Ordinal))
+            {
+                findings.Add(CreateFinding(
+                    summary: $"Use .Any() instead of .Count() for existence checks in {file.NewPath}.",
+                    evidence: $"Line {addedLines[i].LineNumber}: {trimmed}",
+                    whyItMatters: ".Count() enumerates the entire collection; .Any() stops at the first element.",
+                    suggestedAction: "Replace .Count() > 0 with .Any() and .Count() == 0 with !.Any().",
+                    confidence: Confidence.Medium));
+            }
+
+            // Thread.Sleep
+            if (content.Contains("Thread.Sleep(", StringComparison.Ordinal))
+            {
+                findings.Add(CreateFinding(
+                    summary: $"Thread.Sleep() used in {file.NewPath}.",
+                    evidence: $"Line {addedLines[i].LineNumber}: {trimmed}",
+                    whyItMatters: "Thread.Sleep blocks a thread pool thread, degrading throughput and responsiveness.",
+                    suggestedAction: "Use await Task.Delay() in async contexts instead.",
+                    confidence: Confidence.Medium));
+            }
+
+            // .Result or .GetAwaiter().GetResult()
+            if (content.Contains(".Result", StringComparison.Ordinal) ||
+                content.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal))
+            {
+                findings.Add(CreateFinding(
+                    summary: $"Blocking async call detected in {file.NewPath}.",
+                    evidence: $"Line {addedLines[i].LineNumber}: {trimmed}",
+                    whyItMatters: ".Result and .GetAwaiter().GetResult() block the calling thread and can deadlock in ASP.NET contexts.",
+                    suggestedAction: "Use await instead of .Result or .GetAwaiter().GetResult().",
+                    confidence: Confidence.Medium));
+            }
+
+            // new List<>/Dictionary<> inside loops
+            if (loopDepth > 0 && (content.Contains("new List<", StringComparison.Ordinal) ||
+                                   content.Contains("new Dictionary<", StringComparison.Ordinal)))
+            {
+                findings.Add(CreateFinding(
+                    summary: $"Collection allocated inside loop in {file.NewPath}.",
+                    evidence: $"Line {addedLines[i].LineNumber}: {trimmed}",
+                    whyItMatters: "Allocating collections inside loops increases GC pressure.",
+                    suggestedAction: "Move collection allocation outside the loop and clear it between iterations if needed.",
+                    confidence: Confidence.Medium));
+            }
+
+            // String concatenation in loops
+            if (loopDepth > 0 && content.Contains("+=", StringComparison.Ordinal) &&
+                content.Contains('"', StringComparison.Ordinal))
+            {
+                findings.Add(CreateFinding(
+                    summary: $"String concatenation in loop in {file.NewPath}.",
+                    evidence: $"Line {addedLines[i].LineNumber}: {trimmed}",
+                    whyItMatters: "String += in a loop is O(n²) due to string immutability.",
+                    suggestedAction: "Use StringBuilder for string building inside loops.",
+                    confidence: Confidence.Medium));
+            }
+        }
+    }
+}
