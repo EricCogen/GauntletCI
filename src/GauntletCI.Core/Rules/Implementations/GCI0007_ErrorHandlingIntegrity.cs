@@ -1,0 +1,112 @@
+// SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Diff;
+using GauntletCI.Core.Model;
+using GauntletCI.Core.StaticAnalysis;
+
+namespace GauntletCI.Core.Rules.Implementations;
+
+/// <summary>
+/// GCI0007 – Error Handling Integrity
+/// Detects swallowed exceptions and empty catch blocks.
+/// </summary>
+public class GCI0007_ErrorHandlingIntegrity : RuleBase
+{
+    public override string Id => "GCI0007";
+    public override string Name => "Error Handling Integrity";
+
+    public override Task<List<Finding>> EvaluateAsync(
+        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+    {
+        var findings = new List<Finding>();
+
+        CheckSwallowedExceptions(diff, findings);
+        AddRoslynFindings(staticAnalysis, findings);
+
+        return Task.FromResult(findings);
+    }
+
+    private void CheckSwallowedExceptions(DiffContext diff, List<Finding> findings)
+    {
+        foreach (var file in diff.Files)
+        {
+            var addedLines = file.AddedLines.ToList();
+            for (int i = 0; i < addedLines.Count; i++)
+            {
+                var content = addedLines[i].Content.Trim();
+
+                // Detect catch blocks
+                if (!content.StartsWith("catch", StringComparison.Ordinal)) continue;
+
+                bool isSwallowed = IsCatchSwallowed(addedLines, i, out string evidence);
+                if (isSwallowed)
+                {
+                    findings.Add(CreateFinding(
+                        summary: $"Swallowed exception detected in {file.NewPath}",
+                        evidence: evidence,
+                        whyItMatters: "Empty or silent catch blocks hide failures, making bugs invisible and debugging nearly impossible.",
+                        suggestedAction: "Log the exception, rethrow it, or handle it explicitly. Never swallow silently.",
+                        confidence: Confidence.High));
+                }
+            }
+        }
+    }
+
+    private static bool IsCatchSwallowed(List<DiffLine> addedLines, int catchIdx, out string evidence)
+    {
+        evidence = addedLines[catchIdx].Content.Trim();
+
+        // Look for { and } around the catch body
+        int depth = 0;
+        bool inBody = false;
+        bool hasContent = false;
+
+        for (int j = catchIdx; j < Math.Min(addedLines.Count, catchIdx + 10); j++)
+        {
+            var line = addedLines[j].Content.Trim();
+            foreach (char c in line)
+            {
+                if (c == '{') { depth++; inBody = true; }
+                else if (c == '}') { depth--; }
+            }
+
+            if (inBody && j > catchIdx)
+            {
+                if (!string.IsNullOrWhiteSpace(line) && line != "{" && line != "}")
+                {
+                    // Check if it has throw, log, or meaningful content
+                    bool hasThrow = line.Contains("throw", StringComparison.Ordinal);
+                    bool hasLog = line.Contains("Log", StringComparison.Ordinal) ||
+                                  line.Contains("log", StringComparison.Ordinal) ||
+                                  line.Contains("Console.", StringComparison.Ordinal) ||
+                                  line.Contains("Debug.", StringComparison.Ordinal) ||
+                                  line.Contains("Trace.", StringComparison.Ordinal);
+                    if (hasThrow || hasLog) return false;
+                    hasContent = true;
+                }
+            }
+
+            if (inBody && depth == 0) break;
+        }
+
+        // If the catch body had no meaningful content, it's swallowed
+        return !hasContent;
+    }
+
+    private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)
+    {
+        if (staticAnalysis is null) return;
+        foreach (var diag in staticAnalysis.Diagnostics.Where(d => d.Id is "CA1031" or "CA2000" or "CA1001"))
+        {
+            findings.Add(new Finding
+            {
+                RuleId = "GCI0007",
+                RuleName = "Error Handling Integrity",
+                Summary = $"{diag.Id}: {diag.Message}",
+                Evidence = $"{diag.FilePath}:{diag.Line}",
+                WhyItMatters = "Roslyn detected a potential resource or exception handling issue.",
+                SuggestedAction = "Review and address the flagged exception/disposal issue.",
+                Confidence = diag.Id == "CA1031" ? Confidence.High : Confidence.Medium,
+            });
+        }
+    }
+}
