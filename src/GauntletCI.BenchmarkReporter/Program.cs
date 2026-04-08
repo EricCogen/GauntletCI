@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Elastic-2.0
+// Copyright (c) Eric Cogen. All rights reserved.
+
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
@@ -71,8 +74,8 @@ Usage:
   dotnet run --project src/GauntletCI.BenchmarkReporter -- [options]
 
 Options:
-  --repo-root <path>         Repository root (default: current directory)
-  --fixtures-root <path>     Curated fixtures root (default: ../tests/GauntletCI.Benchmarks/Fixtures/curated)
+  --repo-root <path>         Repository root (default: walks up from CWD to find repo root)
+  --fixtures-root <path>     Curated fixtures root (default: <repo-root>/tests/GauntletCI.Benchmarks/Fixtures/curated)
   --output-dir <path>        Output directory (default: docs/benchmarks)
   --include-synthetic        Include synthetic fixtures in metrics (default: false)
   --help, -h                 Show help

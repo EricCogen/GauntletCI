@@ -39,7 +39,7 @@ jobs:
           if [ "${{ github.event.inputs.include_synthetic || 'false' }}" = "true" ]; then
             args+=("--include-synthetic")
           fi
-          dotnet run --project src/GauntletCI.BenchmarkReporter/GauntletCI.BenchmarkReporter.csproj --configuration Release -- "${args[@]}"
+          dotnet run --project src/GauntletCI.BenchmarkReporter/GauntletCI.BenchmarkReporter.csproj --configuration Release --no-build -- "${args[@]}"
 
       - name: Upload benchmark evidence artifact
         uses: actions/upload-artifact@v4
