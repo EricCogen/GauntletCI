@@ -194,27 +194,39 @@ public sealed class DeterministicAnalysisRunner
                 continue;
             }
 
+            if (line.StartsWith('\\'))
+            {
+                // "\ No newline at end of file" — git meta-marker, not real content.
+                continue;
+            }
+
             currentTrackingLine++; // Context line — both sides advance.
         }
 
         return null;
     }
 
+    // Matches "diff --git a/<path> b/<path>" where both paths are identical (standard diff).
+    // The backreference (\1) ensures we find the correct split point even when paths contain spaces.
+    private static readonly Regex DiffGitFilePathPattern =
+        new(@"^diff --git a/(.+) b/\1$", RegexOptions.Compiled);
+
     private static string ParseFilePath(string diffHeader)
     {
-        string[] parts = diffHeader.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length < 4)
+        Match m = DiffGitFilePathPattern.Match(diffHeader);
+        if (m.Success)
         {
-            return "unknown";
+            return m.Groups[1].Value;
         }
 
-        string candidate = parts[3];
-        if (candidate.StartsWith("b/", StringComparison.Ordinal))
+        // Fallback for renames/copies: the new path follows the last " b/" token.
+        int bIdx = diffHeader.LastIndexOf(" b/", StringComparison.Ordinal);
+        if (bIdx >= 0)
         {
-            return candidate[2..];
+            return diffHeader[(bIdx + 3)..];
         }
 
-        return candidate.TrimStart('/');
+        return "unknown";
     }
 
     private static bool IsCommentLike(string snippet)
@@ -259,7 +271,7 @@ public sealed class DeterministicAnalysisRunner
         [
             @"(^|/)(test|tests)/",
             @"[Tt]ests?\.cs$",
-            @"[Ss]pec[^/]*\.cs$"
+            @"(^|/)[^/]*[Ss]pecs?\.cs$"
         ];
         IReadOnlyList<string> placeholderSecretSnippetExclusions =
         [
@@ -637,7 +649,7 @@ public sealed class DeterministicAnalysisRunner
                 WhyItMatters: "Plain HTTP transmits data without encryption; an accidental http:// in a configuration or request can silently downgrade a previously TLS-protected call.",
                 SuggestedAction: "Replace http:// with https:// or move the URL to configuration and enforce TLS at the transport layer.",
                 Kind: DeterministicSignalKind.AddedLineRegex,
-                Pattern: @"[""']http://(?!localhost\b|127\.0\.0\.1\b)[^""'\s]{3,}[""']",
+                Pattern: @"[""']http://(?!localhost(?![\w.])|127\.0\.0\.1\b)[^""'\s]{3,}[""']",
                 PatternOptions: RegexOptions.Compiled | RegexOptions.IgnoreCase,
                 ExcludedFilePathPatterns: commonPathExclusions.Concat(testAndBenchmarkPathExclusions).ToArray(),
                 IncludedFilePathPatterns: [],
@@ -784,7 +796,7 @@ public sealed class DeterministicAnalysisRunner
         [
             @"(^|/)(test|tests)/",
             @"[Tt]ests?\.cs$",
-            @"[Ss]pec[^/]*\.cs$"
+            @"(^|/)[^/]*[Ss]pecs?\.cs$"
         ];
 
         return

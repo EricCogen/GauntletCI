@@ -98,10 +98,10 @@ Options:
                     repoRoot = Path.GetFullPath(args[++i]);
                     break;
                 case "--fixtures-root" when i + 1 < args.Length:
-                    fixturesRoot = Path.GetFullPath(args[++i]);
+                    fixturesRoot = args[++i];
                     break;
                 case "--output-dir" when i + 1 < args.Length:
-                    outputDirectory = Path.GetFullPath(args[++i]);
+                    outputDirectory = args[++i];
                     break;
                 case "--include-synthetic":
                     includeSynthetic = true;
@@ -116,8 +116,12 @@ Options:
             }
         }
 
-        fixturesRoot ??= Path.Combine(repoRoot, "tests", "GauntletCI.Benchmarks", "Fixtures", "curated");
-        outputDirectory ??= Path.Combine(repoRoot, "docs", "benchmarks");
+        fixturesRoot = fixturesRoot is null
+            ? Path.Combine(repoRoot, "tests", "GauntletCI.Benchmarks", "Fixtures", "curated")
+            : Path.IsPathRooted(fixturesRoot) ? Path.GetFullPath(fixturesRoot) : Path.GetFullPath(Path.Combine(repoRoot, fixturesRoot));
+        outputDirectory = outputDirectory is null
+            ? Path.Combine(repoRoot, "docs", "benchmarks")
+            : Path.IsPathRooted(outputDirectory) ? Path.GetFullPath(outputDirectory) : Path.GetFullPath(Path.Combine(repoRoot, outputDirectory));
         return new ReporterOptions(repoRoot, fixturesRoot, outputDirectory, includeSynthetic, showHelp);
     }
 
