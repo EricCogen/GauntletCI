@@ -92,6 +92,39 @@ GauntletCI analyzes what changed.
 GauntletCI highlights where behavior may have changed without
 validation.
 
+## How GauntletCI Compares to Other Tools
+
+Most tools answer one question well. GauntletCI answers a different one.
+
+| Tool Type | What It Does | What It Misses | GauntletCI’s Advantage |
+|-----------|--------------|----------------|-------------------------|
+| **Unit / Integration Tests** | Verifies expected outcomes for specific scenarios | Behavior changes outside tested paths; untested edge cases | Flags when behavior changed but no new test covers that change |
+| **Linters (ESLint, RuboCop, etc.)** | Enforces style, syntax, and basic code quality | Behavioral risk; semantic changes; logic flow | Catches *what* changed, not just *how it looks* |
+| **Static Analysis (SonarQube, Roslyn)** | Finds code smells, potential bugs in the whole codebase | Diff‑specific behavioral changes; assumes current code is the baseline | Analyzes the *difference* – what’s new or removed |
+| **AI Code Review (Copilot, Cursor, etc.)** | Suggests improvements, explains code, finds obvious bugs | Often misses validation gaps; focuses on style or known patterns | Specifically looks for behavior changes without proof of validation |
+| **Test Coverage (Coverlet, JaCoCo)** | Measures which lines are executed by tests | 100% coverage doesn’t mean behavior is correct; doesn’t analyze *changes* | Points to changed lines that lack any test covering them |
+| **Performance Profilers** | Measures speed, memory, resource usage | Requires runtime data; doesn’t run pre‑commit | Works from diff alone – no execution needed |
+| **GauntletCI** | **Evaluates the diff to find unvalidated behavioral changes** | Does not prove correctness; may have false positives | Fills the gap *between* “tests pass” and “behavior is still correct” |
+
+### One‑Line Summary
+
+| Tool | The Gap It Leaves |
+|------|-------------------|
+| Tests | “You only test what you think to test.” |
+| Linters | “You can follow style and still break behavior.” |
+| Static Analysis | “The code is clean, but the change is risky.” |
+| AI Review | “Suggests improvements, but doesn’t ask if you validated the change.” |
+| Coverage | “Every line runs, but does it do the right thing?” |
+| **GauntletCI** | **“You changed what the code does. Nothing proves it still works.”** |
+
+### Where GauntletCI Sits
+
+- **Correctness (Tests)**  ← →  **Behavioral Risk (GauntletCI)**
+- **Quality (Linters/SAST)** ← →  **Validation Gaps (GauntletCI)**
+- **What the code IS**      ← →  **What CHANGED (GauntletCI)**
+
+GauntletCI answers a question no other tool asks:  
+*“Did this change introduce behavior that is not properly validated?”*
 ------------------------------------------------------------------------
 
 ## What it returns
