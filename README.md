@@ -115,6 +115,27 @@ Deterministic rules run first.
 
 ------------------------------------------------------------------------
 
+## Experimental evidence
+
+GauntletCI publishes reproducible benchmark evidence from the curated real-fixture corpus.
+
+Generate the report locally:
+
+```bash
+dotnet run --project src/GauntletCI.BenchmarkReporter -- --repo-root . --output-dir docs/benchmarks
+```
+
+Published artifacts:
+
+- `docs/benchmarks/latest.json` (overall metrics, per-rule metrics, case studies, fixture-level outcomes)
+- `docs/benchmarks/latest.csv` (fixture-level export for external analysis)
+
+Automation:
+
+- `.github/workflows/benchmark-evidence.yml` runs report generation on schedule and manual dispatch and uploads the latest evidence artifacts.
+
+------------------------------------------------------------------------
+
 ## Language coverage
 
 GauntletCI is diff-first and language-agnostic.
