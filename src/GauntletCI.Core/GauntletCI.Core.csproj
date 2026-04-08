@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="Rules\gauntletci-rules.txt" CopyToOutputDirectory="PreserveNewest" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.9.0" />
   </ItemGroup>
 
 </Project>

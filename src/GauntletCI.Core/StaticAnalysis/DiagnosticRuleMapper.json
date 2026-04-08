@@ -1,0 +1,17 @@
+[
+  { "diagnosticId": "CA2100", "ruleId": "GCI0012", "confidence": "High" },
+  { "diagnosticId": "CA2101", "ruleId": "GCI0012", "confidence": "High" },
+  { "diagnosticId": "CA2153", "ruleId": "GCI0012", "confidence": "High" },
+  { "diagnosticId": "CA1031", "ruleId": "GCI0007", "confidence": "High" },
+  { "diagnosticId": "CA2000", "ruleId": "GCI0007", "confidence": "Medium" },
+  { "diagnosticId": "CA1001", "ruleId": "GCI0007", "confidence": "Medium" },
+  { "diagnosticId": "CA1822", "ruleId": "GCI0008", "confidence": "Low" },
+  { "diagnosticId": "CA1062", "ruleId": "GCI0006", "confidence": "Medium" },
+  { "diagnosticId": "CA1305", "ruleId": "GCI0009", "confidence": "Low" },
+  { "diagnosticId": "CA1307", "ruleId": "GCI0009", "confidence": "Low" },
+  { "diagnosticId": "CA1309", "ruleId": "GCI0009", "confidence": "Low" },
+  { "diagnosticId": "CA1711", "ruleId": "GCI0009", "confidence": "Low" },
+  { "diagnosticId": "CA1720", "ruleId": "GCI0009", "confidence": "Low" },
+  { "diagnosticId": "CA2227", "ruleId": "GCI0015", "confidence": "Medium" },
+  { "diagnosticId": "CA1819", "ruleId": "GCI0015", "confidence": "Medium" }
+]

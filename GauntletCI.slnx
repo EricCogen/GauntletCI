@@ -1,15 +1,8 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/GauntletCI.BenchmarkReporter/GauntletCI.BenchmarkReporter.csproj" />
     <Project Path="src/GauntletCI.Cli/GauntletCI.Cli.csproj" />
     <Project Path="src/GauntletCI.Core/GauntletCI.Core.csproj" />
-    <Project Path="src/GauntletCI.PrIntegration.Host/GauntletCI.PrIntegration.Host.csproj" />
-    <Project Path="src/GauntletCI.PrIntegration/GauntletCI.PrIntegration.csproj" />
-  </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/GauntletCI.Benchmarks/GauntletCI.Benchmarks.csproj" />
-    <Project Path="tests/GauntletCI.BenchmarkReporter.Tests/GauntletCI.BenchmarkReporter.Tests.csproj" />
-    <Project Path="tests/GauntletCI.Cli.Tests/GauntletCI.Cli.Tests.csproj" />
-    <Project Path="tests/GauntletCI.Core.Tests/GauntletCI.Core.Tests.csproj" />
+    <Project Path="src/GauntletCI.Llm/GauntletCI.Llm.csproj" />
+    <Project Path="src/GauntletCI.Tests/GauntletCI.Tests.csproj" />
   </Folder>
 </Solution>
