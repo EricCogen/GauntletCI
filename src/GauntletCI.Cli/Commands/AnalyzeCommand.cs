@@ -30,6 +30,7 @@ public static class AnalyzeCommand
         var noLlmFlag = new Option<bool>("--no-llm", "Disable LLM enrichment");
         var asciiFlag = new Option<bool>("--ascii", "Use ASCII-only output (for terminals without Unicode support)");
         var noBannerOption = new Option<bool>("--no-banner", "Disable ASCII banner");
+        var githubAnnotationsFlag = new Option<bool>("--github-annotations", "Emit GitHub Actions workflow commands for inline PR annotations");
 
         var cmd = new Command("analyze", "Analyse a git diff for pre-commit risks")
         {
@@ -43,6 +44,7 @@ public static class AnalyzeCommand
             noLlmFlag,
             asciiFlag,
             noBannerOption,
+            githubAnnotationsFlag,
         };
 
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
@@ -57,6 +59,7 @@ public static class AnalyzeCommand
             var noLlm      = ctx.ParseResult.GetValueForOption(noLlmFlag);
             var ascii      = ctx.ParseResult.GetValueForOption(asciiFlag);
             var noBanner   = ctx.ParseResult.GetValueForOption(noBannerOption);
+            var ghAnnotate = ctx.ParseResult.GetValueForOption(githubAnnotationsFlag);
 
             CliBanner.PrintIfEnabled(new BannerContext
             {
@@ -94,6 +97,9 @@ public static class AnalyzeCommand
                 {
                     ConsoleReporter.Report(result, ascii);
                 }
+
+                if (ghAnnotate)
+                    GitHubAnnotationWriter.Write(result);
 
                 ctx.ExitCode = result.HasFindings ? 1 : 0;
             }
