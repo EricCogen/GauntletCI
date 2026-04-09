@@ -73,7 +73,7 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
                 if (removedName is null) continue;
 
                 var matchingAdded = addedSigs.FirstOrDefault(a => ExtractMethodName(a.Content) == removedName);
-                if (matchingAdded is not null && removed.Content != matchingAdded.Content)
+                if (matchingAdded is not null && NormalizeSignature(removed.Content) != NormalizeSignature(matchingAdded.Content))
                 {
                     findings.Add(CreateFinding(
                         summary: $"Method signature changed: '{removedName}' in {file.NewPath}",
@@ -95,4 +95,7 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
         if (lastSpace < 0) return null;
         return before[(lastSpace + 1)..];
     }
+
+    private static string NormalizeSignature(string sig) =>
+        sig.Replace("async ", "", StringComparison.Ordinal).Trim();
 }
