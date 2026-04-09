@@ -14,11 +14,14 @@ public class ModelDownloader
     private static readonly string[] RequiredFiles =
     [
         "genai_config.json",
-        "model.onnx",
-        "model.onnx.data",
+        "config.json",
+        "added_tokens.json",
         "special_tokens_map.json",
         "tokenizer.json",
+        "tokenizer.model",
         "tokenizer_config.json",
+        "phi3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx",
+        "phi3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx.data",
     ];
 
     private readonly string _modelDir;
