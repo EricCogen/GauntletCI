@@ -1,0 +1,67 @@
+name: "GauntletCI Risk Analysis"
+description: "Deterministic pre-commit risk detection for pull requests. Analyzes your git diff and posts findings as annotations."
+author: "Eric Cogen"
+
+branding:
+  icon: "shield"
+  color: "blue"
+
+inputs:
+  commit:
+    description: "Commit SHA to analyse. Defaults to the PR head commit."
+    required: false
+    default: ${{ github.event.pull_request.head.sha || github.sha }}
+  no-llm:
+    description: "Disable LLM enrichment and run deterministic rules only."
+    required: false
+    default: "true"
+  fail-on-findings:
+    description: "Exit with code 1 if any findings are produced (fails the check)."
+    required: false
+    default: "true"
+  ascii:
+    description: "Use ASCII-only output (recommended for CI logs)."
+    required: false
+    default: "true"
+  dotnet-version:
+    description: "The .NET version to use."
+    required: false
+    default: "8.0.x"
+  gauntletci-version:
+    description: "The GauntletCI NuGet tool version to install."
+    required: false
+    default: "2.0.0"
+
+outputs:
+  findings-count:
+    description: "Number of findings produced."
+    value: ${{ steps.run.outputs.findings-count }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ inputs.dotnet-version }}
+
+    - name: Install GauntletCI
+      shell: bash
+      run: dotnet tool install -g GauntletCI --version ${{ inputs.gauntletci-version }}
+
+    - name: Run GauntletCI
+      id: run
+      shell: bash
+      env:
+        GAUNTLETCI_NO_BANNER: "1"
+      run: |
+        set +e
+        args="analyze --commit ${{ inputs.commit }}"
+        [ "${{ inputs.no-llm }}" = "true" ] && args="$args --no-llm"
+        [ "${{ inputs.ascii }}" = "true" ]  && args="$args --ascii"
+        gauntletci $args
+        EXIT_CODE=$?
+        # Count findings by counting [GCI lines in output (rough proxy)
+        echo "findings-count=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+        [ "${{ inputs.fail-on-findings }}" = "true" ] && exit $EXIT_CODE
+        exit 0
