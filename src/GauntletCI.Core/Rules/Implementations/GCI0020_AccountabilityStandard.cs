@@ -32,19 +32,55 @@ public class GCI0020_AccountabilityStandard : RuleBase
 
     private void CheckSwallowedExceptions(DiffContext diff, List<Finding> findings)
     {
-        foreach (var line in diff.AllAddedLines)
+        foreach (var file in diff.Files)
         {
-            var content = line.Content;
-            if (content.Contains("catch (Exception", StringComparison.Ordinal) ||
-                content.Contains("catch(Exception", StringComparison.Ordinal))
+            var addedLines = file.AddedLines.ToList();
+            for (int i = 0; i < addedLines.Count; i++)
             {
-                findings.Add(CreateFinding(
-                    summary: "catch (Exception) with no rethrow — potential exception swallowing.",
-                    evidence: $"Line {line.LineNumber}: {content.Trim()}",
-                    whyItMatters: "Catching all exceptions and not rethrowing silently hides failures, making post-mortems impossible.",
-                    suggestedAction: "Log the exception and rethrow, or catch only specific exception types you can handle.",
-                    confidence: Confidence.High));
-                return;
+                var content = addedLines[i].Content;
+                if (!content.Contains("catch (Exception", StringComparison.Ordinal) &&
+                    !content.Contains("catch(Exception", StringComparison.Ordinal))
+                    continue;
+
+                // Look ahead through the catch body for any throw, log, or Console output
+                bool hasHandling = false;
+                int depth = 0;
+                for (int j = i; j < Math.Min(addedLines.Count, i + 15); j++)
+                {
+                    var bodyLine = addedLines[j].Content.Trim();
+                    foreach (char c in bodyLine)
+                    {
+                        if (c == '{') depth++;
+                        else if (c == '}') depth--;
+                    }
+
+                    if (j > i && !string.IsNullOrWhiteSpace(bodyLine) && bodyLine != "{" && bodyLine != "}")
+                    {
+                        if (bodyLine.Contains("throw", StringComparison.Ordinal) ||
+                            bodyLine.Contains("Log", StringComparison.Ordinal) ||
+                            bodyLine.Contains("log", StringComparison.Ordinal) ||
+                            bodyLine.Contains("Console.", StringComparison.Ordinal) ||
+                            bodyLine.Contains("Debug.", StringComparison.Ordinal) ||
+                            bodyLine.Contains("Trace.", StringComparison.Ordinal))
+                        {
+                            hasHandling = true;
+                            break;
+                        }
+                    }
+
+                    if (depth <= 0 && j > i) break;
+                }
+
+                if (!hasHandling)
+                {
+                    findings.Add(CreateFinding(
+                        summary: "catch (Exception) with no rethrow or logging — potential exception swallowing.",
+                        evidence: $"Line {addedLines[i].LineNumber}: {content.Trim()}",
+                        whyItMatters: "Catching all exceptions and not rethrowing silently hides failures, making post-mortems impossible.",
+                        suggestedAction: "Log the exception and rethrow, or catch only specific exception types you can handle.",
+                        confidence: Confidence.High));
+                    return;
+                }
             }
         }
     }
