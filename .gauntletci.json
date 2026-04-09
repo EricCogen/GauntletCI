@@ -1,9 +1,31 @@
 {
+  "version": 2,
   "test_command": "dotnet test",
-  "disabled_rules": [],
-  "blocking_rules": ["GCI012", "GCI004"],
-  "policy_refs": ["policy://security/baseline@v1"],
-  "model_required": false,
-  "telemetry": true,
-  "model": "claude-sonnet-4-6"
+  "rules": {
+    "GCI0001": { "enabled": true },
+    "GCI0002": { "enabled": true },
+    "GCI0003": { "enabled": true },
+    "GCI0004": { "enabled": true },
+    "GCI0005": { "enabled": true },
+    "GCI0006": { "enabled": true },
+    "GCI0007": { "enabled": true },
+    "GCI0008": { "enabled": true },
+    "GCI0009": { "enabled": true },
+    "GCI0010": { "enabled": true },
+    "GCI0011": { "enabled": true },
+    "GCI0012": { "enabled": true },
+    "GCI0013": { "enabled": true },
+    "GCI0014": { "enabled": true },
+    "GCI0015": { "enabled": true },
+    "GCI0016": { "enabled": true },
+    "GCI0017": { "enabled": true },
+    "GCI0018": { "enabled": true },
+    "GCI0019": { "enabled": true },
+    "GCI0020": { "enabled": true }
+  },
+  "blocking_rules": ["GCI0012", "GCI0004"],
+  "llm": {
+    "enabled": false,
+    "model_path": "~/.gauntletci/models/phi3-mini"
+  }
 }
