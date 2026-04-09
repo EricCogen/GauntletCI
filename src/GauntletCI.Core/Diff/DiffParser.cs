@@ -136,6 +136,30 @@ public static class DiffParser
         return Parse(diff, commitRef, message);
     }
 
+    /// <summary>Analyzes only staged changes (git diff --cached).</summary>
+    public static async Task<DiffContext> FromStagedAsync(
+        string repoPath, CancellationToken ct = default)
+    {
+        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff --cached", ct);
+        return Parse(diff, commitSha: "staged");
+    }
+
+    /// <summary>Analyzes only unstaged changes (git diff).</summary>
+    public static async Task<DiffContext> FromUnstagedAsync(
+        string repoPath, CancellationToken ct = default)
+    {
+        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff", ct);
+        return Parse(diff, commitSha: "unstaged");
+    }
+
+    /// <summary>Analyzes all local changes: staged + unstaged combined (git diff HEAD).</summary>
+    public static async Task<DiffContext> FromAllChangesAsync(
+        string repoPath, CancellationToken ct = default)
+    {
+        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff HEAD", ct);
+        return Parse(diff, commitSha: "all-changes");
+    }
+
     /// <summary>Parses a diff file from disk.</summary>
     public static DiffContext FromFile(string diffFilePath)
     {
