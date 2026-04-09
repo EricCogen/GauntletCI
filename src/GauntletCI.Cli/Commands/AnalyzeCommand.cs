@@ -14,6 +14,9 @@ public static class AnalyzeCommand
     {
         var diffOption = new Option<FileInfo?>("--diff", "Path to a .diff file");
         var commitOption = new Option<string?>("--commit", "Commit SHA to analyse");
+        var stagedFlag = new Option<bool>("--staged", "Analyse staged changes (git diff --cached)");
+        var unstagedFlag = new Option<bool>("--unstaged", "Analyse unstaged changes (git diff)");
+        var allChangesFlag = new Option<bool>("--all-changes", "Analyse all local changes: staged + unstaged (git diff HEAD)");
         var repoOption = new Option<DirectoryInfo>(
             "--repo",
             () => new DirectoryInfo(Directory.GetCurrentDirectory()),
@@ -23,25 +26,46 @@ public static class AnalyzeCommand
             () => "text",
             "Output format: text or json");
         var noLlmFlag = new Option<bool>("--no-llm", "Disable LLM enrichment");
+        var asciiFlag = new Option<bool>("--ascii", "Use ASCII-only output (for terminals without Unicode support)");
 
         var cmd = new Command("analyze", "Analyse a git diff for pre-commit risks")
         {
             diffOption,
             commitOption,
+            stagedFlag,
+            unstagedFlag,
+            allChangesFlag,
             repoOption,
             outputOption,
             noLlmFlag,
+            asciiFlag,
         };
 
-        cmd.SetHandler(async (diffFile, commit, repo, output, noLlm) =>
+        cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
         {
+            var diffFile   = ctx.ParseResult.GetValueForOption(diffOption);
+            var commit     = ctx.ParseResult.GetValueForOption(commitOption);
+            var staged     = ctx.ParseResult.GetValueForOption(stagedFlag);
+            var unstaged   = ctx.ParseResult.GetValueForOption(unstagedFlag);
+            var allChanges = ctx.ParseResult.GetValueForOption(allChangesFlag);
+            var repo       = ctx.ParseResult.GetValueForOption(repoOption)!;
+            var output     = ctx.ParseResult.GetValueForOption(outputOption)!;
+            var noLlm      = ctx.ParseResult.GetValueForOption(noLlmFlag);
+            var ascii      = ctx.ParseResult.GetValueForOption(asciiFlag);
+
             try
             {
                 var diff = diffFile is not null
                     ? DiffParser.FromFile(diffFile.FullName)
                     : commit is not null
                         ? await DiffParser.FromGitAsync(repo.FullName, commit)
-                        : DiffParser.Parse(await Console.In.ReadToEndAsync());
+                        : staged
+                            ? await DiffParser.FromStagedAsync(repo.FullName)
+                            : unstaged
+                                ? await DiffParser.FromUnstagedAsync(repo.FullName)
+                                : allChanges
+                                    ? await DiffParser.FromAllChangesAsync(repo.FullName)
+                                    : DiffParser.Parse(await Console.In.ReadToEndAsync());
 
                 var orchestrator = RuleOrchestrator.CreateDefault();
                 var result = await orchestrator.RunAsync(diff);
@@ -55,18 +79,17 @@ public static class AnalyzeCommand
                 }
                 else
                 {
-                    ConsoleReporter.Report(result);
+                    ConsoleReporter.Report(result, ascii);
                 }
 
-                Environment.Exit(result.HasFindings ? 1 : 0);
+                ctx.ExitCode = result.HasFindings ? 1 : 0;
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"[GauntletCI] Error: {ex.Message}");
-                Environment.Exit(2);
+                ctx.ExitCode = 2;
             }
-        },
-        diffOption, commitOption, repoOption, outputOption, noLlmFlag);
+        });
 
         return cmd;
     }
