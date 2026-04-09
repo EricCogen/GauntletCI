@@ -31,8 +31,10 @@ models/
 # Markdown policy: only README.md is committed; all others stay local
 *.md
 !README.md
+!AGENTS.md
 !docs/change-risk-thesis.md
 !docs/change-risk-research.md
 !.github/CONTRIBUTING.md
 !.github/CODE_OF_CONDUCT.md
 !.github/SECURITY.md
+!.github/copilot-instructions.md
