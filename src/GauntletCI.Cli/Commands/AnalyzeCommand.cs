@@ -2,6 +2,7 @@
 using System.CommandLine;
 using System.Text.Json;
 using GauntletCI.Cli.Output;
+using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Rules;
 using GauntletCI.Llm;
@@ -67,8 +68,10 @@ public static class AnalyzeCommand
                                     ? await DiffParser.FromAllChangesAsync(repo.FullName)
                                     : DiffParser.Parse(await Console.In.ReadToEndAsync());
 
-                var orchestrator = RuleOrchestrator.CreateDefault();
-                var result = await orchestrator.RunAsync(diff);
+                var config = ConfigLoader.Load(repo.FullName);
+                var ignoreList = IgnoreList.Load(repo.FullName);
+                var orchestrator = RuleOrchestrator.CreateDefault(config);
+                var result = await orchestrator.RunAsync(diff, ignoreList: ignoreList);
 
                 ILlmEngine llm = noLlm ? new NullLlmEngine() : new NullLlmEngine();
 

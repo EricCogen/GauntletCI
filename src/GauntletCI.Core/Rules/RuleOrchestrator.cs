@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules.Implementations;
@@ -14,27 +15,32 @@ namespace GauntletCI.Core.Rules;
 public class RuleOrchestrator
 {
     private readonly IReadOnlyList<IRule> _rules;
+    private readonly GauntletConfig _config;
 
-    public RuleOrchestrator(IEnumerable<IRule> rules)
+    public RuleOrchestrator(IEnumerable<IRule> rules, GauntletConfig? config = null)
     {
         _rules = [.. rules.OrderBy(r => r.Id)];
+        _config = config ?? new GauntletConfig();
     }
 
     /// <summary>Creates an orchestrator with all built-in rules auto-discovered via reflection.</summary>
-    public static RuleOrchestrator CreateDefault()
+    public static RuleOrchestrator CreateDefault(GauntletConfig? config = null)
     {
+        config ??= new GauntletConfig();
         var ruleType = typeof(IRule);
         var rules = typeof(RuleOrchestrator).Assembly
             .GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false } && ruleType.IsAssignableFrom(t))
             .Select(t => (IRule)Activator.CreateInstance(t)!)
+            .Where(r => IsRuleEnabled(r.Id, config))
             .ToList();
-        return new RuleOrchestrator(rules);
+        return new RuleOrchestrator(rules, config);
     }
 
     public async Task<EvaluationResult> RunAsync(
         DiffContext diff,
         AnalyzerResult? staticAnalysis = null,
+        IgnoreList? ignoreList = null,
         CancellationToken ct = default)
     {
         var allFindings = new List<Finding>();
@@ -49,11 +55,12 @@ public class RuleOrchestrator
             }
             catch (Exception ex)
             {
-                // Log and continue — never crash
                 Console.Error.WriteLine($"[GauntletCI] Rule {rule.Id} threw an exception: {ex.Message}");
             }
         }
 
+        ApplySeverityOverrides(allFindings, _config);
+        ApplyIgnoreList(allFindings, ignoreList);
         PostProcess(diff, allFindings);
 
         return new EvaluationResult
@@ -64,6 +71,36 @@ public class RuleOrchestrator
         };
     }
 
+    private static bool IsRuleEnabled(string ruleId, GauntletConfig config)
+    {
+        if (config.Rules.TryGetValue(ruleId, out var rc))
+            return rc.Enabled;
+        return true;
+    }
+
+    private static void ApplySeverityOverrides(List<Finding> findings, GauntletConfig config)
+    {
+        foreach (var finding in findings)
+        {
+            if (!config.Rules.TryGetValue(finding.RuleId, out var rc)) continue;
+            if (rc.Severity is null) continue;
+
+            finding.Confidence = rc.Severity.ToUpperInvariant() switch
+            {
+                "HIGH"   => Confidence.High,
+                "MEDIUM" => Confidence.Medium,
+                "LOW"    => Confidence.Low,
+                _        => finding.Confidence
+            };
+        }
+    }
+
+    private static void ApplyIgnoreList(List<Finding> findings, IgnoreList? ignoreList)
+    {
+        if (ignoreList is null || ignoreList.IsEmpty) return;
+        findings.RemoveAll(f => ignoreList.IsSuppressed(f.RuleId));
+    }
+
     /// <summary>
     /// Runs synthesis checks after all rules have completed.
     /// Adds GCI0018 aggregate finding and GCI0019 large-diff warning.
@@ -72,7 +109,6 @@ public class RuleOrchestrator
     {
         try
         {
-            // GCI0018 synthesis: if >3 distinct rules fired, add a production readiness note
             int distinctRulesFired = allFindings.Select(f => f.RuleId).Distinct().Count();
             if (distinctRulesFired > 3)
             {
@@ -88,7 +124,6 @@ public class RuleOrchestrator
                 });
             }
 
-            // GCI0019 large-diff warning
             var gci0019 = new GCI0019_ConfidenceAndEvidence();
             int totalLines = diff.AllAddedLines.Count() + diff.AllRemovedLines.Count();
             var warning = gci0019.CreateLargeDiffWarning(totalLines, allFindings.Count);
