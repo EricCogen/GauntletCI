@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.CommandLine;
 using System.Text.Json;
+using GauntletCI.Cli.LlmDaemon;
 using GauntletCI.Cli.Output;
 using GauntletCI.Cli.Presentation;
 using GauntletCI.Cli.Telemetry;
@@ -91,7 +92,7 @@ public static class AnalyzeCommand
                 var orchestrator = RuleOrchestrator.CreateDefault(config);
                 var result = await orchestrator.RunAsync(diff, ignoreList: ignoreList);
 
-                using ILlmEngine llm = (withLlm && !noLlm) ? new LocalLlmEngine() : new NullLlmEngine();
+                using ILlmEngine llm = await LlmEngineSelector.ResolveAsync(config, withLlm && !noLlm);
                 if (llm.IsAvailable)
                 {
                     foreach (var finding in result.Findings.Where(f => f.Confidence == Confidence.High))

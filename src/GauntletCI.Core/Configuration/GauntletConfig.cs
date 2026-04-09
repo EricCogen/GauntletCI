@@ -11,6 +11,9 @@ public class GauntletConfig
 
     /// <summary>Paths to external policy files to merge.</summary>
     public string[] PolicyReferences { get; set; } = [];
+
+    /// <summary>Premium LLM configuration for CI/CD enrichment.</summary>
+    public LlmConfig? Llm { get; set; }
 }
 
 /// <summary>Per-rule configuration overrides.</summary>
@@ -24,4 +27,33 @@ public class RuleConfig
     /// Null means use the rule's default.
     /// </summary>
     public string? Severity { get; set; }
+}
+
+/// <summary>
+/// Premium CI/CD LLM configuration. When present in a CI environment alongside a valid
+/// license key, GauntletCI routes LLM enrichment to the user-supplied endpoint instead
+/// of the local ONNX model. The endpoint must be OpenAI-chat-completions compatible.
+/// </summary>
+public class LlmConfig
+{
+    /// <summary>
+    /// OpenAI-compatible chat completions endpoint.
+    /// E.g. "https://api.openai.com/v1/chat/completions" or an Azure OpenAI endpoint.
+    /// </summary>
+    public string? CiEndpoint { get; set; }
+
+    /// <summary>Model name to request (e.g. "gpt-4o-mini", "gpt-4o").</summary>
+    public string CiModel { get; set; } = "gpt-4o-mini";
+
+    /// <summary>
+    /// Name of the environment variable that holds the API key for the CI endpoint.
+    /// The key is never stored in config — always read from the environment at runtime.
+    /// </summary>
+    public string CiApiKeyEnv { get; set; } = "GAUNTLETCI_LLM_KEY";
+
+    /// <summary>
+    /// Name of the environment variable holding the GauntletCI license key.
+    /// Required to enable CI LLM enrichment.
+    /// </summary>
+    public string LicenseKeyEnv { get; set; } = "GAUNTLETCI_LICENSE";
 }
