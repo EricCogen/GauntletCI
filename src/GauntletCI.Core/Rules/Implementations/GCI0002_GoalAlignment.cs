@@ -37,17 +37,21 @@ public class GCI0002_GoalAlignment : RuleBase
         var messageWords = diff.CommitMessage
             .ToLowerInvariant()
             .Split([' ', '-', '_', '.', '/', ':', '(', ')'], StringSplitOptions.RemoveEmptyEntries)
-            .Where(w => w.Length > 3)
+            .Where(w => w.Length >= 3)
             .ToHashSet();
 
         if (messageWords.Count == 0) return;
 
-        var fileNames = diff.Files
-            .Select(f => Path.GetFileNameWithoutExtension(f.NewPath).ToLowerInvariant())
-            .ToList();
+        // Match against all path segments (file name + directory names), not just the filename
+        var pathSegments = diff.Files
+            .SelectMany(f => f.NewPath
+                .ToLowerInvariant()
+                .Split(['/', '\\', '.'], StringSplitOptions.RemoveEmptyEntries))
+            .Where(s => s.Length >= 3)
+            .ToHashSet();
 
-        int matchCount = fileNames.Count(name =>
-            messageWords.Any(word => name.Contains(word) || word.Contains(name)));
+        int matchCount = pathSegments.Count(segment =>
+            messageWords.Any(word => segment.Contains(word) || word.Contains(segment)));
 
         if (diff.Files.Count > 3 && matchCount == 0)
         {
