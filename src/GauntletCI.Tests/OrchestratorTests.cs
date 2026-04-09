@@ -8,7 +8,7 @@ namespace GauntletCI.Tests;
 public class OrchestratorTests
 {
     [Fact]
-    public async Task CreateDefault_ShouldDiscoverAllTwentyRules()
+    public async Task CreateDefault_ShouldDiscoverAllRules()
     {
         var orchestrator = RuleOrchestrator.CreateDefault();
         var diff = DiffParser.Parse("""
@@ -21,7 +21,7 @@ public class OrchestratorTests
             +var x = 1;
             """);
         var result = await orchestrator.RunAsync(diff);
-        Assert.Equal(20, result.RulesEvaluated);
+        Assert.Equal(27, result.RulesEvaluated);
     }
 
     [Fact]
@@ -39,7 +39,7 @@ public class OrchestratorTests
             """);
         var result = await orchestrator.RunAsync(diff);
         Assert.NotNull(result);
-        Assert.Equal(20, result.RulesEvaluated);
+        Assert.Equal(27, result.RulesEvaluated);
     }
 
     [Fact]
