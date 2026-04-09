@@ -11,6 +11,7 @@ var rootCommand = new RootCommand("GauntletCI — deterministic pre-commit risk 
 rootCommand.AddCommand(AnalyzeCommand.Create());
 rootCommand.AddCommand(InitCommand.Create());
 rootCommand.AddCommand(IgnoreCommand.Create());
+rootCommand.AddCommand(ModelCommand.Create());
 rootCommand.AddCommand(PostmortemCommand.Create());
 rootCommand.AddCommand(FeedbackCommand.Create());
 rootCommand.AddCommand(TelemetryCommand.Create());

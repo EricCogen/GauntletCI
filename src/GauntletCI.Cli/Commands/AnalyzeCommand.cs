@@ -6,6 +6,7 @@ using GauntletCI.Cli.Presentation;
 using GauntletCI.Cli.Telemetry;
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
+using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
 using GauntletCI.Llm;
 
@@ -28,7 +29,8 @@ public static class AnalyzeCommand
             "--output",
             () => "text",
             "Output format: text or json");
-        var noLlmFlag = new Option<bool>("--no-llm", "Disable LLM enrichment");
+        var noLlmFlag = new Option<bool>("--no-llm", "Disable LLM enrichment (deprecated — LLM is now opt-in via --with-llm)") { IsHidden = true };
+        var withLlmFlag = new Option<bool>("--with-llm", "Enable LLM enrichment of High-confidence findings (requires 'gauntletci model download', adds latency)");
         var asciiFlag = new Option<bool>("--ascii", "Use ASCII-only output (for terminals without Unicode support)");
         var noBannerOption = new Option<bool>("--no-banner", "Disable ASCII banner");
         var githubAnnotationsFlag = new Option<bool>("--github-annotations", "Emit GitHub Actions workflow commands for inline PR annotations");
@@ -43,6 +45,7 @@ public static class AnalyzeCommand
             repoOption,
             outputOption,
             noLlmFlag,
+            withLlmFlag,
             asciiFlag,
             noBannerOption,
             githubAnnotationsFlag,
@@ -58,6 +61,7 @@ public static class AnalyzeCommand
             var repo       = ctx.ParseResult.GetValueForOption(repoOption)!;
             var output     = ctx.ParseResult.GetValueForOption(outputOption)!;
             var noLlm      = ctx.ParseResult.GetValueForOption(noLlmFlag);
+            var withLlm    = ctx.ParseResult.GetValueForOption(withLlmFlag);
             var ascii      = ctx.ParseResult.GetValueForOption(asciiFlag);
             var noBanner   = ctx.ParseResult.GetValueForOption(noBannerOption);
             var ghAnnotate = ctx.ParseResult.GetValueForOption(githubAnnotationsFlag);
@@ -87,7 +91,12 @@ public static class AnalyzeCommand
                 var orchestrator = RuleOrchestrator.CreateDefault(config);
                 var result = await orchestrator.RunAsync(diff, ignoreList: ignoreList);
 
-                ILlmEngine llm = noLlm ? new NullLlmEngine() : new NullLlmEngine();
+                using ILlmEngine llm = (withLlm && !noLlm) ? new LocalLlmEngine() : new NullLlmEngine();
+                if (llm.IsAvailable)
+                {
+                    foreach (var finding in result.Findings.Where(f => f.Confidence == Confidence.High))
+                        finding.LlmExplanation = await llm.EnrichFindingAsync(finding);
+                }
 
                 if ((output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase))
                 {
