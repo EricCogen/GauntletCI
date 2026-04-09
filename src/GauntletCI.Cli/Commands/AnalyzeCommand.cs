@@ -3,6 +3,7 @@ using System.CommandLine;
 using System.Text.Json;
 using GauntletCI.Cli.Output;
 using GauntletCI.Cli.Presentation;
+using GauntletCI.Cli.Telemetry;
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Rules;
@@ -100,6 +101,8 @@ public static class AnalyzeCommand
 
                 if (ghAnnotate)
                     GitHubAnnotationWriter.Write(result);
+
+                await TelemetryCollector.CollectAsync(result, diff, repo.FullName);
 
                 ctx.ExitCode = result.HasFindings ? 1 : 0;
             }

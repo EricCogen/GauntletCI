@@ -1,0 +1,75 @@
+// SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Diff;
+using GauntletCI.Core.Model;
+using GauntletCI.Core.Rules;
+
+namespace GauntletCI.Cli.Telemetry;
+
+/// <summary>
+/// Orchestrates post-analysis telemetry: consent check → event creation → local store → async upload.
+/// Call after every successful analysis. Always safe — all failures are silently swallowed.
+/// </summary>
+public static class TelemetryCollector
+{
+    public static async Task CollectAsync(
+        EvaluationResult result,
+        DiffContext diff,
+        string repoRoot,
+        bool quiet = false)
+    {
+        try
+        {
+            if (!TelemetryConsent.IsOptedIn) return;
+
+            var installId = TelemetryConsent.InstallId;
+            var repoHash  = await TelemetryHasher.HashRepoAsync(repoRoot);
+            var linesAdded   = diff.Files.Sum(f => f.Hunks.Sum(h => h.Lines.Count(l => l.Kind == DiffLineKind.Added)));
+            var linesRemoved = diff.Files.Sum(f => f.Hunks.Sum(h => h.Lines.Count(l => l.Kind == DiffLineKind.Removed)));
+
+            // 1 summary event per analysis run
+            await TelemetryStore.AppendAsync(new TelemetryEvent
+            {
+                EventType     = "analysis",
+                InstallId     = installId,
+                RepoHash      = repoHash,
+                FindingCount  = result.Findings.Count,
+                FilesChanged  = diff.Files.Count,
+                RulesEvaluated = result.RulesEvaluated,
+                LinesAdded    = linesAdded,
+                LinesRemoved  = linesRemoved,
+            });
+
+            // 1 event per finding (rule signal — most valuable for the model)
+            foreach (var finding in result.Findings)
+            {
+                await TelemetryStore.AppendAsync(new TelemetryEvent
+                {
+                    EventType  = "finding",
+                    InstallId  = installId,
+                    RepoHash   = repoHash,
+                    RuleId     = finding.RuleId,
+                    Confidence = finding.Confidence.ToString(),
+                    FileExt    = ExtractExt(finding.Evidence),
+                });
+            }
+
+            // Upload in the background — don't block the CLI
+            TelemetryUploader.UploadInBackground();
+        }
+        catch { /* telemetry must never crash the tool */ }
+    }
+
+    private static string? ExtractExt(string? evidence)
+    {
+        if (string.IsNullOrEmpty(evidence)) return null;
+        // Evidence often contains a file path — extract extension only
+        var parts = evidence.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        foreach (var part in parts)
+        {
+            var ext = Path.GetExtension(part.TrimEnd(':').TrimEnd(','));
+            if (!string.IsNullOrEmpty(ext) && ext.Length <= 6)
+                return ext.ToLowerInvariant();
+        }
+        return null;
+    }
+}
