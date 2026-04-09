@@ -2,6 +2,7 @@
 using System.CommandLine;
 using System.Text.Json;
 using GauntletCI.Cli.Output;
+using GauntletCI.Cli.Presentation;
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Rules;
@@ -28,6 +29,7 @@ public static class AnalyzeCommand
             "Output format: text or json");
         var noLlmFlag = new Option<bool>("--no-llm", "Disable LLM enrichment");
         var asciiFlag = new Option<bool>("--ascii", "Use ASCII-only output (for terminals without Unicode support)");
+        var noBannerOption = new Option<bool>("--no-banner", "Disable ASCII banner");
 
         var cmd = new Command("analyze", "Analyse a git diff for pre-commit risks")
         {
@@ -40,6 +42,7 @@ public static class AnalyzeCommand
             outputOption,
             noLlmFlag,
             asciiFlag,
+            noBannerOption,
         };
 
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
@@ -53,6 +56,13 @@ public static class AnalyzeCommand
             var output     = ctx.ParseResult.GetValueForOption(outputOption)!;
             var noLlm      = ctx.ParseResult.GetValueForOption(noLlmFlag);
             var ascii      = ctx.ParseResult.GetValueForOption(asciiFlag);
+            var noBanner   = ctx.ParseResult.GetValueForOption(noBannerOption);
+
+            CliBanner.PrintIfEnabled(new BannerContext
+            {
+                NoBanner = noBanner,
+                OutputFormat = output ?? "text",
+            });
 
             try
             {
@@ -75,7 +85,7 @@ public static class AnalyzeCommand
 
                 ILlmEngine llm = noLlm ? new NullLlmEngine() : new NullLlmEngine();
 
-                if (output.Equals("json", StringComparison.OrdinalIgnoreCase))
+                if ((output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase))
                 {
                     var json = JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
                     Console.WriteLine(json);
