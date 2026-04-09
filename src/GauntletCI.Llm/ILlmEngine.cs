@@ -3,7 +3,7 @@ using GauntletCI.Core.Model;
 
 namespace GauntletCI.Llm;
 
-public interface ILlmEngine
+public interface ILlmEngine : IDisposable
 {
     bool IsAvailable { get; }
     Task<string> EnrichFindingAsync(Finding finding, CancellationToken ct = default);

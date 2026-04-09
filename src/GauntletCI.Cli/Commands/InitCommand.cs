@@ -45,7 +45,7 @@ public static class InitCommand
     private static Dictionary<string, object> BuildDefaultRules()
     {
         var rules = new Dictionary<string, object>();
-        for (int i = 1; i <= 20; i++)
+        for (int i = 1; i <= 27; i++)
         {
             rules[$"GCI{i:D4}"] = new { enabled = true };
         }

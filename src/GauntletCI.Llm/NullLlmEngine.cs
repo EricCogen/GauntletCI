@@ -4,7 +4,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Llm;
 
 /// <summary>
-/// No-op LLM engine used when --no-llm is passed or no model is available.
+/// No-op LLM engine used when --with-llm is not passed or no model is available.
 /// </summary>
 public sealed class NullLlmEngine : ILlmEngine
 {
@@ -15,4 +15,6 @@ public sealed class NullLlmEngine : ILlmEngine
 
     public Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct = default)
         => Task.FromResult(string.Empty);
+
+    public void Dispose() { }
 }
