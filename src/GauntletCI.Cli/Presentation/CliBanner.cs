@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: Elastic-2.0
+using System.Reflection;
+
 namespace GauntletCI.Cli.Presentation;
 
 public static class CliBanner
 {
-    private const string BannerText =
-        " ██████╗  █████╗ ██╗   ██╗███╗   ██╗████████╗██╗     ███████╗████████╗ ██████╗ ██╗\n" +
-        "██╔════╝ ██╔══██╗██║   ██║████╗  ██║╚══██╔══╝██║     ██╔════╝╚══██╔══╝██╔════╝ ██║\n" +
-        "██║  ███╗███████║██║   ██║██╔██╗ ██║   ██║   ██║     █████╗     ██║   ██║      ██║\n" +
-        "██║   ██║██╔══██║██║   ██║██║╚██╗██║   ██║   ██║     ██╔══╝     ██║   ██║      ██║\n" +
-        "╚██████╔╝██║  ██║╚██████╔╝██║ ╚████║   ██║   ███████╗███████╗   ██║   ╚██████╗ ██║\n" +
-        " ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═══╝   ╚═╝   ╚══════╝╚══════╝   ╚═╝    ╚═════╝ ╚═╝\n" +
-        "\n" +
-        "GauntletCI - pre-commit change-risk detection";
+    private const string Bold       = "\u001b[1m";
+    private const string Amber      = "\u001b[38;5;214m";
+    private const string Dim        = "\u001b[2m";
+    private const string Reset      = "\u001b[0m";
 
     public static void PrintIfEnabled(BannerContext context)
     {
@@ -22,7 +19,13 @@ public static class CliBanner
         if (Console.IsOutputRedirected) return;
         if (IsCiEnvironment()) return;
 
-        Console.WriteLine(BannerText.Replace("\r\n", "\n").Replace("\r", "\n"));
+        var version = Assembly.GetExecutingAssembly()
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
+            ?.InformationalVersion?.Split('+')[0] ?? "0.0.0";
+
+        Console.WriteLine();
+        Console.WriteLine($"  {Bold}{Amber}GauntletCI{Reset}  {Dim}v{version}{Reset}");
+        Console.WriteLine($"  {Dim}pre-commit change-risk detection{Reset}");
         Console.WriteLine();
     }
 
