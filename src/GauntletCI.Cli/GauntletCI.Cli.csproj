@@ -9,6 +9,11 @@
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\GauntletCI.png" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -18,6 +23,15 @@
     <ToolCommandName>gauntletci</ToolCommandName>
     <PackageId>GauntletCI</PackageId>
     <Version>2.0.0</Version>
+    <Authors>Eric Cogen</Authors>
+    <Description>Deterministic pre-commit risk detection engine. Analyzes git diffs for behavioral changes that may not be properly validated.</Description>
+    <PackageTags>git;diff;code-review;static-analysis;pre-commit;risk-detection;ci</PackageTags>
+    <PackageProjectUrl>https://github.com/EricCogen/GauntletCI</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/EricCogen/GauntletCI.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>Elastic-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageIcon>GauntletCI.png</PackageIcon>
   </PropertyGroup>
 
 </Project>

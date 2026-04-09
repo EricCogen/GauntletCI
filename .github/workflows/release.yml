@@ -18,10 +18,10 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
@@ -61,3 +61,7 @@ jobs:
           generate_release_notes: true
           files: |
             artifacts/release/*.nupkg
+
+      - name: Push to NuGet.org
+        if: ${{ vars.NUGET_PUSH_ENABLED == 'true' }}
+        run: dotnet nuget push artifacts/release/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
