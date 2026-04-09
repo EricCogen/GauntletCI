@@ -1,0 +1,103 @@
+# Moat Bootstrap Pipeline
+# Runs GauntletCI analysis against a curated set of high-signal public PRs
+# to generate training data for the risk model.
+# Artifacts are uploaded as workflow artifacts for offline processing.
+
+name: moat-bootstrap
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'   # Weekly, Sunday 03:00 UTC
+  workflow_dispatch:        # Manual trigger
+
+permissions:
+  contents: read
+
+jobs:
+  bootstrap:
+    name: Collect PR signal
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.x'
+
+      - name: Build GauntletCI
+        run: dotnet build GauntletCI.slnx -c Release -v quiet --nologo
+
+      - name: Collect PR diffs from curated repos
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p bootstrap-output
+
+          # Curated list of high-signal public repos (diverse languages & patterns)
+          REPOS=(
+            "dotnet/runtime"
+            "microsoft/semantic-kernel"
+            "dotnet/aspnetcore"
+            "grafana/grafana"
+            "vercel/next.js"
+          )
+
+          for REPO in "${REPOS[@]}"; do
+            echo "Collecting from $REPO..."
+            SAFE=$(echo "$REPO" | tr '/' '_')
+            mkdir -p "bootstrap-output/$SAFE"
+
+            # Fetch last 10 merged PRs with diffs
+            gh pr list --repo "$REPO" --state merged --limit 10 --json number \
+              --jq '.[].number' 2>/dev/null | head -10 | while read PR; do
+                gh pr diff --repo "$REPO" "$PR" > "bootstrap-output/$SAFE/pr-${PR}.diff" 2>/dev/null || true
+            done
+          done
+
+      - name: Run GauntletCI analysis on each diff
+        run: |
+          mkdir -p bootstrap-output/results
+
+          for DIFF in bootstrap-output/*/*.diff; do
+            [ -f "$DIFF" ] || continue
+            LABEL=$(echo "$DIFF" | tr '/' '_' | sed 's/\.diff$//')
+            dotnet run --project src/GauntletCI.Cli --no-build \
+              -- analyze --diff "$DIFF" --output json --no-banner \
+              > "bootstrap-output/results/${LABEL}.json" 2>/dev/null || true
+          done
+
+      - name: Summarise findings
+        run: |
+          echo "## Bootstrap Summary" > bootstrap-output/summary.md
+          echo "" >> bootstrap-output/summary.md
+          TOTAL=$(find bootstrap-output/results -name '*.json' | wc -l)
+          echo "Diffs analysed: $TOTAL" >> bootstrap-output/summary.md
+          echo "" >> bootstrap-output/summary.md
+
+          # Count findings per rule across all results
+          echo "### Findings by Rule" >> bootstrap-output/summary.md
+          find bootstrap-output/results -name '*.json' -exec cat {} \; 2>/dev/null \
+            | python3 -c "
+          import sys, json, collections
+          counts = collections.Counter()
+          for line in sys.stdin:
+              try:
+                  obj = json.loads(line)
+                  for f in obj.get('Findings', []):
+                      counts[f.get('RuleId','?')] += 1
+              except: pass
+          for rule, count in sorted(counts.items()):
+              print(f'| {rule} | {count} |')
+          " >> bootstrap-output/summary.md || true
+
+          cat bootstrap-output/summary.md
+
+      - name: Upload bootstrap artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: moat-bootstrap-${{ github.run_number }}
+          path: bootstrap-output/
+          retention-days: 30
