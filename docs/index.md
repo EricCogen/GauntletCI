@@ -229,7 +229,7 @@ Current focus areas include:
 
 GitHub repository:
 
-https://github.com/EricCogen/GauntletCI
+[https://github.com/EricCogen/GauntletCI](https://github.com/EricCogen/GauntletCI)
 
 ---
 
