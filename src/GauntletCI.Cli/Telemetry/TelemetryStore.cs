@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Text.Json;
+using System.Threading;
 
 namespace GauntletCI.Cli.Telemetry;
 
@@ -10,6 +11,8 @@ namespace GauntletCI.Cli.Telemetry;
 /// </summary>
 public static class TelemetryStore
 {
+    private static readonly SemaphoreSlim QueueLock = new(1, 1);
+
     private static readonly string QueuePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
         ".gauntletci", "telemetry-queue.json");
@@ -19,6 +22,7 @@ public static class TelemetryStore
 
     public static async Task AppendAsync(TelemetryEvent evt)
     {
+        await QueueLock.WaitAsync();
         try
         {
             var events = await LoadAsync();
@@ -29,20 +33,30 @@ public static class TelemetryStore
             await SaveAsync(events);
         }
         catch { /* telemetry must never crash the tool */ }
+        finally
+        {
+            QueueLock.Release();
+        }
     }
 
     public static async Task<List<TelemetryEvent>> GetPendingAsync(int limit = 100)
     {
+        await QueueLock.WaitAsync();
         try
         {
             var events = await LoadAsync();
             return events.Where(e => !e.Sent).Take(limit).ToList();
         }
         catch { return []; }
+        finally
+        {
+            QueueLock.Release();
+        }
     }
 
     public static async Task MarkSentAsync(IEnumerable<string> eventIds)
     {
+        await QueueLock.WaitAsync();
         try
         {
             var ids = eventIds.ToHashSet();
@@ -54,6 +68,10 @@ public static class TelemetryStore
             await SaveAsync(updated);
         }
         catch { /* non-fatal */ }
+        finally
+        {
+            QueueLock.Release();
+        }
     }
 
     private static async Task<List<TelemetryEvent>> LoadAsync()
