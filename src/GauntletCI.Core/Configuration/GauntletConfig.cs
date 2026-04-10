@@ -14,6 +14,13 @@ public class GauntletConfig
 
     /// <summary>Premium LLM configuration for CI/CD enrichment.</summary>
     public LlmConfig? Llm { get; set; }
+
+    /// <summary>
+    /// Per-layer forbidden import rules for GCI0035 Architecture Layer Guard.
+    /// Key: a namespace fragment identifying the source layer (e.g. "Domain").
+    /// Value: list of namespace fragments that the source layer must not import (e.g. ["Infrastructure", "AspNetCore"]).
+    /// </summary>
+    public Dictionary<string, List<string>>? ForbiddenImports { get; set; }
 }
 
 /// <summary>Per-rule configuration overrides.</summary>

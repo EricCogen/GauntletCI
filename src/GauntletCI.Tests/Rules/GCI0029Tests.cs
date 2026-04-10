@@ -1,0 +1,112 @@
+// SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Diff;
+using GauntletCI.Core.Rules.Implementations;
+
+namespace GauntletCI.Tests.Rules;
+
+public class GCI0029Tests
+{
+    private static readonly GCI0029_PiiLoggingLeak Rule = new();
+
+    [Fact]
+    public async Task EmailInLoggerCall_ShouldFlag()
+    {
+        var raw = """
+            diff --git a/src/UserService.cs b/src/UserService.cs
+            index abc..def 100644
+            --- a/src/UserService.cs
+            +++ b/src/UserService.cs
+            @@ -1,3 +1,4 @@
+             public class UserService {
+            +    _logger.LogInformation("User email: {Email}", user.email);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("email"));
+    }
+
+    [Fact]
+    public async Task SsnInLogCall_ShouldFlag()
+    {
+        var raw = """
+            diff --git a/src/AccountService.cs b/src/AccountService.cs
+            index abc..def 100644
+            --- a/src/AccountService.cs
+            +++ b/src/AccountService.cs
+            @@ -1,3 +1,4 @@
+             public class AccountService {
+            +    Log.Information("Account ssn: {Ssn}", user.ssn);
+            +    Log.Error("Credit card: {Card}", user.creditcard);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("ssn"));
+        Assert.Contains(findings, f => f.Summary.Contains("creditcard"));
+    }
+
+    [Fact]
+    public async Task LogWithoutPiiTerm_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/UserService.cs b/src/UserService.cs
+            index abc..def 100644
+            --- a/src/UserService.cs
+            +++ b/src/UserService.cs
+            @@ -1,3 +1,4 @@
+             public class UserService {
+            +    _logger.LogInformation("User {UserId} logged in", userId);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public async Task PiiTermWithoutLogPrefix_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/UserService.cs b/src/UserService.cs
+            index abc..def 100644
+            --- a/src/UserService.cs
+            +++ b/src/UserService.cs
+            @@ -1,3 +1,4 @@
+             public class UserService {
+            +    var email = user.GetEmail();
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public async Task NonCsFile_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/readme.md b/src/readme.md
+            index abc..def 100644
+            --- a/src/readme.md
+            +++ b/src/readme.md
+            @@ -1,2 +1,3 @@
+             # Docs
+            +    _logger.LogInformation("email: {Email}", user.email);
+             end
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+}
