@@ -14,6 +14,11 @@
     <None Include="..\..\GauntletCI.png" Pack="true" PackagePath="\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Hooks\gauntletci-hook.ps1" />
+    <EmbeddedResource Include="Hooks\gauntletci-hook.sh" />
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
