@@ -1,0 +1,67 @@
+{
+  "mapped_gci_rules": [
+    "GCI002"
+  ],
+  "description": "Goal Alignment: Verify implementation behavior aligns with apparent intent.",
+  "fixtures": [
+    {
+      "id": "gci0002-01",
+      "diff_file": "01_real_true_positive_behavioral_intent_drift_spring.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI002"
+      ],
+      "notes": "Container resolution behavior changes by removing a fallback path while the method contract still appears to support resilient retrieval semantics.",
+      "origin": "real",
+      "source_url": "https://github.com/spring-projects/spring-framework/pull/22260"
+    },
+    {
+      "id": "gci0002-02",
+      "diff_file": "02_real_true_positive_stated_lockfile_guarantee_mixed_changes.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI002"
+      ],
+      "notes": "A lockfile-integrity intent is introduced, but the same change set bundles broad dependency churn and build-path edits that dilute the stated objective and reviewability.",
+      "origin": "real",
+      "source_url": "https://github.com/rust-lang/rust/pull/154641"
+    },
+    {
+      "id": "gci0002-03",
+      "diff_file": "03_real_true_positive_retry_path_loses_diagnostics.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI002"
+      ],
+      "notes": "The worker keeps retry semantics but removes structured failure logging, causing behavior to diverge from the apparent operational intent of actionable retries.",
+      "origin": "real",
+      "source_url": "https://github.com/mastodon/mastodon/pull/34743"
+    },
+    {
+      "id": "gci0002-04",
+      "diff_file": "04_real_true_positive_failure_path_diagnostics_removed.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI002"
+      ],
+      "notes": "Provisioning still returns errors, but key error-path diagnostics are removed, conflicting with the apparent intent to preserve debuggable failure behavior.",
+      "origin": "real",
+      "source_url": "https://github.com/grafana/grafana/pull/119491"
+    },
+    {
+      "id": "gci0002-05",
+      "diff_file": "05_real_false_positive_structured_logging_refactor_preserves_behavior.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Logging moves from formatted strings to structured fields without changing return paths, so implementation remains aligned with the existing failure-handling intent.",
+      "origin": "real",
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/136395"
+    }
+  ]
+}
+

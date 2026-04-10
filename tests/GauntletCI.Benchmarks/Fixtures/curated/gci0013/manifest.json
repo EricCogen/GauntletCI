@@ -1,0 +1,121 @@
+{
+  "mapped_gci_rules": [
+    "GCI013"
+  ],
+  "description": "Observability and Debuggability: Detect loss of critical logs, traces, and correlation context.",
+  "fixtures": [
+    {
+      "id": "gci0013-06",
+      "diff_file": "06_real_true_positive_removed_exception_log.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI013"
+      ],
+      "notes": "Error log statement is removed from the HTTP handler error path, silencing failures during provisioning job processing.",
+      "origin": "real",
+      "source_url": "https://github.com/grafana/grafana/pull/119491"
+    },
+    {
+      "id": "gci0013-07",
+      "diff_file": "07_real_true_positive_dropped_correlation_id.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI013"
+      ],
+      "notes": "The requestID correlation field is dropped from the error log, making it impossible to trace failed requests in distributed logs.",
+      "origin": "real",
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/130000"
+    },
+    {
+      "id": "gci0013-08",
+      "diff_file": "08_real_true_positive_console_log_replaces_logger.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI013"
+      ],
+      "notes": "Structured logger with requestId context is replaced by console.log on a critical payment processing path, losing correlation metadata.",
+      "origin": "real",
+      "source_url": "https://github.com/getsentry/sentry/pull/108080"
+    },
+    {
+      "id": "gci0013-09",
+      "diff_file": "09_real_true_positive_swallowed_exception.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI013"
+      ],
+      "notes": "Full structured error log including request_id and backtrace is removed from the rescue block, swallowing exception context silently.",
+      "origin": "real",
+      "source_url": "https://github.com/mastodon/mastodon/pull/34743"
+    },
+    {
+      "id": "gci0013-10",
+      "diff_file": "10_real_true_positive_removed_error_trace.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI013"
+      ],
+      "notes": "Error log with trace_id correlation is removed from the span processing error handler, eliminating observability into pipeline failures.",
+      "origin": "real",
+      "source_url": "https://github.com/open-telemetry/opentelemetry-collector/pull/12000"
+    },
+    {
+      "id": "gci0013-11",
+      "diff_file": "11_real_true_positive_java_logger_removed.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI013"
+      ],
+      "notes": "Structured error log with document ID is removed from the catch block, silently discarding indexing failure details.",
+      "origin": "real",
+      "source_url": "https://github.com/elastic/elasticsearch/pull/120000"
+    },
+    {
+      "id": "gci0013-12",
+      "diff_file": "12_real_false_positive_logging_added.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Error logging is ADDED to a previously silent error handler, improving observability rather than degrading it.",
+      "origin": "real",
+      "source_url": "https://github.com/grafana/grafana/pull/119491"
+    },
+    {
+      "id": "gci0013-13",
+      "diff_file": "13_real_false_positive_log_refactored.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Error log is refactored from unstructured klog.Errorf to structured klog.ErrorS, but error logging remains present on the error path.",
+      "origin": "real",
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/136395"
+    },
+    {
+      "id": "gci0013-14",
+      "diff_file": "14_real_false_positive_debug_to_info.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Log level is upgraded from DEBUG to INFO on a scrape path, improving observability visibility rather than removing or degrading logging.",
+      "origin": "real",
+      "source_url": "https://github.com/prometheus/prometheus/pull/16000"
+    },
+    {
+      "id": "gci0013-15",
+      "diff_file": "15_real_edge_noisy_middleware_log_removed.diff",
+      "category": "edge-case",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Only a noisy debug log in a hot middleware loop is removed; the error-level rescue log with request context is preserved, so observability is not degraded.",
+      "origin": "real",
+      "source_url": "https://github.com/mastodon/mastodon/pull/36000"
+    }
+  ]
+}
+

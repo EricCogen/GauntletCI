@@ -1,0 +1,30 @@
+# origin: real
+# source: https://github.com/vibhu1212/ufdr-analysis-tool/pull/1
+# expected: do-not-fire
+# reason: Contacts fetched in batches via IN query before the loop; no per-item database roundtrip occurs.
+
+--- a/visualization/centrality_dashboard_viz.py
++++ b/visualization/centrality_dashboard_viz.py
+@@ -75,11 +75,17 @@ def create_centrality_overview(self, case_id, top_n=20):
+             for contact, score in values:
+                 centrality_data[contact][metric_key] = score
+         
+-        # Get names for all contacts (one query per contact)
+-        for contact in all_contacts:
++        contact_list = list(all_contacts)
++        batch_size = 900
++        for contact in contact_list:
++            centrality_data[contact]['name'] = contact[:15]
++        for i in range(0, len(contact_list), batch_size):
++            batch = contact_list[i:i+batch_size]
++            placeholders = ','.join(['?'] * len(batch))
+             cursor = conn.execute(
+-                "SELECT COALESCE(name, phone_raw) FROM contacts WHERE phone_digits = ? LIMIT 1",
+-                (contact,)
++                f"SELECT phone_digits, COALESCE(name, phone_raw) FROM contacts WHERE phone_digits IN ({placeholders})",
++                batch
+             )
+-            result = cursor.fetchone()
+-            centrality_data[contact]['name'] = result[0] if result else contact[:15]
++            for row in cursor.fetchall():
++                centrality_data[row[0]]['name'] = row[1]

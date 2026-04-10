@@ -1,0 +1,44 @@
+# origin: real
+# source: https://github.com/CoraCodeDev/PdfSplitter/pull/3
+# expected: fire
+# reason: Removes IDisposable implementation (resource leak on every page render), introduces Task.Run().Result blocking in UI property getter, and drops the null-check guard — memory leak plus deadlock risk with no tests.
+
+--- a/PdfSplitter/Models/PdfPageItem.cs
++++ b/PdfSplitter/Models/PdfPageItem.cs
+@@ -3,22 +3,13 @@
+ 
+ namespace PdfSplitter.Models
+ {
+-    public class PdfPageItem : IDisposable
++    public class PdfPageItem
+     {
+-        private bool _disposed;
+-
+         public PdfPage Page {get;set;}
+         public int PageNumber { get; set; }
+         public bool Selected { get; set; }
+
+-        public ImageSource Preview => ImageSource.FromStream(async (token) => (await GeneratePreview()).AsStream());
++        public ImageSource Preview => ImageSource.FromStream(() => Task.Run(GeneratePreview).Result.AsStream());
+ 
+-        public ImageSource PageView => ImageSource.FromStream(async (token) => (await GenerateView()).AsStream());
++        public ImageSource PageView => ImageSource.FromStream(() => Task.Run(GenerateView).Result.AsStream());
+ 
+         public async Task<InMemoryRandomAccessStream> GeneratePreview()
+         {
+@@ -44,15 +35,5 @@ public async Task<InMemoryRandomAccessStream> GenerateView()
+ 
+             return stream;
+         }
+-
+-        public void Dispose()
+-        {
+-            if (!_disposed)
+-            {
+-                Page?.Dispose();
+-                Page = null;
+-                _disposed = true;
+-            }
+-        }
+     }
+ }

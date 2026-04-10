@@ -1,0 +1,16 @@
+# origin: real
+# source: https://github.com/TimKenobi/StepScribe/pull/2
+# expected: fire
+# reason: Apple Developer Team ID hardcoded as environment variable fallback, embedding it in source.
+
+--- a/desktop/scripts/notarize.js
++++ b/desktop/scripts/notarize.js
+@@ -13,7 +13,7 @@ exports.default = async function notarizing(context) {
+   // Skip if no credentials are set
+   const appleId = process.env.APPLE_ID;
+   const applePassword = process.env.APPLE_APP_SPECIFIC_PASSWORD;
+-  const teamId = process.env.APPLE_TEAM_ID;
++  const teamId = process.env.APPLE_TEAM_ID || "X3H9P4VWQ7";
+   const keychainProfile = process.env.APPLE_KEYCHAIN_PROFILE;
+ 
+   if (!keychainProfile && (!appleId || !applePassword)) {

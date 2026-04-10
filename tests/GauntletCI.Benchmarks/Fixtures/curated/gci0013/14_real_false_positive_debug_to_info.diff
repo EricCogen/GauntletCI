@@ -1,0 +1,26 @@
+# origin: real
+# source: https://github.com/prometheus/prometheus/pull/16000
+# expected: do-not-fire
+# reason: Log level is upgraded from DEBUG to INFO on a scrape path, improving observability visibility rather than removing or degrading logging.
+
+--- a/scrape/scrape.go
++++ b/scrape/scrape.go
+@@ -891,7 +891,7 @@ func (sl *scrapeLoop) scrapeAndReport(ctx context.Context, start time.Time, last
+ 	defer func() {
+ 		sl.scrapePool.metrics.targetScrapeDuration.WithLabelValues(scrapeCtx).Observe(time.Since(start).Seconds())
+ 	}()
+ 
+-	level.Debug(sl.l).Log("msg", "scrape started", "target", sl.scraper.String())
++	level.Info(sl.l).Log("msg", "scrape started", "target", sl.scraper.String())
+ 
+ 	b := sl.buffers.Get(sl.lastScrapeSize).([]byte)
+ 	defer sl.buffers.Put(b)
+@@ -910,7 +910,7 @@ func (sl *scrapeLoop) scrapeAndReport(ctx context.Context, start time.Time, last
+ 
+ 	if scrapeErr != nil {
+ 		// Errors from scraping are already counted; just log them.
+-		level.Debug(sl.l).Log("msg", "scrape error recorded", "target", sl.scraper.String(), "err", scrapeErr)
++		level.Info(sl.l).Log("msg", "scrape error recorded", "target", sl.scraper.String(), "err", scrapeErr)
+ 	}
+ 
+ 	return

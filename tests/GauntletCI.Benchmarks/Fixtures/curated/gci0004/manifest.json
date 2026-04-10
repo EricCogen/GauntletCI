@@ -1,0 +1,64 @@
+{
+  "mapped_gci_rules": [
+    "GCI004"
+  ],
+  "description": "Breaking Change Risk: Detect caller-facing contract breaks and integration risk.",
+  "fixtures": [
+    {
+      "id": "gci0004-06",
+      "diff_file": "06_real_true_positive_contract_shift_without_signature.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI004"
+      ],
+      "notes": "Named bean lookup fallback behavior is removed without changing method signatures, creating a caller-visible semantic contract break.",
+      "origin": "real",
+      "source_url": "https://github.com/spring-projects/spring-framework/pull/22260"
+    },
+    {
+      "id": "gci0004-08",
+      "diff_file": "08_real_true_positive_schema_contract_break_drop_column.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI004"
+      ],
+      "notes": "Dropping provider_group introduces a data-schema contract break for downstream readers and integrations that still depend on that column.",
+      "origin": "real",
+      "source_url": "https://github.com/roots/wp-packages/pull/49"
+    },
+    {
+      "id": "gci0004-10",
+      "diff_file": "10_real_edge_logging_api_refactor_not_contract_break.diff",
+      "category": "edge-case",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Logging API is refactored from Errorf to ErrorS while method returns and external behavior stay contract-compatible.",
+      "origin": "real",
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/136395"
+    },
+    {
+      "id": "gci0004-11",
+      "diff_file": "11_real_true_positive_alias_quoting_contract_shift.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI004"
+      ],
+      "notes": "SQL alias quoting semantics change and release notes call out raw SQL alias adjustments, creating caller-integration contract risk.",
+      "origin": "real",
+      "source_url": "https://github.com/django/django/pull/20587"
+    },
+    {
+      "id": "gci0004-12",
+      "diff_file": "12_real_false_positive_quote_name_unless_alias_deprecation_shim.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Existing quote_name_unless_alias path remains available as a deprecation shim that forwards to quote_name, preserving compatibility.",
+      "origin": "real",
+      "source_url": "https://github.com/django/django/pull/20587"
+    }
+  ]
+}

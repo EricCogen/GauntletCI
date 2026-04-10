@@ -1,0 +1,60 @@
+# origin: real
+# source: https://github.com/rust-lang/rust/pull/154641
+# expected: fire
+# reason: Three unrelated concerns bundled together: (1) correcting a broken --frozen flag to --frozen-lockfile, (2) adding a new post-install lockfile integrity check, and (3) bumping dozens of yarn.lock dependency versions.
+
+--- a/src/build_helper/src/npm.rs
++++ b/src/build_helper/src/npm.rs
+@@ -1,7 +1,7 @@
+ use std::error::Error;
+ use std::path::{Path, PathBuf};
+ use std::process::Command;
+-use std::{fs, io};
++use std::{env, fs, io};
+ 
+ /// Install all the npm deps, and return the path of `node_modules`.
+ pub fn install(src_root_path: &Path, out_dir: &Path, yarn: &Path) -> Result<PathBuf, io::Error> {
+@@ -19,7 +19,7 @@ pub fn install(src_root_path: &Path, out_dir: &Path, yarn: &Path) -> Result<Path
+     let mut cmd = Command::new(yarn);
+     cmd.arg("install");
+     // make sure our `yarn.lock` file actually means something
+-    cmd.arg("--frozen");
++    cmd.arg("--frozen-lockfile");
+ 
+     cmd.current_dir(out_dir);
+     let exit_status = cmd
+@@ -38,5 +38,13 @@ pub fn install(src_root_path: &Path, out_dir: &Path, yarn: &Path) -> Result<Path
+             "yarn install returned exit code {exit_status}"
+         ))));
+     }
++    if env::var("BOOTSTRAP_SKIP_YARN_LOCK_CHECK").is_err()
++        && fs::read_to_string(src_root_path.join("yarn.lock"))?
++            != fs::read_to_string(out_dir.join("yarn.lock"))?
++    {
++        return Err(io::Error::other(Box::<dyn Error + Send + Sync>::from(format!(
++            "yarn lockfile was modified despite --frozen-lockfile. \
++             this check can be bypassed by setting $BOOTSTRAP_SKIP_YARN_LOCK_CHECK"
++        ))));
++    }
+     Ok(nm_path)
+ }
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -102,10 +102,10 @@
+-"@puppeteer/browsers@2.3.0":
+-  version "2.3.0"
+-  resolved "https://registry.yarnpkg.com/@puppeteer/browsers/-/browsers-2.3.0.tgz#..."
+-  integrity sha512-DPnhUXvmvKT2dFA/...
++"@puppeteer/browsers@2.13.0":
++  version "2.13.0"
++  resolved "https://registry.yarnpkg.com/@puppeteer/browsers/-/browsers-2.13.0.tgz#..."
++  integrity sha512-46BZJYJjc/...
+   dependencies:
+-    debug "^4.3.5"
++    debug "^4.4.3"
+     extract-zip "^2.0.1"
+     progress "^2.0.3"
+-    proxy-agent "^6.4.0"
+-    semver "^7.6.3"
++    proxy-agent "^6.5.0"
++    semver "^7.7.4"

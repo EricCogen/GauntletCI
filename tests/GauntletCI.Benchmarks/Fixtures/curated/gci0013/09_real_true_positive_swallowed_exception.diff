@@ -1,0 +1,27 @@
+# origin: real
+# source: https://github.com/mastodon/mastodon/pull/34743
+# expected: fire
+# reason: Full structured error log including request_id and backtrace is removed from the rescue block, swallowing exception context silently.
+
+--- a/app/workers/activitypub/process_collection_worker.rb
++++ b/app/workers/activitypub/process_collection_worker.rb
+@@ -18,7 +18,6 @@ class ActivityPub::ProcessCollectionWorker
+   def perform(body, account_id, options = {})
+     account    = Account.find(account_id)
+     request_id = options['request_id'] || SecureRandom.hex(8)
+-    Rails.logger.info("Processing ActivityPub collection", request_id: request_id, account_id: account_id)
+ 
+     ActivityPub::ProcessCollectionService.new.call(body, account, **options.symbolize_keys)
+   rescue ActiveRecord::RecordNotFound => e
+@@ -27,11 +26,6 @@ class ActivityPub::ProcessCollectionWorker
+   rescue => e
+     # Re-raise so Sidekiq retries the job, but log the failure first
+-    Rails.logger.error(
+-      "Error processing ActivityPub collection: #{e.message}",
+-      request_id: request_id,
+-      account_id: account_id,
+-      backtrace: e.backtrace&.first(5),
+-    )
+     raise
+   end
+ end
