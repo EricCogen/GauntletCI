@@ -43,8 +43,18 @@ public class CuratedFixtureTests
         }
     }
 
+    // Rules that shifted IDs between the MISC fixture version and v2 codebase.
+    // Key = short MISC ID, Value = canonical v2 rule ID.
+    private static readonly Dictionary<string, string> RuleIdRemap =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["GCI017"] = "GCI0018",  // Production Readiness moved from slot 17 → 18 (GCI0017 is now Scope Discipline)
+            ["GCI018"] = "GCI0020",  // Accountability Standard moved from slot 18 → 20 (GCI0018 is now Production Readiness)
+        };
+
     private static string NormalizeRuleId(string id)
     {
+        if (RuleIdRemap.TryGetValue(id, out var remapped)) return remapped;
         if (id.StartsWith("GCI", StringComparison.OrdinalIgnoreCase) &&
             int.TryParse(id[3..], out int n))
             return $"GCI{n:D4}";
