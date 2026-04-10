@@ -34,6 +34,11 @@ public class RuleOrchestrator
             .Select(t => (IRule)Activator.CreateInstance(t)!)
             .Where(r => IsRuleEnabled(r.Id, config))
             .ToList();
+
+        // Wire config into rules that need it
+        foreach (var rule in rules.OfType<IConfigurableRule>())
+            rule.Configure(config);
+
         return new RuleOrchestrator(rules, config);
     }
 
