@@ -1,3 +1,5 @@
+<div style="min-height:300px"><img src="/GauntletCI.png" alt="GauntletCI Logo" width="200" align="right"/></div>
+
 # GauntletCI
 
 **Pre-commit change-risk detection for pull request diffs.**
