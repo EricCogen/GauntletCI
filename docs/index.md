@@ -1,4 +1,4 @@
-<div style="min-height:300px"><img src="/GauntletCI.png" alt="GauntletCI Logo" width="200" align="right"/></div>
+<div style="min-height:300px"><img src="https://github.com/EricCogen/GauntletCI/blob/main/GauntletCI.png" alt="GauntletCI Logo" width="200" align="right"/></div>
 
 # GauntletCI
 
