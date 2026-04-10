@@ -3,114 +3,173 @@ using System.Text.Json;
 
 namespace GauntletCI.Cli.Telemetry;
 
-/// <summary>
-/// Manages the user's telemetry consent decision.
-/// Consent is stored in ~/.gauntletci/consent.json.
-/// </summary>
+public enum TelemetryMode
+{
+    Off,
+    Local,
+    Shared,
+}
+
 public static class TelemetryConsent
 {
-    private static readonly string ConsentPath = Path.Combine(
+    private static readonly string ConfigPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+        ".gauntletci", "config.json");
+
+    private static readonly string LegacyConsentPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
         ".gauntletci", "consent.json");
 
-    private record ConsentRecord(
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        WriteIndented = true,
+    };
+
+    private record TelemetrySection(
         string InstallId,
-        bool? OptedIn,
-        DateTimeOffset? DecidedAt);
+        string? Mode,
+        DateTimeOffset? ConfiguredAt);
 
-    private static ConsentRecord? _cache;
+    private record RootConfig(TelemetrySection? Telemetry);
 
-    public static string InstallId => Load().InstallId;
+    // Legacy record shape for migrating consent.json → config.json
+    private record LegacyConsentRecord(string InstallId, bool? OptedIn, DateTimeOffset? DecidedAt);
 
-    public static bool IsOptedIn => Load().OptedIn == true;
+    private static RootConfig? _cache;
 
-    public static bool HasDecided => Load().OptedIn.HasValue;
+    public static string InstallId => LoadTelemetry().InstallId;
 
-    /// <summary>
-    /// If the user hasn't decided yet, shows the opt-in prompt.
-    /// Safe to call in CI/redirected contexts — silently skips.
-    /// Returns true if telemetry should be collected this run.
-    /// </summary>
+    public static bool IsOptedIn => GetMode() != TelemetryMode.Off;
+
+    public static bool HasDecided => ParseMode(LoadTelemetry().Mode).HasValue;
+
+    public static TelemetryMode GetMode() => ParseMode(LoadTelemetry().Mode) ?? TelemetryMode.Off;
+
     public static bool PromptIfNeeded()
     {
         if (HasDecided) return IsOptedIn;
         if (Console.IsInputRedirected || Console.IsOutputRedirected) return false;
         if (IsCI()) return false;
 
-        Console.WriteLine();
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.WriteLine("  ┌──────────────────────────────────────────────────────┐");
-        Console.WriteLine("  │  Help improve GauntletCI (anonymous telemetry)       │");
-        Console.WriteLine("  │                                                      │");
-        Console.WriteLine("  │  GauntletCI can share anonymous usage data:          │");
-        Console.WriteLine("  │  • Which rules fire and how often                    │");
-        Console.WriteLine("  │  • File types analysed (e.g. .cs, .ts)              │");
-        Console.WriteLine("  │  • No code, no file paths, no identifiers            │");
-        Console.WriteLine("  │                                                      │");
-        Console.WriteLine("  │  Run 'gauntletci telemetry --status' to opt out.    │");
-        Console.WriteLine("  └──────────────────────────────────────────────────────┘");
-        Console.ResetColor();
-        Console.Write("  Enable anonymous telemetry? [y/N] ");
+        Console.WriteLine("┌─────────────────────────────────────────────────────────────┐");
+        Console.WriteLine("│  🔒 Help improve GauntletCI?                                │");
+        Console.WriteLine("│                                                             │");
+        Console.WriteLine("│  Share anonymous usage data to make the rules smarter.      │");
+        Console.WriteLine("│  No code, file paths, or personal data ever leaves your     │");
+        Console.WriteLine("│  machine. Everything is salted and hashed locally.          │");
+        Console.WriteLine("│                                                             │");
+        Console.WriteLine("│  • 'shared' - Store locally + send anonymous aggregates     │");
+        Console.WriteLine("│  • 'local'  - Store locally only (no network calls)         │");
+        Console.WriteLine("│  • 'off'    - Disable telemetry completely                  │");
+        Console.WriteLine("└─────────────────────────────────────────────────────────────┘");
+        Console.Write("Choose mode [shared/local/off] (default: shared): ");
 
-        var key = Console.ReadKey(intercept: false);
-        Console.WriteLine();
+        var input = (Console.ReadLine() ?? string.Empty).Trim().ToLowerInvariant();
+        var selected = input switch
+        {
+            "" => TelemetryMode.Shared,
+            "shared" => TelemetryMode.Shared,
+            "local" => TelemetryMode.Local,
+            "off" => TelemetryMode.Off,
+            _ => TelemetryMode.Shared,
+        };
+
+        SetMode(selected);
+        Console.WriteLine($"Telemetry mode set to: {selected.ToString().ToLowerInvariant()}");
         Console.WriteLine();
 
-        var optedIn = key.Key == ConsoleKey.Y;
-        Save(optedIn);
-        return optedIn;
+        return selected != TelemetryMode.Off;
     }
 
     public static void SetOptIn(bool value)
     {
-        Save(value);
-        _cache = null;
+        SetMode(value ? TelemetryMode.Shared : TelemetryMode.Off);
     }
 
-    private static ConsentRecord Load()
+    public static void SetMode(TelemetryMode mode)
+    {
+        var record = LoadTelemetry() with
+        {
+            Mode = mode.ToString().ToLowerInvariant(),
+            ConfiguredAt = DateTimeOffset.UtcNow,
+        };
+
+        Save(record);
+    }
+
+    private static TelemetrySection LoadTelemetry()
+    {
+        var cfg = LoadConfig();
+        if (cfg.Telemetry is not null)
+            return cfg.Telemetry;
+
+        var created = new TelemetrySection(Guid.NewGuid().ToString(), null, null);
+        Save(created);
+        return created;
+    }
+
+    private static RootConfig LoadConfig()
     {
         if (_cache is not null) return _cache;
 
         try
         {
-            if (File.Exists(ConsentPath))
+            if (File.Exists(ConfigPath))
             {
-                var json = File.ReadAllText(ConsentPath);
-                _cache = JsonSerializer.Deserialize<ConsentRecord>(json,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                    ?? NewRecord();
+                var json = File.ReadAllText(ConfigPath);
+                _cache = JsonSerializer.Deserialize<RootConfig>(json, JsonOptions) ?? new RootConfig(null);
                 return _cache;
             }
         }
-        catch { /* ignore corrupt files */ }
+        catch
+        {
+            // ignore corrupt config and continue with a fresh one
+        }
 
-        _cache = NewRecord();
+        // Migrate from legacy consent.json if it exists
+        if (File.Exists(LegacyConsentPath))
+        {
+            try
+            {
+                var legacyJson = File.ReadAllText(LegacyConsentPath);
+                var legacy = JsonSerializer.Deserialize<LegacyConsentRecord>(legacyJson, JsonOptions);
+                if (legacy is not null)
+                {
+                    var migratedMode = legacy.OptedIn switch
+                    {
+                        true  => "shared",
+                        false => "off",
+                        null  => null,
+                    };
+                    var section = new TelemetrySection(legacy.InstallId, migratedMode, legacy.DecidedAt);
+                    Save(section);
+                    return _cache!;
+                }
+            }
+            catch { /* ignore corrupt legacy file */ }
+        }
+
+        _cache = new RootConfig(null);
         return _cache;
     }
 
-    private static void Save(bool optedIn)
+    private static void Save(TelemetrySection section)
     {
-        var record = Load() with { OptedIn = optedIn, DecidedAt = DateTimeOffset.UtcNow };
-        _cache = record;
+        _cache = new RootConfig(section);
 
-        Directory.CreateDirectory(Path.GetDirectoryName(ConsentPath)!);
-        var json = JsonSerializer.Serialize(record, new JsonSerializerOptions { WriteIndented = true });
-        File.WriteAllText(ConsentPath, json);
+        Directory.CreateDirectory(Path.GetDirectoryName(ConfigPath)!);
+        var json = JsonSerializer.Serialize(_cache, JsonOptions);
+        File.WriteAllText(ConfigPath, json);
     }
 
-    private static ConsentRecord NewRecord()
+    private static TelemetryMode? ParseMode(string? value) => value?.ToLowerInvariant() switch
     {
-        var record = new ConsentRecord(Guid.NewGuid().ToString(), null, null);
-        // Persist the install ID even before consent decision
-        try
-        {
-            Directory.CreateDirectory(Path.GetDirectoryName(ConsentPath)!);
-            var json = JsonSerializer.Serialize(record, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(ConsentPath, json);
-        }
-        catch { /* non-fatal */ }
-        return record;
-    }
+        "shared" => TelemetryMode.Shared,
+        "local" => TelemetryMode.Local,
+        "off" => TelemetryMode.Off,
+        _ => null,
+    };
 
     private static bool IsCI() =>
         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI")) ||
