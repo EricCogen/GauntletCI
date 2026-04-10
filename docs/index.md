@@ -1,196 +1,251 @@
 # GauntletCI
 
-Pre-commit change-risk detection for pull request and pre-commit diffs.
+**Pre-commit change-risk detection for pull request diffs.**
+
+GauntletCI analyzes what changed in a pull request or from a pre-commit and flags behavior that may no longer be properly validated.
+
+> Did this change introduce behavior that is not properly tested, reviewed, or understood?
 
 ---
 
-## What is GauntletCI?
+## Why this exists
 
-GauntletCI is a .NET CLI tool that analyzes pull request diffs and detects **behavioral change-risk before code is merged**.
+Experienced developers still miss things in diffs.
 
-It answers one question:
+Not because they are careless.
+Because diffs are deceptive.
 
-> Did this change introduce behavior that is not properly validated?
+A change can look small and still introduce real risk:
 
----
+- a null check changes execution flow
+- a guard clause introduces a new exception path
+- a method signature changes without test updates
+- a conditional branch shifts business logic
+- a dependency call changes without validation
 
-## The problem
+These often pass:
 
-Code review focuses on *what looks wrong*.
+- tests
+- linting
+- static analysis
+- code review
 
-But many production issues come from something else:
+And they still cause regressions.
 
-**Behavior changes that look correct — but were never validated.**
-
-Examples:
-
-- A null check changes execution flow
-- A guard clause introduces new exceptions
-- A method signature changes without test updates
-- A conditional branch subtly shifts logic
-
-These changes often:
-- pass tests
-- pass linting
-- pass review
-
-…and still cause problems.
+GauntletCI exists to catch those changes earlier.
 
 ---
 
 ## What GauntletCI does
 
-GauntletCI analyzes diffs and detects:
+GauntletCI is a .NET CLI tool that analyzes pull request diffs and detects:
 
-- Unvalidated behavior changes
-- Missing or weak test coverage
-- Execution flow changes (guards, exceptions, branching)
+- unvalidated behavior changes
+- missing or weak test updates
+- execution flow changes
 - API and contract changes
+- risky modifications hidden inside otherwise normal diffs
 
-It focuses only on:
+It focuses on one thing:
 
-> What changed — and what risk did that introduce?
+> What changed, and what risk did that change introduce?
 
 ---
 
-## Example Output
- 
- ```
- $ gauntletci analyze --staged
- 
- =======================================================
-   GauntletCI Risk Analysis Report
- =======================================================
-   Rules  : 36 evaluated
-   Findings: 21
- 
- -- HIGH CONFIDENCE (12) --------------------------
-   [GCI0007] Error Handling Integrity
-   Summary  : Swallowed exception detected in src/Payments/PaymentProcessor.cs
-   Evidence : catch (Exception)
-   Why      : Empty or silent catch blocks hide failures, making bugs invisible and debugging nearly impossible.
-   Action   : Log the exception, rethrow it, or handle it explicitly. Never swallow silently.
- 
-   [GCI0010] Hardcoding and Configuration
-   Summary  : Hardcoded connection string detected.
-   Evidence : Line 10: private const string ConnectionString = "Server=prod-db;...;Password=Xk9#mPqR2!vL";
-   Why      : Connection strings in source code expose credentials and prevent per-environment configuration.
-   Action   : Use IConfiguration, Secret Manager, or environment variables for connection strings.
- 
-   [GCI0012] Security Risk
-   Summary  : Possible hardcoded credential ('password').
-   Evidence : Line 10: private const string ConnectionString = "Server=prod-db;...;Password=Xk9#mPqR2!vL";
-   Why      : Credentials in source code are exposed via version control and are easily compromised.
-   Action   : Use a secrets manager or environment variables. Never hardcode credentials.
- 
-   [GCI0016] Concurrency and State Risk
-   Summary  : Blocking async call (.Result / .Wait()) can cause deadlocks.
-   Evidence : Line 22: var result = _gateway.ChargeAsync(request).Result;
-   Why      : .Result and .Wait() block the calling thread, risking deadlock in ASP.NET or UI contexts.
-   Action   : Use await instead. If you must block, use .ConfigureAwait(false) and be aware of the risk.
- 
-   [GCI0029] PII Entity Logging Leak
-   Summary  : PII term 'email' found in log call — may expose sensitive data in src/Payments/PaymentProcessor.cs.
-   Evidence : Line 19: _logger.LogInformation("Processing payment for {Email} with card {CreditCard}", ...);
-   Why      : Logging PII violates GDPR, CCPA, and HIPAA. Once in logs, PII propagates to aggregators and storage.
-   Action   : Redact or omit PII from log calls. Log only anonymized identifiers (e.g. UserId, not Email or SSN).
- 
-   [GCI0033] Async Sinkhole
-   Summary  : Blocking .Result access on a Task in src/Payments/PaymentProcessor.cs — risk of deadlock.
-   Evidence : Line 22: var result = _gateway.ChargeAsync(request).Result;
-   Why      : Calling .Result blocks the calling thread and can cause deadlocks in ASP.NET or WPF contexts.
-   Action   : Use `await` instead of `.Result` or `.Wait()`.
- 
-   [GCI0036] Pure Context Mutation
-   Summary  : Assignment in getter or [Pure] method in src/Payments/PaymentProcessor.cs — mutation in a pure context.
-   Evidence : Line 48: _lastValidated = amount;
-   Why      : Property getters are expected to be side-effect free. Mutations break caching and framework contracts.
-   Action   : Move state mutations to a setter, constructor, or dedicated method.
- 
- -- MEDIUM CONFIDENCE (7) --------------------------
-   [GCI0005] Test Coverage Relevance
-   Summary  : Code files changed with no test file changes.
-   Evidence : Changed code files: src/Payments/PaymentProcessor.cs, src/Payments/PaymentRequest.cs
-   Why      : Untested changes increase regression risk. Reviewers cannot verify correctness without tests.
-   Action   : Add or update tests for the changed code files.
- 
-   [GCI0031] Boundary Drift
-   Summary  : Boundary value 0 added via comparison operator with no matching test evidence in diff.
-   Evidence : Line 49: return amount > 0;
-   Why      : Off-by-one errors at boundaries are the most common source of bugs.
-   Action   : Add an xUnit [InlineData(0)] or equivalent test that exercises this boundary value.
- 
-   [GCI0032] Uncaught Exception Path
-   Summary  : 1 'throw new' statement(s) added without Assert.Throws or Should().Throw evidence in this diff.
-   Why      : New exception paths that are untested may crash callers silently in production.
-   Action   : Add xUnit `Assert.Throws<T>` tests for each new exception path.
- 
-   [GCI0018] Production Readiness
-   Summary  : 18 rules flagged issues — this diff has multiple risk dimensions.
-   Evidence : Rules fired: GCI0003, GCI0005, GCI0006, GCI0007, GCI0010, GCI0011, GCI0012, GCI0016, GCI0029, GCI0033, ...
-   Action   : Address High-confidence findings first, then revisit Medium/Low before merging.
- 
- -- LOW CONFIDENCE (2) --------------------------
-   [GCI0023] Structured Logging
-   Summary  : Critical-path file src/Payments/PaymentProcessor.cs has logging but no correlation/request ID.
-   Action   : Include CorrelationId or TraceId in log statements for end-to-end traceability.
- ```
+## What GauntletCI is not
 
-How it fits into your workflow
+GauntletCI is not:
 
-GauntletCI runs:
+- a linter
+- a formatter
+- a test runner
+- a generic static analysis replacement
 
-- As a pre-commit hook
-- In CI pipelines (GitHub Actions, etc.)
-- Locally during development
+It complements those tools by focusing on change-risk in the diff itself.
 
-It complements:
+---
 
-- Tests
-- Code review
-- Static analysis tools
+## How it works
 
-Why this is different
+1. Parse the pull request diff
+2. Identify meaningful change patterns
+3. Apply deterministic rules to changed code
+4. Correlate findings with test impact where possible
+5. Output actionable findings with file paths, line numbers, and reasons
 
-Most tools answer:
+High level flow:
 
-- Is the code correct?
+```text
+PR Diff -> GauntletCI -> Risk Findings -> Developer Action
+```
 
-GauntletCI answers:
+---
 
-- What changed — and what risk did that introduce?
+## Why this is different
 
-That difference is where bugs hide.
+Most tools answer questions like:
 
-Getting started
+- Does the code compile?
+- Do the tests pass?
+- Does this violate a style rule?
+- Is there a known vulnerability?
+
+GauntletCI answers a different question:
+
+> Did this diff change behavior in a way that deserves more scrutiny?
+
+That is where a lot of costly mistakes hide.
+
+---
+
+## Examples
+
+### Example 1: New exception path
+
+```diff
+- return order.Total;
++ if (order == null) throw new ArgumentNullException(nameof(order));
++ return order.Total;
+```
+
+**Potential finding:**
+
+- New guard clause introduces exception behavior
+- Existing callers may now fail earlier
+- No corresponding test update validating the new path
+
+---
+
+### Example 2: Public contract change
+
+```diff
+- Task SaveAsync(Order order)
++ Task SaveAsync(Order order, CancellationToken cancellationToken)
+```
+
+**Potential finding:**
+
+- Public method signature changed
+- Callers and tests may need updates
+- Potential contract or integration break
+
+---
+
+### Example 3: Logic branch change
+
+```diff
+- if (user.IsActive)
++ if (user.IsActive && user.EmailVerified)
+```
+
+**Potential finding:**
+
+- Business rule changed
+- Existing behavior narrowed
+- Missing test coverage may hide downstream impact
+
+---
+
+### Example 4: Dependency behavior change
+
+```diff
+- await _paymentGateway.ChargeAsync(order);
++ await _paymentGateway.AuthorizeAsync(order);
+```
+
+**Potential finding:**
+
+- External dependency behavior changed
+- Semantics may differ significantly
+- Validation and integration coverage should be reviewed
+
+---
+
+## Where it fits
+
+GauntletCI can run:
+
+- as a local pre-commit check
+- in a pull request workflow
+- in CI pipelines such as GitHub Actions
+- as part of a developer review routine before merge
+
+It works alongside:
+
+- unit and integration tests
+- code review
+- existing static analysis tools
+
+---
+
+## Use cases
+
+### Catch risky changes before commit
+Find behavior changes before they even leave your machine.
+
+### Strengthen pull request review
+Highlight subtle risks that are easy to overlook in normal review.
+
+### Detect missing test updates
+Spot logic changes that deserve new or updated tests.
+
+### Reduce avoidable regressions
+Catch the kinds of "how did I miss that?" mistakes that damage confidence and reputation.
+
+---
+
+## Quick start
 
 Install:
 
-- dotnet tool install -g GauntletCI
+```bash
+dotnet tool install -g GauntletCI
+```
 
 Run:
 
-- gauntletci analyze --diff pr.diff
+```bash
+gauntletci analyze --diff pr.diff
+```
 
-Project status
+Then review the findings and decide which changes need additional validation, tests, or scrutiny.
+
+---
+
+## Current focus
 
 GauntletCI is actively being developed.
 
-Current focus:
+Current focus areas include:
 
-Expanding rule coverage (GCI00xx series)
-Improving detection accuracy
-Building a robust rule engine
-Source code
+- expanding rule coverage
+- improving rule accuracy
+- strengthening test correlation
+- improving finding clarity and actionability
+
+---
+
+## Source code
 
 GitHub repository:
 
 https://github.com/EricCogen/GauntletCI
 
-Final note
+---
 
-GauntletCI was built to solve a simple but persistent problem:
+## Get started
 
-Even experienced developers miss things in diffs.
+- Read the source on GitHub
+- Run GauntletCI locally against a diff
+- Add it to your pull request workflow
+- Use it as a safety layer before merge
 
-This tool exists to catch them early.
+---
+
+## Final note
+
+GauntletCI was built around a very real developer problem:
+
+Even seasoned engineers can miss obvious risk in code changes.
+
+This tool exists to reduce those misses before they become production problems.
