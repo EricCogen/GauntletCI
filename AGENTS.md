@@ -41,3 +41,17 @@ All 126 tests must pass before committing.
 - AGENTS.md and .github/copilot-instructions.md are exceptions (tracked)
 - Live LLM tests skipped without ANTHROPIC_API_KEY or OPENAI_API_KEY env vars
 - Banner suppression: CI env vars (CI, GITHUB_ACTIONS, TF_BUILD, BUILD_BUILDID, JENKINS_URL)
+
+## Commit Tags
+Prefix commit messages with a tag in brackets when the change falls into a known category:
+
+| Tag | When to use |
+|-----|-------------|
+| `[RULE]` | Adding, modifying, or deleting a rule (`GCI00XX_*.cs`) or its tests |
+| `[CONFIG]` | Changes to configuration models, loaders, or schema |
+| `[CLI]` | Changes to the CLI layer (`GauntletCI.Cli`) |
+| `[TEST]` | Test-only changes (no production code touched) |
+| `[INFRA]` | CI/CD, build, or tooling changes |
+| `[DOCS]` | Documentation-only changes |
+
+Example: `[RULE] Add GCI0028 Entropy-Based Secret Detection`
