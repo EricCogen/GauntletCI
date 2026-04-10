@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Net.Http.Json;
-using System.Text.Json;
 
 namespace GauntletCI.Cli.Telemetry;
 
@@ -24,6 +23,8 @@ public static class TelemetryUploader
     {
         try
         {
+            if (TelemetryConsent.GetMode() != TelemetryMode.Shared) return;
+
             var pending = await TelemetryStore.GetPendingAsync();
             if (pending.Count == 0) return;
 

@@ -11,8 +11,12 @@ if (args is ["__llm-daemon"])
     return 0;
 }
 
-// First-run opt-in prompt (skipped in CI / redirected contexts)
-TelemetryConsent.PromptIfNeeded();
+var isInitCommand = args.Any(a => string.Equals(a, "init", StringComparison.OrdinalIgnoreCase));
+var isTelemetryCommand = args.Any(a => string.Equals(a, "telemetry", StringComparison.OrdinalIgnoreCase));
+
+// First-run prompt for non-init paths (init handles its own prompt and supports --no-telemetry)
+if (!isInitCommand && !isTelemetryCommand)
+    TelemetryConsent.PromptIfNeeded();
 
 var rootCommand = new RootCommand("GauntletCI — deterministic pre-commit risk detection engine");
 

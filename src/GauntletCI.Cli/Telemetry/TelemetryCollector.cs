@@ -19,7 +19,8 @@ public static class TelemetryCollector
     {
         try
         {
-            if (!TelemetryConsent.IsOptedIn) return;
+            var mode = TelemetryConsent.GetMode();
+            if (mode == TelemetryMode.Off) return;
 
             var installId = TelemetryConsent.InstallId;
             var repoHash  = await TelemetryHasher.HashRepoAsync(repoRoot);
@@ -53,8 +54,9 @@ public static class TelemetryCollector
                 });
             }
 
-            // Upload in the background — don't block the CLI
-            TelemetryUploader.UploadInBackground();
+            // Upload in the background only for shared mode
+            if (mode == TelemetryMode.Shared)
+                TelemetryUploader.UploadInBackground();
         }
         catch { /* telemetry must never crash the tool */ }
     }
