@@ -1,10 +1,10 @@
-﻿<div><img src="GauntletCI.png" alt="GauntletCI Logo" width="200" align="right"/></div>
-
-# GauntletCI – Pre-commit change-risk detection for pull request diffs
-
-[![GitHub last commit](https://img.shields.io/github/last-commit/EricCogen/GauntletCI)](https://github.com/EricCogen/GauntletCI/commits/main)
+﻿[![GitHub last commit](https://img.shields.io/github/last-commit/EricCogen/GauntletCI)](https://github.com/EricCogen/GauntletCI/commits/main)
 [![GitHub stars](https://img.shields.io/github/stars/EricCogen/GauntletCI?style=social)](https://github.com/EricCogen/GauntletCI/stargazers)
 [![License](https://img.shields.io/badge/License-Elastic_2.0-blue.svg)](LICENSE)
+
+<div><img src="GauntletCI.png" alt="GauntletCI Logo" width="200" align="right"/></div>
+
+# GauntletCI - Pre-commit change-risk detection for pull request diffs
 
 **GauntletCI** is a .NET CLI tool that analyzes pull request diffs or as a pre-commit audit that detects **behavioral change-risk before code is merged**.
 
