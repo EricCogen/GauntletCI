@@ -17,14 +17,17 @@ public class RuleOrchestrator
     private readonly IReadOnlyList<IRule> _rules;
     private readonly GauntletConfig _config;
 
-    public RuleOrchestrator(IEnumerable<IRule> rules, GauntletConfig? config = null)
+    private readonly TimeSpan _ruleTimeout;
+
+    public RuleOrchestrator(IEnumerable<IRule> rules, GauntletConfig? config = null, TimeSpan? ruleTimeout = null)
     {
         _rules = [.. rules.OrderBy(r => r.Id)];
         _config = config ?? new GauntletConfig();
+        _ruleTimeout = ruleTimeout ?? TimeSpan.FromSeconds(30);
     }
 
     /// <summary>Creates an orchestrator with all built-in rules auto-discovered via reflection.</summary>
-    public static RuleOrchestrator CreateDefault(GauntletConfig? config = null)
+    public static RuleOrchestrator CreateDefault(GauntletConfig? config = null, TimeSpan? ruleTimeout = null)
     {
         config ??= new GauntletConfig();
         var ruleType = typeof(IRule);
@@ -39,7 +42,7 @@ public class RuleOrchestrator
         foreach (var rule in rules.OfType<IConfigurableRule>())
             rule.Configure(config);
 
-        return new RuleOrchestrator(rules, config);
+        return new RuleOrchestrator(rules, config, ruleTimeout);
     }
 
     public async Task<EvaluationResult> RunAsync(
@@ -53,10 +56,26 @@ public class RuleOrchestrator
         foreach (var rule in _rules)
         {
             ct.ThrowIfCancellationRequested();
+            using var ruleCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            ruleCts.CancelAfter(_ruleTimeout);
             try
             {
-                var findings = await rule.EvaluateAsync(diff, staticAnalysis, ct);
+                var findings = await rule.EvaluateAsync(diff, staticAnalysis, ruleCts.Token);
                 allFindings.AddRange(findings);
+            }
+            catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+            {
+                Console.Error.WriteLine($"[GauntletCI] Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s — analysis truncated.");
+                allFindings.Add(new Finding
+                {
+                    RuleId    = rule.Id,
+                    RuleName  = rule.Name,
+                    Summary   = $"Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s — results may be incomplete.",
+                    Evidence  = $"Analysis exceeded the {_ruleTimeout.TotalSeconds:0}-second per-rule time limit.",
+                    WhyItMatters    = "A timeout may indicate pathologically complex diff input (Roslyn Bomb) or a hung analyzer.",
+                    SuggestedAction = "Investigate the diff for unusual patterns or report this as a GauntletCI issue.",
+                    Confidence = Confidence.Medium,
+                });
             }
             catch (Exception ex)
             {
