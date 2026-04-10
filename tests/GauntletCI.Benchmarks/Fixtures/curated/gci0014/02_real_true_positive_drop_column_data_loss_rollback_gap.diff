@@ -1,0 +1,16 @@
+# origin: real
+# source: https://github.com/roots/wp-packages/pull/49
+# expected: fire
+# reason: Down migration re-adds a dropped column shape but cannot restore previously stored values, leaving rollback with silent data loss.
+
+diff --git a/migrations/019_drop_provider_group_column.sql b/migrations/019_drop_provider_group_column.sql
+new file mode 100644
+index 0000000..a05b320
+--- /dev/null
++++ b/migrations/019_drop_provider_group_column.sql
+@@ -0,0 +1,5 @@
++-- +goose Up
++ALTER TABLE packages DROP COLUMN provider_group;
++
++-- +goose Down
++ALTER TABLE packages ADD COLUMN provider_group TEXT;

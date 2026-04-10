@@ -1,0 +1,62 @@
+{
+  "mapped_gci_rules": [
+    "GCI020"
+  ],
+  "description": "Dependency and Supply Chain Risk: Detect risky dependency changes, versioning drift, and weakened integrity controls.",
+  "fixtures": [
+    {
+      "id": "gci0020-03",
+      "diff_file": "03_real_true_positive_workspace_lockfiles_removed.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI020"
+      ],
+      "notes": "Removes repository and workspace package-lock files while ignoring them in git, increasing supply-chain drift risk across environments.",
+      "origin": "real",
+      "source_url": "https://github.com/dotnetcameroon/website/pull/154"
+    },
+    {
+      "id": "gci0020-04",
+      "diff_file": "04_real_false_positive_ci_hardens_to_npm_ci.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "CI switches from npm install to npm ci and starts tracking package-lock.json, strengthening dependency determinism.",
+      "origin": "real",
+      "source_url": "https://github.com/thiago-slb/react-fun-with-flags-ts/pull/12"
+    },
+    {
+      "id": "gci0020-05",
+      "diff_file": "05_real_true_positive_uv_lock_ignored.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI020"
+      ],
+      "notes": "Ignoring uv.lock allows untracked lockfile drift and weakens reproducible dependency resolution.",
+      "origin": "real",
+      "source_url": "https://github.com/home-assistant/core/pull/158754"
+    },
+    {
+      "id": "gci0020-06",
+      "diff_file": "06_real_false_positive_action_pinned_to_commit_sha.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "GitHub Action reference is pinned to an immutable commit SHA, strengthening workflow supply-chain integrity.",
+      "origin": "real",
+      "source_url": "https://github.com/django/django/pull/21003"
+    },
+    {
+      "id": "gci0020-07",
+      "diff_file": "07_real_false_positive_pause_image_semver_pinning.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Pause image references are upgraded to explicit patch-level semver with stricter matching rules to reduce version drift.",
+      "origin": "real",
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/138199"
+    }
+  ]
+}
