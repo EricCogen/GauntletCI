@@ -1,7 +1,5 @@
 <div style="margin-bottom:50px"><img src="https://raw.githubusercontent.com/EricCogen/GauntletCI/refs/heads/main/GauntletCI.png" alt="GauntletCI Logo" width="200" align="right"/></div>
 
-# GauntletCI
-
 **Pre-commit change-risk detection for pull request diffs.**
 
 GauntletCI analyzes what changed in a pull request or from a pre-commit and flags behavior that may no longer be properly validated.
