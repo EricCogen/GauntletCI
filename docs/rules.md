@@ -110,6 +110,7 @@ Rules that enforce structural invariants and architectural boundaries.
 | ID | Rule | Confidence | Notes |
 |----|------|-----------|-------|
 | GCI0028 | Entropy-Based Secret Detection | High | Detects string literals >12 chars with Shannon entropy >4.5. Orthogonal to GCI0012's name-pattern approach. Deferred pending tuning of entropy threshold to minimize false positives. |
+| GCI0038 | Hardened Execution (Anti-Tamper) | High | Engine-level hardening with three sub-features: (1) **Config Lockdown** — `gauntlet-allowlist.json` found in a PR is ignored unless it matches a known-good administrative hash, preventing allowlist tampering; (2) **No-Echo Logs** — flagged secrets and PII are masked in all output, reporting only FilePath and LineNumber to prevent the tool itself from leaking what it detects; (3) **Timeout Guard** — per-file analysis capped at 30 seconds to prevent Roslyn Bomb DoS attacks on the engine. |
 
 ---
 
@@ -145,9 +146,9 @@ Defines architectural layer boundaries. Each key is a namespace fragment identif
 | Status | Count |
 |--------|-------|
 | Implemented | 36 |
-| Backburner | 1 (GCI0028) |
-| **Total** | **37** |
+| Backburner | 2 (GCI0028, GCI0038) |
+| **Total** | **38** |
 
 ---
 
-*Last updated: 2026-04-10 — GCI0029–GCI0037 added.*
+*Last updated: 2026-04-10 — GCI0029–GCI0037 added; GCI0038 Anti-Tamper added to backburner.*
