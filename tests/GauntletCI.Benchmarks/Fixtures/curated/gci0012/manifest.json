@@ -1,0 +1,62 @@
+{
+  "mapped_gci_rules": [
+    "GCI012"
+  ],
+  "description": "Security Risk: Detect introduced vulnerabilities or weakened security safeguards.",
+  "fixtures": [
+    {
+      "id": "gci0012-01",
+      "diff_file": "01_real_true_positive_sql_injection_interpolation.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI012"
+      ],
+      "notes": "Parameterized SQL is replaced with string interpolation, opening a direct SQL injection path for user-influenced input.",
+      "origin": "real",
+      "source_url": "https://github.com/Phudit-2547/ChuMaiNichi/pull/1"
+    },
+    {
+      "id": "gci0012-04",
+      "diff_file": "04_real_false_positive_parameterized_query_hardening.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Change adds SQL pattern blocking and restores exception handling around query execution, reducing injection risk.",
+      "origin": "real",
+      "source_url": "https://github.com/Phudit-2547/ChuMaiNichi/pull/1"
+    },
+    {
+      "id": "gci0012-05",
+      "diff_file": "05_real_true_positive_ssl_verification_can_be_disabled.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI012"
+      ],
+      "notes": "Remote calendar client now accepts a user-provided verify_ssl flag, enabling insecure TLS behavior when disabled.",
+      "origin": "real",
+      "source_url": "https://github.com/home-assistant/core/pull/160216"
+    },
+    {
+      "id": "gci0012-06",
+      "diff_file": "06_real_false_positive_identifier_quoting_hardening.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Identifier generation switches to strict quote_name usage, hardening SQL compilation behavior rather than weakening it.",
+      "origin": "real",
+      "source_url": "https://github.com/django/django/pull/20587"
+    },
+    {
+      "id": "gci0012-07",
+      "diff_file": "07_real_false_positive_css_selector_values_escaped.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Admin-side selectors now escape dynamic fragments with CSS.escape, reducing selector injection surface.",
+      "origin": "real",
+      "source_url": "https://github.com/django/django/pull/21062"
+    }
+  ]
+}

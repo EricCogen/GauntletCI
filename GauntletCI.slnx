@@ -4,5 +4,9 @@
     <Project Path="src/GauntletCI.Core/GauntletCI.Core.csproj" />
     <Project Path="src/GauntletCI.Llm/GauntletCI.Llm.csproj" />
     <Project Path="src/GauntletCI.Tests/GauntletCI.Tests.csproj" />
+    <Project Path="src/GauntletCI.BenchmarkReporter/GauntletCI.BenchmarkReporter.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GauntletCI.Benchmarks/GauntletCI.Benchmarks.csproj" />
   </Folder>
 </Solution>

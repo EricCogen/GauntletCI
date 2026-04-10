@@ -1,0 +1,27 @@
+# origin: real
+# source: https://github.com/grafana/grafana/pull/119491
+# expected: fire
+# reason: Error log statement is removed from the HTTP handler error path, silencing failures during provisioning job processing.
+
+--- a/pkg/services/provisioning/provisioning.go
++++ b/pkg/services/provisioning/provisioning.go
+@@ -142,7 +142,6 @@ func (ps *ProvisioningServiceImpl) processJob(ctx context.Context, job provisionin
+ 	if err := ps.applyChanges(ctx, job); err != nil {
+ 		ps.mutex.Lock()
+ 		ps.runningJobs[job.Namespace] = jobStatusFailed
+ 		ps.mutex.Unlock()
+-		ps.log.Error("failed to apply provisioning job", "namespace", job.Namespace, "jobType", job.Type, "err", err)
+ 		return err
+ 	}
+ 
+@@ -157,9 +156,7 @@ func (ps *ProvisioningServiceImpl) handleProvisioningError(ctx context.Context,
+ 	span.RecordError(err)
+ 	span.SetStatus(codes.Error, err.Error())
+ 
+-	ps.log.Error("provisioning job encountered an error",
+-		"namespace", namespace,
+-		"err", err,
+-	)
+-
+ 	ps.metrics.jobErrors.WithLabelValues(namespace).Inc()
+ }

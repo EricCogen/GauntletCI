@@ -1,0 +1,19 @@
+# origin: real
+# source: https://github.com/microsoft/teams.net/pull/402
+# expected: fire
+# reason: The change keeps sync blocking via GetAwaiter().GetResult in dependency injection startup and only adds ConfigureAwait(false), leaving a partial sync-over-async hazard.
+
+diff --git a/Libraries/Microsoft.Teams.Extensions/Microsoft.Teams.Extensions.Hosting/Microsoft.Teams.Apps.Extensions/ServiceCollection.cs b/Libraries/Microsoft.Teams.Extensions/Microsoft.Teams.Extensions.Hosting/Microsoft.Teams.Apps.Extensions/ServiceCollection.cs
+index 14c276f2..e5bfa05e 100644
+--- a/Libraries/Microsoft.Teams.Extensions/Microsoft.Teams.Extensions.Hosting/Microsoft.Teams.Apps.Extensions/ServiceCollection.cs
++++ b/Libraries/Microsoft.Teams.Extensions/Microsoft.Teams.Extensions.Hosting/Microsoft.Teams.Apps.Extensions/ServiceCollection.cs
+@@ -99,7 +99,8 @@ public static IServiceCollection AddTeams(this IServiceCollection collection, Fu
+         collection.AddSingleton(provider => provider.GetRequiredService<Common.Logging.ILogger>());
+         collection.AddSingleton<ILoggerFactory, LoggerFactory>();
+         collection.AddHostedService<TeamsService>();
+-        collection.AddSingleton(provider => factory(provider).GetAwaiter().GetResult());
++        // DI factory delegates are synchronous; ConfigureAwait(false) reduces deadlock risk
++        collection.AddSingleton(provider => factory(provider).ConfigureAwait(false).GetAwaiter().GetResult());
+         collection.AddSingleton(provider => provider.GetRequiredService<App>().Logger);
+         collection.AddSingleton(provider => provider.GetRequiredService<App>().Storage);
+         collection.AddSingleton<ILogger, TeamsLogger>(provider => new TeamsLogger(provider.GetRequiredService<App>().Logger));

@@ -1,0 +1,33 @@
+# origin: real
+# source: https://github.com/home-assistant/core/pull/151997
+# expected: fire
+# reason: Request-path locking is removed around shared modbus client calls, increasing race risk under concurrent polling.
+
+--- a/homeassistant/components/modbus/modbus.py
++++ b/homeassistant/components/modbus/modbus.py
+@@ -253,7 +253,6 @@ def __init__(self, hass: HomeAssistant, client_config: dict[str, Any]) -> None:
+         self._client: (
+             AsyncModbusSerialClient | AsyncModbusTcpClient | AsyncModbusUdpClient | None
+         ) = None
+-        self._lock = asyncio.Lock()
+         self.event_connected = asyncio.Event()
+         self.hass = hass
+         self.name = client_config[CONF_NAME]
+@@ -417,11 +413,9 @@ async def async_pb_call(
+         use_call: str,
+     ) -> ModbusPDU | None:
+         """Convert async to sync pymodbus call."""
+-        async with self._lock:
+-            if not self._client:
+-                return None
+-            result = await self.low_level_pb_call(unit, address, value, use_call)
+-            if self._msg_wait:
+-                # small delay until next request/response
+-                await asyncio.sleep(self._msg_wait)
+-            return result
++        if not self._client:
++            return None
++        result = await self.low_level_pb_call(unit, address, value, use_call)
++        if self._msg_wait:
++            await asyncio.sleep(self._msg_wait)
++        return result

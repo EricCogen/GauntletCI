@@ -1,0 +1,26 @@
+# origin: real
+# source: https://github.com/kubernetes/kubernetes/pull/137296
+# expected: do-not-fire
+# reason: Listener startup sequencing now guards against double-start and deadlock, representing focused readiness hardening.
+
+--- a/staging/src/k8s.io/client-go/tools/cache/shared_informer.go
++++ b/staging/src/k8s.io/client-go/tools/cache/shared_informer.go
+@@ -907,7 +907,8 @@ func (s *sharedIndexInformer) AddEventHandlerWithOptions(handler ResourceEventHa
+ 	listener := newProcessListener(logger, handler, resyncPeriod, determineResyncPeriod(logger, resyncPeriod, s.resyncCheckPeriod), s.clock.Now(), initialBufferSize, s.HasSyncedChecker())
+ 
+ 	if !s.started {
+-		return s.processor.addListener(listener), nil
++		handle, _ := s.processor.addListener(listener)
++		return handle, nil
+ 	}
+@@ -932,7 +933,9 @@ func (s *sharedIndexInformer) AddEventHandlerWithOptions(handler ResourceEventHa
+ 	}
+ 
+ 	// Initial list is added, now we can allow the listener to detect that "upstream has synced".
+-	s.processor.wg.Start(listener.watchSynced)
++	if started {
++		s.processor.wg.Start(listener.watchSynced)
++	}
+ 
+ 	return handle, nil
+ }

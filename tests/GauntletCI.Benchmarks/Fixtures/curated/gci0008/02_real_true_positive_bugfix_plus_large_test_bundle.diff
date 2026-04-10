@@ -1,0 +1,80 @@
+# origin: real
+# source: https://github.com/spring-projects/spring-framework/pull/22260
+# expected: fire
+# reason: A single PR bundles two distinct concerns: a bug fix to SpringBeanContainer.java (removing incorrect name-to-type delegation, adding missing autowireBeanProperties call) alongside adding a brand-new 344-line integration test file.
+
+--- a/spring-orm/src/main/java/org/springframework/orm/hibernate5/SpringBeanContainer.java
++++ b/spring-orm/src/main/java/org/springframework/orm/hibernate5/SpringBeanContainer.java
+@@ -115,11 +115,6 @@ public <B> ContainedBean<B> getBean(
+ 	@SuppressWarnings("unchecked")
+ 	public <B> ContainedBean<B> getBean(
+ 			String name, Class<B> beanType, LifecycleOptions lifecycleOptions, BeanInstanceProducer fallbackProducer) {
+-
+-		if (!this.beanFactory.containsBean(name)) {
+-			return getBean(beanType, lifecycleOptions, fallbackProducer);
+-		}
+-
+ 		SpringContainedBean<?> bean;
+ 		if (lifecycleOptions.canUseCachedReferences()) {
+ 			bean = this.beanCache.get(name);
+@@ -169,6 +164,7 @@ private SpringContainedBean<?> createBean(
+ 		try {
+ 			if (lifecycleOptions.useJpaCompliantCreation()) {
+ 				Object bean = this.beanFactory.autowire(beanType, AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR, false);
++				this.beanFactory.autowireBeanProperties(bean, AutowireCapableBeanFactory.AUTOWIRE_NO, false);
+ 				this.beanFactory.applyBeanPropertyValues(bean, name);
+ 				bean = this.beanFactory.initializeBean(bean, name);
+ 				return new SpringContainedBean<>(bean, beanInstance -> this.beanFactory.destroyBean(name, beanInstance));
+--- /dev/null
++++ b/spring-orm/src/test/java/org/springframework/orm/jpa/hibernate/HibernateNativeEntityManagerFactorySpringBeanContainerIntegrationTests.java
+@@ -0,0 +1,50 @@
++package org.springframework.orm.jpa.hibernate;
++
++import org.hibernate.SessionFactory;
++import org.hibernate.resource.beans.container.spi.BeanContainer;
++import org.hibernate.resource.beans.container.spi.ContainedBean;
++import org.hibernate.resource.beans.spi.BeanInstanceProducer;
++import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
++import org.hibernate.service.ServiceRegistry;
++import org.junit.Test;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.context.ApplicationContext;
++import org.springframework.orm.jpa.AbstractEntityManagerFactoryIntegrationTests;
++import org.springframework.orm.jpa.hibernate.beans.*;
++import static org.junit.Assert.*;
++
++/**
++ * Hibernate-specific SpringBeanContainer integration tests.
++ *
++ * @author Yoann Rodiere
++ */
++public class HibernateNativeEntityManagerFactorySpringBeanContainerIntegrationTests
++		extends AbstractEntityManagerFactoryIntegrationTests {
++
++	@Autowired
++	private ApplicationContext applicationContext;
++
++	@Override
++	protected String[] getConfigLocations() {
++		return new String[] {"/org/springframework/orm/jpa/hibernate/hibernate-manager-native.xml",
++				"/org/springframework/orm/jpa/memdb.xml", "/org/springframework/orm/jpa/inject.xml",
++				"/org/springframework/orm/jpa/hibernate/inject-hibernate-spring-bean-container-tests.xml"};
++	}
++
++	@Test
++	public void testCanRetrieveBeanByTypeWithJpaCompliantOptions() {
++		BeanContainer beanContainer = getBeanContainer();
++		assertNotNull(beanContainer);
++		ContainedBean<SinglePrototypeInSpringContextTestBean> bean = beanContainer.getBean(
++				SinglePrototypeInSpringContextTestBean.class,
++				new JpaCompliantLifecycleOptions(), new NoopProducer());
++		assertNotNull(bean);
++		assertNotNull(bean.getBeanInstance());
++	}
++
++	private BeanContainer getBeanContainer() {
++		SessionFactory sessionFactory = entityManagerFactory.unwrap(SessionFactory.class);
++		ServiceRegistry serviceRegistry = sessionFactory.getSessionFactoryOptions().getServiceRegistry();
++		return serviceRegistry.requireService(ManagedBeanRegistry.class).getBeanContainer();
++	}
++}

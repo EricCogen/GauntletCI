@@ -1,0 +1,33 @@
+# origin: real
+# source: https://github.com/z-alzayer/PixelPix3D/pull/22
+# expected: do-not-fire
+# reason: Shared timer and layout constants replace duplicated literal values/macros across input and UI drawing code.
+
+diff --git a/source/input.c b/source/input.c
+index 6a71f35..f8a2567 100644
+--- a/source/input.c
++++ b/source/input.c
+@@ -138,12 +138,12 @@ bool handle_touch(touchPosition touch, u32 kDown, u32 kHeld,
+-                static const int timer_vals[4] = { 0, 3, 5, 10 };
+-                float total_btn_w = 4 * SHOOT_TIMER_BTN_W + 3 * SHOOT_TIMER_BTN_GAP;
++                static const int timer_vals[SHOOT_TIMER_VAL_COUNT] = SHOOT_TIMER_VALS_INIT;
++                float total_btn_w = SHOOT_TIMER_VAL_COUNT * SHOOT_TIMER_BTN_W + (SHOOT_TIMER_VAL_COUNT - 1) * SHOOT_TIMER_BTN_GAP;
+@@ -188,31 +188,21 @@ bool handle_touch(touchPosition touch, u32 kDown, u32 kHeld,
+-                    #define LOMO_COLS  3
+-                    #define LOMO_ROWS  2
+-                    #define LOMO_GAP   4
++                    // use shared LOMO grid constants from ui.h
+diff --git a/source/ui.h b/source/ui.h
+index 3b6406b..4ef9eb1 100644
+--- a/source/ui.h
++++ b/source/ui.h
+@@ -174,6 +174,18 @@
++#define LOMO_GRID_COLS  3
++#define LOMO_GRID_ROWS  2
++#define LOMO_GRID_GAP   4
++#define LOMO_GRID_BTN_W ((BOT_W - (LOMO_GRID_COLS + 1) * LOMO_GRID_GAP) / LOMO_GRID_COLS)
++#define LOMO_GRID_BTN_H 30
++
++#define SHOOT_TIMER_VAL_COUNT 4
++#define SHOOT_TIMER_VALS_INIT { 0, 3, 5, 10 }
++#define SHOOT_TIMER_LBLS_INIT { "Off", "3s", "5s", "10s" }

@@ -39,3 +39,7 @@ models/
 !.github/CODE_OF_CONDUCT.md
 !.github/SECURITY.md
 !.github/copilot-instructions.md
+
+# Benchmark infrastructure — ensure tracked
+!tests/
+!tests/GauntletCI.Benchmarks/Fixtures/

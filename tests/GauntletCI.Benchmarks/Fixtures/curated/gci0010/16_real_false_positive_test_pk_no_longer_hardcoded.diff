@@ -1,0 +1,17 @@
+# origin: real
+# source: https://github.com/django/django/pull/21050
+# expected: do-not-fire
+# reason: A test expectation replaces a literal primary-key value with a fixture-driven value and does not hardcode runtime configuration.
+
+--- a/tests/modeladmin/tests.py
++++ b/tests/modeladmin/tests.py
+@@ -849,7 +849,8 @@ class ConcertAdmin(ModelAdmin):
+             'class="related-widget-wrapper" data-model-ref="band"><select '
+             'name="main_band" data-context="available-source" required '
+             'id="id_main_band" data-custom-widget="true" multiple>'
+-            '<option value="">---------</option><option value="1">The Doors</option>'
++            '<option value="">---------</option>'
++            f'<option value="{self.band.pk}">The Doors</option>'
+             "</select></div></div>"
+         )
+         self.assertInHTML(expected, cmafa().render())

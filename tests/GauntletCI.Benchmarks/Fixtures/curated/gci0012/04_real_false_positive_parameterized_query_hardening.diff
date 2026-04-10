@@ -1,0 +1,30 @@
+# origin: real
+# source: https://github.com/Phudit-2547/ChuMaiNichi/pull/1
+# expected: do-not-fire
+# reason: Query path is hardened with forbidden SQL-pattern detection and robust try/catch handling, reducing exploitability.
+
+--- a/api/query.ts
++++ b/api/query.ts
+@@ -13,8 +13,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
+   const trimmed = query.trim();
+   if (!trimmed.toUpperCase().startsWith("SELECT")) {
+     return res.status(403).json({ error: "Only SELECT statements are allowed" });
+   }
++
++  const forbidden = /;|--|\/\*|\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|GRANT|REVOKE|EXEC|EXECUTE|COPY)\b/i;
++  if (forbidden.test(trimmed)) {
++    return res.status(403).json({ error: "Forbidden SQL pattern detected" });
++  }
++
+-  const sql = neon(process.env.DATABASE_URL!);
+-  const rows = await sql.query(query, params);
+-  return res.status(200).json({ rows, rowCount: rows.length });
++  try {
++    const sql = neon(process.env.DATABASE_URL!);
++    const rows = await sql.query(query, params);
++    return res.status(200).json({ rows, rowCount: rows.length });
++  } catch (err) {
++    console.error("Query execution error:", err);
++    return res.status(500).json({ error: "Query execution failed" });
++  }
+ }

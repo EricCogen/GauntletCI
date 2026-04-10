@@ -1,0 +1,70 @@
+{
+  "mapped_gci_rules": [
+    "GCI015"
+  ],
+  "description": "Data Integrity Risk: Detect silent corruption, mapping errors, and partial-write hazards.",
+  "fixtures": [
+    {
+      "id": "gci0015-01",
+      "diff_file": "01_real_true_positive_rollback_readds_schema_not_data.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI015"
+      ],
+      "notes": "Down migration restores only the dropped column shape, not the historical values, so rollback silently loses existing provider_group data.",
+      "origin": "real",
+      "source_url": "https://github.com/roots/wp-packages/pull/49",
+      "runtime_state_condition": "Rows already contain non-null provider_group values before Up, and operators later execute Down during rollback."
+    },
+    {
+      "id": "gci0015-02",
+      "diff_file": "02_real_true_positive_schema_dedupe_skips_distinct_db_state.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI015"
+      ],
+      "notes": "dump_all dedupes work by schema file path, so a later database config can be skipped even when it has divergent schema state that still needs to be dumped.",
+      "origin": "real",
+      "source_url": "https://github.com/rails/rails/pull/55713",
+      "runtime_state_condition": "Multiple database configs in the same environment resolve to the same schema_path while their underlying database states differ."
+    },
+    {
+      "id": "gci0015-03",
+      "diff_file": "03_real_true_positive_missing_battle_lock_interleaves_updates.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI015"
+      ],
+      "notes": "Removing per-battle locking allows concurrent handlers to interleave updates for the same battle_tag, risking state corruption and lost transitions.",
+      "origin": "real",
+      "source_url": "https://github.com/hsahovic/poke-env/pull/858",
+      "runtime_state_condition": "Two or more websocket messages for the same battle_tag are processed concurrently."
+    },
+    {
+      "id": "gci0015-04",
+      "diff_file": "04_real_false_positive_per_battle_lock_restored.diff",
+      "category": "false-positive",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "Per-battle lock initialization and guarded handling are added back, serializing updates and preserving state integrity under concurrent message delivery.",
+      "origin": "real",
+      "source_url": "https://github.com/hsahovic/poke-env/pull/858",
+      "runtime_state_condition": "Concurrent updates target the same battle_tag, but the lock ensures only one handler mutates shared state at a time."
+    },
+    {
+      "id": "gci0015-05",
+      "diff_file": "05_real_edge_irreversible_migration_declared.diff",
+      "category": "edge-case",
+      "expected_outcome": "do-not-fire",
+      "expected_gci_rules": [],
+      "notes": "The migration is made explicitly irreversible on down, which fails fast instead of pretending dropped relational data can be recreated safely.",
+      "origin": "real",
+      "source_url": "https://github.com/sc0v/binder/pull/381",
+      "runtime_state_condition": "A destructive migration has already run and an operator attempts rollback later."
+    }
+  ]
+}
+

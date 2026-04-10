@@ -1,0 +1,53 @@
+# origin: real
+# source: https://github.com/rails/rails/pull/55713
+# expected: fire
+# reason: dump_schema execution is refactored to use with_temporary_pool and connection-scoped schema version writes, while test changes remain setup-only with no assertion coverage for the altered execution path.
+
+--- a/activerecord/lib/active_record/tasks/database_tasks.rb
++++ b/activerecord/lib/active_record/tasks/database_tasks.rb
+@@ -441,18 +447,22 @@ def dump_schema(db_config, format = db_config.schema_format) # :nodoc:
+       filename = schema_dump_path(db_config, format)
+       return unless filename
+ 
+-      FileUtils.mkdir_p(db_dir)
+-      case format.to_sym
+-      when :ruby
+-        File.open(filename, "w:utf-8") do |file|
+-          ActiveRecord::SchemaDumper.dump(migration_connection_pool, file)
+-        end
+-      when :sql
+-        structure_dump(db_config, filename)
+-        if migration_connection_pool.schema_migration.table_exists?
+-          File.open(filename, "a") do |f|
+-            f.puts migration_connection.dump_schema_versions
+-            f.print "\n"
++      with_temporary_pool(db_config) do |pool|
++        FileUtils.mkdir_p(db_dir)
++        case format.to_sym
++        when :ruby
++          File.open(filename, "w:utf-8") do |file|
++            ActiveRecord::SchemaDumper.dump(pool, file)
++          end
++        when :sql
++          structure_dump(db_config, filename)
++          if pool.schema_migration.table_exists?
++            File.open(filename, "a") do |f|
++              pool.with_connection do |connection|
++                f.puts connection.dump_schema_versions
++              end
++              f.print "\n"
++            end
+           end
+         end
+       end
+--- a/activerecord/test/cases/tasks/database_tasks_test.rb
++++ b/activerecord/test/cases/tasks/database_tasks_test.rb
+@@ -393,6 +393,8 @@ def test_cache_dump_filename_with_path_from_the_argument_has_precedence
+   end
+ 
+   class DatabaseTasksDumpSchemaTest < ActiveRecord::TestCase
++    include DatabaseTasksHelper
++
+     def test_ensure_db_dir
+       Dir.mktmpdir do |dir|
+         ActiveRecord::Tasks::DatabaseTasks.stub(:db_dir, dir) do

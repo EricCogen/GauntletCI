@@ -1,0 +1,37 @@
+# origin: real
+# source: https://github.com/MoonLadderStudios/MoonMind/pull/488
+# expected: fire
+# reason: Calls blocking time.sleep() inside an async polling function, stalling the entire event loop for each retry interval.
+
+--- a/moonmind/workflows/speckit_celery/tasks.py
++++ b/moonmind/workflows/speckit_celery/tasks.py
+@@ -943,7 +943,7 @@ def _summarize_preflight_output(stdout: str, stderr: str) -> Optional[str]:
+     return condensed
+ 
+ 
+-async def _poll_for_codex_diff(
++def _poll_for_codex_diff(
+     codex_client: CodexClient,
+     *,
+     task_id: str,
+@@ -960,14 +960,12 @@ async def _poll_for_codex_diff(
+     while True:
+         try:
+-            return await asyncio.to_thread(
+-                codex_client.retrieve_patch,
++            return codex_client.retrieve_patch(
+                 task_id=task_id,
+                 artifacts_dir=artifacts_dir,
+                 task_identifier=task_identifier,
+                 task_summary=task_summary,
+             )
+-        except CodexDiffNotReadyError as exc:
+-            last_error = exc
+-            if time.monotonic() >= deadline:
+-                raise RuntimeError("Timed out while polling Codex for diff availability") from exc
+-            await asyncio.sleep(poll_interval)
++        except Exception as exc:
++            last_error = exc
++            if time.monotonic() >= deadline:
++                raise RuntimeError("Timed out while polling Codex for diff availability") from exc
++            time.sleep(poll_interval)

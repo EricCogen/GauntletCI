@@ -1,0 +1,26 @@
+# origin: real
+# source: https://github.com/kubernetes/kubernetes/pull/137201
+# expected: fire
+# reason: A second scoring pipeline is introduced with explicit acknowledgement that it mostly duplicates existing RunScorePlugins logic, increasing divergence risk.
+
+--- a/pkg/scheduler/framework/runtime/framework.go
++++ b/pkg/scheduler/framework/runtime/framework.go
+@@ -1293,6 +1312,8 @@ func (f *frameworkImpl) runPreScorePlugin(ctx context.Context, pl fwk.PreScorePl
+ // It returns a list that stores scores from each plugin and total score for each Node.
+ // It also returns *Status, which is set to non-success if any of the plugins returns
+ // a non-success status.
++//
++// This function mostly duplicates RunPlacementScorePlugins. Any changes to it should likely be reflected in both places.
+ func (f *frameworkImpl) RunScorePlugins(ctx context.Context, state fwk.CycleState, pod *v1.Pod, nodes []fwk.NodeInfo) (ns []fwk.NodePluginScores, status *fwk.Status) {
+@@ -1422,6 +1443,14 @@ func (f *frameworkImpl) runScoreExtension(ctx context.Context, pl fwk.ScorePlugi
+         return status
+ }
+ 
++// RunPlacementScorePlugins runs the set of configured scoring plugins.
++// It returns a list that stores scores from each plugin and total score for each Placement.
++// It also returns *Status, which is set to non-success if any of the plugins returns
++// a non-success status.
++//
++// This function mostly duplicates RunScorePlugins. Any changes to it should likely be reflected in both places.
++func (f *frameworkImpl) RunPlacementScorePlugins(ctx context.Context, state fwk.PodGroupCycleState, podGroupInfo fwk.PodGroupInfo, podGroupAssignments []*fwk.PodGroupAssignments) (ps []fwk.PlacementPluginScores, status *fwk.Status) {
++

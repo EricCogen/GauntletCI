@@ -1,0 +1,28 @@
+# origin: real
+# source: https://github.com/kubernetes/kubernetes/pull/130000
+# expected: fire
+# reason: The requestID correlation field is dropped from the error log, making it impossible to trace failed requests in distributed logs.
+
+--- a/staging/src/k8s.io/apiserver/pkg/server/handler.go
++++ b/staging/src/k8s.io/apiserver/pkg/server/handler.go
+@@ -89,7 +89,7 @@ func (h *APIServerHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+ 	requestID := req.Header.Get("X-Request-ID")
+ 	if requestID == "" {
+ 		requestID = uuid.New().String()
+ 	}
+ 
+ 	if err := h.director(w, req); err != nil {
+-		klog.Errorf("request failed requestID=%s method=%s path=%s err=%v", requestID, req.Method, req.URL.Path, err)
++		klog.Errorf("request failed method=%s path=%s err=%v", req.Method, req.URL.Path, err)
+ 		http.Error(w, err.Error(), http.StatusInternalServerError)
+ 		return
+ 	}
+@@ -104,7 +104,7 @@ func (h *APIServerHandler) handleTimeout(w http.ResponseWriter, req *http.Reques
+ 	requestID := getRequestID(req)
+ 
+ 	if ctx.Err() != nil {
+-		klog.Errorf("request timed out requestID=%s path=%s", requestID, req.URL.Path)
++		klog.Errorf("request timed out path=%s", req.URL.Path)
+ 		http.Error(w, "request timeout", http.StatusGatewayTimeout)
+ 	}
+ }
