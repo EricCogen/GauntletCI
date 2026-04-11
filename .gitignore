@@ -34,6 +34,7 @@ artifacts/
 !docs/change-risk-thesis.md
 !docs/change-risk-research.md
 !docs/rules.md
+!docs/architecture.md
 !.github/CONTRIBUTING.md
 !.github/CODE_OF_CONDUCT.md
 !.github/SECURITY.md
