@@ -35,6 +35,7 @@ artifacts/
 !docs/change-risk-research.md
 !docs/rules.md
 !docs/architecture.md
+!docs/cli-reference.md
 !.github/CONTRIBUTING.md
 !.github/CODE_OF_CONDUCT.md
 !.github/SECURITY.md
