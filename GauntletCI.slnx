@@ -2,6 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/GauntletCI.Cli/GauntletCI.Cli.csproj" />
     <Project Path="src/GauntletCI.Core/GauntletCI.Core.csproj" />
+    <Project Path="src/GauntletCI.Corpus/GauntletCI.Corpus.csproj" />
     <Project Path="src/GauntletCI.Llm/GauntletCI.Llm.csproj" />
     <Project Path="src/GauntletCI.Tests/GauntletCI.Tests.csproj" />
     <Project Path="src/GauntletCI.BenchmarkReporter/GauntletCI.BenchmarkReporter.csproj" />
