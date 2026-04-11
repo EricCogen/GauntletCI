@@ -5,7 +5,7 @@ param(
     [string]$StartDate    = (Get-Date).AddDays(-1).ToString("yyyy-MM-dd"),
     [int]   $Limit        = 50,
     [string]$Language     = "",
-    [int]   $MinComments  = 2,
+    [int]   $MinComments  = 0,
     [string]$Tier         = "discovery",
     [string]$Db           = "./data/corpus.db",
     [string]$Fixtures     = "./data/fixtures",
