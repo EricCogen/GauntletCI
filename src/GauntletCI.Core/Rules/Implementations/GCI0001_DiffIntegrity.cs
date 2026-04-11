@@ -17,9 +17,9 @@ public class GCI0001_DiffIntegrity : RuleBase
     // Patterns that suggest pure formatting/whitespace changes
     private static readonly string[] FormattingOnlyPatterns = [" ", "\t", "{", "}"];
 
-    // Extensions that are unrelated to logic (docs, assets, configs mixed with code)
+    // Extensions that are unrelated to logic (docs, assets, configs, lock files mixed with code)
     private static readonly string[] NonCodeExtensions =
-        [".md", ".txt", ".png", ".jpg", ".svg", ".json", ".xml", ".yml", ".yaml", ".csproj", ".sln", ".slnx"];
+        [".md", ".txt", ".png", ".jpg", ".svg", ".json", ".xml", ".yml", ".yaml", ".csproj", ".sln", ".slnx", ".lock", ".sum"];
 
     private static readonly string[] CodeExtensions =
         [".cs", ".ts", ".js", ".py", ".go", ".java", ".rb", ".rs", ".cpp", ".c", ".fs"];
