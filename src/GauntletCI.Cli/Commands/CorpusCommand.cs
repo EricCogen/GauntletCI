@@ -39,12 +39,12 @@ public static class CorpusCommand
 
             Console.WriteLine($"[corpus] Hydrating {url}");
 
-            var (db, store, pipeline) = await BuildPipeline(dbPath, fixtures, ct);
+            var (db, _, pipeline) = await BuildPipeline(dbPath, fixtures, ct);
             using (db)
             {
                 try
                 {
-                    var hydrator = GitHubRestHydrator.CreateDefault(fixtures);
+                    using var hydrator = GitHubRestHydrator.CreateDefault(fixtures);
                     var hydrated = await hydrator.HydrateFromUrlAsync(url, ct);
                     var metadata = await pipeline.NormalizeAsync(hydrated, source: "manual", ct: ct);
 
@@ -67,9 +67,9 @@ public static class CorpusCommand
     {
         var fixtureOpt  = new Option<string>("--fixture",  "Fixture ID (e.g. owner_repo_pr1234)") { IsRequired = true };
         var tierOpt     = new Option<string>("--tier",     () => "discovery", "Fixture tier (gold|silver|discovery)");
-        var ownerOpt    = new Option<string>("--owner",    "Repo owner (required if re-normalizing)");
-        var repoOpt     = new Option<string>("--repo",     "Repo name (required if re-normalizing)");
-        var prOpt       = new Option<int>   ("--pr",       "PR number (required if re-normalizing)");
+        var ownerOpt    = new Option<string>("--owner",    "Repo owner override");
+        var repoOpt     = new Option<string>("--repo",     "Repo name override");
+        var prOpt       = new Option<int>   ("--pr",       "PR number override");
         var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
 
@@ -100,30 +100,32 @@ public static class CorpusCommand
                 return;
             }
 
-            // Infer owner/repo/pr from fixture ID if not provided (format: owner_repo_prNNN)
-            if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo) || prNumber == 0)
-            {
-                var parts = fixtureId.Split('_');
-                if (parts.Length >= 3 && parts[^1].StartsWith("pr", StringComparison.OrdinalIgnoreCase))
-                {
-                    owner    = string.IsNullOrEmpty(owner)   ? parts[0] : owner;
-                    repo     = string.IsNullOrEmpty(repo)    ? string.Join("_", parts[1..^1]) : repo;
-                    prNumber = prNumber == 0 && int.TryParse(parts[^1][2..], out var n) ? n : prNumber;
-                }
-            }
-
-            if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo) || prNumber == 0)
-            {
-                Console.Error.WriteLine("[corpus] Could not infer owner/repo/pr from fixture ID. Provide --owner, --repo, --pr.");
-                ctx.ExitCode = 1;
-                return;
-            }
-
-            Console.WriteLine($"[corpus] Re-normalizing {fixtureId} ({tier})");
-
-            var (db, _, pipeline) = await BuildPipeline(dbPath, fixtures, ct);
+            var (db, store, pipeline) = await BuildPipeline(dbPath, fixtures, ct);
             using (db)
             {
+                // Derive owner/repo/pr from existing metadata.json — unambiguous and avoids
+                // underscore-splitting heuristics that break for repos with underscores in the name.
+                if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo) || prNumber == 0)
+                {
+                    var existingMeta = await store.GetMetadataAsync(fixtureId, ct);
+                    if (existingMeta is not null)
+                    {
+                        var repoParts = existingMeta.Repo.Split('/', 2);
+                        owner    = string.IsNullOrEmpty(owner)   ? repoParts[0] : owner;
+                        repo     = string.IsNullOrEmpty(repo)    ? (repoParts.Length > 1 ? repoParts[1] : "") : repo;
+                        prNumber = prNumber == 0 ? existingMeta.PullRequestNumber : prNumber;
+                    }
+                }
+
+                if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo) || prNumber == 0)
+                {
+                    Console.Error.WriteLine("[corpus] Could not determine owner/repo/pr from metadata. Provide --owner, --repo, --pr.");
+                    ctx.ExitCode = 1;
+                    return;
+                }
+
+                Console.WriteLine($"[corpus] Re-normalizing {fixtureId} ({tier})");
+
                 try
                 {
                     var metadata = await pipeline.ReNormalizeFromRawAsync(
@@ -146,10 +148,10 @@ public static class CorpusCommand
     private static async Task<(CorpusDb Db, FixtureFolderStore Store, NormalizationPipeline Pipeline)>
         BuildPipeline(string dbPath, string fixturesPath, CancellationToken ct)
     {
-        var db    = new CorpusDb(dbPath);
+        var db       = new CorpusDb(dbPath);
         await db.InitializeAsync(ct);
         var store    = new FixtureFolderStore(db, fixturesPath);
-        var pipeline = new NormalizationPipeline(store, fixturesPath);
+        var pipeline = new NormalizationPipeline(store);
         return (db, store, pipeline);
     }
 
@@ -160,6 +162,6 @@ public static class CorpusCommand
         Console.WriteLine($"[corpus] Size    : {m.PrSizeBucket} ({m.FilesChanged} files)");
         Console.WriteLine($"[corpus] Language: {m.Language}");
         Console.WriteLine($"[corpus] Tags    : {string.Join(", ", m.Tags)}");
-        Console.WriteLine($"[corpus] Next    : gauntletci corpus run --fixture {m.FixtureId}");
+        Console.WriteLine($"[corpus] Next    : gauntletci corpus normalize --fixture {m.FixtureId}");
     }
 }
