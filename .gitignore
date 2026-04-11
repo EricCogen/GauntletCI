@@ -36,6 +36,7 @@ artifacts/
 !docs/rules.md
 !docs/architecture.md
 !docs/cli-reference.md
+!docs/corpus-pipeline.md
 !.github/CONTRIBUTING.md
 !.github/CODE_OF_CONDUCT.md
 !.github/SECURITY.md
