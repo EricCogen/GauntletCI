@@ -7,6 +7,7 @@ using GauntletCI.Corpus.Hydration;
 using GauntletCI.Corpus.Interfaces;
 using GauntletCI.Corpus.Models;
 using GauntletCI.Corpus.Normalization;
+using GauntletCI.Corpus.Runners;
 using GauntletCI.Corpus.Storage;
 using Microsoft.Data.Sqlite;
 
@@ -22,6 +23,8 @@ public static class CorpusCommand
         corpus.AddCommand(CreateList());
         corpus.AddCommand(CreateBatchHydrate());
         corpus.AddCommand(CreateDiscover());
+        corpus.AddCommand(CreateRun());
+        corpus.AddCommand(CreateRunAll());
         return corpus;
     }
 
@@ -479,6 +482,159 @@ public static class CorpusCommand
             results.Add((reader.GetString(0), reader.GetString(1), reader.GetInt32(2)));
 
         return results;
+    }
+
+    // ── gauntletci corpus run --fixture <id> ─────────────────────────────────
+
+    private static Command CreateRun()
+    {
+        var fixtureOpt  = new Option<string>("--fixture",  "Fixture ID to run rules against") { IsRequired = true };
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
+
+        var cmd = new Command("run", "Run GCI rules against a single corpus fixture");
+        cmd.AddOption(fixtureOpt);
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var fixtureId = ctx.ParseResult.GetValueForOption(fixtureOpt)!;
+            var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures  = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct        = ctx.GetCancellationToken();
+
+            var (db, store, _) = await BuildPipeline(dbPath, fixtures, ct);
+            using (db)
+            {
+                try
+                {
+                    var metadata = await store.GetMetadataAsync(fixtureId, ct);
+                    if (metadata is null)
+                    {
+                        Console.Error.WriteLine($"[corpus] Fixture '{fixtureId}' not found.");
+                        ctx.ExitCode = 1;
+                        return;
+                    }
+
+                    var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, metadata.Tier, fixtureId);
+                    var diffPath    = Path.Combine(fixturePath, "diff.patch");
+
+                    if (!File.Exists(diffPath))
+                    {
+                        Console.Error.WriteLine($"[corpus] diff.patch not found at {diffPath}");
+                        ctx.ExitCode = 1;
+                        return;
+                    }
+
+                    Console.WriteLine($"[corpus] Running GCI rules against {fixtureId}");
+
+                    var diffText = await File.ReadAllTextAsync(diffPath, ct);
+                    var runner   = new RuleCorpusRunner(store, db);
+                    var findings = await runner.RunAsync(fixtureId, diffText, ct);
+
+                    int high   = findings.Count(f => f.ActualConfidence >= 1.0);
+                    int medium = findings.Count(f => f.ActualConfidence is >= 0.5 and < 1.0);
+                    int low    = findings.Count(f => f.ActualConfidence < 0.5);
+
+                    Console.WriteLine($"[corpus] Run ID  : {runner.LastRunId}");
+                    Console.WriteLine($"[corpus] Findings: {findings.Count} ({high} High, {medium} Medium, {low} Low)");
+                    Console.WriteLine($"[corpus] Saved to: {fixturePath}");
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"[corpus] Error: {ex.Message}");
+                    ctx.ExitCode = 1;
+                }
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus run-all [--tier ...] ───────────────────────────────
+
+    private static Command CreateRunAll()
+    {
+        var tierOpt     = new Option<string?>("--tier",     "Filter by tier (gold|silver|discovery)");
+        var dbOpt       = new Option<string> ("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string> ("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
+
+        var cmd = new Command("run-all", "Run GCI rules against all (or filtered) corpus fixtures");
+        cmd.AddOption(tierOpt);
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var tierStr  = ctx.ParseResult.GetValueForOption(tierOpt);
+            var dbPath   = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct       = ctx.GetCancellationToken();
+
+            FixtureTier? tier = null;
+            if (!string.IsNullOrEmpty(tierStr))
+            {
+                if (!Enum.TryParse<FixtureTier>(tierStr, ignoreCase: true, out var parsedTier))
+                {
+                    Console.Error.WriteLine($"[corpus] Unknown tier '{tierStr}'. Use gold, silver, or discovery.");
+                    ctx.ExitCode = 1;
+                    return;
+                }
+                tier = parsedTier;
+            }
+
+            var (db, store, _) = await BuildPipeline(dbPath, fixtures, ct);
+            using (db)
+            {
+                var allFixtures = await store.ListFixturesAsync(tier, ct);
+
+                if (allFixtures.Count == 0)
+                {
+                    Console.WriteLine("[corpus] No fixtures found.");
+                    return;
+                }
+
+                int totalFindings = 0;
+                int completed     = 0;
+                int failed        = 0;
+
+                foreach (var metadata in allFixtures)
+                {
+                    var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, metadata.Tier, metadata.FixtureId);
+                    var diffPath    = Path.Combine(fixturePath, "diff.patch");
+
+                    if (!File.Exists(diffPath))
+                    {
+                        Console.WriteLine($"[corpus] SKIP {metadata.FixtureId} — diff.patch not found");
+                        failed++;
+                        continue;
+                    }
+
+                    try
+                    {
+                        var diffText = await File.ReadAllTextAsync(diffPath, ct);
+                        var runner   = new RuleCorpusRunner(store, db);
+                        var findings = await runner.RunAsync(metadata.FixtureId, diffText, ct);
+
+                        totalFindings += findings.Count;
+                        completed++;
+
+                        Console.WriteLine($"[corpus] OK  {metadata.FixtureId,-40} {findings.Count,3} finding(s)");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"[corpus] ERR {metadata.FixtureId}: {ex.Message}");
+                        failed++;
+                    }
+                }
+
+                Console.WriteLine();
+                Console.WriteLine($"[corpus] Run-all complete: {completed} OK, {failed} skipped/failed, {totalFindings} total findings");
+            }
+        });
+
+        return cmd;
     }
 
     // ── Shared helpers ────────────────────────────────────────────────────────
