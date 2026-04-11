@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using System.Diagnostics;
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
@@ -52,19 +53,25 @@ public class RuleOrchestrator
         CancellationToken ct = default)
     {
         var allFindings = new List<Finding>();
+        var metrics     = new List<RuleExecutionMetric>();
 
         foreach (var rule in _rules)
         {
             ct.ThrowIfCancellationRequested();
             using var ruleCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             ruleCts.CancelAfter(_ruleTimeout);
+            var sw = Stopwatch.StartNew();
+            var outcome = RuleOutcome.Passed;
+            int findingsBefore = allFindings.Count;
             try
             {
                 var findings = await rule.EvaluateAsync(diff, staticAnalysis, ruleCts.Token);
                 allFindings.AddRange(findings);
+                if (findings.Count > 0) outcome = RuleOutcome.Triggered;
             }
             catch (OperationCanceledException) when (!ct.IsCancellationRequested)
             {
+                outcome = RuleOutcome.TimedOut;
                 Console.Error.WriteLine($"[GauntletCI] Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s — analysis truncated.");
                 allFindings.Add(new Finding
                 {
@@ -79,8 +86,14 @@ public class RuleOrchestrator
             }
             catch (Exception ex)
             {
+                outcome = RuleOutcome.Errored;
                 Console.Error.WriteLine($"[GauntletCI] Rule {rule.Id} threw an exception: {ex.Message}");
             }
+            finally
+            {
+                sw.Stop();
+            }
+            metrics.Add(new RuleExecutionMetric(rule.Id, sw.ElapsedMilliseconds, outcome, allFindings.Count - findingsBefore));
         }
 
         ApplySeverityOverrides(allFindings, _config);
@@ -91,7 +104,8 @@ public class RuleOrchestrator
         {
             CommitSha = diff.CommitSha,
             Findings = allFindings,
-            RulesEvaluated = _rules.Count
+            RulesEvaluated = _rules.Count,
+            RuleMetrics = metrics,
         };
     }
 
@@ -165,5 +179,11 @@ public class EvaluationResult
     public string CommitSha { get; init; } = string.Empty;
     public List<Finding> Findings { get; init; } = [];
     public int RulesEvaluated { get; init; }
+    public IReadOnlyList<RuleExecutionMetric> RuleMetrics { get; init; } = [];
     public bool HasFindings => Findings.Count > 0;
 }
+
+public enum RuleOutcome { Passed, Triggered, TimedOut, Errored }
+
+/// <summary>Per-rule execution timing and outcome, attached to every <see cref="EvaluationResult"/>.</summary>
+public record RuleExecutionMetric(string RuleId, long DurationMs, RuleOutcome Outcome, int FindingCount);
