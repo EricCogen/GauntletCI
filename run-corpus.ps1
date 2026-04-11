@@ -79,7 +79,7 @@ if ($SkipTo -le 3) {
 if ($SkipTo -le 4) {
     Step 4 "Apply silver heuristic labels"
 
-    Invoke-Expression "$cli corpus label-all --fixtures $Fixtures"
+    Invoke-Expression "$cli corpus label-all --db $Db --fixtures $Fixtures"
     if ($LASTEXITCODE -ne 0) { throw "Label-all failed" }
 }
 
