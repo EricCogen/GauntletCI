@@ -90,35 +90,28 @@ public class DiffParserTests
     [Fact]
     public async Task FromGitAsync_InvalidRepo_ShouldThrowGitProcessException()
     {
-        var tempDir = Path.Combine(Path.GetTempPath(), $"gci_test_{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tempDir);
-        try
-        {
-            var ex = await Assert.ThrowsAsync<GitProcessException>(
-                () => DiffParser.FromGitAsync(tempDir, "HEAD"));
-            Assert.True(ex.ExitCode != 0);
-            Assert.False(string.IsNullOrEmpty(ex.StdErr));
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
+        if (!await GitAvailableAsync()) return;
+
+        // Use a guaranteed non-existent path so git fails deterministically
+        // without risking parent-repo discovery when TMP is inside a worktree.
+        var nonExistentDir = Path.Combine(Path.GetTempPath(), $"gci_test_{Guid.NewGuid():N}");
+
+        var ex = await Assert.ThrowsAsync<GitProcessException>(
+            () => DiffParser.FromGitAsync(nonExistentDir, "HEAD"));
+        Assert.True(ex.ExitCode != 0);
+        Assert.False(string.IsNullOrEmpty(ex.StdErr));
+        Assert.Contains(nonExistentDir, ex.Command);
     }
 
     [Fact]
     public async Task FromStagedAsync_InvalidRepo_ShouldThrowGitProcessException()
     {
-        var tempDir = Path.Combine(Path.GetTempPath(), $"gci_test_{Guid.NewGuid():N}");
-        Directory.CreateDirectory(tempDir);
-        try
-        {
-            await Assert.ThrowsAsync<GitProcessException>(
-                () => DiffParser.FromStagedAsync(tempDir));
-        }
-        finally
-        {
-            Directory.Delete(tempDir, recursive: true);
-        }
+        if (!await GitAvailableAsync()) return;
+
+        var nonExistentDir = Path.Combine(Path.GetTempPath(), $"gci_test_{Guid.NewGuid():N}");
+
+        await Assert.ThrowsAsync<GitProcessException>(
+            () => DiffParser.FromStagedAsync(nonExistentDir));
     }
 
     [Fact]
@@ -127,8 +120,30 @@ public class DiffParserTests
         var ex = new GitProcessException("git diff HEAD", exitCode: 128, stderr: "not a git repository");
         Assert.Equal(128, ex.ExitCode);
         Assert.Equal("not a git repository", ex.StdErr);
+        Assert.Equal("git diff HEAD", ex.Command);
+        Assert.Contains("git diff HEAD", ex.Message);
         Assert.Contains("128", ex.Message);
         Assert.Contains("not a git repository", ex.Message);
-        Assert.Equal("git diff HEAD", ex.Data["Command"]);
+    }
+
+    private static async Task<bool> GitAvailableAsync()
+    {
+        try
+        {
+            using var process = new System.Diagnostics.Process();
+            process.StartInfo = new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = "git",
+                Arguments = "--version",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+            };
+            process.Start();
+            await process.WaitForExitAsync();
+            return process.ExitCode == 0;
+        }
+        catch { return false; }
     }
 }
