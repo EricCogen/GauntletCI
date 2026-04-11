@@ -448,11 +448,18 @@ public static class CorpusCommand
                     var fixtureId = GauntletCI.Corpus.Storage.FixtureIdHelper.Build(owner, repo, prNumber);
                     Console.WriteLine($"[corpus] Hydrating {owner}/{repo}#{prNumber} → {fixtureId}");
 
+                    var tier = tierStr.ToLowerInvariant() switch
+                    {
+                        "gold"   => GauntletCI.Corpus.Models.FixtureTier.Gold,
+                        "silver" => GauntletCI.Corpus.Models.FixtureTier.Silver,
+                        _        => GauntletCI.Corpus.Models.FixtureTier.Discovery,
+                    };
+
                     try
                     {
                         using var hydrator = GitHubRestHydrator.CreateDefault(fixtures);
                         var hydrated = await hydrator.HydrateFromUrlAsync(url, ct);
-                        await pipeline.NormalizeAsync(hydrated, source: "batch", ct: ct);
+                        await pipeline.NormalizeAsync(hydrated, source: "batch", tier: tier, ct: ct);
                         success++;
                     }
                     catch (Exception ex)
@@ -475,7 +482,7 @@ public static class CorpusCommand
         cmd.CommandText = """
             SELECT c.repo_owner, c.repo_name, c.pr_number
             FROM candidates c
-            LEFT JOIN fixtures f ON f.fixture_id = (c.repo_owner || '_' || c.repo_name || '_pr' || c.pr_number)
+            LEFT JOIN fixtures f ON f.fixture_id = (lower(c.repo_owner) || '_' || lower(c.repo_name) || '_pr' || c.pr_number)
             WHERE f.fixture_id IS NULL
             ORDER BY c.discovered_at_utc DESC
             LIMIT $limit

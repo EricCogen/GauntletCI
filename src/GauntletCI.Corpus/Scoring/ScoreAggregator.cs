@@ -44,7 +44,10 @@ public sealed class ScoreAggregator : IScoreAggregator
             var expectedFindings = await ReadJsonFileAsync<List<ExpectedFinding>>(expectedPath, cancellationToken) ?? [];
             var actualFindings   = await ReadJsonFileAsync<List<ActualFinding>>(actualPath, cancellationToken)   ?? [];
 
-            var actualByRule = actualFindings.ToDictionary(f => f.RuleId, f => f);
+            // Group by RuleId — a rule may emit multiple findings; any finding means DidTrigger=true.
+            var actualByRule = actualFindings
+                .GroupBy(f => f.RuleId)
+                .ToDictionary(g => g.Key, g => new ActualFinding { RuleId = g.Key, DidTrigger = true });
 
             foreach (var exp in expectedFindings)
             {
@@ -65,17 +68,20 @@ public sealed class ScoreAggregator : IScoreAggregator
         {
             if (!string.IsNullOrEmpty(ruleId) && rid != ruleId) continue;
 
-            int total       = pairs.Count;
-            int triggered   = pairs.Count(p => p.Act?.DidTrigger == true);
-            int tp          = pairs.Count(p => p.Act?.DidTrigger == true && p.Exp.ShouldTrigger);
-            int fp          = pairs.Count(p => p.Act?.DidTrigger == true && !p.Exp.ShouldTrigger);
-            int fn          = pairs.Count(p => p.Exp.ShouldTrigger && p.Act?.DidTrigger != true);
+            int fixtureCount = pairs.Count;
             int inconclusive = pairs.Count(p => p.Exp.IsInconclusive);
+            var conclusivePairs = pairs.Where(p => !p.Exp.IsInconclusive).ToList();
+
+            int total       = conclusivePairs.Count;
+            int triggered   = conclusivePairs.Count(p => p.Act?.DidTrigger == true);
+            int tp          = conclusivePairs.Count(p => p.Act?.DidTrigger == true && p.Exp.ShouldTrigger);
+            int fp          = conclusivePairs.Count(p => p.Act?.DidTrigger == true && !p.Exp.ShouldTrigger);
+            int fn          = conclusivePairs.Count(p => p.Exp.ShouldTrigger && p.Act?.DidTrigger != true);
 
             double triggerRate      = total > 0 ? (double)triggered / total : 0.0;
             double precision        = (tp + fp) > 0 ? (double)tp / (tp + fp) : 0.0;
             double recall           = (tp + fn) > 0 ? (double)tp / (tp + fn) : 0.0;
-            double inconclusiveRate = total > 0 ? (double)inconclusive / total : 0.0;
+            double inconclusiveRate = fixtureCount > 0 ? (double)inconclusive / fixtureCount : 0.0;
             double avgUsefulness    = await GetAvgUsefulnessAsync(rid, cancellationToken);
 
             var scorecard = new RuleScorecard(rid, rtier, total, triggerRate, precision, recall,

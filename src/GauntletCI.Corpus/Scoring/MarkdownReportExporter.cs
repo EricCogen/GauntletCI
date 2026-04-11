@@ -28,7 +28,7 @@ public sealed class MarkdownReportExporter : IReportExporter
         sb.AppendLine();
         sb.AppendLine("## Summary");
         sb.AppendLine($"- Total rules scored: {scorecards.Count}");
-        sb.AppendLine($"- Gold fixtures: {gold} | Silver: {silver} | Discovery: {discovery}");
+        sb.AppendLine($"- Gold scorecards: {gold} | Silver scorecards: {silver} | Discovery scorecards: {discovery}");
         sb.AppendLine();
         sb.AppendLine("## Rule Scorecards");
 
