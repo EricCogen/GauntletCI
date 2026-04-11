@@ -98,8 +98,10 @@ public class GitHubAnnotationWriterTests
     [Fact]
     public void Write_EvidenceWithLineNumber_ExtractsLine()
     {
-        var output = CaptureAnnotations(MakeResult(MakeFinding(evidence: "Line 77: x = secret")));
+        // file= must be present for line= to appear in the annotation
+        var output = CaptureAnnotations(MakeResult(MakeFinding(evidence: "src/Auth.cs Line 77: x = secret")));
         Assert.Contains("line=77", output);
+        Assert.Contains("file=src/Auth.cs", output);
     }
 
     [Fact]
