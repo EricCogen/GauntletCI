@@ -14,12 +14,20 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
     public override string Id => "GCI0007";
     public override string Name => "Error Handling Integrity";
 
+    private static readonly string[] HighSeverityLogPatterns =
+        [".error(", ".Error(", "Errorf(", "ErrorS(", "level.Error(", "log.Error(",
+         ".fatal(", ".Fatal(", ".Panic(", ".panic(", ".critical(", ".Critical("];
+
+    private static readonly string[] ErrorHandlingKeywords =
+        ["catch", "rescue", "if err", "except", "RecordError(", "span.SetStatus"];
+
     public override Task<List<Finding>> EvaluateAsync(
         DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
     {
         var findings = new List<Finding>();
 
         CheckSwallowedExceptions(diff, findings);
+        CheckRemovedErrorContextLogging(diff, findings);
         AddRoslynFindings(staticAnalysis, findings);
 
         return Task.FromResult(findings);
@@ -90,6 +98,36 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
 
         // If the catch body had no meaningful content, it's swallowed
         return !hasContent;
+    }
+
+    private void CheckRemovedErrorContextLogging(DiffContext diff, List<Finding> findings)
+    {
+        foreach (var file in diff.Files)
+        {
+            int removedHighSev = file.RemovedLines
+                .Count(l => HighSeverityLogPatterns.Any(p => l.Content.Contains(p, StringComparison.Ordinal)));
+
+            if (removedHighSev == 0) continue;
+
+            int addedHighSev = file.AddedLines
+                .Count(l => HighSeverityLogPatterns.Any(p => l.Content.Contains(p, StringComparison.Ordinal)));
+
+            if (addedHighSev >= removedHighSev) continue;
+
+            bool hasErrorHandlingContext = file.Hunks.Any(hunk =>
+                hunk.Lines.Any(l =>
+                    (l.Kind == DiffLineKind.Context || l.Kind == DiffLineKind.Removed) &&
+                    ErrorHandlingKeywords.Any(k => l.Content.Contains(k, StringComparison.OrdinalIgnoreCase))));
+
+            if (!hasErrorHandlingContext) continue;
+
+            findings.Add(CreateFinding(
+                summary: $"Error-level logging removed from error handling block in {file.NewPath}.",
+                evidence: $"{removedHighSev} error-level log call(s) removed, {addedHighSev} added in error-handling context.",
+                whyItMatters: "Removing error logs from catch/rescue blocks leaves exceptions silent — critical failure context is lost for incident triage.",
+                suggestedAction: "Preserve or replace the error logging so that failure context is not silently dropped.",
+                confidence: Confidence.High));
+        }
     }
 
     private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)

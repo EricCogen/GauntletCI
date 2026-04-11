@@ -24,7 +24,6 @@ public class GCI0019_ConfidenceAndEvidence : RuleBase
         var findings = new List<Finding>();
 
         CheckBinaryFiles(diff, findings);
-        CheckTinyDiff(diff, findings);
         // Note: the "large diff with few findings" check runs in RuleOrchestrator.PostProcess
 
         return Task.FromResult(findings);
@@ -49,15 +48,8 @@ public class GCI0019_ConfidenceAndEvidence : RuleBase
 
     private void CheckTinyDiff(DiffContext diff, List<Finding> findings)
     {
-        int totalLines = diff.AllAddedLines.Count() + diff.AllRemovedLines.Count();
-        if (totalLines > 3 || totalLines == 0) return;
-
-        findings.Add(CreateFinding(
-            summary: $"Very small diff ({totalLines} total changed line(s)) — possibly incomplete.",
-            evidence: $"Total changed lines: {totalLines}",
-            whyItMatters: "A very small diff may indicate the wrong commit range was analysed, or the change is trivial.",
-            suggestedAction: "Verify the correct diff was analysed. If intentional, this finding can be ignored.",
-            confidence: Confidence.Low));
+        // Removed: single-line refactors (var→const, etc.) were generating false positives.
+        // This check is intentionally disabled.
     }
 
     /// <summary>

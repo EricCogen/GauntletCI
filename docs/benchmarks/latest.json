@@ -1,0 +1,3594 @@
+{
+  "generated_utc": "2026-04-08T02:32:57.2000788+00:00",
+  "repository_commit": "5f7969fdeb5d36dd98c4847f0448c4e9738a677c",
+  "analyzer": {
+    "name": "deterministic",
+    "source": "GauntletCI.Core.Evaluation.DeterministicAnalysisRunner",
+    "version": "v1"
+  },
+  "corpus": {
+    "fixtures_evaluated": 117,
+    "real_fixtures": 117,
+    "synthetic_fixtures": 0,
+    "include_synthetic": false
+  },
+  "summary": {
+    "true_positive": 8,
+    "true_negative": 47,
+    "false_positive": 0,
+    "false_negative": 62,
+    "fixtures_passed": 55,
+    "fixtures_failed": 62,
+    "precision": 1,
+    "recall": 0.11428571428571428,
+    "accuracy": 0.4700854700854701,
+    "false_positive_rate": 0,
+    "false_negative_rate": 0.8857142857142857,
+    "pass_rate": 0.4700854700854701
+  },
+  "per_rule": [
+    {
+      "rule_id": "GCI001",
+      "fixtures_in_scope": 5,
+      "true_positive": 0,
+      "true_negative": 0,
+      "false_positive": 0,
+      "false_negative": 5,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0,
+      "false_positive_rate": null,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI002",
+      "fixtures_in_scope": 5,
+      "true_positive": 0,
+      "true_negative": 1,
+      "false_positive": 0,
+      "false_negative": 4,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.2,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI003",
+      "fixtures_in_scope": 5,
+      "true_positive": 0,
+      "true_negative": 1,
+      "false_positive": 0,
+      "false_negative": 4,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.2,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI004",
+      "fixtures_in_scope": 5,
+      "true_positive": 0,
+      "true_negative": 2,
+      "false_positive": 0,
+      "false_negative": 3,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.4,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI005",
+      "fixtures_in_scope": 5,
+      "true_positive": 0,
+      "true_negative": 0,
+      "false_positive": 0,
+      "false_negative": 5,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0,
+      "false_positive_rate": null,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI006",
+      "fixtures_in_scope": 5,
+      "true_positive": 0,
+      "true_negative": 2,
+      "false_positive": 0,
+      "false_negative": 3,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.4,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI007",
+      "fixtures_in_scope": 5,
+      "true_positive": 0,
+      "true_negative": 2,
+      "false_positive": 0,
+      "false_negative": 3,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.4,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI008",
+      "fixtures_in_scope": 5,
+      "true_positive": 0,
+      "true_negative": 2,
+      "false_positive": 0,
+      "false_negative": 3,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.4,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI009",
+      "fixtures_in_scope": 5,
+      "true_positive": 0,
+      "true_negative": 2,
+      "false_positive": 0,
+      "false_negative": 3,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.4,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI010",
+      "fixtures_in_scope": 5,
+      "true_positive": 0,
+      "true_negative": 4,
+      "false_positive": 0,
+      "false_negative": 1,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.8,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI011",
+      "fixtures_in_scope": 5,
+      "true_positive": 0,
+      "true_negative": 2,
+      "false_positive": 0,
+      "false_negative": 3,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.4,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI012",
+      "fixtures_in_scope": 5,
+      "true_positive": 0,
+      "true_negative": 3,
+      "false_positive": 0,
+      "false_negative": 2,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.6,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI013",
+      "fixtures_in_scope": 10,
+      "true_positive": 0,
+      "true_negative": 4,
+      "false_positive": 0,
+      "false_negative": 6,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.4,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI014",
+      "fixtures_in_scope": 5,
+      "true_positive": 1,
+      "true_negative": 3,
+      "false_positive": 0,
+      "false_negative": 1,
+      "precision": 1,
+      "recall": 0.5,
+      "accuracy": 0.8,
+      "false_positive_rate": 0,
+      "false_negative_rate": 0.5
+    },
+    {
+      "rule_id": "GCI015",
+      "fixtures_in_scope": 5,
+      "true_positive": 0,
+      "true_negative": 2,
+      "false_positive": 0,
+      "false_negative": 3,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.4,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI016",
+      "fixtures_in_scope": 12,
+      "true_positive": 7,
+      "true_negative": 4,
+      "false_positive": 0,
+      "false_negative": 1,
+      "precision": 1,
+      "recall": 0.875,
+      "accuracy": 0.9166666666666666,
+      "false_positive_rate": 0,
+      "false_negative_rate": 0.125
+    },
+    {
+      "rule_id": "GCI017",
+      "fixtures_in_scope": 7,
+      "true_positive": 0,
+      "true_negative": 2,
+      "false_positive": 0,
+      "false_negative": 5,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.2857142857142857,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI018",
+      "fixtures_in_scope": 5,
+      "true_positive": 0,
+      "true_negative": 2,
+      "false_positive": 0,
+      "false_negative": 3,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.4,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI019",
+      "fixtures_in_scope": 8,
+      "true_positive": 0,
+      "true_negative": 6,
+      "false_positive": 0,
+      "false_negative": 2,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.75,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    },
+    {
+      "rule_id": "GCI020",
+      "fixtures_in_scope": 5,
+      "true_positive": 0,
+      "true_negative": 3,
+      "false_positive": 0,
+      "false_negative": 2,
+      "precision": null,
+      "recall": 0,
+      "accuracy": 0.6,
+      "false_positive_rate": 0,
+      "false_negative_rate": 1
+    }
+  ],
+  "case_studies": [
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-07",
+      "rule_id": "GCI016",
+      "source_url": "https://github.com/CoraCodeDev/PdfSplitter/pull/3",
+      "why_it_matters": "Property getter calls Task.Run().Result, blocking the thread-pool thread for synchronous I/O inside an async-capable MAUI app \u2014 classic deadlock anti-pattern.",
+      "sample_finding": "Blocking async/synchronization pattern was introduced in changed code.",
+      "sample_evidence": "signal=DET-CONC-001; unknown:16 public ImageSource Preview =\u003E ImageSource.FromStream(() =\u003E Task.Run(GeneratePreview).Result.AsStream());"
+    },
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-15",
+      "rule_id": "GCI016",
+      "source_url": "https://github.com/abpframework/abp/pull/25155",
+      "why_it_matters": "GetAwaiter().GetResult() blocks the calling thread, but the overall fix reads stdout and stderr concurrently via Task.WhenAll \u2014 debatable: avoids the pipe deadlock but still blocks the outer thread.",
+      "sample_finding": "Blocking async/synchronization pattern was introduced in changed code.",
+      "sample_evidence": "signal=DET-CONC-001; unknown:143 var results = Task.WhenAll(outputTask, errorTask).GetAwaiter().GetResult();"
+    },
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-19",
+      "rule_id": "GCI016",
+      "source_url": "https://github.com/microsoft/teams.net/pull/402",
+      "why_it_matters": "The DI factory call keeps synchronous GetAwaiter().GetResult and only adds ConfigureAwait(false); deadlock likelihood drops but sync-over-async blocking remains.",
+      "sample_finding": "Blocking async/synchronization pattern was introduced in changed code.",
+      "sample_evidence": "signal=DET-CONC-001; Libraries/Microsoft.Teams.Extensions/Microsoft.Teams.Extensions.Hosting/Microsoft.Teams.Apps.Extensions/ServiceCollection.cs:103 collection.AddSingleton(provider =\u003E factory(provider).ConfigureAwait(false).GetAwaiter().GetResult());"
+    },
+    {
+      "fixture_set": "gci0014",
+      "fixture_id": "gci0014-02",
+      "rule_id": "GCI014",
+      "source_url": "https://github.com/roots/wp-packages/pull/49",
+      "why_it_matters": "Schema drops a column and re-adds it in Down, but prior data is irreversibly lost after rollback.",
+      "sample_finding": "Destructive schema change was introduced without proof of rollback-safe recovery.",
+      "sample_evidence": "signal=DET-ROLL-001; migrations/019_drop_provider_group_column.sql:2 ALTER TABLE packages DROP COLUMN provider_group;"
+    },
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-10",
+      "rule_id": "GCI016",
+      "source_url": "https://github.com/MoonLadderStudios/MoonMind/pull/488",
+      "why_it_matters": "Calls blocking time.sleep() inside an async polling function, stalling the entire event loop for each retry interval.",
+      "sample_finding": "Blocking async/synchronization pattern was introduced in changed code.",
+      "sample_evidence": "signal=DET-CONC-001; unknown:972 time.sleep(poll_interval)"
+    }
+  ],
+  "fixtures": [
+    {
+      "fixture_set": "gci0001",
+      "fixture_id": "gci0001-06",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/rails/rails/pull/55713",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI001"
+      ],
+      "mapped_rules": [
+        "GCI001"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI001"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Single PR bundles a performance optimisation (dedup schema dumps) with an unrelated internal refactoring of dump_schema to use with_temporary_pool, and separately refactors the test helper include.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0001",
+      "fixture_id": "gci0001-07",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/rails/rails/pull/38042",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI001"
+      ],
+      "mapped_rules": [
+        "GCI001"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI001"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "PR title explicitly says \u0022Refactor READ_QUERY AND fix missing arguments\u0022 \u2014 a structural refactor (extracting DEFAULT_READ_QUERY) is bundled with a bug fix (adding missing SQL keywords per adapter).",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0001",
+      "fixture_id": "gci0001-08",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/spring-projects/spring-framework/pull/22260",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI001"
+      ],
+      "mapped_rules": [
+        "GCI001"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI001"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "A single PR bundles two distinct concerns: a bug fix to SpringBeanContainer.java (removing incorrect name-to-type delegation, adding missing autowireBeanProperties call) alongside adding a brand-new 344-line integration test file.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0001",
+      "fixture_id": "gci0001-09",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/rust-lang/rust/pull/154641",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI001"
+      ],
+      "mapped_rules": [
+        "GCI001"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI001"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Three unrelated concerns bundled together: (1) correcting a broken --frozen flag to --frozen-lockfile, (2) adding a new post-install lockfile integrity check, and (3) bumping dozens of yarn.lock dependency versions.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0001",
+      "fixture_id": "gci0001-10",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/rails/rails/pull/55713",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI001"
+      ],
+      "mapped_rules": [
+        "GCI001"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI001"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Schema-dedupe behavior changes are bundled with unrelated test-helper include churn in the same PR, increasing scope beyond a single cohesive objective.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0002",
+      "fixture_id": "gci0002-01",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/spring-projects/spring-framework/pull/22260",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI002"
+      ],
+      "mapped_rules": [
+        "GCI002"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI002"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Container resolution behavior changes by removing a fallback path while the method contract still appears to support resilient retrieval semantics.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0002",
+      "fixture_id": "gci0002-02",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/rust-lang/rust/pull/154641",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI002"
+      ],
+      "mapped_rules": [
+        "GCI002"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI002"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "A lockfile-integrity intent is introduced, but the same change set bundles broad dependency churn and build-path edits that dilute the stated objective and reviewability.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0002",
+      "fixture_id": "gci0002-03",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/mastodon/mastodon/pull/34743",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI002"
+      ],
+      "mapped_rules": [
+        "GCI002"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI002"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "The worker keeps retry semantics but removes structured failure logging, causing behavior to diverge from the apparent operational intent of actionable retries.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0002",
+      "fixture_id": "gci0002-04",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/grafana/grafana/pull/119491",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI002"
+      ],
+      "mapped_rules": [
+        "GCI002"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI002"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Provisioning still returns errors, but key error-path diagnostics are removed, conflicting with the apparent intent to preserve debuggable failure behavior.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0002",
+      "fixture_id": "gci0002-05",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/136395",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI002"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Logging moves from formatted strings to structured fields without changing return paths, so implementation remains aligned with the existing failure-handling intent.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0003",
+      "fixture_id": "gci0003-06",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/spring-projects/spring-framework/pull/22260",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI003"
+      ],
+      "mapped_rules": [
+        "GCI003"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI003"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Named bean retrieval fallback is removed while signatures stay the same, materially changing runtime resolution behavior.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0003",
+      "fixture_id": "gci0003-07",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/MoonLadderStudios/MoonMind/pull/488",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI003"
+      ],
+      "mapped_rules": [
+        "GCI003"
+      ],
+      "fired_rules": [
+        "GCI016"
+      ],
+      "missing_expected_rules": [
+        "GCI003"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 1,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Async polling flow is converted to synchronous blocking plus broad exception handling, changing scheduling and failure behavior at runtime.",
+      "sample_finding": "Blocking async/synchronization pattern was introduced in changed code.",
+      "sample_evidence": "signal=DET-CONC-001; unknown:970 time.sleep(poll_interval)"
+    },
+    {
+      "fixture_set": "gci0003",
+      "fixture_id": "gci0003-08",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/hsahovic/poke-env/pull/858",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI003"
+      ],
+      "mapped_rules": [
+        "GCI003"
+      ],
+      "fired_rules": [
+        "GCI016"
+      ],
+      "missing_expected_rules": [
+        "GCI003"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 1,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Per-battle lock removal allows message handlers to interleave and changes state transition behavior under concurrency.",
+      "sample_finding": "A lock statement was removed from changed code.",
+      "sample_evidence": "signal=DET-CONC-004; unknown:143 self._battle_locks[battle_tag] = asyncio.Lock()"
+    },
+    {
+      "fixture_set": "gci0003",
+      "fixture_id": "gci0003-09",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/hsahovic/poke-env/pull/858",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI003"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Per-battle lock addition preserves intended state sequencing and prevents races; behavior remains aligned with expected processing semantics.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0003",
+      "fixture_id": "gci0003-10",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/abpframework/abp/pull/25155",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI003"
+      ],
+      "mapped_rules": [
+        "GCI003"
+      ],
+      "fired_rules": [
+        "GCI007",
+        "GCI016"
+      ],
+      "missing_expected_rules": [
+        "GCI003"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 2,
+      "high_severity_count": 2,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Process stream handling is improved to read stdout/stderr concurrently, but outer call still synchronously blocks on completion, making behavioral impact nuanced.",
+      "sample_finding": "Blocking async/synchronization pattern was introduced in changed code.",
+      "sample_evidence": "signal=DET-CONC-001; unknown:143 var results = Task.WhenAll(outputTask, errorTask).GetAwaiter().GetResult();"
+    },
+    {
+      "fixture_set": "gci0004",
+      "fixture_id": "gci0004-06",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/spring-projects/spring-framework/pull/22260",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI004"
+      ],
+      "mapped_rules": [
+        "GCI004"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI004"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Named bean lookup fallback behavior is removed without changing method signatures, creating a caller-visible semantic contract break.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0004",
+      "fixture_id": "gci0004-08",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/roots/wp-packages/pull/49",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI004"
+      ],
+      "mapped_rules": [
+        "GCI004"
+      ],
+      "fired_rules": [
+        "GCI014"
+      ],
+      "missing_expected_rules": [
+        "GCI004"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 1,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Dropping provider_group introduces a data-schema contract break for downstream readers and integrations that still depend on that column.",
+      "sample_finding": "Destructive schema change was introduced without proof of rollback-safe recovery.",
+      "sample_evidence": "signal=DET-ROLL-001; migrations/019_drop_provider_group_column.sql:2 ALTER TABLE packages DROP COLUMN provider_group;"
+    },
+    {
+      "fixture_set": "gci0004",
+      "fixture_id": "gci0004-10",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/136395",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI004"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Logging API is refactored from Errorf to ErrorS while method returns and external behavior stay contract-compatible.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0004",
+      "fixture_id": "gci0004-11",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/django/django/pull/20587",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI004"
+      ],
+      "mapped_rules": [
+        "GCI004"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI004"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "SQL alias quoting semantics change and release notes call out raw SQL alias adjustments, creating caller-integration contract risk.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0004",
+      "fixture_id": "gci0004-12",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/django/django/pull/20587",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI004"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Existing quote_name_unless_alias path remains available as a deprecation shim that forwards to quote_name, preserving compatibility.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0005",
+      "fixture_id": "gci0005-01",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/spring-projects/spring-framework/pull/22260",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI005"
+      ],
+      "mapped_rules": [
+        "GCI005"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI005"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "A new integration test is added, but it only validates a happy-path bean retrieval and does not assert the changed missing-bean-name fallback behavior or new property autowire branch.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0005",
+      "fixture_id": "gci0005-02",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/rails/rails/pull/55713",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI005"
+      ],
+      "mapped_rules": [
+        "GCI005"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI005"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Core dump_all behavior is changed to dedupe schemas across configs, but the test delta is only helper include churn and adds no assertions for the new branch behavior.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0005",
+      "fixture_id": "gci0005-03",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/rails/rails/pull/55713",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI005"
+      ],
+      "mapped_rules": [
+        "GCI005"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI005"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "dump_schema execution is refactored to use with_temporary_pool and connection-scoped schema version writes, while test changes remain setup-only with no assertion coverage for the altered execution path.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0005",
+      "fixture_id": "gci0005-04",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/grafana/grafana/pull/119491",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI005"
+      ],
+      "mapped_rules": [
+        "GCI005"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI005"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Provisioning failure-path behavior and diagnostics are changed, but no corresponding test assertions are added to validate the modified error path.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0005",
+      "fixture_id": "gci0005-05",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/mastodon/mastodon/pull/34743",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI005"
+      ],
+      "mapped_rules": [
+        "GCI005"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI005"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Retry-adjacent rescue-path diagnostics are removed without adding tests that assert the changed failure-observability behavior.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0006",
+      "fixture_id": "gci0006-01",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/spring-projects/spring-framework/pull/22260",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI006"
+      ],
+      "mapped_rules": [
+        "GCI006"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI006"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "A fallback branch for unresolved named beans is removed, increasing edge-path fragility when name-based lookup misses at runtime.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0006",
+      "fixture_id": "gci0006-02",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/grafana/grafana/pull/119491",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI006"
+      ],
+      "mapped_rules": [
+        "GCI006"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI006"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Operational error context is stripped from a failure path, reducing boundary-case diagnosability when provisioning fails in production.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0006",
+      "fixture_id": "gci0006-03",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/mastodon/mastodon/pull/34743",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI006"
+      ],
+      "mapped_rules": [
+        "GCI006"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI006"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Retry behavior remains, but request and backtrace context are removed from rescue logging, creating a fragile edge condition under repeated failures.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0006",
+      "fixture_id": "gci0006-04",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/136395",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI006"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Error logging API style changes, but all guard/return behavior remains intact, so edge-case handling semantics are preserved.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0006",
+      "fixture_id": "gci0006-05",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/home-assistant/core/pull/162499",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI006"
+      ],
+      "fired_rules": [
+        "GCI005"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 0,
+      "medium_severity_count": 1,
+      "low_severity_count": 0,
+      "notes": "Explicitly disabling parallel updates narrows a concurrency edge case rather than introducing a new invalid-input or boundary-risk path.",
+      "sample_finding": "Code behavior changed without meaningful new test assertions on the changed path.",
+      "sample_evidence": "signal=DET-COV-001; diff metadata: files_changed=2, test_files_changed=0, assertion_like_test_lines_added=0"
+    },
+    {
+      "fixture_set": "gci0007",
+      "fixture_id": "gci0007-06",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/grafana/grafana/pull/119491",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI007"
+      ],
+      "mapped_rules": [
+        "GCI007"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI007"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Critical provisioning error logs are removed on the failure path, leaving only a raw return/propagation with reduced diagnostics for failed jobs.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0007",
+      "fixture_id": "gci0007-07",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/mastodon/mastodon/pull/34743",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI007"
+      ],
+      "mapped_rules": [
+        "GCI007"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI007"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Structured rescue-block logging is removed before re-raising, which drops request/account context needed to diagnose retrying job failures.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0007",
+      "fixture_id": "gci0007-08",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/elastic/elasticsearch/pull/120000",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI007"
+      ],
+      "mapped_rules": [
+        "GCI007"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI007"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Catch blocks continue throwing wrapped exceptions, but removal of explicit catch-path logs loses local failure context and weakens incident triage.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0007",
+      "fixture_id": "gci0007-09",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/grafana/grafana/pull/119491",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI007"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Error logging is added to previously silent provisioning failure paths, improving diagnostics and preserving error visibility.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0007",
+      "fixture_id": "gci0007-10",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/136395",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI007"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Error calls are refactored from unstructured to structured logging APIs while preserving returns and emitted error signals.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0008",
+      "fixture_id": "gci0008-01",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/rust-lang/rust/pull/154641",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI008"
+      ],
+      "mapped_rules": [
+        "GCI008"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI008"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "A small tooling correction is bundled with broad lockfile churn and new bypass controls, creating disproportionate review complexity for the stated task.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0008",
+      "fixture_id": "gci0008-02",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/spring-projects/spring-framework/pull/22260",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI008"
+      ],
+      "mapped_rules": [
+        "GCI008"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI008"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "A targeted container bugfix is mixed with a large new integration-test payload in the same change set, increasing cognitive load beyond the core fix.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0008",
+      "fixture_id": "gci0008-03",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/grafana/grafana/pull/119491",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI008"
+      ],
+      "mapped_rules": [
+        "GCI008"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI008"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Error-path observability behavior is altered across multiple sites, increasing troubleshooting complexity while not simplifying the core workflow.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0008",
+      "fixture_id": "gci0008-04",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/prometheus/prometheus/pull/16000",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI008"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Changing debug logs to info increases visibility but does not add structural branching or algorithmic complexity.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0008",
+      "fixture_id": "gci0008-05",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/home-assistant/core/pull/162499",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI008"
+      ],
+      "fired_rules": [
+        "GCI005"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 0,
+      "medium_severity_count": 1,
+      "low_severity_count": 0,
+      "notes": "Setting PARALLEL_UPDATES to zero reduces concurrent state surface area and simplifies execution semantics in an edge deployment path.",
+      "sample_finding": "Code behavior changed without meaningful new test assertions on the changed path.",
+      "sample_evidence": "signal=DET-COV-001; diff metadata: files_changed=2, test_files_changed=0, assertion_like_test_lines_added=0"
+    },
+    {
+      "fixture_set": "gci0009",
+      "fixture_id": "gci0009-01",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/mastodon/mastodon/pull/34743",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI009"
+      ],
+      "mapped_rules": [
+        "GCI009"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI009"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Structured worker error logging is removed even though retry semantics remain, deviating from established operational pattern consistency.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0009",
+      "fixture_id": "gci0009-02",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/grafana/grafana/pull/119491",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI009"
+      ],
+      "mapped_rules": [
+        "GCI009"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI009"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Service-level error logging calls are removed while error returns remain, creating a pattern inconsistency in failure diagnostics.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0009",
+      "fixture_id": "gci0009-03",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/spring-projects/spring-framework/pull/22260",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI009"
+      ],
+      "mapped_rules": [
+        "GCI009"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI009"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Bean resolution flow removes a defensive fallback branch, deviating from a previously established container access pattern.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0009",
+      "fixture_id": "gci0009-04",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/136395",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI009"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Migration from Errorf to ErrorS standardizes logging style while preserving existing control flow and guard behavior.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0009",
+      "fixture_id": "gci0009-05",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/home-assistant/core/pull/162499",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI009"
+      ],
+      "fired_rules": [
+        "GCI005"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 0,
+      "medium_severity_count": 1,
+      "low_severity_count": 0,
+      "notes": "Framework-level PARALLEL_UPDATES convention is explicitly enforced, improving consistency with expected component update patterns.",
+      "sample_finding": "Code behavior changed without meaningful new test assertions on the changed path.",
+      "sample_evidence": "signal=DET-COV-001; diff metadata: files_changed=2, test_files_changed=0, assertion_like_test_lines_added=0"
+    },
+    {
+      "fixture_set": "gci0010",
+      "fixture_id": "gci0010-11",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/TimKenobi/StepScribe/pull/2",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI010"
+      ],
+      "mapped_rules": [
+        "GCI010"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI010"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Apple Developer Team ID hardcoded as environment variable fallback, embedding it in source.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0010",
+      "fixture_id": "gci0010-13",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/TimKenobi/StepScribe/pull/2",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI010"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Docker Compose uses ${VAR:-default} substitution so credentials come from the host environment at runtime.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0010",
+      "fixture_id": "gci0010-14",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/137714",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI010"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "A runtime message check is refactored to a constant without introducing secrets or brittle fallback defaults.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0010",
+      "fixture_id": "gci0010-15",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/rails/rails/pull/55709",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI010"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Routes reloader wiring replaces a hardcoded watcher choice with a configured file_watcher value.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0010",
+      "fixture_id": "gci0010-16",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/django/django/pull/21050",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI010"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Admin test expectations switch from a literal primary key to a fixture-driven value, removing hardcoded test data.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0011",
+      "fixture_id": "gci0011-09",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/vibhu1212/ufdr-analysis-tool/pull/1",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI011"
+      ],
+      "mapped_rules": [
+        "GCI011"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI011"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Single-row SELECT issued per contact inside a loop over all contacts, causing O(n) database queries.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0011",
+      "fixture_id": "gci0011-10",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/madflow/next-project/pull/1001",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI011"
+      ],
+      "mapped_rules": [
+        "GCI011"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI011"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Dataset SAV file downloaded from S3 on every API request with no caching, causing repeated heavy I/O.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0011",
+      "fixture_id": "gci0011-14",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/vibhu1212/ufdr-analysis-tool/pull/1",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI011"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Contacts fetched in batches via IN query before the loop; no per-item database roundtrip occurs.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0011",
+      "fixture_id": "gci0011-15",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/django/django/pull/20495",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI011"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Deferred-field guard prevents per-row related lookups from triggering unexpected N\u002B1 query patterns.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0011",
+      "fixture_id": "gci0011-16",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/96052",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI011"
+      ],
+      "mapped_rules": [
+        "GCI011"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI011"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Default watch cache sizing disables event watch cache paths, increasing hot-path API load risk.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0012",
+      "fixture_id": "gci0012-01",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/Phudit-2547/ChuMaiNichi/pull/1",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI012"
+      ],
+      "mapped_rules": [
+        "GCI012"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI012"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Parameterized SQL is replaced with string interpolation, opening a direct SQL injection path for user-influenced input.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0012",
+      "fixture_id": "gci0012-04",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/Phudit-2547/ChuMaiNichi/pull/1",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI012"
+      ],
+      "fired_rules": [
+        "GCI005"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 1,
+      "notes": "Change adds SQL pattern blocking and restores exception handling around query execution, reducing injection risk.",
+      "sample_finding": "A try-catch block was introduced inside a test method.",
+      "sample_evidence": "signal=DET-TEST-003; unknown:23 try {"
+    },
+    {
+      "fixture_set": "gci0012",
+      "fixture_id": "gci0012-05",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/home-assistant/core/pull/160216",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI012"
+      ],
+      "mapped_rules": [
+        "GCI012"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI012"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Remote calendar client now accepts a user-provided verify_ssl flag, enabling insecure TLS behavior when disabled.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0012",
+      "fixture_id": "gci0012-06",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/django/django/pull/20587",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI012"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Identifier generation switches to strict quote_name usage, hardening SQL compilation behavior rather than weakening it.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0012",
+      "fixture_id": "gci0012-07",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/django/django/pull/21062",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI012"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Admin-side selectors now escape dynamic fragments with CSS.escape, reducing selector injection surface.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0013",
+      "fixture_id": "gci0013-06",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/grafana/grafana/pull/119491",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI013"
+      ],
+      "mapped_rules": [
+        "GCI013"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI013"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Error log statement is removed from the HTTP handler error path, silencing failures during provisioning job processing.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0013",
+      "fixture_id": "gci0013-07",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/130000",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI013"
+      ],
+      "mapped_rules": [
+        "GCI013"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI013"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "The requestID correlation field is dropped from the error log, making it impossible to trace failed requests in distributed logs.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0013",
+      "fixture_id": "gci0013-08",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/getsentry/sentry/pull/108080",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI013"
+      ],
+      "mapped_rules": [
+        "GCI013"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI013"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Structured logger with requestId context is replaced by console.log on a critical payment processing path, losing correlation metadata.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0013",
+      "fixture_id": "gci0013-09",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/mastodon/mastodon/pull/34743",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI013"
+      ],
+      "mapped_rules": [
+        "GCI013"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI013"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Full structured error log including request_id and backtrace is removed from the rescue block, swallowing exception context silently.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0013",
+      "fixture_id": "gci0013-10",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/open-telemetry/opentelemetry-collector/pull/12000",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI013"
+      ],
+      "mapped_rules": [
+        "GCI013"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI013"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Error log with trace_id correlation is removed from the span processing error handler, eliminating observability into pipeline failures.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0013",
+      "fixture_id": "gci0013-11",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/elastic/elasticsearch/pull/120000",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI013"
+      ],
+      "mapped_rules": [
+        "GCI013"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI013"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Structured error log with document ID is removed from the catch block, silently discarding indexing failure details.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0013",
+      "fixture_id": "gci0013-12",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/grafana/grafana/pull/119491",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI013"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Error logging is ADDED to a previously silent error handler, improving observability rather than degrading it.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0013",
+      "fixture_id": "gci0013-13",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/136395",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI013"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Error log is refactored from unstructured klog.Errorf to structured klog.ErrorS, but error logging remains present on the error path.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0013",
+      "fixture_id": "gci0013-14",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/prometheus/prometheus/pull/16000",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI013"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Log level is upgraded from DEBUG to INFO on a scrape path, improving observability visibility rather than removing or degrading logging.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0013",
+      "fixture_id": "gci0013-15",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/mastodon/mastodon/pull/36000",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI013"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Only a noisy debug log in a hot middleware loop is removed; the error-level rescue log with request context is preserved, so observability is not degraded.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0014",
+      "fixture_id": "gci0014-02",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/roots/wp-packages/pull/49",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": true,
+      "classification": "tp",
+      "expected_rules": [
+        "GCI014"
+      ],
+      "mapped_rules": [
+        "GCI014"
+      ],
+      "fired_rules": [
+        "GCI014"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 1,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Schema drops a column and re-adds it in Down, but prior data is irreversibly lost after rollback.",
+      "sample_finding": "Destructive schema change was introduced without proof of rollback-safe recovery.",
+      "sample_evidence": "signal=DET-ROLL-001; migrations/019_drop_provider_group_column.sql:2 ALTER TABLE packages DROP COLUMN provider_group;"
+    },
+    {
+      "fixture_set": "gci0014",
+      "fixture_id": "gci0014-03",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/sc0v/binder/pull/381",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI014"
+      ],
+      "fired_rules": [
+        "GCI005"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 0,
+      "medium_severity_count": 1,
+      "low_severity_count": 0,
+      "notes": "Existing irreversible drops are made explicit with up/down methods and IrreversibleMigration guards, improving operational safety signaling.",
+      "sample_finding": "Code behavior changed without meaningful new test assertions on the changed path.",
+      "sample_evidence": "signal=DET-COV-001; diff metadata: files_changed=1, test_files_changed=0, assertion_like_test_lines_added=0"
+    },
+    {
+      "fixture_set": "gci0014",
+      "fixture_id": "gci0014-04",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/activepieces/activepieces/pull/12344",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI014"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Adds release-time breaking migration checks and a dedicated rollback workflow, reducing rollback risk.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0014",
+      "fixture_id": "gci0014-05",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/home-assistant/core/pull/123454",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI014"
+      ],
+      "mapped_rules": [
+        "GCI014"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI014"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Constraint restoration path now deletes or nulls foreign-key violations before reapplying constraints, introducing irreversible rollback/data-loss risk.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0014",
+      "fixture_id": "gci0014-06",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/rails/rails/pull/45774",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI014"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Migration command inversion is strengthened so drop_enum is reversible when enum values are supplied.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0015",
+      "fixture_id": "gci0015-01",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/roots/wp-packages/pull/49",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI015"
+      ],
+      "mapped_rules": [
+        "GCI015"
+      ],
+      "fired_rules": [
+        "GCI014"
+      ],
+      "missing_expected_rules": [
+        "GCI015"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 1,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Down migration restores only the dropped column shape, not the historical values, so rollback silently loses existing provider_group data.",
+      "sample_finding": "Destructive schema change was introduced without proof of rollback-safe recovery.",
+      "sample_evidence": "signal=DET-ROLL-001; migrations/019_drop_provider_group_column.sql:2 ALTER TABLE packages DROP COLUMN provider_group;"
+    },
+    {
+      "fixture_set": "gci0015",
+      "fixture_id": "gci0015-02",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/rails/rails/pull/55713",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI015"
+      ],
+      "mapped_rules": [
+        "GCI015"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI015"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "dump_all dedupes work by schema file path, so a later database config can be skipped even when it has divergent schema state that still needs to be dumped.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0015",
+      "fixture_id": "gci0015-03",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/hsahovic/poke-env/pull/858",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI015"
+      ],
+      "mapped_rules": [
+        "GCI015"
+      ],
+      "fired_rules": [
+        "GCI016"
+      ],
+      "missing_expected_rules": [
+        "GCI015"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 1,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Removing per-battle locking allows concurrent handlers to interleave updates for the same battle_tag, risking state corruption and lost transitions.",
+      "sample_finding": "A lock statement was removed from changed code.",
+      "sample_evidence": "signal=DET-CONC-004; unknown:143 self._battle_locks[battle_tag] = asyncio.Lock()"
+    },
+    {
+      "fixture_set": "gci0015",
+      "fixture_id": "gci0015-04",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/hsahovic/poke-env/pull/858",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI015"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Per-battle lock initialization and guarded handling are added back, serializing updates and preserving state integrity under concurrent message delivery.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0015",
+      "fixture_id": "gci0015-05",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/sc0v/binder/pull/381",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI015"
+      ],
+      "fired_rules": [
+        "GCI005"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 0,
+      "medium_severity_count": 1,
+      "low_severity_count": 0,
+      "notes": "The migration is made explicitly irreversible on down, which fails fast instead of pretending dropped relational data can be recreated safely.",
+      "sample_finding": "Code behavior changed without meaningful new test assertions on the changed path.",
+      "sample_evidence": "signal=DET-COV-001; diff metadata: files_changed=1, test_files_changed=0, assertion_like_test_lines_added=0"
+    },
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-07",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/CoraCodeDev/PdfSplitter/pull/3",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": true,
+      "classification": "tp",
+      "expected_rules": [
+        "GCI016"
+      ],
+      "mapped_rules": [
+        "GCI016"
+      ],
+      "fired_rules": [
+        "GCI004",
+        "GCI016"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 2,
+      "high_severity_count": 1,
+      "medium_severity_count": 1,
+      "low_severity_count": 0,
+      "notes": "Property getter calls Task.Run().Result, blocking the thread-pool thread for synchronous I/O inside an async-capable MAUI app \u2014 classic deadlock anti-pattern.",
+      "sample_finding": "Blocking async/synchronization pattern was introduced in changed code.",
+      "sample_evidence": "signal=DET-CONC-001; unknown:16 public ImageSource Preview =\u003E ImageSource.FromStream(() =\u003E Task.Run(GeneratePreview).Result.AsStream());"
+    },
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-08",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/steq98ai-githng/GY-langchain/pull/22",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI016"
+      ],
+      "mapped_rules": [
+        "GCI016"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI016"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Calls blocking requests.get() inside an async method, stalling the event loop for the full HTTP round-trip duration.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-10",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/MoonLadderStudios/MoonMind/pull/488",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": true,
+      "classification": "tp",
+      "expected_rules": [
+        "GCI016"
+      ],
+      "mapped_rules": [
+        "GCI016"
+      ],
+      "fired_rules": [
+        "GCI016"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 1,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Calls blocking time.sleep() inside an async polling function, stalling the entire event loop for each retry interval.",
+      "sample_finding": "Blocking async/synchronization pattern was introduced in changed code.",
+      "sample_evidence": "signal=DET-CONC-001; unknown:972 time.sleep(poll_interval)"
+    },
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-11",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/hsahovic/poke-env/pull/858",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": true,
+      "classification": "tp",
+      "expected_rules": [
+        "GCI016"
+      ],
+      "mapped_rules": [
+        "GCI016"
+      ],
+      "fired_rules": [
+        "GCI016"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 1,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Concurrent battle message handlers run without any asyncio.Lock, so two tasks for the same battle can interleave state updates \u2014 classic async race condition.",
+      "sample_finding": "A lock statement was removed from changed code.",
+      "sample_evidence": "signal=DET-CONC-004; unknown:143 self._battle_locks[battle_tag] = asyncio.Lock()"
+    },
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-13",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/hsahovic/poke-env/pull/858",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI016"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Introduces per-battle asyncio.Lock objects to serialize concurrent message handlers \u2014 this is the correct thread-safe fix.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-15",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/abpframework/abp/pull/25155",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": true,
+      "classification": "tp",
+      "expected_rules": [
+        "GCI016"
+      ],
+      "mapped_rules": [
+        "GCI016"
+      ],
+      "fired_rules": [
+        "GCI007",
+        "GCI016"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 2,
+      "high_severity_count": 2,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "GetAwaiter().GetResult() blocks the calling thread, but the overall fix reads stdout and stderr concurrently via Task.WhenAll \u2014 debatable: avoids the pipe deadlock but still blocks the outer thread.",
+      "sample_finding": "Blocking async/synchronization pattern was introduced in changed code.",
+      "sample_evidence": "signal=DET-CONC-001; unknown:143 var results = Task.WhenAll(outputTask, errorTask).GetAwaiter().GetResult();"
+    },
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-16",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/hsahovic/poke-env/pull/858",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": true,
+      "classification": "tp",
+      "expected_rules": [
+        "GCI016"
+      ],
+      "mapped_rules": [
+        "GCI016"
+      ],
+      "fired_rules": [
+        "GCI016"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 1,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Per-battle lock guard and lock cleanup are both removed, so concurrent battle messages can interleave updates and leave stale shared-state bookkeeping behind.",
+      "sample_finding": "A lock statement was removed from changed code.",
+      "sample_evidence": "signal=DET-CONC-004; unknown:142 self._battle_locks[battle_tag] = asyncio.Lock()"
+    },
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-17",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/home-assistant/core/pull/162499",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI016"
+      ],
+      "fired_rules": [
+        "GCI005"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 0,
+      "medium_severity_count": 1,
+      "low_severity_count": 0,
+      "notes": "Entity platforms explicitly set PARALLEL_UPDATES = 0, serializing update execution to prevent overlapping controller operations.",
+      "sample_finding": "Code behavior changed without meaningful new test assertions on the changed path.",
+      "sample_evidence": "signal=DET-COV-001; diff metadata: files_changed=2, test_files_changed=0, assertion_like_test_lines_added=0"
+    },
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-18",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/microsoft/teams.net/pull/402",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI016"
+      ],
+      "fired_rules": [
+        "GCI005"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 0,
+      "medium_severity_count": 1,
+      "low_severity_count": 0,
+      "notes": "Blocking ConfigureAwait(false).GetAwaiter().GetResult wrappers are replaced with async handlers that await task completion, reducing sync-over-async deadlock risk.",
+      "sample_finding": "Code behavior changed without meaningful new test assertions on the changed path.",
+      "sample_evidence": "signal=DET-COV-001; diff metadata: files_changed=1, test_files_changed=0, assertion_like_test_lines_added=0"
+    },
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-19",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/microsoft/teams.net/pull/402",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": true,
+      "classification": "tp",
+      "expected_rules": [
+        "GCI016"
+      ],
+      "mapped_rules": [
+        "GCI016"
+      ],
+      "fired_rules": [
+        "GCI005",
+        "GCI016"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 2,
+      "high_severity_count": 1,
+      "medium_severity_count": 1,
+      "low_severity_count": 0,
+      "notes": "The DI factory call keeps synchronous GetAwaiter().GetResult and only adds ConfigureAwait(false); deadlock likelihood drops but sync-over-async blocking remains.",
+      "sample_finding": "Blocking async/synchronization pattern was introduced in changed code.",
+      "sample_evidence": "signal=DET-CONC-001; Libraries/Microsoft.Teams.Extensions/Microsoft.Teams.Extensions.Hosting/Microsoft.Teams.Apps.Extensions/ServiceCollection.cs:103 collection.AddSingleton(provider =\u003E factory(provider).ConfigureAwait(false).GetAwaiter().GetResult());"
+    },
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-20",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/home-assistant/core/pull/151997",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": true,
+      "classification": "tp",
+      "expected_rules": [
+        "GCI016"
+      ],
+      "mapped_rules": [
+        "GCI016"
+      ],
+      "fired_rules": [
+        "GCI016"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 1,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Shared modbus client call path removes asyncio.Lock serialization, increasing concurrent request interleaving risk.",
+      "sample_finding": "A lock statement was removed from changed code.",
+      "sample_evidence": "signal=DET-CONC-004; unknown:256 self._lock = asyncio.Lock()"
+    },
+    {
+      "fixture_set": "gci0016",
+      "fixture_id": "gci0016-21",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/home-assistant/core/pull/159106",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI016"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Speaker grouping is applied incrementally with per-step waits, explicitly reducing topology race hazards.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0017",
+      "fixture_id": "gci0017-06",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/Phudit-2547/ChuMaiNichi/pull/1",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI017"
+      ],
+      "mapped_rules": [
+        "GCI017"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI017"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "SQL query built via string interpolation (injection), user-supplied input passed directly to the database, and no error handling \u2014 three compounding high-severity signals with no tests changed.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0017",
+      "fixture_id": "gci0017-08",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/steq98ai-githng/GY-langchain/pull/22",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI017"
+      ],
+      "mapped_rules": [
+        "GCI017"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI017"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Blocking HTTP call in async init() stalls the event loop; no timeout on the request; no error handling around the JSON parse; and zero test coverage of the change \u2014 four high-severity signals stacked together.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0017",
+      "fixture_id": "gci0017-09",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/hsahovic/poke-env/pull/858",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI017"
+      ],
+      "mapped_rules": [
+        "GCI017"
+      ],
+      "fired_rules": [
+        "GCI016"
+      ],
+      "missing_expected_rules": [
+        "GCI017"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 1,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Removes per-battle locking (race condition reintroduced), adds a shared mutable dict pop() call outside the lock, and removes battle_tag cleanup in the finish handler \u2014 three interacting state-corruption vectors with no test changes.",
+      "sample_finding": "A lock statement was removed from changed code.",
+      "sample_evidence": "signal=DET-CONC-004; unknown:142 self._battle_locks[battle_tag] = asyncio.Lock()"
+    },
+    {
+      "fixture_set": "gci0017",
+      "fixture_id": "gci0017-10",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/MoonLadderStudios/MoonMind/pull/488",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI017"
+      ],
+      "mapped_rules": [
+        "GCI017"
+      ],
+      "fired_rules": [
+        "GCI016"
+      ],
+      "missing_expected_rules": [
+        "GCI017"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 1,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Converts async polling function to sync (blocking event loop), uses broad except to swallow all errors including non-transient failures, and removes asyncio.to_thread safety wrapper \u2014 three high-severity signals: blocking I/O, silent error swallowing, and behavioral regression.",
+      "sample_finding": "Blocking async/synchronization pattern was introduced in changed code.",
+      "sample_evidence": "signal=DET-CONC-001; unknown:970 time.sleep(poll_interval)"
+    },
+    {
+      "fixture_set": "gci0017",
+      "fixture_id": "gci0017-11",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/CoraCodeDev/PdfSplitter/pull/3",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI017"
+      ],
+      "mapped_rules": [
+        "GCI017"
+      ],
+      "fired_rules": [
+        "GCI004",
+        "GCI016"
+      ],
+      "missing_expected_rules": [
+        "GCI017"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 2,
+      "high_severity_count": 1,
+      "medium_severity_count": 1,
+      "low_severity_count": 0,
+      "notes": "Removes IDisposable implementation (resource leak on every page render), introduces Task.Run().Result blocking in UI property getter, and drops the null-check guard \u2014 memory leak plus deadlock risk with no tests.",
+      "sample_finding": "Blocking async/synchronization pattern was introduced in changed code.",
+      "sample_evidence": "signal=DET-CONC-001; unknown:12 public ImageSource Preview =\u003E ImageSource.FromStream(() =\u003E Task.Run(GeneratePreview).Result.AsStream());"
+    },
+    {
+      "fixture_set": "gci0017",
+      "fixture_id": "gci0017-12",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/Phudit-2547/ChuMaiNichi/pull/1",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI017"
+      ],
+      "fired_rules": [
+        "GCI005"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 1,
+      "notes": "Migrates SQL string interpolation to parameterized queries, adds multi-statement injection detection, and wraps execution in try/catch \u2014 clean security hardening with no new risks introduced.",
+      "sample_finding": "A try-catch block was introduced inside a test method.",
+      "sample_evidence": "signal=DET-TEST-003; unknown:23 try {"
+    },
+    {
+      "fixture_set": "gci0017",
+      "fixture_id": "gci0017-13",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/137296",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI017"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Listener registration now guards startup sequencing to avoid deadlocks without introducing additional high-severity production risk signals.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0018",
+      "fixture_id": "gci0018-01",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/rust-lang/rust/pull/154641",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI018"
+      ],
+      "mapped_rules": [
+        "GCI018"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI018"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "A correctness guard is added, but broad lockfile churn and mixed concern scope raise ownership risk for safely shipping and validating the change.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0018",
+      "fixture_id": "gci0018-02",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/grafana/grafana/pull/119491",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI018"
+      ],
+      "mapped_rules": [
+        "GCI018"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI018"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Failure telemetry is removed from a production path, reducing post-deploy accountability for diagnosing and remediating runtime breakages.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0018",
+      "fixture_id": "gci0018-03",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/mastodon/mastodon/pull/34743",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI018"
+      ],
+      "mapped_rules": [
+        "GCI018"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI018"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Retries remain but structured request/backtrace logging is dropped, weakening ownership and incident traceability expectations for senior-quality changes.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0018",
+      "fixture_id": "gci0018-04",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/prometheus/prometheus/pull/16000",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI018"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Log visibility is raised from debug to info without introducing deferred correctness or latent known-bad behavior.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0018",
+      "fixture_id": "gci0018-05",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/136395",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI018"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Logging API modernization preserves explicit error returns and operational semantics, so accountability expectations remain intact.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0019",
+      "fixture_id": "gci0019-01",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/z-alzayer/PixelPix3D/pull/22",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI019"
+      ],
+      "fired_rules": [
+        "GCI005"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 0,
+      "medium_severity_count": 1,
+      "low_severity_count": 0,
+      "notes": "Refactor replaces duplicated literal arrays and local macro blocks with shared constants/macros, reducing duplication.",
+      "sample_finding": "Code behavior changed without meaningful new test assertions on the changed path.",
+      "sample_evidence": "signal=DET-COV-001; diff metadata: files_changed=2, test_files_changed=0, assertion_like_test_lines_added=0"
+    },
+    {
+      "fixture_set": "gci0019",
+      "fixture_id": "gci0019-03",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/hxcan/sisterfuture/pull/249",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI019"
+      ],
+      "fired_rules": [
+        "GCI005"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 0,
+      "medium_severity_count": 1,
+      "low_severity_count": 0,
+      "notes": "A duplicated tool implementation file is removed as part of duplication cleanup.",
+      "sample_finding": "Code behavior changed without meaningful new test assertions on the changed path.",
+      "sample_evidence": "signal=DET-COV-001; diff metadata: files_changed=1, test_files_changed=0, assertion_like_test_lines_added=0"
+    },
+    {
+      "fixture_set": "gci0019",
+      "fixture_id": "gci0019-04",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/136395",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI019"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Errorf-to-ErrorS migration standardizes logging API style and does not introduce copy-pasted control-flow branches.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0019",
+      "fixture_id": "gci0019-05",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/prometheus/prometheus/pull/16000",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI019"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Debug-to-info log level tuning changes verbosity only and does not add duplicated logic blocks.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0019",
+      "fixture_id": "gci0019-06",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/137201",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI019"
+      ],
+      "mapped_rules": [
+        "GCI019"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI019"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "A second placement scoring pipeline is introduced with explicit duplicate-flow coupling to RunScorePlugins, raising divergence risk.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0019",
+      "fixture_id": "gci0019-07",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/137489",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI019"
+      ],
+      "mapped_rules": [
+        "GCI019"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI019"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Pod-group scheduling adds bespoke score aggregation and tie-break loops instead of shared scorer reuse, increasing duplicate logic maintenance risk.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0019",
+      "fixture_id": "gci0019-08",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/103537",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI019"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Shared shouldDelegateList helper removes duplicated list-delegation branches across cacher list paths.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0019",
+      "fixture_id": "gci0019-09",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/home-assistant/core/pull/166640",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI019"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Todo item trigger logic is consolidated into an abstract base, reducing repeated branch implementations.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0020",
+      "fixture_id": "gci0020-03",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/dotnetcameroon/website/pull/154",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI020"
+      ],
+      "mapped_rules": [
+        "GCI020"
+      ],
+      "fired_rules": [
+        "GCI005"
+      ],
+      "missing_expected_rules": [
+        "GCI020"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 0,
+      "medium_severity_count": 1,
+      "low_severity_count": 0,
+      "notes": "Removes repository and workspace package-lock files while ignoring them in git, increasing supply-chain drift risk across environments.",
+      "sample_finding": "Code behavior changed without meaningful new test assertions on the changed path.",
+      "sample_evidence": "signal=DET-COV-001; diff metadata: files_changed=3, test_files_changed=0, assertion_like_test_lines_added=0"
+    },
+    {
+      "fixture_set": "gci0020",
+      "fixture_id": "gci0020-04",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/thiago-slb/react-fun-with-flags-ts/pull/12",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI020"
+      ],
+      "fired_rules": [
+        "GCI005"
+      ],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 1,
+      "high_severity_count": 0,
+      "medium_severity_count": 1,
+      "low_severity_count": 0,
+      "notes": "CI switches from npm install to npm ci and starts tracking package-lock.json, strengthening dependency determinism.",
+      "sample_finding": "Code behavior changed without meaningful new test assertions on the changed path.",
+      "sample_evidence": "signal=DET-COV-001; diff metadata: files_changed=3, test_files_changed=0, assertion_like_test_lines_added=0"
+    },
+    {
+      "fixture_set": "gci0020",
+      "fixture_id": "gci0020-05",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/home-assistant/core/pull/158754",
+      "should_fire": true,
+      "expected_outcome": "fire",
+      "passed": false,
+      "classification": "fn",
+      "expected_rules": [
+        "GCI020"
+      ],
+      "mapped_rules": [
+        "GCI020"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [
+        "GCI020"
+      ],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Ignoring uv.lock allows untracked lockfile drift and weakens reproducible dependency resolution.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0020",
+      "fixture_id": "gci0020-06",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/django/django/pull/21003",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI020"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "GitHub Action reference is pinned to an immutable commit SHA, strengthening workflow supply-chain integrity.",
+      "sample_finding": null,
+      "sample_evidence": null
+    },
+    {
+      "fixture_set": "gci0020",
+      "fixture_id": "gci0020-07",
+      "origin": "real",
+      "is_synthetic": false,
+      "source_url": "https://github.com/kubernetes/kubernetes/pull/138199",
+      "should_fire": false,
+      "expected_outcome": "do-not-fire",
+      "passed": true,
+      "classification": "tn",
+      "expected_rules": [],
+      "mapped_rules": [
+        "GCI020"
+      ],
+      "fired_rules": [],
+      "missing_expected_rules": [],
+      "unexpected_mapped_rules": [],
+      "findings_count": 0,
+      "high_severity_count": 0,
+      "medium_severity_count": 0,
+      "low_severity_count": 0,
+      "notes": "Pause image references are upgraded to explicit patch-level semver with stricter matching rules to reduce version drift.",
+      "sample_finding": null,
+      "sample_evidence": null
+    }
+  ]
+}

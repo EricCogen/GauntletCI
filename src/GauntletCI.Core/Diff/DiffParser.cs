@@ -54,12 +54,31 @@ public static class DiffParser
                 continue;
             }
 
+            // Bare unified diff format: "--- a/path" starts a new file when there is no
+            // preceding "diff --git" header. Trigger when no file is open yet, or when
+            // we are already past the @@ stage of a previous file (currentHunk != null).
+            if (line.StartsWith("--- a/") && (currentFile == null || currentHunk != null))
+            {
+                if (currentFile != null)
+                    files.Add(FinalizeFile(currentFile, isAdded, isDeleted));
+
+                var path = line[6..];
+                currentFile = new DiffFile { OldPath = path, NewPath = path };
+                currentHunk = null;
+                isAdded = false;
+                isDeleted = false;
+                continue;
+            }
+
             if (currentFile == null) continue;
+
+            // Update new path from "+++ b/path" (bare format or git format — safe to apply always)
+            if (line.StartsWith("+++ b/")) { currentFile.NewPath = line[6..]; continue; }
 
             if (AddedFileMarker.IsMatch(line)) { isAdded = true; continue; }
             if (DeletedFileMarker.IsMatch(line)) { isDeleted = true; continue; }
 
-            // Skip index/--- /+++ header lines
+            // Skip git diff header lines (index, old-path, new-path)
             if (line.StartsWith("index ") || line.StartsWith("--- ") || line.StartsWith("+++ "))
                 continue;
 
