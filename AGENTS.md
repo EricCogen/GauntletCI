@@ -26,13 +26,22 @@ All 126 tests must pass before committing.
 - Latest checkpoint: `005-banner-rewrite-tier1-tier2-complete.md`
 - To restore todos in a new session: run the SQL in todos-seed.sql via the sql tool
   (The two ALTER TABLE lines may error harmlessly if columns already exist — skip them)
-- Verify: `SELECT status, COUNT(*) FROM todos GROUP BY status;` → done=15, pending=24, blocked=2
+- Verify: `SELECT status, COUNT(*) FROM todos GROUP BY status;` → done=45, pending=17, blocked=4
 
 ## Todo Priorities
 - P1 (done): foundation fixes
 - P2 (done): ship-it features
-- P3 (pending): new rules GCI0021–0027, postmortem-mode, pr-annotations
-- P4 (pending): moat telemetry pipeline, enterprise features, backlog
+- P3 (done): new rules GCI0021–0027, postmortem-mode, pr-annotations
+- P4 (done): moat telemetry pipeline (feedback, opt-in, hashing, upload, local store)
+- P4 (done): corpus ingestion (domain models, storage, manual ingestion, normalization)
+- P4 (pending): enterprise features (audit-export, mcp-server, risk-score, risk-classifier)
+- P4 (pending): corpus phase 2 (run, scoring, silver labels, batch hydration, gh-search, gh-archive, tests)
+- P4 (pending): ecosystem (vscode-extension, winget/brew, moat-bootstrap, block-mode, instrument-rules, model-download)
+
+## Seed Sync Convention (Option B)
+- After every `UPDATE todos SET status = '...' WHERE id = '...'`, immediately make a surgical
+  `edit` to the matching row in `todos-seed.sql` — just flip the status string for that one ID.
+- Also update the `-- Status:` header counts in todos-seed.sql when they change.
 
 ## Key Conventions
 - Commit trailer: `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
