@@ -54,6 +54,21 @@ public static class TelemetryCollector
                 });
             }
 
+            // 1 event per rule — timing and outcome for model training / perf monitoring
+            foreach (var metric in result.RuleMetrics)
+            {
+                await TelemetryStore.AppendAsync(new TelemetryEvent
+                {
+                    EventType    = "rule_metric",
+                    InstallId    = installId,
+                    RepoHash     = repoHash,
+                    RuleId       = metric.RuleId,
+                    DurationMs   = metric.DurationMs,
+                    Outcome      = metric.Outcome.ToString(),
+                    FindingCount = metric.FindingCount,
+                });
+            }
+
             // Upload in the background only for shared mode
             if (mode == TelemetryMode.Shared)
                 TelemetryUploader.UploadInBackground();

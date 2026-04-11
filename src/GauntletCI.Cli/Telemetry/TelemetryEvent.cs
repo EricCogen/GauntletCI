@@ -28,6 +28,10 @@ public record TelemetryEvent
     /// <summary>File extension only — never the full path.</summary>
     public string? FileExt    { get; init; }
 
+    // rule_metric event fields
+    public long?   DurationMs  { get; init; }
+    public string? Outcome     { get; init; }
+
     // feedback event fields
     /// <summary>"up" | "down"</summary>
     public string? Vote { get; init; }
