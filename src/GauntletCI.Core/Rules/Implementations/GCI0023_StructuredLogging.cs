@@ -9,6 +9,8 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0023 – Structured Logging
 /// Detects log calls using string interpolation instead of structured key-value pairs,
 /// and catch blocks in critical sections without any log statement.
+/// See also: GCI0029 (PII Entity Logging Leak) — detects PII terms in log arguments.
+/// These rules are complementary: GCI0023 checks format, GCI0029 checks content.
 /// </summary>
 public class GCI0023_StructuredLogging : RuleBase
 {
