@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GauntletCI.Core\GauntletCI.Core.csproj" />
+    <ProjectReference Include="..\GauntletCI.Corpus\GauntletCI.Corpus.csproj" />
     <ProjectReference Include="..\GauntletCI.Llm\GauntletCI.Llm.csproj" />
   </ItemGroup>
 
