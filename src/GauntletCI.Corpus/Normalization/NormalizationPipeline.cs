@@ -16,7 +16,6 @@ namespace GauntletCI.Corpus.Normalization;
 public sealed class NormalizationPipeline
 {
     private readonly FixtureFolderStore _store;
-    private readonly string _fixturesBasePath;
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -24,10 +23,9 @@ public sealed class NormalizationPipeline
         Converters = { new JsonStringEnumConverter() },
     };
 
-    public NormalizationPipeline(FixtureFolderStore store, string fixturesBasePath = "./data/fixtures")
+    public NormalizationPipeline(FixtureFolderStore store)
     {
         _store = store;
-        _fixturesBasePath = fixturesBasePath;
     }
 
     /// <summary>
@@ -37,9 +35,10 @@ public sealed class NormalizationPipeline
     public async Task<FixtureMetadata> NormalizeAsync(
         HydratedPullRequest pr,
         string source = "manual",
+        FixtureTier tier = FixtureTier.Discovery,
         CancellationToken ct = default)
     {
-        var metadata = FixtureNormalizer.Normalize(pr, source);
+        var metadata = FixtureNormalizer.Normalize(pr, source, tier);
 
         // 1. metadata.json + notes.md template + SQLite upsert
         await _store.SaveMetadataAsync(metadata, ct);
@@ -57,7 +56,8 @@ public sealed class NormalizationPipeline
 
     /// <summary>
     /// Re-normalizes a fixture that already has raw/ snapshots on disk,
-    /// without hitting the GitHub API again.
+    /// without hitting the GitHub API again. Preserves the original hydration
+    /// timestamp from existing metadata.json to keep normalization idempotent.
     /// </summary>
     public async Task<FixtureMetadata> ReNormalizeFromRawAsync(
         string fixtureId,
@@ -67,7 +67,7 @@ public sealed class NormalizationPipeline
         int prNumber,
         CancellationToken ct = default)
     {
-        var fixturePath = FixtureIdHelper.GetFixturePath(_fixturesBasePath, tier, fixtureId);
+        var fixturePath = FixtureIdHelper.GetFixturePath(_store.BasePath, tier, fixtureId);
         var rawPath     = FixtureIdHelper.GetRawPath(fixturePath);
 
         var prJsonPath       = Path.Combine(rawPath, "pr.json");
@@ -77,6 +77,10 @@ public sealed class NormalizationPipeline
 
         if (!File.Exists(prJsonPath))
             throw new FileNotFoundException($"Raw snapshot not found: {prJsonPath}");
+        if (!File.Exists(filesJsonPath))
+            throw new FileNotFoundException($"Raw snapshot not found: {filesJsonPath}");
+        if (!File.Exists(commentsJsonPath))
+            throw new FileNotFoundException($"Raw snapshot not found: {commentsJsonPath}");
 
         var prJson       = await File.ReadAllTextAsync(prJsonPath, ct);
         var filesJson    = await File.ReadAllTextAsync(filesJsonPath, ct);
@@ -84,12 +88,15 @@ public sealed class NormalizationPipeline
         var diffText     = File.Exists(diffPatchPath)
             ? await File.ReadAllTextAsync(diffPatchPath, ct) : "";
 
-        // Reconstruct HydratedPullRequest from raw snapshots
+        // Preserve original hydration timestamp for idempotency
+        var originalTimestamp = await ReadExistingHydratedAtUtcAsync(fixturePath, ct);
+
         var pr = ReconstructFromRaw(
             repoOwner, repoName, prNumber,
-            prJson, filesJson, commentsJson, diffText);
+            prJson, filesJson, commentsJson, diffText,
+            originalTimestamp);
 
-        return await NormalizeAsync(pr, source: "re-normalized", ct);
+        return await NormalizeAsync(pr, source: "re-normalized", tier: tier, ct: ct);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
@@ -98,14 +105,33 @@ public sealed class NormalizationPipeline
     {
         if (string.IsNullOrEmpty(diffText)) return;
 
-        var fixturePath  = FixtureIdHelper.GetFixturePath(_fixturesBasePath, meta.Tier, meta.FixtureId);
+        var fixturePath  = FixtureIdHelper.GetFixturePath(_store.BasePath, meta.Tier, meta.FixtureId);
         var diffPatchPath = Path.Combine(fixturePath, "diff.patch");
         await File.WriteAllTextAsync(diffPatchPath, diffText, ct);
     }
 
+    private static async Task<DateTime?> ReadExistingHydratedAtUtcAsync(
+        string fixturePath, CancellationToken ct)
+    {
+        var metaPath = Path.Combine(fixturePath, "metadata.json");
+        if (!File.Exists(metaPath)) return null;
+
+        try
+        {
+            var json = await File.ReadAllTextAsync(metaPath, ct);
+            var meta = JsonSerializer.Deserialize<FixtureMetadata>(json, JsonOpts);
+            return meta?.CreatedAtUtc;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
     private static HydratedPullRequest ReconstructFromRaw(
         string owner, string repo, int prNumber,
-        string prJson, string filesJson, string commentsJson, string diffText)
+        string prJson, string filesJson, string commentsJson, string diffText,
+        DateTime? preservedTimestamp)
     {
         var ghPr       = JsonSerializer.Deserialize<RawPrSnapshot>(prJson, JsonOpts);
         var ghFiles    = JsonSerializer.Deserialize<List<RawFileSnapshot>>(filesJson, JsonOpts) ?? [];
@@ -133,6 +159,8 @@ public sealed class NormalizationPipeline
             Url          = c.HtmlUrl ?? "",
         }).ToList();
 
+        var hydratedAt = preservedTimestamp ?? DateTime.UtcNow;
+
         return new HydratedPullRequest
         {
             RepoOwner         = owner,
@@ -150,7 +178,7 @@ public sealed class NormalizationPipeline
             ReviewComments    = reviewComments,
             DiffText          = diffText,
             PatchText         = diffText,
-            HydratedAtUtc     = DateTime.UtcNow,
+            HydratedAtUtc     = hydratedAt,
         };
     }
 
