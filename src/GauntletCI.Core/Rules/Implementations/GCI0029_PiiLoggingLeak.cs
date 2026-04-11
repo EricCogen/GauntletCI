@@ -8,6 +8,8 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// <summary>
 /// GCI0029 – PII Entity Logging Leak
 /// Detects PII terms in log calls in added lines of .cs files.
+/// See also: GCI0023 (Structured Logging) — detects format issues in log calls.
+/// These rules are complementary: GCI0029 checks content (PII), GCI0023 checks format.
 /// </summary>
 public class GCI0029_PiiLoggingLeak : RuleBase
 {
