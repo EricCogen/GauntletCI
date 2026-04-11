@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using System.Text.RegularExpressions;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.StaticAnalysis;
@@ -8,12 +9,16 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// <summary>
 /// GCI0024 – Resource Lifecycle
 /// Detects disposable resources allocated without a using statement or try/finally disposal.
+/// Covers both explicit known types (FileStream, SqlConnection, …) and any type whose name
+/// ends with a disposable suffix (Stream, Reader, Writer, Connection, Client, etc.).
+/// Absorbs GCI0030 detection scope; GCI0030 is now superseded by this rule.
 /// </summary>
 public class GCI0024_ResourceLifecycle : RuleBase
 {
     public override string Id => "GCI0024";
     public override string Name => "Resource Lifecycle";
 
+    // Explicit known-type prefixes (fast path)
     private static readonly string[] DisposableTypes =
     [
         "new FileStream(", "new StreamWriter(", "new StreamReader(", "new MemoryStream(",
@@ -25,6 +30,17 @@ public class GCI0024_ResourceLifecycle : RuleBase
         "new GZipStream(", "new DeflateStream(", "new CryptoStream(",
         "new X509Certificate(", "new RSACryptoServiceProvider("
     ];
+
+    // Suffix-based heuristic (from GCI0030) — catches any type whose name ends in these
+    private static readonly string[] DisposableSuffixes =
+    [
+        "Stream", "Reader", "Writer", "Connection", "Command", "Client",
+        "Listener", "Channel", "Context", "Provider", "Session", "Transaction",
+        "Certificate", "Scope", "Timer", "Enumerator"
+    ];
+
+    private static readonly Regex NewTypeRegex =
+        new(@"new ([A-Z][A-Za-z0-9]+)\(", RegexOptions.Compiled);
 
     public override Task<List<Finding>> EvaluateAsync(
         DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
@@ -51,18 +67,11 @@ public class GCI0024_ResourceLifecycle : RuleBase
             if (line.Kind != DiffLineKind.Added) continue;
             var content = line.Content;
 
-            string? matched = null;
-            foreach (var type in DisposableTypes)
-            {
-                if (content.Contains(type, StringComparison.OrdinalIgnoreCase))
-                { matched = type; break; }
-            }
-            if (matched is null) continue;
+            string? typeName = MatchDisposableType(content);
+            if (typeName is null) continue;
 
-            // Safe if: line itself contains "using " or "await using"
             if (content.Contains("using ", StringComparison.Ordinal)) continue;
 
-            // Safe if preceded by "using" on previous non-blank added/context line
             bool prevHasUsing = false;
             for (int j = i - 1; j >= Math.Max(0, i - 3); j--)
             {
@@ -74,7 +83,6 @@ public class GCI0024_ResourceLifecycle : RuleBase
             }
             if (prevHasUsing) continue;
 
-            // Safe if there's a .Dispose() or try/finally in the surrounding window
             int winStart = Math.Max(0, i - 2);
             int winEnd = Math.Min(allLines.Count, i + 20);
             bool hasDispose = allLines[winStart..winEnd].Any(l =>
@@ -82,14 +90,34 @@ public class GCI0024_ResourceLifecycle : RuleBase
                 l.Content.Contains("finally", StringComparison.Ordinal));
             if (hasDispose) continue;
 
-            var typeName = matched.Replace("new ", "").TrimEnd('(');
             findings.Add(CreateFinding(
                 summary: $"{typeName} allocated without using statement in {file.NewPath}.",
                 evidence: $"Line {line.LineNumber}: {content.Trim()}",
-                whyItMatters: $"{typeName} implements IDisposable. If not disposed, it leaks OS handles, file locks, or connection pool slots — especially under exceptions.",
-                suggestedAction: "Wrap in a using statement: using var resource = new " + typeName + "(...); — this guarantees disposal even when exceptions occur.",
+                whyItMatters: $"{typeName} implements IDisposable. Without using, it leaks OS handles or connection pool slots under exceptions.",
+                suggestedAction: $"Wrap in `using var resource = new {typeName}(...);` to guarantee disposal.",
                 confidence: Confidence.High));
         }
+    }
+
+    private static string? MatchDisposableType(string content)
+    {
+        // Fast path: explicit known types
+        foreach (var knownType in DisposableTypes)
+        {
+            if (content.Contains(knownType, StringComparison.OrdinalIgnoreCase))
+                return knownType.Replace("new ", "").TrimEnd('(');
+        }
+
+        // Suffix heuristic: any new XxxYyy( where the type name ends with a disposable suffix
+        var match = NewTypeRegex.Match(content);
+        if (match.Success)
+        {
+            var name = match.Groups[1].Value;
+            if (DisposableSuffixes.Any(suffix => name.EndsWith(suffix, StringComparison.Ordinal)))
+                return name;
+        }
+
+        return null;
     }
 
     private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)
