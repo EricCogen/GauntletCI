@@ -31,8 +31,7 @@ public class GCI0005_TestCoverageRelevance : RuleBase
                 suggestedAction: "Add or update tests for the changed code files.",
                 confidence: Confidence.Medium));
         }
-
-        if (testFiles.Count > 0 && codeFiles.Count == 0)
+        else if (testFiles.Count > 0 && codeFiles.Count == 0)
         {
             findings.Add(CreateFinding(
                 summary: "Test files changed but no corresponding production code changed.",
@@ -45,11 +44,8 @@ public class GCI0005_TestCoverageRelevance : RuleBase
         return Task.FromResult(findings);
     }
 
-    private static bool IsCodeFile(string path)
-    {
-        if (!path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)) return false;
-        return !IsTestFile(path);
-    }
+    private static bool IsCodeFile(string path) =>
+        path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) && !IsTestFile(path);
 
     private static bool IsTestFile(string path) =>
         path.Contains("Test", StringComparison.OrdinalIgnoreCase) ||

@@ -11,6 +11,21 @@ namespace GauntletCI.Cli.Output;
 /// </summary>
 public static class ConsoleReporter
 {
+    // Rules whose Evidence may contain sensitive matched content (secrets, PII).
+    // For these, the code snippet portion is redacted in CLI output — only file/line is shown.
+    private static readonly HashSet<string> SensitiveRuleIds = ["GCI0012", "GCI0029"];
+
+    /// <summary>
+    /// Masks the code-snippet portion of an evidence string, keeping only the file/line reference.
+    /// e.g. "Line 42: _logger.Log(user.Email)" → "Line 42: [REDACTED]"
+    /// e.g. "src/Auth.cs:42" → unchanged (no snippet present)
+    /// </summary>
+    public static string MaskEvidenceSnippet(string evidence)
+    {
+        var idx = evidence.IndexOf(": ", StringComparison.Ordinal);
+        return idx >= 0 ? $"{evidence[..(idx + 2)]}[REDACTED]" : evidence;
+    }
+
     public static void Report(EvaluationResult result, bool ascii = false)
     {
         var originalColor = Console.ForegroundColor;
@@ -73,7 +88,10 @@ public static class ConsoleReporter
 
         Console.WriteLine($"  Summary  : {finding.Summary}");
         Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.WriteLine($"  Evidence : {finding.Evidence}");
+        var evidenceDisplay = SensitiveRuleIds.Contains(finding.RuleId)
+            ? MaskEvidenceSnippet(finding.Evidence)
+            : finding.Evidence;
+        Console.WriteLine($"  Evidence : {evidenceDisplay}");
         Console.ResetColor();
         Console.WriteLine($"  Why      : {finding.WhyItMatters}");
         Console.ForegroundColor = ConsoleColor.Cyan;

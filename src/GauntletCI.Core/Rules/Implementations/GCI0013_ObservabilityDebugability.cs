@@ -17,10 +17,16 @@ public class GCI0013_ObservabilityDebugability : RuleBase
     private static readonly string[] LoggingPatterns =
         ["_logger.", "Log.", "Console.Write", "Trace.", "Debug.Write", "logger."];
 
+    private static readonly string[] HighSeverityLogPatterns =
+        [".error(", ".Error(", "Errorf(", "ErrorS(", "level.Error(", "log.Error(",
+         ".fatal(", ".Fatal(", ".Panic(", ".panic(", ".critical(", ".Critical("];
+
     public override Task<List<Finding>> EvaluateAsync(
         DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
     {
         var findings = new List<Finding>();
+
+        CheckRemovedErrorLogging(diff, findings);
 
         foreach (var file in diff.Files)
         {
@@ -31,6 +37,29 @@ public class GCI0013_ObservabilityDebugability : RuleBase
         }
 
         return Task.FromResult(findings);
+    }
+
+    private void CheckRemovedErrorLogging(DiffContext diff, List<Finding> findings)
+    {
+        foreach (var file in diff.Files)
+        {
+            int removedHighSev = file.RemovedLines
+                .Count(l => HighSeverityLogPatterns.Any(p => l.Content.Contains(p, StringComparison.Ordinal)));
+
+            if (removedHighSev == 0) continue;
+
+            int addedHighSev = file.AddedLines
+                .Count(l => HighSeverityLogPatterns.Any(p => l.Content.Contains(p, StringComparison.Ordinal)));
+
+            if (addedHighSev >= removedHighSev) continue;
+
+            findings.Add(CreateFinding(
+                summary: $"High-severity error logging removed in {file.NewPath}.",
+                evidence: $"{removedHighSev} error-level log call(s) removed, {addedHighSev} added.",
+                whyItMatters: "Removing error-level logs on failure paths silences critical runtime diagnostics needed for production incident triage.",
+                suggestedAction: "Preserve error logging on failure paths, or ensure equivalent logging exists at the call site.",
+                confidence: Confidence.High));
+        }
     }
 
     private void CheckLargeMethodWithoutLogging(DiffFile file, List<Finding> findings)

@@ -23,7 +23,7 @@ public class DiffLine
 public class DiffFile
 {
     public string OldPath { get; init; } = string.Empty;
-    public string NewPath { get; init; } = string.Empty;
+    public string NewPath { get; set; } = string.Empty;
     public bool IsAdded { get; init; }
     public bool IsDeleted { get; init; }
     public bool IsRenamed => OldPath != NewPath && !IsAdded && !IsDeleted;

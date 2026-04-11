@@ -32,9 +32,9 @@ public class GCI0019Tests
     }
 
     [Fact]
-    public async Task TinyDiff_ShouldFlag()
+    public async Task TinyDiff_ShouldNotFlag()
     {
-        // Only 1 changed line total
+        // Single-line changes are valid refactors (var→const, value updates, etc.) — must not fire
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -48,7 +48,7 @@ public class GCI0019Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f => f.Summary.Contains("Very small diff"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Very small diff"));
     }
 
     [Fact]
