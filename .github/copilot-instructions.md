@@ -18,23 +18,42 @@ Each prompt should:
 
 ## Model Usage Strategy
 
-### Included Models (Default)
-Use for:
-- Rule implementation
-- Refactoring
-- Test generation
-- CLI wiring
-- File-level analysis
+### Model Selection by Task Type
 
-### Premium Models (Use Sparingly)
-Use for:
-- Architecture decisions
-- Cross-file reasoning
-- Complex debugging
-- Corpus/scoring design
+Switch models via `/model` in the main conversation, or set `model:` in sub-agent `task` calls.
 
-Rule:
-If the task fits in one file, do NOT use premium.
+| Task Type | Model | Why |
+|-----------|-------|-----|
+| Codebase exploration, file search, quick lookup | `claude-haiku-4.5` | Fastest, cheapest — explore agent default |
+| Build / test / lint execution | `claude-haiku-4.5` | Only needs to run a command and report pass/fail |
+| Rule implementation (single file) | `claude-sonnet-4.6` | Default — handles C# pattern matching well |
+| Refactoring, CLI wiring, test generation | `claude-sonnet-4.6` | Default — multi-step code tasks |
+| PR comment resolution (review fixes) | `claude-sonnet-4.6` | Default — targeted surgical changes |
+| Corpus pipeline (multi-file, 5+ files) | `claude-sonnet-4.6` | General-purpose agent default |
+| Architecture decisions, design review | `claude-opus-4.5` | Premium — cross-cutting reasoning |
+| Complex debugging (root cause unknown) | `claude-opus-4.5` | Premium — deep trace reasoning |
+| Scoring / evaluation algorithm design | `claude-opus-4.5` | Premium — mathematical precision matters |
+
+### Sub-Agent Model Override Examples
+
+```
+# Fast exploration (haiku — cheap)
+task(agent_type="explore", model="claude-haiku-4.5", ...)
+
+# Standard implementation (sonnet — default, no override needed)
+task(agent_type="general-purpose", ...)
+
+# Hard architecture problem (opus — premium)
+task(agent_type="general-purpose", model="claude-opus-4.5", ...)
+```
+
+### Rules of Thumb
+
+- One file, spec is clear → no agent, no model switch (stay on Sonnet)
+- Multi-file, >3 files → background agent on Sonnet
+- Search-only, no code changes → explore agent on Haiku
+- "Why is this broken?" + no obvious answer → switch to Opus
+- Opus for the whole session → never; switch back to Sonnet after the hard question
 
 ---
 
