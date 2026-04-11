@@ -96,6 +96,9 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
                     if (!seen.Add(key))
                         continue;
 
+                    if (query.MinReviewComments > 0 && !prReviewed.Contains(key))
+                        continue;
+
                     results.Add(candidate);
                 }
                 catch (JsonException)
@@ -122,11 +125,7 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
         for (var d = start; d <= end; d = d.AddDays(1))
         {
             for (var h = 0; h < 24; h++)
-            {
                 slots.Add((d, h));
-                if (slots.Count >= 24)
-                    return slots;
-            }
         }
 
         return slots;
