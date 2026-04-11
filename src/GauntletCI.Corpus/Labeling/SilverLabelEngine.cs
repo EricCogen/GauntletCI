@@ -101,21 +101,8 @@ public sealed class SilverLabelEngine
             });
         }
 
-        // Fallback: if no heuristic matched for a given rule, emit inconclusive label
-        // (not emitted here — the spec only emits inconclusive when none of the above apply globally)
-        if (labels.Count == 0)
-        {
-            labels.Add(new ExpectedFinding
-            {
-                RuleId             = "GCI0000",
-                ShouldTrigger      = false,
-                ExpectedConfidence = 0.0,
-                Reason             = "No heuristic patterns matched this diff",
-                LabelSource        = LabelSource.Heuristic,
-                IsInconclusive     = true,
-            });
-        }
-
+        // If no heuristic matched, return an empty list rather than emitting a synthetic
+        // rule ID (GCI0000 does not exist and would pollute scoring/aggregates).
         return Task.FromResult<IReadOnlyList<ExpectedFinding>>(labels);
     }
 
