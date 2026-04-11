@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Corpus.Interfaces;
 using GauntletCI.Corpus.Models;
-using GauntletCI.Corpus.Storage;
 
 namespace GauntletCI.Corpus.Discovery;
 
@@ -16,6 +15,7 @@ public sealed class ManualSeedProvider : IDiscoveryProvider
     public ManualSeedProvider(IReadOnlyList<string> prUrls) => _urls = prUrls;
 
     public string GetProviderName() => "manual";
+
     public bool SupportsIncrementalSync => false;
 
     public Task<IReadOnlyList<PullRequestCandidate>> SearchCandidatesAsync(
