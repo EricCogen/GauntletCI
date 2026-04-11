@@ -5,9 +5,11 @@ using System.Text.Json.Serialization;
 using GauntletCI.Corpus.Discovery;
 using GauntletCI.Corpus.Hydration;
 using GauntletCI.Corpus.Interfaces;
+using GauntletCI.Corpus.Labeling;
 using GauntletCI.Corpus.Models;
 using GauntletCI.Corpus.Normalization;
 using GauntletCI.Corpus.Runners;
+using GauntletCI.Corpus.Scoring;
 using GauntletCI.Corpus.Storage;
 using Microsoft.Data.Sqlite;
 
@@ -25,6 +27,10 @@ public static class CorpusCommand
         corpus.AddCommand(CreateDiscover());
         corpus.AddCommand(CreateRun());
         corpus.AddCommand(CreateRunAll());
+        corpus.AddCommand(CreateScore());
+        corpus.AddCommand(CreateReport());
+        corpus.AddCommand(CreateLabel());
+        corpus.AddCommand(CreateLabelAll());
         return corpus;
     }
 
@@ -631,6 +637,270 @@ public static class CorpusCommand
 
                 Console.WriteLine();
                 Console.WriteLine($"[corpus] Run-all complete: {completed} OK, {failed} skipped/failed, {totalFindings} total findings");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus score ───────────────────────────────────────────────
+
+    private static Command CreateScore()
+    {
+        var ruleOpt     = new Option<string?>("--rule",     "Filter by rule ID (e.g. GCI0001)");
+        var tierOpt     = new Option<string?>("--tier",     "Filter by tier (gold|silver|discovery)");
+        var dbOpt       = new Option<string> ("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string> ("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
+
+        var cmd = new Command("score", "Compute rule scorecards from corpus fixture results");
+        cmd.AddOption(ruleOpt);
+        cmd.AddOption(tierOpt);
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var ruleId   = ctx.ParseResult.GetValueForOption(ruleOpt);
+            var tierStr  = ctx.ParseResult.GetValueForOption(tierOpt);
+            var dbPath   = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct       = ctx.GetCancellationToken();
+
+            FixtureTier? tier = null;
+            if (!string.IsNullOrEmpty(tierStr))
+            {
+                if (!Enum.TryParse<FixtureTier>(tierStr, ignoreCase: true, out var parsed))
+                {
+                    Console.Error.WriteLine($"[corpus] Unknown tier '{tierStr}'. Use gold, silver, or discovery.");
+                    ctx.ExitCode = 1;
+                    return;
+                }
+                tier = parsed;
+            }
+
+            var (db, store, _) = await BuildPipeline(dbPath, fixtures, ct);
+            using (db)
+            {
+                var aggregator = new ScoreAggregator(store, db);
+                var scorecards = await aggregator.ScoreAsync(ruleId, tier, ct);
+
+                if (scorecards.Count == 0)
+                {
+                    Console.WriteLine("[corpus] No scorecards — run 'corpus run-all' first to generate actual.json files.");
+                    return;
+                }
+
+                const int colRule      = 10;
+                const int colTier      = 10;
+                const int colFixtures  = 9;
+                const int colTrigger   = 12;
+                const int colPrecision = 10;
+                const int colRecall    = 8;
+                const int colUseful    = 11;
+
+                var header = $"{"RuleId",-colRule}  {"Tier",-colTier}  {"Fixtures",-colFixtures}  {"TriggerRate",-colTrigger}  {"Precision",-colPrecision}  {"Recall",-colRecall}  {"Usefulness"}";
+                var sep    = new string('-', header.Length + 4);
+
+                Console.WriteLine(sep);
+                Console.WriteLine(header);
+                Console.WriteLine(sep);
+
+                foreach (var sc in scorecards.OrderBy(s => s.RuleId).ThenBy(s => s.Tier))
+                {
+                    Console.WriteLine(
+                        $"{sc.RuleId,-colRule}  {sc.Tier,-colTier}  {sc.Fixtures,-colFixtures}  " +
+                        $"{sc.TriggerRate,colTrigger:P1}  {sc.Precision,colPrecision:P1}  " +
+                        $"{sc.Recall,colRecall:P1}  {sc.AvgUsefulness:F1}/5");
+                }
+
+                Console.WriteLine(sep);
+                Console.WriteLine($"[corpus] {scorecards.Count} scorecard(s)");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus report ──────────────────────────────────────────────
+
+    private static Command CreateReport()
+    {
+        var outputOpt   = new Option<string>("--output",   () => "./corpus-report.md", "Output file path for the markdown report");
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
+
+        var cmd = new Command("report", "Export a markdown scorecard report for all rules");
+        cmd.AddOption(outputOpt);
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var outputPath = ctx.ParseResult.GetValueForOption(outputOpt)!;
+            var dbPath     = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures   = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct         = ctx.GetCancellationToken();
+
+            var (db, store, _) = await BuildPipeline(dbPath, fixtures, ct);
+            using (db)
+            {
+                var aggregator = new ScoreAggregator(store, db);
+                var exporter   = new MarkdownReportExporter(aggregator);
+                var markdown   = await exporter.ExportMarkdownAsync(ct);
+
+                var dir = Path.GetDirectoryName(outputPath);
+                if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+
+                await File.WriteAllTextAsync(outputPath, markdown, ct);
+                Console.WriteLine($"[corpus] Report written to {outputPath}");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus label --fixture <id> ────────────────────────────────
+
+    private static Command CreateLabel()
+    {
+        var fixtureOpt   = new Option<string>("--fixture",   "Fixture ID to label") { IsRequired = true };
+        var overwriteOpt = new Option<bool>  ("--overwrite", () => false, "Overwrite existing HumanReview/Seed labels with heuristic labels");
+        var dbOpt        = new Option<string>("--db",        () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt  = new Option<string>("--fixtures",  () => "./data/fixtures",             "Path to fixtures root directory");
+
+        var cmd = new Command("label", "Apply silver heuristic labels to a single corpus fixture");
+        cmd.AddOption(fixtureOpt);
+        cmd.AddOption(overwriteOpt);
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var fixtureId = ctx.ParseResult.GetValueForOption(fixtureOpt)!;
+            var overwrite = ctx.ParseResult.GetValueForOption(overwriteOpt);
+            var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures  = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct        = ctx.GetCancellationToken();
+
+            var (db, store, _) = await BuildPipeline(dbPath, fixtures, ct);
+            using (db)
+            {
+                try
+                {
+                    var metadata = await store.GetMetadataAsync(fixtureId, ct);
+                    if (metadata is null)
+                    {
+                        Console.Error.WriteLine($"[corpus] Fixture '{fixtureId}' not found.");
+                        ctx.ExitCode = 1;
+                        return;
+                    }
+
+                    var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, metadata.Tier, fixtureId);
+                    var diffPath    = Path.Combine(fixturePath, "diff.patch");
+                    if (!File.Exists(diffPath))
+                    {
+                        Console.Error.WriteLine($"[corpus] diff.patch not found at {diffPath}");
+                        ctx.ExitCode = 1;
+                        return;
+                    }
+
+                    var diffText = await File.ReadAllTextAsync(diffPath, ct);
+                    var engine   = new SilverLabelEngine(store);
+
+                    var inferred = await engine.InferLabelsAsync(fixtureId, diffText, ct);
+                    await engine.ApplyToFixtureAsync(fixtureId, diffText, overwrite, ct);
+
+                    Console.WriteLine($"[corpus] Labeled {fixtureId}: {inferred.Count} heuristic label(s) applied");
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"[corpus] Error: {ex.Message}");
+                    ctx.ExitCode = 1;
+                }
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus label-all ───────────────────────────────────────────
+
+    private static Command CreateLabelAll()
+    {
+        var tierOpt      = new Option<string>("--tier",      () => "discovery", "Fixture tier to process (gold|silver|discovery)");
+        var overwriteOpt = new Option<bool>  ("--overwrite", () => false,       "Overwrite existing HumanReview/Seed labels with heuristic labels");
+        var dbOpt        = new Option<string>("--db",        () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt  = new Option<string>("--fixtures",  () => "./data/fixtures",             "Path to fixtures root directory");
+
+        var cmd = new Command("label-all", "Apply silver heuristic labels to all fixtures in a tier");
+        cmd.AddOption(tierOpt);
+        cmd.AddOption(overwriteOpt);
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var tierStr   = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var overwrite = ctx.ParseResult.GetValueForOption(overwriteOpt);
+            var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures  = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct        = ctx.GetCancellationToken();
+
+            if (!Enum.TryParse<FixtureTier>(tierStr, ignoreCase: true, out var tier))
+            {
+                Console.Error.WriteLine($"[corpus] Unknown tier '{tierStr}'. Use gold, silver, or discovery.");
+                ctx.ExitCode = 1;
+                return;
+            }
+
+            var (db, store, _) = await BuildPipeline(dbPath, fixtures, ct);
+            using (db)
+            {
+                var allFixtures = await store.ListFixturesAsync(tier, ct);
+
+                if (allFixtures.Count == 0)
+                {
+                    Console.WriteLine("[corpus] No fixtures found.");
+                    return;
+                }
+
+                int labeled = 0;
+                int skipped = 0;
+                int totalLabels = 0;
+                var engine = new SilverLabelEngine(store);
+
+                foreach (var metadata in allFixtures)
+                {
+                    var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, metadata.Tier, metadata.FixtureId);
+                    var diffPath    = Path.Combine(fixturePath, "diff.patch");
+
+                    if (!File.Exists(diffPath))
+                    {
+                        Console.WriteLine($"[corpus] SKIP {metadata.FixtureId,-40} — diff.patch not found");
+                        skipped++;
+                        continue;
+                    }
+
+                    try
+                    {
+                        var diffText = await File.ReadAllTextAsync(diffPath, ct);
+                        var inferred = await engine.InferLabelsAsync(metadata.FixtureId, diffText, ct);
+                        await engine.ApplyToFixtureAsync(metadata.FixtureId, diffText, overwrite, ct);
+
+                        totalLabels += inferred.Count;
+                        labeled++;
+
+                        Console.WriteLine($"[corpus] OK   {metadata.FixtureId,-40} {inferred.Count,3} label(s)");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"[corpus] ERR  {metadata.FixtureId}: {ex.Message}");
+                        skipped++;
+                    }
+                }
+
+                Console.WriteLine();
+                Console.WriteLine($"[corpus] label-all complete: {labeled} labeled, {skipped} skipped, {totalLabels} total labels applied");
             }
         });
 
