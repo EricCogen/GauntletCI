@@ -11,18 +11,26 @@ namespace GauntletCI.Corpus.Hydration;
 /// Hydrates pull requests via the GitHub REST API.
 /// Set GITHUB_TOKEN env var for authenticated requests (higher rate limits).
 /// </summary>
-public sealed class GitHubRestHydrator : IPullRequestHydrator
+public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
 {
     private readonly HttpClient _http;
     private readonly RawSnapshotStore _rawStore;
+    private readonly bool _ownsHttpClient;
 
     private static readonly JsonSerializerOptions JsonOpts =
         new() { PropertyNameCaseInsensitive = true };
 
-    public GitHubRestHydrator(HttpClient http, RawSnapshotStore rawStore)
+    public GitHubRestHydrator(HttpClient http, RawSnapshotStore rawStore, bool ownsHttpClient = false)
     {
         _http = http;
         _rawStore = rawStore;
+        _ownsHttpClient = ownsHttpClient;
+    }
+
+    public void Dispose()
+    {
+        if (_ownsHttpClient)
+            _http.Dispose();
     }
 
     public static GitHubRestHydrator CreateDefault(string fixturesBasePath = "./data/fixtures")
@@ -34,7 +42,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator
         if (!string.IsNullOrEmpty(token))
             http.DefaultRequestHeaders.Add("Authorization", $"token {token}");
 
-        return new GitHubRestHydrator(http, new RawSnapshotStore(fixturesBasePath));
+        return new GitHubRestHydrator(http, new RawSnapshotStore(fixturesBasePath), ownsHttpClient: true);
     }
 
     public async Task<HydratedPullRequest> HydrateFromUrlAsync(string url, CancellationToken ct = default)
@@ -143,15 +151,18 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator
 
     private async Task<List<T>> GetJsonListAsync<T>(string url, CancellationToken ct)
     {
-        var json = await _http.GetStringAsync(url, ct);
+        var pagedUrl = url.Contains('?') ? $"{url}&per_page=100" : $"{url}?per_page=100";
+        var json = await _http.GetStringAsync(pagedUrl, ct);
         return JsonSerializer.Deserialize<List<T>>(json, JsonOpts) ?? [];
     }
 
     private async Task<string> GetDiffAsync(string prUrl, CancellationToken ct)
     {
         using var req = new HttpRequestMessage(HttpMethod.Get, prUrl);
-        req.Headers.Add("Accept", "application/vnd.github.v3.diff");
+        req.Headers.Accept.Clear();
+        req.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/vnd.github.v3.diff"));
         using var resp = await _http.SendAsync(req, ct);
+        resp.EnsureSuccessStatusCode();
         return await resp.Content.ReadAsStringAsync(ct);
     }
 
@@ -163,7 +174,10 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator
         if (segs.Length < 4 || !string.Equals(segs[2], "pull", StringComparison.OrdinalIgnoreCase))
             throw new ArgumentException($"Cannot parse PR URL: {url}");
 
-        return (segs[0], segs[1], int.Parse(segs[3]));
+        if (!int.TryParse(segs[3], out var prNumber))
+            throw new ArgumentException($"Cannot parse PR URL with non-numeric PR number: {url}");
+
+        return (segs[0], segs[1], prNumber);
     }
 
     private static string GuessLanguage(string path)
