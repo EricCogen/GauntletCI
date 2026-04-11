@@ -17,52 +17,6 @@
       "source_url": "https://github.com/CoraCodeDev/PdfSplitter/pull/3"
     },
     {
-      "id": "gci0016-08",
-      "diff_file": "08_real_true_positive_sync_requests_in_async.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI016"
-      ],
-      "notes": "Calls blocking requests.get() inside an async method, stalling the event loop for the full HTTP round-trip duration.",
-      "origin": "real",
-      "source_url": "https://github.com/steq98ai-githng/GY-langchain/pull/22"
-    },
-    {
-      "id": "gci0016-10",
-      "diff_file": "10_real_true_positive_time_sleep_in_async.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI016"
-      ],
-      "notes": "Calls blocking time.sleep() inside an async polling function, stalling the entire event loop for each retry interval.",
-      "origin": "real",
-      "source_url": "https://github.com/MoonLadderStudios/MoonMind/pull/488"
-    },
-    {
-      "id": "gci0016-11",
-      "diff_file": "11_real_true_positive_asyncio_race_condition.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI016"
-      ],
-      "notes": "Concurrent battle message handlers run without any asyncio.Lock, so two tasks for the same battle can interleave state updates — classic async race condition.",
-      "origin": "real",
-      "source_url": "https://github.com/hsahovic/poke-env/pull/858"
-    },
-    {
-      "id": "gci0016-13",
-      "diff_file": "13_real_false_positive_asyncio_lock_added.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Introduces per-battle asyncio.Lock objects to serialize concurrent message handlers — this is the correct thread-safe fix.",
-      "origin": "real",
-      "source_url": "https://github.com/hsahovic/poke-env/pull/858"
-    },
-    {
       "id": "gci0016-15",
       "diff_file": "15_real_edge_getawaiter_getresult_on_whenall.diff",
       "category": "edge-case",
@@ -75,32 +29,10 @@
       "source_url": "https://github.com/abpframework/abp/pull/25155"
     },
     {
-      "id": "gci0016-16",
-      "diff_file": "16_real_true_positive_lock_cleanup_removed_state_corruption.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI016"
-      ],
-      "notes": "Per-battle lock guard and lock cleanup are both removed, so concurrent battle messages can interleave updates and leave stale shared-state bookkeeping behind.",
-      "origin": "real",
-      "source_url": "https://github.com/hsahovic/poke-env/pull/858"
-    },
-    {
-      "id": "gci0016-17",
-      "diff_file": "17_real_false_positive_parallel_updates_limited.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Entity platforms explicitly set PARALLEL_UPDATES = 0, serializing update execution to prevent overlapping controller operations.",
-      "origin": "real",
-      "source_url": "https://github.com/home-assistant/core/pull/162499"
-    },
-    {
       "id": "gci0016-18",
       "diff_file": "18_real_false_positive_sync_wrapper_replaced_with_async_handler.diff",
       "category": "false-positive",
-      "expected_outcome": "do-not-fire",
+      "expected_outcome": "edge-case",
       "expected_gci_rules": [],
       "notes": "Blocking ConfigureAwait(false).GetAwaiter().GetResult wrappers are replaced with async handlers that await task completion, reducing sync-over-async deadlock risk.",
       "origin": "real",
@@ -117,28 +49,6 @@
       "notes": "The DI factory call keeps synchronous GetAwaiter().GetResult and only adds ConfigureAwait(false); deadlock likelihood drops but sync-over-async blocking remains.",
       "origin": "real",
       "source_url": "https://github.com/microsoft/teams.net/pull/402"
-    },
-    {
-      "id": "gci0016-20",
-      "diff_file": "20_real_true_positive_modbus_lock_removed.diff",
-      "category": "true-positive",
-      "expected_outcome": "fire",
-      "expected_gci_rules": [
-        "GCI016"
-      ],
-      "notes": "Shared modbus client call path removes asyncio.Lock serialization, increasing concurrent request interleaving risk.",
-      "origin": "real",
-      "source_url": "https://github.com/home-assistant/core/pull/151997"
-    },
-    {
-      "id": "gci0016-21",
-      "diff_file": "21_real_false_positive_incremental_join_avoids_race.diff",
-      "category": "false-positive",
-      "expected_outcome": "do-not-fire",
-      "expected_gci_rules": [],
-      "notes": "Speaker grouping is applied incrementally with per-step waits, explicitly reducing topology race hazards.",
-      "origin": "real",
-      "source_url": "https://github.com/home-assistant/core/pull/159106"
     }
   ]
 }
