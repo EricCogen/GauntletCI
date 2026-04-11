@@ -1,0 +1,152 @@
+// SPDX-License-Identifier: Elastic-2.0
+using Microsoft.Data.Sqlite;
+
+namespace GauntletCI.Corpus.Storage;
+
+/// <summary>
+/// Opens (or creates) the corpus SQLite database and applies the schema.
+/// Call <see cref="InitializeAsync"/> once at startup before any other DB access.
+/// </summary>
+public sealed class CorpusDb : IDisposable
+{
+    private readonly string _connectionString;
+    private SqliteConnection? _connection;
+
+    public CorpusDb(string dbPath = "./data/gauntletci-corpus.db")
+    {
+        var dir = Path.GetDirectoryName(dbPath);
+        if (!string.IsNullOrEmpty(dir))
+            Directory.CreateDirectory(dir);
+
+        _connectionString = $"Data Source={dbPath}";
+    }
+
+    public SqliteConnection Connection => _connection
+        ?? throw new InvalidOperationException("Call InitializeAsync first.");
+
+    public async Task InitializeAsync(CancellationToken cancellationToken = default)
+    {
+        _connection = new SqliteConnection(_connectionString);
+        await _connection.OpenAsync(cancellationToken);
+        await ApplySchemaAsync(cancellationToken);
+    }
+
+    private async Task ApplySchemaAsync(CancellationToken cancellationToken)
+    {
+        using var cmd = Connection.CreateCommand();
+        cmd.CommandText = SchemaInitializer.Ddl;
+        await cmd.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public void Dispose() => _connection?.Dispose();
+}
+
+internal static class SchemaInitializer
+{
+    internal const string Ddl = """
+        PRAGMA journal_mode=WAL;
+
+        CREATE TABLE IF NOT EXISTS candidates (
+            id                  TEXT PRIMARY KEY,
+            source              TEXT NOT NULL,
+            repo_owner          TEXT NOT NULL,
+            repo_name           TEXT NOT NULL,
+            pr_number           INTEGER NOT NULL,
+            url                 TEXT NOT NULL,
+            language            TEXT,
+            created_at_utc      TEXT,
+            updated_at_utc      TEXT,
+            review_comment_count INTEGER DEFAULT 0,
+            candidate_reason    TEXT,
+            raw_metadata_json   TEXT,
+            discovered_at_utc   TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(repo_owner, repo_name, pr_number)
+        );
+
+        CREATE TABLE IF NOT EXISTS hydrations (
+            id                  TEXT PRIMARY KEY,
+            candidate_id        TEXT NOT NULL REFERENCES candidates(id),
+            base_sha            TEXT,
+            head_sha            TEXT,
+            files_changed_count INTEGER DEFAULT 0,
+            additions           INTEGER DEFAULT 0,
+            deletions           INTEGER DEFAULT 0,
+            hydrated_at_utc     TEXT,
+            status              TEXT NOT NULL DEFAULT 'Pending',
+            error_message       TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS fixtures (
+            id                  TEXT PRIMARY KEY,
+            fixture_id          TEXT NOT NULL UNIQUE,
+            tier                TEXT NOT NULL,
+            repo                TEXT NOT NULL,
+            pr_number           INTEGER NOT NULL,
+            language            TEXT,
+            path                TEXT,
+            rule_ids_json       TEXT,
+            tags_json           TEXT,
+            pr_size_bucket      TEXT,
+            has_tests_changed   INTEGER DEFAULT 0,
+            has_review_comments INTEGER DEFAULT 0,
+            source              TEXT,
+            created_at_utc      TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS expected_findings (
+            id                  TEXT PRIMARY KEY,
+            fixture_id          TEXT NOT NULL REFERENCES fixtures(fixture_id),
+            rule_id             TEXT NOT NULL,
+            should_trigger      INTEGER NOT NULL DEFAULT 0,
+            expected_confidence REAL DEFAULT 0.0,
+            reason              TEXT,
+            label_source        TEXT,
+            is_inconclusive     INTEGER DEFAULT 0
+        );
+
+        CREATE TABLE IF NOT EXISTS actual_findings (
+            id                  TEXT PRIMARY KEY,
+            fixture_id          TEXT NOT NULL REFERENCES fixtures(fixture_id),
+            run_id              TEXT NOT NULL,
+            rule_id             TEXT NOT NULL,
+            did_trigger         INTEGER NOT NULL DEFAULT 0,
+            actual_confidence   REAL DEFAULT 0.0,
+            message             TEXT,
+            change_implication  TEXT,
+            evidence_json       TEXT,
+            execution_time_ms   INTEGER DEFAULT 0
+        );
+
+        CREATE TABLE IF NOT EXISTS rule_runs (
+            id                  TEXT PRIMARY KEY,
+            fixture_id          TEXT NOT NULL REFERENCES fixtures(fixture_id),
+            started_at_utc      TEXT NOT NULL,
+            completed_at_utc    TEXT,
+            engine_version      TEXT,
+            rule_set_version    TEXT,
+            status              TEXT NOT NULL DEFAULT 'Pending',
+            error_message       TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS evaluations (
+            id                  TEXT PRIMARY KEY,
+            fixture_id          TEXT NOT NULL REFERENCES fixtures(fixture_id),
+            rule_id             TEXT NOT NULL,
+            usefulness          REAL DEFAULT 0.0,
+            reviewer_notes      TEXT,
+            evaluated_at_utc    TEXT NOT NULL DEFAULT (datetime('now')),
+            reviewer            TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS aggregates (
+            rule_id             TEXT NOT NULL,
+            tier                TEXT NOT NULL,
+            trigger_rate        REAL DEFAULT 0.0,
+            precision_score     REAL DEFAULT 0.0,
+            recall_score        REAL DEFAULT 0.0,
+            usefulness_score    REAL DEFAULT 0.0,
+            last_updated_utc    TEXT NOT NULL DEFAULT (datetime('now')),
+            PRIMARY KEY (rule_id, tier)
+        );
+        """;
+}
