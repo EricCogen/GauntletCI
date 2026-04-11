@@ -228,8 +228,17 @@ public static class DiffParser
         };
 
         process.Start();
-        var output = await process.StandardOutput.ReadToEndAsync(ct);
+
+        // Read stdout and stderr concurrently to prevent deadlocks on large output.
+        var stdoutTask = process.StandardOutput.ReadToEndAsync(ct);
+        var stderrTask = process.StandardError.ReadToEndAsync(ct);
         await process.WaitForExitAsync(ct);
+        var output = await stdoutTask;
+        var stderr = await stderrTask;
+
+        if (process.ExitCode != 0)
+            throw new GitProcessException($"{executable} {arguments}", process.ExitCode, stderr);
+
         return output;
     }
 }
