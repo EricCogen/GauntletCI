@@ -278,7 +278,8 @@ public static class CorpusCommand
         var languageOpt    = new Option<string?>("--language",    "Filter by programming language (e.g. cs, python)");
         var minStarsOpt    = new Option<int>   ("--min-stars",    () => 0,             "Minimum stars on the repository");
         var minCommentsOpt = new Option<int>   ("--min-comments", () => 0,             "Minimum review comment count");
-        var startDateOpt   = new Option<DateTime?>("--start-date","Filter by merge/event date (inclusive, UTC)");
+        var startDateOpt   = new Option<DateTime?>("--start-date","Start of date range to search (inclusive, UTC)");
+        var endDateOpt     = new Option<DateTime?>("--end-date",  "End of date range to search (inclusive, UTC; defaults to start-date)");
         var dbOpt          = new Option<string>("--db",           () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var fixturesOpt    = new Option<string>("--fixtures",     () => "./data/fixtures",             "Path to fixtures root directory");
 
@@ -289,6 +290,7 @@ public static class CorpusCommand
         cmd.AddOption(minStarsOpt);
         cmd.AddOption(minCommentsOpt);
         cmd.AddOption(startDateOpt);
+        cmd.AddOption(endDateOpt);
         cmd.AddOption(dbOpt);
         cmd.AddOption(fixturesOpt);
 
@@ -300,6 +302,7 @@ public static class CorpusCommand
             var minStars     = ctx.ParseResult.GetValueForOption(minStarsOpt);
             var minComments  = ctx.ParseResult.GetValueForOption(minCommentsOpt);
             var startDate    = ctx.ParseResult.GetValueForOption(startDateOpt);
+            var endDate      = ctx.ParseResult.GetValueForOption(endDateOpt);
             var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var ct           = ctx.GetCancellationToken();
 
@@ -337,10 +340,16 @@ public static class CorpusCommand
                 MinStars           = minStars,
                 MinReviewComments  = minComments,
                 StartDateUtc       = startDate,
+                EndDateUtc         = endDate,
                 MaxCandidates      = limit,
             };
 
             Console.WriteLine($"[corpus] Discovering candidates via {provider.GetProviderName()} (limit={limit}) …");
+            if (startDate.HasValue)
+            {
+                var endLabel = endDate.HasValue ? endDate.Value.ToString("yyyy-MM-dd") : startDate.Value.ToString("yyyy-MM-dd");
+                Console.WriteLine($"[corpus] Date range: {startDate.Value:yyyy-MM-dd} → {endLabel}");
+            }
 
             var candidates = await provider.SearchCandidatesAsync(query, ct);
 

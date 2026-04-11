@@ -1,8 +1,9 @@
 # GauntletCI Corpus Pipeline Runner
-# Usage: .\run-corpus.ps1 [-StartDate "2025-03-01"] [-Limit 50] [-Language "C#"] [-MinComments 2] [-Tier "discovery"] [-SkipTo <step>]
+# Usage: .\run-corpus.ps1 [-StartDate "2025-03-01"] [-EndDate "2025-03-31"] [-Limit 50] [-Language "C#"] [-MinComments 2] [-Tier "discovery"] [-SkipTo <step>]
 
 param(
     [string]$StartDate    = (Get-Date).AddDays(-1).ToString("yyyy-MM-dd"),
+    [string]$EndDate      = "",   # End of date range (inclusive). Defaults to StartDate (single day) if not set.
     [int]   $Limit        = 50,
     [string]$Language     = "",
     [int]   $MinComments  = 0,
@@ -50,6 +51,7 @@ if ($SkipTo -le 1) {
         "--db",         $Db
     )
     if ($Language -ne "") { $discoverArgs += "--language", $Language }
+    if ($EndDate  -ne "") { $discoverArgs += "--end-date", $EndDate }
 
     Invoke-Expression "$cli $($discoverArgs -join ' ')"
     if ($LASTEXITCODE -ne 0) { throw "Discover failed" }
@@ -63,7 +65,7 @@ if ($SkipTo -le 2) {
         Write-Warning "GITHUB_TOKEN not set — unauthenticated rate limit is 60 req/hr. Set it for faster hydration."
     }
 
-    Invoke-Expression "$cli corpus batch-hydrate --db $Db --fixtures $Fixtures --tier $Tier"
+    Invoke-Expression "$cli corpus batch-hydrate --db $Db --fixtures $Fixtures --tier $Tier --limit $Limit"
     if ($LASTEXITCODE -ne 0) { throw "Hydrate failed" }
 }
 
