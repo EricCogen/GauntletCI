@@ -148,7 +148,6 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
         }
 
         if (query.Languages.Count > 0 &&
-            !string.IsNullOrEmpty(language) &&
             !query.Languages.Any(l => string.Equals(l, language, StringComparison.OrdinalIgnoreCase)))
             return null;
 
