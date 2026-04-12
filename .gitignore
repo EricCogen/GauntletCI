@@ -45,3 +45,4 @@ artifacts/
 # Benchmark infrastructure — ensure tracked
 !tests/
 !tests/GauntletCI.Benchmarks/Fixtures/
+/ghapi.key
