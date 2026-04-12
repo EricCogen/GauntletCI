@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Diagnostics;
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
+using GauntletCI.Core.FileAnalysis;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules.Implementations;
 using GauntletCI.Core.StaticAnalysis;
@@ -10,6 +12,7 @@ namespace GauntletCI.Core.Rules;
 
 /// <summary>
 /// Runs all registered rules against a <see cref="DiffContext"/> and aggregates findings.
+/// File eligibility filtering runs once before all rules via <see cref="ChangedFileAnalyzer"/>.
 /// Rules are loaded via reflection — drop a new IRule implementation into the assembly
 /// and it will be picked up automatically.
 /// </summary>
@@ -17,14 +20,15 @@ public class RuleOrchestrator
 {
     private readonly IReadOnlyList<IRule> _rules;
     private readonly GauntletConfig _config;
-
     private readonly TimeSpan _ruleTimeout;
+    private readonly IChangedFileAnalyzer _fileAnalyzer;
 
-    public RuleOrchestrator(IEnumerable<IRule> rules, GauntletConfig? config = null, TimeSpan? ruleTimeout = null)
+    public RuleOrchestrator(IEnumerable<IRule> rules, GauntletConfig? config = null, TimeSpan? ruleTimeout = null, IChangedFileAnalyzer? fileAnalyzer = null)
     {
         _rules = [.. rules.OrderBy(r => r.Id)];
         _config = config ?? new GauntletConfig();
         _ruleTimeout = ruleTimeout ?? TimeSpan.FromSeconds(30);
+        _fileAnalyzer = fileAnalyzer ?? new ChangedFileAnalyzer();
     }
 
     /// <summary>Creates an orchestrator with all built-in rules auto-discovered via reflection.</summary>
@@ -52,6 +56,33 @@ public class RuleOrchestrator
         IgnoreList? ignoreList = null,
         CancellationToken ct = default)
     {
+        // Classify all changed files and split into eligible/skipped before any rule runs
+        var allRecords = diff.Files
+            .Select(f => _fileAnalyzer.Analyze(f))
+            .ToList();
+
+        var eligibleRecords = allRecords.Where(r => r.IsEligible).ToList();
+        var skippedRecords  = allRecords.Where(r => !r.IsEligible).ToList();
+        var fileStatistics  = FileEligibilityStatistics.From(allRecords);
+
+        var eligibleFilePaths = eligibleRecords.Select(r => r.FilePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var filteredDiff = new DiffContext
+        {
+            RawDiff       = diff.RawDiff,
+            CommitSha     = diff.CommitSha,
+            CommitMessage = diff.CommitMessage,
+            Files         = diff.Files.Where(f => eligibleFilePaths.Contains(f.NewPath)).ToList(),
+        };
+
+        var context = new AnalysisContext
+        {
+            EligibleFiles  = eligibleRecords,
+            SkippedFiles   = skippedRecords,
+            FileStatistics = fileStatistics,
+            Diff           = filteredDiff,
+            StaticAnalysis = staticAnalysis,
+        };
+
         var allFindings = new List<Finding>();
         var metrics     = new List<RuleExecutionMetric>();
 
@@ -65,7 +96,7 @@ public class RuleOrchestrator
             int findingsBefore = allFindings.Count;
             try
             {
-                var findings = await rule.EvaluateAsync(diff, staticAnalysis, ruleCts.Token);
+                var findings = await rule.EvaluateAsync(context, ruleCts.Token);
                 allFindings.AddRange(findings);
                 if (findings.Count > 0) outcome = RuleOutcome.Triggered;
             }
@@ -75,13 +106,13 @@ public class RuleOrchestrator
                 Console.Error.WriteLine($"[GauntletCI] Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s — analysis truncated.");
                 allFindings.Add(new Finding
                 {
-                    RuleId    = rule.Id,
-                    RuleName  = rule.Name,
-                    Summary   = $"Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s — results may be incomplete.",
-                    Evidence  = $"Analysis exceeded the {_ruleTimeout.TotalSeconds:0}-second per-rule time limit.",
+                    RuleId          = rule.Id,
+                    RuleName        = rule.Name,
+                    Summary         = $"Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s — results may be incomplete.",
+                    Evidence        = $"Analysis exceeded the {_ruleTimeout.TotalSeconds:0}-second per-rule time limit.",
                     WhyItMatters    = "A timeout may indicate pathologically complex diff input (Roslyn Bomb) or a hung analyzer.",
                     SuggestedAction = "Investigate the diff for unusual patterns or report this as a GauntletCI issue.",
-                    Confidence = Confidence.Medium,
+                    Confidence      = Confidence.Medium,
                 });
             }
             catch (Exception ex)
@@ -98,14 +129,15 @@ public class RuleOrchestrator
 
         ApplySeverityOverrides(allFindings, _config);
         ApplyIgnoreList(allFindings, ignoreList);
-        PostProcess(diff, allFindings);
+        PostProcess(filteredDiff, allFindings);
 
         return new EvaluationResult
         {
-            CommitSha = diff.CommitSha,
-            Findings = allFindings,
+            CommitSha      = diff.CommitSha,
+            Findings       = allFindings,
             RulesEvaluated = _rules.Count,
-            RuleMetrics = metrics,
+            RuleMetrics    = metrics,
+            FileStatistics = fileStatistics,
         };
     }
 
@@ -152,13 +184,13 @@ public class RuleOrchestrator
             {
                 allFindings.Add(new Finding
                 {
-                    RuleId = "GCI0018",
-                    RuleName = "Production Readiness",
-                    Summary = $"{distinctRulesFired} rules flagged issues — this diff has multiple risk dimensions.",
-                    Evidence = $"Rules fired: {string.Join(", ", allFindings.Select(f => f.RuleId).Distinct().OrderBy(id => id))}",
-                    WhyItMatters = "Multiple concurrent risks compound each other and increase the chance of production incidents.",
+                    RuleId          = "GCI0018",
+                    RuleName        = "Production Readiness",
+                    Summary         = $"{distinctRulesFired} rules flagged issues — this diff has multiple risk dimensions.",
+                    Evidence        = $"Rules fired: {string.Join(", ", allFindings.Select(f => f.RuleId).Distinct().OrderBy(id => id))}",
+                    WhyItMatters    = "Multiple concurrent risks compound each other and increase the chance of production incidents.",
                     SuggestedAction = "Address High-confidence findings first, then revisit Medium/Low before merging.",
-                    Confidence = Confidence.Medium,
+                    Confidence      = Confidence.Medium,
                 });
             }
 
@@ -180,6 +212,7 @@ public class EvaluationResult
     public List<Finding> Findings { get; init; } = [];
     public int RulesEvaluated { get; init; }
     public IReadOnlyList<RuleExecutionMetric> RuleMetrics { get; init; } = [];
+    public FileEligibilityStatistics FileStatistics { get; init; } = new();
     public bool HasFindings => Findings.Count > 0;
 }
 
