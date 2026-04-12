@@ -1,5 +1,5 @@
 # GauntletCI Corpus Pipeline Runner
-# Usage: .\run-corpus.ps1 [-StartDate "2025-03-01"] [-EndDate "2025-03-31"] [-Limit 50] [-Language "C#"] [-MinComments 2] [-Tier "discovery"] [-SkipTo <step>]
+# Usage: .\run-corpus.ps1 [-Help] [-StartDate "2025-03-01"] [-EndDate "2025-03-31"] [-Limit 50] [-Language "C#"] [-MinComments 2] [-Tier "discovery"] [-Db <path>] [-Fixtures <path>] [-Report <path>] [-SkipTo <step>]
 
 param(
     [switch] $Help,
