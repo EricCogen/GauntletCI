@@ -55,10 +55,12 @@ public sealed class ScoreAggregator : IScoreAggregator
             var expectedFindings = await ReadJsonFileAsync<List<ExpectedFinding>>(expectedPath, cancellationToken) ?? [];
             var actualFindings   = await ReadJsonFileAsync<List<ActualFinding>>(actualPath, cancellationToken)   ?? [];
 
-            // Track trigger counts across ALL fixtures (not just labeled ones)
-            foreach (var actual in actualFindings.Where(a => a.DidTrigger))
+            // Track trigger counts across ALL fixtures (not just labeled ones).
+            // Count each rule at most once per fixture — trigger rate = fraction of fixtures
+            // where the rule fired at least once, not total finding count.
+            foreach (var firedRuleId in actualFindings.Where(a => a.DidTrigger).Select(a => a.RuleId).Distinct())
             {
-                var key = (actual.RuleId, fixture.Tier);
+                var key = (firedRuleId, fixture.Tier);
                 firedCounts[key] = firedCounts.GetValueOrDefault(key) + 1;
             }
 
