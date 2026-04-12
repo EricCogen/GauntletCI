@@ -8,7 +8,7 @@ param(
     [string]$Language     = "",
     [int]   $MinComments  = 0,
     [string]$Tier         = "discovery",
-    [string]$Db           = "./data/corpus.db",
+    [string]$Db           = "./data/gauntletci-corpus.db",
     [string]$Fixtures     = "./data/fixtures",
     [string]$Report       = "./data/scorecard.md",
     [int]   $SkipTo       = 1   # Set to 2-6 to resume from a specific step
