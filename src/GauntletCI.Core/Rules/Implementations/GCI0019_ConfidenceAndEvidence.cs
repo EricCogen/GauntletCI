@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
-using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -19,12 +19,12 @@ public class GCI0019_ConfidenceAndEvidence : RuleBase
          ".bin", ".bmp", ".ttf", ".woff", ".woff2", ".mp3", ".mp4", ".svg"];
 
     public override Task<List<Finding>> EvaluateAsync(
-        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+        AnalysisContext context, CancellationToken ct = default)
     {
+        var diff = context.Diff;
         var findings = new List<Finding>();
 
         CheckBinaryFiles(diff, findings);
-        // Note: the "large diff with few findings" check runs in RuleOrchestrator.PostProcess
 
         return Task.FromResult(findings);
     }
