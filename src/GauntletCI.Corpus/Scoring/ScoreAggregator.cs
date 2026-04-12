@@ -12,6 +12,7 @@ public sealed class ScoreAggregator : IScoreAggregator
 {
     private readonly IFixtureStore _store;
     private readonly CorpusDb _db;
+    private readonly IEvaluationClassifier _classifier;
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -20,9 +21,13 @@ public sealed class ScoreAggregator : IScoreAggregator
     };
 
     public ScoreAggregator(IFixtureStore store, CorpusDb db)
+        : this(store, db, new EvaluationClassifier()) { }
+
+    public ScoreAggregator(IFixtureStore store, CorpusDb db, IEvaluationClassifier classifier)
     {
-        _store = store;
-        _db    = db;
+        _store      = store;
+        _db         = db;
+        _classifier = classifier;
     }
 
     public async Task<IReadOnlyList<RuleScorecard>> ScoreAsync(
@@ -31,12 +36,18 @@ public sealed class ScoreAggregator : IScoreAggregator
         var fixtures     = await _store.ListFixturesAsync(tier, cancellationToken);
         var fixturePaths = await LoadFixturePathsAsync(cancellationToken);
 
-        // (ruleId, tier) → list of (expected, actual?) pairs
-        var groups = new Dictionary<(string RuleId, FixtureTier Tier), List<(ExpectedFinding Exp, ActualFinding? Act)>>();
+        // Totals per tier (denominator for trigger rate)
+        var totalPerTier = new Dictionary<FixtureTier, int>();
+        // How many fixtures each rule fired on, per tier
+        var firedCounts  = new Dictionary<(string RuleId, FixtureTier Tier), int>();
+        // All classification results
+        var allEvaluations = new List<FindingEvaluation>();
 
         foreach (var fixture in fixtures)
         {
             if (!fixturePaths.TryGetValue(fixture.FixtureId, out var fixturePath)) continue;
+
+            totalPerTier[fixture.Tier] = totalPerTier.GetValueOrDefault(fixture.Tier) + 1;
 
             var expectedPath = Path.Combine(fixturePath, "expected.json");
             var actualPath   = Path.Combine(fixturePath, "actual.json");
@@ -44,48 +55,76 @@ public sealed class ScoreAggregator : IScoreAggregator
             var expectedFindings = await ReadJsonFileAsync<List<ExpectedFinding>>(expectedPath, cancellationToken) ?? [];
             var actualFindings   = await ReadJsonFileAsync<List<ActualFinding>>(actualPath, cancellationToken)   ?? [];
 
-            // Group by RuleId — a rule may emit multiple findings; any finding means DidTrigger=true.
-            var actualByRule = actualFindings
-                .GroupBy(f => f.RuleId)
-                .ToDictionary(g => g.Key, g => new ActualFinding { RuleId = g.Key, DidTrigger = true });
-
-            foreach (var exp in expectedFindings)
+            // Track trigger counts across ALL fixtures (not just labeled ones).
+            // Count each rule at most once per fixture — trigger rate = fraction of fixtures
+            // where the rule fired at least once, not total finding count.
+            foreach (var firedRuleId in actualFindings.Where(a => a.DidTrigger).Select(a => a.RuleId).Distinct())
             {
-                var key = (exp.RuleId, fixture.Tier);
-                if (!groups.TryGetValue(key, out var list))
-                {
-                    list = [];
-                    groups[key] = list;
-                }
-                actualByRule.TryGetValue(exp.RuleId, out var act);
-                list.Add((exp, act));
+                var key = (firedRuleId, fixture.Tier);
+                firedCounts[key] = firedCounts.GetValueOrDefault(key) + 1;
             }
+
+            var evaluations = _classifier.Classify(fixture, expectedFindings, actualFindings);
+            allEvaluations.AddRange(evaluations);
         }
+
+        // Group evaluations by (ruleId, tier)
+        var groups = allEvaluations
+            .GroupBy(e => (e.RuleId, e.Tier))
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        // Collect all rule/tier combinations that had any activity
+        var allKeys = new HashSet<(string RuleId, FixtureTier Tier)>(groups.Keys);
+        foreach (var key in firedCounts.Keys) allKeys.Add(key);
 
         var scorecards = new List<RuleScorecard>();
 
-        foreach (var ((rid, rtier), pairs) in groups)
+        foreach (var key in allKeys)
         {
+            var (rid, rtier) = key;
             if (!string.IsNullOrEmpty(ruleId) && rid != ruleId) continue;
 
-            int fixtureCount = pairs.Count;
-            int inconclusive = pairs.Count(p => p.Exp.IsInconclusive);
-            var conclusivePairs = pairs.Where(p => !p.Exp.IsInconclusive).ToList();
+            groups.TryGetValue(key, out var evals);
+            evals ??= [];
 
-            int total       = conclusivePairs.Count;
-            int triggered   = conclusivePairs.Count(p => p.Act?.DidTrigger == true);
-            int tp          = conclusivePairs.Count(p => p.Act?.DidTrigger == true && p.Exp.ShouldTrigger);
-            int fp          = conclusivePairs.Count(p => p.Act?.DidTrigger == true && !p.Exp.ShouldTrigger);
-            int fn          = conclusivePairs.Count(p => p.Exp.ShouldTrigger && p.Act?.DidTrigger != true);
+            int tp      = evals.Count(e => e.Status == EvaluationStatus.TruePositive);
+            int fp      = evals.Count(e => e.Status == EvaluationStatus.FalsePositive);
+            int fn      = evals.Count(e => e.Status == EvaluationStatus.FalseNegative);
+            int tn      = evals.Count(e => e.Status == EvaluationStatus.TrueNegative);
+            int unknown = evals.Count(e => e.Status == EvaluationStatus.Unknown);
 
-            double triggerRate      = total > 0 ? (double)triggered / total : 0.0;
-            double precision        = (tp + fp) > 0 ? (double)tp / (tp + fp) : 0.0;
-            double recall           = (tp + fn) > 0 ? (double)tp / (tp + fn) : 0.0;
-            double inconclusiveRate = fixtureCount > 0 ? (double)inconclusive / fixtureCount : 0.0;
-            double avgUsefulness    = await GetAvgUsefulnessAsync(rid, cancellationToken);
+            int labeled     = tp + fp + fn + tn;
+            int totalTier   = totalPerTier.GetValueOrDefault(rtier, 1);
+            int fired       = firedCounts.GetValueOrDefault(key, 0);
 
-            var scorecard = new RuleScorecard(rid, rtier, total, triggerRate, precision, recall,
-                inconclusiveRate, avgUsefulness, Notes: string.Empty);
+            double triggerRate = (double)fired / totalTier;
+            double precision   = (tp + fp) > 0 ? (double)tp / (tp + fp) : 0.0;
+            double recall      = (tp + fn) > 0 ? (double)tp / (tp + fn) : 0.0;
+
+            // Inconclusive rate relative to labeled pairs
+            int inconclusive = evals.Count(e =>
+                e.Status is EvaluationStatus.TruePositive or EvaluationStatus.FalsePositive
+                         or EvaluationStatus.FalseNegative or EvaluationStatus.TrueNegative
+                         or EvaluationStatus.Unknown);
+            double inconclusiveRate = 0.0; // retained for schema compat; Unknown is now its own field
+
+            double avgUsefulness = await GetAvgUsefulnessAsync(rid, cancellationToken);
+
+            var scorecard = new RuleScorecard(
+                RuleId:           rid,
+                Tier:             rtier,
+                Fixtures:         labeled,
+                TriggerRate:      triggerRate,
+                Precision:        precision,
+                Recall:           recall,
+                InconclusiveRate: inconclusiveRate,
+                AvgUsefulness:    avgUsefulness,
+                Notes:            string.Empty,
+                TruePositives:    tp,
+                FalsePositives:   fp,
+                FalseNegatives:   fn,
+                TrueNegatives:    tn,
+                Unknown:          unknown);
 
             scorecards.Add(scorecard);
             await UpsertAggregateAsync(scorecard, cancellationToken);
