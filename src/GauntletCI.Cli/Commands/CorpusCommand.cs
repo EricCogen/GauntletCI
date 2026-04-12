@@ -12,6 +12,7 @@ using GauntletCI.Corpus.Runners;
 using GauntletCI.Corpus.Scoring;
 using GauntletCI.Corpus.Storage;
 using Microsoft.Data.Sqlite;
+using Spectre.Console;
 
 namespace GauntletCI.Cli.Commands;
 
@@ -54,7 +55,7 @@ public static class CorpusCommand
             var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
             var ct       = ctx.GetCancellationToken();
 
-            Console.WriteLine($"[corpus] Hydrating {url}");
+            AnsiConsole.MarkupLine($"[blue][[corpus]][/] Hydrating {Markup.Escape(url)}");
 
             var (db, _, pipeline) = await BuildPipeline(dbPath, fixtures, ct);
             using (db)
@@ -141,7 +142,7 @@ public static class CorpusCommand
                     return;
                 }
 
-                Console.WriteLine($"[corpus] Re-normalizing {fixtureId} ({tier})");
+                AnsiConsole.MarkupLine($"[blue][[corpus]][/] Re-normalizing {Markup.Escape(fixtureId)} ({tier})");
 
                 try
                 {
@@ -244,29 +245,34 @@ public static class CorpusCommand
 
     private static void PrintFixtureTable(IReadOnlyList<FixtureMetadata> fixtures)
     {
-        const int colFixtureId = 36;
-        const int colTier      = 10;
-        const int colSize      = 8;
-        const int colLanguage  = 12;
-        const int colRules     = 30;
-
-        var header = $"{"FixtureId",-colFixtureId}  {"Tier",-colTier}  {"Size",-colSize}  {"Language",-colLanguage}  {"Rules",-colRules}  Tags";
-        var sep    = new string('-', header.Length + 4);
-
-        Console.WriteLine(sep);
-        Console.WriteLine(header);
-        Console.WriteLine(sep);
+        var table = new Table()
+            .BorderColor(Color.Grey)
+            .AddColumn("[bold]FixtureId[/]")
+            .AddColumn("[bold]Tier[/]")
+            .AddColumn("[bold]Size[/]")
+            .AddColumn("[bold]Language[/]")
+            .AddColumn("[bold]Rules[/]")
+            .AddColumn("[bold]Tags[/]");
 
         foreach (var m in fixtures)
         {
-            var rules = string.Join(",", m.RuleIds);
-            var tagsStr = string.Join(",", m.Tags);
-            Console.WriteLine(
-                $"{m.FixtureId,-colFixtureId}  {m.Tier,-colTier}  {m.PrSizeBucket,-colSize}  {m.Language,-colLanguage}  {rules,-colRules}  {tagsStr}");
+            var tierColor = m.Tier switch
+            {
+                FixtureTier.Gold      => "gold1",
+                FixtureTier.Silver    => "silver",
+                _                     => "blue",
+            };
+            table.AddRow(
+                Markup.Escape(m.FixtureId),
+                $"[{tierColor}]{m.Tier}[/]",
+                Markup.Escape(m.PrSizeBucket.ToString()),
+                Markup.Escape(m.Language),
+                Markup.Escape(string.Join(",", m.RuleIds)),
+                Markup.Escape(string.Join(",", m.Tags)));
         }
 
-        Console.WriteLine(sep);
-        Console.WriteLine($"[corpus] {fixtures.Count} fixture(s)");
+        AnsiConsole.Write(table);
+        AnsiConsole.MarkupLine($"[dim][[corpus]] {fixtures.Count} fixture(s)[/]");
     }
 
     // ── gauntletci corpus discover --provider gh-search|gh-archive ───────────
@@ -344,11 +350,11 @@ public static class CorpusCommand
                 MaxCandidates      = limit,
             };
 
-            Console.WriteLine($"[corpus] Discovering candidates via {provider.GetProviderName()} (limit={limit}) …");
+            AnsiConsole.MarkupLine($"[blue][[corpus]][/] Discovering candidates via {provider.GetProviderName()} (limit={limit}) …");
             if (startDate.HasValue)
             {
                 var endLabel = endDate.HasValue ? endDate.Value.ToString("yyyy-MM-dd") : startDate.Value.ToString("yyyy-MM-dd");
-                Console.WriteLine($"[corpus] Date range: {startDate.Value:yyyy-MM-dd} → {endLabel}");
+                AnsiConsole.MarkupLine($"[blue][[corpus]][/] Date range: {startDate.Value:yyyy-MM-dd} → {endLabel}");
             }
 
             var candidates = await provider.SearchCandidatesAsync(query, ct);
@@ -388,7 +394,7 @@ public static class CorpusCommand
                 }
 
                 var skipped = candidates.Count - inserted;
-                Console.WriteLine($"[corpus] Discovered {candidates.Count} candidates ({inserted} new, {skipped} already known)");
+                AnsiConsole.MarkupLine($"[blue][[corpus]][/] Discovered {candidates.Count} candidates ({inserted} new, {skipped} already known)");
             }
         });
 
@@ -436,7 +442,7 @@ public static class CorpusCommand
 
                 if (candidates.Count == 0)
                 {
-                    Console.WriteLine("[corpus] No pending candidates found.");
+                    AnsiConsole.MarkupLine("[dim][[corpus]] No pending candidates found.[/]");
                     return;
                 }
 
@@ -449,13 +455,13 @@ public static class CorpusCommand
 
                     if (dryRun)
                     {
-                        Console.WriteLine($"[corpus] [dry-run] Would hydrate {owner}/{repo}#{prNumber}");
+                        AnsiConsole.MarkupLine($"[dim][[corpus]] [[dry-run]][/] Would hydrate {owner}/{repo}#{prNumber}");
                         success++;
                         continue;
                     }
 
                     var fixtureId = GauntletCI.Corpus.Storage.FixtureIdHelper.Build(owner, repo, prNumber);
-                    Console.WriteLine($"[corpus] Hydrating {owner}/{repo}#{prNumber} → {fixtureId}");
+                    AnsiConsole.MarkupLine($"[blue][[corpus]][/] Hydrating {owner}/{repo}#{prNumber} → {Markup.Escape(fixtureId)}");
 
                     var tier = tierStr.ToLowerInvariant() switch
                     {
@@ -477,7 +483,7 @@ public static class CorpusCommand
                     }
                 }
 
-                Console.WriteLine($"[corpus] Batch complete: {success}/{total} fixtures hydrated");
+                AnsiConsole.MarkupLine($"[blue][[corpus]][/] Batch complete: [green]{success}[/]/{total} fixtures hydrated");
             }
         });
 
@@ -549,7 +555,7 @@ public static class CorpusCommand
                         return;
                     }
 
-                    Console.WriteLine($"[corpus] Running GCI rules against {fixtureId}");
+                    AnsiConsole.MarkupLine($"[blue][[corpus]][/] Running GCI rules against {Markup.Escape(fixtureId)}");
 
                     var diffText = await File.ReadAllTextAsync(diffPath, ct);
                     var runner   = new RuleCorpusRunner(store, db);
@@ -559,9 +565,9 @@ public static class CorpusCommand
                     int medium = findings.Count(f => f.ActualConfidence is >= 0.5 and < 1.0);
                     int low    = findings.Count(f => f.ActualConfidence < 0.5);
 
-                    Console.WriteLine($"[corpus] Run ID  : {runner.LastRunId}");
-                    Console.WriteLine($"[corpus] Findings: {findings.Count} ({high} High, {medium} Medium, {low} Low)");
-                    Console.WriteLine($"[corpus] Saved to: {fixturePath}");
+                    AnsiConsole.MarkupLine($"[dim][[corpus]][/] Run ID  : {runner.LastRunId}");
+                    AnsiConsole.MarkupLine($"[dim][[corpus]][/] Findings: {findings.Count} ({high} High, {medium} Medium, {low} Low)");
+                    AnsiConsole.MarkupLine($"[dim][[corpus]][/] Saved to: {Markup.Escape(fixturePath)}");
                 }
                 catch (Exception ex)
                 {
@@ -613,7 +619,7 @@ public static class CorpusCommand
 
                 if (allFixtures.Count == 0)
                 {
-                    Console.WriteLine("[corpus] No fixtures found.");
+                    AnsiConsole.MarkupLine("[dim][[corpus]] No fixtures found.[/]");
                     return;
                 }
 
@@ -628,7 +634,7 @@ public static class CorpusCommand
 
                     if (!File.Exists(diffPath))
                     {
-                        Console.WriteLine($"[corpus] SKIP {metadata.FixtureId} — diff.patch not found");
+                        AnsiConsole.MarkupLine($"[yellow][[corpus]] SKIP {Markup.Escape(metadata.FixtureId)}[/] — diff.patch not found");
                         failed++;
                         continue;
                     }
@@ -642,7 +648,7 @@ public static class CorpusCommand
                         totalFindings += findings.Count;
                         completed++;
 
-                        Console.WriteLine($"[corpus] OK  {metadata.FixtureId,-40} {findings.Count,3} finding(s)");
+                        AnsiConsole.MarkupLine($"[green][[corpus]] OK [/] {Markup.Escape(metadata.FixtureId),-40} {findings.Count,3} finding(s)");
                     }
                     catch (Exception ex)
                     {
@@ -651,8 +657,8 @@ public static class CorpusCommand
                     }
                 }
 
-                Console.WriteLine();
-                Console.WriteLine($"[corpus] Run-all complete: {completed} OK, {failed} skipped/failed, {totalFindings} total findings");
+                AnsiConsole.WriteLine();
+                AnsiConsole.MarkupLine($"[blue][[corpus]][/] Run-all complete: [green]{completed} OK[/], {failed} skipped/failed, {totalFindings} total findings");
             }
         });
 
@@ -702,35 +708,34 @@ public static class CorpusCommand
 
                 if (scorecards.Count == 0)
                 {
-                    Console.WriteLine("[corpus] No scorecards — run 'corpus run-all' first to generate actual.json files.");
+                    AnsiConsole.MarkupLine("[yellow][[corpus]] No scorecards — run 'corpus run-all' first to generate actual.json files.[/]");
                     return;
                 }
 
-                const int colRule      = 10;
-                const int colTier      = 10;
-                const int colFixtures  = 9;
-                const int colTrigger   = 12;
-                const int colPrecision = 10;
-                const int colRecall    = 8;
-                const int colUseful    = 11;
-
-                var header = $"{"RuleId",-colRule}  {"Tier",-colTier}  {"Fixtures",-colFixtures}  {"TriggerRate",-colTrigger}  {"Precision",-colPrecision}  {"Recall",-colRecall}  {"Usefulness"}";
-                var sep    = new string('-', header.Length + 4);
-
-                Console.WriteLine(sep);
-                Console.WriteLine(header);
-                Console.WriteLine(sep);
+                var table = new Table()
+                    .BorderColor(Color.Grey)
+                    .AddColumn("[bold]RuleId[/]")
+                    .AddColumn("[bold]Tier[/]")
+                    .AddColumn(new TableColumn("[bold]Fixtures[/]").RightAligned())
+                    .AddColumn(new TableColumn("[bold]TriggerRate[/]").RightAligned())
+                    .AddColumn(new TableColumn("[bold]Precision[/]").RightAligned())
+                    .AddColumn(new TableColumn("[bold]Recall[/]").RightAligned())
+                    .AddColumn(new TableColumn("[bold]Usefulness[/]").RightAligned());
 
                 foreach (var sc in scorecards.OrderBy(s => s.RuleId).ThenBy(s => s.Tier))
                 {
-                    Console.WriteLine(
-                        $"{sc.RuleId,-colRule}  {sc.Tier,-colTier}  {sc.Fixtures,-colFixtures}  " +
-                        $"{sc.TriggerRate,colTrigger:P1}  {sc.Precision,colPrecision:P1}  " +
-                        $"{sc.Recall,colRecall:P1}  {sc.AvgUsefulness:F1}/5");
+                    table.AddRow(
+                        sc.RuleId,
+                        sc.Tier.ToString(),
+                        sc.Fixtures.ToString(),
+                        sc.TriggerRate.ToString("P1"),
+                        sc.Precision.ToString("P1"),
+                        sc.Recall.ToString("P1"),
+                        $"{sc.AvgUsefulness:F1}/5");
                 }
 
-                Console.WriteLine(sep);
-                Console.WriteLine($"[corpus] {scorecards.Count} scorecard(s)");
+                AnsiConsole.Write(table);
+                AnsiConsole.MarkupLine($"[dim][[corpus]] {scorecards.Count} scorecard(s)[/]");
             }
         });
 
@@ -768,7 +773,7 @@ public static class CorpusCommand
                 if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
 
                 await File.WriteAllTextAsync(outputPath, markdown, ct);
-                Console.WriteLine($"[corpus] Report written to {outputPath}");
+                AnsiConsole.MarkupLine($"[green][[corpus]][/] Report written to {Markup.Escape(outputPath)}");
             }
         });
 
@@ -826,7 +831,7 @@ public static class CorpusCommand
                     var inferred = await engine.InferLabelsAsync(fixtureId, diffText, ct);
                     await engine.ApplyToFixtureAsync(fixtureId, diffText, overwrite, ct);
 
-                    Console.WriteLine($"[corpus] Labeled {fixtureId}: {inferred.Count} heuristic label(s) applied");
+                    AnsiConsole.MarkupLine($"[green][[corpus]][/] Labeled {Markup.Escape(fixtureId)}: {inferred.Count} heuristic label(s) applied");
                 }
                 catch (Exception ex)
                 {
@@ -876,7 +881,7 @@ public static class CorpusCommand
 
                 if (allFixtures.Count == 0)
                 {
-                    Console.WriteLine("[corpus] No fixtures found.");
+                    AnsiConsole.MarkupLine("[dim][[corpus]] No fixtures found.[/]");
                     return;
                 }
 
@@ -892,7 +897,7 @@ public static class CorpusCommand
 
                     if (!File.Exists(diffPath))
                     {
-                        Console.WriteLine($"[corpus] SKIP {metadata.FixtureId,-40} — diff.patch not found");
+                        AnsiConsole.MarkupLine($"[yellow][[corpus]] SKIP {Markup.Escape(metadata.FixtureId)}[/] — diff.patch not found");
                         skipped++;
                         continue;
                     }
@@ -906,7 +911,7 @@ public static class CorpusCommand
                         totalLabels += inferred.Count;
                         labeled++;
 
-                        Console.WriteLine($"[corpus] OK   {metadata.FixtureId,-40} {inferred.Count,3} label(s)");
+                        AnsiConsole.MarkupLine($"[green][[corpus]] OK [/] {Markup.Escape(metadata.FixtureId),-40} {inferred.Count,3} label(s)");
                     }
                     catch (Exception ex)
                     {
@@ -915,8 +920,8 @@ public static class CorpusCommand
                     }
                 }
 
-                Console.WriteLine();
-                Console.WriteLine($"[corpus] label-all complete: {labeled} labeled, {skipped} skipped, {totalLabels} total labels applied");
+                AnsiConsole.WriteLine();
+                AnsiConsole.MarkupLine($"[blue][[corpus]][/] label-all complete: [green]{labeled} labeled[/], {skipped} skipped, {totalLabels} total labels applied");
             }
         });
 
@@ -937,11 +942,11 @@ public static class CorpusCommand
 
     private static void PrintMetadata(GauntletCI.Corpus.Models.FixtureMetadata m)
     {
-        Console.WriteLine($"[corpus] Fixture : {m.FixtureId}");
-        Console.WriteLine($"[corpus] Tier    : {m.Tier}");
-        Console.WriteLine($"[corpus] Size    : {m.PrSizeBucket} ({m.FilesChanged} files)");
-        Console.WriteLine($"[corpus] Language: {m.Language}");
-        Console.WriteLine($"[corpus] Tags    : {string.Join(", ", m.Tags)}");
-        Console.WriteLine($"[corpus] Next    : gauntletci corpus normalize --fixture {m.FixtureId}");
+        AnsiConsole.MarkupLine($"[dim][[corpus]][/] Fixture : {Markup.Escape(m.FixtureId)}");
+        AnsiConsole.MarkupLine($"[dim][[corpus]][/] Tier    : {m.Tier}");
+        AnsiConsole.MarkupLine($"[dim][[corpus]][/] Size    : {m.PrSizeBucket} ({m.FilesChanged} files)");
+        AnsiConsole.MarkupLine($"[dim][[corpus]][/] Language: {Markup.Escape(m.Language)}");
+        AnsiConsole.MarkupLine($"[dim][[corpus]][/] Tags    : {Markup.Escape(string.Join(", ", m.Tags))}");
+        AnsiConsole.MarkupLine($"[dim][[corpus]][/] Next    : gauntletci corpus normalize --fixture {Markup.Escape(m.FixtureId)}");
     }
 }

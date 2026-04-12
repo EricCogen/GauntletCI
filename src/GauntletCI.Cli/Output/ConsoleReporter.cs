@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
+using Spectre.Console;
 
 namespace GauntletCI.Cli.Output;
 
@@ -28,38 +29,32 @@ public static class ConsoleReporter
 
     public static void Report(EvaluationResult result, bool ascii = false)
     {
-        var originalColor = Console.ForegroundColor;
-
         string hr  = ascii ? "=======================================================" : "═══════════════════════════════════════════════════════";
         string sep = ascii ? "-- {0} CONFIDENCE ({1}) --------------------------" : "── {0} CONFIDENCE ({1}) ──────────────────────────";
         string ok  = ascii ? "  OK No findings -- diff looks clean!" : "  ✓ No findings — diff looks clean!";
 
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine(hr);
-        Console.WriteLine("  GauntletCI Risk Analysis Report");
-        Console.WriteLine(hr);
-        Console.ResetColor();
+        AnsiConsole.MarkupLine($"[cyan]{hr}[/]");
+        AnsiConsole.MarkupLine("[cyan]  GauntletCI Risk Analysis Report[/]");
+        AnsiConsole.MarkupLine($"[cyan]{hr}[/]");
 
         if (!string.IsNullOrEmpty(result.CommitSha))
-            Console.WriteLine($"  Commit : {result.CommitSha}");
+            AnsiConsole.MarkupLine($"  Commit : {result.CommitSha}");
 
-        Console.WriteLine($"  Rules  : {result.RulesEvaluated} evaluated");
-        Console.WriteLine($"  Findings: {result.Findings.Count}");
-        Console.WriteLine();
+        AnsiConsole.MarkupLine($"  Rules  : {result.RulesEvaluated} evaluated");
+        AnsiConsole.MarkupLine($"  Findings: {result.Findings.Count}");
+        AnsiConsole.WriteLine();
 
         if (!result.HasFindings)
         {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine(ok);
-            Console.ResetColor();
+            AnsiConsole.MarkupLine($"[green]{ok}[/]");
             return;
         }
 
         var groups = new[]
         {
-            (Confidence.High,   "HIGH",   ConsoleColor.Red),
-            (Confidence.Medium, "MEDIUM", ConsoleColor.Yellow),
-            (Confidence.Low,    "LOW",    ConsoleColor.DarkYellow),
+            (Confidence.High,   "HIGH",   "red"),
+            (Confidence.Medium, "MEDIUM", "yellow"),
+            (Confidence.Low,    "LOW",    "darkorange"),
         };
 
         foreach (var (confidence, label, color) in groups)
@@ -67,44 +62,29 @@ public static class ConsoleReporter
             var findings = result.Findings.Where(f => f.Confidence == confidence).ToList();
             if (findings.Count == 0) continue;
 
-            Console.ForegroundColor = color;
-            Console.WriteLine(string.Format(sep, label, findings.Count));
-            Console.ResetColor();
+            AnsiConsole.MarkupLine($"[{color}]{string.Format(sep, label, findings.Count)}[/]");
 
             foreach (var finding in findings)
                 PrintFinding(finding, color);
         }
-
-        Console.ForegroundColor = originalColor;
     }
 
-    private static void PrintFinding(Finding finding, ConsoleColor accentColor)
+    private static void PrintFinding(Finding finding, string accentColor)
     {
-        Console.ForegroundColor = accentColor;
-        Console.Write($"  [{finding.RuleId}] ");
-        Console.ForegroundColor = ConsoleColor.White;
-        Console.WriteLine(finding.RuleName);
-        Console.ResetColor();
+        AnsiConsole.MarkupLine($"[{accentColor}]  [[{finding.RuleId}]][/] [white]{finding.RuleName}[/]");
+        AnsiConsole.MarkupLine($"  Summary  : {finding.Summary}");
 
-        Console.WriteLine($"  Summary  : {finding.Summary}");
-        Console.ForegroundColor = ConsoleColor.DarkGray;
         var evidenceDisplay = SensitiveRuleIds.Contains(finding.RuleId)
             ? MaskEvidenceSnippet(finding.Evidence)
             : finding.Evidence;
-        Console.WriteLine($"  Evidence : {evidenceDisplay}");
-        Console.ResetColor();
-        Console.WriteLine($"  Why      : {finding.WhyItMatters}");
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.WriteLine($"  Action   : {finding.SuggestedAction}");
-        Console.ResetColor();
+        AnsiConsole.MarkupLine($"[grey]  Evidence : {Markup.Escape(evidenceDisplay)}[/]");
+
+        AnsiConsole.MarkupLine($"  Why      : {Markup.Escape(finding.WhyItMatters)}");
+        AnsiConsole.MarkupLine($"[cyan]  Action   : {Markup.Escape(finding.SuggestedAction)}[/]");
 
         if (!string.IsNullOrEmpty(finding.LlmExplanation))
-        {
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            Console.WriteLine($"  LLM      : {finding.LlmExplanation}");
-            Console.ResetColor();
-        }
+            AnsiConsole.MarkupLine($"[magenta]  LLM      : {Markup.Escape(finding.LlmExplanation)}[/]");
 
-        Console.WriteLine();
+        AnsiConsole.WriteLine();
     }
 }

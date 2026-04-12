@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Reflection;
+using Spectre.Console;
 
 namespace GauntletCI.Cli.Presentation;
 
 public static class CliBanner
 {
-    private const string Bold       = "\u001b[1m";
-    private const string Amber      = "\u001b[38;5;214m";
-    private const string Dim        = "\u001b[2m";
-    private const string Reset      = "\u001b[0m";
-
     public static void PrintIfEnabled(BannerContext context)
     {
         if (context is null) throw new ArgumentNullException(nameof(context));
@@ -23,10 +19,10 @@ public static class CliBanner
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
             ?.InformationalVersion?.Split('+')[0] ?? "0.0.0";
 
-        Console.WriteLine();
-        Console.WriteLine($"  {Bold}{Amber}GauntletCI{Reset}  {Dim}v{version}{Reset}");
-        Console.WriteLine($"  {Dim}pre-commit change-risk detection{Reset}");
-        Console.WriteLine();
+        AnsiConsole.WriteLine();
+        AnsiConsole.MarkupLine($"  [bold gold1]GauntletCI[/]  [dim]v{version}[/]");
+        AnsiConsole.MarkupLine("  [dim]pre-commit change-risk detection[/]");
+        AnsiConsole.WriteLine();
     }
 
     private static bool IsCiEnvironment()
