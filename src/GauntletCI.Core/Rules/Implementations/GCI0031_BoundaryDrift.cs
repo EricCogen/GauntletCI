@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Text.RegularExpressions;
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
-using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -19,12 +19,12 @@ public class GCI0031_BoundaryDrift : RuleBase
         new(@"(?<![<>!=])[<>]=?\s*(\d+)", RegexOptions.Compiled);
 
     public override Task<List<Finding>> EvaluateAsync(
-        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+        AnalysisContext context, CancellationToken ct = default)
     {
+        var diff = context.Diff;
         var findings = new List<Finding>();
 
         var nonTestFiles = diff.Files.Where(f =>
-            f.NewPath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) &&
             !f.NewPath.Contains("Test", StringComparison.OrdinalIgnoreCase) &&
             !f.NewPath.Contains("Spec", StringComparison.OrdinalIgnoreCase)).ToList();
 

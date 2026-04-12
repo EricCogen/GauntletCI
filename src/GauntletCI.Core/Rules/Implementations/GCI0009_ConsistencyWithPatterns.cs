@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.StaticAnalysis;
@@ -15,12 +16,13 @@ public class GCI0009_ConsistencyWithPatterns : RuleBase
     public override string Name => "Consistency with Patterns";
 
     public override Task<List<Finding>> EvaluateAsync(
-        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+        AnalysisContext context, CancellationToken ct = default)
     {
+        var diff = context.Diff;
         var findings = new List<Finding>();
 
         CheckAsyncPattern(diff, findings);
-        AddRoslynFindings(staticAnalysis, findings);
+        AddRoslynFindings(context.StaticAnalysis, findings);
 
         return Task.FromResult(findings);
     }
