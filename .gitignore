@@ -45,3 +45,6 @@ artifacts/
 # Benchmark infrastructure — ensure tracked
 !tests/
 !tests/GauntletCI.Benchmarks/Fixtures/
+/data
+/src/GauntletCI.Corpus/GauntletCI_Labeler_App/.venv
+/ghapi.key
