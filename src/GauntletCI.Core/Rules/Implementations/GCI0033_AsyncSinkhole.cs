@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
-using GauntletCI.Core.Diff;
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Model;
-using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -18,6 +17,7 @@ public class GCI0033_AsyncSinkhole : RuleBase
     public override string Name => "Async Sinkhole";
 
     public override Task<List<Finding>> EvaluateAsync(
-        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+        AnalysisContext context, CancellationToken ct = default)
         => Task.FromResult(new List<Finding>());
 }
+

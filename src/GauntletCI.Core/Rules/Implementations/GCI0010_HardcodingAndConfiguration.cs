@@ -1,5 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
+using System.Text.RegularExpressions;
 using GauntletCI.Core.Analysis;
+using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 
 namespace GauntletCI.Core.Rules.Implementations;
