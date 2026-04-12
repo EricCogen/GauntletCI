@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
+using GauntletCI.Core.FileAnalysis;
 using GauntletCI.Core.Model;
 
 namespace GauntletCI.Core.Rules.Implementations;
@@ -23,16 +24,20 @@ public class GCI0017_ScopeDiscipline : RuleBase
         var diff = context.Diff;
         var findings = new List<Finding>();
 
-        CheckDistinctModules(diff, findings);
+        CheckDistinctModules(diff, context.SkippedFiles, findings);
         CheckMixedProductionAndNonProduction(diff, findings);
 
         return Task.FromResult(findings);
     }
 
-    private void CheckDistinctModules(DiffContext diff, List<Finding> findings)
+    private void CheckDistinctModules(DiffContext diff, IReadOnlyList<ChangedFileAnalysisRecord> skippedFiles, List<Finding> findings)
     {
-        var topLevelDirs = diff.Files
-            .Select(f => f.NewPath.Replace('\\', '/'))
+        // Count top-level dirs across ALL changed files (eligible + skipped)
+        var allPaths = diff.Files.Select(f => f.NewPath)
+            .Concat(skippedFiles.Select(r => r.FilePath));
+
+        var topLevelDirs = allPaths
+            .Select(p => p.Replace('\\', '/'))
             .Select(p => p.Contains('/') ? p.Split('/')[0] : string.Empty)
             .Where(d => !string.IsNullOrEmpty(d))
             .Distinct(StringComparer.OrdinalIgnoreCase)

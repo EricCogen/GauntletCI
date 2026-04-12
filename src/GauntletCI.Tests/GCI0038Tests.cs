@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Cli.Output;
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
-using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Tests;
 
@@ -66,7 +66,7 @@ public class GCI0038TimeoutGuardTests
         public string Name => "SlowRule";
 
         public async Task<List<Finding>> EvaluateAsync(
-            DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+            AnalysisContext context, CancellationToken ct = default)
         {
             await Task.Delay(Timeout.Infinite, ct);
             return [];
