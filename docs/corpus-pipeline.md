@@ -49,12 +49,15 @@ Common overrides:
 
 | Parameter | Default | Description |
 |---|---|---|
+| `-Provider` | `gh-search` | Discovery provider: `gh-search` (token required) or `gh-archive` (unauthenticated). **Note:** `--min-stars` has no effect with `gh-archive` — event streams contain no star count. |
 | `-StartDate` | Yesterday (UTC) | Filter PRs merged/created on or after this date |
+| `-EndDate` | _(same as StartDate)_ | End of date range, inclusive |
 | `-Limit` | `50` | Max candidates to discover |
-| `-Language` | _(all)_ | Programming language filter (e.g. `C#`, `Python`) |
+| `-Language` | `C#` | Programming language filter (e.g. `C#`, `Python`). Pass empty string to include all. |
 | `-MinComments` | `2` | Minimum review comment count |
+| `-MinStars` | `500` | Minimum repository star count (`gh-search` only) |
 | `-Tier` | `discovery` | Target fixture tier for hydration |
-| `-Db` | `./data/corpus.db` | SQLite database path |
+| `-Db` | `./data/gauntletci-corpus.db` | SQLite database path |
 | `-Fixtures` | `./data/fixtures` | Fixtures root directory |
 | `-Report` | `./data/scorecard.md` | Output path for the markdown report |
 | `-SkipTo` | `1` | Resume from step N (1–6) |

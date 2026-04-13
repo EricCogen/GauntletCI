@@ -16,6 +16,7 @@ def main() -> None:
     parser.add_argument("--include-nonfired", type=int, default=30, help="How many non-fired tasks to synthesize.")
     parser.add_argument("--rules", default="", help="Comma-separated rule ids to target.")
     parser.add_argument("--language", default="C#", help="Only queue fixtures whose primary language matches (default: C#). Pass empty string to disable filter.")
+    parser.add_argument("--tiers", default="gold,silver", help="Comma-separated tiers to include (default: gold,silver). Use 'all' to include discovery-tier fixtures.")
     args = parser.parse_args()
 
     base_dir = Path(__file__).resolve().parent
@@ -26,6 +27,9 @@ def main() -> None:
 
         target_rules = [x.strip() for x in args.rules.split(",") if x.strip()]
         lang_filter = args.language.strip()
+        tier_filter: list[str] = []
+        if args.tiers.strip().lower() != "all":
+            tier_filter = [t.strip().lower() for t in args.tiers.split(",") if t.strip()]
 
         # Build WHERE clause for fired query
         conditions: list[str] = []
@@ -36,6 +40,9 @@ def main() -> None:
         if lang_filter:
             conditions.append("LOWER(f.language) = LOWER(?)")
             params.append(lang_filter)
+        if tier_filter:
+            conditions.append(f"LOWER(f.tier) IN ({','.join(['?'] * len(tier_filter))})")
+            params.extend(tier_filter)
         conditions.append("af.did_trigger = 1")
         where = "WHERE " + " AND ".join(conditions)
 
@@ -82,9 +89,15 @@ def main() -> None:
                 rules = [r[0] for r in conn.execute("SELECT DISTINCT rule_id FROM actual_findings ORDER BY rule_id").fetchall()]
             per_rule = max(1, math.ceil(nonfired_limit / max(len(rules), 1)))
 
-            # Build language filter clause for nonfired probes
-            nonfired_lang_clause = "AND LOWER(f.language) = LOWER(?)" if lang_filter else ""
-            nonfired_lang_params: list[object] = [lang_filter] if lang_filter else []
+            # Build language and tier filter clauses for nonfired probes
+            nonfired_extra_clauses = ""
+            nonfired_extra_params: list[object] = []
+            if lang_filter:
+                nonfired_extra_clauses += " AND LOWER(f.language) = LOWER(?)"
+                nonfired_extra_params.append(lang_filter)
+            if tier_filter:
+                nonfired_extra_clauses += f" AND LOWER(f.tier) IN ({','.join(['?'] * len(tier_filter))})"
+                nonfired_extra_params.extend(tier_filter)
 
             for rule_id in rules:
                 rows = conn.execute(
@@ -96,11 +109,11 @@ def main() -> None:
                         FROM actual_findings af
                         WHERE af.fixture_id = f.fixture_id AND af.rule_id = ? AND af.did_trigger = 1
                     )
-                    {nonfired_lang_clause}
+                    {nonfired_extra_clauses}
                     ORDER BY f.has_review_comments DESC, f.has_tests_changed ASC, f.created_at_utc DESC
                     LIMIT ?
                     """,
-                    (rule_id, *nonfired_lang_params, per_rule),
+                    (rule_id, *nonfired_extra_params, per_rule),
                 ).fetchall()
                 for row in rows:
                     conn.execute(
