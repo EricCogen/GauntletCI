@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
+using System.Net;
+using System.Net.Http.Headers;
 using System.Text.Json;
 using GauntletCI.Corpus.Interfaces;
 using GauntletCI.Corpus.Models;
@@ -144,7 +146,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
 
     private async Task<T> GetJsonAsync<T>(string url, CancellationToken ct)
     {
-        var json = await _http.GetStringAsync(url, ct);
+        var json = await FetchWithBackoffAsync(() => new HttpRequestMessage(HttpMethod.Get, url), ct);
         return JsonSerializer.Deserialize<T>(json, JsonOpts)
             ?? throw new InvalidOperationException($"Null response from {url}");
     }
@@ -152,18 +154,82 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
     private async Task<List<T>> GetJsonListAsync<T>(string url, CancellationToken ct)
     {
         var pagedUrl = url.Contains('?') ? $"{url}&per_page=100" : $"{url}?per_page=100";
-        var json = await _http.GetStringAsync(pagedUrl, ct);
+        var json = await FetchWithBackoffAsync(() => new HttpRequestMessage(HttpMethod.Get, pagedUrl), ct);
         return JsonSerializer.Deserialize<List<T>>(json, JsonOpts) ?? [];
     }
 
-    private async Task<string> GetDiffAsync(string prUrl, CancellationToken ct)
+    private Task<string> GetDiffAsync(string prUrl, CancellationToken ct) =>
+        FetchWithBackoffAsync(() =>
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, prUrl);
+            req.Headers.Accept.Clear();
+            req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3.diff"));
+            return req;
+        }, ct);
+
+    /// <summary>
+    /// Sends an HTTP request with exponential back-off on GitHub rate-limit responses
+    /// (HTTP 429 or HTTP 403 with x-ratelimit-remaining: 0).
+    /// Honors the Retry-After and x-ratelimit-reset response headers when present.
+    /// </summary>
+    private async Task<string> FetchWithBackoffAsync(Func<HttpRequestMessage> requestFactory, CancellationToken ct)
     {
-        using var req = new HttpRequestMessage(HttpMethod.Get, prUrl);
-        req.Headers.Accept.Clear();
-        req.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/vnd.github.v3.diff"));
-        using var resp = await _http.SendAsync(req, ct);
-        resp.EnsureSuccessStatusCode();
-        return await resp.Content.ReadAsStringAsync(ct);
+        const int MaxRetries = 6;
+        var baseDelay = TimeSpan.FromSeconds(2);
+
+        for (int attempt = 0; ; attempt++)
+        {
+            using var req  = requestFactory();
+            using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
+
+            if (resp.IsSuccessStatusCode)
+                return await resp.Content.ReadAsStringAsync(ct);
+
+            if (!IsRateLimited(resp) || attempt >= MaxRetries)
+                resp.EnsureSuccessStatusCode(); // throws HttpRequestException
+
+            var waitTime = GetWaitTime(resp, baseDelay);
+            baseDelay = TimeSpan.FromSeconds(Math.Min(baseDelay.TotalSeconds * 2, 64));
+
+            Console.Error.WriteLine(
+                $"[corpus] Rate limit (HTTP {(int)resp.StatusCode}) — attempt {attempt + 1}/{MaxRetries}, " +
+                $"waiting {waitTime.TotalSeconds:F0}s before retry…");
+
+            await Task.Delay(waitTime, ct);
+        }
+    }
+
+    private static bool IsRateLimited(HttpResponseMessage resp)
+    {
+        if (resp.StatusCode == HttpStatusCode.TooManyRequests) return true;
+
+        // GitHub also returns 403 when the primary rate limit is exhausted
+        if (resp.StatusCode == HttpStatusCode.Forbidden &&
+            resp.Headers.TryGetValues("x-ratelimit-remaining", out var vals) &&
+            vals.FirstOrDefault() == "0")
+            return true;
+
+        return false;
+    }
+
+    private static TimeSpan GetWaitTime(HttpResponseMessage resp, TimeSpan fallback)
+    {
+        // Standard Retry-After header (seconds or HTTP-date)
+        if (resp.Headers.RetryAfter?.Delta is { } delta)
+            return delta + TimeSpan.FromSeconds(1);
+
+        // GitHub-specific: unix timestamp when the rate-limit window resets
+        if (resp.Headers.TryGetValues("x-ratelimit-reset", out var resetVals) &&
+            long.TryParse(resetVals.FirstOrDefault(), out var epoch))
+        {
+            var resetAt = DateTimeOffset.FromUnixTimeSeconds(epoch);
+            var wait    = resetAt - DateTimeOffset.UtcNow + TimeSpan.FromSeconds(2); // small buffer
+            if (wait > TimeSpan.Zero) return wait;
+        }
+
+        // Exponential backoff with ±10 % jitter
+        var jitter = 1.0 + (Random.Shared.NextDouble() * 0.2 - 0.1);
+        return TimeSpan.FromSeconds(fallback.TotalSeconds * jitter);
     }
 
     internal static (string Owner, string Repo, int PrNumber) ParsePrUrl(string url)
