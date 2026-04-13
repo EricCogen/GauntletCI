@@ -58,18 +58,48 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
 
     private void CheckRemovedEnumMembers(DiffFile file, List<Finding> findings)
     {
-        // Only flag in files that have an enum definition present (added or context)
-        bool hasEnum = file.Hunks
-            .SelectMany(h => h.Lines)
-            .Any(l => l.Content.Contains("enum ", StringComparison.Ordinal));
+        var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
 
-        if (!hasEnum) return;
+        bool inEnumBody = false;
+        bool pendingEnumOpen = false;
+        int braceDepth = 0;
+        int enumBraceDepth = 0;
 
-        foreach (var line in file.RemovedLines)
+        foreach (var line in allLines)
         {
-            var content = line.Content.Trim();
-            // Enum member pattern: "MemberName," or "MemberName = N," or "MemberName = N"
+            var raw = line.Content;
+
+            if (raw.Contains("enum ", StringComparison.Ordinal))
+            {
+                pendingEnumOpen = true;
+                inEnumBody = false;
+            }
+
+            foreach (var c in raw)
+            {
+                if (c == '{')
+                {
+                    braceDepth++;
+                    if (pendingEnumOpen)
+                    {
+                        inEnumBody = true;
+                        pendingEnumOpen = false;
+                        enumBraceDepth = braceDepth;
+                    }
+                }
+                else if (c == '}')
+                {
+                    if (inEnumBody && braceDepth == enumBraceDepth)
+                        inEnumBody = false;
+                    braceDepth--;
+                }
+            }
+
+            if (line.Kind != DiffLineKind.Removed) continue;
+
+            var content = raw.Trim();
             if (content.Length == 0 || content.StartsWith("//")) continue;
+            if (!inEnumBody) continue;
             if (!IsEnumMember(content)) continue;
 
             findings.Add(CreateFinding(
