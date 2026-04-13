@@ -47,7 +47,7 @@ artifacts/
 !tests/GauntletCI.Benchmarks/Fixtures/
 /data
 /src/GauntletCI.Corpus/GauntletCI_Labeler_App/.venv
-/ghapi.key
+
 
 # Python bytecode
 **/__pycache__/
