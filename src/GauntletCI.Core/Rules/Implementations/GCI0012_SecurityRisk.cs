@@ -19,6 +19,8 @@ public class GCI0012_SecurityRisk : RuleBase
     private static readonly string[] WeakHashAlgorithms = ["MD5.Create()", "SHA1.Create()", "new MD5CryptoServiceProvider", "new SHA1Managed"];
     private static readonly string[] WeakCryptoAlgorithms = ["DESCryptoServiceProvider", "RC2CryptoServiceProvider", "TripleDES"];
     private static readonly string[] DangerousApis = ["Assembly.Load(", "Activator.CreateInstance(", "Process.Start("];
+    // Diverges intentionally from WellKnownPatterns.SecretNamePatterns: includes "pwd" and is scoped
+    // to patterns relevant to credential assignment checks in this rule.
     private static readonly string[] SecretNamePatterns = ["password", "secret", "apikey", "api_key", "pwd"];
 
     public override Task<List<Finding>> EvaluateAsync(

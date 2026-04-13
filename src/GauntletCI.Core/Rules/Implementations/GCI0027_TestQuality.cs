@@ -45,6 +45,9 @@ public class GCI0027_TestQuality : RuleBase
         return Task.FromResult(findings);
     }
 
+    // Diverges intentionally from WellKnownPatterns.IsTestFile: takes a DiffFile rather than a string
+    // path, and checks file endings (Tests.cs, Test.cs, Spec.cs) as well as directory segments,
+    // which is more precise for the test-quality assertion checks in this rule.
     private static bool IsTestFile(DiffFile file)
     {
         var path = file.NewPath;

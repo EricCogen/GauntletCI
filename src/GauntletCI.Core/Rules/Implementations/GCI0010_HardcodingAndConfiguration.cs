@@ -24,6 +24,8 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
     private static readonly string[] ConnectionStringMarkers =
         ["Server=", "Data Source=", "mongodb://", "redis://"];
 
+    // Diverges intentionally from WellKnownPatterns.SecretNamePatterns: includes "pwd" (common abbreviation
+    // detected in this context) and omits broader entries specific to other rules.
     private static readonly string[] SecretNamePatterns =
         ["password", "secret", "apikey", "api_key", "token", "pwd"];
 
