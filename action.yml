@@ -59,9 +59,13 @@ runs:
         args="analyze --commit ${{ inputs.commit }}"
         [ "${{ inputs.no-llm }}" = "true" ] && args="$args --no-llm"
         [ "${{ inputs.ascii }}" = "true" ]  && args="$args --ascii"
-        gauntletci $args
+        TMPFILE=$(mktemp)
+        set -o pipefail
+        gauntletci $args 2>&1 | tee "$TMPFILE"
         EXIT_CODE=$?
-        # Count findings by counting [GCI lines in output (rough proxy)
-        echo "findings-count=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+        set +o pipefail
+        FINDINGS=$(grep -cE 'GCI[0-9]{4}' "$TMPFILE" 2>/dev/null || echo "0")
+        rm -f "$TMPFILE"
+        echo "findings-count=$FINDINGS" >> "$GITHUB_OUTPUT"
         [ "${{ inputs.fail-on-findings }}" = "true" ] && exit $EXIT_CODE
         exit 0

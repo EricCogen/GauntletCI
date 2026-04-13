@@ -28,15 +28,25 @@ public static class IgnoreCommand
             repoOption,
         };
 
-        cmd.SetHandler((ruleId, path, repo) =>
+        cmd.SetHandler((context) =>
         {
-            var normalizedId = ruleId.ToUpperInvariant();
-            IgnoreList.Append(repo.FullName, normalizedId, path);
+            var ruleId = context.ParseResult.GetValueForArgument(ruleIdArg);
+            var path   = context.ParseResult.GetValueForOption(pathOption);
+            var repo   = context.ParseResult.GetValueForOption(repoOption)!;
+            try
+            {
+                var normalizedId = ruleId.ToUpperInvariant();
+                IgnoreList.Append(repo.FullName, normalizedId, path);
 
-            var entry = path is not null ? $"{normalizedId}:{path}" : normalizedId;
-            AnsiConsole.MarkupLine($"[green][[GauntletCI]] Added '{Markup.Escape(entry)}' to .gauntletci-ignore[/]");
-            return Task.CompletedTask;
-        }, ruleIdArg, pathOption, repoOption);
+                var entry = path is not null ? $"{normalizedId}:{path}" : normalizedId;
+                AnsiConsole.MarkupLine($"[green][[GauntletCI]] Added '{Markup.Escape(entry)}' to .gauntletci-ignore[/]");
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.MarkupLine($"[red][[GauntletCI]] Error writing ignore entry: {Markup.Escape(ex.Message)}[/]");
+                context.ExitCode = 1;
+            }
+        });
 
         return cmd;
     }

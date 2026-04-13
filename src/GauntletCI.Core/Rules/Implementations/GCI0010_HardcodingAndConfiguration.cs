@@ -201,14 +201,21 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         if (string.IsNullOrWhiteSpace(content) || !content.Contains('"', StringComparison.Ordinal))
             return [];
 
-        var wrapped = $"class __G {{ void __M() {{ {content} }} }}";
-        var tree = CSharpSyntaxTree.ParseText(wrapped);
-        var root = tree.GetRoot();
+        try
+        {
+            var wrapped = $"class __G {{ void __M() {{ {content} }} }}";
+            var tree = CSharpSyntaxTree.ParseText(wrapped);
+            var root = tree.GetRoot();
 
-        return root.DescendantTokens()
-            .Where(t => t.IsKind(SyntaxKind.StringLiteralToken))
-            .Select(t => t.ValueText)
-            .ToList();
+            return root.DescendantTokens()
+                .Where(t => t.IsKind(SyntaxKind.StringLiteralToken))
+                .Select(t => t.ValueText)
+                .ToList();
+        }
+        catch
+        {
+            return [];
+        }
     }
 
     private void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)

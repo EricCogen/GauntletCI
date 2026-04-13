@@ -57,10 +57,6 @@ public class GCI0023_StructuredLogging : RuleBase
             if (!isLogCall) continue;
 
             // Flag string interpolation: logger.LogInformation($"...)
-            if (!content.Contains("($\"") && !content.Contains(", $\"") &&
-                !content.Contains("($'") && !content.Contains("(\"") == false) continue;
-
-            // More precise: contains a log call AND a $" interpolated string
             if (content.Contains("$\""))
             {
                 findings.Add(CreateFinding(

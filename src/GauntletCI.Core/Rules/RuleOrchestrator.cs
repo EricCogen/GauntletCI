@@ -125,6 +125,16 @@ public class RuleOrchestrator
             {
                 outcome = RuleOutcome.Errored;
                 Console.Error.WriteLine($"[GauntletCI] Rule {rule.Id} threw an exception: {ex.Message}");
+                allFindings.Add(new Finding
+                {
+                    RuleId          = rule.Id,
+                    RuleName        = rule.Name,
+                    Summary         = $"Rule {rule.Id} encountered an internal error and could not complete analysis.",
+                    Evidence        = ex.GetType().Name + ": " + ex.Message,
+                    WhyItMatters    = "An errored rule may have missed real issues in this diff.",
+                    SuggestedAction = "Report this error at https://github.com/EricCogen/GauntletCI/issues.",
+                    Confidence      = Confidence.Low,
+                });
             }
             finally
             {
