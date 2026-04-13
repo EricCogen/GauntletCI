@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.CommandLine;
 using GauntletCI.Llm;
+using Spectre.Console;
 
 namespace GauntletCI.Cli.Commands;
 
@@ -34,15 +35,13 @@ public static class ModelCommand
         {
             var dir = ctx.ParseResult.GetValueForOption(dirOption)!;
             var downloader = new ModelDownloader(dir);
-            var progress = new Progress<string>(msg => Console.WriteLine(msg));
+            var progress = new Progress<string>(msg => AnsiConsole.MarkupLine($"[dim]{Markup.Escape(msg)}[/]"));
 
             try
             {
                 await downloader.EnsureModelAsync(progress);
-                Console.WriteLine();
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("  Model ready. Use 'gauntletci analyze --with-llm' to enable enrichment.");
-                Console.ResetColor();
+                AnsiConsole.WriteLine();
+                AnsiConsole.MarkupLine("[green]  ✓ Model ready. Use 'gauntletci analyze --with-llm' to enable enrichment.[/]");
             }
             catch (Exception ex)
             {
@@ -63,17 +62,14 @@ public static class ModelCommand
             var downloader = new ModelDownloader(DefaultModelDir);
             if (downloader.IsModelCached())
             {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"  ✓ Model cached at {DefaultModelDir}");
-                Console.WriteLine("  Run 'gauntletci analyze --with-llm' to enable enrichment.");
+                AnsiConsole.MarkupLine($"[green]  ✓ Model cached at {Markup.Escape(DefaultModelDir)}[/]");
+                AnsiConsole.MarkupLine("[green]  Run 'gauntletci analyze --with-llm' to enable enrichment.[/]");
             }
             else
             {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"  ✗ Model not found at {DefaultModelDir}");
-                Console.WriteLine("  Run 'gauntletci model download' to download it (~2 GB).");
+                AnsiConsole.MarkupLine($"[yellow]  ✗ Model not found at {Markup.Escape(DefaultModelDir)}[/]");
+                AnsiConsole.MarkupLine("[yellow]  Run 'gauntletci model download' to download it (~2 GB).[/]");
             }
-            Console.ResetColor();
         });
 
         return cmd;
