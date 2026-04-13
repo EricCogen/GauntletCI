@@ -1,0 +1,98 @@
+{% extends 'layout.html' %}
+{% block content %}
+<section class="panel hero-panel">
+  <div class="panel-header">
+    <div>
+      <h1>Auto-label Preview</h1>
+      <div class="muted">{{ total }} pending item(s) where the rule did not fire — almost always a safe "No"</div>
+    </div>
+    <a class="button secondary" href="{{ url_for('queue') }}">Back to queue</a>
+  </div>
+</section>
+
+<section class="panel">
+  <p style="margin:0 0 1rem">
+    When a rule has <strong>fired = No</strong> the engine looked at the diff and found nothing to flag.
+    Labeling these <em>No</em> creates clean negative training examples without requiring manual review.
+    Rules marked <span class="badge badge-warn">review anyway</span> are high-risk rules where you may
+    want a human to verify even non-fires — they are unchecked by default.
+  </p>
+
+  <form method="post" action="{{ url_for('auto_label_apply') }}">
+    <table class="data-table" style="margin-bottom:1.25rem">
+      <thead>
+        <tr>
+          <th style="width:2rem"><input type="checkbox" id="check-all" checked title="Select all"></th>
+          <th>Rule</th>
+          <th>Items</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+        {% set is_high_risk = row.rule_id in high_risk %}
+        <tr>
+          <td>
+            <input type="checkbox" name="rule_ids" value="{{ row.rule_id }}"
+              {% if not is_high_risk %}checked{% endif %}
+              class="rule-check">
+          </td>
+          <td style="font-weight:600">{{ row.rule_id }}</td>
+          <td>{{ row.n }}</td>
+          <td>
+            {% if is_high_risk %}
+              <span class="badge badge-warn">review anyway</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <div style="display:flex;gap:1.5rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:1rem">
+      <label style="min-width:160px">Confidence to assign
+        <select name="confidence">
+          <option value="0.75" selected>0.75 — pretty sure (default)</option>
+          <option value="1.0">1.0 — certain (all obvious negatives)</option>
+          <option value="0.5">0.5 — uncertain</option>
+        </select>
+      </label>
+
+      <div>
+        <div class="muted" style="font-size:0.8rem;margin-bottom:0.35rem">
+          Label source will be recorded as <code>auto-negative</code>.
+          You can re-label any item manually later.
+        </div>
+        <button class="button" type="submit" id="apply-btn">Apply to selected rules</button>
+      </div>
+    </div>
+  </form>
+</section>
+
+<script>
+(function () {
+  var checkAll = document.getElementById('check-all');
+  var checks = document.querySelectorAll('.rule-check');
+  var applyBtn = document.getElementById('apply-btn');
+
+  function updateApplyBtn() {
+    var checked = document.querySelectorAll('.rule-check:checked').length;
+    applyBtn.textContent = checked
+      ? 'Apply to ' + checked + ' rule(s)'
+      : 'Apply to selected rules';
+    applyBtn.disabled = checked === 0;
+  }
+
+  checkAll.addEventListener('change', function () {
+    checks.forEach(function (c) { c.checked = checkAll.checked; });
+    updateApplyBtn();
+  });
+
+  checks.forEach(function (c) {
+    c.addEventListener('change', updateApplyBtn);
+  });
+
+  updateApplyBtn();
+})();
+</script>
+{% endblock %}

@@ -1,7 +1,10 @@
 {% extends 'layout.html' %}
 {% block content %}
 <section class="panel">
-  <div class="panel-header"><h1>Queue</h1><div class="muted">Grouped review units at fixture + rule level</div></div>
+  <div class="panel-header">
+    <div><h1>Queue</h1><div class="muted">Grouped review units at fixture + rule level</div></div>
+    <a class="button secondary" href="{{ url_for('auto_label_preview') }}">Auto-label non-fired →</a>
+  </div>
   <form class="filters" method="get">
     <label>Status
       <select name="status">

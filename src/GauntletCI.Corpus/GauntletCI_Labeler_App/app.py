@@ -373,6 +373,69 @@ def rule_detail(rule_id: str):
     return render_template("rule_detail.html", rubric=rubric, metrics=metrics[0] if metrics else None, evaluation=evaluations[0] if evaluations else None)
 
 
+@app.route("/auto-label/preview")
+def auto_label_preview():
+    with get_conn() as conn:
+        rows = conn.execute("""
+            SELECT lq.rule_id, COUNT(*) AS n
+            FROM label_queue lq
+            WHERE lq.fired = 0 AND lq.status = 'pending'
+            GROUP BY lq.rule_id
+            ORDER BY lq.rule_id
+        """).fetchall()
+    total = sum(r["n"] for r in rows)
+    # Flag rules where a human eye is worth it even for non-fires
+    high_risk = {"GCI0012", "GCI0029", "GCI0040"}
+    return render_template(
+        "auto_label_preview.html",
+        rows=rows,
+        total=total,
+        high_risk=high_risk,
+    )
+
+
+@app.post("/auto-label/apply")
+def auto_label_apply():
+    selected = set(request.form.getlist("rule_ids"))
+    try:
+        confidence = float(request.form.get("confidence", "0.75"))
+    except ValueError:
+        confidence = 0.75
+    reason = "Rule did not fire on this PR; auto-labeled as negative example."
+
+    if not selected:
+        flash("No rules selected — nothing applied.", "warning")
+        return redirect(url_for("auto_label_preview"))
+
+    applied = 0
+    with get_conn() as conn:
+        items = conn.execute("""
+            SELECT lq.id, lq.fixture_id, lq.rule_id
+            FROM label_queue lq
+            WHERE lq.fired = 0 AND lq.status = 'pending'
+              AND lq.rule_id IN ({})
+        """.format(",".join("?" * len(selected))), list(selected)).fetchall()
+
+        for item in items:
+            upsert_label(
+                conn,
+                fixture_id=item["fixture_id"],
+                rule_id=item["rule_id"],
+                decision="no",
+                confidence=confidence,
+                reason=reason,
+                label_source="auto-negative",
+                usefulness=None,
+                reviewer_notes="",
+                reviewer=CONFIG["reviewer_name"],
+            )
+            update_queue_status(conn, item["id"], "labeled", notes="auto-negative")
+            applied += 1
+
+    flash(f"Auto-labeled {applied} item(s) as No (confidence {confidence}).", "success")
+    return redirect(url_for("queue"))
+
+
 @app.route("/evaluations")
 def evaluations():
     with get_conn() as conn:

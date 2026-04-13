@@ -178,6 +178,14 @@ textarea { resize: vertical; }
   border: 1px solid var(--border);
   color: var(--muted);
 }
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.badge-warn { background: rgba(234,179,8,0.15); color: #eab308; border: 1px solid rgba(234,179,8,0.3); }
 .summary-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(120px, 1fr));
