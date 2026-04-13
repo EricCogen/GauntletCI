@@ -106,7 +106,7 @@ public class GCI0024_ResourceLifecycle : RuleBase
         // Fast path: explicit known types
         foreach (var knownType in DisposableTypes)
         {
-            if (content.Contains(knownType, StringComparison.OrdinalIgnoreCase))
+            if (content.Contains(knownType, StringComparison.Ordinal))
                 return knownType.Replace("new ", "").TrimEnd('(');
         }
 

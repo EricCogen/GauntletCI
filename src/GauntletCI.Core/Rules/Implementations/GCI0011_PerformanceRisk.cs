@@ -31,19 +31,42 @@ public class GCI0011_PerformanceRisk : RuleBase
     private void CheckPerformanceAntiPatterns(DiffFile file, List<Finding> findings)
     {
         var addedLines = file.AddedLines.ToList();
-        int loopDepth = 0;
+        // loopStartDepths holds the brace depth at the moment each loop's { was opened.
+        // The scope closes when braceDepth drops back to that value on a closing brace.
+        var loopStartDepths = new Stack<int>();
+        int braceDepth = 0;
+        int pendingLoopBrace = 0; // deferred: loop keyword seen but { is on the next line
 
         for (int i = 0; i < addedLines.Count; i++)
         {
             var content = addedLines[i].Content;
             var trimmed = content.Trim();
 
-            // Track loop context
             bool isLoopLine = trimmed.StartsWith("for ", StringComparison.Ordinal) ||
                               trimmed.StartsWith("foreach ", StringComparison.Ordinal) ||
                               trimmed.StartsWith("while ", StringComparison.Ordinal);
-            if (isLoopLine) loopDepth++;
-            if (trimmed == "}") loopDepth = Math.Max(0, loopDepth - 1);
+
+            int opens  = trimmed.Count(c => c == '{');
+            int closes = trimmed.Count(c => c == '}');
+
+            // Process opens first (textual order).
+            if (opens > 0)
+            {
+                if (isLoopLine || pendingLoopBrace > 0)
+                {
+                    loopStartDepths.Push(braceDepth);
+                    if (pendingLoopBrace > 0) pendingLoopBrace--;
+                }
+                braceDepth += opens;
+            }
+            else if (isLoopLine)
+            {
+                // Loop keyword without a same-line { — opening brace is on the next line.
+                pendingLoopBrace++;
+            }
+
+            // Detection uses depth after opens but before closes.
+            int loopDepth = loopStartDepths.Count;
 
             // .ToList()/.ToArray() inside loop
             if (loopDepth > 0 && (content.Contains(".ToList()", StringComparison.Ordinal) ||
@@ -115,6 +138,14 @@ public class GCI0011_PerformanceRisk : RuleBase
                     whyItMatters: "String += in a loop is O(n²) due to string immutability.",
                     suggestedAction: "Use StringBuilder for string building inside loops.",
                     confidence: Confidence.Medium));
+            }
+
+            // Update brace depth after detection and close exhausted loop scopes.
+            for (int j = 0; j < closes; j++)
+            {
+                braceDepth = Math.Max(0, braceDepth - 1);
+                if (loopStartDepths.Count > 0 && braceDepth == loopStartDepths.Peek())
+                    loopStartDepths.Pop();
             }
         }
     }

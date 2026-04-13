@@ -37,7 +37,8 @@ public static class TelemetryHasher
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
-            using var proc = System.Diagnostics.Process.Start(psi)!;
+            using var proc = System.Diagnostics.Process.Start(psi);
+            if (proc is null) return "local";
             var url = await proc.StandardOutput.ReadToEndAsync();
             await proc.WaitForExitAsync();
             return string.IsNullOrWhiteSpace(url) ? "local" : Hash8(url);

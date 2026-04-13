@@ -131,7 +131,9 @@ internal sealed class LlmDaemonClient : ILlmEngine
                 CreateNoWindow  = true,
             };
 
-            return Process.Start(psi) is not null;
+            // Start the daemon and immediately release our handle — we don't own its lifetime.
+            using var proc = Process.Start(psi);
+            return proc is not null;
         }
         catch
         {

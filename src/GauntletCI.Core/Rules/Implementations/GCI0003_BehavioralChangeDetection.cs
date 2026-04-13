@@ -32,7 +32,8 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
     private void CheckLogicRemovedWithoutTests(DiffContext diff, List<Finding> findings)
     {
         var removedLogicLines = diff.AllRemovedLines
-            .Where(l => LogicKeywords.Any(k => l.Content.Contains(k, StringComparison.Ordinal)))
+            .Where(l => !l.Content.TrimStart().StartsWith("//", StringComparison.Ordinal)
+                     && LogicKeywords.Any(k => l.Content.Contains(k, StringComparison.Ordinal)))
             .ToList();
 
         if (removedLogicLines.Count < 3) return;
