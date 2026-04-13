@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
+using GauntletCI.Core.FileAnalysis;
 using GauntletCI.Core.Model;
-using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -20,19 +21,26 @@ public class GCI0002_GoalAlignment : RuleBase
     private static readonly string[] TestPatterns = ["test", "spec", "tests", "specs"];
 
     public override Task<List<Finding>> EvaluateAsync(
-        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+        AnalysisContext context, CancellationToken ct = default)
     {
+        var diff = context.Diff;
         var findings = new List<Finding>();
 
-        CheckCommitMessageAlignment(diff, findings);
-        CheckUnclearScope(diff, findings);
+        CheckCommitMessageAlignment(diff, context.SkippedFiles, findings);
+        CheckUnclearScope(diff, context.SkippedFiles, findings);
 
         return Task.FromResult(findings);
     }
 
-    private void CheckCommitMessageAlignment(DiffContext diff, List<Finding> findings)
+    private void CheckCommitMessageAlignment(DiffContext diff, IReadOnlyList<ChangedFileAnalysisRecord> skippedFiles, List<Finding> findings)
     {
-        if (string.IsNullOrWhiteSpace(diff.CommitMessage) || diff.Files.Count == 0) return;
+        if (string.IsNullOrWhiteSpace(diff.CommitMessage)) return;
+
+        var allFilePaths = diff.Files.Select(f => f.NewPath)
+            .Concat(skippedFiles.Select(r => r.FilePath))
+            .ToList();
+
+        if (allFilePaths.Count == 0) return;
 
         var messageWords = diff.CommitMessage
             .ToLowerInvariant()
@@ -42,9 +50,8 @@ public class GCI0002_GoalAlignment : RuleBase
 
         if (messageWords.Count == 0) return;
 
-        // Match against all path segments (file name + directory names), not just the filename
-        var pathSegments = diff.Files
-            .SelectMany(f => f.NewPath
+        var pathSegments = allFilePaths
+            .SelectMany(p => p
                 .ToLowerInvariant()
                 .Split(['/', '\\', '.'], StringSplitOptions.RemoveEmptyEntries))
             .Where(s => s.Length >= 3)
@@ -53,32 +60,34 @@ public class GCI0002_GoalAlignment : RuleBase
         int matchCount = pathSegments.Count(segment =>
             messageWords.Any(word => segment.Contains(word) || word.Contains(segment)));
 
-        if (diff.Files.Count > 3 && matchCount == 0)
+        int totalFileCount = allFilePaths.Count;
+        if (totalFileCount > 3 && matchCount == 0)
         {
             findings.Add(CreateFinding(
                 summary: "Changed files appear unrelated to the commit message.",
-                evidence: $"Commit message: \"{diff.CommitMessage}\" — no keyword overlap with changed files: {string.Join(", ", diff.Files.Select(f => f.NewPath))}",
+                evidence: $"Commit message: \"{diff.CommitMessage}\" — no keyword overlap with changed files: {string.Join(", ", allFilePaths)}",
                 whyItMatters: "Commits that don't match their description confuse reviewers and break git blame traceability.",
                 suggestedAction: "Update the commit message to describe the actual changes, or split the commit.",
                 confidence: Confidence.Low));
         }
     }
 
-    private void CheckUnclearScope(DiffContext diff, List<Finding> findings)
+    private void CheckUnclearScope(DiffContext diff, IReadOnlyList<ChangedFileAnalysisRecord> skippedFiles, List<Finding> findings)
     {
-        if (diff.Files.Count <= 5) return;
+        int totalFileCount = diff.Files.Count + skippedFiles.Count;
+        if (totalFileCount <= 5) return;
 
-        bool hasFrontend = diff.Files.Any(f => FrontendExtensions.Any(e => f.NewPath.EndsWith(e, StringComparison.OrdinalIgnoreCase)));
-        bool hasBackend = diff.Files.Any(f => BackendExtensions.Any(e => f.NewPath.EndsWith(e, StringComparison.OrdinalIgnoreCase)));
-        bool hasConfig = diff.Files.Any(f => ConfigExtensions.Any(e => f.NewPath.EndsWith(e, StringComparison.OrdinalIgnoreCase)));
-        bool hasTests = diff.Files.Any(f => TestPatterns.Any(p => f.NewPath.Contains(p, StringComparison.OrdinalIgnoreCase)));
+        bool hasFrontend = skippedFiles.Any(r => FrontendExtensions.Any(e => r.Extension.Equals(e, StringComparison.OrdinalIgnoreCase)));
+        bool hasBackend  = diff.Files.Count > 0; // eligible files are all backend (.cs)
+        bool hasConfig   = skippedFiles.Any(r => ConfigExtensions.Any(e => r.Extension.Equals(e, StringComparison.OrdinalIgnoreCase)));
+        bool hasTests    = diff.Files.Any(f => TestPatterns.Any(p => f.NewPath.Contains(p, StringComparison.OrdinalIgnoreCase)));
 
         int categoryCount = (hasFrontend ? 1 : 0) + (hasBackend ? 1 : 0) + (hasConfig ? 1 : 0) + (hasTests ? 1 : 0);
 
         if (categoryCount >= 3)
         {
             findings.Add(CreateFinding(
-                summary: $"Diff spans {diff.Files.Count} files across {categoryCount} distinct categories (frontend, backend, config, tests).",
+                summary: $"Diff spans {totalFileCount} files across {categoryCount} distinct categories (frontend, backend, config, tests).",
                 evidence: $"Frontend: {hasFrontend}, Backend: {hasBackend}, Config: {hasConfig}, Tests: {hasTests}",
                 whyItMatters: "Large cross-cutting diffs are harder to review, increase merge conflict risk, and make rollbacks difficult.",
                 suggestedAction: "Consider splitting this into focused commits by concern.",

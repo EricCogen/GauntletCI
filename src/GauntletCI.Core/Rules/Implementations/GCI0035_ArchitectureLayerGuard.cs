@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Text.RegularExpressions;
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
-using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -27,13 +27,14 @@ public class GCI0035_ArchitectureLayerGuard : RuleBase, IConfigurableRule
     }
 
     public override Task<List<Finding>> EvaluateAsync(
-        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+        AnalysisContext context, CancellationToken ct = default)
     {
+        var diff = context.Diff;
         var findings = new List<Finding>();
 
         if (_forbiddenImports.Count == 0) return Task.FromResult(findings);
 
-        foreach (var file in diff.Files.Where(f => f.NewPath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)))
+        foreach (var file in diff.Files)
         {
             foreach (var line in file.AddedLines)
             {
