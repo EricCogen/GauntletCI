@@ -17,6 +17,21 @@ public class GCI0013_ObservabilityDebugability : RuleBase
     private static readonly string[] LoggingPatterns =
         ["_logger.", "Log.", "Console.Write", "Trace.", "Debug.Write", "logger."];
 
+    /// <summary>
+    /// Markers that indicate the file is a unit/integration test file.
+    /// Checked against all hunk lines (context + added) so that imports at the
+    /// top of the file are detected even when they are not part of the diff.
+    /// </summary>
+    private static readonly string[] TestFrameworkMarkers =
+    [
+        // xUnit
+        "[Fact]", "[Theory]", "[InlineData(", "using Xunit;",
+        // NUnit
+        "[Test]", "[TestFixture]", "[TestCase(", "using NUnit.Framework;",
+        // MSTest
+        "[TestMethod]", "[TestClass]", "using Microsoft.VisualStudio.TestTools.UnitTesting;",
+    ];
+
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -24,11 +39,22 @@ public class GCI0013_ObservabilityDebugability : RuleBase
 
         foreach (var file in context.Diff.Files)
         {
+            if (IsTestFile(file)) continue;
             CheckLargeMethodWithoutLogging(file, findings);
         }
 
         return Task.FromResult(findings);
     }
+
+    /// <summary>
+    /// Returns true when the file's hunk content contains a recognisable test
+    /// framework attribute or namespace import — no file-path heuristics used.
+    /// </summary>
+    private static bool IsTestFile(DiffFile file) =>
+        file.Hunks
+            .SelectMany(h => h.Lines)
+            .Any(l => TestFrameworkMarkers.Any(
+                m => l.Content.Contains(m, StringComparison.Ordinal)));
 
     private void CheckLargeMethodWithoutLogging(DiffFile file, List<Finding> findings)
     {
@@ -49,6 +75,4 @@ public class GCI0013_ObservabilityDebugability : RuleBase
                 confidence: Confidence.Low));
         }
     }
-
-
 }
