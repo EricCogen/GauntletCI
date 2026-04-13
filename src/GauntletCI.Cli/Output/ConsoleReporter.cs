@@ -71,8 +71,8 @@ public static class ConsoleReporter
 
     private static void PrintFinding(Finding finding, string accentColor)
     {
-        AnsiConsole.MarkupLine($"[{accentColor}]  [[{finding.RuleId}]][/] [white]{finding.RuleName}[/]");
-        AnsiConsole.MarkupLine($"  Summary  : {finding.Summary}");
+        AnsiConsole.MarkupLine($"[{accentColor}]  [[{finding.RuleId}]][/] [white]{Markup.Escape(finding.RuleName)}[/]");
+        AnsiConsole.MarkupLine($"  Summary  : {Markup.Escape(finding.Summary)}");
 
         var evidenceDisplay = SensitiveRuleIds.Contains(finding.RuleId)
             ? MaskEvidenceSnippet(finding.Evidence)

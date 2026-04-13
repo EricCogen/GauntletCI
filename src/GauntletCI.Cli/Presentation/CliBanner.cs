@@ -20,7 +20,7 @@ public static class CliBanner
             ?.InformationalVersion?.Split('+')[0] ?? "0.0.0";
 
         AnsiConsole.WriteLine();
-        AnsiConsole.MarkupLine($"  [bold gold1]GauntletCI[/]  [dim]v{version}[/]");
+        AnsiConsole.MarkupLine($"  [bold gold1]GauntletCI[/]  [dim]v{Markup.Escape(version)}[/]");
         AnsiConsole.MarkupLine("  [dim]pre-commit change-risk detection[/]");
         AnsiConsole.WriteLine();
     }

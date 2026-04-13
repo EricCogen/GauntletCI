@@ -62,12 +62,12 @@ public static class ModelCommand
             var downloader = new ModelDownloader(DefaultModelDir);
             if (downloader.IsModelCached())
             {
-                AnsiConsole.MarkupLine($"[green]  ✓ Model cached at {DefaultModelDir}[/]");
+                AnsiConsole.MarkupLine($"[green]  ✓ Model cached at {Markup.Escape(DefaultModelDir)}[/]");
                 AnsiConsole.MarkupLine("[green]  Run 'gauntletci analyze --with-llm' to enable enrichment.[/]");
             }
             else
             {
-                AnsiConsole.MarkupLine($"[yellow]  ✗ Model not found at {DefaultModelDir}[/]");
+                AnsiConsole.MarkupLine($"[yellow]  ✗ Model not found at {Markup.Escape(DefaultModelDir)}[/]");
                 AnsiConsole.MarkupLine("[yellow]  Run 'gauntletci model download' to download it (~2 GB).[/]");
             }
         });
