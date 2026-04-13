@@ -58,7 +58,7 @@ public static class PostmortemCommand
                 else
                 {
                     var shortSha = commit.Length >= 8 ? commit[..8] : commit;
-                    AnsiConsole.MarkupLine($"[dim]  ⏪  Postmortem — commit {shortSha}[/]");
+                    AnsiConsole.MarkupLine($"[dim]  ⏪  Postmortem — commit {Markup.Escape(shortSha)}[/]");
                     AnsiConsole.MarkupLine("[dim]     These findings would have been caught at pre-commit time.[/]");
                     AnsiConsole.WriteLine();
                     ConsoleReporter.Report(result, ascii);
