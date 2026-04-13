@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Text.RegularExpressions;
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.StaticAnalysis;
@@ -43,16 +44,17 @@ public class GCI0024_ResourceLifecycle : RuleBase
         new(@"new ([A-Z][A-Za-z0-9]+)\(", RegexOptions.Compiled);
 
     public override Task<List<Finding>> EvaluateAsync(
-        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+        AnalysisContext context, CancellationToken ct = default)
     {
+        var diff = context.Diff;
         var findings = new List<Finding>();
 
-        foreach (var file in diff.Files.Where(f => f.NewPath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)))
+        foreach (var file in diff.Files)
         {
             CheckUnguardedDisposables(file, findings);
         }
 
-        AddRoslynFindings(staticAnalysis, findings);
+        AddRoslynFindings(context.StaticAnalysis, findings);
 
         return Task.FromResult(findings);
     }
