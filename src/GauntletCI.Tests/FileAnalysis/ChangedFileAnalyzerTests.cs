@@ -39,27 +39,27 @@ public class ChangedFileAnalyzerTests
         Assert.Contains(".cs is allowed", record.Reason, StringComparison.OrdinalIgnoreCase);
     }
 
-    // ── 2. .md file is KnownNonSource and skipped ────────────────────────────
+    // ── 2. .md file is unsupported and skipped ───────────────────────────────
 
     [Fact]
-    public void MdFile_IsKnownNonSource_Skipped()
+    public void MdFile_IsUnknownUnsupported_Skipped()
     {
         var record = Analyzer.Analyze(MakeFile("docs/readme.md"));
 
         Assert.False(record.IsEligible);
-        Assert.Equal(FileEligibilityClassification.KnownNonSource, record.Classification);
-        Assert.Contains("non-source", record.Reason, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(FileEligibilityClassification.UnknownUnsupported, record.Classification);
+        Assert.Contains("not supported", record.Reason, StringComparison.OrdinalIgnoreCase);
     }
 
-    // ── 3. .svg file is KnownNonSource and skipped ───────────────────────────
+    // ── 3. .svg file is unsupported and skipped ──────────────────────────────
 
     [Fact]
-    public void SvgFile_IsKnownNonSource_Skipped()
+    public void SvgFile_IsUnknownUnsupported_Skipped()
     {
         var record = Analyzer.Analyze(MakeFile("assets/logo.svg"));
 
         Assert.False(record.IsEligible);
-        Assert.Equal(FileEligibilityClassification.KnownNonSource, record.Classification);
+        Assert.Equal(FileEligibilityClassification.UnknownUnsupported, record.Classification);
     }
 
     // ── 4. .prefab file is UnknownUnsupported and skipped ───────────────────
@@ -170,13 +170,13 @@ public class ChangedFileAnalyzerTests
         var files = new[]
         {
             MakeFile("src/OrderService.cs"),          // EligibleSource
-            MakeFile("src/PaymentService.cs"),         // EligibleSource
-            MakeFile("docs/readme.md"),                // KnownNonSource
-            MakeFile("assets/logo.svg"),               // KnownNonSource
-            MakeFile("Assets/Player.prefab"),          // UnknownUnsupported
+            MakeFile("src/PaymentService.cs"),        // EligibleSource
+            MakeFile("docs/readme.md"),               // UnknownUnsupported
+            MakeFile("assets/logo.svg"),              // UnknownUnsupported
+            MakeFile("Assets/Player.prefab"),         // UnknownUnsupported
             MakeFile("src/OldService.cs", isDeleted: true),  // Deleted
-            MakeFile("src/Form1.designer.cs"),         // Generated
-            MakeFile("Makefile"),                      // MissingExtension
+            MakeFile("src/Form1.designer.cs"),        // Generated
+            MakeFile("Makefile"),                     // MissingExtension
         };
 
         var records = files.Select(f => Analyzer.Analyze(f)).ToList();
@@ -186,8 +186,8 @@ public class ChangedFileAnalyzerTests
         Assert.Equal(2, stats.EligibleFiles);
         Assert.Equal(6, stats.SkippedFiles);
         Assert.Equal(2, stats.EligibleSourceCount);
-        Assert.Equal(2, stats.KnownNonSourceCount);
-        Assert.Equal(1, stats.UnknownUnsupportedCount);
+        Assert.Equal(0, stats.KnownNonSourceCount);
+        Assert.Equal(3, stats.UnknownUnsupportedCount);
         Assert.Equal(1, stats.DeletedCount);
         Assert.Equal(1, stats.GeneratedCount);
         Assert.Equal(1, stats.MissingExtensionCount);

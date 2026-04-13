@@ -151,4 +151,23 @@ public class OrchestratorTests
         // We just verify RunAsync completes without error
         Assert.NotNull(result);
     }
+
+    [Fact]
+    public async Task RunAsync_NonCsFile_ShouldBeBypassed()
+    {
+        var orchestrator = RuleOrchestrator.CreateDefault();
+        var diff = DiffParser.Parse("""
+            diff --git a/docs/readme.md b/docs/readme.md
+            index abc..def 100644
+            --- a/docs/readme.md
+            +++ b/docs/readme.md
+            @@ -1,1 +1,2 @@
+             # Notes
+            +password = "secret123"
+            """);
+
+        var result = await orchestrator.RunAsync(diff);
+
+        Assert.Empty(result.Findings);
+    }
 }
