@@ -61,7 +61,8 @@ if ($Help) {
     Write-Host "  .\run-corpus.ps1 -SkipTo 3"
     Write-Host ""
     Write-Host "NOTES" -ForegroundColor Yellow
-    Write-Host "  Requires GITHUB_TOKEN env var for Step 2 (hydration)."
+    Write-Host "  Requires GITHUB_TOKEN env var for Step 1 (gh-search discover) and Step 2 (hydration)."
+    Write-Host "  If not set, the script will load it from .misc/ghapi.key automatically."
     Write-Host "  The database accumulates across runs — each run adds new candidates."
     Write-Host ""
     exit 0
@@ -72,6 +73,15 @@ $ErrorActionPreference = "Stop"
 
 $RepoRoot = $PSScriptRoot
 Push-Location $RepoRoot
+
+# Auto-load GITHUB_TOKEN from .misc/ghapi.key if not already set
+if (-not $env:GITHUB_TOKEN) {
+    $keyFile = Join-Path $RepoRoot ".misc\ghapi.key"
+    if (Test-Path $keyFile) {
+        $env:GITHUB_TOKEN = (Get-Content $keyFile -Raw).Trim()
+        Write-Host "Loaded GITHUB_TOKEN from .misc/ghapi.key" -ForegroundColor DarkGray
+    }
+}
 
 function Step($n, $label) {
     Write-Host ""
