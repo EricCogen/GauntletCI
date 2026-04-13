@@ -6,7 +6,8 @@ param(
     [string]$Provider     = "gh-search",
     [string]$StartDate    = "",    # Start of date range (yyyy-MM-dd). Leave empty to search all-time.
     [string]$EndDate      = "",    # End of date range (inclusive). Leave empty for no upper bound.
-    [int]   $Limit        = 50,
+    [int]   $Limit        = 285,   # Total candidate cap (57 repos × 5 per-repo default)
+    [int]   $PerRepoLimit = 5,     # Max fixtures taken from any single repo (0 = unlimited)
     [string]$Language     = "C#",
     [int]   $MinComments  = 5,
     [int]   $MinStars     = 1000,
@@ -186,6 +187,7 @@ if ($SkipTo -le 1) {
         "--min-comments", $MinComments,
         "--db",           $Db
     )
+    if ($PerRepoLimit -gt 0)  { $discoverArgs += "--per-repo-limit", $PerRepoLimit }
     if ($Language    -ne "") { $discoverArgs += "--language", $Language }
     if ($StartDate   -ne "") { $discoverArgs += "--start-date", $StartDate }
     if ($EndDate     -ne "") { $discoverArgs += "--end-date", $EndDate }

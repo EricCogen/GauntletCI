@@ -46,7 +46,11 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
             var q   = BuildRepoQuery(query, repoSpec);
             var url = $"https://api.github.com/search/issues?q={Uri.EscapeDataString(q)}&sort=updated&order=desc&per_page=100&page=1";
 
-            await FetchPageAsync(url, query, seen, results, cancellationToken);
+            var repoLimit = query.PerRepoLimit > 0
+                ? Math.Min(query.PerRepoLimit, query.MaxCandidates - results.Count)
+                : query.MaxCandidates - results.Count;
+
+            await FetchPageAsync(url, query, seen, results, repoLimit, cancellationToken);
         }
 
         return results;
@@ -57,6 +61,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         DiscoveryQuery query,
         HashSet<(string, string, int)> seen,
         List<PullRequestCandidate> results,
+        int maxFromThisCall,
         CancellationToken cancellationToken)
     {
         using var response = await _http.GetAsync(url, cancellationToken);
@@ -83,9 +88,11 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         if (!doc.RootElement.TryGetProperty("items", out var items))
             return;
 
+        int addedFromThisCall = 0;
+
         foreach (var item in items.EnumerateArray())
         {
-            if (results.Count >= query.MaxCandidates)
+            if (addedFromThisCall >= maxFromThisCall)
                 break;
 
             var candidate = MapToCandidate(item, "");
@@ -103,6 +110,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
                 continue;
 
             results.Add(candidate);
+            addedFromThisCall++;
         }
     }
 
