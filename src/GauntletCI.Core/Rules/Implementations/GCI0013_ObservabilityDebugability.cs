@@ -41,6 +41,7 @@ public class GCI0013_ObservabilityDebugability : RuleBase
         if (!hasLogging)
         {
             findings.Add(CreateFinding(
+                file,
                 summary: $"{addedLines.Count} lines added in {file.NewPath} with no logging calls.",
                 evidence: $"File: {file.NewPath} — {addedLines.Count} added lines, no logging detected.",
                 whyItMatters: "Code without logging is hard to diagnose in production.",

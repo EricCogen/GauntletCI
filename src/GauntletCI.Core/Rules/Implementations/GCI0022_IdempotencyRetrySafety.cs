@@ -68,11 +68,13 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
             if (!hasIdempotency)
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"[HttpPost] endpoint in {file.NewPath} has no idempotency key handling.",
                     evidence: $"Line {line.LineNumber}: {content}",
                     whyItMatters: "Non-idempotent POST endpoints executed multiple times (retries, duplicate submissions) can create duplicate records or double-charge customers.",
                     suggestedAction: "Add an idempotency key header (e.g. Idempotency-Key), validate it server-side, and cache the response for duplicate requests.",
-                    confidence: Confidence.Medium));
+                    confidence: Confidence.Medium,
+                    line: line));
             }
         }
     }
@@ -89,11 +91,13 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
             if (!hasUpsert)
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Raw INSERT without upsert guard in {file.NewPath}.",
                     evidence: $"Line {line.LineNumber}: {content.Trim()}",
                     whyItMatters: "Plain INSERT statements fail or create duplicates on retry. Retried operations (network errors, message queue redelivery) need safe insert semantics.",
                     suggestedAction: "Use INSERT OR IGNORE / ON CONFLICT DO NOTHING / UPSERT / MERGE, or add a unique constraint with application-level duplicate detection.",
-                    confidence: Confidence.Medium));
+                    confidence: Confidence.Medium,
+                    line: line));
             }
         }
     }
@@ -127,11 +131,13 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
             if (!hasDedup)
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Event handler registered without deduplication guard in {file.NewPath}.",
                     evidence: $"Line {line.LineNumber}: {content}",
                     whyItMatters: "Event handlers registered multiple times fire multiple times, causing duplicate side effects that are hard to debug.",
                     suggestedAction: "Unsubscribe before subscribing (-= then +=), or guard with a boolean flag to prevent duplicate registration.",
-                    confidence: Confidence.Low));
+                    confidence: Confidence.Low,
+                    line: line));
             }
         }
     }

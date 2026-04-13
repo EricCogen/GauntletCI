@@ -159,6 +159,7 @@ public class GCI0012_SecurityRisk : RuleBase
             if (hadAuthorize && addedAllowAnonymous)
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"[AllowAnonymous] added to controller that previously had [Authorize] in {file.NewPath}.",
                     evidence: $"File: {file.NewPath}",
                     whyItMatters: "Removing authorization from a controller bypasses access control and may expose sensitive operations.",

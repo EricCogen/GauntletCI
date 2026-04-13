@@ -73,11 +73,13 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
             if (matched is null) continue;
 
             findings.Add(CreateFinding(
+                file,
                 summary: "Service locator anti-pattern detected",
                 evidence: $"{file.NewPath} line {line.LineNumber}: {line.Content.Trim()}",
                 whyItMatters: "Service locator hides dependencies, makes testing harder, and couples code to the DI container.",
                 suggestedAction: "Inject the dependency directly via constructor injection instead of resolving it at runtime.",
-                confidence: Confidence.High));
+                confidence: Confidence.High,
+                line: line));
         }
     }
 
@@ -93,11 +95,13 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
             if (!DirectInstantiationRegex.IsMatch(line.Content)) continue;
 
             findings.Add(CreateFinding(
+                file,
                 summary: "Direct instantiation of injectable type",
                 evidence: $"{file.NewPath} line {line.LineNumber}: {line.Content.Trim()}",
                 whyItMatters: "Directly instantiating services bypasses the DI container, making the dependency untestable and unswappable.",
                 suggestedAction: "Register the type with the DI container and inject it via constructor.",
-                confidence: Confidence.Low));
+                confidence: Confidence.Low,
+                line: line));
         }
     }
 
@@ -122,6 +126,7 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
             .FirstOrDefault() ?? string.Empty;
 
         findings.Add(CreateFinding(
+            file,
             summary: "Potential captive dependency: singleton may capture scoped service",
             evidence: $"{file.NewPath}: mixed lifetimes detected — {firstEvidence}",
             whyItMatters: "A singleton that depends on a scoped service will capture a stale instance, causing bugs that are hard to diagnose.",

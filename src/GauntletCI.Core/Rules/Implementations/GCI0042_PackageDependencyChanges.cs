@@ -54,11 +54,13 @@ public class GCI0042_PackageDependencyChanges : RuleBase
                 continue;
 
             findings.Add(CreateFinding(
+                file,
                 summary: "New NuGet package reference added",
                 evidence: line.Content.Trim(),
                 whyItMatters: "New dependencies introduce supply chain risk, license obligations, and potential transitive dependency conflicts.",
                 suggestedAction: "Verify the package is from a trusted publisher, review its license, and check for known vulnerabilities with `dotnet list package --vulnerable`.",
-                confidence: Confidence.Low));
+                confidence: Confidence.Low,
+                line: line));
         }
     }
 
@@ -78,11 +80,13 @@ public class GCI0042_PackageDependencyChanges : RuleBase
                 if (!packageName.Contains(pattern, StringComparison.OrdinalIgnoreCase)) continue;
 
                 findings.Add(CreateFinding(
+                    file,
                     summary: "Suspicious package name — possible typosquatting",
                     evidence: $"Package '{packageName}' matches suspicious pattern '{pattern}'",
                     whyItMatters: "Typosquatted packages are a common supply chain attack vector that can execute arbitrary code during build or at runtime.",
                     suggestedAction: "Verify the exact package name on nuget.org. Reject this change if the package cannot be verified.",
-                    confidence: Confidence.High));
+                    confidence: Confidence.High,
+                    line: line));
                 break;
             }
         }
@@ -100,6 +104,7 @@ public class GCI0042_PackageDependencyChanges : RuleBase
             if (removedVersion > addedVersion)
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: "Package version downgraded",
                     evidence: $"'{packageName}' downgraded from {removedVersion} to {addedVersion}",
                     whyItMatters: "Downgrading a package version may reintroduce known vulnerabilities that were fixed in the higher version.",

@@ -50,11 +50,13 @@ public class GCI0039_ExternalServiceSafety : RuleBase
             if (!content.Contains("new HttpClient(")) continue;
 
             findings.Add(CreateFinding(
+                file,
                 summary: "Direct HttpClient instantiation",
                 evidence: $"Line {line.LineNumber}: {content.Trim()}",
                 whyItMatters: "Directly instantiating HttpClient bypasses the socket pool managed by IHttpClientFactory, causing socket exhaustion under load.",
                 suggestedAction: "Use IHttpClientFactory.CreateClient() or typed clients registered in the DI container.",
-                confidence: Confidence.High));
+                confidence: Confidence.High,
+                line: line));
         }
     }
 
@@ -74,6 +76,7 @@ public class GCI0039_ExternalServiceSafety : RuleBase
         if (!hasTimeoutConfig)
         {
             findings.Add(CreateFinding(
+                file,
                 summary: "HttpClient used without explicit timeout",
                 evidence: $"File {file.NewPath} adds HttpClient usage with no timeout configuration.",
                 whyItMatters: "HttpClient has a default timeout of 100 seconds. Without explicit configuration, slow external services can exhaust thread pool resources.",
@@ -100,11 +103,13 @@ public class GCI0039_ExternalServiceSafety : RuleBase
             if (!hasCancellationToken)
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: "HTTP call missing CancellationToken",
                     evidence: $"Line {line.LineNumber}: {content.Trim()}",
                     whyItMatters: "Without propagating CancellationToken, cancelled requests continue executing on the server, wasting resources.",
                     suggestedAction: "Pass the CancellationToken from the calling method to all async HTTP operations.",
-                    confidence: Confidence.Low));
+                    confidence: Confidence.Low,
+                    line: line));
             }
         }
     }

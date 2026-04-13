@@ -84,11 +84,13 @@ public class GCI0027_TestQuality : RuleBase
             if (!hasAssertion)
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Test method without assertions in {file.NewPath} (at line {line.LineNumber}).",
                     evidence: $"Line {line.LineNumber}: {content} — no Assert/Should/Expect found in method body",
                     whyItMatters: "A test with no assertions always passes — it gives false confidence and provides zero protection against regressions.",
                     suggestedAction: "Add meaningful assertions that verify the expected behaviour, not just that the code runs without throwing.",
-                    confidence: Confidence.High));
+                    confidence: Confidence.High,
+                    line: line));
                 continue;
             }
 
@@ -100,11 +102,13 @@ public class GCI0027_TestQuality : RuleBase
             if (!hasNonTrivialAssertion)
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Test method in {file.NewPath} only asserts non-null (line {line.LineNumber}).",
                     evidence: $"Line {line.LineNumber}: {content} — only null-check assertions found",
                     whyItMatters: "Asserting only non-null doesn't verify correctness — the method could return a wrong value and the test would still pass.",
                     suggestedAction: "Add value-level assertions: Assert.Equal(expected, actual) to verify the returned value, not just its existence.",
-                    confidence: Confidence.Medium));
+                    confidence: Confidence.Medium,
+                    line: line));
             }
         }
     }

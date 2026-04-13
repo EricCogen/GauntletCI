@@ -64,11 +64,13 @@ public class GCI0035_ArchitectureLayerGuard : RuleBase, IConfigurableRule
                         if (!importedNs.Contains(forbiddenFragment, StringComparison.OrdinalIgnoreCase)) continue;
 
                         findings.Add(CreateFinding(
+                            file,
                             summary: $"Forbidden import '{importedNs}' in {file.NewPath}: layer '{layer}' must not depend on '{forbiddenFragment}'.",
                             evidence: $"Line {line.LineNumber}: {line.Content.Trim()}",
                             whyItMatters: "Cross-layer dependencies break architectural boundaries, increase coupling, and make the codebase harder to test and maintain.",
                             suggestedAction: "Move the dependency to a more appropriate layer, or introduce an abstraction (interface/adapter) to invert the dependency.",
-                            confidence: Confidence.High));
+                            confidence: Confidence.High,
+                            line: line));
                     }
                 }
             }

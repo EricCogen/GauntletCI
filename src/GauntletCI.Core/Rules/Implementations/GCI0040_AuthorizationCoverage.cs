@@ -68,6 +68,7 @@ public class GCI0040_AuthorizationCoverage : RuleBase
             if (!hasAuthAttr)
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: "Controller action added without authorization attribute",
                     evidence: $"New public action method detected in {path} without [Authorize], [AllowAnonymous], [RequirePermission], or [CustomAuthorize].",
                     whyItMatters: "Controllers without explicit authorization attributes may be inadvertently accessible to unauthenticated users.",

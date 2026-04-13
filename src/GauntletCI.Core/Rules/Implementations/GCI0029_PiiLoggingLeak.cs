@@ -60,11 +60,13 @@ public class GCI0029_PiiLoggingLeak : RuleBase
                 if (matchedTerm is null) continue;
 
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"PII term '{matchedTerm}' found in log call — may expose sensitive data in {file.NewPath}.",
                     evidence: $"Line {line.LineNumber}: {content.Trim()}",
                     whyItMatters: "Logging PII violates GDPR, CCPA, and HIPAA. Once in logs, PII propagates to log aggregators, storage, and third-party monitoring tools.",
                     suggestedAction: "Redact or omit PII from log calls. Log only anonymized identifiers (e.g. UserId, not Email or SSN).",
-                    confidence: Confidence.High));
+                    confidence: Confidence.High,
+                    line: line));
             }
         }
 

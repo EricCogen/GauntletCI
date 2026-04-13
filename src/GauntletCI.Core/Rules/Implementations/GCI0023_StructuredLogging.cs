@@ -63,11 +63,13 @@ public class GCI0023_StructuredLogging : RuleBase
             if (content.Contains("$\""))
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Log call uses string interpolation instead of structured parameters in {file.NewPath}.",
                     evidence: $"Line {line.LineNumber}: {content}",
                     whyItMatters: "String interpolation in log calls prevents log aggregators (Seq, Splunk, ELK) from indexing structured fields. Use message templates with named placeholders instead.",
                     suggestedAction: "Replace $\"Value is {value}\" with \"Value is {Value}\", value — structured logging preserves queryable fields.",
-                    confidence: Confidence.Medium));
+                    confidence: Confidence.Medium,
+                    line: line));
             }
         }
     }
@@ -94,6 +96,7 @@ public class GCI0023_StructuredLogging : RuleBase
         if (hasLogging && !hasCorrelationId)
         {
             findings.Add(CreateFinding(
+                file,
                 summary: $"Critical-path file {file.NewPath} has logging but no correlation/request ID.",
                 evidence: $"{addedLines.Count} lines added to {file.NewPath}",
                 whyItMatters: "Without correlation IDs, tracing a single request across distributed services during an incident is extremely difficult.",

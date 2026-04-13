@@ -49,11 +49,13 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 if (!hasGuard)
                 {
                     findings.Add(CreateFinding(
+                        file,
                         summary: $"Potential null dereference via .Value access in {file.NewPath}",
                         evidence: $"Line {addedLines[i].LineNumber}: {content.Trim()}",
                         whyItMatters: "Accessing .Value on a nullable without a null check will throw InvalidOperationException at runtime.",
                         suggestedAction: "Add a null check or use ?.Value with null-coalescing before accessing .Value.",
-                        confidence: Confidence.Medium));
+                        confidence: Confidence.Medium,
+                        line: addedLines[i]));
                     break; // one finding per file
                 }
             }
@@ -82,11 +84,13 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 if (!hasValidation && (content.Contains("string ") || content.Contains("object ")))
                 {
                     findings.Add(CreateFinding(
+                        file,
                         summary: $"New method parameter(s) added without apparent null/range validation in {file.NewPath}",
                         evidence: $"Line {addedLines[i].LineNumber}: {content.Trim()}",
                         whyItMatters: "Unvalidated parameters can lead to NullReferenceException or incorrect behaviour deeper in the call stack.",
                         suggestedAction: "Add ArgumentNullException.ThrowIfNull() or similar guard at the top of the method.",
-                        confidence: Confidence.Medium));
+                        confidence: Confidence.Medium,
+                        line: addedLines[i]));
                     break;
                 }
             }

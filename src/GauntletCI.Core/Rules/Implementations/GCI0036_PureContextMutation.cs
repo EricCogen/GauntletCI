@@ -96,11 +96,13 @@ public class GCI0036_PureContextMutation : RuleBase
             if (line.Kind == DiffLineKind.Added && inPureContext && HasAssignment(trimmed))
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Assignment in getter or [Pure] method in {file.NewPath} — mutation in a pure context.",
                     evidence: $"Line {line.LineNumber}: {trimmed}",
                     whyItMatters: "Property getters and [Pure]-annotated methods are expected to be side-effect free. Mutations break this contract and can cause subtle bugs with lazy initialization, caching, or framework reflection.",
                     suggestedAction: "Move state mutations to setter, constructor, or a dedicated method. If lazy init is intended, use Lazy<T> or Interlocked.",
-                    confidence: Confidence.High));
+                    confidence: Confidence.High,
+                    line: line));
             }
         }
     }

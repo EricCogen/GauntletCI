@@ -93,11 +93,13 @@ public class GCI0024_ResourceLifecycle : RuleBase
             if (hasDispose) continue;
 
             findings.Add(CreateFinding(
+                file,
                 summary: $"{typeName} allocated without using statement in {file.NewPath}.",
                 evidence: $"Line {line.LineNumber}: {content.Trim()}",
                 whyItMatters: $"{typeName} implements IDisposable. Without using, it leaks OS handles or connection pool slots under exceptions.",
                 suggestedAction: $"Wrap in `using var resource = new {typeName}(...);` to guarantee disposal.",
-                confidence: isExplicit ? Confidence.High : Confidence.Medium));
+                confidence: isExplicit ? Confidence.High : Confidence.Medium,
+                line: line));
         }
     }
 

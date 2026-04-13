@@ -75,6 +75,7 @@ public class GCI0015_DataIntegrityRisk : RuleBase
                 if (assignmentCount >= 3)
                 {
                     findings.Add(CreateFinding(
+                        file,
                         summary: "Possible unsafe HTTP input binding — mass-assignment without allowlist",
                         evidence: $"Starting at line {firstLine} in {file.NewPath}",
                         whyItMatters: "Binding HTTP request data directly to entity properties without an explicit allowlist (e.g. [Bind], DTO projection, or manual mapping) can expose internal fields to over-posting attacks (OWASP A03).",
@@ -116,6 +117,7 @@ public class GCI0015_DataIntegrityRisk : RuleBase
                     if (!hasNullCheck)
                     {
                         findings.Add(CreateFinding(
+                            file,
                             summary: $"Mass field assignment ({assignmentCount} assignments) without null validation in {file.NewPath}.",
                             evidence: $"Starting at line {firstLine} in {file.NewPath}",
                             whyItMatters: "Direct field assignment from user input without validation can lead to data corruption or over-posting attacks.",

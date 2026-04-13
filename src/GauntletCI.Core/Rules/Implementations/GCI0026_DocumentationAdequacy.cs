@@ -71,11 +71,13 @@ public class GCI0026_DocumentationAdequacy : RuleBase
                 // Extract method name for a cleaner message
                 var methodName = ExtractMethodName(content);
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Public method '{methodName}' added without XML documentation in {file.NewPath}.",
                     evidence: $"Line {line.LineNumber}: {content}",
                     whyItMatters: "Public API methods without XML docs leave callers guessing about behaviour, parameters, and edge cases — especially important for shared libraries and services.",
                     suggestedAction: "Add a /// <summary> block above the method describing what it does, its parameters, and return value.",
-                    confidence: Confidence.Low));
+                    confidence: Confidence.Low,
+                    line: line));
             }
         }
     }

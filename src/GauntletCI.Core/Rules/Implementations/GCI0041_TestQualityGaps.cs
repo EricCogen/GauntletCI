@@ -69,11 +69,13 @@ public class GCI0041_TestQualityGaps : RuleBase
                 if (!content.Contains(pattern, StringComparison.OrdinalIgnoreCase)) continue;
 
                 findings.Add(CreateFinding(
+                    file,
                     summary: "Test silenced with Skip/Ignore attribute",
                     evidence: $"Line {line.LineNumber}: {content.Trim()}",
                     whyItMatters: "Silenced tests give false confidence that the suite is green while real failures go undetected.",
                     suggestedAction: "Fix the underlying issue and re-enable the test. If the test is permanently obsolete, delete it.",
-                    confidence: Confidence.Medium));
+                    confidence: Confidence.Medium,
+                    line: line));
                 break;
             }
         }
@@ -110,11 +112,13 @@ public class GCI0041_TestQualityGaps : RuleBase
             if (!BadMethodNames.Contains(methodName) && !BadNamePattern.IsMatch(methodName)) continue;
 
             findings.Add(CreateFinding(
+                file,
                 summary: "Uninformative test method name",
                 evidence: $"Line {line.LineNumber}: method '{methodName}' has a low-signal name",
                 whyItMatters: "Tests named 'Test1' or 'TestMethod' provide no documentation value and make failures hard to diagnose.",
                 suggestedAction: "Use descriptive names following the pattern: MethodName_Scenario_ExpectedBehavior.",
-                confidence: Confidence.Low));
+                confidence: Confidence.Low,
+                line: line));
         }
     }
 
@@ -133,6 +137,7 @@ public class GCI0041_TestQualityGaps : RuleBase
         if (hasAssertion) return;
 
         findings.Add(CreateFinding(
+            file,
             summary: "Test method may lack assertions",
             evidence: "A test attribute was added but no assertion keywords were found in the added lines.",
             whyItMatters: "Tests without assertions always pass and provide no safety net against regressions.",

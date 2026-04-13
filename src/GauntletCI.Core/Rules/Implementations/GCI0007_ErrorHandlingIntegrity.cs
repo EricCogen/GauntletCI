@@ -54,11 +54,13 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
                 if (isSwallowed)
                 {
                     findings.Add(CreateFinding(
+                        file,
                         summary: $"Swallowed exception detected in {file.NewPath}",
                         evidence: evidence,
                         whyItMatters: "Empty or silent catch blocks hide failures, making bugs invisible and debugging nearly impossible.",
                         suggestedAction: "Log the exception, rethrow it, or handle it explicitly. Never swallow silently.",
-                        confidence: Confidence.High));
+                        confidence: Confidence.High,
+                        line: addedLines[i]));
                 }
             }
         }
@@ -127,6 +129,7 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
             if (!hasErrorHandlingContext) continue;
 
             findings.Add(CreateFinding(
+                file,
                 summary: $"Error-level logging removed from error handling block in {file.NewPath}.",
                 evidence: $"{removedHighSev} error-level log call(s) removed, {addedHighSev} added in error-handling context.",
                 whyItMatters: "Removing error logs from catch/rescue blocks leaves exceptions silent — critical failure context is lost for incident triage.",
