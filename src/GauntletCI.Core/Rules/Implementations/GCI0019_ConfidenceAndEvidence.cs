@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
+using GauntletCI.Core.FileAnalysis;
 using GauntletCI.Core.Model;
-using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -19,28 +20,39 @@ public class GCI0019_ConfidenceAndEvidence : RuleBase
          ".bin", ".bmp", ".ttf", ".woff", ".woff2", ".mp3", ".mp4", ".svg"];
 
     public override Task<List<Finding>> EvaluateAsync(
-        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+        AnalysisContext context, CancellationToken ct = default)
     {
+        var diff = context.Diff;
         var findings = new List<Finding>();
 
-        CheckBinaryFiles(diff, findings);
-        // Note: the "large diff with few findings" check runs in RuleOrchestrator.PostProcess
+        CheckBinaryFiles(diff, context.SkippedFiles, findings);
 
         return Task.FromResult(findings);
     }
 
-    private void CheckBinaryFiles(DiffContext diff, List<Finding> findings)
+    private void CheckBinaryFiles(DiffContext diff, IReadOnlyList<ChangedFileAnalysisRecord> skippedFiles, List<Finding> findings)
     {
-        var binaryFiles = diff.Files
-            .Where(f => BinaryExtensions.Any(ext =>
-                f.NewPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+        // Binary files are now classified upstream and appear in skippedFiles.
+        // Also check eligible diff files as a fallback (e.g. unknown binary types).
+        var binaryFromSkipped = skippedFiles
+            .Where(r => BinaryExtensions.Any(ext =>
+                r.FilePath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+            .Select(r => r.FilePath)
             .ToList();
 
-        if (binaryFiles.Count == 0) return;
+        var binaryFromDiff = diff.Files
+            .Where(f => BinaryExtensions.Any(ext =>
+                f.NewPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+            .Select(f => f.NewPath)
+            .ToList();
+
+        var allBinary = binaryFromSkipped.Concat(binaryFromDiff).Distinct().ToList();
+
+        if (allBinary.Count == 0) return;
 
         findings.Add(CreateFinding(
-            summary: $"{binaryFiles.Count} binary file(s) in diff cannot be analysed.",
-            evidence: $"Binary files: {string.Join(", ", binaryFiles.Select(f => f.NewPath))}",
+            summary: $"{allBinary.Count} binary file(s) in diff cannot be analysed.",
+            evidence: $"Binary files: {string.Join(", ", allBinary)}",
             whyItMatters: "Binary files cannot be inspected for logic, credentials, or security issues by static analysis.",
             suggestedAction: "Review binary files manually, consider storing large binaries in Git LFS.",
             confidence: Confidence.Low));

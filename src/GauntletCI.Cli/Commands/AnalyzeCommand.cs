@@ -9,6 +9,7 @@ using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
+using GauntletCI.Core.StaticAnalysis;
 using GauntletCI.Llm;
 
 namespace GauntletCI.Cli.Commands;
@@ -90,7 +91,12 @@ public static class AnalyzeCommand
                 var config = ConfigLoader.Load(repo.FullName);
                 var ignoreList = IgnoreList.Load(repo.FullName);
                 var orchestrator = RuleOrchestrator.CreateDefault(config);
-                var result = await orchestrator.RunAsync(diff, ignoreList: ignoreList);
+
+                // Run static analysis on changed C# files (null when no repo path or no .cs changes)
+                var repoPath = diffFile is null ? repo.FullName : null;
+                var staticAnalysis = await StaticAnalysisRunner.RunAsync(diff, repoPath);
+
+                var result = await orchestrator.RunAsync(diff, staticAnalysis, ignoreList: ignoreList);
 
                 using ILlmEngine llm = await LlmEngineSelector.ResolveAsync(config, withLlm && !noLlm);
                 if (llm.IsAvailable)
