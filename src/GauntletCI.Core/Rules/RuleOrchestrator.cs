@@ -183,7 +183,7 @@ public class RuleOrchestrator
     private static void ApplyIgnoreList(List<Finding> findings, IgnoreList? ignoreList)
     {
         if (ignoreList is null || ignoreList.IsEmpty) return;
-        findings.RemoveAll(f => ignoreList.IsSuppressed(f.RuleId));
+        findings.RemoveAll(f => ignoreList.IsSuppressed(f.RuleId, f.FilePath));
     }
 
     /// <summary>
@@ -199,8 +199,8 @@ public class RuleOrchestrator
             {
                 allFindings.Add(new Finding
                 {
-                    RuleId          = "GCI0018",
-                    RuleName        = "Production Readiness",
+                    RuleId          = "GCI_SYN_AGG",
+                    RuleName        = "Aggregate Risk Signal",
                     Summary         = $"{distinctRulesFired} rules flagged issues — this diff has multiple risk dimensions.",
                     Evidence        = $"Rules fired: {string.Join(", ", allFindings.Select(f => f.RuleId).Distinct().OrderBy(id => id))}",
                     WhyItMatters    = "Multiple concurrent risks compound each other and increase the chance of production incidents.",

@@ -21,8 +21,8 @@ public static class GitHubAnnotationWriter
                 _                 => "notice",
             };
 
-            var file = ExtractFile(finding.Evidence);
-            var line = ExtractLine(finding.Evidence);
+            var file = finding.FilePath ?? string.Empty;
+            var line = finding.Line ?? 1;
             var title = $"{finding.RuleId} {finding.RuleName}"
                 .Replace("%", "%25")
                 .Replace(",", "%2C")
@@ -37,27 +37,5 @@ public static class GitHubAnnotationWriter
 
             Console.WriteLine(annotation);
         }
-    }
-
-    private static string ExtractFile(string? evidence)
-    {
-        if (string.IsNullOrEmpty(evidence)) return string.Empty;
-        // Evidence often starts with "Line N: ..." or contains a file path
-        // Try to find a path-like token (contains / or \)
-        var parts = evidence.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        return parts.FirstOrDefault(p =>
-            (p.Contains('/') || p.Contains('\\')) &&
-            !p.StartsWith("Line", StringComparison.OrdinalIgnoreCase)) ?? string.Empty;
-    }
-
-    private static int ExtractLine(string? evidence)
-    {
-        if (string.IsNullOrEmpty(evidence)) return 1;
-        // "Line 42: ..." pattern
-        var idx = evidence.IndexOf("Line ", StringComparison.OrdinalIgnoreCase);
-        if (idx < 0) return 1;
-        var rest = evidence[(idx + 5)..];
-        var numStr = new string(rest.TakeWhile(char.IsDigit).ToArray());
-        return int.TryParse(numStr, out var n) ? n : 1;
     }
 }
