@@ -92,4 +92,28 @@ public class GCI0024Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("FileStream"));
     }
+
+    [Fact]
+    public async Task FactoryInjectedHttpClient_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/Api.cs b/src/Api.cs
+            index abc..def 100644
+            --- a/src/Api.cs
+            +++ b/src/Api.cs
+            @@ -1,1 +1,6 @@
+             public class Api {
+            +    private readonly IHttpClientFactory _httpClientFactory;
+            +    public Api(IHttpClientFactory httpClientFactory) { _httpClientFactory = httpClientFactory; }
+            +    public void Do() {
+            +        var client = _httpClientFactory.CreateClient("x");
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("HttpClient"));
+    }
 }
