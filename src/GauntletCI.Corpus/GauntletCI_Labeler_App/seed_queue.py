@@ -15,6 +15,7 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=150, help="Total fired items to queue.")
     parser.add_argument("--include-nonfired", type=int, default=30, help="How many non-fired tasks to synthesize.")
     parser.add_argument("--rules", default="", help="Comma-separated rule ids to target.")
+    parser.add_argument("--language", default="C#", help="Only queue fixtures whose primary language matches (default: C#). Pass empty string to disable filter.")
     args = parser.parse_args()
 
     base_dir = Path(__file__).resolve().parent
@@ -23,11 +24,18 @@ def main() -> None:
     init_app_tables(conn)
 
     target_rules = [x.strip() for x in args.rules.split(",") if x.strip()]
-    where = ""
+    lang_filter = args.language.strip()
+
+    conditions: list[str] = []
     params: list[object] = []
     if target_rules:
-        where = f"WHERE af.rule_id IN ({','.join(['?'] * len(target_rules))})"
+        conditions.append(f"af.rule_id IN ({','.join(['?'] * len(target_rules))})")
         params.extend(target_rules)
+    if lang_filter:
+        conditions.append("f.language = ?")
+        params.append(lang_filter)
+    conditions.append("af.did_trigger = 1")
+    where = "WHERE " + " AND ".join(conditions)
 
     fired_sql = f"""
     WITH grouped AS (
@@ -41,7 +49,6 @@ def main() -> None:
         FROM actual_findings af
         JOIN fixtures f ON f.fixture_id = af.fixture_id
         {where}
-        AND af.did_trigger = 1
         GROUP BY af.fixture_id, af.rule_id
     )
     SELECT *
@@ -51,12 +58,8 @@ def main() -> None:
     """
 
     sql_params = params.copy()
-    if where:
-        sql = fired_sql
-    else:
-        sql = fired_sql.replace("\n        WHERE af.rule_id IN ()\n        AND af.did_trigger = 1", "\n        WHERE af.did_trigger = 1")
     sql_params.append(args.limit)
-    fired_rows = conn.execute(sql, tuple(sql_params)).fetchall()
+    fired_rows = conn.execute(fired_sql, tuple(sql_params)).fetchall()
 
     for row in fired_rows:
         bucket = "fired_high_signal" if row["finding_count"] >= 3 else "fired"
@@ -77,19 +80,23 @@ def main() -> None:
             rules = [r[0] for r in conn.execute("SELECT DISTINCT rule_id FROM actual_findings ORDER BY rule_id").fetchall()]
         per_rule = max(1, math.ceil(nonfired_limit / max(len(rules), 1)))
         for rule_id in rules:
+            nf_conditions = [
+                "NOT EXISTS (SELECT 1 FROM actual_findings af WHERE af.fixture_id = f.fixture_id AND af.rule_id = ? AND af.did_trigger = 1)"
+            ]
+            nf_params: list[object] = [rule_id]
+            if lang_filter:
+                nf_conditions.append("f.language = ?")
+                nf_params.append(lang_filter)
+            nf_params.append(per_rule)
             rows = conn.execute(
-                """
+                f"""
                 SELECT f.fixture_id
                 FROM fixtures f
-                WHERE NOT EXISTS (
-                    SELECT 1
-                    FROM actual_findings af
-                    WHERE af.fixture_id = f.fixture_id AND af.rule_id = ? AND af.did_trigger = 1
-                )
+                WHERE {' AND '.join(nf_conditions)}
                 ORDER BY f.has_review_comments DESC, f.has_tests_changed ASC, f.created_at_utc DESC
                 LIMIT ?
                 """,
-                (rule_id, per_rule),
+                tuple(nf_params),
             ).fetchall()
             for row in rows:
                 conn.execute(
