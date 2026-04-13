@@ -21,6 +21,53 @@ Rules do not modify code and do not block merges on their own. They surface info
 
 ---
 
+## Reviewer Guide
+
+This document is prepared for an independent third-party review of the GauntletCI rule set. The goal of this review is to help us answer three questions honestly:
+
+1. **Should any rules be removed or merged?** Rules that fire too broadly, punish developers for legitimate patterns, or duplicate coverage already provided by another rule create alert fatigue and erode trust in the tool. If a rule is more noise than signal, we want to know.
+
+2. **Should any rules be adjusted?** A rule may be detecting the right *category* of risk but using patterns that are too loose (causing false positives), too strict (missing real cases), or calibrated at the wrong confidence level. If the detection logic needs narrowing or the confidence level is wrong, tell us.
+
+3. **Are there important risk categories we have missed?** We have 39 rules today. We do not believe this is exhaustive. If you can identify a class of risk that regularly causes production incidents, security vulnerabilities, or data loss — and that a diff-level static analysis could plausibly detect — we want to add it.
+
+### What GauntletCI is (and is not)
+
+Understanding these constraints will help you evaluate the rules fairly:
+
+- **It analyzes diffs, not full codebases.** GauntletCI sees only the lines that were added or removed in a pull request. It cannot reason about the overall structure of the codebase, call graphs, or runtime state. A rule that would require reading the entire file or tracing a call chain is out of scope.
+- **It is fully deterministic.** There is no machine learning, no network calls, and no external lookups. Every detection is a text pattern, a structural heuristic, or a count. This is intentional — deterministic rules are auditable, explainable, and fast.
+- **It must complete in under one second per diff.** Rules need to be lightweight. Regex matching on added/removed lines is the primary tool. Rules that require parsing, compiling, or AST traversal are not feasible today.
+- **It is not a replacement for a security scanner or linter.** GauntletCI is a change-risk signal, not a comprehensive static analysis platform. It is meant to surface things a human reviewer might miss at merge time — not to replace SAST tools, dependency auditors, or test coverage tools.
+- **Findings are advisory by default.** No rule automatically blocks a merge. High-confidence findings are *intended* to block, but the enforcement mechanism is up to the team using the tool.
+- **It is primarily focused on C#/.NET.** Some rules are language-agnostic (file naming, diff shape, logging patterns). Most rules target C# idioms. If you have expertise in another stack, note it — we may expand language support later.
+
+### How to give useful feedback
+
+For each rule you review, answer as many of these as you can:
+
+- **Is the risk real?** Does this pattern actually cause incidents, bugs, or security issues in practice? Or is it theoretical?
+- **Is the confidence level right?** High means "almost always a problem." Low means "maybe a problem, worth a look." Is the level we've assigned appropriate?
+- **What would cause a false positive?** Describe a legitimate pattern that would trigger this rule incorrectly. Even one concrete scenario is valuable.
+- **What would it miss?** If a developer tried to write the risky code in a slightly different way, would the rule still catch it?
+- **Keep, adjust, merge, or remove?** For each rule, give a verdict: keep as-is, modify (describe how), merge into another rule, or remove.
+
+For new rules you want to suggest:
+
+- Describe the risk category in plain English.
+- Give a concrete example of the code pattern that should trigger it.
+- Suggest a confidence level and explain why.
+- Note whether it would overlap with any existing rule.
+
+### What we do not need from this review
+
+- Style opinions or formatting preferences.
+- Suggestions requiring full-program analysis or runtime information.
+- Language-specific rules for languages other than C# (unless you have a strong case for prioritizing them).
+- Feedback on the tool's UI, CLI, or configuration format — this review is focused solely on the rule logic.
+
+---
+
 ## Tier 1 — Structural & Scope Integrity
 
 These rules examine the shape of the diff itself rather than the code it contains. They ask whether the change is focused, well-described, and reviewable as a single unit. Large, unfocused, or misdescribed diffs are harder to review and increase the chance that unintended changes slip through.
