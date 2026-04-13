@@ -68,6 +68,19 @@ public static class AnalyzeCommand
             var noBanner   = ctx.ParseResult.GetValueForOption(noBannerOption);
             var ghAnnotate = ctx.ParseResult.GetValueForOption(githubAnnotationsFlag);
 
+            // Enforce single diff source
+            int sourceCount = (diffFile is not null ? 1 : 0)
+                            + (commit    is not null ? 1 : 0)
+                            + (staged      ? 1 : 0)
+                            + (unstaged    ? 1 : 0)
+                            + (allChanges  ? 1 : 0);
+            if (sourceCount > 1)
+            {
+                Console.Error.WriteLine("[GauntletCI] Error: multiple diff sources specified. Use exactly one of: --diff, --commit, --staged, --unstaged, --all-changes.");
+                ctx.ExitCode = 1;
+                return;
+            }
+
             CliBanner.PrintIfEnabled(new BannerContext
             {
                 NoBanner = noBanner,
