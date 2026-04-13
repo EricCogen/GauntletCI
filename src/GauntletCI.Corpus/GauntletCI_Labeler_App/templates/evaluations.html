@@ -1,0 +1,27 @@
+{% extends 'layout.html' %}
+{% block content %}
+<section class="panel">
+  <h1>Evaluations</h1>
+  <table class="data-table">
+    <thead>
+      <tr><th>Rule</th><th>Labeled</th><th>Precision</th><th>Recall</th><th>TP</th><th>FP</th><th>FN</th><th>Inconclusive</th><th>Usefulness</th><th>Verdict</th></tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td><a href="{{ url_for('rule_detail', rule_id=row.rule_id) }}">{{ row.rule_id }}</a></td>
+        <td>{{ row.labeled_cases }}</td>
+        <td>{{ ('%.2f'|format(row.precision)) if row.precision is not none else '-' }}</td>
+        <td>{{ ('%.2f'|format(row.recall)) if row.recall is not none else '-' }}</td>
+        <td>{{ row.tp }}</td>
+        <td>{{ row.fp }}</td>
+        <td>{{ row.fn }}</td>
+        <td>{{ row.inconclusive }}</td>
+        <td>{{ row.avg_usefulness if row.avg_usefulness is not none else '-' }}</td>
+        <td>{{ row.verdict }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
-using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -15,11 +15,12 @@ public class GCI0005_TestCoverageRelevance : RuleBase
     public override string Name => "Test Coverage Relevance";
 
     public override Task<List<Finding>> EvaluateAsync(
-        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+        AnalysisContext context, CancellationToken ct = default)
     {
+        var diff = context.Diff;
         var findings = new List<Finding>();
 
-        var codeFiles = diff.Files.Where(f => IsCodeFile(f.NewPath)).ToList();
+        var codeFiles = diff.Files.Where(f => !IsTestFile(f.NewPath)).ToList();
         var testFiles = diff.Files.Where(f => IsTestFile(f.NewPath)).ToList();
 
         if (codeFiles.Count > 0 && testFiles.Count == 0)
@@ -43,9 +44,6 @@ public class GCI0005_TestCoverageRelevance : RuleBase
 
         return Task.FromResult(findings);
     }
-
-    private static bool IsCodeFile(string path) =>
-        path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) && !IsTestFile(path);
 
     private static bool IsTestFile(string path) =>
         path.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
