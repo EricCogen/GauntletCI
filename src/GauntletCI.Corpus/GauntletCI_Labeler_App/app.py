@@ -104,7 +104,10 @@ def task(queue_id: int):
         label_state = current_label(conn, task_row["fixture_id"], task_row["rule_id"], CONFIG["reviewer_name"])
     artifacts = load_fixture_artifacts(CONFIG["fixtures_root"], fixture)
     files_json = artifacts.get("files_json") or []
-    changed_files = files_json[:25] if isinstance(files_json, list) else []
+    changed_files = (
+        [f for f in files_json if str(f.get("filename") or f.get("path") or "").endswith(".cs")][:25]
+        if isinstance(files_json, list) else []
+    )
     review_comments = artifacts.get("review_comments") or []
     diff_patch = artifacts.get("diff_patch") or ""
     diff_preview = "\n".join(diff_patch.splitlines()[:350])
