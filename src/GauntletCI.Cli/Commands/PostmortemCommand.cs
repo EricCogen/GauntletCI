@@ -6,6 +6,7 @@ using GauntletCI.Cli.Presentation;
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Rules;
+using Spectre.Console;
 
 namespace GauntletCI.Cli.Commands;
 
@@ -57,11 +58,9 @@ public static class PostmortemCommand
                 else
                 {
                     var shortSha = commit.Length >= 8 ? commit[..8] : commit;
-                    Console.ForegroundColor = ConsoleColor.DarkGray;
-                    Console.WriteLine($"  ⏪  Postmortem — commit {shortSha}");
-                    Console.WriteLine("     These findings would have been caught at pre-commit time.");
-                    Console.WriteLine();
-                    Console.ResetColor();
+                    AnsiConsole.MarkupLine($"[dim]  ⏪  Postmortem — commit {Markup.Escape(shortSha)}[/]");
+                    AnsiConsole.MarkupLine("[dim]     These findings would have been caught at pre-commit time.[/]");
+                    AnsiConsole.WriteLine();
                     ConsoleReporter.Report(result, ascii);
                 }
 

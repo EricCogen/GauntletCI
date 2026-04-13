@@ -1,0 +1,56 @@
+{% extends 'layout.html' %}
+{% block content %}
+<section class="panel">
+  <div class="panel-header"><h1>Queue</h1><div class="muted">Grouped review units at fixture + rule level</div></div>
+  <form class="filters" method="get">
+    <label>Status
+      <select name="status">
+        {% for opt in ['pending', 'in_progress', 'labeled', 'skipped'] %}
+          <option value="{{ opt }}" {% if status == opt %}selected{% endif %}>{{ opt }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Rule
+      <select name="rule_id">
+        <option value="">All</option>
+        {% for rule in rules %}
+          <option value="{{ rule }}" {% if rule_id == rule %}selected{% endif %}>{{ rule }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Bucket
+      <select name="bucket">
+        <option value="">All</option>
+        {% for item in buckets %}
+          <option value="{{ item }}" {% if bucket == item %}selected{% endif %}>{{ item }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <button class="button" type="submit">Apply</button>
+  </form>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>ID</th><th>Rule</th><th>Repo</th><th>PR</th><th>Bucket</th><th>Fired</th><th>Findings</th><th>Tests</th><th>Comments</th><th>Status</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+      <tr>
+        <td>{{ row.id }}</td>
+        <td>{{ row.rule_id }}</td>
+        <td>{{ row.repo }}</td>
+        <td>#{{ row.pr_number }}</td>
+        <td>{{ row.queue_bucket }}</td>
+        <td>{{ row.fired|yesno }}</td>
+        <td>{{ row.finding_count }}</td>
+        <td>{{ row.has_tests_changed|yesno }}</td>
+        <td>{{ row.has_review_comments|yesno }}</td>
+        <td>{{ row.status }}</td>
+        <td><a class="button secondary" href="{{ url_for('task', queue_id=row.id) }}">Open</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

@@ -28,22 +28,22 @@ public static class TelemetryCollector
             var linesRemoved = diff.Files.Sum(f => f.Hunks.Sum(h => h.Lines.Count(l => l.Kind == DiffLineKind.Removed)));
 
             // 1 summary event per analysis run
-            await TelemetryStore.AppendAsync(new TelemetryEvent
+            await AppendAsync(new TelemetryEvent
             {
-                EventType     = "analysis",
-                InstallId     = installId,
-                RepoHash      = repoHash,
-                FindingCount  = result.Findings.Count,
-                FilesChanged  = diff.Files.Count,
+                EventType      = "analysis",
+                InstallId      = installId,
+                RepoHash       = repoHash,
+                FindingCount   = result.Findings.Count,
+                FilesChanged   = diff.Files.Count,
                 RulesEvaluated = result.RulesEvaluated,
-                LinesAdded    = linesAdded,
-                LinesRemoved  = linesRemoved,
+                LinesAdded     = linesAdded,
+                LinesRemoved   = linesRemoved,
             });
 
             // 1 event per finding (rule signal — most valuable for the model)
             foreach (var finding in result.Findings)
             {
-                await TelemetryStore.AppendAsync(new TelemetryEvent
+                await AppendAsync(new TelemetryEvent
                 {
                     EventType  = "finding",
                     InstallId  = installId,
@@ -51,6 +51,21 @@ public static class TelemetryCollector
                     RuleId     = finding.RuleId,
                     Confidence = finding.Confidence.ToString(),
                     FileExt    = ExtractExt(finding.Evidence),
+                });
+            }
+
+            // 1 event per rule — timing and outcome for model training / perf monitoring
+            foreach (var metric in result.RuleMetrics)
+            {
+                await AppendAsync(new TelemetryEvent
+                {
+                    EventType    = "rule_metric",
+                    InstallId    = installId,
+                    RepoHash     = repoHash,
+                    RuleId       = metric.RuleId,
+                    DurationMs   = metric.DurationMs,
+                    Outcome      = metric.Outcome.ToString(),
+                    FindingCount = metric.FindingCount,
                 });
             }
 
@@ -73,5 +88,12 @@ public static class TelemetryCollector
                 return ext.ToLowerInvariant();
         }
         return null;
+    }
+
+    // Dual-write: JSON queue (upload buffer) + SQLite (durable local store).
+    private static async Task AppendAsync(TelemetryEvent evt)
+    {
+        await TelemetryStore.AppendAsync(evt);
+        await TelemetryDb.AppendAsync(evt);
     }
 }
