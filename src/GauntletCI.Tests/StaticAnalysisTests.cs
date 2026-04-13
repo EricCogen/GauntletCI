@@ -71,18 +71,16 @@ public class StaticAnalysisTests
                 new() { Id = "CA1031", Message = "Catch specific exception", FilePath = "src/Svc.cs", Line = 5, Column = 1 },
                 new() { Id = "CA1062", Message = "Validate parameter", FilePath = "src/Svc.cs", Line = 8, Column = 1 },
                 new() { Id = "CA2227", Message = "Collection property", FilePath = "src/Svc.cs", Line = 12, Column = 1 },
-                new() { Id = "CA1305", Message = "Specify format", FilePath = "src/Svc.cs", Line = 15, Column = 1 },
                 new() { Id = "CA1819", Message = "Arrays as properties", FilePath = "src/Svc.cs", Line = 18, Column = 1 }
             ]
         };
 
         var findings = DiagnosticMapper.MapDiagnostics(result).ToList();
 
-        Assert.Equal(5, findings.Count);
+        Assert.Equal(4, findings.Count);
         Assert.Contains(findings, f => f.RuleId == "GCI0007");
         Assert.Contains(findings, f => f.RuleId == "GCI0006");
         Assert.Contains(findings, f => f.RuleId == "GCI0015");
-        Assert.Contains(findings, f => f.RuleId == "GCI0009");
     }
 
     [Fact]

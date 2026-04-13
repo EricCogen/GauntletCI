@@ -53,7 +53,7 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
                 evidence: $"Removed logic: {string.Join(" | ", examples)}",
                 whyItMatters: "Removing control-flow logic without updating tests may silently break behaviour that was previously covered.",
                 suggestedAction: "Add or update tests to verify the removed logic paths are intentionally no longer needed.",
-                confidence: Confidence.Medium));
+                confidence: Confidence.Low));
         }
     }
 

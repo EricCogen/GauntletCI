@@ -33,6 +33,48 @@ public class GCI0007Tests
     }
 
     [Fact]
+    public async Task EmptyCatch_TaskCanceledException_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,1 +1,5 @@
+             // service
+            +catch (TaskCanceledException)
+            +{
+            +}
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Swallowed exception"));
+    }
+
+    [Fact]
+    public async Task EmptyCatch_OperationCanceledException_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,1 +1,5 @@
+             // service
+            +catch (OperationCanceledException)
+            +{
+            +}
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Swallowed exception"));
+    }
+
+    [Fact]
     public async Task CatchWithLog_ShouldNotFlag()
     {
         var raw = """

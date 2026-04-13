@@ -72,6 +72,9 @@ public class GCI0024_ResourceLifecycle : RuleBase
             var (typeName, isExplicit) = MatchDisposableType(content);
             if (typeName is null) continue;
 
+            if (typeName == "HttpClient" && LooksLikeFactoryProvidedHttpClient(allLines, i))
+                continue;
+
             if (content.Contains("using ", StringComparison.Ordinal)) continue;
 
             bool prevHasUsing = false;
@@ -101,6 +104,17 @@ public class GCI0024_ResourceLifecycle : RuleBase
                 confidence: isExplicit ? Confidence.High : Confidence.Medium,
                 line: line));
         }
+    }
+
+    private static bool LooksLikeFactoryProvidedHttpClient(List<DiffLine> allLines, int idx)
+    {
+        int start = Math.Max(0, idx - 20);
+        int end = Math.Min(allLines.Count, idx + 20);
+
+        return allLines[start..end].Any(l =>
+            l.Content.Contains("CreateClient(", StringComparison.Ordinal) ||
+            l.Content.Contains("_httpClientFactory", StringComparison.Ordinal) ||
+            l.Content.Contains("IHttpClientFactory", StringComparison.Ordinal));
     }
 
     private static (string? TypeName, bool IsExplicit) MatchDisposableType(string content)

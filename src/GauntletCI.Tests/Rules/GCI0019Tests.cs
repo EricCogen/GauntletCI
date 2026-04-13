@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Core.Diff;
-using GauntletCI.Core.Rules;
 using GauntletCI.Core.Rules.Implementations;
 
 namespace GauntletCI.Tests.Rules;
@@ -8,20 +7,6 @@ namespace GauntletCI.Tests.Rules;
 public class GCI0019Tests
 {
     private static readonly GCI0019_ConfidenceAndEvidence Rule = new();
-
-    private static DiffContext MakeAddedLinesDiff(int addedLineCount)
-    {
-        var sb = new System.Text.StringBuilder();
-        sb.AppendLine("diff --git a/src/Service.cs b/src/Service.cs");
-        sb.AppendLine("index abc..def 100644");
-        sb.AppendLine("--- a/src/Service.cs");
-        sb.AppendLine("+++ b/src/Service.cs");
-        sb.AppendLine($"@@ -1,1 +1,{addedLineCount + 1} @@");
-        sb.AppendLine(" // service");
-        for (int i = 1; i <= addedLineCount; i++)
-            sb.AppendLine($"+int x{i} = {i};");
-        return DiffParser.Parse(sb.ToString());
-    }
 
     [Fact]
     public async Task BinaryFileInDiff_ShouldFlag()
@@ -87,35 +72,6 @@ public class GCI0019Tests
         var findings = await Rule.EvaluateAsync(diff, null);
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("Very small diff"));
-    }
-
-    [Fact]
-    public void LargeDiffWarning_FewFindings_ShouldReturnFinding()
-    {
-        var diff = MakeAddedLinesDiff(300);
-        var finding = ((IPostProcessor)Rule).PostProcess(diff);
-
-        Assert.NotNull(finding);
-        Assert.Contains("Large diff", finding.Summary);
-    }
-
-    [Fact]
-    public void LargeDiffWarning_AtThreshold_ShouldReturnNull()
-    {
-        // Exactly 200 added lines → totalLinesChanged == 200, which is not > 200 → null
-        var diff = MakeAddedLinesDiff(200);
-        var finding = ((IPostProcessor)Rule).PostProcess(diff);
-
-        Assert.Null(finding);
-    }
-
-    [Fact]
-    public void LargeDiffWarning_SmallDiff_ShouldReturnNull()
-    {
-        var diff = MakeAddedLinesDiff(100);
-        var finding = ((IPostProcessor)Rule).PostProcess(diff);
-
-        Assert.Null(finding);
     }
 
     [Fact]

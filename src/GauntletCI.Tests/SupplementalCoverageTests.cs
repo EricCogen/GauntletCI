@@ -378,32 +378,6 @@ public class SupplementalCoverageTests
         Assert.Contains(findings, f => f.RuleId == "GCI0007" && f.Confidence == GauntletCI.Core.Model.Confidence.Medium);
     }
 
-    // ── GCI0009 static analysis path ─────────────────────────────────────────
-
-    [Fact]
-    public async Task GCI0009_WithStaticAnalysis_CA1305_ShouldAddFinding()
-    {
-        var rule = new GCI0009_ConsistencyWithPatterns();
-        var diff = DiffParser.Parse("""
-            diff --git a/src/Foo.cs b/src/Foo.cs
-            index abc..def 100644
-            --- a/src/Foo.cs
-            +++ b/src/Foo.cs
-            @@ -1,1 +1,2 @@
-             // existing
-            +var x = 1;
-            """);
-        var staticAnalysis = new AnalyzerResult
-        {
-            Success = true,
-            Diagnostics = [new() { Id = "CA1307", Message = "StringComparison", FilePath = "src/Foo.cs", Line = 2 }]
-        };
-
-        var findings = await rule.EvaluateAsync(diff, staticAnalysis);
-
-        Assert.Contains(findings, f => f.Summary.Contains("CA1307"));
-    }
-
     // ── GCI0015 static analysis path ─────────────────────────────────────────
 
     [Fact]

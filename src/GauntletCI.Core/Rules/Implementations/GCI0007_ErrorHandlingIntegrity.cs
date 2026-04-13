@@ -50,6 +50,13 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
                 // Detect catch blocks
                 if (!content.StartsWith("catch", StringComparison.Ordinal)) continue;
 
+                // Cancellation exceptions are commonly swallowed intentionally (shutdown/background work).
+                if (content.Contains("TaskCanceledException", StringComparison.Ordinal) ||
+                    content.Contains("OperationCanceledException", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
                 bool isSwallowed = IsCatchSwallowed(addedLines, i, out string evidence);
                 if (isSwallowed)
                 {
