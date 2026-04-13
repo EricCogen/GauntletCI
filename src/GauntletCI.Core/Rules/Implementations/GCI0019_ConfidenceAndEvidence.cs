@@ -10,7 +10,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0019 – Confidence and Evidence
 /// Self-audit rule: flags large diffs with few findings, binary files, and tiny diffs.
 /// </summary>
-public class GCI0019_ConfidenceAndEvidence : RuleBase
+public class GCI0019_ConfidenceAndEvidence : RuleBase, IPostProcessor
 {
     public override string Id => "GCI0019";
     public override string Name => "Confidence and Evidence";
@@ -65,15 +65,17 @@ public class GCI0019_ConfidenceAndEvidence : RuleBase
     }
 
     /// <summary>
-    /// Called by RuleOrchestrator.PostProcess after all rules have run.
+    /// Called by <see cref="RuleOrchestrator"/> after all rules have run.
+    /// Flags large diffs that may have hidden risks not caught by deterministic rules.
     /// </summary>
-    public Finding? CreateLargeDiffWarning(int totalLinesChanged, int findingsCount)
+    public Finding? PostProcess(DiffContext context)
     {
-        if (totalLinesChanged <= 200 || findingsCount >= 2) return null;
+        int totalLinesChanged = context.AllAddedLines.Count() + context.AllRemovedLines.Count();
+        if (totalLinesChanged <= 200) return null;
 
         return CreateFinding(
             summary: "Large diff with few findings — hidden risks possible.",
-            evidence: $"{totalLinesChanged} lines changed, {findingsCount} finding(s) from deterministic rules.",
+            evidence: $"{totalLinesChanged} lines changed — deterministic rules may not catch all issues.",
             whyItMatters: "Large diffs have a higher surface area for bugs. Deterministic rules may not catch all issues.",
             suggestedAction: "Consider manual review or enabling LLM enrichment for deeper analysis.",
             confidence: Confidence.Low);

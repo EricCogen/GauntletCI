@@ -24,6 +24,9 @@ public class GCI0023_StructuredLogging : RuleBase
         "Log.Write"
     ];
 
+    // Diverges intentionally from WellKnownPatterns.CriticalPathKeywords: includes domain terms
+    // specific to this rule's structured-logging context (Login, Order, Checkout) and uses both
+    // PascalCase and lowercase variants for case-sensitive Contains matching.
     private static readonly string[] CriticalPathKeywords =
     [
         "Payment", "payment", "Auth", "auth", "Login", "login",
