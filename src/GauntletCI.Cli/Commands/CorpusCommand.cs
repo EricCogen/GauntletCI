@@ -1022,15 +1022,17 @@ public static class CorpusCommand
 
     private static Command CreatePurge()
     {
-        var languageOpt            = new Option<string>("--language",              () => "C#",  "Remove fixtures whose inferred language doesn't match this value. Pass empty to skip language filter.");
+        var languageOpt              = new Option<string>("--language",              () => "C#",  "Remove fixtures whose inferred language doesn't match this value. Pass empty to skip language filter.");
         var requireReviewCommentsOpt = new Option<bool>("--require-review-comments", () => false, "Remove fixtures that have no inline review comments");
-        var dryRunOpt              = new Option<bool>  ("--dry-run",              () => false, "Print what would be purged without making changes");
-        var dbOpt                  = new Option<string>("--db",                   () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt            = new Option<string>("--fixtures",             () => "./data/fixtures",             "Path to fixtures root directory");
+        var repoBlocklistOpt         = new Option<string[]>("--repo-blocklist",      "Remove fixtures from these owner/repo names (e.g. 'Goob-Station/Goob-Station')") { AllowMultipleArgumentsPerToken = false, Arity = ArgumentArity.ZeroOrMore };
+        var dryRunOpt                = new Option<bool>  ("--dry-run",              () => false, "Print what would be purged without making changes");
+        var dbOpt                    = new Option<string>("--db",                   () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt              = new Option<string>("--fixtures",             () => "./data/fixtures",             "Path to fixtures root directory");
 
-        var cmd = new Command("purge", "Remove low-quality fixtures from the corpus (language mismatch, no review comments)");
+        var cmd = new Command("purge", "Remove low-quality fixtures from the corpus (language mismatch, no review comments, blocklisted repos)");
         cmd.AddOption(languageOpt);
         cmd.AddOption(requireReviewCommentsOpt);
+        cmd.AddOption(repoBlocklistOpt);
         cmd.AddOption(dryRunOpt);
         cmd.AddOption(dbOpt);
         cmd.AddOption(fixturesOpt);
@@ -1039,6 +1041,7 @@ public static class CorpusCommand
         {
             var language              = ctx.ParseResult.GetValueForOption(languageOpt)!;
             var requireReviewComments = ctx.ParseResult.GetValueForOption(requireReviewCommentsOpt);
+            var repoBlocklist         = ctx.ParseResult.GetValueForOption(repoBlocklistOpt) ?? [];
             var dryRun                = ctx.ParseResult.GetValueForOption(dryRunOpt);
             var dbPath                = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixturesRoot          = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
@@ -1053,6 +1056,8 @@ public static class CorpusCommand
                     conditions.Add("(f.language IS NULL OR LOWER(f.language) != LOWER($lang))");
                 if (requireReviewComments)
                     conditions.Add("f.has_review_comments = 0");
+                if (repoBlocklist.Length > 0)
+                    conditions.Add("f.repo IN (" + string.Join(",", repoBlocklist.Select((_, i) => $"$blk{i}")) + ")");
 
                 if (conditions.Count == 0)
                 {
@@ -1070,6 +1075,8 @@ public static class CorpusCommand
                     WHERE {where}
                     """;
                 selectCmd.Parameters.AddWithValue("$lang", language);
+                for (int i = 0; i < repoBlocklist.Length; i++)
+                    selectCmd.Parameters.AddWithValue($"$blk{i}", repoBlocklist[i]);
 
                 var toPurge = new List<(string FixtureId, string? Path, string Repo, int PrNumber)>();
                 using (var reader = await selectCmd.ExecuteReaderAsync(ct))
@@ -1082,7 +1089,9 @@ public static class CorpusCommand
                         var prn  = reader.GetInt32(3);
                         var lang = reader.IsDBNull(4) ? "(none)" : reader.GetString(4);
                         var hasRc = reader.GetInt32(5) == 1;
-                        Console.WriteLine($"[corpus] purge: {fid}  lang={lang}  review_comments={hasRc}");
+                        var blocklisted = repoBlocklist.Length > 0 && repoBlocklist.Contains(repo, StringComparer.OrdinalIgnoreCase);
+                        var reason = blocklisted ? "blocklisted" : (!hasRc ? "no-review-comments" : $"lang={lang}");
+                        Console.WriteLine($"[corpus] purge: {fid}  reason={reason}");
                         toPurge.Add((fid, path, repo, prn));
                     }
                 }
