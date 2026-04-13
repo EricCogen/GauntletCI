@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using System.Text.RegularExpressions;
 using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
@@ -19,7 +20,9 @@ public class GCI0029_PiiLoggingLeak : RuleBase
     private static readonly string[] PiiTerms =
     [
         "email", "ssn", "socialsecurity", "phonenumber", "creditcard", "cardnumber",
-        "dateofbirth", "passport", "nationalid", "taxid", "bankaccount"
+        "dateofbirth", "passport", "nationalid", "taxid", "bankaccount",
+        "name", "address", "dob", "birthdate", "username", "zipcode", "postalcode",
+        "geolocation", "ipaddress", "deviceid", "token"
     ];
 
     private static readonly string[] LogPrefixes =
@@ -51,7 +54,7 @@ public class GCI0029_PiiLoggingLeak : RuleBase
                 string? matchedTerm = null;
                 foreach (var term in PiiTerms)
                 {
-                    if (content.Contains(term, StringComparison.OrdinalIgnoreCase))
+                    if (ContainsPiiTerm(content, term))
                     { matchedTerm = term; break; }
                 }
                 if (matchedTerm is null) continue;
@@ -67,4 +70,23 @@ public class GCI0029_PiiLoggingLeak : RuleBase
 
         return Task.FromResult(findings);
     }
+
+    private static bool ContainsPiiTerm(string content, string term)
+    {
+        int idx = 0;
+        while (idx < content.Length)
+        {
+            int found = content.IndexOf(term, idx, StringComparison.OrdinalIgnoreCase);
+            if (found < 0) return false;
+
+            bool prevOk = found == 0 || !IsWordChar(content[found - 1]);
+            bool nextOk = found + term.Length >= content.Length || !IsWordChar(content[found + term.Length]);
+
+            if (prevOk && nextOk) return true;
+            idx = found + 1;
+        }
+        return false;
+    }
+
+    private static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_';
 }
