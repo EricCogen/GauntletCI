@@ -16,7 +16,7 @@ def main() -> None:
     parser.add_argument("--include-nonfired", type=int, default=30, help="How many non-fired tasks to synthesize.")
     parser.add_argument("--rules", default="", help="Comma-separated rule ids to target.")
     parser.add_argument("--language", default="C#", help="Only queue fixtures whose primary language matches (default: C#). Pass empty string to disable filter.")
-    parser.add_argument("--tiers", default="gold,silver", help="Comma-separated tiers to include (default: gold,silver). Use 'all' to include discovery-tier fixtures.")
+    parser.add_argument("--tiers", default="all", help="Comma-separated tiers to include (default: all). Use 'gold,silver' to restrict to vetted tiers only.")
     args = parser.parse_args()
 
     base_dir = Path(__file__).resolve().parent
