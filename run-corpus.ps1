@@ -4,12 +4,12 @@
 param(
     [switch] $Help,
     [string]$Provider     = "gh-search",
-    [string]$StartDate    = (Get-Date).AddDays(-1).ToString("yyyy-MM-dd"),
-    [string]$EndDate      = "",   # End of date range (inclusive). Defaults to StartDate (single day) if not set.
+    [string]$StartDate    = "",    # Start of date range (yyyy-MM-dd). Leave empty to search all-time.
+    [string]$EndDate      = "",    # End of date range (inclusive). Leave empty for no upper bound.
     [int]   $Limit        = 50,
     [string]$Language     = "C#",
-    [int]   $MinComments  = 2,
-    [int]   $MinStars     = 500,
+    [int]   $MinComments  = 5,
+    [int]   $MinStars     = 1000,
     [string]$Tier         = "discovery",
     [string]$Db           = "./data/gauntletci-corpus.db",
     [string]$Fixtures     = "./data/fixtures",
@@ -38,12 +38,12 @@ if ($Help) {
     Write-Host "  -Help                  Show this help message"
     Write-Host "  -Provider  <name>      Discovery provider: gh-search (default) | gh-archive"
     Write-Host "                         gh-search requires GITHUB_TOKEN; gh-archive is unauthenticated"
-    Write-Host "  -StartDate <date>      Start of date range to discover (default: yesterday, yyyy-MM-dd)"
-    Write-Host "  -EndDate   <date>      End of date range, inclusive (default: same as StartDate)"
+    Write-Host "  -StartDate <date>      Start of date range to discover (default: empty = all-time, yyyy-MM-dd)"
+    Write-Host "  -EndDate   <date>      End of date range, inclusive (default: empty = no upper bound)"
     Write-Host "  -Limit     <n>         Max candidates to discover AND hydrate per run (default: 50)"
     Write-Host "  -Language  <lang>      Filter by language, default C# (pass empty to include all)"
-    Write-Host "  -MinComments <n>       Minimum review comment count (default: 2)"
-    Write-Host "  -MinStars  <n>         Minimum repository star count (default: 500)"
+    Write-Host "  -MinComments <n>       Minimum review comment count (default: 5)"
+    Write-Host "  -MinStars  <n>         Minimum repository star count (default: 1000)"
     Write-Host "                         NOTE: --min-stars has no effect with gh-archive (no star data in event stream)"
     Write-Host "  -Tier      <tier>      Fixture tier: gold | silver | discovery (default: discovery)"
     Write-Host "  -Db        <path>      SQLite database path (default: ./data/gauntletci-corpus.db)"
@@ -158,6 +158,9 @@ if ($SkipTo -le 2) {
         "--fixtures", $Fixtures
     )
     if ($Language -ne "") { $purgeArgs += "--language", $Language }
+    foreach ($blocked in $RepoBlocklist) {
+        $purgeArgs += "--repo-blocklist", $blocked
+    }
 
     Invoke-Expression "$cli $($purgeArgs -join ' ')"
     if ($LASTEXITCODE -ne 0) { throw "Purge failed" }
