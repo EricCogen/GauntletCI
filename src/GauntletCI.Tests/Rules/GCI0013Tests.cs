@@ -76,17 +76,17 @@ public class GCI0013Tests
         // The [Fact] attribute appears as a context line (not added) — rule must
         // inspect all hunk lines, not just added lines, to detect test files.
         var addedLines = string.Join("\n", Enumerable.Range(1, 22).Select(i => $"+    var x{i} = {i};"));
-        var raw = $"""
+        var raw = $$"""
             diff --git a/src/ServiceTests.cs b/src/ServiceTests.cs
             index abc..def 100644
             --- a/src/ServiceTests.cs
             +++ b/src/ServiceTests.cs
             @@ -1,3 +1,25 @@
              using Xunit;
-             public class ServiceTests {{
-             [Fact] public async Task Foo() {{
-            {addedLines}
-             }}
+             public class ServiceTests {
+             [Fact] public async Task Foo() {
+            {{addedLines}}
+             }
             """;
 
         var diff = DiffParser.Parse(raw);
@@ -99,16 +99,16 @@ public class GCI0013Tests
     public async Task NUnitTestFile_ShouldNotFlag()
     {
         var addedLines = string.Join("\n", Enumerable.Range(1, 22).Select(i => $"+    var x{i} = {i};"));
-        var raw = $"""
+        var raw = $$"""
             diff --git a/src/MySpec.cs b/src/MySpec.cs
             index abc..def 100644
             --- a/src/MySpec.cs
             +++ b/src/MySpec.cs
             @@ -1,2 +1,24 @@
              using NUnit.Framework;
-             [TestFixture] public class MySpec {{
-            {addedLines}
-             }}
+             [TestFixture] public class MySpec {
+            {{addedLines}}
+             }
             """;
 
         var diff = DiffParser.Parse(raw);
