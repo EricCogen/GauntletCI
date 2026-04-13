@@ -1,12 +1,12 @@
 # GauntletCI Corpus Pipeline Runner
-# Usage: .\run-corpus.ps1 [-Help] [-StartDate "2025-03-01"] [-EndDate "2025-03-31"] [-Limit 50] [-Language "C#"] [-MinComments 2] [-Tier "discovery"] [-Db <path>] [-Fixtures <path>] [-Report <path>] [-SkipTo <step>]
+# Usage: .\run-corpus.ps1 [-Help] [-StartDate "2025-03-01"] [-EndDate "2025-03-31"] [-Limit 50] [-Language "C#"] [-MinComments 2] [-Tier "discovery"] [-Db <path>] [-Fixtures <path>] [-Report <path>] [-SkipTo <step>" ]
 
 param(
     [switch] $Help,
     [string]$StartDate    = (Get-Date).AddDays(-1).ToString("yyyy-MM-dd"),
     [string]$EndDate      = "",   # End of date range (inclusive). Defaults to StartDate (single day) if not set.
     [int]   $Limit        = 50,
-    [string]$Language     = "",
+    [string]$Language     = "C#",
     [int]   $MinComments  = 0,
     [string]$Tier         = "discovery",
     [string]$Db           = "./data/gauntletci-corpus.db",
@@ -28,7 +28,7 @@ if ($Help) {
     Write-Host "  -StartDate <date>      Start of date range to discover (default: yesterday, yyyy-MM-dd)"
     Write-Host "  -EndDate   <date>      End of date range, inclusive (default: same as StartDate)"
     Write-Host "  -Limit     <n>         Max candidates to discover AND hydrate per run (default: 50)"
-    Write-Host "  -Language  <lang>      Filter by language, e.g. C#, Python (default: all)"
+    Write-Host "  -Language  <lang>      Filter by language, default C# (pass empty to include all)"
     Write-Host "  -MinComments <n>       Minimum review comment count (default: 0)"
     Write-Host "  -Tier      <tier>      Fixture tier: gold | silver | discovery (default: discovery)"
     Write-Host "  -Db        <path>      SQLite database path (default: ./data/gauntletci-corpus.db)"
