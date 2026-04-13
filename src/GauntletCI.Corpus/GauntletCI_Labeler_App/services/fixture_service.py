@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -24,12 +25,18 @@ def read_text_file(path: Path) -> str:
         return ""
 
 
+def _safe_fixture_id(fixture_id: str) -> str:
+    """Strip path-traversal sequences from a fixture ID."""
+    sanitized = re.sub(r'[/\\]', '', fixture_id)
+    return sanitized.strip('.')
+
+
 def locate_fixture_dir(fixtures_root: str, fixture: dict[str, Any]) -> Path | None:
     root = Path(fixtures_root)
     if not root.exists():
         return None
 
-    fixture_id = fixture["fixture_id"]
+    fixture_id = _safe_fixture_id(fixture["fixture_id"])
     tier = str(fixture.get("tier") or "").lower()
 
     candidates = [root / tier / fixture_id, root / fixture_id]

@@ -79,7 +79,7 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                                l.Content.Contains("ArgumentException", StringComparison.Ordinal) ||
                                l.Content.Contains("throw", StringComparison.Ordinal));
 
-                if (!hasValidation && content.Contains("string ") || content.Contains("object "))
+                if (!hasValidation && (content.Contains("string ") || content.Contains("object ")))
                 {
                     findings.Add(CreateFinding(
                         summary: $"New method parameter(s) added without apparent null/range validation in {file.NewPath}",
