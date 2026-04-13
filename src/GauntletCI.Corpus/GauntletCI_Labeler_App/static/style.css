@@ -95,6 +95,14 @@ input, textarea, select {
   border-radius: 10px;
   padding: 10px 12px;
 }
+input[type=checkbox], input[type=radio], input[type=hidden] {
+  width: auto;
+  margin-top: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: 0;
+}
 textarea { resize: vertical; }
 .data-table {
   width: 100%;
@@ -117,7 +125,7 @@ textarea { resize: vertical; }
 .sticky-form { position: sticky; top: 82px; align-self: start; }
 .decision-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(3, minmax(0, 200px));
   gap: 10px;
   margin-bottom: 14px;
 }
@@ -127,6 +135,7 @@ textarea { resize: vertical; }
   border: 1px solid var(--border);
   border-radius: 12px;
   background: #0f1728;
+  cursor: pointer;
 }
 .decision-card span { display: block; color: var(--text); font-weight: 700; margin-top: 4px; }
 .decision-card small { color: var(--muted); }
