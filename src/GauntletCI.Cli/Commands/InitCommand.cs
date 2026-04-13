@@ -3,6 +3,7 @@ using System.CommandLine;
 using System.Text.Json;
 using GauntletCI.Cli.Resources;
 using GauntletCI.Cli.Telemetry;
+using Spectre.Console;
 
 namespace GauntletCI.Cli.Commands;
 
@@ -56,7 +57,7 @@ public static class InitCommand
         var configPath = Path.Combine(dir.FullName, ".gauntletci.json");
         if (File.Exists(configPath))
         {
-            Console.WriteLine($"Config already exists at {configPath}");
+            AnsiConsole.MarkupLine($"[yellow]Config already exists at {Markup.Escape(configPath)}[/]");
             return;
         }
 
@@ -68,7 +69,7 @@ public static class InitCommand
 
         var json = JsonSerializer.Serialize(config, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(configPath, json);
-        Console.WriteLine($"Created {configPath}");
+        AnsiConsole.MarkupLine($"[green]Created {Markup.Escape(configPath)}[/]");
     }
 
     private static void InstallHooks(string gitRoot, bool force)
@@ -84,7 +85,7 @@ public static class InitCommand
     {
         if (File.Exists(targetPath) && !force)
         {
-            Console.WriteLine($"Hook already exists at {targetPath}. Use --force to overwrite.");
+            AnsiConsole.MarkupLine($"[yellow]Hook already exists at {Markup.Escape(targetPath)}. Use --force to overwrite.[/]");
             return;
         }
 
@@ -100,7 +101,7 @@ public static class InitCommand
                 UnixFileMode.OtherRead | UnixFileMode.OtherExecute);
         }
 
-        Console.WriteLine($"Installed hook: {targetPath}");
+        AnsiConsole.MarkupLine($"[green]Installed hook: {Markup.Escape(targetPath)}[/]");
     }
 
     private static string? FindGitRoot(string startDirectory)
