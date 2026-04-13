@@ -279,14 +279,38 @@ gauntletci corpus report --output ./data/scorecard.md
 
 ## Silver Heuristics
 
-The `SilverLabelEngine` infers `expected.json` labels from diff content without human review. Labels have `LabelSource: Heuristic` and are never applied over existing `HumanReview` or `Seed` entries unless `--overwrite` is passed.
+The `SilverLabelEngine` infers `expected.json` labels from diff content and review comments without human review. Labels have `LabelSource: Heuristic` and are never applied over existing `HumanReview` or `Seed` entries unless `--overwrite` is passed.
 
-| Rule | Trigger condition | Expected confidence |
+### Diff heuristics
+
+| Rule | Trigger condition | Confidence |
 |---|---|---|
-| **GCI0016** — Sync-over-async | Any added line contains `.Result` or `.Wait()` | 0.60 |
-| **GCI0007** — Secret exposure | Any added line contains `password`, `secret`, `api_key`, or `token` (case-insensitive) | 0.70 |
-| **GCI0003** — Empty catch block | Added lines contain an empty or comment-only `catch { }` block | 0.65 |
-| **GCI0021** — Migration file touched | Any diff path line contains `Migration` or `_migration` (case-insensitive) | 0.60 |
+| **GCI0003** — Empty catch block | Added lines contain empty or comment-only `catch { }` block | 0.65 |
+| **GCI0004** — Breaking change | Added lines contain `[Obsolete]` or `throw new NotImplemented` on a public API | 0.55 |
+| **GCI0005** — Missing tests | Diff path touches a test file (contains `Test`, `Spec.`, `.test.`) | 0.50 |
+| **GCI0006** — Null dereference | Added lines assign `null` or use the null-forgiving operator (`!.`) | 0.50 |
+| **GCI0007** — Secret exposure | Added lines contain `password`, `secret`, `api_key`, or `token` | 0.70 |
+| **GCI0010** — Hardcoded config | Added lines contain hardcoded URL, host, or port literal | 0.55 |
+| **GCI0016** — Sync-over-async | Added lines contain `.Result` or `.Wait()` | 0.60 |
+| **GCI0021** — Migration file touched | Diff path contains `Migration` or `_migration` | 0.60 |
+| **GCI0022** — Binary/generated file | Diff path contains `.min.js`, `.bundle.`, `.dll`, `.exe`, `.png`, `.jpg` | 0.65 |
+
+### Review comment heuristics
+
+When a fixture has `raw/review-comments.json`, comment bodies are also scanned:
+
+| Rule | Keywords that trigger it | Confidence |
+|---|---|---|
+| **GCI0003** — Empty catch block | `exception`, `catch`, `swallowing`, `ignored exception` | 0.60 |
+| **GCI0004** — Breaking change | `breaking change`, `backwards compat`, `semver`, `api break` | 0.65 |
+| **GCI0005** — Missing tests | `needs tests`, `add test`, `missing test`, `no test` | 0.70 |
+| **GCI0006** — Null dereference | `null`, `nullable`, `null reference`, `nullreferenceexception` | 0.60 |
+| **GCI0007** — Secret exposure | `secret`, `password`, `credential`, `api key`, `token` | 0.75 |
+| **GCI0010** — Hardcoded config | `hardcoded`, `magic string`, `magic number`, `config`, `environment variable` | 0.60 |
+| **GCI0016** — Sync-over-async | `.result`, `.wait()`, `async`, `blocking`, `deadlock`, `configureawait`, `thread safe`, `race condition`, `lock` | 0.65 |
+| **GCI0021** — Migration file touched | `migration`, `schema change`, `db migration`, `database migration` | 0.65 |
+| **GCI0022** — Binary/generated file | `large file`, `file size`, `binary file`, `binary blob` | 0.60 |
+| **GCI0023** — Broad change | `rename`, `too many files`, `broad change`, `sweeping change` | 0.55 |
 
 When no heuristic matches, no label is written (an empty `expected.json` is not created).
 
