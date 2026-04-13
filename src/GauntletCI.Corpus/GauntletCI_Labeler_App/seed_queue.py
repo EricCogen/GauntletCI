@@ -33,7 +33,7 @@ def main() -> None:
         conditions.append(f"af.rule_id IN ({','.join(['?'] * len(target_rules))})")
         params.extend(target_rules)
     if lang_filter:
-        conditions.append("f.language = ?")
+        conditions.append("LOWER(f.language) = LOWER(?)")
         params.append(lang_filter)
     conditions.append("af.did_trigger = 1")
     where = "WHERE " + " AND ".join(conditions)
@@ -82,7 +82,7 @@ def main() -> None:
         per_rule = max(1, math.ceil(nonfired_limit / max(len(rules), 1)))
 
         # Build language filter clause for nonfired probes
-        nonfired_lang_clause = "AND f.language = ?" if lang_filter else ""
+        nonfired_lang_clause = "AND LOWER(f.language) = LOWER(?)" if lang_filter else ""
         nonfired_lang_params: list[object] = [lang_filter] if lang_filter else []
 
         for rule_id in rules:

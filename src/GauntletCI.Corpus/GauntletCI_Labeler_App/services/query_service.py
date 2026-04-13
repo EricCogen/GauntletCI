@@ -27,7 +27,7 @@ def dashboard_stats(conn: sqlite3.Connection) -> dict[str, Any]:
     }
 
 
-def queue_rows(conn: sqlite3.Connection, status: str = "pending", rule_id: str = "", bucket: str = "") -> list[sqlite3.Row]:
+def queue_rows(conn: sqlite3.Connection, status: str = "pending", rule_id: str = "", bucket: str = "", language: str = "C#") -> list[sqlite3.Row]:
     sql = """
     SELECT lq.*, f.repo, f.pr_number, f.tier, f.pr_size_bucket,
            f.has_tests_changed, f.has_review_comments,
@@ -56,6 +56,9 @@ def queue_rows(conn: sqlite3.Connection, status: str = "pending", rule_id: str =
     if bucket:
         sql += " AND lq.queue_bucket = ?"
         params.append(bucket)
+    if language:
+        sql += " AND LOWER(f.language) = LOWER(?)"
+        params.append(language)
     sql += " ORDER BY lq.priority DESC, lq.id ASC"
     return conn.execute(sql, tuple(params)).fetchall()
 

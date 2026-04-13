@@ -26,6 +26,9 @@
         {% endfor %}
       </select>
     </label>
+    <label>Language
+      <input type="text" name="language" value="{{ language or 'C#' }}" placeholder="C#" />
+    </label>
     <button class="button" type="submit">Apply</button>
   </form>
   <table class="data-table">

@@ -61,11 +61,12 @@ def queue():
     status = request.args.get("status", "pending")
     rule_id = request.args.get("rule_id", "")
     bucket = request.args.get("bucket", "")
+    language = request.args.get("language", "C#")
     with get_conn() as conn:
-        rows = queue_rows(conn, status=status, rule_id=rule_id, bucket=bucket)
+        rows = queue_rows(conn, status=status, rule_id=rule_id, bucket=bucket, language=language)
         rules = [r[0] for r in conn.execute("SELECT DISTINCT rule_id FROM actual_findings ORDER BY rule_id").fetchall()]
         buckets = [r[0] for r in conn.execute("SELECT DISTINCT queue_bucket FROM label_queue ORDER BY queue_bucket").fetchall()]
-    return render_template("queue.html", rows=rows, status=status, rule_id=rule_id, bucket=bucket, rules=rules, buckets=buckets)
+    return render_template("queue.html", rows=rows, status=status, rule_id=rule_id, bucket=bucket, language=language, rules=rules, buckets=buckets)
 
 
 @app.route("/task/<int:queue_id>")
@@ -105,7 +106,10 @@ def task(queue_id: int):
     artifacts = load_fixture_artifacts(CONFIG["fixtures_root"], fixture)
     files_json = artifacts.get("files_json") or []
     changed_files = (
-        [f for f in files_json if str(f.get("filename") or f.get("path") or "").endswith(".cs")][:25]
+        [
+            f for f in files_json
+            if str(f.get("filename") or f.get("path") or "").lower().endswith(".cs")
+        ][:25]
         if isinstance(files_json, list) else []
     )
     review_comments = artifacts.get("review_comments") or []
