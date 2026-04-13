@@ -16,7 +16,7 @@ public class GCI0002_GoalAlignment : RuleBase
     public override string Name => "Goal Alignment";
 
     private static readonly string[] FrontendExtensions = [".ts", ".tsx", ".js", ".jsx", ".vue", ".html", ".css", ".scss"];
-    private static readonly string[] BackendExtensions = [".cs", ".go", ".java", ".py", ".rb", ".rs", ".cpp", ".c"];
+    private static readonly string[] BackendExtensions = [".cs", ".go", ".java", ".py", ".rb", ".rs", ".cpp", ".fs", ".php", ".scala", ".kt"];
     private static readonly string[] ConfigExtensions = [".json", ".yml", ".yaml", ".xml", ".toml", ".env", ".config"];
     private static readonly string[] TestPatterns = ["test", "spec", "tests", "specs"];
 
@@ -78,7 +78,7 @@ public class GCI0002_GoalAlignment : RuleBase
         if (totalFileCount <= 5) return;
 
         bool hasFrontend = skippedFiles.Any(r => FrontendExtensions.Any(e => r.Extension.Equals(e, StringComparison.OrdinalIgnoreCase)));
-        bool hasBackend  = diff.Files.Count > 0; // eligible files are all backend (.cs)
+        bool hasBackend  = diff.Files.Any(f => BackendExtensions.Any(e => f.NewPath.EndsWith(e, StringComparison.OrdinalIgnoreCase)));
         bool hasConfig   = skippedFiles.Any(r => ConfigExtensions.Any(e => r.Extension.Equals(e, StringComparison.OrdinalIgnoreCase)));
         bool hasTests    = diff.Files.Any(f => TestPatterns.Any(p => f.NewPath.Contains(p, StringComparison.OrdinalIgnoreCase)));
 
