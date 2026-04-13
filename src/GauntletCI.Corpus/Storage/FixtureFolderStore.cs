@@ -28,6 +28,9 @@ public sealed class FixtureFolderStore : IFixtureStore
         _basePath = basePath;
     }
 
+    public string BasePath => _basePath;
+
+
     // ── IFixtureStore ────────────────────────────────────────────────────────
 
     public async Task SaveMetadataAsync(FixtureMetadata metadata, CancellationToken ct = default)

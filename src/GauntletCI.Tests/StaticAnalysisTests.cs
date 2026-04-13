@@ -266,4 +266,83 @@ public class StaticAnalysisTests
 
         Assert.Single(ctx.Files);
     }
+
+    // ── StaticAnalysisRunner ─────────────────────────────────────────────────
+
+    [Fact]
+    public async Task StaticAnalysisRunner_NullRepoPath_ShouldReturnNull()
+    {
+        var diff = DiffParser.Parse("diff --git a/src/Foo.cs b/src/Foo.cs\nindex abc..def 100644\n--- a/src/Foo.cs\n+++ b/src/Foo.cs\n@@ -1,1 +1,2 @@\n int x;\n+int y;\n");
+        var result = await StaticAnalysisRunner.RunAsync(diff, repoPath: null);
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task StaticAnalysisRunner_NoCsFiles_ShouldReturnNull()
+    {
+        var raw = """
+            diff --git a/README.md b/README.md
+            index abc..def 100644
+            --- a/README.md
+            +++ b/README.md
+            @@ -1,1 +1,2 @@
+             # Hello
+            +World
+            """;
+        var diff = DiffParser.Parse(raw);
+        var result = await StaticAnalysisRunner.RunAsync(diff, repoPath: Path.GetTempPath());
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task StaticAnalysisRunner_CsFileMissingFromDisk_ShouldReturnNull()
+    {
+        var raw = """
+            diff --git a/src/Ghost.cs b/src/Ghost.cs
+            index abc..def 100644
+            --- a/src/Ghost.cs
+            +++ b/src/Ghost.cs
+            @@ -1,1 +1,2 @@
+             // nothing
+            +int x = 1;
+            """;
+        var diff = DiffParser.Parse(raw);
+        // Repo path exists but the file doesn't
+        var result = await StaticAnalysisRunner.RunAsync(diff, repoPath: Path.GetTempPath());
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task StaticAnalysisRunner_ValidCsFile_ShouldReturnResult()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"gci_sas_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        var srcDir = Path.Combine(tempDir, "src");
+        Directory.CreateDirectory(srcDir);
+        var filePath = Path.Combine(srcDir, "Foo.cs");
+        await File.WriteAllTextAsync(filePath, "public class Foo { public void Bar() { } }");
+
+        try
+        {
+            var raw = """
+                diff --git a/src/Foo.cs b/src/Foo.cs
+                index abc..def 100644
+                --- a/src/Foo.cs
+                +++ b/src/Foo.cs
+                @@ -1,1 +1,1 @@
+                -public class Foo { }
+                +public class Foo { public void Bar() { } }
+                """;
+            var diff = DiffParser.Parse(raw);
+            var result = await StaticAnalysisRunner.RunAsync(diff, repoPath: tempDir);
+
+            Assert.NotNull(result);
+            Assert.True(result.Success);
+            Assert.NotNull(result.Diagnostics);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
 }

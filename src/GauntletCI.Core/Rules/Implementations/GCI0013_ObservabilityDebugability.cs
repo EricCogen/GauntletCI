@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
-using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -22,16 +22,15 @@ public class GCI0013_ObservabilityDebugability : RuleBase
          ".fatal(", ".Fatal(", ".Panic(", ".panic(", ".critical(", ".Critical("];
 
     public override Task<List<Finding>> EvaluateAsync(
-        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+        AnalysisContext context, CancellationToken ct = default)
     {
+        var diff = context.Diff;
         var findings = new List<Finding>();
 
         CheckRemovedErrorLogging(diff, findings);
 
         foreach (var file in diff.Files)
         {
-            if (!file.NewPath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)) continue;
-
             CheckLargeMethodWithoutLogging(file, findings);
             CheckPublicApiWithoutXmlDocs(file, findings);
         }

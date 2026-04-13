@@ -18,7 +18,7 @@ public static class FixtureNormalizer
     private static readonly string[] LoggingTags         = ["_logger", "Log.", "ILogger"];
     private static readonly string[] ExceptionFlowTags   = ["catch ", "throw ", "Exception"];
 
-    public static FixtureMetadata Normalize(HydratedPullRequest pr, string source = "manual")
+    public static FixtureMetadata Normalize(HydratedPullRequest pr, string source = "manual", FixtureTier tier = FixtureTier.Discovery)
     {
         var fixtureId = FixtureIdHelper.Build(pr.RepoOwner, pr.RepoName, pr.PullRequestNumber);
         var tags      = InferTags(pr);
@@ -27,7 +27,7 @@ public static class FixtureNormalizer
         return new FixtureMetadata
         {
             FixtureId         = fixtureId,
-            Tier              = FixtureTier.Discovery,
+            Tier              = tier,
             Repo              = $"{pr.RepoOwner}/{pr.RepoName}",
             PullRequestNumber = pr.PullRequestNumber,
             Language          = language,

@@ -34,6 +34,9 @@ artifacts/
 !docs/change-risk-thesis.md
 !docs/change-risk-research.md
 !docs/rules.md
+!docs/architecture.md
+!docs/cli-reference.md
+!docs/corpus-pipeline.md
 !.github/CONTRIBUTING.md
 !.github/CODE_OF_CONDUCT.md
 !.github/SECURITY.md
@@ -42,3 +45,6 @@ artifacts/
 # Benchmark infrastructure — ensure tracked
 !tests/
 !tests/GauntletCI.Benchmarks/Fixtures/
+/data
+/src/GauntletCI.Corpus/GauntletCI_Labeler_App/.venv
+/ghapi.key
