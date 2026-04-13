@@ -14,6 +14,8 @@ public class GCI0020_AccountabilityStandard : RuleBase
     public override string Id => "GCI0020";
     public override string Name => "Accountability Standard";
 
+    // Diverges intentionally from WellKnownPatterns.SecretNamePatterns: includes "pwd" and "passwd"
+    // as abbreviations relevant to this accountability check, and excludes broader infrastructure terms.
     private static readonly string[] SecretPatterns = ["password", "secret", "apikey", "api_key", "pwd", "passwd"];
 
     public override Task<List<Finding>> EvaluateAsync(

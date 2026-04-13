@@ -15,6 +15,9 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
     public override string Id => "GCI0007";
     public override string Name => "Error Handling Integrity";
 
+    // Diverges intentionally from WellKnownPatterns.HighSeverityLogKeywords: this array matches
+    // structured log method-call patterns (e.g. ".Error(", ".Fatal(") rather than bare keyword strings,
+    // so it cannot be replaced by the shared keyword list without changing detection logic.
     private static readonly string[] HighSeverityLogPatterns =
         [".error(", ".Error(", "Errorf(", "ErrorS(", "level.Error(", "log.Error(",
          ".fatal(", ".Fatal(", ".Panic(", ".panic(", ".critical(", ".Critical("];

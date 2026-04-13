@@ -16,6 +16,9 @@ public class GCI0025_FeatureFlagReadiness : RuleBase
 
     private const int LargeChangeLinesThreshold = 50;
 
+    // Diverges intentionally from WellKnownPatterns.CriticalPathKeywords: includes additional business
+    // terms (login, order, checkout, subscription, pricing, password) and both PascalCase/lowercase
+    // variants for OrdinalIgnoreCase matching against file paths in this feature-flag context.
     private static readonly string[] CriticalPathKeywords =
     [
         "auth", "Auth", "login", "Login", "payment", "Payment",

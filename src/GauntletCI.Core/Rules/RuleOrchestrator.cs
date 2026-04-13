@@ -5,7 +5,6 @@ using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.FileAnalysis;
 using GauntletCI.Core.Model;
-using GauntletCI.Core.Rules.Implementations;
 using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules;
@@ -189,9 +188,9 @@ public class RuleOrchestrator
 
     /// <summary>
     /// Runs synthesis checks after all rules have completed.
-    /// Adds GCI0018 aggregate finding and GCI0019 large-diff warning.
+    /// Adds GCI0018 aggregate finding and runs any <see cref="IPostProcessor"/> rules.
     /// </summary>
-    private static void PostProcess(DiffContext diff, List<Finding> allFindings)
+    private void PostProcess(DiffContext diff, List<Finding> allFindings)
     {
         try
         {
@@ -210,10 +209,11 @@ public class RuleOrchestrator
                 });
             }
 
-            var gci0019 = new GCI0019_ConfidenceAndEvidence();
-            int totalLines = diff.AllAddedLines.Count() + diff.AllRemovedLines.Count();
-            var warning = gci0019.CreateLargeDiffWarning(totalLines, allFindings.Count);
-            if (warning != null) allFindings.Add(warning);
+            foreach (var processor in _rules.OfType<IPostProcessor>())
+            {
+                var finding = processor.PostProcess(diff);
+                if (finding != null) allFindings.Add(finding);
+            }
         }
         catch (Exception ex)
         {

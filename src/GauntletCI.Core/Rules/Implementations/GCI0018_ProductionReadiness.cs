@@ -67,6 +67,8 @@ public class GCI0018_ProductionReadiness : RuleBase
         // Console.WriteLine in non-test, non-CLI files
         foreach (var file in diff.Files)
         {
+            // Diverges intentionally from WellKnownPatterns.IsTestFile: inline check scoped to this
+            // method's context; only "Test"/"Spec" name fragments are relevant here.
             bool isTestFile = file.NewPath.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
                               file.NewPath.Contains("Spec", StringComparison.OrdinalIgnoreCase);
             bool isCliFile = file.NewPath.Contains("Cli", StringComparison.OrdinalIgnoreCase) ||

@@ -45,6 +45,8 @@ public class GCI0005_TestCoverageRelevance : RuleBase
         return Task.FromResult(findings);
     }
 
+    // Diverges intentionally from WellKnownPatterns.IsTestFile: this version also checks for /Specs/
+    // and /spec/ directories and normalises backslashes, making it more precise for multi-language repos.
     private static bool IsTestFile(string path) =>
         path.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
         path.Contains("Spec", StringComparison.OrdinalIgnoreCase) ||
