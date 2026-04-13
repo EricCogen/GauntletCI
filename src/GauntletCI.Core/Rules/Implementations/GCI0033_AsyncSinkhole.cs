@@ -1,13 +1,15 @@
 // SPDX-License-Identifier: Elastic-2.0
-using GauntletCI.Core.Diff;
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Model;
-using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0033 – Async Sinkhole
-/// Detects .Result property access or .Wait() calls that block threads and cause deadlocks.
+/// GCI0033 – Async Sinkhole (superseded)
+/// This rule's detection of .Result and .Wait() blocking calls has been absorbed into
+/// GCI0016 (Concurrency and State Risk), which already fires on the same patterns
+/// with equivalent confidence and guidance. GCI0033 returns no findings to prevent
+/// duplicate alerts. It is retained as a reserved ID to avoid breaking configurations.
 /// </summary>
 public class GCI0033_AsyncSinkhole : RuleBase
 {
@@ -15,45 +17,7 @@ public class GCI0033_AsyncSinkhole : RuleBase
     public override string Name => "Async Sinkhole";
 
     public override Task<List<Finding>> EvaluateAsync(
-        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
-    {
-        var findings = new List<Finding>();
-
-        foreach (var file in diff.Files.Where(f => f.NewPath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)))
-        {
-            foreach (var line in file.AddedLines)
-            {
-                var content = line.Content;
-                var trimmed = content.TrimStart();
-
-                // Skip comments
-                if (trimmed.StartsWith("//") || trimmed.StartsWith("*")) continue;
-
-                if (content.Contains(".Result", StringComparison.Ordinal))
-                {
-                    findings.Add(CreateFinding(
-                        summary: $"Blocking .Result access on a Task in {file.NewPath} — risk of deadlock.",
-                        evidence: $"Line {line.LineNumber}: {trimmed}",
-                        whyItMatters: "Calling .Result or .Wait() on a Task blocks the calling thread and can cause deadlocks in ASP.NET, WPF, or any context with a synchronization context.",
-                        suggestedAction: "Use `await` instead of `.Result` or `.Wait()`. If calling from a sync context, use `Task.Run(() => ...).GetAwaiter().GetResult()` as a last resort.",
-                        confidence: Confidence.High));
-                    continue;
-                }
-
-                if ((content.Contains(".Wait()", StringComparison.Ordinal) ||
-                     content.Contains(".Wait(", StringComparison.Ordinal)) &&
-                    !content.Contains(".WaitOne(", StringComparison.Ordinal))
-                {
-                    findings.Add(CreateFinding(
-                        summary: $"Blocking .Wait() call on a Task in {file.NewPath} — risk of deadlock.",
-                        evidence: $"Line {line.LineNumber}: {trimmed}",
-                        whyItMatters: "Calling .Result or .Wait() on a Task blocks the calling thread and can cause deadlocks in ASP.NET, WPF, or any context with a synchronization context.",
-                        suggestedAction: "Use `await` instead of `.Result` or `.Wait()`. If calling from a sync context, use `Task.Run(() => ...).GetAwaiter().GetResult()` as a last resort.",
-                        confidence: Confidence.High));
-                }
-            }
-        }
-
-        return Task.FromResult(findings);
-    }
+        AnalysisContext context, CancellationToken ct = default)
+        => Task.FromResult(new List<Finding>());
 }
+

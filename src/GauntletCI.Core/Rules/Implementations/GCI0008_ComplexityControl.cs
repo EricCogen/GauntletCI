@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
-using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -19,8 +19,9 @@ public class GCI0008_ComplexityControl : RuleBase
     private const int DuplicateLineThreshold = 3;
 
     public override Task<List<Finding>> EvaluateAsync(
-        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+        AnalysisContext context, CancellationToken ct = default)
     {
+        var diff = context.Diff;
         var findings = new List<Finding>();
 
         CheckNestingDepth(diff, findings);
