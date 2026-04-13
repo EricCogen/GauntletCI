@@ -10,8 +10,10 @@ public class GCI0020Tests
     private static readonly GCI0020_AccountabilityStandard Rule = new();
 
     [Fact]
-    public async Task CatchException_ShouldFlagHigh()
+    public async Task CatchException_ShouldNotFlag_OwnerIsGCI0007()
     {
+        // Swallowed catch(Exception) detection is owned by GCI0007 (Error Handling Integrity).
+        // GCI0020 does not duplicate this check.
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -25,9 +27,7 @@ public class GCI0020Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f =>
-            f.Summary.Contains("catch (Exception)") &&
-            f.Confidence == Confidence.High);
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("catch (Exception)"));
     }
 
     [Fact]

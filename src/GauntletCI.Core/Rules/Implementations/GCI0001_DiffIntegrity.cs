@@ -29,7 +29,6 @@ public class GCI0001_DiffIntegrity : RuleBase
 
         CheckMixedScope(diff, context.SkippedFiles, findings);
         CheckExcessiveFormattingChurn(diff, findings);
-        CheckLargeDiffWithNoTests(diff, findings);
 
         return Task.FromResult(findings);
     }
@@ -86,28 +85,5 @@ public class GCI0001_DiffIntegrity : RuleBase
         }
     }
 
-    private void CheckLargeDiffWithNoTests(DiffContext diff, List<Finding> findings)
-    {
-        var codeFiles = diff.Files
-            .Where(f => !IsTestFile(f.NewPath))
-            .ToList();
 
-        var testFiles = diff.Files.Where(f => IsTestFile(f.NewPath)).ToList();
-
-        int totalAddedCodeLines = codeFiles.Sum(f => f.AddedLines.Count());
-
-        if (totalAddedCodeLines > 50 && testFiles.Count == 0)
-        {
-            findings.Add(CreateFinding(
-                summary: $"Large diff ({totalAddedCodeLines} added lines) with no test file changes.",
-                evidence: $"{codeFiles.Count} code file(s) changed, 0 test files changed.",
-                whyItMatters: "Substantial logic changes without test coverage increase regression risk.",
-                suggestedAction: "Add or update tests covering the changed logic before merging.",
-                confidence: Confidence.Medium));
-        }
-    }
-
-    private static bool IsTestFile(string path) =>
-        path.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
-        path.Contains("Spec", StringComparison.OrdinalIgnoreCase);
 }
