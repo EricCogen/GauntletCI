@@ -23,7 +23,7 @@ public sealed class SilverLabelEngine
         Converters = { new JsonStringEnumConverter() },
     };
 
-    // Review comment keyword → (ruleId, reason, confidence) mapping
+    // Review comment keyword -> (ruleId, reason, confidence) mapping
     private static readonly (string[] Keywords, string RuleId, string Reason, double Confidence)[] CommentRules =
     [
         (["needs tests", "add test", "missing test", "no test"],
@@ -86,7 +86,7 @@ public sealed class SilverLabelEngine
         }
         catch (JsonException)
         {
-            // Malformed JSON — skip comment scanning
+            // Malformed JSON -- skip comment scanning
         }
 
         return Task.FromResult<IReadOnlyList<ExpectedFinding>>(labels);
@@ -120,18 +120,18 @@ public sealed class SilverLabelEngine
         await _store.SaveExpectedFindingsAsync(fixtureId, merged, ct);
     }
 
-    // ── Heuristic application ─────────────────────────────────────────────────
+    // -- Heuristic application -------------------------------------------------
 
     private static void ApplyDiffHeuristics(List<string> addedLines, List<string> pathLines, List<ExpectedFinding> labels)
     {
-        // GCI0016 — Sync-over-async (.Result / .Wait())
+        // GCI0016 -- Sync-over-async (.Result / .Wait())
         if (addedLines.Any(l => l.Contains(".Result", StringComparison.Ordinal)
                              || l.Contains(".Wait()", StringComparison.Ordinal)))
         {
             labels.Add(MakeLabel("GCI0016", "Diff contains .Result or .Wait() on added lines (sync-over-async)", 0.6));
         }
 
-        // GCI0007 — Secret/credential exposure
+        // GCI0007 -- Secret/credential exposure
         if (addedLines.Any(l =>
                 l.Contains("password",  StringComparison.OrdinalIgnoreCase) ||
                 l.Contains("secret",    StringComparison.OrdinalIgnoreCase) ||
@@ -141,11 +141,11 @@ public sealed class SilverLabelEngine
             labels.Add(MakeLabel("GCI0007", "Diff contains credential-related keyword on added lines", 0.7));
         }
 
-        // GCI0003 — Empty catch block
+        // GCI0003 -- Empty catch block
         if (HasEmptyCatch(addedLines))
             labels.Add(MakeLabel("GCI0003", "Diff contains empty or comment-only catch block on added lines", 0.65));
 
-        // GCI0021 — Migration file touched
+        // GCI0021 -- Migration file touched
         if (pathLines.Any(l =>
                 l.Contains("Migration",  StringComparison.OrdinalIgnoreCase) ||
                 l.Contains("_migration", StringComparison.OrdinalIgnoreCase)))
@@ -153,7 +153,7 @@ public sealed class SilverLabelEngine
             labels.Add(MakeLabel("GCI0021", "Diff touches a migration file (path contains 'Migration' or '_migration')", 0.6));
         }
 
-        // GCI0004 — Breaking change signals (public API removed/renamed)
+        // GCI0004 -- Breaking change signals (public API removed/renamed)
         if (addedLines.Any(l =>
                 Regex.IsMatch(l, @"\[Obsolete", RegexOptions.IgnoreCase) ||
                 Regex.IsMatch(l, @"(public|protected)\s+(abstract|virtual|override)\s+\w+.*\(") && l.Contains("throw new NotImplemented")))
@@ -161,36 +161,35 @@ public sealed class SilverLabelEngine
             labels.Add(MakeLabel("GCI0004", "Diff contains [Obsolete] attribute or throws NotImplemented on public API", 0.55));
         }
 
-        // GCI0005 — Test file deleted or test count reduced
+        // GCI0005 -- Test file deleted or test count reduced
         if (pathLines.Any(l =>
                 l.Contains("Test",  StringComparison.OrdinalIgnoreCase) ||
                 l.Contains("Spec.",  StringComparison.OrdinalIgnoreCase) ||
                 l.Contains(".test.", StringComparison.OrdinalIgnoreCase)))
         {
-            // Only flag if there are removed lines with [Fact] or [Theory]
-            var diffText = string.Join("\n", addedLines); // reuse for removedLines check via full diff
+            var diffText = string.Join("\n", addedLines);
             if (pathLines.Any(l => l.StartsWith("---")))
-                labels.Add(MakeLabel("GCI0005", "Diff modifies a test file — possible test coverage reduction", 0.5));
+                labels.Add(MakeLabel("GCI0005", "Diff modifies a test file -- possible test coverage reduction", 0.5));
         }
 
-        // GCI0006 — Possible null dereference (assignment without null check)
+        // GCI0006 -- Possible null dereference (assignment without null check)
         if (addedLines.Any(l =>
                 Regex.IsMatch(l, @"=\s*null\b") ||
-                Regex.IsMatch(l, @"!\.\w+\(")))    // null-forgiving operator usage
+                Regex.IsMatch(l, @"!\.\w+\(")))
         {
             labels.Add(MakeLabel("GCI0006", "Diff assigns null or uses null-forgiving operator on added lines", 0.5));
         }
 
-        // GCI0010 — Hardcoded configuration value
+        // GCI0010 -- Hardcoded configuration value
         if (addedLines.Any(l =>
-                Regex.IsMatch(l, @"""https?://[^""]{10,}""") ||  // hardcoded URL
+                Regex.IsMatch(l, @"""https?://[^""]{10,}""") ||
                 Regex.IsMatch(l, @"(port|host|url|endpoint)\s*=\s*""", RegexOptions.IgnoreCase) ||
                 Regex.IsMatch(l, @"(port|host|url|endpoint)\s*=\s*\d{2,}", RegexOptions.IgnoreCase)))
         {
             labels.Add(MakeLabel("GCI0010", "Diff contains hardcoded URL/host/port on added lines", 0.55));
         }
 
-        // GCI0022 — Large binary or generated file
+        // GCI0022 -- Large binary or generated file
         if (pathLines.Any(l =>
                 l.Contains(".min.js",  StringComparison.OrdinalIgnoreCase) ||
                 l.Contains(".bundle.", StringComparison.OrdinalIgnoreCase) ||
@@ -205,7 +204,6 @@ public sealed class SilverLabelEngine
 
     private static void ApplyCommentHeuristics(IReadOnlyList<string> commentBodies, List<ExpectedFinding> labels)
     {
-        // Track which rules were already emitted to avoid duplicates
         var emitted = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var (keywords, ruleId, reason, confidence) in CommentRules)
@@ -223,7 +221,7 @@ public sealed class SilverLabelEngine
         }
     }
 
-    // ── Private helpers ───────────────────────────────────────────────────────
+    // -- Private helpers -------------------------------------------------------
 
     private static ExpectedFinding MakeLabel(string ruleId, string reason, double confidence) =>
         new()
@@ -255,7 +253,6 @@ public sealed class SilverLabelEngine
     {
         var bodies = new List<string>();
 
-        // GitHub returns review comments as an array or an object with an array field
         if (root.ValueKind == JsonValueKind.Array)
         {
             foreach (var el in root.EnumerateArray())
@@ -264,7 +261,6 @@ public sealed class SilverLabelEngine
         }
         else if (root.ValueKind == JsonValueKind.Object)
         {
-            // Some endpoints wrap in { comments: [...] }
             foreach (var prop in root.EnumerateObject())
             {
                 if (prop.Value.ValueKind == JsonValueKind.Array)

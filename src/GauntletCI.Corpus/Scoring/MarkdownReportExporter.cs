@@ -33,7 +33,7 @@ public sealed class MarkdownReportExporter : IReportExporter
         // Caveat banner when there are no trusted labels
         if (gold.Count == 0 && silver.Count == 0 && discovery.Count > 0)
         {
-            sb.AppendLine("> ⚠️ **No labeled fixtures exist.** All metrics below are operational " +
+            sb.AppendLine("> Warning: **No labeled fixtures exist.** All metrics below are operational " +
                           "(trigger rate + Unknown count only). Precision and Recall cannot be computed " +
                           "without ground-truth labels. Add gold fixtures via `corpus ingest` or run " +
                           "`corpus label-all` to generate heuristic silver labels.");
@@ -41,13 +41,13 @@ public sealed class MarkdownReportExporter : IReportExporter
         }
 
         AppendGoldSilverSection(sb, gold, "Gold", trusted: true);
-        AppendGoldSilverSection(sb, silver, "Silver _(directional — heuristic labels)_", trusted: false);
+        AppendGoldSilverSection(sb, silver, "Silver _(directional -- heuristic labels)_", trusted: false);
         AppendDiscoverySection(sb, discovery);
 
         return sb.ToString();
     }
 
-    // ── Section renderers ────────────────────────────────────────────────────
+    // -- Section renderers -----------------------------------------------------
 
     private static void AppendGoldSilverSection(StringBuilder sb, IReadOnlyList<RuleScorecard> scorecards, string heading, bool trusted)
     {
@@ -55,7 +55,7 @@ public sealed class MarkdownReportExporter : IReportExporter
 
         sb.AppendLine($"## {heading} Metrics");
         if (!trusted)
-            sb.AppendLine("_Metrics derived from heuristic labels — treat as directional, not definitive._");
+            sb.AppendLine("_Metrics derived from heuristic labels -- treat as directional, not definitive._");
         sb.AppendLine();
         sb.AppendLine("| Rule | Labeled | TP | FP | FN | TN | Unknown | Precision | Recall | Trigger Rate |");
         sb.AppendLine("|------|--------:|---:|---:|---:|---:|--------:|----------:|-------:|-------------:|");
@@ -64,10 +64,10 @@ public sealed class MarkdownReportExporter : IReportExporter
         {
             var precision = (sc.TruePositives + sc.FalsePositives) > 0
                 ? $"{sc.Precision:P1}"
-                : "—";
+                : "--";
             var recall = (sc.TruePositives + sc.FalseNegatives) > 0
                 ? $"{sc.Recall:P1}"
-                : "—";
+                : "--";
 
             sb.AppendLine(
                 $"| {sc.RuleId} | {sc.Fixtures} | {sc.TruePositives} | {sc.FalsePositives} | " +
@@ -81,7 +81,7 @@ public sealed class MarkdownReportExporter : IReportExporter
         if (scorecards.Count == 0) return;
 
         sb.AppendLine("## Discovery Operational Metrics");
-        sb.AppendLine("_Discovery fixtures are unlabeled — precision/recall are not reported. " +
+        sb.AppendLine("_Discovery fixtures are unlabeled -- precision/recall are not reported. " +
                       "Unknown = rule fired but no label exists._");
         sb.AppendLine();
         sb.AppendLine("| Rule | Trigger Rate | Fired (Unknown) | Avg Usefulness |");
