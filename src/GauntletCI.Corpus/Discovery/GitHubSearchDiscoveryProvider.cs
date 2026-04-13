@@ -61,6 +61,14 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
     {
         using var response = await _http.GetAsync(url, cancellationToken);
 
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            Console.Error.WriteLine($"[gh-search] HTTP {(int)response.StatusCode} for {url}");
+            Console.Error.WriteLine($"[gh-search] Response: {body}");
+            response.EnsureSuccessStatusCode();
+        }
+
         if (response.Headers.TryGetValues("X-RateLimit-Remaining", out var remaining) &&
             int.TryParse(remaining.FirstOrDefault(), out var remainingCount) &&
             remainingCount <= 0)
@@ -68,8 +76,6 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
             Console.Error.WriteLine("[gh-search] GitHub rate limit reached; returning partial results.");
             return;
         }
-
-        response.EnsureSuccessStatusCode();
 
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
@@ -105,7 +111,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         var parts = new List<string> { "is:pr", "is:merged", $"repo:{repoSpec}" };
 
         if (query.MinReviewComments > 0)
-            parts.Add($"review_comments:>{query.MinReviewComments}");
+            parts.Add($"comments:>{query.MinReviewComments}");
 
         if (query.StartDateUtc.HasValue)
             parts.Add($"merged:>={query.StartDateUtc.Value:yyyy-MM-dd}");
@@ -121,7 +127,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         var parts = new List<string> { "is:pr", "is:merged" };
 
         if (query.MinReviewComments > 0)
-            parts.Add($"review_comments:>{query.MinReviewComments}");
+            parts.Add($"comments:>{query.MinReviewComments}");
 
         if (query.MinStars > 0)
             parts.Add($"stars:>{query.MinStars}");
