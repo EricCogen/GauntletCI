@@ -115,6 +115,10 @@ textarea { resize: vertical; }
   vertical-align: top;
 }
 .data-table.compact th, .data-table.compact td { padding: 8px 10px; }
+.sortable-th { white-space: nowrap; }
+.sortable-th:hover { color: var(--text); }
+.sort-active { color: var(--text); }
+.sort-icon { font-size: 0.75rem; margin-left: 4px; }
 .muted { color: var(--muted); }
 .two-col {
   display: grid;

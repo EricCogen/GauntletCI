@@ -120,8 +120,24 @@ def queue():
     rule_id = request.args.get("rule_id", "")
     bucket = request.args.get("bucket", "")
     language = request.args.get("language", "C#")
+    has_tests = request.args.get("has_tests", "")
+    has_comments = request.args.get("has_comments", "")
+    fired_filter = request.args.get("fired_filter", "")
+    sort = request.args.get("sort", "")
+    sort_dir = request.args.get("sort_dir", "asc")
     with get_conn() as conn:
-        rows = queue_rows(conn, status=status, rule_id=rule_id, bucket=bucket, language=language)
+        rows = queue_rows(
+            conn,
+            status=status,
+            rule_id=rule_id,
+            bucket=bucket,
+            language=language,
+            has_tests=has_tests,
+            has_comments=has_comments,
+            fired_filter=fired_filter,
+            sort=sort,
+            sort_dir=sort_dir,
+        )
         rules = [r[0] for r in conn.execute("SELECT DISTINCT rule_id FROM actual_findings ORDER BY rule_id").fetchall()]
         buckets = [r[0] for r in conn.execute("SELECT DISTINCT queue_bucket FROM label_queue ORDER BY queue_bucket").fetchall()]
     return render_template(
@@ -131,6 +147,11 @@ def queue():
         rule_id=rule_id,
         bucket=bucket,
         language=language,
+        has_tests=has_tests,
+        has_comments=has_comments,
+        fired_filter=fired_filter,
+        sort=sort,
+        sort_dir=sort_dir,
         rules=rules,
         buckets=buckets,
     )

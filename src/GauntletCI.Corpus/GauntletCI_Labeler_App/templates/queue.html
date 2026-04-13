@@ -27,14 +27,63 @@
       </select>
     </label>
     <label>Language
-      <input type="text" name="language" value="{{ language or 'C#' }}" placeholder="C#" />
+      <input type="text" name="language" value="{{ language or 'C#' }}" placeholder="C#" style="width:6rem" />
     </label>
+    <label>Fired
+      <select name="fired_filter">
+        <option value="" {% if fired_filter == '' %}selected{% endif %}>Any</option>
+        <option value="1" {% if fired_filter == '1' %}selected{% endif %}>Yes</option>
+        <option value="0" {% if fired_filter == '0' %}selected{% endif %}>No</option>
+      </select>
+    </label>
+    <label>Tests changed
+      <select name="has_tests">
+        <option value="" {% if has_tests == '' %}selected{% endif %}>Any</option>
+        <option value="1" {% if has_tests == '1' %}selected{% endif %}>Yes</option>
+        <option value="0" {% if has_tests == '0' %}selected{% endif %}>No</option>
+      </select>
+    </label>
+    <label>Has comments
+      <select name="has_comments">
+        <option value="" {% if has_comments == '' %}selected{% endif %}>Any</option>
+        <option value="1" {% if has_comments == '1' %}selected{% endif %}>Yes</option>
+        <option value="0" {% if has_comments == '0' %}selected{% endif %}>No</option>
+      </select>
+    </label>
+    {# preserve sort state across filter submissions #}
+    {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+    {% if sort_dir %}<input type="hidden" name="sort_dir" value="{{ sort_dir }}">{% endif %}
     <button class="button" type="submit">Apply</button>
   </form>
-  <table class="data-table">
+
+  <table class="data-table sortable" id="queue-table">
     <thead>
       <tr>
-        <th>ID</th><th>Rule</th><th>Repo</th><th>PR</th><th>Bucket</th><th>Fired</th><th>Findings</th><th>Tests</th><th>Comments</th><th>Status</th><th></th>
+        {% set cols = [
+          ('id',       'ID'),
+          ('rule_id',  'Rule'),
+          ('repo',     'Repo'),
+          ('pr',       'PR'),
+          ('bucket',   'Bucket'),
+          ('fired',    'Fired'),
+          ('findings', 'Findings'),
+          ('tests',    'Tests'),
+          ('comments', 'Comments'),
+          ('status',   'Status'),
+        ] %}
+        {% for key, label in cols %}
+          <th class="sortable-th {% if sort == key %}sort-active{% endif %}"
+              data-sort-key="{{ key }}"
+              data-sort-dir="{{ sort_dir if sort == key else 'asc' }}">
+            {{ label }}
+            {% if sort == key %}
+              <span class="sort-icon">{{ '▲' if sort_dir == 'asc' else '▼' }}</span>
+            {% else %}
+              <span class="sort-icon muted">⇅</span>
+            {% endif %}
+          </th>
+        {% endfor %}
+        <th></th>
       </tr>
     </thead>
     <tbody>
@@ -55,5 +104,37 @@
       {% endfor %}
     </tbody>
   </table>
+  <div class="muted" style="margin-top:0.5rem;font-size:0.85rem">{{ rows|length }} row(s)</div>
 </section>
+
+<script>
+(function () {
+  var table = document.getElementById('queue-table');
+  if (!table) return;
+
+  // Build the current filter query string (without sort params)
+  function baseParams() {
+    var p = new URLSearchParams(window.location.search);
+    p.delete('sort');
+    p.delete('sort_dir');
+    return p;
+  }
+
+  table.querySelectorAll('th.sortable-th').forEach(function (th) {
+    th.style.cursor = 'pointer';
+    th.style.userSelect = 'none';
+    th.addEventListener('click', function () {
+      var key = th.dataset.sortKey;
+      var currentDir = th.dataset.sortDir;
+      var activeKey = '{{ sort }}';
+      var newDir = (key === activeKey && currentDir === 'asc') ? 'desc' : 'asc';
+
+      var p = baseParams();
+      p.set('sort', key);
+      p.set('sort_dir', newDir);
+      window.location.search = p.toString();
+    });
+  });
+})();
+</script>
 {% endblock %}

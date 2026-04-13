@@ -27,7 +27,32 @@ def dashboard_stats(conn: sqlite3.Connection) -> dict[str, Any]:
     }
 
 
-def queue_rows(conn: sqlite3.Connection, status: str = "pending", rule_id: str = "", bucket: str = "", language: str = "C#") -> list[sqlite3.Row]:
+_QUEUE_SORT_COLS: dict[str, str] = {
+    "id":       "lq.id",
+    "rule_id":  "lq.rule_id",
+    "repo":     "f.repo",
+    "pr":       "f.pr_number",
+    "bucket":   "lq.queue_bucket",
+    "fired":    "lq.fired",
+    "findings": "finding_count",
+    "tests":    "f.has_tests_changed",
+    "comments": "f.has_review_comments",
+    "status":   "lq.status",
+}
+
+
+def queue_rows(
+    conn: sqlite3.Connection,
+    status: str = "pending",
+    rule_id: str = "",
+    bucket: str = "",
+    language: str = "C#",
+    has_tests: str = "",
+    has_comments: str = "",
+    fired_filter: str = "",
+    sort: str = "",
+    sort_dir: str = "asc",
+) -> list[sqlite3.Row]:
     sql = """
     SELECT lq.*, f.repo, f.pr_number, f.tier, f.pr_size_bucket,
            f.has_tests_changed, f.has_review_comments,
@@ -59,7 +84,23 @@ def queue_rows(conn: sqlite3.Connection, status: str = "pending", rule_id: str =
     if language:
         sql += " AND LOWER(f.language) = LOWER(?)"
         params.append(language)
-    sql += " ORDER BY lq.priority DESC, lq.id ASC"
+    if has_tests in ("0", "1"):
+        sql += " AND f.has_tests_changed = ?"
+        params.append(int(has_tests))
+    if has_comments in ("0", "1"):
+        sql += " AND f.has_review_comments = ?"
+        params.append(int(has_comments))
+    if fired_filter in ("0", "1"):
+        sql += " AND lq.fired = ?"
+        params.append(int(fired_filter))
+
+    sort_col = _QUEUE_SORT_COLS.get(sort, "")
+    if sort_col:
+        direction = "DESC" if sort_dir == "desc" else "ASC"
+        sql += f" ORDER BY {sort_col} {direction}, lq.id ASC"
+    else:
+        sql += " ORDER BY lq.priority DESC, lq.id ASC"
+
     return conn.execute(sql, tuple(params)).fetchall()
 
 
