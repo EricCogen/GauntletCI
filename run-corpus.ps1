@@ -1,13 +1,15 @@
 # GauntletCI Corpus Pipeline Runner
-# Usage: .\run-corpus.ps1 [-Help] [-StartDate "2025-03-01"] [-EndDate "2025-03-31"] [-Limit 50] [-Language "C#"] [-MinComments 2] [-Tier "discovery"] [-Db <path>] [-Fixtures <path>] [-Report <path>] [-SkipTo <step>" ]
+# Usage: .\run-corpus.ps1 [-Help] [-Provider "gh-search"] [-StartDate "2025-03-01"] [-EndDate "2025-03-31"] [-Limit 50] [-Language "C#"] [-MinComments 2] [-MinStars 500] [-Tier "discovery"] [-Db <path>] [-Fixtures <path>] [-Report <path>] [-SkipTo <step>]
 
 param(
     [switch] $Help,
+    [string]$Provider     = "gh-search",
     [string]$StartDate    = (Get-Date).AddDays(-1).ToString("yyyy-MM-dd"),
     [string]$EndDate      = "",   # End of date range (inclusive). Defaults to StartDate (single day) if not set.
     [int]   $Limit        = 50,
     [string]$Language     = "C#",
-    [int]   $MinComments  = 0,
+    [int]   $MinComments  = 2,
+    [int]   $MinStars     = 500,
     [string]$Tier         = "discovery",
     [string]$Db           = "./data/gauntletci-corpus.db",
     [string]$Fixtures     = "./data/fixtures",
@@ -25,11 +27,15 @@ if ($Help) {
     Write-Host ""
     Write-Host "OPTIONS" -ForegroundColor Yellow
     Write-Host "  -Help                  Show this help message"
+    Write-Host "  -Provider  <name>      Discovery provider: gh-search (default) | gh-archive"
+    Write-Host "                         gh-search requires GITHUB_TOKEN; gh-archive is unauthenticated"
     Write-Host "  -StartDate <date>      Start of date range to discover (default: yesterday, yyyy-MM-dd)"
     Write-Host "  -EndDate   <date>      End of date range, inclusive (default: same as StartDate)"
     Write-Host "  -Limit     <n>         Max candidates to discover AND hydrate per run (default: 50)"
     Write-Host "  -Language  <lang>      Filter by language, default C# (pass empty to include all)"
-    Write-Host "  -MinComments <n>       Minimum review comment count (default: 0)"
+    Write-Host "  -MinComments <n>       Minimum review comment count (default: 2)"
+    Write-Host "  -MinStars  <n>         Minimum repository star count (default: 500)"
+    Write-Host "                         NOTE: --min-stars has no effect with gh-archive (no star data in event stream)"
     Write-Host "  -Tier      <tier>      Fixture tier: gold | silver | discovery (default: discovery)"
     Write-Host "  -Db        <path>      SQLite database path (default: ./data/gauntletci-corpus.db)"
     Write-Host "  -Fixtures  <path>      Fixtures root directory (default: ./data/fixtures)"
@@ -91,11 +97,12 @@ if ($SkipTo -le 1) {
 
     $discoverArgs = @(
         "corpus", "discover",
-        "--provider", "gh-archive",
-        "--limit",      $Limit,
-        "--start-date", $StartDate,
+        "--provider",     $Provider,
+        "--limit",        $Limit,
+        "--start-date",   $StartDate,
         "--min-comments", $MinComments,
-        "--db",         $Db
+        "--min-stars",    $MinStars,
+        "--db",           $Db
     )
     if ($Language -ne "") { $discoverArgs += "--language", $Language }
     if ($EndDate  -ne "") { $discoverArgs += "--end-date", $EndDate }
