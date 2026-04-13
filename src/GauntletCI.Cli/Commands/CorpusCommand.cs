@@ -31,6 +31,7 @@ public static class CorpusCommand
         corpus.AddCommand(CreateReport());
         corpus.AddCommand(CreateLabel());
         corpus.AddCommand(CreateLabelAll());
+        corpus.AddCommand(CreateResetStats());
         return corpus;
     }
 
@@ -908,6 +909,85 @@ public static class CorpusCommand
 
                 Console.WriteLine();
                 Console.WriteLine($"[corpus] label-all complete: {labeled} labeled, {skipped} skipped, {totalLabels} total labels applied");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus reset-stats ────────────────────────────────────────
+
+    private static Command CreateResetStats()
+    {
+        var dbOpt      = new Option<string>("--db",      () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var ruleOpt    = new Option<string?>("--rule",   "Limit reset to a specific rule ID (e.g. GCI0001)");
+        var confirmOpt = new Option<bool>("--confirm",   "Required: confirm you want to delete run and scoring data");
+
+        var cmd = new Command("reset-stats", "Delete rule run, scoring, and evaluation data from the corpus database");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(ruleOpt);
+        cmd.AddOption(confirmOpt);
+
+        cmd.SetHandler((ctx) =>
+        {
+            var dbPath  = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var ruleId  = ctx.ParseResult.GetValueForOption(ruleOpt);
+            var confirm = ctx.ParseResult.GetValueForOption(confirmOpt);
+
+            if (!confirm)
+            {
+                Console.Error.WriteLine("[corpus] reset-stats requires --confirm to prevent accidental data loss.");
+                Console.Error.WriteLine("[corpus] Re-run with: gauntletci corpus reset-stats --confirm");
+                ctx.ExitCode = 1;
+                return;
+            }
+
+            if (!File.Exists(dbPath))
+            {
+                Console.Error.WriteLine($"[corpus] Database not found: {dbPath}");
+                ctx.ExitCode = 1;
+                return;
+            }
+
+            try
+            {
+                using var connection = new SqliteConnection($"Data Source={dbPath}");
+                connection.Open();
+
+                string ruleFilter     = ruleId is not null ? " WHERE rule_id = @rule" : "";
+                string ruleFilterJoin = ruleId is not null ? " WHERE af.rule_id = @rule" : "";
+
+                using var tx = connection.BeginTransaction();
+
+                void Exec(string sql)
+                {
+                    using var cmd2 = connection.CreateCommand();
+                    cmd2.Transaction = tx;
+                    cmd2.CommandText = sql;
+                    if (ruleId is not null) cmd2.Parameters.AddWithValue("@rule", ruleId);
+                    cmd2.ExecuteNonQuery();
+                }
+
+                // Delete scoring and evaluation data (scoped to rule if provided).
+                Exec($"DELETE FROM aggregates{ruleFilter}");
+                Exec($"DELETE FROM evaluations{ruleFilter}");
+                Exec($"DELETE FROM actual_findings{(ruleId is not null ? " WHERE rule_id = @rule" : "")}");
+
+                // For rule_runs, only delete if scoped (a run covers all rules) or if no filter.
+                if (ruleId is null)
+                    Exec("DELETE FROM rule_runs");
+
+                tx.Commit();
+
+                var scope = ruleId is not null ? $" for rule {ruleId}" : "";
+                Console.WriteLine($"[corpus] reset-stats complete{scope}: aggregates, evaluations, and actual_findings cleared.");
+                if (ruleId is null)
+                    Console.WriteLine("[corpus] rule_runs cleared.");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[corpus] Error during reset-stats: {ex.Message}");
+                ctx.ExitCode = 1;
             }
         });
 
