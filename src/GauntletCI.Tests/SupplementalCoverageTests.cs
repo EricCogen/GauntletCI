@@ -488,9 +488,10 @@ public class SupplementalCoverageTests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var findings = await rule.EvaluateAsync(diff, null);
+        var finding = ((IPostProcessor)rule).PostProcess(diff);
 
-        Assert.Contains(findings, f => f.Summary.Contains("binary file(s)"));
+        Assert.NotNull(finding);
+        Assert.Contains("binary file(s)", finding.Summary);
     }
 
     // ── GCI0018 synthesis: verify EvaluationResult.HasFindings ───────────────
