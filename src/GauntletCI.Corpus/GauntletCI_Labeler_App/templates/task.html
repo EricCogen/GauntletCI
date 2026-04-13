@@ -14,32 +14,25 @@
 
 <section class="panel" style="border-left: 4px solid #6366f1;">
   {% if rule_def %}
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
-    <div>
-      <div class="muted" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.25rem">Rule Definition</div>
-      <p style="margin:0;font-weight:600;font-size:1rem">{{ task.rule_id }} — {{ rule_def.name }}</p>
-      <p style="margin:0.4rem 0 0;font-size:0.9rem">{{ rule_def.what }}</p>
-    </div>
-    {% if rule_def.why or rule_def.action %}
-    <details class="explain-details">
-      <summary class="button secondary" style="cursor:pointer;list-style:none;white-space:nowrap">Explain this issue</summary>
-      <div class="explain-body">
-        {% if rule_def.why %}
-        <div class="explain-section">
-          <div class="explain-label">Why it matters</div>
-          <p>{{ rule_def.why }}</p>
-        </div>
-        {% endif %}
-        {% if rule_def.action %}
-        <div class="explain-section">
-          <div class="explain-label">Suggested action</div>
-          <p>{{ rule_def.action }}</p>
-        </div>
-        {% endif %}
-      </div>
-    </details>
-    {% endif %}
+  <div class="muted" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.35rem">Rule Definition</div>
+  <p style="margin:0 0 0.3rem;font-weight:600;font-size:1rem">{{ task.rule_id }} — {{ rule_def.name }}</p>
+  <p style="margin:0 0 0.9rem;font-size:0.9rem">{{ rule_def.what }}</p>
+
+  {% if rule_def.why %}
+  <div class="rule-meta-block">
+    <div class="rule-meta-label">Why it matters</div>
+    <div class="rule-meta-body">{{ rule_def.why }}</div>
   </div>
+  {% endif %}
+
+  {% set suggestion = item_suggestion if item_suggestion else rule_def.action %}
+  {% if suggestion %}
+  <div class="rule-meta-block rule-suggestion">
+    <div class="rule-meta-label">{{ '✦ Specific suggestion' if item_suggestion else 'Suggested action' }}</div>
+    <div class="rule-meta-body">{{ suggestion }}</div>
+  </div>
+  {% endif %}
+
   {% else %}
   <p style="margin:0;font-weight:600">{{ task.rule_id }}</p>
   {% endif %}
