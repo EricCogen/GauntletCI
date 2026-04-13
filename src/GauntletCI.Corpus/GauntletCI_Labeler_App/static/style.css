@@ -172,6 +172,9 @@ pre {
   max-height:300px;
 }
 pre.diff { max-height: 640px; }
+pre.diff .diff-add { background: rgba(70, 200, 120, 0.12); color: #7ef0c8; display: block; }
+pre.diff .diff-del { background: rgba(255, 80, 80, 0.12); color: #ff7c7c; display: block; }
+pre.diff .diff-hunk { color: #7ab4f5; display: block; }
 .flash-stack { margin-bottom: 14px; }
 .flash { padding: 12px 14px; border-radius: 12px; margin-bottom: 10px; }
 .flash.success { background: rgba(126, 240, 200, 0.12); border: 1px solid rgba(126, 240, 200, 0.5); }

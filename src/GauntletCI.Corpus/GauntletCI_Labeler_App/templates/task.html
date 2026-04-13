@@ -210,5 +210,24 @@
       }
     });
   });
+
+  (function () {
+    const pre = document.getElementById('diff-preview');
+    if (!pre) return;
+    const lines = pre.textContent.split('\n');
+    pre.textContent = '';
+    lines.forEach(function (line) {
+      const span = document.createElement('span');
+      if (line.startsWith('+') && !line.startsWith('+++')) {
+        span.className = 'diff-add';
+      } else if (line.startsWith('-') && !line.startsWith('---')) {
+        span.className = 'diff-del';
+      } else if (line.startsWith('@@')) {
+        span.className = 'diff-hunk';
+      }
+      span.textContent = line + '\n';
+      pre.appendChild(span);
+    });
+  })();
 </script>
 {% endblock %}

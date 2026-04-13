@@ -26,6 +26,7 @@ def main() -> None:
     target_rules = [x.strip() for x in args.rules.split(",") if x.strip()]
     lang_filter = args.language.strip()
 
+    # Build WHERE clause for fired query
     conditions: list[str] = []
     params: list[object] = []
     if target_rules:
@@ -79,24 +80,26 @@ def main() -> None:
         else:
             rules = [r[0] for r in conn.execute("SELECT DISTINCT rule_id FROM actual_findings ORDER BY rule_id").fetchall()]
         per_rule = max(1, math.ceil(nonfired_limit / max(len(rules), 1)))
+
+        # Build language filter clause for nonfired probes
+        nonfired_lang_clause = "AND f.language = ?" if lang_filter else ""
+        nonfired_lang_params: list[object] = [lang_filter] if lang_filter else []
+
         for rule_id in rules:
-            nf_conditions = [
-                "NOT EXISTS (SELECT 1 FROM actual_findings af WHERE af.fixture_id = f.fixture_id AND af.rule_id = ? AND af.did_trigger = 1)"
-            ]
-            nf_params: list[object] = [rule_id]
-            if lang_filter:
-                nf_conditions.append("f.language = ?")
-                nf_params.append(lang_filter)
-            nf_params.append(per_rule)
             rows = conn.execute(
                 f"""
                 SELECT f.fixture_id
                 FROM fixtures f
-                WHERE {' AND '.join(nf_conditions)}
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM actual_findings af
+                    WHERE af.fixture_id = f.fixture_id AND af.rule_id = ? AND af.did_trigger = 1
+                )
+                {nonfired_lang_clause}
                 ORDER BY f.has_review_comments DESC, f.has_tests_changed ASC, f.created_at_utc DESC
                 LIMIT ?
                 """,
-                tuple(nf_params),
+                (rule_id, *nonfired_lang_params, per_rule),
             ).fetchall()
             for row in rows:
                 conn.execute(
