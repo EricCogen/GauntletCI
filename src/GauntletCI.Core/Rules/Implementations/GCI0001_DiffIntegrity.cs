@@ -76,6 +76,7 @@ public class GCI0001_DiffIntegrity : RuleBase
             if (totalChanged > 10 && whitespaceOnlyPairs > totalChanged * 0.4)
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Excessive whitespace/formatting churn in {file.NewPath}.",
                     evidence: $"{whitespaceOnlyPairs} of {totalChanged} changed lines are whitespace-only.",
                     whyItMatters: "Formatting noise obscures real logic changes and makes the diff harder to review.",

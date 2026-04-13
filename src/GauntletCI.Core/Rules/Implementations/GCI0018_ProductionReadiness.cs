@@ -85,6 +85,7 @@ public class GCI0018_ProductionReadiness : RuleBase
             if (consoleLines.Count > 0)
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Console.WriteLine() in production code: {file.NewPath}",
                     evidence: string.Join(", ", consoleLines.Take(3).Select(l => $"L{l.LineNumber}")),
                     whyItMatters: "Console output bypasses the logging infrastructure and is lost in production environments.",
@@ -99,6 +100,7 @@ public class GCI0018_ProductionReadiness : RuleBase
             if (debugAsserts.Count > 0)
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Debug.Assert() in production code: {file.NewPath}",
                     evidence: string.Join(", ", debugAsserts.Take(3).Select(l => $"L{l.LineNumber}")),
                     whyItMatters: "Debug.Assert() is stripped in Release builds and should not be used for runtime validation.",

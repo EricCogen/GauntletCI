@@ -46,6 +46,7 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
                 if (!content.Contains(attr, StringComparison.OrdinalIgnoreCase)) continue;
 
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Serialization attribute removed in {file.NewPath}: {content}",
                     evidence: $"Removed line ~{line.OldLineNumber}: {content}",
                     whyItMatters: "Removing or renaming serialized fields breaks deserialization of existing data in databases, caches, message queues, and APIs.",
@@ -103,6 +104,7 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
             if (!IsEnumMember(content)) continue;
 
             findings.Add(CreateFinding(
+                file,
                 summary: $"Enum member removed in {file.NewPath}: {content}",
                 evidence: $"Removed line ~{line.OldLineNumber}: {content}",
                 whyItMatters: "Removing enum members breaks deserialization of persisted integer or string values that mapped to the removed member.",

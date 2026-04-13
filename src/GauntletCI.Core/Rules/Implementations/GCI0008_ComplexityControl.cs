@@ -57,6 +57,7 @@ public class GCI0008_ComplexityControl : RuleBase
             if (maxDepth > MaxNestingDepth)
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Nesting depth of {maxDepth} exceeds limit of {MaxNestingDepth} in {file.NewPath}",
                     evidence: $"Max nesting depth reached at line {maxDepthLine}",
                     whyItMatters: "Deep nesting makes code hard to read, test, and maintain. It often indicates missing abstractions.",
@@ -94,11 +95,13 @@ public class GCI0008_ComplexityControl : RuleBase
                 if (depth == 0 && methodStart >= 0 && methodLineCount > MaxMethodLines)
                 {
                     findings.Add(CreateFinding(
+                        file,
                         summary: $"Large method block with {methodLineCount} added lines in {file.NewPath}",
                         evidence: $"Block starting at line {methodStart} has {methodLineCount} added lines",
                         whyItMatters: "Long methods are harder to test, understand, and change without introducing bugs.",
                         suggestedAction: "Decompose the method into smaller, focused helpers.",
-                        confidence: Confidence.Low));
+                        confidence: Confidence.Low,
+                        line: line));
                     methodStart = -1;
                 }
             }

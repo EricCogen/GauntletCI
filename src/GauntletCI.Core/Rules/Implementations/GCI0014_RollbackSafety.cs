@@ -87,6 +87,7 @@ public class GCI0014_RollbackSafety : RuleBase
             if (hasUp && !hasDown)
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Database migration has Up() but no Down() method in {file.NewPath}.",
                     evidence: $"File: {file.NewPath} — Up() found, Down() not found in added lines.",
                     whyItMatters: "Migrations without a Down() method cannot be rolled back, making recovery from bad deployments impossible.",
