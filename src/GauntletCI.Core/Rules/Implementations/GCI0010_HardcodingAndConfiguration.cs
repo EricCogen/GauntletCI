@@ -100,6 +100,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         foreach (var line in diff.AllAddedLines)
         {
             var content = line.Content;
+            if (IsCommentLine(content.Trim())) continue;
             var literals = ExtractStringLiterals(content);
             if (literals.Count == 0) continue;
 
@@ -123,6 +124,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         foreach (var line in diff.AllAddedLines)
         {
             var content = line.Content;
+            if (IsCommentLine(content.Trim())) continue;
             var lower = content.ToLowerInvariant();
             if (!content.Contains('=', StringComparison.Ordinal)) continue;
 
@@ -149,6 +151,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         foreach (var line in diff.AllAddedLines)
         {
             var content = line.Content;
+            if (IsCommentLine(content.Trim())) continue;
             var literals = ExtractStringLiterals(content);
 
             foreach (var port in KnownPorts)
@@ -173,6 +176,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         foreach (var line in diff.AllAddedLines)
         {
             var content = line.Content;
+            if (IsCommentLine(content.Trim())) continue;
             var literals = ExtractStringLiterals(content);
             if (literals.Count == 0) continue;
 
