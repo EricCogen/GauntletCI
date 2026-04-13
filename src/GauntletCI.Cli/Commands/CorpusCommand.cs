@@ -292,6 +292,7 @@ public static class CorpusCommand
             Arity = ArgumentArity.ZeroOrMore,
             AllowMultipleArgumentsPerToken = true,
         };
+        var perRepoLimitOpt  = new Option<int>   ("--per-repo-limit", () => 0,              "Max candidates per repo when using allowlist (0 = unlimited, shared across --limit)");
         var dbOpt          = new Option<string>("--db",           () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var fixturesOpt    = new Option<string>("--fixtures",     () => "./data/fixtures",             "Path to fixtures root directory");
 
@@ -305,6 +306,7 @@ public static class CorpusCommand
         cmd.AddOption(endDateOpt);
         cmd.AddOption(repoBlocklistOpt);
         cmd.AddOption(repoAllowlistOpt);
+        cmd.AddOption(perRepoLimitOpt);
         cmd.AddOption(dbOpt);
         cmd.AddOption(fixturesOpt);
 
@@ -317,10 +319,11 @@ public static class CorpusCommand
             var minComments  = ctx.ParseResult.GetValueForOption(minCommentsOpt);
             var startDate    = ctx.ParseResult.GetValueForOption(startDateOpt);
             var endDate      = ctx.ParseResult.GetValueForOption(endDateOpt);
-            var repoBlocklist = ctx.ParseResult.GetValueForOption(repoBlocklistOpt) ?? [];
-            var repoAllowlist = ctx.ParseResult.GetValueForOption(repoAllowlistOpt) ?? [];
-            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var ct           = ctx.GetCancellationToken();
+            var repoBlocklist  = ctx.ParseResult.GetValueForOption(repoBlocklistOpt) ?? [];
+            var repoAllowlist  = ctx.ParseResult.GetValueForOption(repoAllowlistOpt) ?? [];
+            var perRepoLimit   = ctx.ParseResult.GetValueForOption(perRepoLimitOpt);
+            var dbPath         = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var ct             = ctx.GetCancellationToken();
 
             IDiscoveryProvider provider;
 
@@ -358,11 +361,12 @@ public static class CorpusCommand
                 StartDateUtc       = startDate,
                 EndDateUtc         = endDate,
                 MaxCandidates      = limit,
+                PerRepoLimit       = perRepoLimit,
                 RepoBlockList      = repoBlocklist,
                 RepoAllowList      = repoAllowlist,
             };
 
-            Console.WriteLine($"[corpus] Discovering candidates via {provider.GetProviderName()} (limit={limit}) …");
+            Console.WriteLine($"[corpus] Discovering candidates via {provider.GetProviderName()} (limit={limit}{(perRepoLimit > 0 ? $", per-repo={perRepoLimit}" : "")}) …");
 
             var candidates = await provider.SearchCandidatesAsync(query, ct);
 
