@@ -26,9 +26,10 @@ public class GCI0019Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
+        var finding = ((GauntletCI.Core.Rules.IPostProcessor)Rule).PostProcess(diff);
 
-        Assert.Contains(findings, f => f.Summary.Contains("binary file(s)"));
+        Assert.NotNull(finding);
+        Assert.Contains("binary file(s)", finding.Summary);
     }
 
     [Fact]
