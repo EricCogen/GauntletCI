@@ -706,7 +706,7 @@ public static class CorpusCommand
                 const int colRecall    = 8;
                 const int colUseful    = 11;
 
-                var header = $"{"RuleId",-colRule}  {"Tier",-colTier}  {"Fixtures",-colFixtures}  {"TriggerRate",-colTrigger}  {"Precision",-colPrecision}  {"Recall",-colRecall}  {"Usefulness"}";
+                var header = $"{"RuleId",-colRule}  {"Tier",-colTier}  {"Fixtures",-colFixtures}  {"TriggerRate",-colTrigger}  {"Precision",-colPrecision}  {"Recall",-colRecall}  {"Usefulness",-colUseful}";
                 var sep    = new string('-', header.Length + 4);
 
                 Console.WriteLine(sep);
@@ -718,7 +718,7 @@ public static class CorpusCommand
                     Console.WriteLine(
                         $"{sc.RuleId,-colRule}  {sc.Tier,-colTier}  {sc.Fixtures,-colFixtures}  " +
                         $"{sc.TriggerRate,colTrigger:P1}  {sc.Precision,colPrecision:P1}  " +
-                        $"{sc.Recall,colRecall:P1}  {sc.AvgUsefulness:F1}/5");
+                        $"{sc.Recall,colRecall:P1}  {sc.AvgUsefulness,-colUseful:F1}/5");
                 }
 
                 Console.WriteLine(sep);
