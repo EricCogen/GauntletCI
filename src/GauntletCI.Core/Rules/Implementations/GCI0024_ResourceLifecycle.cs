@@ -69,7 +69,7 @@ public class GCI0024_ResourceLifecycle : RuleBase
             if (line.Kind != DiffLineKind.Added) continue;
             var content = line.Content;
 
-            string? typeName = MatchDisposableType(content);
+            var (typeName, isExplicit) = MatchDisposableType(content);
             if (typeName is null) continue;
 
             if (content.Contains("using ", StringComparison.Ordinal)) continue;
@@ -97,29 +97,29 @@ public class GCI0024_ResourceLifecycle : RuleBase
                 evidence: $"Line {line.LineNumber}: {content.Trim()}",
                 whyItMatters: $"{typeName} implements IDisposable. Without using, it leaks OS handles or connection pool slots under exceptions.",
                 suggestedAction: $"Wrap in `using var resource = new {typeName}(...);` to guarantee disposal.",
-                confidence: Confidence.High));
+                confidence: isExplicit ? Confidence.High : Confidence.Medium));
         }
     }
 
-    private static string? MatchDisposableType(string content)
+    private static (string? TypeName, bool IsExplicit) MatchDisposableType(string content)
     {
-        // Fast path: explicit known types
+        // Fast path: explicit known types — High confidence
         foreach (var knownType in DisposableTypes)
         {
             if (content.Contains(knownType, StringComparison.Ordinal))
-                return knownType.Replace("new ", "").TrimEnd('(');
+                return (knownType.Replace("new ", "").TrimEnd('('), true);
         }
 
-        // Suffix heuristic: any new XxxYyy( where the type name ends with a disposable suffix
+        // Suffix heuristic — Medium confidence (type name resembles a disposable but isn't confirmed)
         var match = NewTypeRegex.Match(content);
         if (match.Success)
         {
             var name = match.Groups[1].Value;
             if (DisposableSuffixes.Any(suffix => name.EndsWith(suffix, StringComparison.Ordinal)))
-                return name;
+                return (name, false);
         }
 
-        return null;
+        return (null, false);
     }
 
     private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)

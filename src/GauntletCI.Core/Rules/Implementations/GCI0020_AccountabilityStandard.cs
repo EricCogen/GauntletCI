@@ -22,68 +22,12 @@ public class GCI0020_AccountabilityStandard : RuleBase
         var diff = context.Diff;
         var findings = new List<Finding>();
 
-        CheckSwallowedExceptions(diff, findings);
         CheckSecretsInCode(diff, findings);
         CheckCommentedOutCodeBlocks(diff, findings);
         CheckEmptyRoleAuthorization(diff, findings);
         CheckUnreachableCode(diff, findings);
 
         return Task.FromResult(findings);
-    }
-
-    private void CheckSwallowedExceptions(DiffContext diff, List<Finding> findings)
-    {
-        foreach (var file in diff.Files)
-        {
-            var addedLines = file.AddedLines.ToList();
-            for (int i = 0; i < addedLines.Count; i++)
-            {
-                var content = addedLines[i].Content;
-                if (!content.Contains("catch (Exception", StringComparison.Ordinal) &&
-                    !content.Contains("catch(Exception", StringComparison.Ordinal))
-                    continue;
-
-                // Look ahead through the catch body for any throw, log, or Console output
-                bool hasHandling = false;
-                int depth = 0;
-                for (int j = i; j < Math.Min(addedLines.Count, i + 15); j++)
-                {
-                    var bodyLine = addedLines[j].Content.Trim();
-                    foreach (char c in bodyLine)
-                    {
-                        if (c == '{') depth++;
-                        else if (c == '}') depth--;
-                    }
-
-                    if (j > i && !string.IsNullOrWhiteSpace(bodyLine) && bodyLine != "{" && bodyLine != "}")
-                    {
-                        if (bodyLine.Contains("throw", StringComparison.Ordinal) ||
-                            bodyLine.Contains("Log", StringComparison.Ordinal) ||
-                            bodyLine.Contains("log", StringComparison.Ordinal) ||
-                            bodyLine.Contains("Console.", StringComparison.Ordinal) ||
-                            bodyLine.Contains("Debug.", StringComparison.Ordinal) ||
-                            bodyLine.Contains("Trace.", StringComparison.Ordinal))
-                        {
-                            hasHandling = true;
-                            break;
-                        }
-                    }
-
-                    if (depth <= 0 && j > i) break;
-                }
-
-                if (!hasHandling)
-                {
-                    findings.Add(CreateFinding(
-                        summary: "catch (Exception) with no rethrow or logging — potential exception swallowing.",
-                        evidence: $"Line {addedLines[i].LineNumber}: {content.Trim()}",
-                        whyItMatters: "Catching all exceptions and not rethrowing silently hides failures, making post-mortems impossible.",
-                        suggestedAction: "Log the exception and rethrow, or catch only specific exception types you can handle.",
-                        confidence: Confidence.High));
-                    return;
-                }
-            }
-        }
     }
 
     private void CheckSecretsInCode(DiffContext diff, List<Finding> findings)
@@ -117,7 +61,9 @@ public class GCI0020_AccountabilityStandard : RuleBase
 
             foreach (var line in addedLines)
             {
-                bool isLineComment = line.Content.Trim().StartsWith("//", StringComparison.Ordinal);
+                var trimmed = line.Content.Trim();
+                bool isXmlDoc = trimmed.StartsWith("///", StringComparison.Ordinal);
+                bool isLineComment = !isXmlDoc && trimmed.StartsWith("//", StringComparison.Ordinal);
                 if (isLineComment)
                 {
                     if (consecutiveComments == 0) startLine = line.LineNumber;
@@ -132,7 +78,7 @@ public class GCI0020_AccountabilityStandard : RuleBase
                             evidence: $"Starting at line {startLine} in {file.NewPath}",
                             whyItMatters: "Commented-out code is dead weight that confuses readers and suggests incomplete cleanup.",
                             suggestedAction: "Remove commented-out code. If needed for reference, use version control history instead.",
-                            confidence: Confidence.High));
+                            confidence: Confidence.Medium));
                         break;
                     }
                     consecutiveComments = 0;

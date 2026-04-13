@@ -79,8 +79,10 @@ public class GCI0014_RollbackSafety : RuleBase
             var allAddedContent = string.Join("\n", file.AddedLines.Select(l => l.Content));
             bool hasUp = allAddedContent.Contains("void Up(", StringComparison.Ordinal) ||
                          allAddedContent.Contains("Up(MigrationBuilder", StringComparison.Ordinal);
-            bool hasDown = allAddedContent.Contains("void Down(", StringComparison.Ordinal) ||
-                           allAddedContent.Contains("Down(MigrationBuilder", StringComparison.Ordinal);
+
+            var allHunkContent = string.Join("\n", file.Hunks.SelectMany(h => h.Lines).Select(l => l.Content));
+            bool hasDown = allHunkContent.Contains("void Down(", StringComparison.Ordinal) ||
+                           allHunkContent.Contains("Down(MigrationBuilder", StringComparison.Ordinal);
 
             if (hasUp && !hasDown)
             {

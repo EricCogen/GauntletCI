@@ -33,7 +33,7 @@ public class GCI0018_ProductionReadiness : RuleBase
     private void CheckTodoMarkers(DiffContext diff, List<Finding> findings)
     {
         var markerLines = diff.AllAddedLines
-            .Where(l => MarkerKeywords.Any(k => l.Content.Contains(k, StringComparison.Ordinal)))
+            .Where(l => MarkerKeywords.Any(k => l.Content.Contains(k, StringComparison.OrdinalIgnoreCase)))
             .ToList();
 
         if (markerLines.Count == 0) return;
@@ -49,7 +49,7 @@ public class GCI0018_ProductionReadiness : RuleBase
     private void CheckNotImplemented(DiffContext diff, List<Finding> findings)
     {
         var niLines = diff.AllAddedLines
-            .Where(l => l.Content.Contains("throw new NotImplementedException()", StringComparison.Ordinal))
+            .Where(l => l.Content.Contains("throw new NotImplementedException(", StringComparison.Ordinal))
             .ToList();
 
         if (niLines.Count == 0) return;
