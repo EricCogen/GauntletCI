@@ -50,7 +50,16 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
                 ? Math.Min(query.PerRepoLimit, query.MaxCandidates - results.Count)
                 : query.MaxCandidates - results.Count;
 
-            await FetchPageAsync(url, query, seen, results, repoLimit, cancellationToken);
+            try
+            {
+                await FetchPageAsync(url, query, seen, results, repoLimit, cancellationToken);
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity
+                                               || ex.StatusCode == System.Net.HttpStatusCode.NotFound
+                                               || ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                Console.Error.WriteLine($"[gh-search] Skipping {repoSpec} ({(int?)ex.StatusCode})");
+            }
         }
 
         return results;
