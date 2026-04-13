@@ -50,6 +50,7 @@ public class GCI0004_BreakingChangeRisk : RuleBase
                 if (!addedSigNames.Contains(name))
                 {
                     findings.Add(CreateFinding(
+                        file,
                         summary: $"Public API removed: '{name}' in {file.NewPath}",
                         evidence: $"Removed: {removed.Content.Trim()}",
                         whyItMatters: "Removing public members is a breaking change for any consumers of this API.",
@@ -64,11 +65,13 @@ public class GCI0004_BreakingChangeRisk : RuleBase
                     if (addedLine != null)
                     {
                         findings.Add(CreateFinding(
+                            file,
                             summary: $"Public API signature changed: '{name}' in {file.NewPath}",
                             evidence: $"Was: {removed.Content.Trim()} | Now: {addedLine.Content.Trim()}",
                             whyItMatters: "Changing a public method signature is a breaking change for callers not in this diff.",
                             suggestedAction: "Provide a backward-compatible overload or bump the major version.",
-                            confidence: Confidence.Medium));
+                            confidence: Confidence.Medium,
+                            line: addedLine));
                     }
                 }
             }
@@ -86,6 +89,7 @@ public class GCI0004_BreakingChangeRisk : RuleBase
             if (removedObsolete.Count > 0)
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"[Obsolete] attribute removed in {file.NewPath}.",
                     evidence: $"Removed: {string.Join("; ", removedObsolete.Select(l => l.Content.Trim()))}",
                     whyItMatters: "Removing [Obsolete] may indicate unintentional removal of a deprecation guard, or premature deletion of an API still consumed externally.",

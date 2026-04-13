@@ -65,6 +65,7 @@ public class GCI0025_FeatureFlagReadiness : RuleBase
         if (!hasFeatureFlag)
         {
             findings.Add(CreateFinding(
+                file,
                 summary: $"Large change ({addedLines.Count} lines) to critical-path file {file.NewPath} has no feature flag.",
                 evidence: $"{addedLines.Count} lines added to {file.NewPath}",
                 whyItMatters: "Large changes to auth, payment, or billing code shipped without a feature flag cannot be rolled back without a full deployment. A flag lets you disable the change instantly if it causes incidents.",

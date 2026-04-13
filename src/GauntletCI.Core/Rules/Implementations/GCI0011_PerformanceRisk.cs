@@ -73,11 +73,13 @@ public class GCI0011_PerformanceRisk : RuleBase
                                    content.Contains(".ToArray()", StringComparison.Ordinal)))
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Materializing collection inside loop in {file.NewPath}.",
                     evidence: $"Line {addedLines[i].LineNumber}: {trimmed}",
                     whyItMatters: ".ToList()/.ToArray() inside loops can cause O(n²) allocations.",
                     suggestedAction: "Materialize the collection outside the loop.",
-                    confidence: Confidence.Medium));
+                    confidence: Confidence.Medium,
+                    line: addedLines[i]));
             }
 
             // .Count() instead of .Any()
@@ -86,11 +88,13 @@ public class GCI0011_PerformanceRisk : RuleBase
                 content.Contains(".Count() >= 1", StringComparison.Ordinal))
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Use .Any() instead of .Count() for existence checks in {file.NewPath}.",
                     evidence: $"Line {addedLines[i].LineNumber}: {trimmed}",
                     whyItMatters: ".Count() enumerates the entire collection; .Any() stops at the first element.",
                     suggestedAction: "Replace .Count() > 0 with .Any() and .Count() == 0 with !.Any().",
-                    confidence: Confidence.Medium));
+                    confidence: Confidence.Medium,
+                    line: addedLines[i]));
             }
 
             // new List<>/Dictionary<> inside loops
@@ -98,11 +102,13 @@ public class GCI0011_PerformanceRisk : RuleBase
                                    content.Contains("new Dictionary<", StringComparison.Ordinal)))
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Collection allocated inside loop in {file.NewPath}.",
                     evidence: $"Line {addedLines[i].LineNumber}: {trimmed}",
                     whyItMatters: "Allocating collections inside loops increases GC pressure.",
                     suggestedAction: "Move collection allocation outside the loop and clear it between iterations if needed.",
-                    confidence: Confidence.Medium));
+                    confidence: Confidence.Medium,
+                    line: addedLines[i]));
             }
 
             // String concatenation in loops
@@ -110,11 +116,13 @@ public class GCI0011_PerformanceRisk : RuleBase
                 content.Contains('"', StringComparison.Ordinal))
             {
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"String concatenation in loop in {file.NewPath}.",
                     evidence: $"Line {addedLines[i].LineNumber}: {trimmed}",
                     whyItMatters: "String += in a loop is O(n²) due to string immutability.",
                     suggestedAction: "Use StringBuilder for string building inside loops.",
-                    confidence: Confidence.Medium));
+                    confidence: Confidence.Medium,
+                    line: addedLines[i]));
             }
 
             // Update brace depth after detection and close exhausted loop scopes.

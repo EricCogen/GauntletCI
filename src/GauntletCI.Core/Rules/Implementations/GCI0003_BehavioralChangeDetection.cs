@@ -78,11 +78,13 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
                 if (matchingAdded is not null && NormalizeSignature(removed.Content) != NormalizeSignature(matchingAdded.Content))
                 {
                     findings.Add(CreateFinding(
+                        file,
                         summary: $"Method signature changed: '{removedName}' in {file.NewPath}",
                         evidence: $"Was: {removed.Content.Trim()} | Now: {matchingAdded.Content.Trim()}",
                         whyItMatters: "Signature changes can break callers that haven't been updated.",
                         suggestedAction: "Verify all callers are updated and consider adding an overload for backward compatibility.",
-                        confidence: Confidence.Medium));
+                        confidence: Confidence.Medium,
+                        line: matchingAdded));
                 }
             }
         }

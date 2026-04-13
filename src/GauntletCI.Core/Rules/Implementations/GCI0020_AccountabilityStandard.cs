@@ -76,11 +76,13 @@ public class GCI0020_AccountabilityStandard : RuleBase
                     if (consecutiveComments >= 5)
                     {
                         findings.Add(CreateFinding(
+                            file,
                             summary: $"Block of {consecutiveComments} consecutive comment lines in {file.NewPath} — possible commented-out code.",
                             evidence: $"Starting at line {startLine} in {file.NewPath}",
                             whyItMatters: "Commented-out code is dead weight that confuses readers and suggests incomplete cleanup.",
                             suggestedAction: "Remove commented-out code. If needed for reference, use version control history instead.",
-                            confidence: Confidence.Medium));
+                            confidence: Confidence.Medium,
+                            line: line));
                         break;
                     }
                     consecutiveComments = 0;
@@ -127,6 +129,7 @@ public class GCI0020_AccountabilityStandard : RuleBase
                     !next.StartsWith("default:", StringComparison.Ordinal))
                 {
                     findings.Add(CreateFinding(
+                        file,
                         summary: $"Possible unreachable code after return/throw in {file.NewPath}.",
                         evidence: $"Line {addedLines[i].LineNumber}: {content} → Line {addedLines[i + 1].LineNumber}: {next}",
                         whyItMatters: "Unreachable code indicates a logic error or dead code that will never execute.",
