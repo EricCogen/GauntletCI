@@ -1,22 +1,21 @@
 // SPDX-License-Identifier: Elastic-2.0
-using GauntletCI.Core.Analysis;
+using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
+using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0030 – IDisposable Resource Safety (superseded)
-/// This rule's detection scope has been fully absorbed into GCI0024 (Resource Lifecycle),
-/// which now covers both explicit known types and suffix-based heuristic detection.
-/// GCI0030 returns no findings to prevent duplicate alerts. It is retained as a reserved
-/// ID to avoid breaking configurations that reference it.
+/// GCI0030 – IDisposable Resource Safety (superseded by GCI0024)
+/// Retained as a reserved ID to avoid breaking configurations. Does not participate
+/// in rule discovery — use GCI0024 (Resource Lifecycle) for disposable safety checks.
 /// </summary>
-public class GCI0030_DisposableResourceSafety : RuleBase
+// Superseded by GCI0024 (Resource Lifecycle)
+public class GCI0030_DisposableResourceSafety
 {
-    public override string Id => "GCI0030";
-    public override string Name => "IDisposable Resource Safety";
-
-    public override Task<List<Finding>> EvaluateAsync(
-        AnalysisContext context, CancellationToken ct = default)
+    public Task<List<Finding>> EvaluateAsync(
+        DiffContext diff,
+        AnalyzerResult? staticAnalysis = null,
+        CancellationToken ct = default)
         => Task.FromResult(new List<Finding>());
 }

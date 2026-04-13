@@ -81,7 +81,7 @@ public class GCI0035Tests
     }
 
     [Fact]
-    public async Task NoForbiddenImportsConfig_ShouldBeNoop()
+    public async Task NoForbiddenImportsConfig_ShouldReturnInformationalFinding()
     {
         var raw = """
             diff --git a/src/Domain/Foo.cs b/src/Domain/Foo.cs
@@ -99,7 +99,8 @@ public class GCI0035Tests
         rule.Configure(new GauntletConfig { ForbiddenImports = null });
         var findings = await rule.EvaluateAsync(diff, null);
 
-        Assert.Empty(findings);
+        Assert.Single(findings);
+        Assert.Contains(findings, f => f.Summary.Contains("not configured"));
     }
 
     [Fact]

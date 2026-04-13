@@ -74,7 +74,7 @@ public class GCI0015_DataIntegrityRisk : RuleBase
                             evidence: $"Starting at line {firstLine} in {file.NewPath}",
                             whyItMatters: "Direct field assignment from user input without validation can lead to data corruption or over-posting attacks.",
                             suggestedAction: "Validate input with a DTO/ViewModel, use FluentValidation, or add null guards before assignment.",
-                            confidence: Confidence.Medium));
+                            confidence: Confidence.Low));
                     }
                 }
                 assignmentCount = 0;
@@ -93,7 +93,7 @@ public class GCI0015_DataIntegrityRisk : RuleBase
                 evidence: $"Line {line.LineNumber}: {line.Content.Trim()}",
                 whyItMatters: "Hard casts without overflow checking can cause silent data truncation or OverflowException.",
                 suggestedAction: "Use checked{} blocks, Convert.ToInt32(), or int.TryParse() with validation.",
-                confidence: Confidence.Medium));
+                confidence: Confidence.Low));
             return;
         }
     }

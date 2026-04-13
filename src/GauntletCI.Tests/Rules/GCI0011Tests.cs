@@ -50,8 +50,10 @@ public class GCI0011Tests
     }
 
     [Fact]
-    public async Task ThreadSleep_ShouldFlag()
+    public async Task ThreadSleep_ShouldNotFlag_OwnerIsGCI0016()
     {
+        // Thread.Sleep detection is owned by GCI0016 (Concurrency and State Risk).
+        // GCI0011 must not duplicate this check.
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -65,12 +67,14 @@ public class GCI0011Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f => f.Summary.Contains("Thread.Sleep()"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Thread.Sleep()"));
     }
 
     [Fact]
-    public async Task BlockingResultCall_ShouldFlag()
+    public async Task BlockingResultCall_ShouldNotFlag_OwnerIsGCI0016()
     {
+        // .Result / .GetAwaiter().GetResult() detection is owned by GCI0016.
+        // GCI0011 must not duplicate this check.
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -84,7 +88,7 @@ public class GCI0011Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f => f.Summary.Contains("Blocking async call"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Blocking async call"));
     }
 
     [Fact]
