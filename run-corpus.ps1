@@ -23,6 +23,26 @@ param(
         "Gaby-Station/Gaby-Station",
         "Simple-Station/Einstein-Engines",
         "zunath/SWLOR_NWN"
+    ),
+    # Curated list of known-good C# repos to target for PR discovery.
+    # When non-empty, discovery searches each repo directly instead of using a global keyword search.
+    # Leave empty to fall back to global gh-search mode (not recommended).
+    [string[]]$RepoAllowlist = @(
+        "dotnet/aspnetcore",
+        "dotnet/efcore",
+        "dotnet/runtime",
+        "dotnet/roslyn",
+        "OrchardCMS/OrchardCore",
+        "MassTransit/MassTransit",
+        "akkadotnet/akka.net",
+        "JasperFx/marten",
+        "serilog/serilog",
+        "nunit/nunit",
+        "StackExchange/Dapper",
+        "AutoMapper/AutoMapper",
+        "reactiveui/ReactiveUI",
+        "Hangfire/Hangfire",
+        "abpframework/abp"
     )
 )
 
@@ -49,8 +69,10 @@ if ($Help) {
     Write-Host "  -Db        <path>      SQLite database path (default: ./data/gauntletci-corpus.db)"
     Write-Host "  -Fixtures  <path>      Fixtures root directory (default: ./data/fixtures)"
     Write-Host "  -Report    <path>      Scorecard output path (default: ./data/scorecard.md)"
-    Write-Host "  -RepoBlocklist <repos>  Comma-separated or repeated owner/repo pairs to exclude from discovery.
-                         Defaults to known game forks (SS14 variants, SWLOR_NWN)."
+    Write-Host "  -RepoBlocklist <repos>  Repos to exclude (owner/repo, repeatable). Defaults to known game forks."
+    Write-Host "  -RepoAllowlist <repos>  Curated repos to target (owner/repo, repeatable)."
+    Write-Host "                         When set, searches each repo directly (no global keyword search)."
+    Write-Host "                         Defaults to 15 high-quality C# OSS repos. Pass @() to disable."
     Write-Host "  -SkipTo    <step>      Resume from step N (1–7, default: 1)"
     Write-Host ""
     Write-Host "STEPS" -ForegroundColor Yellow
@@ -120,13 +142,19 @@ if ($SkipTo -le 1) {
         "corpus", "discover",
         "--provider",     $Provider,
         "--limit",        $Limit,
-        "--start-date",   $StartDate,
         "--min-comments", $MinComments,
-        "--min-stars",    $MinStars,
         "--db",           $Db
     )
     if ($Language    -ne "") { $discoverArgs += "--language", $Language }
+    if ($StartDate   -ne "") { $discoverArgs += "--start-date", $StartDate }
     if ($EndDate     -ne "") { $discoverArgs += "--end-date", $EndDate }
+    # In allowlist mode, stars are irrelevant — we know the repos already
+    if ($RepoAllowlist.Count -eq 0 -and $MinStars -gt 0) {
+        $discoverArgs += "--min-stars", $MinStars
+    }
+    foreach ($allowed in $RepoAllowlist) {
+        $discoverArgs += "--repo-allowlist", $allowed
+    }
     foreach ($blocked in $RepoBlocklist) {
         $discoverArgs += "--repo-blocklist", $blocked
     }
