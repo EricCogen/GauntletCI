@@ -110,4 +110,75 @@ public class GCI0015Tests
 
         Assert.Contains(findings, f => f.Summary.Contains("ON CONFLICT DO NOTHING"));
     }
+
+    [Fact]
+    public async Task HttpInputBinding_WithHttpContextSignal_ShouldFlagHigh()
+    {
+        var raw = """
+            diff --git a/src/UserController.cs b/src/UserController.cs
+            index abc..def 100644
+            --- a/src/UserController.cs
+            +++ b/src/UserController.cs
+            @@ -1,1 +1,8 @@
+             // controller
+            +[HttpPost]
+            +public IActionResult Create([FromBody] UserInput input)
+            +{
+            +entity.Name = input.Name;
+            +entity.Email = input.Email;
+            +entity.Phone = input.Phone;
+            +// end
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f =>
+            f.Summary.Contains("unsafe HTTP input binding") &&
+            f.Confidence == GauntletCI.Core.Model.Confidence.High);
+    }
+
+    [Fact]
+    public async Task HttpInputBinding_WithoutHttpContextSignal_ShouldNotFlagHigh()
+    {
+        var raw = """
+            diff --git a/src/UserService.cs b/src/UserService.cs
+            index abc..def 100644
+            --- a/src/UserService.cs
+            +++ b/src/UserService.cs
+            @@ -1,1 +1,6 @@
+             // service
+            +entity.Name = model.Name;
+            +entity.Email = model.Email;
+            +entity.Phone = model.Phone;
+            +// end assignments
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("unsafe HTTP input binding"));
+    }
+
+    [Fact]
+    public async Task HttpInputBinding_HttpSignalButFewAssignments_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/UserController.cs b/src/UserController.cs
+            index abc..def 100644
+            --- a/src/UserController.cs
+            +++ b/src/UserController.cs
+            @@ -1,1 +1,5 @@
+             // controller
+            +public IActionResult Get([FromQuery] string id)
+            +{
+            +entity.Name = id;
+            +// end
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("unsafe HTTP input binding"));
+    }
 }
