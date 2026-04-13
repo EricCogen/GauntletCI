@@ -15,14 +15,6 @@ public sealed class ChangedFileAnalyzer : IChangedFileAnalyzer
             ".cs"
         };
 
-    private static readonly HashSet<string> KnownNonSourceExtensions =
-        new(StringComparer.OrdinalIgnoreCase)
-        {
-            ".md", ".txt", ".json", ".yml", ".yaml", ".xml", ".svg", ".png", ".jpg",
-            ".jpeg", ".gif", ".ico", ".csproj", ".sln", ".slnx", ".props", ".targets",
-            ".editorconfig", ".gitignore", ".config", ".csv"
-        };
-
     public ChangedFileAnalysisRecord Analyze(DiffFile file)
     {
         var filePath = file.NewPath ?? string.Empty;
@@ -124,22 +116,6 @@ public sealed class ChangedFileAnalyzer : IChangedFileAnalyzer
                 Classification     = FileEligibilityClassification.EligibleSource,
                 IsEligible         = true,
                 Reason             = $"Extension {extension} is allowed for analysis",
-                IsDeleted          = false,
-                IsRename           = isRename,
-                HasContentChanges  = hasContentChanges,
-            };
-        }
-
-        if (KnownNonSourceExtensions.Contains(extension))
-        {
-            return new ChangedFileAnalysisRecord
-            {
-                FilePath           = filePath,
-                OldFilePath        = oldPath,
-                Extension          = extension,
-                Classification     = FileEligibilityClassification.KnownNonSource,
-                IsEligible         = false,
-                Reason             = $"Extension {extension} is recognized as non-source and is skipped",
                 IsDeleted          = false,
                 IsRename           = isRename,
                 HasContentChanges  = hasContentChanges,
