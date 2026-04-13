@@ -314,8 +314,7 @@ public class SupplementalCoverageTests
         public string Name => "Throwing Test Rule";
 
         public Task<List<GauntletCI.Core.Model.Finding>> EvaluateAsync(
-            GauntletCI.Core.Diff.DiffContext diff,
-            AnalyzerResult? staticAnalysis,
+            GauntletCI.Core.Analysis.AnalysisContext context,
             CancellationToken ct = default)
             => throw new InvalidOperationException("Test rule always throws");
     }

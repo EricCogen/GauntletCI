@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.CommandLine;
 using GauntletCI.Cli.Telemetry;
+using Spectre.Console;
 
 namespace GauntletCI.Cli.Commands;
 
@@ -34,14 +35,14 @@ public static class TelemetryCommand
             if (enable)
             {
                 TelemetryConsent.SetMode(TelemetryMode.Shared);
-                Console.WriteLine("  ✓ Telemetry mode set to shared.");
+                AnsiConsole.MarkupLine("[green]  ✓ Telemetry mode set to shared.[/]");
                 return;
             }
 
             if (disable)
             {
                 TelemetryConsent.SetMode(TelemetryMode.Off);
-                Console.WriteLine("  ✓ Telemetry mode set to off.");
+                AnsiConsole.MarkupLine("[green]  ✓ Telemetry mode set to off.[/]");
                 return;
             }
 
@@ -63,23 +64,23 @@ public static class TelemetryCommand
                 }
 
                 TelemetryConsent.SetMode(parsed.Value);
-                Console.WriteLine($"  ✓ Telemetry mode set to {mode.Trim().ToLowerInvariant()}.");
+                AnsiConsole.MarkupLine($"[green]  ✓ Telemetry mode set to {Markup.Escape(mode.Trim().ToLowerInvariant())}.[/]");
                 return;
             }
 
             var currentMode = TelemetryConsent.GetMode();
             var installId = TelemetryConsent.InstallId;
 
-            Console.WriteLine();
-            Console.WriteLine($"  Install ID : {installId}");
-            Console.WriteLine($"  Mode       : {currentMode.ToString().ToLowerInvariant()}");
-            Console.WriteLine();
-            Console.WriteLine("  shared = local store + anonymous aggregate upload");
-            Console.WriteLine("  local  = local store only, no network calls");
-            Console.WriteLine("  off    = telemetry disabled");
-            Console.WriteLine();
-            Console.WriteLine("  To change: gauntletci telemetry --mode shared|local|off");
-            Console.WriteLine();
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine($"[dim]  Install ID :[/] {Markup.Escape(installId)}");
+            AnsiConsole.MarkupLine($"[dim]  Mode       :[/] {currentMode.ToString().ToLowerInvariant()}");
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("  shared = local store + anonymous aggregate upload");
+            AnsiConsole.MarkupLine("  local  = local store only, no network calls");
+            AnsiConsole.MarkupLine("  off    = telemetry disabled");
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("  To change: gauntletci telemetry --mode shared|local|off");
+            AnsiConsole.WriteLine();
             ctx.ExitCode = 0;
         });
 

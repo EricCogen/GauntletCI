@@ -63,6 +63,45 @@ GauntletCI complements your existing tools — it does not replace them.
 
 ---
 
+## Installation
+
+```bash
+dotnet tool install -g GauntletCI
+```
+
+> **Coming soon:**
+> - `winget install EricCogen.GauntletCI`
+> - `brew install gauntletci`
+
+---
+
+## Quick start
+
+```bash
+# Analyze staged changes before committing
+gauntletci analyze --staged
+
+# Analyze a specific commit
+gauntletci analyze --commit <sha>
+
+# Analyze a saved diff file
+gauntletci analyze --diff changes.diff
+
+# Output JSON (for tooling/automation)
+gauntletci analyze --staged --output json
+
+# Emit GitHub Actions inline PR annotations
+gauntletci analyze --staged --github-annotations
+
+# Enable LLM enrichment of High-confidence findings
+gauntletci analyze --staged --with-llm
+
+# ASCII-only output (for terminals without Unicode support)
+gauntletci analyze --staged --ascii
+```
+
+---
+
 ## Rule catalog (36 rules, GCI0001–GCI0037)
 
 | ID | Name | What it detects |
@@ -190,3 +229,58 @@ GauntletCI complements your existing tools — it does not replace them.
    Summary  : Critical-path file src/Payments/PaymentProcessor.cs has logging but no correlation/request ID.
    Action   : Include CorrelationId or TraceId in log statements for end-to-end traceability.
 ```
+
+---
+
+## Optional: LLM enrichment
+
+GauntletCI can enrich High-confidence findings with natural-language explanations using a local Phi-3 Mini ONNX model — no API key, no data sent externally.
+
+```bash
+# Download the model (~2GB)
+gauntletci model download
+
+# Run with LLM enrichment
+gauntletci analyze --staged --with-llm
+```
+
+---
+
+## CI/CD integration
+
+### GitHub Actions
+
+```yaml
+- name: GauntletCI risk analysis
+  run: gauntletci analyze --staged --github-annotations
+```
+
+Findings appear as inline annotations on the pull request diff.
+
+### Pre-commit hook
+
+```bash
+gauntletci init
+```
+
+Installs a pre-commit hook that runs `gauntletci analyze --staged` before every commit.
+
+---
+
+## Telemetry
+
+GauntletCI collects anonymous usage data to improve rule quality. No code, no file paths, no PII is ever collected.
+
+```bash
+gauntletci telemetry status    # view current mode
+gauntletci telemetry opt-in    # enable shared telemetry
+gauntletci telemetry opt-out   # disable all telemetry
+```
+
+---
+
+## Documentation
+
+- [CLI Reference](docs/cli-reference.md)
+- [Architecture](docs/architecture.md)
+- [Corpus Pipeline](docs/corpus-pipeline.md)
