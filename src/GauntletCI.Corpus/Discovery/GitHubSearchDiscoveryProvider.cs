@@ -31,37 +31,22 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         var seen    = new HashSet<(string Owner, string Repo, int Number)>();
         var results = new List<PullRequestCandidate>();
 
-        if (query.RepoAllowList.Count > 0)
+        if (query.RepoAllowList.Count == 0)
+            throw new InvalidOperationException(
+                "gh-search requires a repo allowlist. " +
+                "Pass --repo-allowlist owner/repo (repeatable) or use -RepoAllowlist in run-corpus.ps1. " +
+                "Global keyword search is disabled to prevent low-quality corpus ingestion.");
+
+        // Allowlist mode: one targeted repo: query per known repo
+        foreach (var repoSpec in query.RepoAllowList)
         {
-            // Allowlist mode: one targeted repo: query per known repo
-            foreach (var repoSpec in query.RepoAllowList)
-            {
-                if (results.Count >= query.MaxCandidates)
-                    break;
+            if (results.Count >= query.MaxCandidates)
+                break;
 
-                var q   = BuildRepoQuery(query, repoSpec);
-                var url = $"https://api.github.com/search/issues?q={Uri.EscapeDataString(q)}&sort=updated&order=desc&per_page=100&page=1";
+            var q   = BuildRepoQuery(query, repoSpec);
+            var url = $"https://api.github.com/search/issues?q={Uri.EscapeDataString(q)}&sort=updated&order=desc&per_page=100&page=1";
 
-                await FetchPageAsync(url, query, seen, results, cancellationToken);
-            }
-        }
-        else
-        {
-            // Global search mode: iterate over languages with broad filters
-            var languages = query.Languages.Count > 0
-                ? (IEnumerable<string>)query.Languages
-                : new[] { "" };
-
-            foreach (var lang in languages)
-            {
-                if (results.Count >= query.MaxCandidates)
-                    break;
-
-                var q   = BuildQuery(query, lang);
-                var url = $"https://api.github.com/search/issues?q={Uri.EscapeDataString(q)}&sort=updated&order=desc&per_page=100&page=1";
-
-                await FetchPageAsync(url, query, seen, results, cancellationToken);
-            }
+            await FetchPageAsync(url, query, seen, results, cancellationToken);
         }
 
         return results;
