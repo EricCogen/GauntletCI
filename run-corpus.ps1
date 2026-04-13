@@ -14,7 +14,16 @@ param(
     [string]$Db           = "./data/gauntletci-corpus.db",
     [string]$Fixtures     = "./data/fixtures",
     [string]$Report       = "./data/scorecard.md",
-    [int]   $SkipTo       = 1   # Set to 2-6 to resume from a specific step
+    [int]   $SkipTo       = 1,   # Set to 2-7 to resume from a specific step
+    # Known game repositories and other low-signal repos to exclude from discovery.
+    # Add owner/repo strings here to prevent them from entering the corpus.
+    [string[]]$RepoBlocklist = @(
+        "Goob-Station/Goob-Station",
+        "corvax-team/ss14-wl",
+        "Gaby-Station/Gaby-Station",
+        "Simple-Station/Einstein-Engines",
+        "zunath/SWLOR_NWN"
+    )
 )
 
 if ($Help) {
@@ -40,11 +49,14 @@ if ($Help) {
     Write-Host "  -Db        <path>      SQLite database path (default: ./data/gauntletci-corpus.db)"
     Write-Host "  -Fixtures  <path>      Fixtures root directory (default: ./data/fixtures)"
     Write-Host "  -Report    <path>      Scorecard output path (default: ./data/scorecard.md)"
-    Write-Host "  -SkipTo    <step>      Resume from step N (1–6, default: 1)"
+    Write-Host "  -RepoBlocklist <repos>  Comma-separated or repeated owner/repo pairs to exclude from discovery.
+                         Defaults to known game forks (SS14 variants, SWLOR_NWN)."
+    Write-Host "  -SkipTo    <step>      Resume from step N (1–7, default: 1)"
     Write-Host ""
     Write-Host "STEPS" -ForegroundColor Yellow
     Write-Host "  1  Discover   — pull PR candidates from GH Archive"
     Write-Host "  2  Hydrate    — fetch diffs + metadata from GitHub REST API"
+    Write-Host "  2.5 Purge     — remove language-mismatched / no-review-comment fixtures"
     Write-Host "  3  Run rules  — evaluate all GCI rules against fixtures"
     Write-Host "  4  Label      — apply silver heuristic labels"
     Write-Host "  5  Score      — compute precision / recall aggregates"
@@ -58,8 +70,7 @@ if ($Help) {
     Write-Host "  .\run-corpus.ps1 -StartDate 2025-03-01 -EndDate 2025-03-31 -Language C# -Limit 100"
     Write-Host ""
     Write-Host "  # Skip discovery and hydration — re-score existing fixtures"
-    Write-Host "  .\run-corpus.ps1 -SkipTo 3"
-    Write-Host ""
+    Write-Host "  .\run-corpus.ps1 -SkipTo 3"    Write-Host ""
     Write-Host "NOTES" -ForegroundColor Yellow
     Write-Host "  Requires GITHUB_TOKEN env var for Step 1 (gh-search discover) and Step 2 (hydration)."
     Write-Host "  If not set, the script will load it from .misc/ghapi.key automatically."
@@ -114,8 +125,11 @@ if ($SkipTo -le 1) {
         "--min-stars",    $MinStars,
         "--db",           $Db
     )
-    if ($Language -ne "") { $discoverArgs += "--language", $Language }
-    if ($EndDate  -ne "") { $discoverArgs += "--end-date", $EndDate }
+    if ($Language    -ne "") { $discoverArgs += "--language", $Language }
+    if ($EndDate     -ne "") { $discoverArgs += "--end-date", $EndDate }
+    foreach ($blocked in $RepoBlocklist) {
+        $discoverArgs += "--repo-blocklist", $blocked
+    }
 
     Invoke-Expression "$cli $($discoverArgs -join ' ')"
     if ($LASTEXITCODE -ne 0) { throw "Discover failed" }
@@ -131,6 +145,22 @@ if ($SkipTo -le 2) {
 
     Invoke-Expression "$cli corpus batch-hydrate --db $Db --fixtures $Fixtures --tier $Tier --limit $Limit"
     if ($LASTEXITCODE -ne 0) { throw "Hydrate failed" }
+}
+
+# ── Step 2.5: Purge low-quality fixtures ─────────────────────────────────────
+if ($SkipTo -le 2) {
+    Step "2.5" "Purge language-mismatched and no-review-comment fixtures"
+
+    $purgeArgs = @(
+        "corpus", "purge",
+        "--require-review-comments",
+        "--db",       $Db,
+        "--fixtures", $Fixtures
+    )
+    if ($Language -ne "") { $purgeArgs += "--language", $Language }
+
+    Invoke-Expression "$cli $($purgeArgs -join ' ')"
+    if ($LASTEXITCODE -ne 0) { throw "Purge failed" }
 }
 
 # ── Step 3: Run rules ─────────────────────────────────────────────────────────

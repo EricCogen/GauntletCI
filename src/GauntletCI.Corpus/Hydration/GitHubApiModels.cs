@@ -17,6 +17,7 @@ internal sealed class GhPullRequest
     [JsonPropertyName("deletions")] public int Deletions { get; init; }
     [JsonPropertyName("changed_files")] public int ChangedFiles { get; init; }
     [JsonPropertyName("merge_commit_sha")] public string? MergeCommitSha { get; init; }
+    [JsonPropertyName("review_comments")] public int ReviewComments { get; init; }
     [JsonPropertyName("base")]      public GhRef Base { get; init; } = new();
     [JsonPropertyName("head")]      public GhRef Head { get; init; } = new();
     [JsonPropertyName("created_at")] public DateTime CreatedAt { get; init; }

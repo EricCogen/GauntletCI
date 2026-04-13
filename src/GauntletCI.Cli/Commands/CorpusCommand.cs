@@ -32,6 +32,7 @@ public static class CorpusCommand
         corpus.AddCommand(CreateLabel());
         corpus.AddCommand(CreateLabelAll());
         corpus.AddCommand(CreateResetStats());
+        corpus.AddCommand(CreatePurge());
         return corpus;
     }
 
@@ -280,6 +281,12 @@ public static class CorpusCommand
         var minStarsOpt    = new Option<int>   ("--min-stars",    () => 0,             "Minimum stars on the repository");
         var minCommentsOpt = new Option<int>   ("--min-comments", () => 0,             "Minimum review comment count");
         var startDateOpt   = new Option<DateTime?>("--start-date","Filter by merge/event date (inclusive, UTC)");
+        var endDateOpt     = new Option<DateTime?>("--end-date",  "Filter by merge/event date upper bound (inclusive, UTC)");
+        var repoBlocklistOpt = new Option<string[]>("--repo-blocklist", "Repos to exclude in owner/repo format (repeatable)")
+        {
+            Arity = ArgumentArity.ZeroOrMore,
+            AllowMultipleArgumentsPerToken = true,
+        };
         var dbOpt          = new Option<string>("--db",           () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var fixturesOpt    = new Option<string>("--fixtures",     () => "./data/fixtures",             "Path to fixtures root directory");
 
@@ -290,6 +297,8 @@ public static class CorpusCommand
         cmd.AddOption(minStarsOpt);
         cmd.AddOption(minCommentsOpt);
         cmd.AddOption(startDateOpt);
+        cmd.AddOption(endDateOpt);
+        cmd.AddOption(repoBlocklistOpt);
         cmd.AddOption(dbOpt);
         cmd.AddOption(fixturesOpt);
 
@@ -301,6 +310,8 @@ public static class CorpusCommand
             var minStars     = ctx.ParseResult.GetValueForOption(minStarsOpt);
             var minComments  = ctx.ParseResult.GetValueForOption(minCommentsOpt);
             var startDate    = ctx.ParseResult.GetValueForOption(startDateOpt);
+            var endDate      = ctx.ParseResult.GetValueForOption(endDateOpt);
+            var repoBlocklist = ctx.ParseResult.GetValueForOption(repoBlocklistOpt) ?? [];
             var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var ct           = ctx.GetCancellationToken();
 
@@ -338,7 +349,9 @@ public static class CorpusCommand
                 MinStars           = minStars,
                 MinReviewComments  = minComments,
                 StartDateUtc       = startDate,
+                EndDateUtc         = endDate,
                 MaxCandidates      = limit,
+                RepoBlockList      = repoBlocklist,
             };
 
             Console.WriteLine($"[corpus] Discovering candidates via {provider.GetProviderName()} (limit={limit}) …");
@@ -461,6 +474,15 @@ public static class CorpusCommand
                         using var hydrator = GitHubRestHydrator.CreateDefault(fixtures);
                         var hydrated = await hydrator.HydrateFromUrlAsync(url, ct);
                         await pipeline.NormalizeAsync(hydrated, source: "batch", tier: tier, ct: ct);
+
+                        // Persist actual review comment count back to candidates so purge can use it
+                        var candidateId = $"{owner}/{repo}#{prNumber}";
+                        using var updateCmd = db.Connection.CreateCommand();
+                        updateCmd.CommandText = "UPDATE candidates SET review_comment_count = $count WHERE id = $id";
+                        updateCmd.Parameters.AddWithValue("$count", hydrated.ReviewComments.Count);
+                        updateCmd.Parameters.AddWithValue("$id", candidateId);
+                        await updateCmd.ExecuteNonQueryAsync(ct);
+
                         success++;
                     }
                     catch (Exception ex)
@@ -995,6 +1017,131 @@ public static class CorpusCommand
     }
 
     // ── Shared helpers ────────────────────────────────────────────────────────
+
+    // ── gauntletci corpus purge ───────────────────────────────────────────────
+
+    private static Command CreatePurge()
+    {
+        var languageOpt            = new Option<string>("--language",              () => "C#",  "Remove fixtures whose inferred language doesn't match this value. Pass empty to skip language filter.");
+        var requireReviewCommentsOpt = new Option<bool>("--require-review-comments", () => false, "Remove fixtures that have no inline review comments");
+        var dryRunOpt              = new Option<bool>  ("--dry-run",              () => false, "Print what would be purged without making changes");
+        var dbOpt                  = new Option<string>("--db",                   () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt            = new Option<string>("--fixtures",             () => "./data/fixtures",             "Path to fixtures root directory");
+
+        var cmd = new Command("purge", "Remove low-quality fixtures from the corpus (language mismatch, no review comments)");
+        cmd.AddOption(languageOpt);
+        cmd.AddOption(requireReviewCommentsOpt);
+        cmd.AddOption(dryRunOpt);
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var language              = ctx.ParseResult.GetValueForOption(languageOpt)!;
+            var requireReviewComments = ctx.ParseResult.GetValueForOption(requireReviewCommentsOpt);
+            var dryRun                = ctx.ParseResult.GetValueForOption(dryRunOpt);
+            var dbPath                = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixturesRoot          = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct                    = ctx.GetCancellationToken();
+
+            var (db, _, _) = await BuildPipeline(dbPath, fixturesRoot, ct);
+            using (db)
+            {
+                // Build WHERE predicate
+                var conditions = new List<string>();
+                if (!string.IsNullOrEmpty(language))
+                    conditions.Add("(f.language IS NULL OR LOWER(f.language) != LOWER($lang))");
+                if (requireReviewComments)
+                    conditions.Add("f.has_review_comments = 0");
+
+                if (conditions.Count == 0)
+                {
+                    Console.WriteLine("[corpus] purge: no filters specified — nothing to do.");
+                    return;
+                }
+
+                var where = string.Join(" OR ", conditions);
+
+                // Collect fixtures to purge
+                using var selectCmd = db.Connection.CreateCommand();
+                selectCmd.CommandText = $"""
+                    SELECT f.fixture_id, f.path, f.repo, f.pr_number, f.language, f.has_review_comments
+                    FROM fixtures f
+                    WHERE {where}
+                    """;
+                selectCmd.Parameters.AddWithValue("$lang", language);
+
+                var toPurge = new List<(string FixtureId, string? Path, string Repo, int PrNumber)>();
+                using (var reader = await selectCmd.ExecuteReaderAsync(ct))
+                {
+                    while (await reader.ReadAsync(ct))
+                    {
+                        var fid  = reader.GetString(0);
+                        var path = reader.IsDBNull(1) ? null : reader.GetString(1);
+                        var repo = reader.GetString(2);
+                        var prn  = reader.GetInt32(3);
+                        var lang = reader.IsDBNull(4) ? "(none)" : reader.GetString(4);
+                        var hasRc = reader.GetInt32(5) == 1;
+                        Console.WriteLine($"[corpus] purge: {fid}  lang={lang}  review_comments={hasRc}");
+                        toPurge.Add((fid, path, repo, prn));
+                    }
+                }
+
+                if (toPurge.Count == 0)
+                {
+                    Console.WriteLine("[corpus] purge: no fixtures matched the filter — corpus is clean.");
+                    return;
+                }
+
+                if (dryRun)
+                {
+                    Console.WriteLine($"[corpus] purge: [dry-run] would remove {toPurge.Count} fixture(s).");
+                    return;
+                }
+
+                using var tx = db.Connection.BeginTransaction();
+                int removed = 0;
+                foreach (var (fixtureId, path, repo, prNumber) in toPurge)
+                {
+                    var candidateId = $"{repo}#{prNumber}";
+
+                    void Exec(string sql, string param, object val)
+                    {
+                        using var c = db.Connection.CreateCommand();
+                        c.Transaction = tx;
+                        c.CommandText = sql;
+                        c.Parameters.AddWithValue(param, val);
+                        c.ExecuteNonQuery();
+                    }
+
+                    Exec("DELETE FROM actual_findings  WHERE fixture_id = $fid", "$fid", fixtureId);
+                    Exec("DELETE FROM expected_findings WHERE fixture_id = $fid", "$fid", fixtureId);
+                    Exec("DELETE FROM evaluations       WHERE fixture_id = $fid", "$fid", fixtureId);
+                    Exec("DELETE FROM rule_runs         WHERE fixture_id = $fid", "$fid", fixtureId);
+                    Exec("DELETE FROM fixtures          WHERE fixture_id = $fid", "$fid", fixtureId);
+                    Exec("DELETE FROM hydrations        WHERE candidate_id = $cid", "$cid", candidateId);
+                    Exec("DELETE FROM candidates        WHERE id = $cid",           "$cid", candidateId);
+
+                    // Remove fixture directory from disk
+                    if (path is not null && Directory.Exists(path))
+                    {
+                        try { Directory.Delete(path, recursive: true); }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine($"[corpus] purge: warning — could not delete {path}: {ex.Message}");
+                        }
+                    }
+
+                    removed++;
+                }
+                tx.Commit();
+
+                Console.WriteLine($"[corpus] purge: removed {removed} fixture(s) from DB and disk.");
+            }
+        });
+
+        return cmd;
+    }
 
     private static async Task<(CorpusDb Db, FixtureFolderStore Store, NormalizationPipeline Pipeline)>
         BuildPipeline(string dbPath, string fixturesPath, CancellationToken ct)

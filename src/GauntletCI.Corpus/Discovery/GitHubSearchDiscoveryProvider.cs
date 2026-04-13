@@ -96,7 +96,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         var parts = new List<string> { "is:pr", "is:merged" };
 
         if (query.MinReviewComments > 0)
-            parts.Add($"comments:>{query.MinReviewComments}");
+            parts.Add($"review_comments:>{query.MinReviewComments}");
 
         if (query.MinStars > 0)
             parts.Add($"stars:>{query.MinStars}");
