@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.CommandLine;
 using GauntletCI.Cli.Telemetry;
+using Spectre.Console;
 
 namespace GauntletCI.Cli.Commands;
 
@@ -33,15 +34,15 @@ public static class FeedbackCommand
 
             if (!TelemetryConsent.HasDecided)
             {
-                Console.WriteLine("  Telemetry is not enabled. Run 'gauntletci telemetry --enable' to opt in.");
+                AnsiConsole.MarkupLine("[yellow]  Telemetry is not enabled. Run 'gauntletci telemetry --enable' to opt in.[/]");
                 ctx.ExitCode = 0;
                 return;
             }
 
             if (!TelemetryConsent.IsOptedIn)
             {
-                Console.WriteLine("  Feedback requires telemetry to be enabled.");
-                Console.WriteLine("  Run 'gauntletci telemetry --enable' to opt in.");
+                AnsiConsole.MarkupLine("[yellow]  Feedback requires telemetry to be enabled.[/]");
+                AnsiConsole.MarkupLine("[yellow]  Run 'gauntletci telemetry --enable' to opt in.[/]");
                 ctx.ExitCode = 0;
                 return;
             }
@@ -56,7 +57,7 @@ public static class FeedbackCommand
             TelemetryUploader.UploadInBackground();
 
             var emoji = vote == "up" ? "👍" : "👎";
-            Console.WriteLine($"  {emoji}  Feedback recorded — thank you!");
+            AnsiConsole.MarkupLine($"[green]  {emoji}  Feedback recorded — thank you![/]");
             ctx.ExitCode = 0;
         });
 
