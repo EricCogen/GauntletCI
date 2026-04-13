@@ -23,6 +23,7 @@ from services.query_service import (
     top_rule_metrics,
 )
 from services.rules_doc_parser import load_rule_definitions
+from services.suggestion_engine import generate_item_suggestion
 from store import (
     _labels_since_last_snapshot,
     _snapshot_aggregates,
@@ -225,6 +226,10 @@ def task(queue_id: int):
 
     rule_def = RULE_DEFINITIONS.get(task_row["rule_id"])
 
+    # Raw evidence for suggestion engine
+    raw_evidence = grouped["finding_rows"][0].get("evidence") if grouped["finding_rows"] else None
+    item_suggestion = generate_item_suggestion(task_row["rule_id"], top_message, raw_evidence)
+
     return render_template(
         "task.html",
         task=task_row,
@@ -237,6 +242,7 @@ def task(queue_id: int):
         review_comments=review_comments,
         duplicates=duplicates,
         pending_count=pending_count,
+        item_suggestion=item_suggestion,
     )
 
 
@@ -360,17 +366,26 @@ def rule_detail(rule_id: str):
         return redirect(url_for("rule_detail", rule_id=rule_id))
 
     with get_conn() as conn:
-        rubric = rubric_for_rule(conn, rule_id) or {
-            "rule_id": rule_id,
-            "intent": "",
-            "trigger_conditions": "",
-            "non_trigger_conditions": "",
-            "inconclusive_conditions": "",
-            "examples": "",
-        }
+        rubric = rubric_for_rule(conn, rule_id)
+        rule_def = RULE_DEFINITIONS.get(rule_id)
+        if not rubric:
+            rubric = {
+                "rule_id": rule_id,
+                "intent": rule_def["what"] if rule_def else "",
+                "trigger_conditions": "",
+                "non_trigger_conditions": "",
+                "inconclusive_conditions": "",
+                "examples": "",
+            }
         metrics = [row for row in top_rule_metrics(conn) if row["rule_id"] == rule_id]
         evaluations = [row for row in evaluation_rows(conn) if row["rule_id"] == rule_id]
-    return render_template("rule_detail.html", rubric=rubric, metrics=metrics[0] if metrics else None, evaluation=evaluations[0] if evaluations else None)
+    return render_template(
+        "rule_detail.html",
+        rubric=rubric,
+        rule_def=rule_def,
+        metrics=metrics[0] if metrics else None,
+        evaluation=evaluations[0] if evaluations else None,
+    )
 
 
 @app.route("/auto-label/preview")
