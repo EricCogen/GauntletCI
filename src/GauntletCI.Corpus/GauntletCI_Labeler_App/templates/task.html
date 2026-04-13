@@ -14,9 +14,32 @@
 
 <section class="panel" style="border-left: 4px solid #6366f1;">
   {% if rule_def %}
-  <div class="muted" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.25rem">Rule Definition</div>
-  <p style="margin:0;font-weight:600;font-size:1rem">{{ task.rule_id }} — {{ rule_def.name }}</p>
-  <p style="margin:0.4rem 0 0;font-size:0.9rem">{{ rule_def.what }}</p>
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
+    <div>
+      <div class="muted" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.25rem">Rule Definition</div>
+      <p style="margin:0;font-weight:600;font-size:1rem">{{ task.rule_id }} — {{ rule_def.name }}</p>
+      <p style="margin:0.4rem 0 0;font-size:0.9rem">{{ rule_def.what }}</p>
+    </div>
+    {% if rule_def.why or rule_def.action %}
+    <details class="explain-details">
+      <summary class="button secondary" style="cursor:pointer;list-style:none;white-space:nowrap">Explain this issue</summary>
+      <div class="explain-body">
+        {% if rule_def.why %}
+        <div class="explain-section">
+          <div class="explain-label">Why it matters</div>
+          <p>{{ rule_def.why }}</p>
+        </div>
+        {% endif %}
+        {% if rule_def.action %}
+        <div class="explain-section">
+          <div class="explain-label">Suggested action</div>
+          <p>{{ rule_def.action }}</p>
+        </div>
+        {% endif %}
+      </div>
+    </details>
+    {% endif %}
+  </div>
   {% else %}
   <p style="margin:0;font-weight:600">{{ task.rule_id }}</p>
   {% endif %}
