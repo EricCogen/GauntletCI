@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.StaticAnalysis;
@@ -21,8 +22,9 @@ public class GCI0012_SecurityRisk : RuleBase
     private static readonly string[] SecretNamePatterns = ["password", "secret", "apikey", "api_key", "pwd"];
 
     public override Task<List<Finding>> EvaluateAsync(
-        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+        AnalysisContext context, CancellationToken ct = default)
     {
+        var diff = context.Diff;
         var findings = new List<Finding>();
 
         foreach (var line in diff.AllAddedLines)
@@ -36,7 +38,7 @@ public class GCI0012_SecurityRisk : RuleBase
         }
 
         CheckAllowAnonymousAdded(diff, findings);
-        AddRoslynFindings(staticAnalysis, findings);
+        AddRoslynFindings(context.StaticAnalysis, findings);
 
         return Task.FromResult(findings);
     }

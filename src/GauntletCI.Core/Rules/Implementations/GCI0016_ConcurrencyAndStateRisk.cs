@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
-using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -15,12 +15,14 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
     public override string Name => "Concurrency and State Risk";
 
     public override Task<List<Finding>> EvaluateAsync(
-        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+        AnalysisContext context, CancellationToken ct = default)
     {
+        var diff = context.Diff;
         var findings = new List<Finding>();
 
         foreach (var line in diff.AllAddedLines)
         {
+            if (line.Content.TrimStart().StartsWith("//")) continue;
             CheckAsyncVoid(line, findings);
             CheckBlockingAsyncCall(line, findings);
             CheckLockThis(line, findings);
@@ -52,8 +54,7 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
     private void CheckBlockingAsyncCall(DiffLine line, List<Finding> findings)
     {
         var content = line.Content;
-        bool hasResult = content.Contains(".Result", StringComparison.Ordinal) &&
-                         !content.Contains("// .Result", StringComparison.Ordinal);
+        bool hasResult = content.Contains(".Result", StringComparison.Ordinal);
         bool hasWait = content.Contains(".Wait()", StringComparison.Ordinal) ||
                        content.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal);
 

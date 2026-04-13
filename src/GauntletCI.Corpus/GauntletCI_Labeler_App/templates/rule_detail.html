@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% block content %}
+<section class="panel">
+  <div class="panel-header"><h1>{{ rubric.rule_id }}</h1><a class="button secondary" href="{{ url_for('queue', rule_id=rubric.rule_id) }}">View queue for this rule</a></div>
+  {% if metrics %}
+  <div class="pill-row">
+    <span class="pill">Trigger rate {{ metrics.trigger_rate|pct }}</span>
+    <span class="pill">Fired {{ metrics.total_fired }}</span>
+    <span class="pill">Labeled {{ metrics.total_labels }}</span>
+  </div>
+  {% endif %}
+  {% if evaluation %}
+  <div class="pill-row">
+    <span class="pill">TP {{ evaluation.tp }}</span>
+    <span class="pill">FP {{ evaluation.fp }}</span>
+    <span class="pill">FN {{ evaluation.fn }}</span>
+    <span class="pill">Inconclusive {{ evaluation.inconclusive }}</span>
+    <span class="pill">Usefulness {{ evaluation.avg_usefulness if evaluation.avg_usefulness is not none else '-' }}</span>
+  </div>
+  {% endif %}
+  <form method="post" class="rubric-form">
+    <label>Intent<textarea name="intent" rows="4">{{ rubric.intent }}</textarea></label>
+    <label>Trigger conditions<textarea name="trigger_conditions" rows="5">{{ rubric.trigger_conditions }}</textarea></label>
+    <label>Non-trigger conditions<textarea name="non_trigger_conditions" rows="5">{{ rubric.non_trigger_conditions }}</textarea></label>
+    <label>Inconclusive conditions<textarea name="inconclusive_conditions" rows="4">{{ rubric.inconclusive_conditions }}</textarea></label>
+    <label>Examples<textarea name="examples" rows="8">{{ rubric.examples }}</textarea></label>
+    <button class="button" type="submit">Save rubric</button>
+  </form>
+</section>
+{% endblock %}
