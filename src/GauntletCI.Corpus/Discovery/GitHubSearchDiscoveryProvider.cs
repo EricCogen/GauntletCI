@@ -31,64 +31,104 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         var seen    = new HashSet<(string Owner, string Repo, int Number)>();
         var results = new List<PullRequestCandidate>();
 
-        var languages = query.Languages.Count > 0
-            ? (IEnumerable<string>)query.Languages
-            : new[] { "" };
-
-        foreach (var lang in languages)
+        if (query.RepoAllowList.Count > 0)
         {
-            if (results.Count >= query.MaxCandidates)
-                break;
-
-            var q   = BuildQuery(query, lang);
-            var url = $"https://api.github.com/search/issues?q={Uri.EscapeDataString(q)}&sort=updated&order=desc&per_page=100&page=1";
-
-            using var response = await _http.GetAsync(url, cancellationToken);
-
-            if (response.Headers.TryGetValues("X-RateLimit-Remaining", out var remaining) &&
-                int.TryParse(remaining.FirstOrDefault(), out var remainingCount) &&
-                remainingCount <= 0)
-            {
-                Console.Error.WriteLine("[gh-search] GitHub rate limit reached; returning partial results.");
-                break;
-            }
-
-            response.EnsureSuccessStatusCode();
-
-            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
-
-            if (!doc.RootElement.TryGetProperty("items", out var items))
-                continue;
-
-            foreach (var item in items.EnumerateArray())
+            // Allowlist mode: one targeted repo: query per known repo
+            foreach (var repoSpec in query.RepoAllowList)
             {
                 if (results.Count >= query.MaxCandidates)
                     break;
 
-                var candidate = MapToCandidate(item, lang);
-                if (candidate is null)
-                    continue;
+                var q   = BuildRepoQuery(query, repoSpec);
+                var url = $"https://api.github.com/search/issues?q={Uri.EscapeDataString(q)}&sort=updated&order=desc&per_page=100&page=1";
 
-                var key = (candidate.RepoOwner, candidate.RepoName, candidate.PullRequestNumber);
-                if (!seen.Add(key))
-                    continue;
+                await FetchPageAsync(url, query, seen, results, cancellationToken);
+            }
+        }
+        else
+        {
+            // Global search mode: iterate over languages with broad filters
+            var languages = query.Languages.Count > 0
+                ? (IEnumerable<string>)query.Languages
+                : new[] { "" };
 
-                var fullRepo = $"{candidate.RepoOwner}/{candidate.RepoName}";
+            foreach (var lang in languages)
+            {
+                if (results.Count >= query.MaxCandidates)
+                    break;
 
-                if (query.RepoBlockList.Count > 0 &&
-                    query.RepoBlockList.Any(r => string.Equals(r, fullRepo, StringComparison.OrdinalIgnoreCase)))
-                    continue;
+                var q   = BuildQuery(query, lang);
+                var url = $"https://api.github.com/search/issues?q={Uri.EscapeDataString(q)}&sort=updated&order=desc&per_page=100&page=1";
 
-                if (query.RepoAllowList.Count > 0 &&
-                    !query.RepoAllowList.Any(r => string.Equals(r, fullRepo, StringComparison.OrdinalIgnoreCase)))
-                    continue;
-
-                results.Add(candidate);
+                await FetchPageAsync(url, query, seen, results, cancellationToken);
             }
         }
 
         return results;
+    }
+
+    private async Task FetchPageAsync(
+        string url,
+        DiscoveryQuery query,
+        HashSet<(string, string, int)> seen,
+        List<PullRequestCandidate> results,
+        CancellationToken cancellationToken)
+    {
+        using var response = await _http.GetAsync(url, cancellationToken);
+
+        if (response.Headers.TryGetValues("X-RateLimit-Remaining", out var remaining) &&
+            int.TryParse(remaining.FirstOrDefault(), out var remainingCount) &&
+            remainingCount <= 0)
+        {
+            Console.Error.WriteLine("[gh-search] GitHub rate limit reached; returning partial results.");
+            return;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+
+        if (!doc.RootElement.TryGetProperty("items", out var items))
+            return;
+
+        foreach (var item in items.EnumerateArray())
+        {
+            if (results.Count >= query.MaxCandidates)
+                break;
+
+            var candidate = MapToCandidate(item, "");
+            if (candidate is null)
+                continue;
+
+            var key = (candidate.RepoOwner, candidate.RepoName, candidate.PullRequestNumber);
+            if (!seen.Add(key))
+                continue;
+
+            var fullRepo = $"{candidate.RepoOwner}/{candidate.RepoName}";
+
+            if (query.RepoBlockList.Count > 0 &&
+                query.RepoBlockList.Any(r => string.Equals(r, fullRepo, StringComparison.OrdinalIgnoreCase)))
+                continue;
+
+            results.Add(candidate);
+        }
+    }
+
+    private static string BuildRepoQuery(DiscoveryQuery query, string repoSpec)
+    {
+        var parts = new List<string> { "is:pr", "is:merged", $"repo:{repoSpec}" };
+
+        if (query.MinReviewComments > 0)
+            parts.Add($"review_comments:>{query.MinReviewComments}");
+
+        if (query.StartDateUtc.HasValue)
+            parts.Add($"merged:>={query.StartDateUtc.Value:yyyy-MM-dd}");
+
+        if (query.EndDateUtc.HasValue)
+            parts.Add($"merged:<={query.EndDateUtc.Value:yyyy-MM-dd}");
+
+        return string.Join(" ", parts);
     }
 
     private static string BuildQuery(DiscoveryQuery query, string lang)

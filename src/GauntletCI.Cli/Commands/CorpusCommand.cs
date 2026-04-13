@@ -287,6 +287,11 @@ public static class CorpusCommand
             Arity = ArgumentArity.ZeroOrMore,
             AllowMultipleArgumentsPerToken = true,
         };
+        var repoAllowlistOpt = new Option<string[]>("--repo-allowlist", "Only discover from these repos in owner/repo format (repeatable). When set, searches are targeted per-repo instead of global.")
+        {
+            Arity = ArgumentArity.ZeroOrMore,
+            AllowMultipleArgumentsPerToken = true,
+        };
         var dbOpt          = new Option<string>("--db",           () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var fixturesOpt    = new Option<string>("--fixtures",     () => "./data/fixtures",             "Path to fixtures root directory");
 
@@ -299,6 +304,7 @@ public static class CorpusCommand
         cmd.AddOption(startDateOpt);
         cmd.AddOption(endDateOpt);
         cmd.AddOption(repoBlocklistOpt);
+        cmd.AddOption(repoAllowlistOpt);
         cmd.AddOption(dbOpt);
         cmd.AddOption(fixturesOpt);
 
@@ -312,6 +318,7 @@ public static class CorpusCommand
             var startDate    = ctx.ParseResult.GetValueForOption(startDateOpt);
             var endDate      = ctx.ParseResult.GetValueForOption(endDateOpt);
             var repoBlocklist = ctx.ParseResult.GetValueForOption(repoBlocklistOpt) ?? [];
+            var repoAllowlist = ctx.ParseResult.GetValueForOption(repoAllowlistOpt) ?? [];
             var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var ct           = ctx.GetCancellationToken();
 
@@ -352,6 +359,7 @@ public static class CorpusCommand
                 EndDateUtc         = endDate,
                 MaxCandidates      = limit,
                 RepoBlockList      = repoBlocklist,
+                RepoAllowList      = repoAllowlist,
             };
 
             Console.WriteLine($"[corpus] Discovering candidates via {provider.GetProviderName()} (limit={limit}) …");
