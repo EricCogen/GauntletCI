@@ -61,8 +61,14 @@ public class RuleOrchestrator
             .Select(f => _fileAnalyzer.Analyze(f))
             .ToList();
 
-        var eligibleRecords = allRecords.Where(r => r.IsEligible).ToList();
-        var skippedRecords  = allRecords.Where(r => !r.IsEligible).ToList();
+        var eligibleRecords = allRecords
+            .Where(r => r.IsEligible &&
+                        r.Extension.Equals(".cs", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        var skippedRecords  = allRecords
+            .Where(r => !r.IsEligible ||
+                        !r.Extension.Equals(".cs", StringComparison.OrdinalIgnoreCase))
+            .ToList();
         var fileStatistics  = FileEligibilityStatistics.From(allRecords);
 
         var eligibleFilePaths = eligibleRecords.Select(r => r.FilePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
