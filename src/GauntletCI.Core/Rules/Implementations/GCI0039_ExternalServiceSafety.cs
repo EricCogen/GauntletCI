@@ -46,7 +46,7 @@ public class GCI0039_ExternalServiceSafety : RuleBase
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            if (content.Contains("//")) continue;
+            if (content.TrimStart().StartsWith("//")) continue;
             if (!content.Contains("new HttpClient(")) continue;
 
             findings.Add(CreateFinding(
@@ -87,7 +87,7 @@ public class GCI0039_ExternalServiceSafety : RuleBase
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            if (content.Contains("//")) continue;
+            if (content.TrimStart().StartsWith("//")) continue;
 
             bool hasHttpCall = HttpCallMethods.Any(m => content.Contains(m));
             if (!hasHttpCall) continue;
