@@ -12,7 +12,8 @@ public sealed class ChangedFileAnalyzer : IChangedFileAnalyzer
     private static readonly HashSet<string> AllowedExtensions =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            ".cs"
+            ".cs",
+            ".csproj"
         };
 
     public ChangedFileAnalysisRecord Analyze(DiffFile file)
