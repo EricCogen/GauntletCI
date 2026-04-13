@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.CommandLine;
 using GauntletCI.Core.Configuration;
+using Spectre.Console;
 
 namespace GauntletCI.Cli.Commands;
 
@@ -33,7 +34,7 @@ public static class IgnoreCommand
             IgnoreList.Append(repo.FullName, normalizedId, path);
 
             var entry = path is not null ? $"{normalizedId}:{path}" : normalizedId;
-            Console.WriteLine($"[GauntletCI] Added '{entry}' to .gauntletci-ignore");
+            AnsiConsole.MarkupLine($"[green][[GauntletCI]] Added '{Markup.Escape(entry)}' to .gauntletci-ignore[/]");
             return Task.CompletedTask;
         }, ruleIdArg, pathOption, repoOption);
 
