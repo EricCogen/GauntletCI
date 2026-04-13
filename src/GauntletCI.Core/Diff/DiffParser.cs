@@ -228,8 +228,47 @@ public static class DiffParser
         };
 
         process.Start();
-        var output = await process.StandardOutput.ReadToEndAsync(ct);
-        await process.WaitForExitAsync(ct);
+
+        // Kill the process (and its tree) if the token is canceled.
+        using var cancellationRegistration = ct.Register(() =>
+        {
+            try
+            {
+                if (!process.HasExited)
+                    process.Kill(entireProcessTree: true);
+            }
+            catch (InvalidOperationException) { /* already exited */ }
+            catch (NotSupportedException)
+            {
+                // entireProcessTree not supported on all platforms — fall back to single-process kill.
+                try { if (!process.HasExited) process.Kill(); }
+                catch (InvalidOperationException) { /* already exited */ }
+            }
+        });
+
+        // Read stdout and stderr concurrently to prevent deadlocks on large output.
+        var stdoutTask = process.StandardOutput.ReadToEndAsync(ct);
+        var stderrTask = process.StandardError.ReadToEndAsync(ct);
+        string output = string.Empty;
+        string stderr = string.Empty;
+
+        try
+        {
+            await process.WaitForExitAsync(ct);
+        }
+        finally
+        {
+            // Drain streams even on cancellation to release handles.
+            try { output = await stdoutTask; }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
+
+            try { stderr = await stderrTask; }
+            catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
+        }
+
+        if (process.ExitCode != 0)
+            throw new GitProcessException($"{executable} {arguments}", process.ExitCode, stderr);
+
         return output;
     }
 }

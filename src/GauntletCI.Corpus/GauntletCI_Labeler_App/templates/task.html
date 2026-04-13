@@ -1,0 +1,214 @@
+{% extends 'layout.html' %}
+{% block content %}
+<section class="panel hero-panel">
+  <div class="panel-header">
+    <div>
+      <h1>{{ task.rule_id }} on {{ fixture.repo }} #{{ fixture.pr_number }}</h1>
+      <div class="muted">Queue #{{ task.id }} · {{ task.queue_bucket }} · {{ task.status }}</div>
+    </div>
+    <div class="pill-row">
+      <span class="pill">{{ fixture.tier }}</span>
+      <span class="pill">{{ fixture.pr_size_bucket }}</span>
+      <span class="pill">Tests changed: {{ fixture.has_tests_changed|yesno }}</span>
+      <span class="pill">Review comments: {{ fixture.has_review_comments|yesno }}</span>
+      <span class="pill">Grouped findings: {{ grouped.count }}</span>
+    </div>
+  </div>
+</section>
+
+<div class="two-col">
+  <section class="panel sticky-form">
+    <h2>Label</h2>
+    <form method="post" action="{{ url_for('submit_label', queue_id=task.id) }}" id="label-form">
+      <input type="hidden" name="fixture_id" value="{{ fixture.fixture_id }}">
+      <input type="hidden" name="rule_id" value="{{ task.rule_id }}">
+
+      <div class="decision-grid">
+        <label class="decision-card"><input type="radio" name="decision" value="yes" {% if label_state.label and label_state.label.should_trigger == 1 and label_state.label.is_inconclusive == 0 %}checked{% endif %}> <span>Yes</span><small>Rule should trigger</small></label>
+        <label class="decision-card"><input type="radio" name="decision" value="no" {% if label_state.label and label_state.label.should_trigger == 0 and label_state.label.is_inconclusive == 0 %}checked{% endif %}> <span>No</span><small>Rule should not trigger</small></label>
+        <label class="decision-card"><input type="radio" name="decision" value="inconclusive" {% if label_state.label and label_state.label.is_inconclusive == 1 %}checked{% endif %}> <span>Inconclusive</span><small>Diff is not enough to decide</small></label>
+      </div>
+
+      <label>Confidence
+        <select name="confidence">
+          {% set current_conf = label_state.label.expected_confidence if label_state.label else 0.75 %}
+          {% for value in [1.0, 0.75, 0.5, 0.25] %}
+            <option value="{{ value }}" {% if current_conf == value %}selected{% endif %}>{{ value }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>Usefulness
+        <select name="usefulness">
+          {% set current_usefulness = label_state.evaluation.usefulness if label_state.evaluation else '' %}
+          <option value="">Skip usefulness for now</option>
+          {% for value in range(0, 6) %}
+            <option value="{{ value }}" {% if current_usefulness != '' and current_usefulness|int == value %}selected{% endif %}>{{ value }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>Apply scope
+        <select name="apply_scope">
+          <option value="current" selected>Only this task item</option>
+          <option value="fixture_pending">This task item and all pending items for this fixture</option>
+        </select>
+      </label>
+
+      <label>Reason
+        <textarea name="reason" rows="4" placeholder="Why did you choose this truth label?">{{ label_state.label.reason if label_state.label else '' }}</textarea>
+      </label>
+
+      <label>Reviewer notes
+        <textarea name="reviewer_notes" rows="4" placeholder="Anything useful for later?">{{ label_state.evaluation.reviewer_notes if label_state.evaluation else '' }}</textarea>
+      </label>
+
+      <div class="action-row">
+        <button class="button" type="submit">Save and continue</button>
+      </div>
+    </form>
+
+    <form method="post" action="{{ url_for('skip_task', queue_id=task.id) }}">
+      <input type="hidden" name="notes" value="Skipped from task screen">
+      <button class="button secondary" type="submit">Skip</button>
+    </form>
+  </section>
+
+  <section class="content-stack">
+    <section class="panel">
+      <h2>Rule summary</h2>
+      {% if rubric %}
+      <div class="rubric-grid">
+        <div><h3>Intent</h3><p>{{ rubric.intent or 'Not defined yet.' }}</p></div>
+        <div><h3>Trigger conditions</h3><p>{{ rubric.trigger_conditions or 'Not defined yet.' }}</p></div>
+        <div><h3>Non-trigger conditions</h3><p>{{ rubric.non_trigger_conditions or 'Not defined yet.' }}</p></div>
+        <div><h3>Inconclusive conditions</h3><p>{{ rubric.inconclusive_conditions or 'Not defined yet.' }}</p></div>
+      </div>
+      {% else %}
+      <p class="muted">No rubric yet. Add one from the Rules page.</p>
+      {% endif %}
+    </section>
+
+    <section class="panel">
+      <div class="section-header">
+        <h2>Grouped findings</h2>
+      </div>
+      <div class="summary-grid">
+        <div><span class="metric-label">Count</span><span class="metric-value">{{ grouped.count }}</span></div>
+        <div><span class="metric-label">Max confidence</span><span class="metric-value">{{ '%.2f'|format(grouped.max_confidence) }}</span></div>
+      </div>
+      {% for item in grouped.finding_rows %}
+      <details class="finding-card" {% if loop.first %}open{% endif %}>
+        <summary>
+          <span>{{ item.message or 'No message' }}</span>
+          <span class="muted">conf {{ '%.2f'|format(item.confidence) }}</span>
+        </summary>
+        {% if item.change_implication %}
+        <p><strong>Implication:</strong> {{ item.change_implication }}</p>
+        {% endif %}
+        <div class="copy-row">
+          <button type="button" class="copy-button" data-copy-target="finding-{{ loop.index }}">Copy finding</button>
+        </div>
+        <pre id="finding-{{ loop.index }}">{% if item.message %}Message: {{ item.message }}
+{% endif %}{% if item.change_implication %}Implication: {{ item.change_implication }}
+{% endif %}Evidence:
+{{ item.evidence }}</pre>
+      </details>
+      {% endfor %}
+    </section>
+
+    <section class="panel">
+      <div class="section-header">
+        <h2>PR and fixture context</h2>
+        {% if artifacts.pr_json %}
+        <button type="button" class="copy-button" data-copy-target="pr-json">Copy</button>
+        {% endif %}
+      </div>
+      {% if artifacts.pr_json %}
+      <pre id="pr-json">{{ artifacts.pr_json | tojson(indent=2) }}</pre>
+      {% else %}
+      <p class="muted">No raw pr.json found.</p>
+      {% endif %}
+      {% if artifacts.notes %}
+      <div class="section-header section-header-sub">
+        <h3>Fixture notes</h3>
+        <button type="button" class="copy-button" data-copy-target="fixture-notes">Copy</button>
+      </div>
+      <pre id="fixture-notes">{{ artifacts.notes }}</pre>
+      {% endif %}
+    </section>
+
+    <section class="panel">
+      <div class="section-header">
+        <h2>Changed files</h2>
+        {% if changed_files %}
+        <button type="button" class="copy-button" data-copy-target="changed-files-copy">Copy</button>
+        {% endif %}
+      </div>
+      {% if changed_files %}
+      <pre id="changed-files-copy" class="hidden-copy-source">{% for item in changed_files %}{{ item.filename or item.path or '-' }} | {{ item.status or '-' }} | +{{ item.additions or '-' }} | -{{ item.deletions or '-' }} | Δ{{ item.changes or '-' }}
+{% endfor %}</pre>
+      <table class="data-table compact">
+        <thead><tr><th>Filename</th><th>Status</th><th>Additions</th><th>Deletions</th><th>Changes</th></tr></thead>
+        <tbody>
+        {% for item in changed_files %}
+          <tr>
+            <td>{{ item.filename or item.path or '-' }}</td>
+            <td>{{ item.status or '-' }}</td>
+            <td>{{ item.additions or '-' }}</td>
+            <td>{{ item.deletions or '-' }}</td>
+            <td>{{ item.changes or '-' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <p class="muted">No files.json found.</p>
+      {% endif %}
+    </section>
+
+    <section class="panel">
+      <div class="section-header">
+        <h2>Diff preview</h2>
+        {% if diff_preview %}
+        <button type="button" class="copy-button" data-copy-target="diff-preview">Copy</button>
+        {% endif %}
+      </div>
+      <pre id="diff-preview" class="diff">{{ diff_preview if diff_preview else 'No diff.patch found.' }}</pre>
+    </section>
+
+    <section class="panel">
+      <div class="section-header">
+        <h2>Review comments</h2>
+        {% if review_comments and review_comments|length > 0 %}
+        <button type="button" class="copy-button" data-copy-target="review-comments">Copy</button>
+        {% endif %}
+      </div>
+      {% if review_comments and review_comments|length > 0 %}
+        <pre id="review-comments">{{ review_comments | tojson(indent=2) }}</pre>
+      {% else %}
+        <p class="muted">No review comments artifact found.</p>
+      {% endif %}
+    </section>
+  </section>
+</div>
+
+<script>
+  document.querySelectorAll('.copy-button').forEach(function (button) {
+    button.addEventListener('click', async function () {
+      const targetId = button.getAttribute('data-copy-target');
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      const text = target.innerText || target.textContent || '';
+      try {
+        await navigator.clipboard.writeText(text);
+        const original = button.textContent;
+        button.textContent = 'Copied';
+        setTimeout(function () { button.textContent = original; }, 1200);
+      } catch (error) {
+        console.error('Clipboard copy failed', error);
+      }
+    });
+  });
+</script>
+{% endblock %}
