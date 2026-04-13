@@ -34,10 +34,154 @@ CREATE TABLE IF NOT EXISTS rule_rubrics (
 );
 """
 
+AUDIT_SNAPSHOTS_DDL = """
+CREATE TABLE IF NOT EXISTS audit_snapshots (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    snapped_at_utc TEXT NOT NULL DEFAULT (datetime('now')),
+    rules_snapped INTEGER NOT NULL DEFAULT 0,
+    notes TEXT
+);
+CREATE TABLE IF NOT EXISTS audit_snapshot_rows (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    snapshot_id INTEGER NOT NULL REFERENCES audit_snapshots(id),
+    rule_id TEXT NOT NULL,
+    labeled INTEGER DEFAULT 0,
+    tp INTEGER DEFAULT 0,
+    fp INTEGER DEFAULT 0,
+    fn INTEGER DEFAULT 0,
+    precision_score REAL,
+    recall_score REAL,
+    usefulness_score REAL
+);
+"""
+
 
 def init_app_tables(conn: sqlite3.Connection) -> None:
     conn.executescript(APP_SCHEMA)
+    _ensure_snapshot_tables(conn)
     conn.commit()
+
+
+def _ensure_snapshot_tables(conn: sqlite3.Connection) -> None:
+    conn.executescript(AUDIT_SNAPSHOTS_DDL)
+    conn.commit()
+
+
+def _table_exists(conn: sqlite3.Connection, name: str) -> bool:
+    return (
+        conn.execute(
+            "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?", (name,)
+        ).fetchone()[0]
+        > 0
+    )
+
+
+def _labels_since_last_snapshot(conn: sqlite3.Connection) -> int:
+    if not _table_exists(conn, "audit_snapshots"):
+        return 0
+    last = conn.execute("SELECT MAX(snapped_at_utc) FROM audit_snapshots").fetchone()[0]
+    if not last:
+        return conn.execute("SELECT COUNT(*) FROM expected_findings").fetchone()[0]
+    return conn.execute(
+        "SELECT COUNT(*) FROM label_queue WHERE status='labeled' AND completed_at_utc > ?",
+        (last,),
+    ).fetchone()[0]
+
+
+def _snapshot_aggregates(conn: sqlite3.Connection) -> None:
+    _ensure_snapshot_tables(conn)
+    rows = conn.execute(
+        """
+        WITH fired AS (
+            SELECT fixture_id, rule_id, MAX(did_trigger) AS fired FROM actual_findings GROUP BY fixture_id, rule_id
+        )
+        SELECT ef.rule_id, COUNT(*) AS labeled,
+               SUM(CASE WHEN f.fired=1 AND ef.should_trigger=1 AND ef.is_inconclusive=0 THEN 1 ELSE 0 END) AS tp,
+               SUM(CASE WHEN f.fired=1 AND ef.should_trigger=0 AND ef.is_inconclusive=0 THEN 1 ELSE 0 END) AS fp,
+               SUM(CASE WHEN f.fired=0 AND ef.should_trigger=1 AND ef.is_inconclusive=0 THEN 1 ELSE 0 END) AS fn,
+               CASE WHEN SUM(CASE WHEN f.fired=1 AND ef.is_inconclusive=0 THEN 1 ELSE 0 END)>0
+                    THEN CAST(SUM(CASE WHEN f.fired=1 AND ef.should_trigger=1 AND ef.is_inconclusive=0 THEN 1 ELSE 0 END) AS REAL)/
+                         SUM(CASE WHEN f.fired=1 AND ef.is_inconclusive=0 THEN 1 ELSE 0 END) ELSE NULL END AS precision_score,
+               AVG(ev.usefulness) AS usefulness_score
+        FROM expected_findings ef
+        LEFT JOIN fired f ON f.fixture_id=ef.fixture_id AND f.rule_id=ef.rule_id
+        LEFT JOIN evaluations ev ON ev.fixture_id=ef.fixture_id AND ev.rule_id=ef.rule_id
+        GROUP BY ef.rule_id
+        """
+    ).fetchall()
+    snap_id = conn.execute(
+        "INSERT INTO audit_snapshots (rules_snapped) VALUES (?)", (len(rows),)
+    ).lastrowid
+    for row in rows:
+        conn.execute(
+            "INSERT INTO audit_snapshot_rows (snapshot_id, rule_id, labeled, tp, fp, fn, precision_score, usefulness_score) VALUES (?,?,?,?,?,?,?,?)",
+            (
+                snap_id,
+                row["rule_id"],
+                row["labeled"],
+                row["tp"],
+                row["fp"],
+                row["fn"],
+                row["precision_score"],
+                row["usefulness_score"],
+            ),
+        )
+    conn.commit()
+
+
+def refresh_aggregates(conn) -> int:
+    """Recompute aggregates table from actual_findings + expected_findings. Returns rule count updated."""
+    rows = conn.execute(
+        """
+        WITH labeled AS (
+            SELECT ef.rule_id,
+                   COUNT(*) AS total,
+                   AVG(ef.should_trigger) AS trigger_rate
+            FROM expected_findings ef GROUP BY ef.rule_id
+        ),
+        scored AS (
+            SELECT ef.rule_id,
+                   CAST(SUM(CASE WHEN af_fired.fired=1 AND ef.should_trigger=1 AND ef.is_inconclusive=0 THEN 1 ELSE 0 END) AS REAL) AS tp,
+                   CAST(SUM(CASE WHEN af_fired.fired=1 AND ef.should_trigger=0 AND ef.is_inconclusive=0 THEN 1 ELSE 0 END) AS REAL) AS fp,
+                   CAST(SUM(CASE WHEN af_fired.fired=0 AND ef.should_trigger=1 AND ef.is_inconclusive=0 THEN 1 ELSE 0 END) AS REAL) AS fn,
+                   AVG(ev.usefulness) AS avg_usefulness
+            FROM expected_findings ef
+            LEFT JOIN (
+                SELECT fixture_id, rule_id, MAX(did_trigger) AS fired
+                FROM actual_findings GROUP BY fixture_id, rule_id
+            ) af_fired ON af_fired.fixture_id=ef.fixture_id AND af_fired.rule_id=ef.rule_id
+            LEFT JOIN evaluations ev ON ev.fixture_id=ef.fixture_id AND ev.rule_id=ef.rule_id
+            GROUP BY ef.rule_id
+        )
+        SELECT l.rule_id, l.trigger_rate,
+               CASE WHEN s.tp+s.fp>0 THEN s.tp/(s.tp+s.fp) ELSE NULL END AS precision_score,
+               CASE WHEN s.tp+s.fn>0 THEN s.tp/(s.tp+s.fn) ELSE NULL END AS recall_score,
+               COALESCE(s.avg_usefulness, 0.0) AS usefulness_score
+        FROM labeled l LEFT JOIN scored s ON s.rule_id=l.rule_id
+        """
+    ).fetchall()
+    for row in rows:
+        conn.execute(
+            """
+            INSERT INTO aggregates (rule_id, tier, trigger_rate, precision_score, recall_score, usefulness_score, last_updated_utc)
+            VALUES (?, 'all', ?, ?, ?, ?, datetime('now'))
+            ON CONFLICT(rule_id, tier) DO UPDATE SET
+                trigger_rate=excluded.trigger_rate,
+                precision_score=excluded.precision_score,
+                recall_score=excluded.recall_score,
+                usefulness_score=excluded.usefulness_score,
+                last_updated_utc=excluded.last_updated_utc
+            """,
+            (
+                row["rule_id"],
+                row["trigger_rate"],
+                row["precision_score"],
+                row["recall_score"],
+                row["usefulness_score"],
+            ),
+        )
+    conn.commit()
+    return len(rows)
 
 
 def upsert_label(

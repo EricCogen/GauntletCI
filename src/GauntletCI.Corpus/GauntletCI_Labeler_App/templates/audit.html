@@ -1,0 +1,102 @@
+{% extends 'layout.html' %}
+{% block content %}
+<section class="panel hero-panel">
+  <div class="panel-header">
+    <div>
+      <h1>Audit</h1>
+      <div class="muted">Rule-level verdicts from labeled truth data</div>
+    </div>
+    <div>
+      <form method="post" action="{{ url_for('refresh_metrics') }}" style="display:inline">
+        <button class="button" type="submit">Refresh metrics</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+{% set keep_count = rows | selectattr('verdict', 'equalto', 'keep') | list | length %}
+{% set rewrite_count = rows | selectattr('verdict', 'equalto', 'rewrite') | list | length %}
+{% set kill_count = rows | selectattr('verdict', 'equalto', 'kill_or_demote') | list | length %}
+{% set insufficient_count = rows | selectattr('verdict', 'equalto', 'insufficient_data') | list | length %}
+
+<section class="panel">
+  <div class="pill-row">
+    <span class="pill">{{ rows|length }} rules audited</span>
+    <span class="pill" style="background:#dcfce7;color:#166534">keep {{ keep_count }}</span>
+    <span class="pill" style="background:#fef9c3;color:#854d0e">rewrite {{ rewrite_count }}</span>
+    <span class="pill" style="background:#fee2e2;color:#991b1b">kill {{ kill_count }}</span>
+    <span class="pill" style="background:#f3f4f6;color:#374151">insufficient {{ insufficient_count }}</span>
+  </div>
+
+  {% if labels_since >= 25 %}
+    <div class="panel" style="margin-top:0.75rem;border-left:4px solid #6366f1">
+      <p style="margin:0"><strong>Heads up:</strong> You've labeled {{ labels_since }} items since the last snapshot. Run <em>Refresh metrics</em> to update the audit view.</p>
+    </div>
+  {% endif %}
+</section>
+
+<section class="panel">
+  <h2>Verdicts</h2>
+  <table class="data-table compact">
+    <thead>
+      <tr>
+        <th>Rule</th>
+        <th>Labels</th>
+        <th>TP</th>
+        <th>FP</th>
+        <th>FN</th>
+        <th>Precision</th>
+        <th>Recall</th>
+        <th>Usefulness</th>
+        <th>Verdict</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+        {% set v = row.verdict %}
+        {% if v == 'keep' %}
+          {% set bg = '#dcfce7' %}{% set fg = '#166534' %}
+        {% elif v == 'rewrite' %}
+          {% set bg = '#fef9c3' %}{% set fg = '#854d0e' %}
+        {% elif v == 'kill_or_demote' %}
+          {% set bg = '#fee2e2' %}{% set fg = '#991b1b' %}
+        {% else %}
+          {% set bg = '#f3f4f6' %}{% set fg = '#374151' %}
+        {% endif %}
+        <tr>
+          <td><a href="{{ url_for('rule_detail', rule_id=row.rule_id) }}">{{ row.rule_id }}</a></td>
+          <td>{{ row.labeled }}</td>
+          <td>{{ row.tp }}</td>
+          <td>{{ row.fp }}</td>
+          <td>{{ row.fn }}</td>
+          <td>{{ row.precision_score|pct if row.precision_score is not none else '-' }}</td>
+          <td>{{ row.recall_score|pct if row.recall_score is not none else '-' }}</td>
+          <td>{{ '%.2f'|format(row.avg_usefulness or 0) }}</td>
+          <td><span class="pill" style="background:{{ bg }};color:{{ fg }}">{{ row.verdict }}</span></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<section class="panel">
+  <h2>Snapshot history</h2>
+  {% if snapshots and snapshots|length > 0 %}
+    <table class="data-table compact">
+      <thead>
+        <tr><th>Snapped at (UTC)</th><th>Rules snapped</th></tr>
+      </thead>
+      <tbody>
+        {% for s in snapshots %}
+          <tr>
+            <td>{{ s.snapped_at_utc }}</td>
+            <td>{{ s.rules_snapped }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p class="muted">No snapshots yet. Use Refresh metrics to create one.</p>
+  {% endif %}
+</section>
+{% endblock %}

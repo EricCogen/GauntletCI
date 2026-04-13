@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import math
 from pathlib import Path
 from typing import Any
@@ -8,24 +9,40 @@ from flask import Flask, abort, flash, redirect, render_template, request, url_f
 
 from config_loader import load_config
 from db import connect
-from services.fixture_service import load_fixture_artifacts
+from services.fixture_service import extract_diff_snippet, load_fixture_artifacts
 from services.query_service import (
+    audit_report_rows,
     current_label,
     dashboard_stats,
     evaluation_rows,
+    find_exact_duplicates,
     fixture_by_id,
     grouped_findings_for_task,
     queue_rows,
     rubric_for_rule,
     top_rule_metrics,
 )
-from store import bulk_apply_label_to_fixture, init_app_tables, save_rubric, update_queue_status, upsert_label
+from services.rules_doc_parser import load_rule_definitions
+from store import (
+    _labels_since_last_snapshot,
+    _snapshot_aggregates,
+    _table_exists,
+    init_app_tables,
+    refresh_aggregates,
+    save_rubric,
+    update_queue_status,
+    upsert_label,
+)
 
 BASE_DIR = Path(__file__).resolve().parent
 CONFIG = load_config(BASE_DIR)
 
 app = Flask(__name__)
 app.secret_key = CONFIG["secret_key"]
+
+# Resolve relative to repo root (two levels up from app.py)
+_RULES_MD = Path(__file__).resolve().parent.parent.parent.parent / "docs" / "rules.md"
+RULE_DEFINITIONS = load_rule_definitions(str(_RULES_MD))
 
 
 def get_conn():
@@ -56,6 +73,47 @@ def dashboard():
     return render_template("dashboard.html", stats=stats, rules=rules[:12], evaluations=evaluations[:12])
 
 
+@app.post("/refresh-metrics")
+def refresh_metrics():
+    with get_conn() as conn:
+        n = refresh_aggregates(conn)
+        _snapshot_aggregates(conn)
+    flash(f"Metrics refreshed for {n} rule(s).", "success")
+    return redirect(url_for("audit"))
+
+
+@app.get("/audit")
+def audit():
+    with get_conn() as conn:
+        rows = audit_report_rows(conn)
+        snapshots = (
+            conn.execute("SELECT * FROM audit_snapshots ORDER BY snapped_at_utc DESC LIMIT 10").fetchall()
+            if _table_exists(conn, "audit_snapshots")
+            else []
+        )
+        labels_since = _labels_since_last_snapshot(conn)
+
+    enriched = []
+    for row in rows:
+        p = row["precision_score"]
+        r = row["recall_score"]
+        u = row["avg_usefulness"] or 0
+        labeled = row["labeled"]
+        if labeled < 5:
+            verdict = "insufficient_data"
+        elif p is not None and p >= 0.75 and u >= 3.0:
+            verdict = "keep"
+        elif p is not None and p < 0.4:
+            verdict = "kill_or_demote"
+        elif p is not None:
+            verdict = "rewrite"
+        else:
+            verdict = "insufficient_data"
+        enriched.append({**dict(row), "precision_score": p, "recall_score": r, "verdict": verdict})
+
+    return render_template("audit.html", rows=enriched, snapshots=snapshots, labels_since=labels_since)
+
+
 @app.route("/queue")
 def queue():
     status = request.args.get("status", "pending")
@@ -66,7 +124,16 @@ def queue():
         rows = queue_rows(conn, status=status, rule_id=rule_id, bucket=bucket, language=language)
         rules = [r[0] for r in conn.execute("SELECT DISTINCT rule_id FROM actual_findings ORDER BY rule_id").fetchall()]
         buckets = [r[0] for r in conn.execute("SELECT DISTINCT queue_bucket FROM label_queue ORDER BY queue_bucket").fetchall()]
-    return render_template("queue.html", rows=rows, status=status, rule_id=rule_id, bucket=bucket, language=language, rules=rules, buckets=buckets)
+    return render_template(
+        "queue.html",
+        rows=rows,
+        status=status,
+        rule_id=rule_id,
+        bucket=bucket,
+        language=language,
+        rules=rules,
+        buckets=buckets,
+    )
 
 
 @app.route("/task/<int:queue_id>")
@@ -100,21 +167,43 @@ def task(queue_id: int):
         fixture = fixture_by_id(conn, task_row["fixture_id"])
         if not fixture:
             abort(404)
+
         grouped = grouped_findings_for_task(conn, task_row["fixture_id"], task_row["rule_id"])
         rubric = rubric_for_rule(conn, task_row["rule_id"])
         label_state = current_label(conn, task_row["fixture_id"], task_row["rule_id"], CONFIG["reviewer_name"])
+
+        top_message = grouped["messages"][0] if grouped["messages"] else ""
+        top_evidence = ""
+        if grouped["finding_rows"]:
+            ev = grouped["finding_rows"][0].get("evidence")
+            if isinstance(ev, (dict, list)):
+                top_evidence = json.dumps(ev, ensure_ascii=False)
+            else:
+                top_evidence = str(ev or "")
+
+        duplicates = find_exact_duplicates(conn, queue_id, task_row["rule_id"], top_message)
+        pending_count = conn.execute("SELECT COUNT(*) FROM label_queue WHERE status='pending'").fetchone()[0]
+
     artifacts = load_fixture_artifacts(CONFIG["fixtures_root"], fixture)
-    files_json = artifacts.get("files_json") or []
-    changed_files = (
-        [
-            f for f in files_json
-            if str(f.get("filename") or f.get("path") or "").lower().endswith(".cs")
-        ][:25]
-        if isinstance(files_json, list) else []
-    )
-    review_comments = artifacts.get("review_comments") or []
     diff_patch = artifacts.get("diff_patch") or ""
-    diff_preview = "\n".join(diff_patch.splitlines()[:350])
+    diff_snippet = extract_diff_snippet(diff_patch, (top_message + " " + top_evidence).strip())
+
+    review_comments_raw = artifacts.get("review_comments") or []
+    review_comments: list[dict[str, str]] = []
+    if isinstance(review_comments_raw, list):
+        for c in review_comments_raw[:5]:
+            if not isinstance(c, dict):
+                continue
+            path = c.get("path") or c.get("original_path") or "-"
+            body = (c.get("body") or "").strip()
+            user = "-"
+            u = c.get("user")
+            if isinstance(u, dict):
+                user = u.get("login") or u.get("name") or user
+            review_comments.append({"path": path, "body": body, "user": user})
+
+    rule_def = RULE_DEFINITIONS.get(task_row["rule_id"])
+
     return render_template(
         "task.html",
         task=task_row,
@@ -122,10 +211,11 @@ def task(queue_id: int):
         grouped=grouped,
         rubric=rubric,
         label_state=label_state,
-        artifacts=artifacts,
-        changed_files=changed_files,
+        rule_def=rule_def,
+        diff_snippet=diff_snippet,
         review_comments=review_comments,
-        diff_preview=diff_preview,
+        duplicates=duplicates,
+        pending_count=pending_count,
     )
 
 
@@ -133,19 +223,28 @@ def task(queue_id: int):
 def submit_label(queue_id: int):
     decision = request.form.get("decision", "").strip()
     confidence = float(request.form.get("confidence", "0.75") or 0.75)
-    usefulness_raw = request.form.get("usefulness", "").strip()
-    usefulness = float(usefulness_raw) if usefulness_raw else None
     reason = request.form.get("reason", "").strip()
-    reviewer_notes = request.form.get("reviewer_notes", "").strip()
     fixture_id = request.form.get("fixture_id", "").strip()
     rule_id = request.form.get("rule_id", "").strip()
-    apply_scope = request.form.get("apply_scope", "current").strip()
+
+    apply_to_duplicates = request.form.get("apply_to_duplicates") == "1"
+    duplicate_ids_raw = request.form.get("duplicate_ids", "") if apply_to_duplicates else ""
 
     if decision not in {"yes", "no", "inconclusive"}:
         flash("Choose Yes, No, or Inconclusive.", "error")
         return redirect(url_for("task", queue_id=queue_id))
 
     source = "human_gold" if confidence >= 0.75 and decision != "inconclusive" else "human_silver"
+
+    dup_ids: list[int] = []
+    for part in duplicate_ids_raw.split(","):
+        part = part.strip()
+        if part.isdigit():
+            dup_ids.append(int(part))
+
+    applied_count = 0
+    should_snapshot_prompt = False
+
     with get_conn() as conn:
         upsert_label(
             conn,
@@ -155,35 +254,53 @@ def submit_label(queue_id: int):
             confidence=confidence,
             reason=reason,
             label_source=source,
-            usefulness=usefulness,
-            reviewer_notes=reviewer_notes,
+            usefulness=None,
+            reviewer_notes="",
             reviewer=CONFIG["reviewer_name"],
         )
-        update_queue_status(conn, queue_id, "labeled", notes=reviewer_notes)
+        update_queue_status(conn, queue_id, "labeled", notes="")
 
-        bulk_count = 0
-        if apply_scope == "fixture_pending":
-            bulk_count = bulk_apply_label_to_fixture(
-                conn,
-                fixture_id=fixture_id,
-                exclude_rule_id=rule_id,
-                decision=decision,
-                confidence=confidence,
-                reason=reason,
-                label_source=source,
-                usefulness=usefulness,
-                reviewer_notes=reviewer_notes,
-                reviewer=CONFIG["reviewer_name"],
-            )
+        if apply_to_duplicates and dup_ids:
+            for dup_id in dup_ids:
+                row = conn.execute(
+                    "SELECT fixture_id, rule_id FROM label_queue WHERE id = ?",
+                    (dup_id,),
+                ).fetchone()
+                if not row:
+                    continue
+                upsert_label(
+                    conn,
+                    fixture_id=row["fixture_id"],
+                    rule_id=row["rule_id"],
+                    decision=decision,
+                    confidence=confidence,
+                    reason=reason,
+                    label_source=source,
+                    usefulness=None,
+                    reviewer_notes="",
+                    reviewer=CONFIG["reviewer_name"],
+                )
+                update_queue_status(conn, dup_id, "labeled", notes="")
+                applied_count += 1
+
+        labels_since = _labels_since_last_snapshot(conn)
+        should_snapshot_prompt = labels_since > 0 and labels_since % 25 == 0
 
         next_row = conn.execute(
             "SELECT id FROM label_queue WHERE status = 'pending' ORDER BY priority DESC, id ASC LIMIT 1"
         ).fetchone()
 
-    if apply_scope == "fixture_pending" and bulk_count:
-        flash(f"Saved and applied to {bulk_count} additional pending item(s) for this fixture.", "success")
+    if applied_count:
+        flash(f"Saved + applied to {applied_count} duplicate(s).", "success")
     else:
         flash("Saved.", "success")
+
+    if should_snapshot_prompt:
+        flash(
+            f"You've labeled {labels_since} items since the last audit snapshot. Consider refreshing metrics from the Audit page.",
+            "info",
+        )
+
     if next_row:
         return redirect(url_for("task", queue_id=next_row["id"]))
     return redirect(url_for("queue"))

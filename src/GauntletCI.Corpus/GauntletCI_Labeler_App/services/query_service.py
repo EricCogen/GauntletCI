@@ -170,3 +170,51 @@ def evaluation_rows(conn: sqlite3.Connection) -> list[sqlite3.Row]:
         ORDER BY labeled_cases DESC, ef.rule_id ASC
         """
     ).fetchall()
+
+
+def find_exact_duplicates(conn, current_queue_id: int, rule_id: str, message: str) -> list:
+    if not message:
+        return []
+    return conn.execute(
+        """
+        SELECT lq.id, lq.fixture_id, f.repo, f.pr_number
+        FROM label_queue lq
+        JOIN fixtures f ON f.fixture_id = lq.fixture_id
+        JOIN actual_findings af
+          ON af.fixture_id = lq.fixture_id AND af.rule_id = lq.rule_id AND af.did_trigger = 1
+        WHERE lq.rule_id = ? AND lq.status = 'pending' AND lq.id != ? AND af.message = ?
+        GROUP BY lq.id
+        ORDER BY lq.priority DESC, lq.id ASC
+        LIMIT 50
+        """,
+        (rule_id, current_queue_id, message),
+    ).fetchall()
+
+
+def audit_report_rows(conn) -> list:
+    return conn.execute(
+        """
+        WITH fired AS (
+            SELECT fixture_id, rule_id, MAX(did_trigger) AS fired
+            FROM actual_findings GROUP BY fixture_id, rule_id
+        ),
+        stats AS (
+            SELECT ef.rule_id,
+                   COUNT(*) AS labeled,
+                   SUM(CASE WHEN f.fired=1 AND ef.should_trigger=1 AND ef.is_inconclusive=0 THEN 1 ELSE 0 END) AS tp,
+                   SUM(CASE WHEN f.fired=1 AND ef.should_trigger=0 AND ef.is_inconclusive=0 THEN 1 ELSE 0 END) AS fp,
+                   SUM(CASE WHEN f.fired=0 AND ef.should_trigger=1 AND ef.is_inconclusive=0 THEN 1 ELSE 0 END) AS fn,
+                   SUM(CASE WHEN ef.is_inconclusive=1 THEN 1 ELSE 0 END) AS inconclusive,
+                   AVG(ev.usefulness) AS avg_usefulness
+            FROM expected_findings ef
+            LEFT JOIN fired f ON f.fixture_id=ef.fixture_id AND f.rule_id=ef.rule_id
+            LEFT JOIN evaluations ev ON ev.fixture_id=ef.fixture_id AND ev.rule_id=ef.rule_id
+            GROUP BY ef.rule_id
+        )
+        SELECT s.*,
+               CASE WHEN s.tp+s.fp>0 THEN CAST(s.tp AS REAL)/(s.tp+s.fp) ELSE NULL END AS precision_score,
+               CASE WHEN s.tp+s.fn>0 THEN CAST(s.tp AS REAL)/(s.tp+s.fn) ELSE NULL END AS recall_score
+        FROM stats s
+        ORDER BY s.labeled DESC, s.rule_id ASC
+        """
+    ).fetchall()

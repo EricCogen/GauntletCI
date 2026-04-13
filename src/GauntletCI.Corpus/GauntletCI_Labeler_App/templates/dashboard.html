@@ -30,7 +30,15 @@
 </section>
 
 <section class="panel">
-  <div class="panel-header"><h2>Evaluation snapshot</h2><a class="button secondary" href="{{ url_for('evaluations') }}">Open evaluation view</a></div>
+  <div class="panel-header">
+    <h2>Evaluation snapshot</h2>
+    <div>
+      <form method="post" action="{{ url_for('refresh_metrics') }}" style="display:inline">
+        <button class="button" type="submit">Refresh metrics</button>
+      </form>
+      <a class="button secondary" href="{{ url_for('evaluations') }}">Open evaluation view</a>
+    </div>
+  </div>
   <table class="data-table compact">
     <thead>
       <tr><th>Rule</th><th>Labeled</th><th>TP</th><th>FP</th><th>FN</th><th>Inconclusive</th><th>Usefulness</th></tr>

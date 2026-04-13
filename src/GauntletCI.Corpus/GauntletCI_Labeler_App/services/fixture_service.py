@@ -83,7 +83,60 @@ def load_fixture_artifacts(fixtures_root: str, fixture: dict[str, Any]) -> dict[
         "diff_patch": read_text_file(fixture_dir / "diff.patch"),
         "actual_json": parse_json_file(fixture_dir / "actual.json"),
         "expected_json": parse_json_file(fixture_dir / "expected.json"),
-        "pr_json": parse_json_file(raw_dir / "pr.json"),
-        "files_json": parse_json_file(raw_dir / "files.json"),
+        # Not needed for the redesigned task page. Keep keys for compatibility.
+        "pr_json": None,
+        "files_json": None,
         "review_comments": parse_json_file(raw_dir / "review-comments.json"),
     }
+
+
+def extract_diff_snippet(diff_patch: str, search_text: str, context_lines: int = 12) -> str:
+    """Return ~25 lines of diff centered on the first line matching search_text."""
+    import re
+
+    if not diff_patch:
+        return ""
+
+    lines = diff_patch.splitlines()
+    stop = {
+        "the",
+        "a",
+        "an",
+        "in",
+        "on",
+        "at",
+        "to",
+        "for",
+        "of",
+        "and",
+        "or",
+        "is",
+        "was",
+        "found",
+        "detected",
+        "added",
+        "changed",
+        "new",
+        "not",
+        "with",
+        "has",
+        "from",
+        "that",
+    }
+    terms = [t for t in re.findall(r"\b\w{4,}\b", search_text) if t.lower() not in stop][:6]
+
+    best, best_score = -1, 0
+    for i, line in enumerate(lines):
+        if not (line.startswith("+") or line.startswith("-") or line.startswith("@@")):
+            continue
+        score = sum(1 for t in terms if t.lower() in line.lower())
+        if score > best_score:
+            best_score, best = score, i
+
+    if best < 0 or best_score == 0:
+        return "\n".join(lines[:40])
+
+    start = max(0, best - context_lines)
+    end = min(len(lines), best + context_lines + 1)
+    header = f"... lines {start+1}–{end} of {len(lines)} ..."
+    return header + "\n" + "\n".join(lines[start:end])

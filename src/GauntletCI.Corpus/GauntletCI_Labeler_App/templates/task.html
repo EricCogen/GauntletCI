@@ -3,216 +3,118 @@
 <section class="panel hero-panel">
   <div class="panel-header">
     <div>
-      <h1>{{ task.rule_id }} on {{ fixture.repo }} #{{ fixture.pr_number }}</h1>
-      <div class="muted">Queue #{{ task.id }} · {{ task.queue_bucket }} · {{ task.status }}</div>
+      <h1>Task #{{ task.id }} · {{ task.rule_id }}</h1>
+      <div class="muted">{{ fixture.repo }} #{{ fixture.pr_number }} · {{ fixture.tier }} · {{ task.queue_bucket }} · {{ pending_count }} pending</div>
     </div>
-    <div class="pill-row">
-      <span class="pill">{{ fixture.tier }}</span>
-      <span class="pill">{{ fixture.pr_size_bucket }}</span>
-      <span class="pill">Tests changed: {{ fixture.has_tests_changed|yesno }}</span>
-      <span class="pill">Review comments: {{ fixture.has_review_comments|yesno }}</span>
-      <span class="pill">Grouped findings: {{ grouped.count }}</span>
+    <div>
+      <a class="button secondary" href="{{ url_for('queue') }}">Back to queue</a>
     </div>
   </div>
 </section>
 
-<div class="two-col">
-  <section class="panel sticky-form">
-    <h2>Label</h2>
-    <form method="post" action="{{ url_for('submit_label', queue_id=task.id) }}" id="label-form">
-      <input type="hidden" name="fixture_id" value="{{ fixture.fixture_id }}">
-      <input type="hidden" name="rule_id" value="{{ task.rule_id }}">
+<section class="panel" style="border-left: 4px solid #6366f1;">
+  {% if rule_def %}
+  <div class="muted" style="font-size:0.75rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:0.25rem">Rule Definition</div>
+  <p style="margin:0;font-weight:600;font-size:1rem">{{ task.rule_id }} — {{ rule_def.name }}</p>
+  <p style="margin:0.4rem 0 0;font-size:0.9rem">{{ rule_def.what }}</p>
+  {% else %}
+  <p style="margin:0;font-weight:600">{{ task.rule_id }}</p>
+  {% endif %}
+</section>
 
-      <div class="decision-grid">
-        <label class="decision-card"><input type="radio" name="decision" value="yes" {% if label_state.label and label_state.label.should_trigger == 1 and label_state.label.is_inconclusive == 0 %}checked{% endif %}> <span>Yes</span><small>Rule should trigger</small></label>
-        <label class="decision-card"><input type="radio" name="decision" value="no" {% if label_state.label and label_state.label.should_trigger == 0 and label_state.label.is_inconclusive == 0 %}checked{% endif %}> <span>No</span><small>Rule should not trigger</small></label>
-        <label class="decision-card"><input type="radio" name="decision" value="inconclusive" {% if label_state.label and label_state.label.is_inconclusive == 1 %}checked{% endif %}> <span>Inconclusive</span><small>Diff is not enough to decide</small></label>
-      </div>
+<section class="panel">
+  <h2>What was found</h2>
+  {% set top = grouped.finding_rows[0] if grouped.finding_rows else none %}
+  {% if top %}
+    <p style="margin:0 0 0.25rem;font-weight:600">{{ top.message or 'No message' }}</p>
+    {% if top.change_implication %}
+      <p class="muted" style="margin:0 0 0.75rem">{{ top.change_implication }}</p>
+    {% endif %}
+    <div class="muted" style="font-size:0.8rem;margin-bottom:0.25rem">Evidence</div>
+    <pre style="white-space:pre-wrap">{% if top.evidence is mapping or (top.evidence is sequence and top.evidence is not string) %}{{ top.evidence | tojson(indent=2) }}{% else %}{{ top.evidence }}{% endif %}</pre>
+  {% else %}
+    <p class="muted">No findings were recorded for this rule on this fixture.</p>
+  {% endif %}
+</section>
 
-      <label>Confidence
-        <select name="confidence">
-          {% set current_conf = label_state.label.expected_confidence if label_state.label else 0.75 %}
-          {% for value in [1.0, 0.75, 0.5, 0.25] %}
-            <option value="{{ value }}" {% if current_conf == value %}selected{% endif %}>{{ value }}</option>
-          {% endfor %}
-        </select>
-      </label>
+<section class="panel">
+  <h2>Relevant diff snippet</h2>
+  <pre id="diff-snippet" class="diff">{{ diff_snippet if diff_snippet else 'No diff.patch found.' }}</pre>
+</section>
 
-      <label>Usefulness
-        <select name="usefulness">
-          {% set current_usefulness = label_state.evaluation.usefulness if label_state.evaluation else '' %}
-          <option value="">Skip usefulness for now</option>
-          {% for value in range(0, 6) %}
-            <option value="{{ value }}" {% if current_usefulness != '' and current_usefulness|int == value %}selected{% endif %}>{{ value }}</option>
-          {% endfor %}
-        </select>
-      </label>
-
-      <label>Apply scope
-        <select name="apply_scope">
-          <option value="current" selected>Only this task item</option>
-          <option value="fixture_pending">This task item and all pending items for this fixture</option>
-        </select>
-      </label>
-
-      <label>Reason
-        <textarea name="reason" rows="4" placeholder="Why did you choose this truth label?">{{ label_state.label.reason if label_state.label else '' }}</textarea>
-      </label>
-
-      <label>Reviewer notes
-        <textarea name="reviewer_notes" rows="4" placeholder="Anything useful for later?">{{ label_state.evaluation.reviewer_notes if label_state.evaluation else '' }}</textarea>
-      </label>
-
-      <div class="action-row">
-        <button class="button" type="submit">Save and continue</button>
-      </div>
-    </form>
-
-    <form method="post" action="{{ url_for('skip_task', queue_id=task.id) }}">
-      <input type="hidden" name="notes" value="Skipped from task screen">
-      <button class="button secondary" type="submit">Skip</button>
-    </form>
-  </section>
-
-  <section class="content-stack">
-    <section class="panel">
-      <h2>Rule summary</h2>
-      {% if rubric %}
-      <div class="rubric-grid">
-        <div><h3>Intent</h3><p>{{ rubric.intent or 'Not defined yet.' }}</p></div>
-        <div><h3>Trigger conditions</h3><p>{{ rubric.trigger_conditions or 'Not defined yet.' }}</p></div>
-        <div><h3>Non-trigger conditions</h3><p>{{ rubric.non_trigger_conditions or 'Not defined yet.' }}</p></div>
-        <div><h3>Inconclusive conditions</h3><p>{{ rubric.inconclusive_conditions or 'Not defined yet.' }}</p></div>
-      </div>
-      {% else %}
-      <p class="muted">No rubric yet. Add one from the Rules page.</p>
-      {% endif %}
-    </section>
-
-    <section class="panel">
-      <div class="section-header">
-        <h2>Grouped findings</h2>
-      </div>
-      <div class="summary-grid">
-        <div><span class="metric-label">Count</span><span class="metric-value">{{ grouped.count }}</span></div>
-        <div><span class="metric-label">Max confidence</span><span class="metric-value">{{ '%.2f'|format(grouped.max_confidence) }}</span></div>
-      </div>
-      {% for item in grouped.finding_rows %}
-      <details class="finding-card" {% if loop.first %}open{% endif %}>
-        <summary>
-          <span>{{ item.message or 'No message' }}</span>
-          <span class="muted">conf {{ '%.2f'|format(item.confidence) }}</span>
-        </summary>
-        {% if item.change_implication %}
-        <p><strong>Implication:</strong> {{ item.change_implication }}</p>
-        {% endif %}
-        <div class="copy-row">
-          <button type="button" class="copy-button" data-copy-target="finding-{{ loop.index }}">Copy finding</button>
+<section class="panel">
+  <h2>Review comments</h2>
+  {% if review_comments and review_comments|length > 0 %}
+    <div style="display:flex;flex-direction:column;gap:0.5rem">
+      {% for c in review_comments %}
+        <div class="panel" style="padding:0.75rem">
+          <div class="muted" style="font-size:0.8rem;margin-bottom:0.25rem">{{ c.path }} · {{ c.user }}</div>
+          <div style="white-space:pre-wrap">{{ c.body }}</div>
         </div>
-        <pre id="finding-{{ loop.index }}">{% if item.message %}Message: {{ item.message }}
-{% endif %}{% if item.change_implication %}Implication: {{ item.change_implication }}
-{% endif %}Evidence:
-{{ item.evidence }}</pre>
-      </details>
       {% endfor %}
-    </section>
+    </div>
+  {% else %}
+    <p class="muted">No review comments found for this fixture.</p>
+  {% endif %}
+</section>
 
-    <section class="panel">
-      <div class="section-header">
-        <h2>PR and fixture context</h2>
-        {% if artifacts.pr_json %}
-        <button type="button" class="copy-button" data-copy-target="pr-json">Copy</button>
-        {% endif %}
-      </div>
-      {% if artifacts.pr_json %}
-      <pre id="pr-json">{{ artifacts.pr_json | tojson(indent=2) }}</pre>
-      {% else %}
-      <p class="muted">No raw pr.json found.</p>
-      {% endif %}
-      {% if artifacts.notes %}
-      <div class="section-header section-header-sub">
-        <h3>Fixture notes</h3>
-        <button type="button" class="copy-button" data-copy-target="fixture-notes">Copy</button>
-      </div>
-      <pre id="fixture-notes">{{ artifacts.notes }}</pre>
-      {% endif %}
-    </section>
+<section class="panel">
+  <h2>Label — should this rule have triggered?</h2>
+  <form method="post" action="{{ url_for('submit_label', queue_id=task.id) }}" id="label-form">
+    <input type="hidden" name="fixture_id" value="{{ fixture.fixture_id }}">
+    <input type="hidden" name="rule_id" value="{{ task.rule_id }}">
 
-    <section class="panel">
-      <div class="section-header">
-        <h2>Changed files</h2>
-        {% if changed_files %}
-        <button type="button" class="copy-button" data-copy-target="changed-files-copy">Copy</button>
-        {% endif %}
-      </div>
-      {% if changed_files %}
-      <pre id="changed-files-copy" class="hidden-copy-source">{% for item in changed_files %}{{ item.filename or item.path or '-' }} | {{ item.status or '-' }} | +{{ item.additions or '-' }} | -{{ item.deletions or '-' }} | Δ{{ item.changes or '-' }}
-{% endfor %}</pre>
-      <table class="data-table compact">
-        <thead><tr><th>Filename</th><th>Status</th><th>Additions</th><th>Deletions</th><th>Changes</th></tr></thead>
-        <tbody>
-        {% for item in changed_files %}
-          <tr>
-            <td>{{ item.filename or item.path or '-' }}</td>
-            <td>{{ item.status or '-' }}</td>
-            <td>{{ item.additions or '-' }}</td>
-            <td>{{ item.deletions or '-' }}</td>
-            <td>{{ item.changes or '-' }}</td>
-          </tr>
+    <div class="decision-grid">
+      <label class="decision-card"><input type="radio" name="decision" value="yes" {% if label_state.label and label_state.label.should_trigger == 1 and label_state.label.is_inconclusive == 0 %}checked{% endif %}> <span>Yes</span><small>Rule should trigger</small></label>
+      <label class="decision-card"><input type="radio" name="decision" value="no" {% if label_state.label and label_state.label.should_trigger == 0 and label_state.label.is_inconclusive == 0 %}checked{% endif %}> <span>No</span><small>Rule should not trigger</small></label>
+      <label class="decision-card"><input type="radio" name="decision" value="inconclusive" {% if label_state.label and label_state.label.is_inconclusive == 1 %}checked{% endif %}> <span>Inconclusive</span><small>Diff is not enough to decide</small></label>
+    </div>
+
+    <label>Confidence
+      <select name="confidence">
+        {% set current_conf = label_state.label.expected_confidence if label_state.label else 0.75 %}
+        {% for value in [1.0, 0.75, 0.5, 0.25] %}
+          <option value="{{ value }}" {% if current_conf == value %}selected{% endif %}>{{ value }}</option>
         {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      <p class="muted">No files.json found.</p>
-      {% endif %}
-    </section>
+      </select>
+    </label>
 
-    <section class="panel">
-      <div class="section-header">
-        <h2>Diff preview</h2>
-        {% if diff_preview %}
-        <button type="button" class="copy-button" data-copy-target="diff-preview">Copy</button>
-        {% endif %}
-      </div>
-      <pre id="diff-preview" class="diff">{{ diff_preview if diff_preview else 'No diff.patch found.' }}</pre>
-    </section>
+    <label>Reason (optional)
+      <textarea name="reason" rows="4" placeholder="Why did you choose this truth label?">{{ label_state.label.reason if label_state.label else '' }}</textarea>
+    </label>
 
-    <section class="panel">
-      <div class="section-header">
-        <h2>Review comments</h2>
-        {% if review_comments and review_comments|length > 0 %}
-        <button type="button" class="copy-button" data-copy-target="review-comments">Copy</button>
-        {% endif %}
+    {% if duplicates and duplicates|length > 0 %}
+      <div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid rgba(0,0,0,0.08)">
+        <label style="display:flex;gap:0.5rem;align-items:flex-start">
+          <input type="checkbox" name="apply_to_duplicates" value="1" style="margin-top:0.2rem">
+          <span>Apply to {{ duplicates|length }} exact duplicate(s) (same rule + same finding message)</span>
+        </label>
+        <input type="hidden" name="duplicate_ids" value="{{ duplicates | map(attribute='id') | join(',') }}">
+        <div class="muted" style="margin-top:0.4rem;font-size:0.85rem">
+          {% for d in duplicates[:5] %}
+            <div>Queue #{{ d.id }} · {{ d.repo }} #{{ d.pr_number }}</div>
+          {% endfor %}
+          {% if duplicates|length > 5 %}
+            <div>… and {{ duplicates|length - 5 }} more</div>
+          {% endif %}
+        </div>
       </div>
-      {% if review_comments and review_comments|length > 0 %}
-        <pre id="review-comments">{{ review_comments | tojson(indent=2) }}</pre>
-      {% else %}
-        <p class="muted">No review comments artifact found.</p>
-      {% endif %}
-    </section>
-  </section>
-</div>
+    {% endif %}
+
+    <div class="action-row">
+      <button class="button" type="submit">Save & next</button>
+    </div>
+  </form>
+
+  <form method="post" action="{{ url_for('skip_task', queue_id=task.id) }}" style="margin-top:0.75rem">
+    <input type="hidden" name="notes" value="Skipped from task screen">
+    <button class="button secondary" type="submit">Skip</button>
+  </form>
+</section>
 
 <script>
-  document.querySelectorAll('.copy-button').forEach(function (button) {
-    button.addEventListener('click', async function () {
-      const targetId = button.getAttribute('data-copy-target');
-      const target = document.getElementById(targetId);
-      if (!target) return;
-      const text = target.innerText || target.textContent || '';
-      try {
-        await navigator.clipboard.writeText(text);
-        const original = button.textContent;
-        button.textContent = 'Copied';
-        setTimeout(function () { button.textContent = original; }, 1200);
-      } catch (error) {
-        console.error('Clipboard copy failed', error);
-      }
-    });
-  });
-
   (function () {
-    const pre = document.getElementById('diff-preview');
+    const pre = document.getElementById('diff-snippet');
     if (!pre) return;
     const lines = pre.textContent.split('\n');
     pre.textContent = '';
