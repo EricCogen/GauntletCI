@@ -22,40 +22,8 @@ public class GCI0019_ConfidenceAndEvidence : RuleBase, IPostProcessor
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
-        var diff = context.Diff;
-        var findings = new List<Finding>();
-
-        CheckBinaryFiles(diff, context.SkippedFiles, findings);
-
-        return Task.FromResult(findings);
-    }
-
-    private void CheckBinaryFiles(DiffContext diff, IReadOnlyList<ChangedFileAnalysisRecord> skippedFiles, List<Finding> findings)
-    {
-        // Binary files are now classified upstream and appear in skippedFiles.
-        // Also check eligible diff files as a fallback (e.g. unknown binary types).
-        var binaryFromSkipped = skippedFiles
-            .Where(r => BinaryExtensions.Any(ext =>
-                r.FilePath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
-            .Select(r => r.FilePath)
-            .ToList();
-
-        var binaryFromDiff = diff.Files
-            .Where(f => BinaryExtensions.Any(ext =>
-                f.NewPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
-            .Select(f => f.NewPath)
-            .ToList();
-
-        var allBinary = binaryFromSkipped.Concat(binaryFromDiff).Distinct().ToList();
-
-        if (allBinary.Count == 0) return;
-
-        findings.Add(CreateFinding(
-            summary: $"{allBinary.Count} binary file(s) in diff cannot be analysed.",
-            evidence: $"Binary files: {string.Join(", ", allBinary)}",
-            whyItMatters: "Binary files cannot be inspected for logic, credentials, or security issues by static analysis.",
-            suggestedAction: "Review binary files manually, consider storing large binaries in Git LFS.",
-            confidence: Confidence.Low));
+        // Binary files are surfaced via PostProcess(), which can inspect RawDiff (including skipped files).
+        return Task.FromResult(new List<Finding>());
     }
 
     private void CheckTinyDiff(DiffContext diff, List<Finding> findings)
@@ -69,6 +37,59 @@ public class GCI0019_ConfidenceAndEvidence : RuleBase, IPostProcessor
     /// </summary>
     public Finding? PostProcess(DiffContext context)
     {
-        return null;
+        var binaryPaths = ExtractBinaryPathsFromRawDiff(context.RawDiff);
+        if (binaryPaths.Count == 0) return null;
+
+        return CreateFinding(
+            summary: $"{binaryPaths.Count} binary file(s) in diff cannot be analysed.",
+            evidence: $"Binary files: {string.Join(", ", binaryPaths)}",
+            whyItMatters: "Binary files cannot be inspected for logic, credentials, or security issues by static analysis.",
+            suggestedAction: "Review binary files manually, consider storing large binaries in Git LFS.",
+            confidence: Confidence.Low);
+    }
+
+    private static List<string> ExtractBinaryPathsFromRawDiff(string rawDiff)
+    {
+        if (string.IsNullOrWhiteSpace(rawDiff)) return [];
+
+        var results = new List<string>();
+        string? currentNewPath = null;
+
+        foreach (var rawLine in rawDiff.Split('\n'))
+        {
+            var line = rawLine.TrimEnd('\r');
+
+            if (line.StartsWith("diff --git ", StringComparison.Ordinal))
+            {
+                // Format: diff --git a/path b/path
+                var bIdx = line.IndexOf(" b/", StringComparison.Ordinal);
+                currentNewPath = bIdx >= 0 ? line[(bIdx + 3)..].Trim() : null;
+                continue;
+            }
+
+            if (line.StartsWith("Binary files ", StringComparison.Ordinal))
+            {
+                // Format: Binary files a/path and b/path differ
+                const string marker = " and b/";
+                var andIdx = line.IndexOf(marker, StringComparison.Ordinal);
+                if (andIdx >= 0)
+                {
+                    var start = andIdx + marker.Length;
+                    var end = line.IndexOf(" differ", start, StringComparison.Ordinal);
+                    if (end < 0) end = line.Length;
+                    var path = line[start..end].Trim();
+                    if (!string.IsNullOrWhiteSpace(path)) results.Add(path);
+                }
+                continue;
+            }
+
+            if (line.StartsWith("GIT binary patch", StringComparison.Ordinal) && currentNewPath is not null)
+            {
+                if (BinaryExtensions.Any(ext => currentNewPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                    results.Add(currentNewPath);
+            }
+        }
+
+        return results.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
     }
 }
