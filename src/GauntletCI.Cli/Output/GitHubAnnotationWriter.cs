@@ -23,7 +23,12 @@ public static class GitHubAnnotationWriter
 
             var file = ExtractFile(finding.Evidence);
             var line = ExtractLine(finding.Evidence);
-            var title = $"{finding.RuleId} {finding.RuleName}";
+            var title = $"{finding.RuleId} {finding.RuleName}"
+                .Replace("%", "%25")
+                .Replace(",", "%2C")
+                .Replace(":", "%3A")
+                .Replace("\r", "")
+                .Replace("\n", "");
             var message = finding.Summary.Replace("\n", "%0A").Replace("\r", "");
 
             var annotation = string.IsNullOrEmpty(file)

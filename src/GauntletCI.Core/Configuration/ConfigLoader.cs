@@ -26,7 +26,7 @@ public static class ConfigLoader
             var json = File.ReadAllText(path);
             return JsonSerializer.Deserialize<GauntletConfig>(json, JsonOptions) ?? new GauntletConfig();
         }
-        catch
+        catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {
             Console.Error.WriteLine("[GauntletCI] Warning: could not parse .gauntletci.json — using defaults.");
             return new GauntletConfig();
