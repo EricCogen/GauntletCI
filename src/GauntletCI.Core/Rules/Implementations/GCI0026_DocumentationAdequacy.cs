@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using System.Text.RegularExpressions;
 using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
@@ -15,18 +16,13 @@ public class GCI0026_DocumentationAdequacy : RuleBase
     public override string Id => "GCI0026";
     public override string Name => "Documentation Adequacy";
 
-    private static readonly string[] PublicMethodReturnTypes =
-    [
-        "public Task ", "public async Task ", "public ValueTask ",
-        "public async ValueTask ", "public static Task ", "public static async Task ",
-        "public static ValueTask ", "public override Task ", "public virtual Task ",
-        "public string ", "public bool ", "public int ", "public long ",
-        "public void ", "public static void ", "public static string ",
-        "public static bool ", "public static int ", "public override string ",
-        "public override bool ", "public override void ", "public override int ",
-        "public IEnumerable", "public IList", "public IReadOnly",
-        "public List<", "public Dictionary<"
-    ];
+    // Matches: public [modifiers] [ReturnType] MethodName(
+    // where ReturnType is any word (possibly generic like Task<T>).
+    // Constructors are excluded naturally: they have no return type, so the
+    // pattern requires at least two distinct tokens (return type + method name).
+    private static readonly Regex PublicMethodRegex = new(
+        @"^\s*public\s+(?:(?:static|async|virtual|override|abstract|sealed|new|partial)\s+)*[\w<>\[\],\s?]+\s+\w+\s*[(<]",
+        RegexOptions.Compiled);
 
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
@@ -54,10 +50,7 @@ public class GCI0026_DocumentationAdequacy : RuleBase
             var content = line.Content.Trim();
             if (content.StartsWith("//")) continue;
 
-            // Must look like a public method signature (has opening paren)
-            bool isPublicMethod = PublicMethodReturnTypes.Any(r => content.Contains(r)) &&
-                                   content.Contains('(');
-            if (!isPublicMethod) continue;
+            if (!PublicMethodRegex.IsMatch(line.Content)) continue;
 
             // Check if there's a /// XML doc comment in the preceding lines
             bool hasDocs = false;
