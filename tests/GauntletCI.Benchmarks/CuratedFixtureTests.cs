@@ -48,8 +48,8 @@ public class CuratedFixtureTests
     private static readonly Dictionary<string, string> RuleIdRemap =
         new(StringComparer.OrdinalIgnoreCase)
         {
-            ["GCI017"] = "GCI0018",  // Production Readiness moved from slot 17 → 18 (GCI0017 is now Scope Discipline)
-            ["GCI018"] = "GCI0020",  // Accountability Standard moved from slot 18 → 20 (GCI0018 is now Production Readiness)
+            ["GCI017"] = "GCI_SYN_AGG", // Production Readiness moved to synthetic aggregate ID
+            ["GCI018"] = "GCI0020",     // Accountability Standard moved from slot 18 → 20 (GCI0018 is now Production Readiness)
         };
 
     private static string NormalizeRuleId(string id)
