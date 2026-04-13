@@ -30,8 +30,10 @@ public class GCI0013Tests
     }
 
     [Fact]
-    public async Task PublicClassWithoutXmlDocs_ShouldFlag()
+    public async Task PublicClassWithoutXmlDocs_ShouldNotFlag_OwnerIsGCI0026()
     {
+        // Public API XML doc checking is owned by GCI0026 (Public API Documentation).
+        // GCI0013 must not duplicate this check.
         var raw = """
             diff --git a/src/MyService.cs b/src/MyService.cs
             index abc..def 100644
@@ -45,7 +47,7 @@ public class GCI0013Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f => f.Summary.Contains("without XML documentation"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("without XML documentation"));
     }
 
     [Fact]

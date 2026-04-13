@@ -93,29 +93,6 @@ public class GCI0011_PerformanceRisk : RuleBase
                     confidence: Confidence.Medium));
             }
 
-            // Thread.Sleep
-            if (content.Contains("Thread.Sleep(", StringComparison.Ordinal))
-            {
-                findings.Add(CreateFinding(
-                    summary: $"Thread.Sleep() used in {file.NewPath}.",
-                    evidence: $"Line {addedLines[i].LineNumber}: {trimmed}",
-                    whyItMatters: "Thread.Sleep blocks a thread pool thread, degrading throughput and responsiveness.",
-                    suggestedAction: "Use await Task.Delay() in async contexts instead.",
-                    confidence: Confidence.Medium));
-            }
-
-            // .Result or .GetAwaiter().GetResult()
-            if (content.Contains(".Result", StringComparison.Ordinal) ||
-                content.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal))
-            {
-                findings.Add(CreateFinding(
-                    summary: $"Blocking async call detected in {file.NewPath}.",
-                    evidence: $"Line {addedLines[i].LineNumber}: {trimmed}",
-                    whyItMatters: ".Result and .GetAwaiter().GetResult() block the calling thread and can deadlock in ASP.NET contexts.",
-                    suggestedAction: "Use await instead of .Result or .GetAwaiter().GetResult().",
-                    confidence: Confidence.Medium));
-            }
-
             // new List<>/Dictionary<> inside loops
             if (loopDepth > 0 && (content.Contains("new List<", StringComparison.Ordinal) ||
                                    content.Contains("new Dictionary<", StringComparison.Ordinal)))
