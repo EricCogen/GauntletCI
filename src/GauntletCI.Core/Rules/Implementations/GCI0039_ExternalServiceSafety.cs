@@ -1,0 +1,111 @@
+// SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Analysis;
+using GauntletCI.Core.Diff;
+using GauntletCI.Core.Model;
+
+namespace GauntletCI.Core.Rules.Implementations;
+
+/// <summary>
+/// GCI0039 – External Service Safety
+/// Detects unsafe HTTP client and external service usage patterns in C# code.
+/// </summary>
+public class GCI0039_ExternalServiceSafety : RuleBase
+{
+    public override string Id => "GCI0039";
+    public override string Name => "External Service Safety";
+
+    private static readonly string[] HttpCallMethods =
+    [
+        ".GetAsync(", ".PostAsync(", ".PutAsync(", ".DeleteAsync(", ".SendAsync("
+    ];
+
+    public override Task<List<Finding>> EvaluateAsync(
+        AnalysisContext context, CancellationToken ct = default)
+    {
+        var diff = context.Diff;
+        var findings = new List<Finding>();
+
+        foreach (var file in diff.Files)
+        {
+            if (IsTestFile(file.NewPath)) continue;
+
+            CheckHttpClientInstantiation(file, findings);
+            CheckMissingTimeout(file, findings);
+            CheckMissingCancellationToken(file, findings);
+        }
+
+        return Task.FromResult(findings);
+    }
+
+    private static bool IsTestFile(string path) =>
+        path.Contains("test", StringComparison.OrdinalIgnoreCase)
+        || path.Contains("spec", StringComparison.OrdinalIgnoreCase);
+
+    private void CheckHttpClientInstantiation(DiffFile file, List<Finding> findings)
+    {
+        foreach (var line in file.AddedLines)
+        {
+            var content = line.Content;
+            if (content.Contains("//")) continue;
+            if (!content.Contains("new HttpClient(")) continue;
+
+            findings.Add(CreateFinding(
+                summary: "Direct HttpClient instantiation",
+                evidence: $"Line {line.LineNumber}: {content.Trim()}",
+                whyItMatters: "Directly instantiating HttpClient bypasses the socket pool managed by IHttpClientFactory, causing socket exhaustion under load.",
+                suggestedAction: "Use IHttpClientFactory.CreateClient() or typed clients registered in the DI container.",
+                confidence: Confidence.High));
+        }
+    }
+
+    private void CheckMissingTimeout(DiffFile file, List<Finding> findings)
+    {
+        var addedLines = file.AddedLines.ToList();
+        bool hasHttpClientUsage = addedLines.Any(l =>
+            l.Content.Contains("new HttpClient(") || l.Content.Contains("HttpClient "));
+
+        if (!hasHttpClientUsage) return;
+
+        bool hasTimeoutConfig = addedLines.Any(l =>
+            l.Content.Contains(".Timeout =")
+            || l.Content.Contains("TimeoutPolicy")
+            || l.Content.Contains("timeout", StringComparison.OrdinalIgnoreCase));
+
+        if (!hasTimeoutConfig)
+        {
+            findings.Add(CreateFinding(
+                summary: "HttpClient used without explicit timeout",
+                evidence: $"File {file.NewPath} adds HttpClient usage with no timeout configuration.",
+                whyItMatters: "HttpClient has a default timeout of 100 seconds. Without explicit configuration, slow external services can exhaust thread pool resources.",
+                suggestedAction: "Set an explicit Timeout on the HttpClient or configure a timeout policy via Polly/Refit.",
+                confidence: Confidence.Medium));
+        }
+    }
+
+    private void CheckMissingCancellationToken(DiffFile file, List<Finding> findings)
+    {
+        foreach (var line in file.AddedLines)
+        {
+            var content = line.Content;
+            if (content.Contains("//")) continue;
+
+            bool hasHttpCall = HttpCallMethods.Any(m => content.Contains(m));
+            if (!hasHttpCall) continue;
+
+            bool hasCancellationToken =
+                content.Contains("cancellationToken")
+                || content.Contains("CancellationToken")
+                || content.Contains("ct)");
+
+            if (!hasCancellationToken)
+            {
+                findings.Add(CreateFinding(
+                    summary: "HTTP call missing CancellationToken",
+                    evidence: $"Line {line.LineNumber}: {content.Trim()}",
+                    whyItMatters: "Without propagating CancellationToken, cancelled requests continue executing on the server, wasting resources.",
+                    suggestedAction: "Pass the CancellationToken from the calling method to all async HTTP operations.",
+                    confidence: Confidence.Low));
+            }
+        }
+    }
+}
