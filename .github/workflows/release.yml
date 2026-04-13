@@ -55,7 +55,7 @@ jobs:
         run: dotnet pack src/GauntletCI.Cli/GauntletCI.Cli.csproj --configuration Release --no-build -p:PackageVersion=${{ steps.version.outputs.version }} --output artifacts/release
 
       - name: Publish GitHub release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.version.outputs.tag }}
           generate_release_notes: true
