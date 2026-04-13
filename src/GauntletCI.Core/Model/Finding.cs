@@ -10,5 +10,7 @@ public class Finding
     public required string WhyItMatters { get; set; }
     public required string SuggestedAction { get; set; }
     public Confidence Confidence { get; set; }
+    public string? FilePath { get; set; }
+    public int? Line { get; set; }
     public string? LlmExplanation { get; set; }         // optional LLM enrichment
 }

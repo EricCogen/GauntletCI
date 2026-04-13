@@ -62,7 +62,7 @@ public class OrchestratorTests
         var diff = DiffParser.Parse(raw);
         var orchestrator = RuleOrchestrator.CreateDefault();
         var result = await orchestrator.RunAsync(diff);
-        Assert.Contains(result.Findings, f => f.RuleId == "GCI0018" && f.Summary.Contains("rules flagged"));
+        Assert.Contains(result.Findings, f => f.RuleId == "GCI_SYN_AGG" && f.Summary.Contains("rules flagged"));
     }
 
     [Fact]

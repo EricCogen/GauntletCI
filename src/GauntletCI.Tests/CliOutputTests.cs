@@ -98,8 +98,17 @@ public class GitHubAnnotationWriterTests
     [Fact]
     public void Write_EvidenceWithLineNumber_ExtractsLine()
     {
-        // file= must be present for line= to appear in the annotation
-        var output = CaptureAnnotations(MakeResult(MakeFinding(evidence: "src/Auth.cs Line 77: x = secret")));
+        // file= and line= come from structured FilePath/Line fields now
+        var f = new Finding
+        {
+            RuleId = "GCI0001", RuleName = "Diff Integrity",
+            Summary = "Something risky", Evidence = "x = secret",
+            WhyItMatters = "It matters.", SuggestedAction = "Fix it.",
+            Confidence = Confidence.High,
+            FilePath = "src/Auth.cs",
+            Line = 77,
+        };
+        var output = CaptureAnnotations(MakeResult(f));
         Assert.Contains("line=77", output);
         Assert.Contains("file=src/Auth.cs", output);
     }
