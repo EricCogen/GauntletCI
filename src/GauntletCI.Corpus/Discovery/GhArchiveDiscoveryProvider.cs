@@ -18,8 +18,9 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
         DiscoveryQuery query, CancellationToken cancellationToken = default)
     {
         var archiveSlots = BuildArchiveSlots(query);
-        var seen    = new HashSet<(string Owner, string Repo, int Number)>();
-        var results = new List<PullRequestCandidate>();
+        var seen         = new HashSet<(string Owner, string Repo, int Number)>();
+        var prReviewed   = new HashSet<(string Owner, string Repo, int Number)>();
+        var results      = new List<PullRequestCandidate>();
 
         foreach (var (date, hour) in archiveSlots)
         {
@@ -61,7 +62,17 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
                     if (!root.TryGetProperty("type", out var typeEl))
                         continue;
 
-                    if (typeEl.GetString() != "PullRequestEvent")
+                    var eventType = typeEl.GetString();
+
+                    if (eventType == "PullRequestReviewEvent")
+                    {
+                        var (owner, repo, number) = ExtractRepoAndNumber(root);
+                        if (owner is not null && repo is not null && number > 0)
+                            prReviewed.Add((owner, repo, number));
+                        continue;
+                    }
+
+                    if (eventType != "PullRequestEvent")
                         continue;
 
                     if (!root.TryGetProperty("payload", out var payload))
@@ -83,6 +94,9 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
 
                     var key = (candidate.RepoOwner, candidate.RepoName, candidate.PullRequestNumber);
                     if (!seen.Add(key))
+                        continue;
+
+                    if (query.MinReviewComments > 0 && !prReviewed.Contains(key))
                         continue;
 
                     results.Add(candidate);
@@ -117,6 +131,28 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
         return slots;
     }
 
+    private static (string? Owner, string? Repo, int Number) ExtractRepoAndNumber(JsonElement root)
+    {
+        if (!root.TryGetProperty("repo", out var repoEl))
+            return (null, null, 0);
+
+        if (!repoEl.TryGetProperty("name", out var nameEl))
+            return (null, null, 0);
+
+        var parts = nameEl.GetString()?.Split('/', 2);
+        if (parts is null || parts.Length < 2)
+            return (null, null, 0);
+
+        if (!root.TryGetProperty("payload", out var payload))
+            return (parts[0], parts[1], 0);
+
+        if (!payload.TryGetProperty("pull_request", out var pr))
+            return (parts[0], parts[1], 0);
+
+        var number = pr.TryGetProperty("number", out var numEl) ? numEl.GetInt32() : 0;
+        return (parts[0], parts[1], number);
+    }
+
     private static PullRequestCandidate? MapToCandidate(
         JsonElement root, JsonElement pr, DiscoveryQuery query, string dateSlot)
     {
@@ -148,6 +184,7 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
         }
 
         if (query.Languages.Count > 0 &&
+            !string.IsNullOrEmpty(language) &&
             !query.Languages.Any(l => string.Equals(l, language, StringComparison.OrdinalIgnoreCase)))
             return null;
 
