@@ -26,6 +26,7 @@
     <ProjectReference Include="..\GauntletCI.Core\GauntletCI.Core.csproj" />
     <ProjectReference Include="..\GauntletCI.Cli\GauntletCI.Cli.csproj" />
     <ProjectReference Include="..\GauntletCI.Llm\GauntletCI.Llm.csproj" />
+    <ProjectReference Include="..\GauntletCI.Corpus\GauntletCI.Corpus.csproj" />
   </ItemGroup>
 
 </Project>

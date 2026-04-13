@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
-using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -17,8 +17,9 @@ public class GCI0020_AccountabilityStandard : RuleBase
     private static readonly string[] SecretPatterns = ["password", "secret", "apikey", "api_key", "pwd", "passwd"];
 
     public override Task<List<Finding>> EvaluateAsync(
-        DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct = default)
+        AnalysisContext context, CancellationToken ct = default)
     {
+        var diff = context.Diff;
         var findings = new List<Finding>();
 
         CheckSwallowedExceptions(diff, findings);
