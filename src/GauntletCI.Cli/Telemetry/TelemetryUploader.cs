@@ -16,9 +16,14 @@ public static class TelemetryUploader
     /// Fire-and-forget: upload pending events in the background.
     /// Call without await from the CLI to avoid blocking.
     /// </summary>
+    /// <returns>A detached <see cref="Task"/> — the caller must not await it; all exceptions are suppressed.</returns>
     public static void UploadInBackground() =>
         Task.Run(UploadAsync).ContinueWith(_ => { }); // swallow all exceptions
 
+    /// <summary>
+    /// Fetches pending events from the local queue, posts them to the telemetry endpoint,
+    /// and marks successfully uploaded events as sent. Does nothing when mode is not Shared.
+    /// </summary>
     public static async Task UploadAsync()
     {
         try

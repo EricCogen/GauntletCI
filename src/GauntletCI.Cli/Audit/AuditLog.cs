@@ -10,6 +10,7 @@ namespace GauntletCI.Cli.Audit;
 /// </summary>
 public static class AuditLog
 {
+    /// <summary>Absolute path to the NDJSON audit log file in the user profile directory.</summary>
     public static readonly string LogPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
         ".gauntletci", "audit-log.ndjson");
@@ -19,6 +20,12 @@ public static class AuditLog
 
     private static readonly SemaphoreSlim _guard = new(1, 1);
 
+    /// <summary>
+    /// Appends a single audit entry to the log file, creating it if absent.
+    /// Uses a semaphore to prevent concurrent writes from corrupting the NDJSON stream.
+    /// </summary>
+    /// <param name="entry">The audit entry to serialise and append.</param>
+    /// <param name="ct">Cancellation token.</param>
     public static async Task AppendAsync(AuditLogEntry entry, CancellationToken ct = default)
     {
         await _guard.WaitAsync(ct).ConfigureAwait(false);
@@ -33,6 +40,11 @@ public static class AuditLog
         finally { _guard.Release(); }
     }
 
+    /// <summary>
+    /// Reads and deserialises all valid entries from the audit log, skipping malformed lines.
+    /// </summary>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>All successfully parsed audit entries, oldest first.</returns>
     public static async Task<IReadOnlyList<AuditLogEntry>> LoadAllAsync(CancellationToken ct = default)
     {
         if (!File.Exists(LogPath))

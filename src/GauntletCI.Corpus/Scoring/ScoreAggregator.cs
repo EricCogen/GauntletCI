@@ -98,6 +98,8 @@ public sealed class ScoreAggregator : IScoreAggregator
             int fired       = firedCounts.GetValueOrDefault(key, 0);
 
             double triggerRate = (double)fired / totalTier;
+            // Precision = TP / (TP + FP);  Recall = TP / (TP + FN)
+            // Guard against division by zero when no predictions or no actual positives
             double precision   = (tp + fp) > 0 ? (double)tp / (tp + fp) : 0.0;
             double recall      = (tp + fn) > 0 ? (double)tp / (tp + fn) : 0.0;
 

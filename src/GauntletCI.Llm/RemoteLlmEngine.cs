@@ -21,6 +21,10 @@ public sealed class RemoteLlmEngine : ILlmEngine
     private readonly string _apiKey;
     private readonly HttpClient _http;
 
+    /// <summary>Initializes the engine and configures the <see cref="HttpClient"/> with auth headers.</summary>
+    /// <param name="endpoint">Full URL of the OpenAI-compatible chat completions endpoint.</param>
+    /// <param name="model">Model identifier sent in each request body (e.g., <c>gpt-4o</c>).</param>
+    /// <param name="apiKey">Bearer token used for authorization.</param>
     public RemoteLlmEngine(string endpoint, string model, string apiKey)
     {
         _endpoint = endpoint;
@@ -31,8 +35,10 @@ public sealed class RemoteLlmEngine : ILlmEngine
         _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
     }
 
+    /// <summary>Always <see langword="true"/>; reachability of the remote endpoint is not pre-checked.</summary>
     public bool IsAvailable => true;
 
+    /// <summary>Builds an enrichment prompt and forwards it to the remote model.</summary>
     public async Task<string> EnrichFindingAsync(Finding finding, CancellationToken ct = default)
     {
         var prompt = PromptTemplates.EnrichFinding(
@@ -41,12 +47,14 @@ public sealed class RemoteLlmEngine : ILlmEngine
         return await CallAsync(prompt, ct);
     }
 
+    /// <summary>Builds a summarization prompt from all finding summaries and forwards it to the remote model.</summary>
     public async Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct = default)
     {
         var prompt = PromptTemplates.SummarizeReport(findings.Select(f => f.Summary));
         return await CallAsync(prompt, ct);
     }
 
+    /// <summary>Forwards a pre-built prompt directly to the remote model and returns its completion.</summary>
     public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
         => CallAsync(prompt, ct);
 
@@ -84,5 +92,6 @@ public sealed class RemoteLlmEngine : ILlmEngine
         }
     }
 
+    /// <summary>Disposes the underlying <see cref="HttpClient"/>.</summary>
     public void Dispose() => _http.Dispose();
 }

@@ -12,6 +12,10 @@ public static class PromptTemplates
     private const string AssistantStart = "<|assistant|>\n";
 
     /// <summary>Builds a prompt to enrich a single finding with a one-sentence explanation.</summary>
+    /// <param name="ruleId">The rule identifier (e.g., <c>GCI0001</c>) for context.</param>
+    /// <param name="ruleName">Human-readable rule name shown to the model.</param>
+    /// <param name="summary">Short description of what was flagged.</param>
+    /// <param name="evidence">The code snippet or diff evidence the rule matched on.</param>
     public static string EnrichFinding(string ruleId, string ruleName, string summary, string evidence) =>
         $"{UserStart}" +
         $"You are a code review assistant. A rule called \"{ruleName}\" ({ruleId}) flagged this issue:\n\n" +
@@ -23,6 +27,7 @@ public static class PromptTemplates
         $"{AssistantStart}";
 
     /// <summary>Builds a prompt to summarize a full set of findings into one paragraph.</summary>
+    /// <param name="findingSummaries">One summary string per finding, in any order.</param>
     public static string SummarizeReport(IEnumerable<string> findingSummaries) =>
         $"{UserStart}" +
         $"You are a code review assistant. A pull request was analysed and produced these findings:\n\n" +
@@ -35,6 +40,8 @@ public static class PromptTemplates
     /// <summary>
     /// Extracts a single-sentence expert fact from a PR or issue body for LLM distillation.
     /// </summary>
+    /// <param name="title">Issue or PR title used to orient the model.</param>
+    /// <param name="body">Issue or PR body text; truncated to 2000 characters to stay within token limits.</param>
     public static string ExtractExpertFact(string title, string body)
     {
         var truncatedBody = body.Length > 2000 ? body[..2000] + "…" : body;

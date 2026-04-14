@@ -12,6 +12,10 @@ public static class FixtureIdHelper
     /// Builds a fixture ID from repo owner, name, and PR number.
     /// Example: "torvalds", "linux", 4321 → "torvalds_linux_pr4321"
     /// </summary>
+    /// <param name="repoOwner">The repository owner login (lowercased and sanitized).</param>
+    /// <param name="repoName">The repository name (lowercased and sanitized).</param>
+    /// <param name="prNumber">The pull request number.</param>
+    /// <returns>A deterministic lowercase string usable as a file-system safe fixture ID.</returns>
     public static string Build(string repoOwner, string repoName, int prNumber)
     {
         var owner = Sanitize(repoOwner);

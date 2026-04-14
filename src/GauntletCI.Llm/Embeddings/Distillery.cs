@@ -11,6 +11,10 @@ public sealed class Distillery
     private readonly IEmbeddingEngine _embedding;
     private readonly VectorStore _store;
 
+    /// <summary>Initializes the distillery with the LLM, embedding engine, and vector store to use.</summary>
+    /// <param name="llm">LLM engine used to extract expert facts from raw discussion text.</param>
+    /// <param name="embedding">Embedding engine used to convert extracted facts into float vectors.</param>
+    /// <param name="store">Vector store where embedded facts are persisted.</param>
     public Distillery(ILlmEngine llm, IEmbeddingEngine embedding, VectorStore store)
     {
         _llm       = llm;
@@ -48,6 +52,7 @@ public sealed class Distillery
         CancellationToken ct = default)
     {
         var count = 0;
+        // Process highest-engagement issues first: they're most likely to contain expert-level discussion and validated fixes worth extracting as facts
         var sorted = inputs.OrderByDescending(r => r.Reactions).Take(maxRecords);
 
         foreach (var input in sorted)
@@ -82,6 +87,11 @@ public sealed class Distillery
 }
 
 /// <summary>Normalized input for the distillery pipeline.</summary>
+/// <param name="Id">Unique identifier for this record (e.g., issue URL or composite key).</param>
+/// <param name="Title">Issue or PR title used to orient the LLM prompt.</param>
+/// <param name="Body">Full text of the discussion body; long bodies are truncated inside the prompt template.</param>
+/// <param name="Source">URL of the originating discussion, stored for provenance.</param>
+/// <param name="Reactions">Total reaction count used to rank records by community engagement.</param>
 public sealed record DistillationInput(
     string Id,
     string Title,

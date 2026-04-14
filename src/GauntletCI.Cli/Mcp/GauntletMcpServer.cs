@@ -12,6 +12,10 @@ using ModelContextProtocol.Server;
 
 namespace GauntletCI.Cli.Mcp;
 
+/// <summary>
+/// Exposes GauntletCI risk analysis as MCP tools consumable by AI coding assistants.
+/// Tools are auto-discovered by the MCP server host via the <c>[McpServerToolType]</c> attribute.
+/// </summary>
 [McpServerToolType]
 public static class GauntletTools
 {
@@ -24,6 +28,10 @@ public static class GauntletTools
 
     private static ILlmEngine _engine = new NullLlmEngine();
 
+    /// <summary>
+    /// Overrides the LLM engine used to enrich high-confidence findings with natural-language explanations.
+    /// </summary>
+    /// <param name="engine">The engine implementation to activate; defaults to <see cref="NullLlmEngine"/>.</param>
     public static void SetEngine(ILlmEngine engine) => _engine = engine;
 
     [McpServerTool, Description("Analyze staged changes in a git repository for pre-commit risk findings")]

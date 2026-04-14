@@ -127,6 +127,15 @@ gauntletci analyze --staged --output json
 
 # Emit GitHub Actions annotations
 gauntletci analyze --staged --github-annotations
+
+# Enrich high-confidence findings with a locally running Ollama LLM
+gauntletci analyze --staged --with-llm
+
+# Attach the closest expert knowledge citation from the local vector store
+gauntletci analyze --staged --with-expert-context
+
+# Both LLM enrichment and expert context (requires Ollama + seeded vector store)
+gauntletci analyze --staged --with-llm --with-expert-context
 ```
 
 ### `gauntletci audit` — Local audit trail
@@ -181,6 +190,48 @@ gauntletci mcp serve
 | `list_rules` | List all 42+ analysis rules |
 | `audit_stats` | Aggregate stats from local audit log |
 
+When Ollama is running locally, the MCP server can optionally use `RemoteLlmEngine` to provide LLM-powered explanations for high-confidence findings inline in your AI assistant conversation.
+
+### `gauntletci llm` — Local expert knowledge commands
+
+GauntletCI can build a local vector store of expert .NET facts to attach as citations alongside findings. This requires [Ollama](https://ollama.com) running locally with `nomic-embed-text` pulled.
+
+```bash
+# Install the embedding model (one time)
+ollama pull nomic-embed-text
+
+# Seed 11 hand-curated .NET expert facts into the local vector store
+gauntletci llm seed
+
+# Distill expert facts from a GitHub issues JSON file via LLM
+gauntletci llm distill --input issues.json
+
+# Limit distillation to the top 50 highest-engagement issues
+gauntletci llm distill --input issues.json --max-records 50
+```
+
+Vector store location: `~/.gauntletci/expert-embeddings.db`
+
+### `gauntletci corpus maintainers fetch` — Fetch high-signal OSS PRs
+
+Fetches merged PRs and issues from top .NET OSS contributors for use in the corpus pipeline.
+
+```bash
+# Fetch from default repos (dotnet/runtime, dotnet/roslyn, etc.)
+gauntletci corpus maintainers fetch
+
+# Limit results per label
+gauntletci corpus maintainers fetch --max-per-label 20
+
+# Write output to a specific file
+gauntletci corpus maintainers fetch --output maintainers.json
+
+# Scope to a specific repository
+gauntletci corpus maintainers fetch --repo dotnet/runtime
+```
+
+Requires `GITHUB_TOKEN` env var for authenticated requests (5000 req/hr vs 60 unauthenticated).
+
 ### Other commands
 
 - `gauntletci init` — Initialize GauntletCI config in your repo
@@ -188,6 +239,43 @@ gauntletci mcp serve
 - `gauntletci postmortem` — Run postmortem analysis
 - `gauntletci feedback` — Submit feedback on a finding
 - `gauntletci telemetry` — Manage telemetry opt-in/out
+- `gauntletci llm seed` — Seed local expert knowledge vector store
+- `gauntletci llm distill` — Distill expert facts from GitHub issues via LLM
+- `gauntletci corpus maintainers fetch` — Fetch high-signal OSS maintainer PRs
+
+---
+
+## 🤖 Local LLM Integration
+
+GauntletCI supports optional local LLM enrichment via [Ollama](https://ollama.com). All inference runs on your machine — no data leaves your environment.
+
+### Setup
+
+```bash
+# Install Ollama: https://ollama.com
+# Pull the embedding model
+ollama pull nomic-embed-text
+
+# Seed expert knowledge into the local vector store
+gauntletci llm seed
+```
+
+### Usage
+
+```bash
+# Enrich findings with LLM explanations (Ollama must be running)
+gauntletci analyze --staged --with-llm
+
+# Attach expert knowledge citations
+gauntletci analyze --staged --with-expert-context
+
+# Both together
+gauntletci analyze --staged --with-llm --with-expert-context
+```
+
+When `--with-expert-context` is active, each high-confidence finding is embedded and matched against `~/.gauntletci/expert-embeddings.db`. If a match scores above the similarity threshold, the expert citation is shown inline (CLI) and included in GitHub annotations and MCP tool responses.
+
+**All local LLM processing is fully offline.** Ollama runs locally; nothing is sent to any cloud service.
 
 ---
 
@@ -219,10 +307,11 @@ Run `gauntletci init` to generate a `.gauntletci.json` config file in your repos
 
 ## 🔒 Privacy
 
-All analysis is **local**. No code ever leaves your machine.
+All analysis is **local**. No code ever leaves your machine — including when using Ollama for local LLM enrichment.
 
 - Telemetry is **opt-in** and anonymous (no code, no file paths, no content)
 - All findings are stored only in `~/.gauntletci/audit-log.ndjson`
+- Ollama runs locally; all LLM inference stays on your machine
 
 See the [GauntletCI Charter](CHARTER.md) for the full privacy commitment.
 

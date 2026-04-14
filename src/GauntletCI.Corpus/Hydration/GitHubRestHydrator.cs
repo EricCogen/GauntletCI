@@ -22,6 +22,12 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
     private static readonly JsonSerializerOptions JsonOpts =
         new() { PropertyNameCaseInsensitive = true };
 
+    /// <summary>
+    /// Initializes the hydrator with an externally owned or injected HTTP client.
+    /// </summary>
+    /// <param name="http">The HTTP client pre-configured with auth headers.</param>
+    /// <param name="rawStore">Store used to persist raw API snapshots alongside fixtures.</param>
+    /// <param name="ownsHttpClient">When true, the hydrator disposes <paramref name="http"/> on <see cref="Dispose"/>.</param>
     public GitHubRestHydrator(HttpClient http, RawSnapshotStore rawStore, bool ownsHttpClient = false)
     {
         _http = http;
@@ -35,6 +41,11 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
             _http.Dispose();
     }
 
+    /// <summary>
+    /// Creates a fully configured hydrator using the GITHUB_TOKEN environment variable for auth.
+    /// The returned instance owns its HTTP client and will dispose it on <see cref="Dispose"/>.
+    /// </summary>
+    /// <param name="fixturesBasePath">Root directory where raw fixture snapshots are stored.</param>
     public static GitHubRestHydrator CreateDefault(string fixturesBasePath = "./data/fixtures")
     {
         var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
@@ -47,6 +58,11 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
         return new GitHubRestHydrator(http, new RawSnapshotStore(fixturesBasePath), ownsHttpClient: true);
     }
 
+    /// <summary>
+    /// Parses a GitHub PR URL and hydrates it as if it were an ad-hoc candidate.
+    /// Convenience wrapper around <see cref="HydrateAsync"/> for manual ingestion.
+    /// </summary>
+    /// <param name="url">Full GitHub pull request URL, e.g. https://github.com/owner/repo/pull/123.</param>
     public async Task<HydratedPullRequest> HydrateFromUrlAsync(string url, CancellationToken ct = default)
     {
         var (owner, repo, prNumber) = ParsePrUrl(url);
@@ -61,6 +77,13 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
         return await HydrateAsync(candidate, ct);
     }
 
+    /// <summary>
+    /// Fetches PR metadata, files, review comments, commits, and unified diff from GitHub,
+    /// persists raw snapshots, then maps everything to a <see cref="HydratedPullRequest"/>.
+    /// </summary>
+    /// <param name="candidate">The pull request candidate describing the target repo and PR number.</param>
+    /// <param name="ct">Cancellation token propagated to all HTTP and I/O operations.</param>
+    /// <returns>A fully hydrated pull request with all changed files, review comments, and diff text.</returns>
     public async Task<HydratedPullRequest> HydrateAsync(
         PullRequestCandidate candidate, CancellationToken ct = default)
     {

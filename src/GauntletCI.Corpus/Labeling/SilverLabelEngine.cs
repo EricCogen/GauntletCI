@@ -67,6 +67,10 @@ public sealed class SilverLabelEngine
             "GCI0023", "Review comment mentions broad/sweeping change", 0.55),
     ];
 
+    /// <summary>
+    /// Initializes the engine with the fixture store used to persist and read expected findings.
+    /// </summary>
+    /// <param name="store">The fixture store providing read/write access to <c>expected.json</c> files.</param>
     public SilverLabelEngine(IFixtureStore store)
     {
         _store = store;

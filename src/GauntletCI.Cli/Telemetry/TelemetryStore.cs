@@ -31,6 +31,11 @@ public static class TelemetryStore
     private static readonly JsonSerializerOptions JsonOpts =
         new() { WriteIndented = false, PropertyNameCaseInsensitive = true };
 
+    /// <summary>
+    /// Appends a telemetry event to the local queue, evicting the oldest events when the queue
+    /// exceeds 500 entries to prevent unbounded growth in offline scenarios.
+    /// </summary>
+    /// <param name="evt">The telemetry event to persist.</param>
     public static async Task AppendAsync(TelemetryEvent evt)
     {
         await _inProcessGuard.WaitAsync().ConfigureAwait(false);
@@ -41,6 +46,7 @@ public static class TelemetryStore
                 var events = Load();
                 events.Add(evt);
                 // Keep queue bounded — drop oldest sent events first, then oldest unsent
+                // Bounded to 500 events to prevent unbounded growth in offline scenarios
                 if (events.Count > 500)
                     events = events.OrderBy(e => e.Sent).ThenBy(e => e.Timestamp).Skip(50).ToList();
                 Save(events);
@@ -50,6 +56,11 @@ public static class TelemetryStore
         finally { _inProcessGuard.Release(); }
     }
 
+    /// <summary>
+    /// Returns unsent events from the queue, up to the specified limit, without modifying the queue.
+    /// </summary>
+    /// <param name="limit">Maximum number of pending events to return.</param>
+    /// <returns>A list of events that have not yet been marked as sent.</returns>
     public static async Task<List<TelemetryEvent>> GetPendingAsync(int limit = 100)
     {
         await _inProcessGuard.WaitAsync().ConfigureAwait(false);
@@ -63,6 +74,10 @@ public static class TelemetryStore
         finally { _inProcessGuard.Release(); }
     }
 
+    /// <summary>
+    /// Marks the specified events as sent and purges any sent events older than 7 days.
+    /// </summary>
+    /// <param name="eventIds">The IDs of events to mark as successfully uploaded.</param>
     public static async Task MarkSentAsync(IEnumerable<string> eventIds)
     {
         await _inProcessGuard.WaitAsync().ConfigureAwait(false);

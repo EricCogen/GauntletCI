@@ -11,6 +11,14 @@ namespace GauntletCI.Cli.Telemetry;
 /// </summary>
 public static class TelemetryCollector
 {
+    /// <summary>
+    /// Collects telemetry for a completed analysis run: one summary event, one event per finding,
+    /// and one event per rule metric. Triggers background upload when mode is Shared.
+    /// </summary>
+    /// <param name="result">The evaluation result to record.</param>
+    /// <param name="diff">The diff context used in the analysis, for line-count metrics.</param>
+    /// <param name="repoRoot">Absolute path to the repository root, hashed before storage.</param>
+    /// <param name="quiet">Reserved for future suppression of consent prompts (currently unused).</param>
     public static async Task CollectAsync(
         EvaluationResult result,
         DiffContext diff,
