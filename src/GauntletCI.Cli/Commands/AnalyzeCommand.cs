@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.CommandLine;
 using System.Text.Json;
+using GauntletCI.Cli.Audit;
 using GauntletCI.Cli.LlmDaemon;
 using GauntletCI.Cli.Output;
 using GauntletCI.Cli.Presentation;
@@ -132,6 +133,34 @@ public static class AnalyzeCommand
                     GitHubAnnotationWriter.Write(result);
 
                 await TelemetryCollector.CollectAsync(result, diff, repo.FullName);
+
+                // Append full-detail entry to local audit log
+                var diffSource = diffFile is not null ? "file"
+                    : commit is not null ? "commit"
+                    : staged ? "staged"
+                    : unstaged ? "unstaged"
+                    : allChanges ? "all-changes"
+                    : "stdin";
+
+                await AuditLog.AppendAsync(new AuditLogEntry
+                {
+                    RepoPath       = repo.FullName,
+                    CommitSha      = result.CommitSha,
+                    DiffSource     = diffSource,
+                    FilesChanged   = result.FileStatistics.TotalFiles,
+                    FilesEligible  = result.FileStatistics.EligibleFiles,
+                    RulesEvaluated = result.RulesEvaluated,
+                    FindingCount   = result.Findings.Count,
+                    Findings       = [.. result.Findings.Select(f => new AuditFinding
+                    {
+                        RuleId     = f.RuleId,
+                        RuleName   = f.RuleName,
+                        Summary    = f.Summary,
+                        Confidence = f.Confidence.ToString(),
+                        FilePath   = f.FilePath,
+                        Line       = f.Line,
+                    })],
+                });
 
                 ctx.ExitCode = result.HasFindings ? 1 : 0;
             }
