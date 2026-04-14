@@ -31,4 +31,20 @@ public static class PromptTemplates
         $"Be concise and direct." +
         $"{UserEnd}" +
         $"{AssistantStart}";
+
+    /// <summary>
+    /// Extracts a single-sentence expert fact from a PR or issue body for LLM distillation.
+    /// </summary>
+    public static string ExtractExpertFact(string title, string body)
+    {
+        var truncatedBody = body.Length > 2000 ? body[..2000] + "…" : body;
+        return
+            $"{UserStart}" +
+            $"From this GitHub discussion:\n\nTitle: {title}\n\nContent:\n{truncatedBody}\n\n" +
+            $"Extract one single-sentence expert fact about .NET performance, concurrency, or resource management. " +
+            $"The fact must be specific, actionable, and describe exact behavior or a concrete risk. " +
+            $"Do not start with 'The' or 'This'. Output ONLY the fact sentence, nothing else." +
+            $"{UserEnd}" +
+            $"{AssistantStart}";
+    }
 }

@@ -156,6 +156,9 @@ internal sealed class LlmDaemonClient : ILlmEngine
     public Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct = default)
         => Task.FromResult(string.Empty);
 
+    public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
+        => Task.FromResult(string.Empty);
+
     private async Task<DaemonResponse?> SendAsync(DaemonRequest req, CancellationToken ct)
     {
         if (_disposed || !_pipe.IsConnected) return null;

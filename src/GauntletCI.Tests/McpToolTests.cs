@@ -263,6 +263,8 @@ public class McpToolTests
             => Task.FromResult(response);
         public Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct = default)
             => Task.FromResult(response);
+        public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
+            => Task.FromResult(response);
         public void Dispose() { }
     }
 
@@ -276,6 +278,8 @@ public class McpToolTests
             return Task.FromResult("ok");
         }
         public Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct = default)
+            => Task.FromResult("ok");
+        public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
             => Task.FromResult("ok");
         public void Dispose() { }
     }

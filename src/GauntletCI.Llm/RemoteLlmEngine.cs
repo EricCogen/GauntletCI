@@ -47,6 +47,9 @@ public sealed class RemoteLlmEngine : ILlmEngine
         return await CallAsync(prompt, ct);
     }
 
+    public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
+        => CallAsync(prompt, ct);
+
     private async Task<string> CallAsync(string userPrompt, CancellationToken ct)
     {
         var body = new
