@@ -8,7 +8,9 @@ namespace GauntletCI.Tests;
 /// <summary>
 /// Tests for TelemetryConsent — mode parsing, mode enum values, and migration from legacy consent.json.
 /// Uses reflection to reset the internal static cache between tests.
+/// Runs serially with TelemetryCollectorTests to prevent file-lock races on the consent file.
 /// </summary>
+[Collection("TelemetrySerial")]
 public class TelemetryConsentTests
 {
     private static void ResetCache() =>
