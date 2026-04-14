@@ -17,6 +17,7 @@
   <ItemGroup>
     <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     <None Include="..\..\GauntletCI.png" Pack="true" PackagePath="\" />
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,11 +40,9 @@
     <PackageReleaseNotes>v2.0.0: 42 built-in rules, local LLM expert distillery, MCP server, Ollama embedding engine, corpus pipeline, GitHub Actions annotations, full audit log.</PackageReleaseNotes>
     <Copyright>Copyright © 2024 Eric Cogen</Copyright>
     <PackageProjectUrl>https://gauntletci.com</PackageProjectUrl>
-    <PackageLicenseExpression>Elastic-2.0</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/EricCogen/GauntletCI</PackageProjectUrl>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/EricCogen/GauntletCI.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageLicenseExpression>Elastic-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageIcon>GauntletCI.png</PackageIcon>
   </PropertyGroup>

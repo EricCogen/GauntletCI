@@ -9,7 +9,7 @@
     <owners>Eric Cogen</owners>
 
     <!-- Licensing -->
-    <license type="expression">Elastic-2.0</license>
+    <license type="file">LICENSE</license>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <copyright>Copyright © 2024 Eric Cogen</copyright>
 
@@ -142,6 +142,7 @@ v2.0.0
     <!-- Package assets -->
     <file src="..\..\README.md" target="" />
     <file src="..\..\GauntletCI.png" target="" />
+    <file src="..\..\LICENSE" target="" />
   </files>
 
 </package>
