@@ -36,6 +36,18 @@ public sealed class CorpusDb : IDisposable
         using var cmd = Connection.CreateCommand();
         cmd.CommandText = SchemaInitializer.Ddl;
         await cmd.ExecuteNonQueryAsync(cancellationToken);
+
+        // Idempotent migrations — ALTER TABLE errors if column exists; that is harmless.
+        foreach (var migration in SchemaInitializer.Migrations)
+        {
+            try
+            {
+                using var m = Connection.CreateCommand();
+                m.CommandText = migration;
+                await m.ExecuteNonQueryAsync(cancellationToken);
+            }
+            catch { /* column already exists */ }
+        }
     }
 
     public void Dispose() => _connection?.Dispose();
@@ -149,4 +161,9 @@ internal static class SchemaInitializer
             PRIMARY KEY (rule_id, tier)
         );
         """;
+
+    internal static readonly string[] Migrations =
+    [
+        "ALTER TABLE actual_findings ADD COLUMN file_path TEXT",
+    ];
 }
