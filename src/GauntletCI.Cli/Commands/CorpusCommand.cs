@@ -38,6 +38,10 @@ public static class CorpusCommand
         issues.AddCommand(CreateIssueSearch());
         corpus.AddCommand(issues);
 
+        var maintainers = new Command("maintainers", "Expert maintainer knowledge acquisition");
+        maintainers.AddCommand(CreateMaintainersFetch());
+        corpus.AddCommand(maintainers);
+
         return corpus;
     }
 
@@ -1284,5 +1288,62 @@ public static class CorpusCommand
         Console.WriteLine($"[corpus] Language: {m.Language}");
         Console.WriteLine($"[corpus] Tags    : {string.Join(", ", m.Tags)}");
         Console.WriteLine($"[corpus] Next    : gauntletci corpus normalize --fixture {m.FixtureId}");
+    }
+
+    // ── gauntletci corpus maintainers fetch ──────────────────────────────────
+
+    private static Command CreateMaintainersFetch()
+    {
+        var outputOpt = new Option<string>("--output", () => "./data/maintainer-records.ndjson",
+            "Output path for NDJSON records");
+        var maxOpt    = new Option<int>("--max-per-label", () => 100,
+            "Max search results per label per repo");
+        var reposOpt  = new Option<string[]>("--repo",
+            "Additional repos to fetch (format: owner/repo). Can specify multiple times.")
+            { AllowMultipleArgumentsPerToken = false, Arity = ArgumentArity.ZeroOrMore };
+
+        var cmd = new Command("fetch", "Fetch high-signal PRs/issues from top OSS contributors");
+        cmd.AddOption(outputOpt);
+        cmd.AddOption(maxOpt);
+        cmd.AddOption(reposOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var output      = ctx.ParseResult.GetValueForOption(outputOpt)!;
+            var max         = ctx.ParseResult.GetValueForOption(maxOpt);
+            var extraRepos  = ctx.ParseResult.GetValueForOption(reposOpt) ?? [];
+            var ct          = ctx.GetCancellationToken();
+
+            var targets = GauntletCI.Corpus.MaintainerFetcher.MaintainerTarget.Defaults.ToList();
+            foreach (var r in extraRepos)
+            {
+                var parts = r.Split('/', 2);
+                if (parts.Length == 2)
+                    targets.Add(new GauntletCI.Corpus.MaintainerFetcher.MaintainerTarget(
+                        parts[0], parts[1], ["performance", "design-discussion"]));
+            }
+
+            Console.WriteLine($"[maintainers] Fetching from {targets.Count} repos, max {max} per label…");
+
+            using var fetcher = GauntletCI.Corpus.MaintainerFetcher.MaintainerFetcher.CreateDefault();
+            var records = await fetcher.FetchAsync([.. targets], max, ct);
+
+            var dir = Path.GetDirectoryName(output);
+            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+
+            var jsonOpts = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+            };
+
+            await using var writer = new StreamWriter(output, append: false, System.Text.Encoding.UTF8);
+            foreach (var rec in records)
+                await writer.WriteLineAsync(JsonSerializer.Serialize(rec, jsonOpts));
+
+            Console.WriteLine($"[maintainers] Wrote {records.Count} records to {output}");
+        });
+
+        return cmd;
     }
 }
