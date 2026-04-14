@@ -121,7 +121,8 @@ public sealed class SilverLabelEngine
     /// After merging positive matches, emits ShouldTrigger=false for any covered rule that
     /// did not produce a positive signal, enabling real precision computation.
     /// </summary>
-    public async Task ApplyToFixtureAsync(
+    /// <returns>Total number of labels written to <c>expected.json</c>.</returns>
+    public async Task<int> ApplyToFixtureAsync(
         string fixtureId, string diffText, bool overwriteExisting = false, CancellationToken ct = default)
     {
         var inferred = (await InferLabelsAsync(fixtureId, diffText, ct)).ToList();
@@ -164,6 +165,7 @@ public sealed class SilverLabelEngine
         var existingLabels = await ReadExistingLabelsAsync(fixtureId, ct);
         var merged         = MergeLabels(existingLabels, inferred, overwriteExisting);
         await _store.SaveExpectedFindingsAsync(fixtureId, merged, ct);
+        return merged.Count;
     }
 
     // -- Heuristic application -------------------------------------------------
