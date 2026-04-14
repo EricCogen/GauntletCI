@@ -31,5 +31,6 @@ jobs:
     - name: Pack
       run: dotnet pack src/GauntletCI.Cli/GauntletCI.Cli.csproj --no-build --configuration Release --output packaging/
 
-    - name: Publish to GitHub Packages
-      run: dotnet nuget push packaging/*.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/EricCogen/index.json --skip-duplicate
+    - name: Publish to NuGet.org
+      if: ${{ secrets.NUGET_API_KEY != '' }}
+      run: dotnet nuget push packaging/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
