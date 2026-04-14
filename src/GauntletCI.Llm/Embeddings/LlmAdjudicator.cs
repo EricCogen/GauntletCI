@@ -13,6 +13,10 @@ public sealed class LlmAdjudicator
     private readonly VectorStore _store;
     private readonly float _minScore;
 
+    /// <summary>Initializes the adjudicator with the embedding engine, vector store, and minimum similarity threshold.</summary>
+    /// <param name="embedding">Embedding engine used to convert finding context into a query vector.</param>
+    /// <param name="store">Vector store queried for expert facts matching each finding.</param>
+    /// <param name="minScore">Cosine similarity floor; findings below this threshold receive no expert context.</param>
     public LlmAdjudicator(IEmbeddingEngine embedding, VectorStore store, float minScore = 0.40f)
     {
         _embedding = embedding;
@@ -47,6 +51,7 @@ public sealed class LlmAdjudicator
                 if (top.Score >= _minScore)
                     finding.ExpertContext = new ExpertFact(top.Content, top.Source, top.Score);
             }
+            // Catch per-finding to ensure one bad embedding doesn't abort the entire batch
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"[adjudicator] Error for {finding.RuleId}: {ex.Message}");

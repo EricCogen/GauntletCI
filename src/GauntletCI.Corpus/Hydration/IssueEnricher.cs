@@ -7,6 +7,10 @@ using Microsoft.Data.Sqlite;
 
 namespace GauntletCI.Corpus.Hydration;
 
+/// <summary>
+/// Fetches GitHub issues referenced in PR bodies and links them to fixture records in the corpus DB.
+/// Requires GITHUB_TOKEN to be set; silently skips enrichment when the token is absent.
+/// </summary>
 public sealed class IssueEnricher : IDisposable
 {
     private readonly HttpClient _http;
@@ -18,12 +22,21 @@ public sealed class IssueEnricher : IDisposable
         @"(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+(?:(\w[\w-]*/[\w.-]+)?#)(\d+)",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    /// <summary>
+    /// Initializes the enricher with an externally owned or injected HTTP client.
+    /// </summary>
+    /// <param name="http">Pre-configured HTTP client (auth headers should already be set).</param>
+    /// <param name="ownsClient">When true, disposes <paramref name="http"/> on <see cref="Dispose"/>.</param>
     public IssueEnricher(HttpClient http, bool ownsClient = false)
     {
         _http = http;
         _ownsClient = ownsClient;
     }
 
+    /// <summary>
+    /// Creates a fully configured enricher using the GITHUB_TOKEN environment variable for auth.
+    /// The returned instance owns its HTTP client.
+    /// </summary>
     public static IssueEnricher CreateDefault()
     {
         var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
@@ -37,6 +50,17 @@ public sealed class IssueEnricher : IDisposable
 
     public void Dispose() { if (_ownsClient) _http.Dispose(); }
 
+    /// <summary>
+    /// Parses issue references from <paramref name="prBody"/>, fetches each referenced issue from GitHub,
+    /// upserts it into the corpus DB, and creates fixture–issue links.
+    /// </summary>
+    /// <param name="db">Open SQLite connection for the corpus database.</param>
+    /// <param name="fixtureId">The fixture ID to link resolved issues against.</param>
+    /// <param name="owner">Default repository owner when the issue reference omits an explicit repo.</param>
+    /// <param name="repo">Default repository name when the issue reference omits an explicit repo.</param>
+    /// <param name="prBody">The raw PR description body to scan for "closes #N" patterns.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>The number of issues successfully fetched and linked.</returns>
     public async Task<int> EnrichAsync(
         SqliteConnection db, string fixtureId,
         string owner, string repo, string prBody,
@@ -67,6 +91,13 @@ public sealed class IssueEnricher : IDisposable
         return linked;
     }
 
+    /// <summary>
+    /// Extracts deduplicated issue references from a PR body using "closes/fixes/resolves #N" patterns.
+    /// </summary>
+    /// <param name="defaultOwner">Owner used when the reference is a bare <c>#N</c> without explicit repo.</param>
+    /// <param name="defaultRepo">Repo used when the reference is a bare <c>#N</c> without explicit repo.</param>
+    /// <param name="body">The PR body text to scan.</param>
+    /// <returns>Deduplicated list of (owner, repo, issue number) tuples in order of appearance.</returns>
     public static List<(string Owner, string Repo, int Number)> ParseBodyRefs(
         string defaultOwner, string defaultRepo, string body)
     {
