@@ -1,5 +1,5 @@
 # GauntletCI Corpus Pipeline Runner
-# Usage: .\run-corpus.ps1 [-Help] [-Provider "gh-search"] [-StartDate "2025-03-01"] [-EndDate "2025-03-31"] [-Limit 50] [-Language "C#"] [-MinComments 2] [-MinStars 500] [-Tier "discovery"] [-Db <path>] [-Fixtures <path>] [-Report <path>] [-SkipTo <step>]
+# Usage: .\run-corpus.ps1 [-Help] [-Provider "gh-search"] [-StartDate "2025-03-01"] [-EndDate "2025-03-31"] [-Limit 50] [-Language "C#"] [-MinComments 2] [-MinStars 500] [-Tier "discovery"] [-Db <path>] [-Fixtures <path>] [-Report <path>] [-SkipTo <step>] [-SkipSeedQueue]
 
 param(
     [switch] $Help,
@@ -15,7 +15,10 @@ param(
     [string]$Db           = "./data/gauntletci-corpus.db",
     [string]$Fixtures     = "./data/fixtures",
     [string]$Report       = "./data/scorecard.md",
-    [int]   $SkipTo       = 1,   # Set to 2-7 to resume from a specific step
+    [int]   $SkipTo         = 1,     # Set to 2-7 to resume from a specific step
+    [switch]$SkipSeedQueue  = $false, # Skip Step 7 (seed labeler queue) even if present
+    [int]   $SeedQueueLimit = 150,   # Max fired items to add to the labeler queue
+    [int]   $SeedQueueNonFired = 30, # Non-fired probe tasks to add per queue seed
     # Known game repositories and other low-signal repos to exclude from discovery.
     # Add owner/repo strings here to prevent them from entering the corpus.
     [string[]]$RepoBlocklist = @(
@@ -116,6 +119,9 @@ if ($Help) {
     Write-Host "                         When set, searches each repo directly (no global keyword search)."
     Write-Host "                         Defaults to 15 high-quality C# OSS repos. Pass @() to disable."
     Write-Host "  -SkipTo    <step>      Resume from step N (1–7, default: 1)"
+    Write-Host "  -SkipSeedQueue         Skip Step 7 (labeler queue seed) even if seed_queue.py is present"
+    Write-Host "  -SeedQueueLimit <n>    Max fired findings to queue for labeling (default: 150)"
+    Write-Host "  -SeedQueueNonFired <n> Non-fired probe tasks per queue seed run (default: 30)"
     Write-Host ""
     Write-Host "STEPS" -ForegroundColor Yellow
     Write-Host "  1  Discover   — pull PR candidates from GH Archive"
@@ -125,6 +131,7 @@ if ($Help) {
     Write-Host "  4  Label      — apply silver heuristic labels"
     Write-Host "  5  Score      — compute precision / recall aggregates"
     Write-Host "  6  Report     — write markdown scorecard to -Report path"
+    Write-Host "  7  Seed queue — populate labeler queue from actual_findings (requires Python)"
     Write-Host ""
     Write-Host "EXAMPLES" -ForegroundColor Yellow
     Write-Host "  # Full pipeline for yesterday"
@@ -271,6 +278,23 @@ if ($SkipTo -le 6) {
     Write-Host ""
     Write-Host "✅ Pipeline complete. Scorecard: $Report" -ForegroundColor Green
     if (Test-Path $Report) { Get-Content $Report | Select-Object -First 30 }
+}
+
+# ── Step 7: Seed labeler queue ────────────────────────────────────────────────
+if ($SkipTo -le 7 -and -not $SkipSeedQueue) {
+    Step 7 "Seed labeler queue from actual_findings"
+
+    $seedScript = Join-Path $RepoRoot "src\GauntletCI.Corpus\GauntletCI_Labeler_App\seed_queue.py"
+    if (-not (Test-Path $seedScript)) {
+        Write-Warning "seed_queue.py not found at $seedScript — skipping queue seed."
+    } elseif (-not (Get-Command python -ErrorAction SilentlyContinue)) {
+        Write-Warning "Python not found in PATH — skipping queue seed. Run manually: python seed_queue.py"
+    } else {
+        Push-Location (Split-Path $seedScript)
+        python seed_queue.py --limit $SeedQueueLimit --include-nonfired $SeedQueueNonFired
+        if ($LASTEXITCODE -ne 0) { Write-Warning "seed_queue.py exited with code $LASTEXITCODE" }
+        Pop-Location
+    }
 }
 
 Pop-Location
