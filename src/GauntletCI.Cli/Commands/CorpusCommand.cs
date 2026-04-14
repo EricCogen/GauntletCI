@@ -1240,6 +1240,7 @@ public static class CorpusCommand
                     Exec("DELETE FROM expected_findings WHERE fixture_id = $fid", "$fid", fixtureId);
                     Exec("DELETE FROM evaluations       WHERE fixture_id = $fid", "$fid", fixtureId);
                     Exec("DELETE FROM rule_runs         WHERE fixture_id = $fid", "$fid", fixtureId);
+                    Exec("DELETE FROM fixture_issues    WHERE fixture_id = $fid", "$fid", fixtureId);
                     Exec("DELETE FROM fixtures          WHERE fixture_id = $fid", "$fid", fixtureId);
                     Exec("DELETE FROM hydrations        WHERE candidate_id = $cid", "$cid", candidateId);
                     Exec("DELETE FROM candidates        WHERE id = $cid",           "$cid", candidateId);
