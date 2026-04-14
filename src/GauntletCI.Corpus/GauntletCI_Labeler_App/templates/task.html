@@ -170,8 +170,8 @@
         tr.className = 'diff-row-hunk';
         const m = hunkRe.exec(line);
         if (m) { oldLine = parseInt(m[1], 10); newLine = parseInt(m[2], 10); }
-      } else if (line.startsWith('---') || line.startsWith('+++')) {
-        /* file header — no class, no line numbers */
+      } else if (line.startsWith('---') || line.startsWith('+++') || line.startsWith('...')) {
+        /* file header / info separator — no class, no line numbers */
       } else if (line.startsWith('+')) {
         tr.className = 'diff-row-add';
         newLn = String(newLine++);

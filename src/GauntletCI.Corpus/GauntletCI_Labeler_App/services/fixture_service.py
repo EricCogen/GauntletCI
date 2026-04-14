@@ -163,8 +163,16 @@ def _find_line_in_section(lines: list[str], section_start: int, target_new_line:
 
 
 def _format_snippet(lines: list[str], start: int, end: int) -> str:
+    # Find the nearest preceding @@ hunk header so the browser can
+    # initialise line-number counters from the correct offset.
+    hunk_prefix: list[str] = []
+    if start < len(lines) and not lines[start].startswith("@@"):
+        for k in range(start - 1, -1, -1):
+            if lines[k].startswith("@@"):
+                hunk_prefix = [lines[k]]
+                break
     header = f"... lines {start + 1}–{end} of {len(lines)} ..."
-    return header + "\n" + "\n".join(lines[start:end])
+    return "\n".join(hunk_prefix + [header] + lines[start:end])
 
 
 def extract_diff_snippet(diff_patch: str, search_text: str, context_lines: int = 30) -> str:
