@@ -33,7 +33,7 @@ They are **behavior changes** — and they regularly slip through code review.
 
 GauntletCI exists to catch them **before they reach production**.
 
-Read the full story behind GauntletCI in **[STORY.md](STORY.md)**.
+Read the full [STORY.md](story) behind GauntletCI.
 
 ---
 
