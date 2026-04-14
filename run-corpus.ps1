@@ -118,7 +118,7 @@ if ($Help) {
     Write-Host "  -RepoAllowlist <repos>  Curated repos to target (owner/repo, repeatable)."
     Write-Host "                         When set, searches each repo directly (no global keyword search)."
     Write-Host "                         Defaults to 15 high-quality C# OSS repos. Pass @() to disable."
-    Write-Host "  -SkipTo    <step>      Resume from step N (1–7, default: 1)"
+    Write-Host "  -SkipTo    <step>      Resume from step N (1–8, default: 1)"
     Write-Host "  -SkipSeedQueue         Skip Step 7 (labeler queue seed) even if seed_queue.py is present"
     Write-Host "  -SeedQueueLimit <n>    Max fired findings to queue for labeling (default: 150)"
     Write-Host "  -SeedQueueNonFired <n> Non-fired probe tasks per queue seed run (default: 30)"
@@ -132,6 +132,7 @@ if ($Help) {
     Write-Host "  5  Score      — compute precision / recall aggregates"
     Write-Host "  6  Report     — write markdown scorecard to -Report path"
     Write-Host "  7  Seed queue — populate labeler queue from actual_findings (requires Python)"
+    Write-Host "  8  Label again — re-apply silver labels with --overwrite (final pass)"
     Write-Host ""
     Write-Host "EXAMPLES" -ForegroundColor Yellow
     Write-Host "  # Full pipeline for yesterday"
@@ -252,7 +253,7 @@ if ($SkipTo -le 3) {
     if ($LASTEXITCODE -ne 0) { throw "Run-all failed" }
 }
 
-# ── Step 4: Label ─────────────────────────────────────────────────────────────
+# ── Step 4: Label (initial pass) ─────────────────────────────────────────────
 if ($SkipTo -le 4) {
     Step 4 "Apply silver heuristic labels"
 
@@ -275,8 +276,6 @@ if ($SkipTo -le 6) {
     Invoke-Expression "$cli corpus report --db $Db --fixtures $Fixtures --output $Report"
     if ($LASTEXITCODE -ne 0) { throw "Report failed" }
 
-    Write-Host ""
-    Write-Host "✅ Pipeline complete. Scorecard: $Report" -ForegroundColor Green
     if (Test-Path $Report) { Get-Content $Report | Select-Object -First 30 }
 }
 
@@ -295,6 +294,17 @@ if ($SkipTo -le 7 -and -not $SkipSeedQueue) {
         if ($LASTEXITCODE -ne 0) { Write-Warning "seed_queue.py exited with code $LASTEXITCODE" }
         Pop-Location
     }
+}
+
+# ── Step 8: Label (final pass with --overwrite) ───────────────────────────────
+if ($SkipTo -le 8) {
+    Step 8 "Re-apply silver labels (final pass, --overwrite)"
+
+    Invoke-Expression "$cli corpus label-all --db $Db --fixtures $Fixtures --overwrite"
+    if ($LASTEXITCODE -ne 0) { throw "Label-all (final) failed" }
+
+    Write-Host ""
+    Write-Host "✅ Pipeline complete. Scorecard: $Report" -ForegroundColor Green
 }
 
 Pop-Location
