@@ -18,7 +18,6 @@ public sealed class HydratedPullRequest
     public IReadOnlyList<ReviewComment> ReviewComments { get; init; } = [];
     public IReadOnlyList<string> Commits { get; init; } = [];
     public string DiffText { get; init; } = string.Empty;
-    public string PatchText { get; init; } = string.Empty;
     public string? RawApiPayloadJson { get; init; }
     public DateTime HydratedAtUtc { get; init; }
 }

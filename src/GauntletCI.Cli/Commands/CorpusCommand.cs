@@ -19,7 +19,17 @@ public static class CorpusCommand
 {
     public static Command Create()
     {
-        var corpus = new Command("corpus", "Manage the GauntletCI fixture corpus");
+        var corpus = new Command("corpus", """
+            Manage the GauntletCI fixture corpus.
+
+            Typical workflow:
+              1. corpus discover --provider gh-search --repo-allowlist owner/repo
+              2. corpus batch-hydrate --limit 50
+              3. corpus label-all --tier discovery
+              4. corpus run-all --tier discovery
+              5. corpus score
+              6. corpus report
+            """);
         corpus.AddCommand(CreateAddPr());
         corpus.AddCommand(CreateNormalize());
         corpus.AddCommand(CreateList());
@@ -304,7 +314,7 @@ public static class CorpusCommand
             Arity = ArgumentArity.ZeroOrMore,
             AllowMultipleArgumentsPerToken = true,
         };
-        var repoAllowlistOpt = new Option<string[]>("--repo-allowlist", "Only discover from these repos in owner/repo format (repeatable). When set, searches are targeted per-repo instead of global.")
+        var repoAllowlistOpt = new Option<string[]>("--repo-allowlist", "Only discover from these repos in owner/repo format (repeatable). Required when --provider gh-search.")
         {
             Arity = ArgumentArity.ZeroOrMore,
             AllowMultipleArgumentsPerToken = true,
@@ -350,6 +360,12 @@ public static class CorpusCommand
                 if (string.IsNullOrEmpty(token))
                 {
                     Console.Error.WriteLine("[corpus] Error: GITHUB_TOKEN environment variable is required for gh-search provider.");
+                    ctx.ExitCode = 1;
+                    return;
+                }
+                if (repoAllowlist.Length == 0)
+                {
+                    Console.Error.WriteLine("[corpus] Error: --repo-allowlist is required for gh-search. Pass one or more owner/repo values.");
                     ctx.ExitCode = 1;
                     return;
                 }
@@ -455,6 +471,13 @@ public static class CorpusCommand
             var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
             var ct       = ctx.GetCancellationToken();
 
+            if (!Enum.TryParse<GauntletCI.Corpus.Models.FixtureTier>(tierStr, ignoreCase: true, out var tier))
+            {
+                Console.Error.WriteLine($"[corpus] Unknown tier '{tierStr}'. Use gold, silver, or discovery.");
+                ctx.ExitCode = 1;
+                return;
+            }
+
             var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
             if (string.IsNullOrEmpty(token))
             {
@@ -490,13 +513,6 @@ public static class CorpusCommand
 
                     var fixtureId = GauntletCI.Corpus.Storage.FixtureIdHelper.Build(owner, repo, prNumber);
                     Console.WriteLine($"[corpus] Hydrating {owner}/{repo}#{prNumber} → {fixtureId}");
-
-                    var tier = tierStr.ToLowerInvariant() switch
-                    {
-                        "gold"   => GauntletCI.Corpus.Models.FixtureTier.Gold,
-                        "silver" => GauntletCI.Corpus.Models.FixtureTier.Silver,
-                        _        => GauntletCI.Corpus.Models.FixtureTier.Discovery,
-                    };
 
                     try
                     {
@@ -539,7 +555,10 @@ public static class CorpusCommand
         cmd.CommandText = """
             SELECT c.repo_owner, c.repo_name, c.pr_number
             FROM candidates c
-            LEFT JOIN fixtures f ON f.fixture_id = (lower(c.repo_owner) || '_' || lower(c.repo_name) || '_pr' || c.pr_number)
+            LEFT JOIN fixtures f ON f.fixture_id = (
+                replace(replace(replace(lower(c.repo_owner), '/', '_'), '\', '_'), ' ', '-') || '_' ||
+                replace(replace(replace(lower(c.repo_name),  '/', '_'), '\', '_'), ' ', '-') || '_pr' || c.pr_number
+            )
             WHERE f.fixture_id IS NULL
             ORDER BY c.discovered_at_utc DESC
             LIMIT $limit
@@ -871,10 +890,9 @@ public static class CorpusCommand
                     var diffText = await File.ReadAllTextAsync(diffPath, ct);
                     var engine   = new SilverLabelEngine(store);
 
-                    var inferred = await engine.InferLabelsAsync(fixtureId, diffText, ct);
-                    await engine.ApplyToFixtureAsync(fixtureId, diffText, overwrite, ct);
+                    var labelsWritten = await engine.ApplyToFixtureAsync(fixtureId, diffText, overwrite, ct);
 
-                    Console.WriteLine($"[corpus] Labeled {fixtureId}: {inferred.Count} heuristic label(s) applied");
+                    Console.WriteLine($"[corpus] Labeled {fixtureId}: {labelsWritten} label(s) written");
                 }
                 catch (Exception ex)
                 {
@@ -947,14 +965,13 @@ public static class CorpusCommand
 
                     try
                     {
-                        var diffText = await File.ReadAllTextAsync(diffPath, ct);
-                        var inferred = await engine.InferLabelsAsync(metadata.FixtureId, diffText, ct);
-                        await engine.ApplyToFixtureAsync(metadata.FixtureId, diffText, overwrite, ct);
+                        var diffText      = await File.ReadAllTextAsync(diffPath, ct);
+                        var labelsWritten = await engine.ApplyToFixtureAsync(metadata.FixtureId, diffText, overwrite, ct);
 
-                        totalLabels += inferred.Count;
+                        totalLabels += labelsWritten;
                         labeled++;
 
-                        Console.WriteLine($"[corpus] OK   {metadata.FixtureId,-40} {inferred.Count,3} label(s)");
+                        Console.WriteLine($"[corpus] OK   {metadata.FixtureId,-40} {labelsWritten,3} label(s)");
                     }
                     catch (Exception ex)
                     {
@@ -964,7 +981,7 @@ public static class CorpusCommand
                 }
 
                 Console.WriteLine();
-                Console.WriteLine($"[corpus] label-all complete: {labeled} labeled, {skipped} skipped, {totalLabels} total labels applied");
+                Console.WriteLine($"[corpus] label-all complete: {labeled} labeled, {skipped} skipped, {totalLabels} total labels written");
             }
         });
 
