@@ -50,6 +50,7 @@ public sealed class RuleCorpusRunner : IRuleCorpusRunner
                 Message           = f.Summary,
                 ChangeImplication = f.WhyItMatters,
                 Evidence          = f.Evidence,
+                FilePath          = f.FilePath,
                 ExecutionTimeMs   = 0,
             })
             .ToList();
@@ -94,10 +95,10 @@ public sealed class RuleCorpusRunner : IRuleCorpusRunner
             cmd.CommandText = """
                 INSERT OR IGNORE INTO actual_findings
                     (id, fixture_id, run_id, rule_id, did_trigger, actual_confidence,
-                     message, change_implication, evidence_json, execution_time_ms)
+                     message, change_implication, evidence_json, execution_time_ms, file_path)
                 VALUES
                     ($id, $fixture_id, $run_id, $rule_id, $did_trigger, $actual_confidence,
-                     $message, $change_implication, $evidence_json, $execution_time_ms)
+                     $message, $change_implication, $evidence_json, $execution_time_ms, $file_path)
                 """;
             cmd.Parameters.AddWithValue("$id",                Guid.NewGuid().ToString());
             cmd.Parameters.AddWithValue("$fixture_id",        fixtureId);
@@ -109,6 +110,7 @@ public sealed class RuleCorpusRunner : IRuleCorpusRunner
             cmd.Parameters.AddWithValue("$change_implication",f.ChangeImplication);
             cmd.Parameters.AddWithValue("$evidence_json",     JsonSerializer.Serialize(f.Evidence));
             cmd.Parameters.AddWithValue("$execution_time_ms", f.ExecutionTimeMs);
+            cmd.Parameters.AddWithValue("$file_path",         f.FilePath ?? (object)DBNull.Value);
             await cmd.ExecuteNonQueryAsync(ct);
         }
     }
