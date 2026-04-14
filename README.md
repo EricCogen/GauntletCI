@@ -63,7 +63,7 @@ GauntletCI is built on a clear set of principles defined in the **[GauntletCI Ch
 - Not a static analysis replacement
 - Not a code formatter
 
-GauntletCI complements your existing tools — it does not replace them.
+GauntletCI complements your existing tools; it does not replace them.
 
 ---
 
