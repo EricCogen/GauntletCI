@@ -85,6 +85,12 @@ public static class ConsoleReporter
         if (!string.IsNullOrEmpty(finding.LlmExplanation))
             AnsiConsole.MarkupLine($"[magenta]  LLM      : {Markup.Escape(finding.LlmExplanation)}[/]");
 
+        if (finding.ExpertContext is { } expert)
+        {
+            AnsiConsole.MarkupLine($"[blue]  Expert   : {Markup.Escape(expert.Content)}[/]");
+            AnsiConsole.MarkupLine($"[grey]             Score {expert.Score:F2} · {Markup.Escape(expert.Source)}[/]");
+        }
+
         AnsiConsole.WriteLine();
     }
 }

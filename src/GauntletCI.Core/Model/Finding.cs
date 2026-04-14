@@ -13,4 +13,5 @@ public class Finding
     public string? FilePath { get; set; }
     public int? Line { get; set; }
     public string? LlmExplanation { get; set; }         // optional LLM enrichment
+    public ExpertFact? ExpertContext { get; set; }      // optional expert knowledge match
 }
