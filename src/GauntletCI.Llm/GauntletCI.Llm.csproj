@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI.Managed" Version="0.13.1" />
+    <PackageReference Include="Microsoft.ML.OnnxRuntimeGenAI.DirectML" Version="0.13.1" />
   </ItemGroup>
 
   <PropertyGroup>

@@ -7,7 +7,8 @@ using Microsoft.ML.OnnxRuntimeGenAI;
 namespace GauntletCI.Llm;
 
 /// <summary>
-/// Local ONNX LLM engine using Microsoft.ML.OnnxRuntimeGenAI.Managed with Phi-3 Mini.
+/// Local ONNX LLM engine using Microsoft.ML.OnnxRuntimeGenAI with Phi-3 Mini.
+/// Runs on GPU via DirectML when available; falls back to CPU automatically.
 /// Model is loaded lazily on first use and cached for the lifetime of this instance.
 /// Dispose when done to release native resources.
 /// </summary>
@@ -85,11 +86,9 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
                     var sequences = _tokenizer!.Encode(prompt);
                     using var generatorParams = new GeneratorParams(_model!);
                     generatorParams.SetSearchOption("max_length", MaxOutputTokens);
-                    // Greedy decoding for deterministic output (no random sampling)
                     generatorParams.SetSearchOption("do_sample", false);
 
                     using var generator = new Generator(_model!, generatorParams);
-                    // In OnnxRuntimeGenAI 0.13+, input sequences are appended to the generator
                     generator.AppendTokenSequences(sequences);
                     var sb = new StringBuilder();
 
