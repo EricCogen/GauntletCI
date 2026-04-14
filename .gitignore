@@ -31,6 +31,7 @@ artifacts/
 *.md
 !README.md
 !AGENTS.md
+!CHARTER.md
 !docs/change-risk-thesis.md
 !docs/change-risk-research.md
 !docs/rules.md
