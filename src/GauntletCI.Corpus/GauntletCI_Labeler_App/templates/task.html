@@ -46,8 +46,29 @@
     {% if top.change_implication %}
       <p class="muted" style="margin:0 0 0.75rem">{{ top.change_implication }}</p>
     {% endif %}
-    <div class="muted" style="font-size:0.8rem;margin-bottom:0.25rem">Evidence</div>
-    <pre style="white-space:pre-wrap">{% if top.evidence is mapping or (top.evidence is sequence and top.evidence is not string) %}{{ top.evidence | tojson(indent=2) }}{% else %}{{ top.evidence }}{% endif %}</pre>
+    <div class="muted" style="font-size:0.8rem;margin-bottom:0.4rem">Evidence</div>
+    {% if top.evidence is string and ' | Now: ' in top.evidence %}
+      {% set parts = top.evidence.split(' | Now: ') %}
+      {% set was_raw = parts[0] %}
+      {% set now_raw = parts[1:] | join(' | Now: ') %}
+      {% set was_text = was_raw[5:] if was_raw.startswith('Was: ') else was_raw %}
+      <div class="evidence-wasnow" id="evidence-wasnow"
+           data-was="{{ was_text | e }}"
+           data-now="{{ now_raw | e }}">
+        <div class="evidence-row ev-row-del">
+          <span class="evidence-label ev-label-del">Was</span>
+          <code class="evidence-code" id="ev-was">{{ was_text }}</code>
+        </div>
+        <div class="evidence-row ev-row-add">
+          <span class="evidence-label ev-label-add">Now</span>
+          <code class="evidence-code" id="ev-now">{{ now_raw }}</code>
+        </div>
+      </div>
+    {% elif top.evidence is mapping or (top.evidence is sequence and top.evidence is not string) %}
+      <pre style="white-space:pre-wrap">{{ top.evidence | tojson(indent=2) }}</pre>
+    {% else %}
+      <pre style="white-space:pre-wrap">{{ top.evidence }}</pre>
+    {% endif %}
   {% else %}
     <p class="muted">No findings were recorded for this rule on this fixture.</p>
   {% endif %}
@@ -132,20 +153,101 @@
   (function () {
     const pre = document.getElementById('diff-snippet');
     if (!pre) return;
-    const lines = pre.textContent.split('\n');
-    pre.textContent = '';
-    lines.forEach(function (line) {
-      const span = document.createElement('span');
-      if (line.startsWith('+') && !line.startsWith('+++')) {
-        span.className = 'diff-add';
-      } else if (line.startsWith('-') && !line.startsWith('---')) {
-        span.className = 'diff-del';
-      } else if (line.startsWith('@@')) {
-        span.className = 'diff-hunk';
+    const rawLines = pre.textContent.split('\n');
+    const hunkRe = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
+    let oldLine = 0, newLine = 0;
+
+    const table = document.createElement('table');
+    table.className = 'diff-table';
+
+    rawLines.forEach(function (line, idx) {
+      if (idx === rawLines.length - 1 && line === '') return;
+
+      const tr = document.createElement('tr');
+      let oldLn = '', newLn = '';
+
+      if (line.startsWith('@@')) {
+        tr.className = 'diff-row-hunk';
+        const m = hunkRe.exec(line);
+        if (m) { oldLine = parseInt(m[1], 10); newLine = parseInt(m[2], 10); }
+      } else if (line.startsWith('---') || line.startsWith('+++')) {
+        /* file header — no class, no line numbers */
+      } else if (line.startsWith('+')) {
+        tr.className = 'diff-row-add';
+        newLn = String(newLine++);
+      } else if (line.startsWith('-')) {
+        tr.className = 'diff-row-del';
+        oldLn = String(oldLine++);
+      } else {
+        oldLn = String(oldLine++);
+        newLn = String(newLine++);
       }
-      span.textContent = line + '\n';
-      pre.appendChild(span);
+
+      const tdOld = document.createElement('td');
+      tdOld.className = 'diff-ln'; tdOld.textContent = oldLn;
+
+      const tdNew = document.createElement('td');
+      tdNew.className = 'diff-ln'; tdNew.textContent = newLn;
+
+      const tdCode = document.createElement('td');
+      tdCode.className = 'diff-code'; tdCode.textContent = line;
+
+      tr.appendChild(tdOld); tr.appendChild(tdNew); tr.appendChild(tdCode);
+      table.appendChild(tr);
     });
+
+    pre.textContent = '';
+    pre.appendChild(table);
+  })();
+</script>
+
+<script>
+  (function () {
+    const container = document.getElementById('evidence-wasnow');
+    if (!container) return;
+    const wasText = container.dataset.was;
+    const nowText = container.dataset.now;
+
+    function tokenize(s) { return s.match(/\S+|\s+/g) || []; }
+    function escHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function computeDiff(a, b) {
+      if (a.length + b.length > 600) return null;
+      const m = a.length, n = b.length, W = n + 1;
+      const dp = new Uint16Array((m + 1) * W);
+      for (let i = 1; i <= m; i++)
+        for (let j = 1; j <= n; j++)
+          dp[i * W + j] = a[i - 1] === b[j - 1]
+            ? dp[(i - 1) * W + (j - 1)] + 1
+            : Math.max(dp[(i - 1) * W + j], dp[i * W + (j - 1)]);
+      const ops = [];
+      let i = m, j = n;
+      while (i > 0 || j > 0) {
+        if (i > 0 && j > 0 && a[i - 1] === b[j - 1]) {
+          ops.push({ op: '=', val: a[i - 1] }); i--; j--;
+        } else if (j > 0 && (i === 0 || dp[i * W + (j - 1)] >= dp[(i - 1) * W + j])) {
+          ops.push({ op: '+', val: b[j - 1] }); j--;
+        } else {
+          ops.push({ op: '-', val: a[i - 1] }); i--;
+        }
+      }
+      return ops.reverse();
+    }
+
+    const ops = computeDiff(tokenize(wasText), tokenize(nowText));
+    if (!ops) return;
+
+    let wasHtml = '', nowHtml = '';
+    for (const { op, val } of ops) {
+      const e = escHtml(val);
+      if (op === '=')       { wasHtml += e; nowHtml += e; }
+      else if (op === '-')  { wasHtml += `<mark class="ev-del">${e}</mark>`; }
+      else                  { nowHtml += `<mark class="ev-add">${e}</mark>`; }
+    }
+    document.getElementById('ev-was').innerHTML = wasHtml;
+    document.getElementById('ev-now').innerHTML = nowHtml;
   })();
 </script>
 {% endblock %}
