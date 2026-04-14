@@ -21,6 +21,7 @@ if (!isInitCommand && !isTelemetryCommand)
 var rootCommand = new RootCommand("GauntletCI — deterministic pre-commit risk detection engine");
 
 rootCommand.AddCommand(AnalyzeCommand.Create());
+rootCommand.AddCommand(AuditCommand.Create());
 rootCommand.AddCommand(CorpusCommand.Create());
 rootCommand.AddCommand(InitCommand.Create());
 rootCommand.AddCommand(IgnoreCommand.Create());
