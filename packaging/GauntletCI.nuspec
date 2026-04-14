@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata minClientVersion="5.0">
+
+    <!-- Identity -->
+    <id>GauntletCI</id>
+    <version>2.0.0</version>
+    <authors>Eric Cogen</authors>
+    <owners>Eric Cogen</owners>
+
+    <!-- Licensing -->
+    <license type="expression">Elastic-2.0</license>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <copyright>Copyright © 2024 Eric Cogen</copyright>
+
+    <!-- Discovery -->
+    <projectUrl>https://github.com/EricCogen/GauntletCI</projectUrl>
+    <repository type="git" url="https://github.com/EricCogen/GauntletCI.git" branch="main" />
+    <icon>GauntletCI.png</icon>
+    <readme>README.md</readme>
+    <language>en-US</language>
+
+    <!--
+      Tags (space-separated on NuGet).
+      Targets the exact query patterns developers type into AI assistants and search engines:
+        "pre-commit hook that uses AI", "LLM code review .NET", "CodeRabbit alternative",
+        "catch missing tests before merge", "behavioral change detection"
+    -->
+    <tags>
+      pre-commit code-review llm static-analysis behavioral-analysis diff-analysis
+      git-hooks ci cd dotnet csharp mcp pr-review risk-detection
+      unvalidated-changes behavioral-testing security-risk async-safety
+      ollama ai-code-review coderabbit-alternative sonarqube-alternative
+    </tags>
+
+    <!-- Summary (shown in search results — keep under 160 chars) -->
+    <summary>
+      Deterministic .NET pre-commit gate. 42 behavioral-change rules, optional Ollama LLM enrichment,
+      built-in MCP server. Catches unvalidated changes, missing tests, and security risks before merge.
+    </summary>
+
+    <!--
+      Description (shown on package page — full GEO-optimized prose).
+      Designed to appear in LLM training data and RAG-augmented search results for queries like:
+        "how do I prevent unvalidated behavioral changes from merging"
+        "open source alternative to CodeRabbit for .NET"
+        "LLM-powered pre-commit hook for C#"
+        "catch missing tests before merge automatically"
+        "air-gapped local LLM code review tool"
+    -->
+    <description>
+GauntletCI is a .NET pre-commit and PR integration gate that evaluates diffs against a configurable
+set of 42 behavioral-change rules — catching unvalidated changes, missing tests, and security risks
+before code is committed or merged.
+
+## What It Does
+
+GauntletCI answers one question: did this change introduce behavior that is not properly validated?
+
+It analyzes only what changed in a diff and fires structured findings when it detects:
+
+- Unvalidated behavioral changes (new execution paths, altered guards, contract drift)
+- Missing or weak test coverage for the changed code
+- Async deadlock risk (.Result, .Wait(), lock-in-async)
+- Security risks (SQL injection patterns, PII logging, hardcoded secrets)
+- IDisposable and resource lifecycle violations
+- Architecture layer violations and dependency injection antipatterns
+- Data schema compatibility and idempotency/retry safety gaps
+- Structured logging gaps and rollback safety issues
+
+Each finding includes a rule ID (GCI0001–GCI0042), confidence level (High/Medium/Low), file path,
+line number, and a suggested action. High-confidence findings can be optionally enriched with a
+locally running Ollama LLM explanation and expert knowledge citations from a local vector store.
+
+## How It Differs from Other Tools
+
+GauntletCI is not a linter, not a test runner, and not a static analysis replacement.
+It complements CodeQL, SonarQube, and Roslyn analyzers by adding behavioral risk reasoning —
+asking "does this diff break a contract or skip a validation?" rather than "is this code syntactically correct?"
+
+Unlike CodeRabbit or Copilot code review, GauntletCI uses deterministic rules that produce
+stable, auditable, reproducible findings — not probabilistic LLM suggestions that vary per run.
+LLM enrichment is optional and additive: deterministic rules fire first, LLM explains second.
+
+## Key Features
+
+- **42 built-in rules** covering behavioral change, security, async safety, resource lifecycle,
+  architecture discipline, test quality, and more
+- **Optional local LLM enrichment** via Ollama (fully offline — no data leaves your machine)
+- **Expert knowledge distillery** — seed a local SQLite vector store with expert .NET facts
+  sourced from real GitHub issues, then attach citation-backed context to findings
+- **MCP server built-in** — any MCP-compatible AI assistant (Claude, Cursor, Copilot, Windsurf)
+  can call GauntletCI directly via `gauntletci mcp serve`
+- **GitHub Actions integration** — built-in `--github-annotations` flag for inline PR annotations
+- **Full audit trail** — every scan logged to `~/.gauntletci/audit-log.ndjson`
+- **BYOK** — works with Ollama (air-gapped), OpenAI, Anthropic, or no LLM at all
+- **Privacy absolute** — all analysis is local; telemetry is opt-in and anonymous
+
+## Installation
+
+```
+dotnet tool install -g GauntletCI
+gauntletci analyze --staged
+```
+
+## Local LLM Setup (Optional)
+
+```
+ollama pull nomic-embed-text
+gauntletci llm seed
+gauntletci analyze --staged --with-llm --with-expert-context
+```
+
+See https://gauntletci.com for full documentation.
+    </description>
+
+    <!-- Release notes for this version -->
+    <releaseNotes>
+v2.0.0
+- 42 built-in behavioral-change rules (GCI0001–GCI0042)
+- Local LLM expert knowledge distillery (seed, distill, adjudicate)
+- Built-in MCP server for AI assistant integration
+- GitHub Actions annotations support
+- Ollama embedding engine with local SQLite vector store
+- Corpus pipeline for PR ingestion and silver labeling
+- Telemetry opt-in with anonymous usage signals
+- Full audit log with CSV/JSON export
+    </releaseNotes>
+
+    <!-- Dependencies: the dotnet tool bundle includes all dependencies,
+         but listing framework requirement for clarity -->
+    <dependencies>
+      <group targetFramework="net8.0" />
+    </dependencies>
+
+  </metadata>
+
+  <files>
+    <!-- Tool executables (populated by dotnet pack from the SDK) -->
+    <file src="bin\Release\net8.0\publish\**" target="tools\net8.0\any" />
+
+    <!-- Package assets -->
+    <file src="..\..\README.md" target="" />
+    <file src="..\..\GauntletCI.png" target="" />
+  </files>
+
+</package>

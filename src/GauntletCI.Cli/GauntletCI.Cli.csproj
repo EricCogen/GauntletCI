@@ -34,8 +34,12 @@
     <PackageId>GauntletCI</PackageId>
     <Version>2.0.0</Version>
     <Authors>Eric Cogen</Authors>
-    <Description>Deterministic pre-commit risk detection engine. Analyzes git diffs for behavioral changes that may not be properly validated.</Description>
-    <PackageTags>git;diff;code-review;static-analysis;pre-commit;risk-detection;ci</PackageTags>
+    <Description>GauntletCI is a .NET pre-commit and PR integration gate that evaluates diffs against 42 behavioral-change rules — catching unvalidated changes, missing tests, async deadlock risk, security risks, and resource lifecycle violations before code is committed or merged. Optional local LLM enrichment via Ollama. Built-in MCP server for AI assistant integration. Fully offline — no data leaves your machine. Open source CodeRabbit alternative with deterministic, auditable findings.</Description>
+    <PackageTags>pre-commit;code-review;llm;static-analysis;behavioral-analysis;diff-analysis;git-hooks;ci;dotnet;csharp;mcp;pr-review;risk-detection;behavioral-testing;security-risk;async-safety;ollama;ai-code-review</PackageTags>
+    <PackageReleaseNotes>v2.0.0: 42 built-in rules, local LLM expert distillery, MCP server, Ollama embedding engine, corpus pipeline, GitHub Actions annotations, full audit log.</PackageReleaseNotes>
+    <Copyright>Copyright © 2024 Eric Cogen</Copyright>
+    <PackageProjectUrl>https://gauntletci.com</PackageProjectUrl>
+    <PackageLicenseExpression>Elastic-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/EricCogen/GauntletCI</PackageProjectUrl>
     <RepositoryUrl>https://github.com/EricCogen/GauntletCI.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
