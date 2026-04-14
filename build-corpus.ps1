@@ -1,4 +1,4 @@
-# GauntletCI Corpus Pipeline Runner
+﻿# GauntletCI Corpus Pipeline Runner
 # Usage: .\run-corpus.ps1 [-Help] [-Provider "gh-search"] [-StartDate "2025-03-01"] [-EndDate "2025-03-31"] [-Limit 50] [-Language "C#"] [-MinComments 2] [-MinStars 500] [-Tier "discovery"] [-Db <path>] [-Fixtures <path>] [-Report <path>] [-SkipTo <step>] [-SkipSeedQueue]
 
 param(
@@ -21,6 +21,7 @@ param(
     [switch]$SkipSeedQueue  = $false, # Skip Step 7 (seed labeler queue) even if present
     [int]   $SeedQueueLimit = 150,   # Max fired items to add to the labeler queue
     [int]   $SeedQueueNonFired = 30, # Non-fired probe tasks to add per queue seed
+    [switch]$SkipLabeler    = $false, # Skip launching the labeler Flask app after pipeline completes
     # Known game repositories and other low-signal repos to exclude from discovery.
     # Add owner/repo strings here to prevent them from entering the corpus.
     [string[]]$RepoBlocklist = @(
@@ -124,6 +125,7 @@ if ($Help) {
     Write-Host "  -SkipIssueSearch       Skip Step 1.5 (issue-based discovery)"
     Write-Host "  -IssueLabels <labels>  Comma-separated issue labels to search (default: bug,security,vulnerability)"
     Write-Host "  -SkipSeedQueue         Skip Step 7 (labeler queue seed) even if seed_queue.py is present"
+    Write-Host "  -SkipLabeler           Skip launching the labeler app after pipeline completes"
     Write-Host "  -SeedQueueLimit <n>    Max fired findings to queue for labeling (default: 150)"
     Write-Host "  -SeedQueueNonFired <n> Non-fired probe tasks per queue seed run (default: 30)"
     Write-Host ""
@@ -147,7 +149,8 @@ if ($Help) {
     Write-Host "  .\run-corpus.ps1 -StartDate 2025-03-01 -EndDate 2025-03-31 -Language C# -Limit 100"
     Write-Host ""
     Write-Host "  # Skip discovery and hydration — re-score existing fixtures"
-    Write-Host "  .\run-corpus.ps1 -SkipTo 3"    Write-Host ""
+    Write-Host "  .\run-corpus.ps1 -SkipTo 3"
+    Write-Host ""
     Write-Host "NOTES" -ForegroundColor Yellow
     Write-Host "  Requires GITHUB_TOKEN env var for Step 1 (gh-search discover) and Step 2 (hydration)."
     Write-Host "  If not set, the script will load it from .misc/ghapi.key automatically."
@@ -328,6 +331,53 @@ if ($SkipTo -le 8) {
 
     Write-Host ""
     Write-Host "✅ Pipeline complete. Scorecard: $Report" -ForegroundColor Green
+}
+
+# ── Launch Labeler App ────────────────────────────────────────────────────────
+if (-not $SkipLabeler) {
+    $labelerDir = Join-Path $RepoRoot "src\GauntletCI.Corpus\GauntletCI_Labeler_App"
+    $appScript  = Join-Path $labelerDir "app.py"
+    $configPath = Join-Path $labelerDir "config.yaml"
+    $venvPython = Join-Path $labelerDir ".venv\Scripts\python.exe"
+
+    if (-not (Test-Path $appScript)) {
+        Write-Warning "Labeler app not found at $appScript — skipping launch."
+    } else {
+        # Auto-generate config.yaml from pipeline paths if not already present
+        if (-not (Test-Path $configPath)) {
+            $absDb       = [System.IO.Path]::GetFullPath($Db,       $RepoRoot) -replace '\\', '/'
+            $absFixtures = [System.IO.Path]::GetFullPath($Fixtures, $RepoRoot) -replace '\\', '/'
+            $reviewer    = if ($env:USERNAME) { $env:USERNAME } else { "reviewer" }
+            @"
+database_path: $absDb
+fixtures_root: $absFixtures
+secret_key: change-me
+reviewer_name: $reviewer
+queue:
+  default_limit: 200
+  repeat_check_percent: 10
+"@ | Set-Content -Path $configPath -Encoding UTF8
+            Write-Host "[labeler] Created config.yaml → $configPath" -ForegroundColor DarkGray
+        }
+
+        # Prefer .venv Python, fall back to system python
+        $python = if (Test-Path $venvPython) { $venvPython } else { "python" }
+
+        if (-not (Test-Path $venvPython) -and -not (Get-Command python -ErrorAction SilentlyContinue)) {
+            Write-Warning "Python not found — install it or create a .venv in $labelerDir, then run: python app.py"
+        } else {
+            Write-Host ""
+            Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Magenta
+            Write-Host "  Launching Labeler App → http://127.0.0.1:5000" -ForegroundColor Magenta
+            Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Magenta
+
+            Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$labelerDir'; & '$python' app.py"
+            Start-Sleep -Seconds 2
+            Start-Process "http://127.0.0.1:5000"
+
+            Write-Host "[labeler] App launched. Close its window to stop the server." -ForegroundColor Magenta
+        }
+    }
 }
 
 Pop-Location
