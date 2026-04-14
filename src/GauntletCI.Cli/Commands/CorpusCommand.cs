@@ -471,6 +471,13 @@ public static class CorpusCommand
             var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
             var ct       = ctx.GetCancellationToken();
 
+            if (!Enum.TryParse<GauntletCI.Corpus.Models.FixtureTier>(tierStr, ignoreCase: true, out var tier))
+            {
+                Console.Error.WriteLine($"[corpus] Unknown tier '{tierStr}'. Use gold, silver, or discovery.");
+                ctx.ExitCode = 1;
+                return;
+            }
+
             var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
             if (string.IsNullOrEmpty(token))
             {
@@ -506,13 +513,6 @@ public static class CorpusCommand
 
                     var fixtureId = GauntletCI.Corpus.Storage.FixtureIdHelper.Build(owner, repo, prNumber);
                     Console.WriteLine($"[corpus] Hydrating {owner}/{repo}#{prNumber} → {fixtureId}");
-
-                    if (!Enum.TryParse<GauntletCI.Corpus.Models.FixtureTier>(tierStr, ignoreCase: true, out var tier))
-                    {
-                        Console.Error.WriteLine($"[corpus] Unknown tier '{tierStr}'. Use gold, silver, or discovery.");
-                        ctx.ExitCode = 1;
-                        return;
-                    }
 
                     try
                     {
@@ -981,7 +981,7 @@ public static class CorpusCommand
                 }
 
                 Console.WriteLine();
-                Console.WriteLine($"[corpus] label-all complete: {labeled} labeled, {skipped} skipped, {totalLabels} total labels applied");
+                Console.WriteLine($"[corpus] label-all complete: {labeled} labeled, {skipped} skipped, {totalLabels} total labels written");
             }
         });
 
