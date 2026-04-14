@@ -14,17 +14,17 @@ Not the same bugs. The same *shape* of failure. Subtle things. Things that passe
 
 And here's what I couldn't shake: most of my failures started with **unthought assumptions**.
 
-Not the kind where I said, *"I'll just assume this works."* The kind I didn't even know I was making. I was subconsciencly making assumptions, I assumed I understood the ticket. I assumed the acceptance criteria covered the edge case. I assumed the existing code worked the way I remembered. I assumed the test actually tested what I thought it did.
+Not the kind where I said, *"I'll just assume this works."* The kind I didn't even know I was making. I was subconsciously making assumptions. I thought I understood the ticket. I assumed the acceptance criteria covered the edge case. I assumed the existing code worked the way I remembered. I assumed the test actually tested what I thought it did.
 
 These assumptions were invisible to me. They were the water I was swimming in.
 
-I couldn't figure out *how* to get myself past this plateau of mediocracy.
+I couldn't figure out *how* to get myself past this plateau of mediocrity.
 
 ---
 
 ### 2. The Spiral
 
-It wasn't one catastrophic mistake. It was a pattern I didnt understand and couldn't break.
+It wasn't one catastrophic mistake. It was a pattern I didn't understand and couldn't break.
 
 I lost confidence. I started using self-deprecating humor to deflect - laughing at myself before anyone else could. *"Classic me. Ship it and pray."*
 
@@ -62,7 +62,7 @@ Then, for the AI I was increasingly relying on:
 
 And then - this was the big one, I wrote a rule specifically for those unthought assumptions:
 
-> **Does this code actually accomplish what the ticket intended?, Am i really understanding the intent of the ticket?**
+> **Does this code actually accomplish what the ticket intended? Am I really understanding the intent of the ticket?**
 
 Not *"Does it run?"* Not *"Does it match the spec I skimmed?"* But: *If the person who wrote that Jira ticket looked at my PR, would they say, "Yes, that's exactly what I meant"?*
 
@@ -73,6 +73,7 @@ I fed those rules into GitHub Copilot for revisions, streamlining, core truths. 
 ---
 
 ### 4. The 20 Rules
+Over time, those questions became a checklist I could run every time I touched code:
 
 1. Refresh git - keep current changes
 2. Refresh working memory
@@ -103,7 +104,7 @@ These weren't style guides. They were scar tissue.
 
 I turned those twenty rules into a proof of concept called **PreCommitGuard**. I was excited. I thought I had something real.
 
-So I did what you do when you're serious: I asked the hard questions. I showed the idea to Gemini. I showed it to DeepSeek, I showed it to ChatGPT. I asked for honest brutal feedback with no fluff.
+So I did what you do when you're serious: I asked the hard questions. I showed the idea to Gemini. I showed it to DeepSeek. I showed it to ChatGPT and I asked those tools for honest brutal feedback with no fluff.
 
 The feedback was clear: the approach I had taken was likely untenable. The architecture wouldn't scale. The methodology wasn't sound.
 
@@ -113,7 +114,7 @@ I was forced to kill the idea.
 
 ### 6. The Detour
 
-And then, because I didn't know what else to do, I started ideating on something completely different. A tool for game enthusiasts. Dungeons & Dragons players. Fiction writers. Something to help build rich backstories for tertiary characters, complete with ideologies, pathologies, histories, geneology.
+And then, because I didn't know what else to do, I started ideating on something completely different. A tool for game enthusiasts. Dungeons & Dragons players. Fiction writers. Something to help build rich backstories for tertiary characters, complete with ideologies, pathologies, histories, genealogy.
 
 It was interesting. But while I was building it, I found myself asking a deeper question:
 
@@ -161,7 +162,7 @@ This is for experienced engineers who:
 
 - Have hit a plateau they can't see past
 - Have felt their confidence erode for reasons they can't articulate
-- dying a little inside at every standup
+- Have died a little inside at every standup
 - Have stared at a production incident and thought: *"I knew better."*
 
 This is for the part of you that's tired of relying on memory, discipline, and hope.
@@ -196,4 +197,4 @@ You just need a better system.
 
 That's what I'm building.
 
-* -  The maintainer of GauntletCI*
+*- Eric I Cogen, maintainer of GauntletCI*
