@@ -16,6 +16,8 @@ param(
     [string]$Fixtures     = "./data/fixtures",
     [string]$Report       = "./data/scorecard.md",
     [int]   $SkipTo         = 1,     # Set to 2-7 to resume from a specific step
+    [switch]$SkipIssueSearch = $false, # Skip Step 1.5 (issue-based discovery)
+    [string]$IssueLabels    = "bug,security,vulnerability", # Labels for issue search
     [switch]$SkipSeedQueue  = $false, # Skip Step 7 (seed labeler queue) even if present
     [int]   $SeedQueueLimit = 150,   # Max fired items to add to the labeler queue
     [int]   $SeedQueueNonFired = 30, # Non-fired probe tasks to add per queue seed
@@ -119,12 +121,15 @@ if ($Help) {
     Write-Host "                         When set, searches each repo directly (no global keyword search)."
     Write-Host "                         Defaults to 15 high-quality C# OSS repos. Pass @() to disable."
     Write-Host "  -SkipTo    <step>      Resume from step N (1–8, default: 1)"
+    Write-Host "  -SkipIssueSearch       Skip Step 1.5 (issue-based discovery)"
+    Write-Host "  -IssueLabels <labels>  Comma-separated issue labels to search (default: bug,security,vulnerability)"
     Write-Host "  -SkipSeedQueue         Skip Step 7 (labeler queue seed) even if seed_queue.py is present"
     Write-Host "  -SeedQueueLimit <n>    Max fired findings to queue for labeling (default: 150)"
     Write-Host "  -SeedQueueNonFired <n> Non-fired probe tasks per queue seed run (default: 30)"
     Write-Host ""
     Write-Host "STEPS" -ForegroundColor Yellow
     Write-Host "  1  Discover   — pull PR candidates from GH Archive"
+    Write-Host "  1.5 Issues    — find candidates from closed GitHub issues (bug/security)"
     Write-Host "  2  Hydrate    — fetch diffs + metadata from GitHub REST API"
     Write-Host "  2.5 Purge     — remove language-mismatched / no-review-comment fixtures"
     Write-Host "  3  Run rules  — evaluate all GCI rules against fixtures"
@@ -212,6 +217,24 @@ if ($SkipTo -le 1) {
 
     Invoke-Expression "$cli $($discoverArgs -join ' ')"
     if ($LASTEXITCODE -ne 0) { throw "Discover failed" }
+}
+
+# ── Step 1.5: Issue-based discovery ──────────────────────────────────────────
+if ($SkipTo -le 1 -and -not $SkipIssueSearch -and $env:GITHUB_TOKEN) {
+    Step "1.5" "Discover PR candidates from closed GitHub issues"
+
+    $issueArgs = @(
+        "corpus", "issues", "search",
+        "--labels", $IssueLabels,
+        "--limit",  $Limit,
+        "--db",     $Db
+    )
+    if ($Language -ne "") { $issueArgs += "--language", $Language }
+
+    Invoke-Expression "$cli $($issueArgs -join ' ')"
+    if ($LASTEXITCODE -ne 0) { Write-Warning "Issue search failed (exit $LASTEXITCODE) — continuing" }
+} elseif ($SkipTo -le 1 -and -not $SkipIssueSearch -and -not $env:GITHUB_TOKEN) {
+    Write-Warning "Skipping Step 1.5 (issue search): GITHUB_TOKEN not set."
 }
 
 # ── Step 2: Hydrate ───────────────────────────────────────────────────────────
