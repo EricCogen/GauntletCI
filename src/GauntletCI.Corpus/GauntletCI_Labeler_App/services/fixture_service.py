@@ -99,6 +99,8 @@ _FILE_EXT_RE = re.compile(
     r"[\w/\\.\-]+\.(?:cs|ts|tsx|js|jsx|py|go|java|rb|cpp|hpp|c|h|json|yaml|yml|xml)",
     re.IGNORECASE,
 )
+_LINE_NUM_RE = re.compile(r'\b[Ll]ines?\s+(\d+)', re.IGNORECASE)
+_HUNK_HEADER_RE = re.compile(r'^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@')
 
 
 def _snippet_terms(text: str) -> list[str]:
@@ -129,40 +131,91 @@ def _find_file_section(lines: list[str], file_path: str) -> int:
     return -1
 
 
+def _find_line_in_section(lines: list[str], section_start: int, target_new_line: int) -> int:
+    """Walk hunks in one file section and return the lines[] index closest to target_new_line.
+
+    Hunk headers (`@@ -A +N @@`) tell us the new-file starting line via `+N`.
+    We track the running new-file counter and stop when we reach or pass the target.
+    """
+    current = 0
+    best_idx = section_start
+    best_dist: float = float("inf")
+    i = section_start
+    while i < len(lines):
+        line = lines[i]
+        if i > section_start and line.startswith("diff --git "):
+            break
+        m = _HUNK_HEADER_RE.match(line)
+        if m:
+            current = int(m.group(1))
+            i += 1
+            continue
+        if (line.startswith("+") and not line.startswith("+++")) or line.startswith(" "):
+            dist = abs(current - target_new_line)
+            if dist < best_dist:
+                best_dist, best_idx = dist, i
+            if current >= target_new_line:
+                return i  # reached or passed — closest line found
+            current += 1
+        # "-" lines don't advance the new-file counter
+        i += 1
+    return best_idx
+
+
 def _format_snippet(lines: list[str], start: int, end: int) -> str:
     header = f"... lines {start + 1}–{end} of {len(lines)} ..."
     return header + "\n" + "\n".join(lines[start:end])
 
 
-def extract_diff_snippet(diff_patch: str, search_text: str, context_lines: int = 15) -> str:
+def extract_diff_snippet(diff_patch: str, search_text: str, context_lines: int = 30) -> str:
     """Return a relevant portion of a unified diff.
 
     Strategies (in priority order):
-    1. Locate the file section whose path appears in search_text — most accurate for
-       multi-file diffs where keyword matching could land in the wrong file.
-    2. Keyword-score every added/removed/hunk line; require ≥ 2 matches.
+    1. File-path anchor + line-number anchor: parse both from search_text (message +
+       evidence JSON), find the exact hunk covering that line, center the snippet there.
+    2. File-path anchor only: found the file section but no usable line number — show
+       from the first hunk in that section.
+    3. Keyword score: score every added/removed/hunk line; require ≥ 2 matches.
        Added lines are weighted 2× because that is what the rule flagged.
-    3. Fall back to the first real code hunk (the first @@ block), which is always
-       better than raw lines[:40] which shows only git/binary headers.
+    4. First real hunk: always better than raw lines[:N] which shows git/binary headers.
+
+    Short diffs (≤ 150 lines) are returned in full — no windowing needed.
     """
     if not diff_patch:
         return ""
 
     lines = diff_patch.splitlines()
 
-    # Strategy 1: file-path anchor
-    for candidate in _FILE_EXT_RE.findall(search_text):
-        idx = _find_file_section(lines, candidate)
-        if idx >= 0:
-            hunk_start = idx
-            for j in range(idx, min(len(lines), idx + 10)):
-                if lines[j].startswith("@@"):
-                    hunk_start = max(0, j - 1)  # include the +++ b/... line
-                    break
-            end = min(len(lines), hunk_start + context_lines * 2 + 1)
-            return _format_snippet(lines, hunk_start, end)
+    # Short diffs: show everything
+    if len(lines) <= 150:
+        return "\n".join(lines)
 
-    # Strategy 2: keyword score — require ≥2 to avoid spurious matches
+    # Strategy 1 + 2: file-path anchor
+    for candidate in _FILE_EXT_RE.findall(search_text):
+        section_start = _find_file_section(lines, candidate)
+        if section_start < 0:
+            continue
+
+        # Locate the first hunk inside this file section (+++ b/... line included)
+        first_hunk = section_start
+        for j in range(section_start, min(len(lines), section_start + 15)):
+            if lines[j].startswith("@@"):
+                first_hunk = max(0, j - 1)
+                break
+
+        # Strategy 1: line-number anchor within the section
+        line_nums = [int(m) for m in _LINE_NUM_RE.findall(search_text) if int(m) > 0]
+        if line_nums:
+            center = _find_line_in_section(lines, section_start, line_nums[0])
+            start = max(0, center - context_lines)
+            end = min(len(lines), center + context_lines + 1)
+            return _format_snippet(lines, start, end)
+
+        # Strategy 2: file found, no line number — show from first hunk
+        end = min(len(lines), first_hunk + context_lines * 2 + 1)
+        return _format_snippet(lines, first_hunk, end)
+
+    # Strategy 3: keyword score — require ≥ 2 to avoid spurious matches
     terms = _snippet_terms(search_text)
     best, best_score = -1, 0
     for i, line in enumerate(lines):
@@ -179,11 +232,11 @@ def extract_diff_snippet(diff_patch: str, search_text: str, context_lines: int =
         end = min(len(lines), best + context_lines + 1)
         return _format_snippet(lines, start, end)
 
-    # Strategy 3: first real hunk — always better than first N raw lines
+    # Strategy 4: first real hunk
     for i, line in enumerate(lines):
         if line.startswith("@@"):
-            start = max(0, i - 1)  # include the +++ b/... path line
+            start = max(0, i - 1)
             end = min(len(lines), start + context_lines * 2 + 1)
             return _format_snippet(lines, start, end)
 
-    return "\n".join(lines[:50])
+    return "\n".join(lines[:80])
