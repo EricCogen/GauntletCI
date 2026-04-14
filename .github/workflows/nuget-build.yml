@@ -33,5 +33,5 @@ jobs:
       run: dotnet pack src/GauntletCI.Cli/GauntletCI.Cli.csproj --no-build --configuration Release --output packaging/
 
     - name: Publish to NuGet.org
-      if: ${{ secrets.NUGET_API_KEY != '' }}
-      run: dotnet nuget push packaging/*.nupkg -k ${{ secrets.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
+      if: ${{ secrets.Nuget.NUGET_API_KEY != '' }}
+      run: dotnet nuget push packaging/*.nupkg -k ${{ secrets.Nuget.NUGET_API_KEY }} -s https://api.nuget.org/v3/index.json --skip-duplicate
