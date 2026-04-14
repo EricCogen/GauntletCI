@@ -148,9 +148,9 @@ public sealed class DistilleryTests : IDisposable
     // ── ExpertSeedFacts ───────────────────────────────────────────────────────
 
     [Fact]
-    public void ExpertSeedFacts_HasTenFacts()
+    public void ExpertSeedFacts_HasElevenFacts()
     {
-        Assert.Equal(10, ExpertSeedFacts.All.Count);
+        Assert.Equal(11, ExpertSeedFacts.All.Count);
     }
 
     [Fact]

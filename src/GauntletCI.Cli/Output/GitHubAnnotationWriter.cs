@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using System.Text;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
 
@@ -7,6 +8,7 @@ namespace GauntletCI.Cli.Output;
 /// <summary>
 /// Emits GitHub Actions workflow commands for inline PR annotations.
 /// Format: ::error file={path},line={line},title={title}::{message}
+/// LlmExplanation and ExpertContext are appended to the message when present.
 /// </summary>
 public static class GitHubAnnotationWriter
 {
@@ -29,7 +31,8 @@ public static class GitHubAnnotationWriter
                 .Replace(":", "%3A")
                 .Replace("\r", "")
                 .Replace("\n", "");
-            var message = finding.Summary.Replace("\n", "%0A").Replace("\r", "");
+
+            var message = BuildMessage(finding);
 
             var annotation = string.IsNullOrEmpty(file)
                 ? $"::{level} title={title}::{message}"
@@ -38,4 +41,21 @@ public static class GitHubAnnotationWriter
             Console.WriteLine(annotation);
         }
     }
+
+    public static string BuildMessage(Finding finding)
+    {
+        var sb = new StringBuilder();
+        sb.Append(Sanitize(finding.Summary));
+
+        if (!string.IsNullOrWhiteSpace(finding.LlmExplanation))
+            sb.Append($" | LLM: {Sanitize(finding.LlmExplanation!)}");
+
+        if (finding.ExpertContext is { } ctx)
+            sb.Append($" | Expert: {Sanitize(ctx.Content)} ({Sanitize(ctx.Source)})");
+
+        return sb.ToString();
+    }
+
+    private static string Sanitize(string value) =>
+        value.Replace("\r", "").Replace("\n", "%0A");
 }

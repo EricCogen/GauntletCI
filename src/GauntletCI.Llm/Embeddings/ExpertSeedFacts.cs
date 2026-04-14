@@ -58,6 +58,11 @@ public static class ExpertSeedFacts
             Id:      "aws/aws-sdk-net#issues/1310",
             Content: "AmazonS3Client is thread-safe and must be shared as a singleton; instantiating it per-request causes connection pool exhaustion and significant latency spikes.",
             Source:  "https://github.com/aws/aws-sdk-net/issues/1310"),
+
+        new(
+            Id:      "dotnet/runtime#issues/358",
+            Content: "Types that own IDisposable fields or unmanaged resources must implement IDisposable and call Dispose() in a finally block or using statement; omitting Dispose() silently leaks OS handles, database connections, and network sockets.",
+            Source:  "https://github.com/dotnet/runtime/issues/358"),
     ];
 }
 

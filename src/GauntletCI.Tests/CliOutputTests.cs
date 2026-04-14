@@ -128,4 +128,75 @@ public class GitHubAnnotationWriterTests
         Assert.DoesNotContain("\n", output.Split("::error").Last().Split("::").First());
         Assert.Contains("%0A", output);
     }
+
+    [Fact]
+    public void Write_WithExpertContext_IncludesExpertContent()
+    {
+        var f = MakeFinding();
+        f.ExpertContext = new GauntletCI.Core.Model.ExpertFact(
+            "IDisposable fields must be disposed.", "https://github.com/dotnet/runtime/issues/358", 0.92f);
+        var output = CaptureAnnotations(MakeResult(f));
+        Assert.Contains("IDisposable fields must be disposed.", output);
+        Assert.Contains("Expert:", output);
+    }
+
+    [Fact]
+    public void Write_WithExpertContext_IncludesGitHubSourceUrl()
+    {
+        var f = MakeFinding();
+        f.ExpertContext = new GauntletCI.Core.Model.ExpertFact(
+            "Some content.", "https://github.com/dotnet/runtime/issues/358", 0.85f);
+        var output = CaptureAnnotations(MakeResult(f));
+        Assert.Contains("https://github.com/dotnet/runtime/issues/358", output);
+    }
+
+    [Fact]
+    public void Write_WithoutExpertContext_NoExpertPrefix()
+    {
+        var output = CaptureAnnotations(MakeResult(MakeFinding()));
+        Assert.DoesNotContain("Expert:", output);
+    }
+
+    [Fact]
+    public void Write_WithLlmExplanation_IncludesLlmLabel()
+    {
+        var f = MakeFinding();
+        f.LlmExplanation = "This pattern causes socket exhaustion.";
+        var output = CaptureAnnotations(MakeResult(f));
+        Assert.Contains("LLM:", output);
+        Assert.Contains("socket exhaustion", output);
+    }
+
+    [Fact]
+    public void Write_WithBothLlmAndExpertContext_IncludesBoth()
+    {
+        var f = MakeFinding();
+        f.LlmExplanation = "Async deadlock risk here.";
+        f.ExpertContext  = new GauntletCI.Core.Model.ExpertFact(
+            "SemaphoreSlim preferred over lock.", "https://github.com/dotnet/runtime/issues/22144", 0.78f);
+        var output = CaptureAnnotations(MakeResult(f));
+        Assert.Contains("LLM:", output);
+        Assert.Contains("Expert:", output);
+        Assert.Contains("Async deadlock", output);
+        Assert.Contains("SemaphoreSlim", output);
+    }
+
+    [Fact]
+    public void BuildMessage_NoExtras_ReturnsSummaryOnly()
+    {
+        var f = MakeFinding(summary: "Plain summary");
+        var msg = GitHubAnnotationWriter.BuildMessage(f);
+        Assert.Equal("Plain summary", msg);
+    }
+
+    [Fact]
+    public void BuildMessage_ExpertContextNewlines_AreEscaped()
+    {
+        var f = MakeFinding();
+        f.ExpertContext = new GauntletCI.Core.Model.ExpertFact(
+            "Line one\nLine two.", "https://github.com/dotnet/runtime/issues/1", 0.5f);
+        var msg = GitHubAnnotationWriter.BuildMessage(f);
+        Assert.DoesNotContain("\n", msg);
+        Assert.Contains("%0A", msg);
+    }
 }
