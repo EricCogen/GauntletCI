@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Text.Json;
 using GauntletCI.Cli.Mcp;
+using GauntletCI.Core.Model;
+using GauntletCI.Llm;
 
 namespace GauntletCI.Tests;
 
@@ -19,6 +21,18 @@ public class McpToolTests
         +    {
         +        Console.WriteLine("hello");
         +    }
+         }
+        """;
+
+    private const string CredentialDiff = """
+        diff --git a/src/Config.cs b/src/Config.cs
+        index 0000000..1111111 100644
+        --- a/src/Config.cs
+        +++ b/src/Config.cs
+        @@ -1,3 +1,4 @@
+         public class Config
+         {
+        +    public string Password = "hunter2";
          }
         """;
 
@@ -102,4 +116,96 @@ public class McpToolTests
         var doc = JsonDocument.Parse(result);
         Assert.True(doc.RootElement.TryGetProperty("error", out _));
     }
+
+    [Fact]
+    public async Task analyze_diff_WithNullEngine_FindingsHaveNoLlmExplanation()
+    {
+        GauntletTools.SetEngine(new NullLlmEngine());
+
+        var result = await GauntletTools.analyze_diff(CredentialDiff);
+        var doc = JsonDocument.Parse(result);
+        var findings = doc.RootElement.GetProperty("findings").EnumerateArray().ToList();
+
+        Assert.True(findings.Count > 0);
+        foreach (var f in findings)
+        {
+            // NullLlmEngine produces no enrichment — llmExplanation should be absent or null
+            if (f.TryGetProperty("llmExplanation", out var expl))
+                Assert.Equal(JsonValueKind.Null, expl.ValueKind);
+        }
+    }
+
+    [Fact]
+    public async Task analyze_diff_WithFakeEngine_HighFindingsGetLlmExplanation()
+    {
+        GauntletTools.SetEngine(new FakeLlmEngine("enriched by ollama"));
+
+        var result = await GauntletTools.analyze_diff(CredentialDiff);
+        var doc = JsonDocument.Parse(result);
+        var findings = doc.RootElement.GetProperty("findings").EnumerateArray().ToList();
+
+        var highFindings = findings
+            .Where(f => f.GetProperty("confidence").GetString() == "High")
+            .ToList();
+
+        Assert.True(highFindings.Count > 0, "Expected at least one High finding from credential diff");
+        Assert.All(highFindings, f =>
+        {
+            Assert.True(f.TryGetProperty("llmExplanation", out var expl));
+            Assert.Equal("enriched by ollama", expl.GetString());
+        });
+    }
+
+    [Fact]
+    public async Task analyze_diff_WithFakeEngine_LimitedToThreeEnrichments()
+    {
+        // Build a diff that triggers many High findings
+        var sb = new System.Text.StringBuilder();
+        for (var i = 1; i <= 5; i++)
+        {
+            sb.AppendLine($"diff --git a/src/Config{i}.cs b/src/Config{i}.cs");
+            sb.AppendLine($"index 0000000..111111{i} 100644");
+            sb.AppendLine($"--- a/src/Config{i}.cs");
+            sb.AppendLine($"+++ b/src/Config{i}.cs");
+            sb.AppendLine("@@ -1,3 +1,4 @@");
+            sb.AppendLine($" public class Config{i}");
+            sb.AppendLine(" {");
+            sb.AppendLine($"+    public string Password = \"secret{i}\";");
+            sb.AppendLine(" }");
+        }
+
+        var countingEngine = new CountingLlmEngine();
+        GauntletTools.SetEngine(countingEngine);
+
+        await GauntletTools.analyze_diff(sb.ToString());
+
+        Assert.True(countingEngine.CallCount <= 3, $"Expected ≤3 enrichment calls, got {countingEngine.CallCount}");
+    }
+
+    // Test doubles
+
+    private sealed class FakeLlmEngine(string response) : ILlmEngine
+    {
+        public bool IsAvailable => true;
+        public Task<string> EnrichFindingAsync(Finding f, CancellationToken ct = default)
+            => Task.FromResult(response);
+        public Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct = default)
+            => Task.FromResult(response);
+        public void Dispose() { }
+    }
+
+    private sealed class CountingLlmEngine : ILlmEngine
+    {
+        public int CallCount;
+        public bool IsAvailable => true;
+        public Task<string> EnrichFindingAsync(Finding f, CancellationToken ct = default)
+        {
+            Interlocked.Increment(ref CallCount);
+            return Task.FromResult("ok");
+        }
+        public Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct = default)
+            => Task.FromResult("ok");
+        public void Dispose() { }
+    }
 }
+
