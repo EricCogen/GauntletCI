@@ -34,10 +34,13 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider, IDisposab
         DiscoveryQuery query, CancellationToken cancellationToken = default)
     {
         var langFilter = query.Languages.Count > 0
-            ? string.Join("+", query.Languages.Select(l => $"language:{l}"))
+            ? string.Join("+", query.Languages.Select(l => $"language:{Uri.EscapeDataString(l)}"))
             : "language:C%23";
 
-        var labelFilter = string.Join("+", _labels.Select(l => $"label:{l}"));
+        // OR logic: issues need only one of the labels, not all of them
+        var labelFilter = _labels.Length == 1
+            ? $"label:{Uri.EscapeDataString(_labels[0])}"
+            : "(" + string.Join("+OR+", _labels.Select(l => $"label:{Uri.EscapeDataString(l)}")) + ")";
         var q = $"is:issue+state:closed+{labelFilter}+{langFilter}";
         var limit = query.MaxCandidates > 0 ? query.MaxCandidates : 50;
 
