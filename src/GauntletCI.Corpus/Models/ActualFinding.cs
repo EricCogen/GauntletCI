@@ -10,4 +10,5 @@ public sealed class ActualFinding
     public string ChangeImplication { get; init; } = string.Empty;
     public string Evidence { get; init; } = string.Empty;
     public long ExecutionTimeMs { get; init; }
+    public string? FilePath { get; init; }
 }

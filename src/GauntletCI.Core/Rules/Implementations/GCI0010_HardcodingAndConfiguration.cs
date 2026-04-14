@@ -37,23 +37,27 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
-        var diff = context.Diff;
         var findings = new List<Finding>();
 
-        CheckIpAddress(diff, findings);
-        CheckHardcodedUrl(diff, findings);
-        CheckConnectionString(diff, findings);
-        CheckSecrets(diff, findings);
-        CheckHardcodedPorts(diff, findings);
-        CheckEnvironmentNames(diff, findings);
+        foreach (var file in context.Diff.Files)
+        {
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            CheckIpAddress(file, findings);
+            CheckHardcodedUrl(file, findings);
+            CheckConnectionString(file, findings);
+            CheckSecrets(file, findings);
+            CheckHardcodedPorts(file, findings);
+            CheckEnvironmentNames(file, findings);
+        }
+
         AddRoslynFindings(context.StaticAnalysis, findings);
 
         return Task.FromResult(findings);
     }
 
-    private void CheckIpAddress(DiffContext diff, List<Finding> findings)
+    private void CheckIpAddress(DiffFile file, List<Finding> findings)
     {
-        foreach (var line in diff.AllAddedLines)
+        foreach (var line in file.AddedLines)
         {
             var content = line.Content;
             var trimmed = content.Trim();
@@ -63,6 +67,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
             if (!match.Success) continue;
 
             findings.Add(CreateFinding(
+                file,
                 summary: $"Hardcoded IP address detected: {match.Value}",
                 evidence: $"Line {line.LineNumber}: {content.Trim()}",
                 whyItMatters: "Hardcoded IPs break across environments and make infrastructure changes require code changes.",
@@ -71,9 +76,9 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         }
     }
 
-    private void CheckHardcodedUrl(DiffContext diff, List<Finding> findings)
+    private void CheckHardcodedUrl(DiffFile file, List<Finding> findings)
     {
-        foreach (var line in diff.AllAddedLines)
+        foreach (var line in file.AddedLines)
         {
             var content = line.Content;
             var trimmed = content.Trim();
@@ -89,6 +94,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
             if (!hasUrlLiteral) continue;
 
             findings.Add(CreateFinding(
+                file,
                 summary: "Hardcoded URL in string literal.",
                 evidence: $"Line {line.LineNumber}: {content.Trim()}",
                 whyItMatters: "Hardcoded URLs break across environments and cannot be easily changed without recompilation.",
@@ -97,9 +103,9 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         }
     }
 
-    private void CheckConnectionString(DiffContext diff, List<Finding> findings)
+    private void CheckConnectionString(DiffFile file, List<Finding> findings)
     {
-        foreach (var line in diff.AllAddedLines)
+        foreach (var line in file.AddedLines)
         {
             var content = line.Content;
             if (IsCommentLine(content.Trim())) continue;
@@ -111,6 +117,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
                 if (!literals.Any(l => l.Contains(marker, StringComparison.OrdinalIgnoreCase))) continue;
 
                 findings.Add(CreateFinding(
+                    file,
                     summary: "Hardcoded connection string detected.",
                     evidence: $"Line {line.LineNumber}: {content.Trim()}",
                     whyItMatters: "Connection strings in source code expose credentials and prevent per-environment configuration.",
@@ -121,9 +128,9 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         }
     }
 
-    private void CheckSecrets(DiffContext diff, List<Finding> findings)
+    private void CheckSecrets(DiffFile file, List<Finding> findings)
     {
-        foreach (var line in diff.AllAddedLines)
+        foreach (var line in file.AddedLines)
         {
             var content = line.Content;
             if (IsCommentLine(content.Trim())) continue;
@@ -138,6 +145,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
                 if (!lower.Contains(pattern)) continue;
 
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Possible hardcoded secret ('{pattern}' assigned a string literal).",
                     evidence: $"Line {line.LineNumber}: {content.Trim()}",
                     whyItMatters: "Secrets in source code get committed to version control and can leak via logs, diffs, or repo access.",
@@ -148,9 +156,9 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         }
     }
 
-    private void CheckHardcodedPorts(DiffContext diff, List<Finding> findings)
+    private void CheckHardcodedPorts(DiffFile file, List<Finding> findings)
     {
-        foreach (var line in diff.AllAddedLines)
+        foreach (var line in file.AddedLines)
         {
             var content = line.Content;
             if (IsCommentLine(content.Trim())) continue;
@@ -162,6 +170,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
                     literals.Any(l => l.Contains($":{port}", StringComparison.Ordinal)))
                 {
                     findings.Add(CreateFinding(
+                        file,
                         summary: $"Hardcoded port number {port} detected.",
                         evidence: $"Line {line.LineNumber}: {content.Trim()}",
                         whyItMatters: "Hardcoded ports create conflicts and are inflexible across environments.",
@@ -173,9 +182,9 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         }
     }
 
-    private void CheckEnvironmentNames(DiffContext diff, List<Finding> findings)
+    private void CheckEnvironmentNames(DiffFile file, List<Finding> findings)
     {
-        foreach (var line in diff.AllAddedLines)
+        foreach (var line in file.AddedLines)
         {
             var content = line.Content;
             if (IsCommentLine(content.Trim())) continue;
@@ -187,6 +196,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
                 if (!literals.Any(l => l.Contains(env, StringComparison.OrdinalIgnoreCase))) continue;
 
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Hardcoded environment name '{env}' in code.",
                     evidence: $"Line {line.LineNumber}: {content.Trim()}",
                     whyItMatters: "Hardcoded environment names create branching logic that is fragile and hard to test.",

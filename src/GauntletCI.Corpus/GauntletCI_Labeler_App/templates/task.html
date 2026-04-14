@@ -42,6 +42,12 @@
   <h2>What was found</h2>
   {% set top = grouped.finding_rows[0] if grouped.finding_rows else none %}
   {% if top %}
+    {% if top.file_path %}
+      <div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.5rem">
+        <span style="font-size:0.75rem;opacity:0.5">📄</span>
+        <code style="font-size:0.8rem;color:var(--muted)">{{ top.file_path }}</code>
+      </div>
+    {% endif %}
     <p style="margin:0 0 0.25rem;font-weight:600">{{ top.message or 'No message' }}</p>
     {% if top.change_implication %}
       <p class="muted" style="margin:0 0 0.75rem">{{ top.change_implication }}</p>

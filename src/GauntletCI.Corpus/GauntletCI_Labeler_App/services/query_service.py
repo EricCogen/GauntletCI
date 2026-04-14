@@ -124,6 +124,7 @@ def grouped_findings_for_task(conn: sqlite3.Connection, fixture_id: str, rule_id
                 "message": row["message"] or "",
                 "change_implication": row["change_implication"] or "",
                 "evidence": evidence,
+                "file_path": row["file_path"] if "file_path" in row.keys() else None,
                 "execution_time_ms": row["execution_time_ms"],
             }
         )

@@ -163,16 +163,45 @@ def _find_line_in_section(lines: list[str], section_start: int, target_new_line:
 
 
 def _format_snippet(lines: list[str], start: int, end: int) -> str:
-    # Find the nearest preceding @@ hunk header so the browser can
-    # initialise line-number counters from the correct offset.
-    hunk_prefix: list[str] = []
-    if start < len(lines) and not lines[start].startswith("@@"):
-        for k in range(start - 1, -1, -1):
-            if lines[k].startswith("@@"):
-                hunk_prefix = [lines[k]]
-                break
+    """Return the slice lines[start:end] prefixed with an accurate @@ header.
+
+    For mid-hunk slices the raw hunk header has the wrong starting line (e.g.
+    "+1" when the interesting code is at line 3 100).  We walk from the hunk
+    body start up to `start`, counting how many new-file / old-file lines were
+    consumed, then emit a *synthetic* adjusted header so the browser JS can
+    initialise its line-number counters at the correct offset.
+    """
+    # Locate the nearest preceding @@ header
+    hunk_idx = -1
+    for k in range(start - 1, -1, -1):
+        if lines[k].startswith("@@"):
+            hunk_idx = k
+            break
+
     header = f"... lines {start + 1}–{end} of {len(lines)} ..."
-    return "\n".join(hunk_prefix + [header] + lines[start:end])
+
+    if hunk_idx < 0:
+        return "\n".join([header] + lines[start:end])
+
+    m = re.match(r'^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@', lines[hunk_idx])
+    if m:
+        adj_old = int(m.group(1))
+        adj_new = int(m.group(2))
+        for k in range(hunk_idx + 1, start):
+            ln = lines[k]
+            if ln.startswith('+') and not ln.startswith('+++'):
+                adj_new += 1
+            elif ln.startswith('-') and not ln.startswith('---'):
+                adj_old += 1
+            else:
+                # context line — advances both counters
+                adj_old += 1
+                adj_new += 1
+        synth_hunk = f"@@ -{adj_old} +{adj_new} @@"
+    else:
+        synth_hunk = lines[hunk_idx]
+
+    return "\n".join([synth_hunk, header] + lines[start:end])
 
 
 def extract_diff_snippet(diff_patch: str, search_text: str, context_lines: int = 30) -> str:
