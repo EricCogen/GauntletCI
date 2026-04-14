@@ -60,6 +60,9 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
         return await RunInferenceAsync(prompt, ct);
     }
 
+    public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
+        => RunInferenceAsync(prompt, ct);
+
     private async Task<string> RunInferenceAsync(string prompt, CancellationToken ct)
     {
         if (_disposed) return string.Empty;

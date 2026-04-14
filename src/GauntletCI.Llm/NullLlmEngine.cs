@@ -16,5 +16,8 @@ public sealed class NullLlmEngine : ILlmEngine
     public Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct = default)
         => Task.FromResult(string.Empty);
 
+    public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
+        => Task.FromResult(string.Empty);
+
     public void Dispose() { }
 }
