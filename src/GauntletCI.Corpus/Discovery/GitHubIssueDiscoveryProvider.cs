@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using GauntletCI.Corpus.Hydration;
@@ -124,11 +125,58 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider, IDisposab
 
     private async Task<T> GetJsonAsync<T>(string url, CancellationToken ct)
     {
-        using var resp = await _http.GetAsync(url, ct);
-        resp.EnsureSuccessStatusCode();
-        var json = await resp.Content.ReadAsStringAsync(ct);
-        return JsonSerializer.Deserialize<T>(json, JsonOpts)
-            ?? throw new InvalidOperationException($"Null response from {url}");
+        const int MaxRetries = 6;
+        var baseDelay = TimeSpan.FromSeconds(2);
+
+        for (int attempt = 0; ; attempt++)
+        {
+            using var resp = await _http.GetAsync(url, ct);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                var json = await resp.Content.ReadAsStringAsync(ct);
+                return JsonSerializer.Deserialize<T>(json, JsonOpts)
+                    ?? throw new InvalidOperationException($"Null response from {url}");
+            }
+
+            if (!IsRateLimited(resp) || attempt >= MaxRetries)
+                resp.EnsureSuccessStatusCode();
+
+            var waitTime = GetWaitTime(resp, baseDelay);
+            baseDelay = TimeSpan.FromSeconds(Math.Min(baseDelay.TotalSeconds * 2, 64));
+
+            Console.Error.WriteLine(
+                $"[corpus/issues] Rate limit (HTTP {(int)resp.StatusCode}) — " +
+                $"attempt {attempt + 1}/{MaxRetries}, waiting {waitTime.TotalSeconds:F0}s…");
+
+            await Task.Delay(waitTime, ct);
+        }
+    }
+
+    private static bool IsRateLimited(HttpResponseMessage resp)
+    {
+        if (resp.StatusCode == HttpStatusCode.TooManyRequests) return true;
+        if (resp.StatusCode == HttpStatusCode.Forbidden &&
+            resp.Headers.TryGetValues("x-ratelimit-remaining", out var vals) &&
+            vals.FirstOrDefault() == "0")
+            return true;
+        return false;
+    }
+
+    private static TimeSpan GetWaitTime(HttpResponseMessage resp, TimeSpan fallback)
+    {
+        if (resp.Headers.RetryAfter?.Delta is { } delta)
+            return delta + TimeSpan.FromSeconds(1);
+
+        if (resp.Headers.TryGetValues("x-ratelimit-reset", out var resetVals) &&
+            long.TryParse(resetVals.FirstOrDefault(), out var epoch))
+        {
+            var wait = DateTimeOffset.FromUnixTimeSeconds(epoch) - DateTimeOffset.UtcNow + TimeSpan.FromSeconds(2);
+            if (wait > TimeSpan.Zero) return wait;
+        }
+
+        var jitter = 1.0 + (Random.Shared.NextDouble() * 0.2 - 0.1);
+        return TimeSpan.FromSeconds(fallback.TotalSeconds * jitter);
     }
 
     private static (string? Owner, string? Repo, int IssueNumber) TryParseIssueUrl(string htmlUrl)
