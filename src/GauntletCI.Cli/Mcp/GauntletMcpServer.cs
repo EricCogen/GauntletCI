@@ -131,7 +131,8 @@ public static class GauntletTools
 
         await Task.WhenAll(toEnrich.Select(async f =>
         {
-            f.LlmExplanation = await _engine.EnrichFindingAsync(f);
+            var enrichment = await _engine.EnrichFindingAsync(f);
+            f.LlmExplanation = string.IsNullOrWhiteSpace(enrichment) ? null : enrichment;
         }));
     }
 
