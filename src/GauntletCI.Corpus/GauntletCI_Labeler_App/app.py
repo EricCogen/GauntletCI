@@ -18,6 +18,7 @@ from services.query_service import (
     find_exact_duplicates,
     fixture_by_id,
     grouped_findings_for_task,
+    linked_issues_for_fixture,
     queue_rows,
     rubric_for_rule,
     top_rule_metrics,
@@ -194,6 +195,8 @@ def task(queue_id: int):
         rubric = rubric_for_rule(conn, task_row["rule_id"])
         label_state = current_label(conn, task_row["fixture_id"], task_row["rule_id"], CONFIG["reviewer_name"])
 
+        linked_issues = linked_issues_for_fixture(conn, task_row["fixture_id"])
+
         top_message = grouped["messages"][0] if grouped["messages"] else ""
         top_evidence = ""
         if grouped["finding_rows"]:
@@ -243,6 +246,7 @@ def task(queue_id: int):
         duplicates=duplicates,
         pending_count=pending_count,
         item_suggestion=item_suggestion,
+        linked_issues=linked_issues,
     )
 
 

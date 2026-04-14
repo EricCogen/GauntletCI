@@ -233,8 +233,41 @@ def find_exact_duplicates(conn, current_queue_id: int, rule_id: str, message: st
     ).fetchall()
 
 
-def audit_report_rows(conn) -> list:
-    return conn.execute(
+def linked_issues_for_fixture(conn: sqlite3.Connection, fixture_id: str) -> list[dict]:
+    """Return issues linked to this fixture via fixture_issues, newest first."""
+    import json as _json
+    try:
+        rows = conn.execute(
+            """
+            SELECT i.id, i.number, i.title, i.labels_json, i.state, i.url, fi.link_source
+            FROM fixture_issues fi
+            JOIN issues i ON fi.issue_id = i.id
+            WHERE fi.fixture_id = ?
+            ORDER BY i.number DESC
+            """,
+            (fixture_id,),
+        ).fetchall()
+    except Exception:
+        return []
+    result = []
+    for r in rows:
+        labels = []
+        try:
+            labels = _json.loads(r["labels_json"] or "[]")
+        except Exception:
+            pass
+        result.append({
+            "number":      r["number"],
+            "title":       r["title"] or "",
+            "labels":      labels,
+            "state":       r["state"] or "",
+            "url":         r["url"] or "",
+            "link_source": r["link_source"] or "",
+        })
+    return result
+
+
+def audit_report_rows(conn) -> list:    return conn.execute(
         """
         WITH fired AS (
             SELECT fixture_id, rule_id, MAX(did_trigger) AS fired

@@ -38,8 +38,30 @@
   {% endif %}
 </section>
 
+{% if linked_issues %}
+<section class="panel" style="border-left: 4px solid #f59e0b;">
+  <h2 style="margin:0 0 0.5rem">Linked Issues</h2>
+  <div style="display:flex;flex-direction:column;gap:0.5rem">
+    {% for issue in linked_issues %}
+    <div style="display:flex;align-items:flex-start;gap:0.75rem;padding:0.5rem 0;border-bottom:1px solid rgba(0,0,0,0.06)">
+      <a href="{{ issue.url }}" target="_blank" rel="noopener"
+         style="font-weight:600;white-space:nowrap;color:inherit">#{{ issue.number }}</a>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.9rem;margin-bottom:0.25rem">{{ issue.title }}</div>
+        <div style="display:flex;gap:0.3rem;flex-wrap:wrap">
+          {% for label in issue.labels %}
+          <span style="font-size:0.7rem;padding:0.1rem 0.4rem;border-radius:9999px;background:rgba(99,102,241,0.12);color:#6366f1">{{ label }}</span>
+          {% endfor %}
+          <span class="muted" style="font-size:0.7rem">{{ issue.link_source }}</span>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
 <section class="panel">
-  <h2>What was found</h2>
   {% set top = grouped.finding_rows[0] if grouped.finding_rows else none %}
   {% if top %}
     {% if top.file_path %}
