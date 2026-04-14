@@ -162,6 +162,72 @@ public sealed class LlmAdjudicatorTests : IDisposable
         Assert.Null(finding.ExpertContext);
     }
 
+    [Fact]
+    public async Task Adjudicate_CancellationRequested_ThrowsOperationCanceledException()
+    {
+        var vec = new float[] { 1f, 0f, 0f };
+        _store.Upsert("fact1", "ValueTask must not be awaited twice.", "source", vec);
+
+        var adjudicator = new LlmAdjudicator(FakeEngine(vec), _store, minScore: 0.0f);
+        var findings = Enumerable.Range(0, 100).Select(_ => MakeFinding()).ToList();
+
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => adjudicator.AdjudicateAsync(findings, cts.Token));
+    }
+
+    [Fact]
+    public async Task Adjudicate_EngineThrowsException_ContinuesToNextFinding()
+    {
+        var vec = new float[] { 1f, 0f, 0f };
+        _store.Upsert("fact1", "Some expert fact.", "source", vec);
+
+        var throwingEngine = new ThrowingEmbeddingEngine(vec);
+        var adjudicator = new LlmAdjudicator(throwingEngine, _store, minScore: 0.0f);
+        var f1 = MakeFinding("GCI0001");
+        var f2 = MakeFinding("GCI0002");
+
+        // Should not throw — errors are caught per-finding
+        await adjudicator.AdjudicateAsync([f1, f2]);
+
+        // Both findings should still have null context because engine throws
+        Assert.Null(f1.ExpertContext);
+        Assert.Null(f2.ExpertContext);
+    }
+
+    [Fact]
+    public async Task Adjudicate_MinScoreExactlyAtThreshold_AttachesContext()
+    {
+        // Test the boundary condition: score == minScore should attach
+        var vec = new float[] { 1f, 0f };
+        _store.Upsert("fact1", "Edge case fact.", "source", vec);
+
+        // minScore = 1.0, score will be exactly 1.0 (identical vectors)
+        var adjudicator = new LlmAdjudicator(FakeEngine(vec), _store, minScore: 1.0f);
+        var finding = MakeFinding();
+
+        await adjudicator.AdjudicateAsync([finding]);
+
+        Assert.NotNull(finding.ExpertContext);
+    }
+
+    [Fact]
+    public async Task Adjudicate_DimensionMismatch_SkipsFinding()
+    {
+        // Store has 3D vectors, query produces 2D
+        _store.Upsert("fact1", "3D fact.", "source", [1f, 0f, 0f]);
+
+        var adjudicator = new LlmAdjudicator(FakeEngine([1f, 0f]), _store, minScore: 0.0f);
+        var finding = MakeFinding();
+
+        await adjudicator.AdjudicateAsync([finding]);
+
+        // No match due to dimension mismatch → ExpertContext is null
+        Assert.Null(finding.ExpertContext);
+    }
+
     // ── Test double ───────────────────────────────────────────────────────────
 
     private sealed class StaticEmbeddingEngine(float[] vec) : IEmbeddingEngine
@@ -169,5 +235,12 @@ public sealed class LlmAdjudicatorTests : IDisposable
         public bool IsAvailable => vec.Length > 0;
         public Task<float[]> EmbedAsync(string text, CancellationToken ct = default)
             => Task.FromResult(vec);
+    }
+
+    private sealed class ThrowingEmbeddingEngine(float[] vec) : IEmbeddingEngine
+    {
+        public bool IsAvailable => vec.Length > 0;
+        public Task<float[]> EmbedAsync(string text, CancellationToken ct = default)
+            => throw new InvalidOperationException("Simulated embedding failure");
     }
 }

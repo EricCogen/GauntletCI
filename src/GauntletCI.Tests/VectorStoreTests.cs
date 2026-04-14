@@ -185,12 +185,97 @@ public sealed class VectorStoreTests : IDisposable
         Assert.True(engine.IsAvailable);
     }
 
+    [Fact]
+    public async Task OllamaEmbeddingEngine_NonSuccessStatusCode_ThrowsHttpRequestException()
+    {
+        var handler = new ErrorHandler(HttpStatusCode.InternalServerError);
+        using var engine = new OllamaEmbeddingEngine("model", "http://localhost:11434", new HttpClient(handler));
+
+        await Assert.ThrowsAsync<HttpRequestException>(() => engine.EmbedAsync("test"));
+    }
+
+    [Fact]
+    public async Task OllamaEmbeddingEngine_NullEmbeddingInResponse_ReturnsEmptyArray()
+    {
+        // Response with null embedding field
+        var fakeResponse = JsonSerializer.Serialize(new { embedding = (float[]?)null });
+        var handler = new FakeEmbedHandler(fakeResponse);
+        using var engine = new OllamaEmbeddingEngine("model", "http://localhost:11434", new HttpClient(handler));
+
+        var result = await engine.EmbedAsync("test");
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task OllamaEmbeddingEngine_MissingEmbeddingField_ReturnsEmptyArray()
+    {
+        var fakeResponse = "{}";
+        var handler = new FakeEmbedHandler(fakeResponse);
+        using var engine = new OllamaEmbeddingEngine("model", "http://localhost:11434", new HttpClient(handler));
+
+        var result = await engine.EmbedAsync("test");
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void CosineSimilarity_MismatchedLengths_ReturnsZero()
+    {
+        var a = new float[] { 1f, 0f, 0f };
+        var b = new float[] { 1f, 0f };
+        Assert.Equal(0f, VectorStore.CosineSimilarity(a, b));
+    }
+
+    [Fact]
+    public void Dispose_CanBeCalledMultipleTimes()
+    {
+        var dbPath = Path.Combine(Path.GetTempPath(), $"gauntlet-test-{Guid.NewGuid():N}.db");
+        var store = new VectorStore(dbPath);
+        store.Dispose();
+
+        var ex = Record.Exception(() => store.Dispose());
+
+        Assert.Null(ex);
+        if (File.Exists(dbPath)) File.Delete(dbPath);
+    }
+
+    [Fact]
+    public void Search_HighDimensionalVectors_ReturnsCorrectResults()
+    {
+        // Create 128-dim vectors (typical embedding dimension)
+        var vec1 = new float[128];
+        var vec2 = new float[128];
+        vec1[0] = 1f;
+        vec2[127] = 1f;
+
+        _store.Upsert("first", "content 1", "source", vec1);
+        _store.Upsert("second", "content 2", "source", vec2);
+
+        var query = new float[128];
+        query[0] = 1f;
+
+        var results = _store.Search(query, topK: 1);
+
+        Assert.Single(results);
+        Assert.Equal("first", results[0].Id);
+    }
+
     private sealed class FakeEmbedHandler(string responseJson) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage req, CancellationToken ct)
             => Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent(responseJson, System.Text.Encoding.UTF8, "application/json")
+            });
+    }
+
+    private sealed class ErrorHandler(HttpStatusCode statusCode) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage req, CancellationToken ct)
+            => Task.FromResult(new HttpResponseMessage(statusCode)
+            {
+                Content = new StringContent("Error", System.Text.Encoding.UTF8, "text/plain")
             });
     }
 }
