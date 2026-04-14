@@ -24,6 +24,11 @@ public class GCI0026_DocumentationAdequacy : RuleBase
         @"^\s*public\s+(?:(?:static|async|virtual|override|abstract|sealed|new|partial)\s+)*[\w<>\[\],\s?]+\s+\w+\s*[(<]",
         RegexOptions.Compiled);
 
+    // Attributes that identify test methods — no XML docs required.
+    private static readonly Regex TestAttributeRegex = new(
+        @"^\[(Fact|Theory|Test|TestCase|TestMethod|DataTestMethod|DataRow|InlineData|MemberData|ClassData)\b",
+        RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -32,6 +37,7 @@ public class GCI0026_DocumentationAdequacy : RuleBase
 
         foreach (var file in diff.Files)
         {
+            if (IsTestFile(file.NewPath)) continue;
             CheckPublicMembersWithoutDocs(file, findings);
         }
 
@@ -52,23 +58,24 @@ public class GCI0026_DocumentationAdequacy : RuleBase
 
             if (!PublicMethodRegex.IsMatch(line.Content)) continue;
 
-            // Check if there's a /// XML doc comment in the preceding lines
+            // Check preceding lines for XML doc comment or a test attribute
             bool hasDocs = false;
+            bool isTestMethod = false;
             for (int j = i - 1; j >= Math.Max(0, i - 5); j--)
             {
                 var prev = allLines[j].Content.Trim();
                 if (string.IsNullOrWhiteSpace(prev)) break;
-                if (prev.StartsWith("///"))
-                { hasDocs = true; break; }
-                // An attribute line is ok to skip ([HttpGet], etc.)
-                if (prev.StartsWith("[")) continue;
-                // Any non-attribute non-doc non-blank line means no doc above
-                break;
+                if (prev.StartsWith("///")) { hasDocs = true; break; }
+                if (prev.StartsWith("["))
+                {
+                    if (TestAttributeRegex.IsMatch(prev)) { isTestMethod = true; break; }
+                    continue; // other attributes ([HttpGet] etc.) — keep looking
+                }
+                break; // non-attribute, non-doc, non-blank — stop
             }
 
-            if (!hasDocs)
+            if (!hasDocs && !isTestMethod)
             {
-                // Extract method name for a cleaner message
                 var methodName = ExtractMethodName(content);
                 findings.Add(CreateFinding(
                     file,
@@ -82,9 +89,22 @@ public class GCI0026_DocumentationAdequacy : RuleBase
         }
     }
 
+    /// <summary>Heuristic: skip files that are clearly test files by path convention.</summary>
+    private static bool IsTestFile(string? path)
+    {
+        if (string.IsNullOrEmpty(path)) return false;
+        var name = Path.GetFileNameWithoutExtension(path);
+        return name.EndsWith("Tests", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith("Test", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith("Specs", StringComparison.OrdinalIgnoreCase)
+            || name.EndsWith("Spec", StringComparison.OrdinalIgnoreCase)
+            || path.Contains("/Tests/", StringComparison.OrdinalIgnoreCase)
+            || path.Contains("/Test/", StringComparison.OrdinalIgnoreCase)
+            || path.Contains(".Tests/", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static string ExtractMethodName(string signature)
     {
-        // Extract method name from "public Task<T> MethodName(..."
         var parenIdx = signature.IndexOf('(');
         if (parenIdx <= 0) return signature;
         var beforeParen = signature[..parenIdx].Trim();
@@ -92,3 +112,4 @@ public class GCI0026_DocumentationAdequacy : RuleBase
         return parts.Length > 0 ? parts[^1] : beforeParen;
     }
 }
+
