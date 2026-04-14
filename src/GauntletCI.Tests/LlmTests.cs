@@ -47,6 +47,21 @@ public class NullLlmEngineTests
     {
         Assert.IsAssignableFrom<ILlmEngine>(_engine);
     }
+
+    [Fact]
+    public async Task CompleteAsync_ReturnsEmpty()
+    {
+        var result = await _engine.CompleteAsync("any prompt");
+        Assert.Equal(string.Empty, result);
+    }
+
+    [Fact]
+    public async Task CompleteAsync_WithCancellationToken_ReturnsEmpty()
+    {
+        using var cts = new CancellationTokenSource();
+        var result = await _engine.CompleteAsync("any prompt", cts.Token);
+        Assert.Equal(string.Empty, result);
+    }
 }
 
 public class PromptTemplatesTests

@@ -283,5 +283,73 @@ public class McpToolTests
             => Task.FromResult("ok");
         public void Dispose() { }
     }
+
+    private sealed class ThrowingLlmEngine : ILlmEngine
+    {
+        public bool IsAvailable => true;
+        public Task<string> EnrichFindingAsync(Finding f, CancellationToken ct = default)
+            => throw new InvalidOperationException("Simulated LLM failure");
+        public Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct = default)
+            => throw new InvalidOperationException("Simulated LLM failure");
+        public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
+            => throw new InvalidOperationException("Simulated LLM failure");
+        public void Dispose() { }
+    }
+
+    [Fact]
+    public async Task analyze_diff_WhenEngineThrows_DoesNotPropagate()
+    {
+        // Engine throws during enrichment — should not bubble up to the caller
+        GauntletTools.SetEngine(new ThrowingLlmEngine());
+
+        var result = await GauntletTools.analyze_diff(CredentialDiff);
+
+        // Should still return valid JSON, not throw
+        Assert.NotNull(result);
+        var doc = JsonDocument.Parse(result);
+        // Result is either findings array or object with findings property
+        Assert.True(doc.RootElement.ValueKind == JsonValueKind.Object ||
+                    doc.RootElement.ValueKind == JsonValueKind.Array,
+                    "Should return valid JSON object or array");
+    }
+
+    [Fact]
+    public async Task analyze_commit_InvalidRepo_ReturnsErrorJson()
+    {
+        var result = await GauntletTools.analyze_commit(@"C:\does-not-exist", "HEAD");
+
+        Assert.NotNull(result);
+        var doc = JsonDocument.Parse(result);
+        Assert.True(doc.RootElement.TryGetProperty("error", out _));
+    }
+
+    [Fact]
+    public void list_rules_ReturnsValidJsonArray()
+    {
+        var result = GauntletTools.list_rules();
+        var arr = JsonDocument.Parse(result).RootElement;
+
+        // Should be an array with at least one rule
+        Assert.True(arr.GetArrayLength() >= 1, "Should return at least one rule");
+
+        // Each element should have id and name
+        foreach (var elem in arr.EnumerateArray())
+        {
+            Assert.True(elem.TryGetProperty("id", out _));
+            Assert.True(elem.TryGetProperty("name", out _));
+        }
+    }
+
+    [Fact]
+    public async Task analyze_staged_DefaultRepo_UsesCurrentDirectory()
+    {
+        // Calling with null uses current directory - it will either
+        // succeed (if current dir is a git repo) or return error JSON
+        var result = await GauntletTools.analyze_staged(null);
+
+        Assert.NotNull(result);
+        var doc = JsonDocument.Parse(result);
+        Assert.Equal(JsonValueKind.Object, doc.RootElement.ValueKind);
+    }
 }
 

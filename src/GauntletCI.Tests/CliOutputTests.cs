@@ -36,6 +36,20 @@ public class ConsoleReporterTests
         Assert.EndsWith("[REDACTED]", result);
         Assert.DoesNotContain("secretToken", result);
     }
+
+    [Fact]
+    public void MaskEvidenceSnippet_MultipleColons_RedactsAfterFirstColonSpace()
+    {
+        var result = ConsoleReporter.MaskEvidenceSnippet("Line 10: user.Email = foo: bar: baz");
+        Assert.Equal("Line 10: [REDACTED]", result);
+    }
+
+    [Fact]
+    public void MaskEvidenceSnippet_ColonWithoutSpace_ReturnsUnchanged()
+    {
+        var result = ConsoleReporter.MaskEvidenceSnippet("http://example.com/path");
+        Assert.Equal("http://example.com/path", result);
+    }
 }
 
 public class GitHubAnnotationWriterTests
@@ -198,5 +212,74 @@ public class GitHubAnnotationWriterTests
         var msg = GitHubAnnotationWriter.BuildMessage(f);
         Assert.DoesNotContain("\n", msg);
         Assert.Contains("%0A", msg);
+    }
+
+    [Fact]
+    public void BuildMessage_NullLlmExplanation_DoesNotThrow()
+    {
+        var f = MakeFinding();
+        f.LlmExplanation = null;
+        var ex = Record.Exception(() => GitHubAnnotationWriter.BuildMessage(f));
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public void BuildMessage_EmptyLlmExplanation_DoesNotIncludeLlmLabel()
+    {
+        var f = MakeFinding();
+        f.LlmExplanation = "";
+        var msg = GitHubAnnotationWriter.BuildMessage(f);
+        Assert.DoesNotContain("LLM:", msg);
+    }
+
+    [Fact]
+    public void BuildMessage_WhitespaceLlmExplanation_DoesNotIncludeLlmLabel()
+    {
+        var f = MakeFinding();
+        f.LlmExplanation = "   ";
+        var msg = GitHubAnnotationWriter.BuildMessage(f);
+        Assert.DoesNotContain("LLM:", msg);
+    }
+
+    [Fact]
+    public void Write_NullFilePath_OmitsFileParameter()
+    {
+        var f = MakeFinding();
+        f.FilePath = null;
+        f.Line = 10;
+        var output = CaptureAnnotations(MakeResult(f));
+        Assert.DoesNotContain("file=", output);
+    }
+
+    [Fact]
+    public void Write_EmptyFilePath_OmitsFileParameter()
+    {
+        var f = new Finding
+        {
+            RuleId = "GCI0001", RuleName = "Diff Integrity",
+            Summary = "Something risky", Evidence = "x = secret",
+            WhyItMatters = "It matters.", SuggestedAction = "Fix it.",
+            Confidence = Confidence.High,
+            FilePath = "",
+            Line = 77,
+        };
+        var output = CaptureAnnotations(MakeResult(f));
+        Assert.DoesNotContain("file=,", output);
+    }
+
+    [Fact]
+    public void Write_NullLine_DefaultsToLineOne()
+    {
+        var f = new Finding
+        {
+            RuleId = "GCI0001", RuleName = "Diff Integrity",
+            Summary = "Something risky", Evidence = "x = secret",
+            WhyItMatters = "It matters.", SuggestedAction = "Fix it.",
+            Confidence = Confidence.High,
+            FilePath = "src/Test.cs",
+            Line = null,
+        };
+        var output = CaptureAnnotations(MakeResult(f));
+        Assert.Contains("line=1", output);
     }
 }

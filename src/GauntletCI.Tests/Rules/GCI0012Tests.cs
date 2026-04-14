@@ -36,4 +36,51 @@ public class GCI0012Tests
 
         Assert.Contains(findings, f => f.Summary.Contains("Weak hashing") || f.Summary.Contains("MD5"));
     }
+
+    [Fact]
+    public async Task Sha1Managed_ShouldFlagWeakHashing()
+    {
+        var diff = MakeDiff("    using var sha1 = new SHA1Managed();");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("Weak hashing") || f.Summary.Contains("SHA1"));
+    }
+
+    [Fact]
+    public async Task HardcodedPassword_ShouldFlagCredentialLeak()
+    {
+        var diff = MakeDiff("    var password = \"mysecret123\";");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("hardcoded") || f.Summary.Contains("credential") || f.Summary.Contains("secret"));
+    }
+
+    [Fact]
+    public async Task ParameterizedSql_ShouldNotFlag()
+    {
+        var diff = MakeDiff("    var sql = \"SELECT * FROM Users WHERE Id = @id\";");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("SQL injection"));
+    }
+
+    [Fact]
+    public async Task Sha256_ShouldNotFlagWeakHashing()
+    {
+        var diff = MakeDiff("    using var sha256 = SHA256.Create();");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Weak hashing"));
+    }
+
+    [Fact]
+    public async Task CommentedCredential_StillFlags()
+    {
+        // Note: GCI0012 doesn't filter comments - this documents actual behavior
+        // (credentials in comments are still risky as they can end up in version control)
+        var diff = MakeDiff("    // var apiKey = \"test1234\";");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("hardcoded") || f.Summary.Contains("credential") || f.Summary.Contains("apikey"));
+    }
 }
