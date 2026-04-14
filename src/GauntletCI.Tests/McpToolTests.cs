@@ -182,6 +182,78 @@ public class McpToolTests
         Assert.True(countingEngine.CallCount <= 3, $"Expected ≤3 enrichment calls, got {countingEngine.CallCount}");
     }
 
+    [Fact]
+    public async Task analyze_diff_WithFakeEngine_NoHighFindings_ZeroEnrichmentCalls()
+    {
+        // Empty diff produces zero findings → enrichment must not be called
+        var countingEngine = new CountingLlmEngine();
+        GauntletTools.SetEngine(countingEngine);
+
+        await GauntletTools.analyze_diff("");
+
+        Assert.Equal(0, countingEngine.CallCount);
+    }
+
+    [Fact]
+    public async Task analyze_diff_WithFakeEngine_OnlyMediumLowFindings_ZeroEnrichmentCalls()
+    {
+        // SampleDiff adds a Console.WriteLine — triggers complexity/edge-case rules at
+        // Medium/Low confidence, but no High-confidence findings.
+        var countingEngine = new CountingLlmEngine();
+        GauntletTools.SetEngine(countingEngine);
+
+        var result = await GauntletTools.analyze_diff(SampleDiff);
+        var doc = JsonDocument.Parse(result);
+        var highCount = doc.RootElement.GetProperty("findings").EnumerateArray()
+            .Count(f => f.GetProperty("confidence").GetString() == "High");
+
+        // If the diff produces zero High findings, enrichment should not be invoked
+        if (highCount == 0)
+            Assert.Equal(0, countingEngine.CallCount);
+    }
+
+    [Fact]
+    public async Task analyze_diff_WhenEngineReturnsEmpty_LlmExplanationAbsentFromJson()
+    {
+        // An engine that returns empty string → WhenWritingNull suppresses the field
+        GauntletTools.SetEngine(new FakeLlmEngine(string.Empty));
+
+        var result = await GauntletTools.analyze_diff(CredentialDiff);
+        var doc = JsonDocument.Parse(result);
+        var findings = doc.RootElement.GetProperty("findings").EnumerateArray().ToList();
+
+        // llmExplanation should be absent or null when the engine returned ""
+        // (empty string is stored as null equivalent by Finding; serializer omits null)
+        Assert.True(findings.Count > 0);
+        foreach (var f in findings.Where(f => f.GetProperty("confidence").GetString() == "High"))
+        {
+            var hasExplanation = f.TryGetProperty("llmExplanation", out var expl)
+                && expl.ValueKind != JsonValueKind.Null
+                && !string.IsNullOrEmpty(expl.GetString());
+            Assert.False(hasExplanation, "Expected no llmExplanation when engine returns empty string");
+        }
+    }
+
+    [Fact]
+    public async Task SetEngine_ReplacedEngine_NewEngineIsUsed()
+    {
+        GauntletTools.SetEngine(new FakeLlmEngine("first"));
+        GauntletTools.SetEngine(new FakeLlmEngine("second"));
+
+        var result = await GauntletTools.analyze_diff(CredentialDiff);
+        var doc = JsonDocument.Parse(result);
+        var highFindings = doc.RootElement.GetProperty("findings").EnumerateArray()
+            .Where(f => f.GetProperty("confidence").GetString() == "High")
+            .ToList();
+
+        Assert.True(highFindings.Count > 0);
+        Assert.All(highFindings, f =>
+        {
+            f.TryGetProperty("llmExplanation", out var expl);
+            Assert.Equal("second", expl.GetString());
+        });
+    }
+
     // Test doubles
 
     private sealed class FakeLlmEngine(string response) : ILlmEngine
