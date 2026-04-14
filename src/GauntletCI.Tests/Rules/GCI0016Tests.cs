@@ -36,4 +36,68 @@ public class GCI0016Tests
 
         Assert.Contains(findings, f => f.Summary.Contains(".Result"));
     }
+
+    [Fact]
+    public async Task DotWaitOnTask_ShouldFlagFinding()
+    {
+        var diff = MakeDiff("    task.Wait();");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains(".Wait()"));
+    }
+
+    [Fact]
+    public async Task ConfigureAwaitFalse_ShouldNotFlag()
+    {
+        var diff = MakeDiff("    await task.ConfigureAwait(false);");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("ConfigureAwait"));
+    }
+
+    [Fact]
+    public async Task AsyncTaskMethod_ShouldNotFlag()
+    {
+        var diff = MakeDiff("    public async Task RunAsync() { }");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("async void"));
+    }
+
+    [Fact]
+    public async Task GetResultInsideAwait_ShouldNotFlagFalsePositive()
+    {
+        // "GetResult" as part of a method name, not .Result access
+        var diff = MakeDiff("    var x = await FetchAndGetResultAsync();");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains(".Result"));
+    }
+
+    [Fact]
+    public async Task CommentedDotResult_ShouldNotFlag()
+    {
+        var diff = MakeDiff("    // var result = task.Result;");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains(".Result"));
+    }
+
+    [Fact]
+    public async Task LockThis_ShouldFlagWarning()
+    {
+        var diff = MakeDiff("    lock (this) { }");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("lock(this)"));
+    }
+
+    [Fact]
+    public async Task LockOnPrivateField_ShouldNotFlag()
+    {
+        var diff = MakeDiff("    lock (_syncRoot) { }");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("lock"));
+    }
 }

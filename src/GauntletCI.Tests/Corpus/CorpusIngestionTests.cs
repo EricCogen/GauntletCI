@@ -42,6 +42,31 @@ public class FixtureIdHelperTests
         var rawPath     = FixtureIdHelper.GetRawPath(fixturePath);
         Assert.Equal(Path.Combine(fixturePath, "raw"), rawPath);
     }
+
+    [Theory]
+    [InlineData("owner\\with\\backslash", "repo", 1, "owner_with_backslash_repo_pr1")]
+    [InlineData("OWNER", "REPO", 123, "owner_repo_pr123")]
+    [InlineData("test  double  space", "repo", 1, "test--double--space_repo_pr1")]
+    public void Build_SanitizesSpecialCharacters(string owner, string repo, int prNumber, string expected)
+    {
+        var result = FixtureIdHelper.Build(owner, repo, prNumber);
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void Build_EmptyStrings_ProducesValidId()
+    {
+        var result = FixtureIdHelper.Build("", "", 1);
+        Assert.Equal("__pr1", result);
+    }
+
+    [Fact]
+    public void GetFixturePath_EmptyBasePath_ProducesValidPath()
+    {
+        var result = FixtureIdHelper.GetFixturePath("", FixtureTier.Gold, "fixture1");
+        Assert.Contains("gold", result.ToLowerInvariant());
+        Assert.Contains("fixture1", result);
+    }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

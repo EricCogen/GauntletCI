@@ -229,4 +229,35 @@ public sealed class SilverLabelEngineTests
         // Assert
         Assert.Contains(labels, l => l.RuleId == "GCI0007" && l.ShouldTrigger);
     }
+
+    [Fact]
+    public async Task InferLabelsFromComments_NullInput_Throws()
+    {
+        // Null input throws ArgumentNullException - this documents actual behavior
+        await Assert.ThrowsAsync<ArgumentNullException>(
+            () => _engine.InferLabelsFromCommentsAsync(null!));
+    }
+
+    [Fact]
+    public async Task InferLabelsFromComments_WhitespaceInput_ReturnsEmpty()
+    {
+        var labels = await _engine.InferLabelsFromCommentsAsync("   ");
+        Assert.Empty(labels);
+    }
+
+    [Fact]
+    public async Task InferLabels_VeryLargeDiff_HandlesGracefully()
+    {
+        // Build a 10,000 line diff
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine("--- a/src/Large.cs");
+        sb.AppendLine("+++ b/src/Large.cs");
+        sb.AppendLine("@@ -1,3 +1,10003 @@");
+        for (int i = 0; i < 10000; i++)
+            sb.AppendLine($"+    int field{i} = {i};");
+
+        var ex = await Record.ExceptionAsync(() => _engine.InferLabelsAsync("large", sb.ToString()));
+
+        Assert.Null(ex);
+    }
 }

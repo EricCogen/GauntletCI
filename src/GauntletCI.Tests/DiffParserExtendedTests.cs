@@ -190,4 +190,162 @@ public class DiffParserExtendedTests
         Assert.Single(ctx.Files);
         Assert.True(ctx.Files[0].IsDeleted);
     }
+
+    [Fact]
+    public void Parse_RenamedFile_CaptureBothPaths()
+    {
+        var renamedDiff = """
+            diff --git a/src/OldName.cs b/src/NewName.cs
+            similarity index 90%
+            rename from src/OldName.cs
+            rename to src/NewName.cs
+            index abc..def 100644
+            --- a/src/OldName.cs
+            +++ b/src/NewName.cs
+            @@ -1,3 +1,3 @@
+             public class Test {
+            -    int x = 1;
+            +    int x = 2;
+             }
+            """;
+
+        var ctx = DiffParser.Parse(renamedDiff);
+
+        Assert.Single(ctx.Files);
+        Assert.Equal("src/OldName.cs", ctx.Files[0].OldPath);
+        Assert.Equal("src/NewName.cs", ctx.Files[0].NewPath);
+    }
+
+    [Fact]
+    public void Parse_HunkHeaderOnly_NoAddedRemovedLines()
+    {
+        var hunkOnlyDiff = """
+            diff --git a/src/File.cs b/src/File.cs
+            index abc..def 100644
+            --- a/src/File.cs
+            +++ b/src/File.cs
+            @@ -1,3 +1,3 @@
+             line 1
+             line 2
+             line 3
+            """;
+
+        var ctx = DiffParser.Parse(hunkOnlyDiff);
+
+        Assert.Single(ctx.Files);
+        Assert.Empty(ctx.Files[0].AddedLines);
+        Assert.Empty(ctx.Files[0].RemovedLines);
+    }
+
+    [Fact]
+    public void Parse_NoNewlineAtEndOfFile_HandledGracefully()
+    {
+        var noNewlineDiff = """
+            diff --git a/src/File.cs b/src/File.cs
+            index abc..def 100644
+            --- a/src/File.cs
+            +++ b/src/File.cs
+            @@ -1,2 +1,2 @@
+             line 1
+            -old line
+            +new line
+            \ No newline at end of file
+            """;
+
+        var ctx = DiffParser.Parse(noNewlineDiff);
+
+        Assert.Single(ctx.Files);
+        Assert.Single(ctx.Files[0].AddedLines);
+        Assert.Single(ctx.Files[0].RemovedLines);
+    }
+
+    [Fact]
+    public void Parse_BareUnifiedDiff_ParsesCorrectly()
+    {
+        // Some tools emit bare unified diff without "diff --git" header
+        var bareDiff = """
+            --- a/src/File.cs
+            +++ b/src/File.cs
+            @@ -1,3 +1,4 @@
+             line 1
+            +new line
+             line 2
+             line 3
+            """;
+
+        var ctx = DiffParser.Parse(bareDiff);
+
+        Assert.Single(ctx.Files);
+        Assert.Equal("src/File.cs", ctx.Files[0].NewPath);
+        Assert.Single(ctx.Files[0].AddedLines);
+    }
+
+    [Fact]
+    public void Parse_MultipleHunksInSameFile_AllCaptured()
+    {
+        var multiHunkDiff = """
+            diff --git a/src/File.cs b/src/File.cs
+            index abc..def 100644
+            --- a/src/File.cs
+            +++ b/src/File.cs
+            @@ -1,3 +1,4 @@
+             line 1
+            +added at start
+             line 2
+             line 3
+            @@ -10,3 +11,4 @@
+             line 10
+            +added at middle
+             line 11
+             line 12
+            """;
+
+        var ctx = DiffParser.Parse(multiHunkDiff);
+
+        Assert.Single(ctx.Files);
+        Assert.Equal(2, ctx.Files[0].Hunks.Count);
+        Assert.Equal(2, ctx.Files[0].AddedLines.Count());
+    }
+
+    [Fact]
+    public void Parse_ContextLines_AreTracked()
+    {
+        var contextDiff = """
+            diff --git a/src/File.cs b/src/File.cs
+            index abc..def 100644
+            --- a/src/File.cs
+            +++ b/src/File.cs
+            @@ -1,5 +1,5 @@
+             context before 1
+             context before 2
+            -old line
+            +new line
+             context after 1
+             context after 2
+            """;
+
+        var ctx = DiffParser.Parse(contextDiff);
+
+        var file = ctx.Files[0];
+        var hunk = file.Hunks[0];
+        var contextLines = hunk.Lines.Where(l => l.Kind == GauntletCI.Core.Diff.DiffLineKind.Context).ToList();
+
+        Assert.Equal(4, contextLines.Count);
+    }
+
+    [Fact]
+    public void Parse_EmptyHunk_HandlesGracefully()
+    {
+        // Some diffs can have an empty hunk header followed immediately by another
+        var diff = """
+            diff --git a/src/File.cs b/src/File.cs
+            index abc..def 100644
+            --- a/src/File.cs
+            +++ b/src/File.cs
+            @@ -1,0 +1,0 @@
+            """;
+
+        var ex = Record.Exception(() => DiffParser.Parse(diff));
+        Assert.Null(ex);
+    }
 }
