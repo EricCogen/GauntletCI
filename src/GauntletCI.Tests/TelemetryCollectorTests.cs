@@ -12,8 +12,10 @@ namespace GauntletCI.Tests;
 /// on static dependencies (TelemetryConsent, TelemetryStore, TelemetryDb), most tests
 /// verify the observable contract: no exceptions are thrown.
 /// ExtractExt is tested via reflection since it is a private static helper.
+/// Runs serially with TelemetryConsentTests to prevent file-lock races on the consent file.
 /// NOTE: Full integration testing requires mockable static deps.
 /// </summary>
+[Collection("TelemetrySerial")]
 public class TelemetryCollectorTests
 {
     private static readonly MethodInfo? ExtractExtMethod =
