@@ -177,7 +177,6 @@ public sealed class NormalizationPipeline
             ChangedFiles      = changedFiles,
             ReviewComments    = reviewComments,
             DiffText          = diffText,
-            PatchText         = diffText,
             HydratedAtUtc     = hydratedAt,
         };
     }
