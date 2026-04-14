@@ -5,45 +5,31 @@ on:
     branches:
       - main
 
-env:
-  # Path to the solution file relative to the root of the project.
-  SOLUTION_FILE_PATH: .
-
-  # Configuration type to build.
-  # You can convert this to a build matrix if you need coverage of multiple configuration types.
-  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
-  BUILD_CONFIGURATION: Release
-
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     permissions:
       packages: write
-      
+
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - name: Add NUGET to PATH
-      uses: NuGet/setup-nuget@v1.0.5
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
 
-    - name: Restore NuGet packages
-      run: nuget restore ${{ env.SOLUTION_FILE_PATH }}
-
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.0.2
+    - name: Restore
+      run: dotnet restore GauntletCI.slnx
 
     - name: Build
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      # Add additional options to the MSBuild command line here (like platform or verbosity level).
-      
-      # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
+      run: dotnet build GauntletCI.slnx --no-restore --configuration Release
 
-    - name: Dotnet Pack
-      run: dotnet pack src/GauntletCI.Cli/GauntletCI.Cli.csproj -p:NuspecFile=packaging/**/*.nupkg -c Release
-      
-    - name: Create a package
-      run: nuget pack
+    - name: Test
+      run: dotnet test GauntletCI.slnx --no-build --configuration Release --verbosity minimal
 
-    - name: Publish NuGet package
-      run: dotnet nuget push "GauntletCI*.nupkg" -k ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/microsoft/index.json --skip-duplicate
+    - name: Pack
+      run: dotnet pack src/GauntletCI.Cli/GauntletCI.Cli.csproj --no-build --configuration Release --output packaging/
+
+    - name: Publish to GitHub Packages
+      run: dotnet nuget push packaging/*.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/EricCogen/index.json --skip-duplicate
