@@ -16,6 +16,14 @@ public sealed class ChangedFileAnalyzer : IChangedFileAnalyzer
             ".csproj"
         };
 
+    /// <summary>
+    /// Classifies a single changed file and determines whether it is eligible for rule analysis.
+    /// </summary>
+    /// <param name="file">The changed file entry from the parsed diff.</param>
+    /// <returns>
+    /// A <see cref="ChangedFileAnalysisRecord"/> describing the file's classification, eligibility,
+    /// and the reason it was included or excluded.
+    /// </returns>
     public ChangedFileAnalysisRecord Analyze(DiffFile file)
     {
         var filePath = file.NewPath ?? string.Empty;

@@ -17,6 +17,13 @@ public static class StaticAnalysisRunner
     /// Analyzes all changed C# source files in the diff. Returns null when analysis
     /// cannot be performed (no repo path, no C# files, or diff-file-only mode).
     /// </summary>
+    /// <param name="diff">The parsed diff whose changed C# files will be analyzed.</param>
+    /// <param name="repoPath">Absolute path to the repository root used to locate source files on disk.</param>
+    /// <param name="ct">Token used to cancel the analysis run.</param>
+    /// <returns>
+    /// An aggregated <see cref="AnalyzerResult"/> containing diagnostics from all analyzed files,
+    /// or <c>null</c> if analysis could not be performed.
+    /// </returns>
     public static async Task<AnalyzerResult?> RunAsync(
         DiffContext diff,
         string? repoPath,

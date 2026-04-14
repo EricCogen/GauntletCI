@@ -22,6 +22,13 @@ public class RuleOrchestrator
     private readonly TimeSpan _ruleTimeout;
     private readonly IChangedFileAnalyzer _fileAnalyzer;
 
+    /// <summary>
+    /// Initializes the orchestrator with an explicit set of rules and optional configuration.
+    /// </summary>
+    /// <param name="rules">The rules to evaluate, ordered by ID.</param>
+    /// <param name="config">GauntletCI configuration; defaults to built-in settings when null.</param>
+    /// <param name="ruleTimeout">Per-rule evaluation time limit; defaults to 30 seconds when null.</param>
+    /// <param name="fileAnalyzer">File eligibility classifier; defaults to <see cref="ChangedFileAnalyzer"/> when null.</param>
     public RuleOrchestrator(IEnumerable<IRule> rules, GauntletConfig? config = null, TimeSpan? ruleTimeout = null, IChangedFileAnalyzer? fileAnalyzer = null)
     {
         _rules = [.. rules.OrderBy(r => r.Id)];
@@ -35,6 +42,8 @@ public class RuleOrchestrator
     {
         config ??= new GauntletConfig();
         var ruleType = typeof(IRule);
+        // Discover all IRule implementations via reflection at startup;
+        // no manual registration needed — drop a new class in the assembly to register it
         var rules = typeof(RuleOrchestrator).Assembly
             .GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false } && ruleType.IsAssignableFrom(t))
@@ -49,6 +58,15 @@ public class RuleOrchestrator
         return new RuleOrchestrator(rules, config, ruleTimeout);
     }
 
+    /// <summary>
+    /// Runs all registered rules against the diff, applies ignore lists and severity overrides,
+    /// and returns aggregated findings with per-rule metrics.
+    /// </summary>
+    /// <param name="diff">The parsed diff to analyze.</param>
+    /// <param name="staticAnalysis">Optional Roslyn diagnostics to make available to rules.</param>
+    /// <param name="ignoreList">Optional suppression list; matching findings are removed from results.</param>
+    /// <param name="ct">Token used to cancel the entire evaluation run.</param>
+    /// <returns>An <see cref="EvaluationResult"/> containing all findings and execution metadata.</returns>
     public async Task<EvaluationResult> RunAsync(
         DiffContext diff,
         AnalyzerResult? staticAnalysis = null,
@@ -222,16 +240,24 @@ public class RuleOrchestrator
     }
 }
 
+/// <summary>Aggregated output of a single <see cref="RuleOrchestrator.RunAsync"/> call.</summary>
 public class EvaluationResult
 {
+    /// <summary>The Git commit SHA that was analyzed, or a sentinel such as "staged".</summary>
     public string CommitSha { get; init; } = string.Empty;
+    /// <summary>All findings raised by any rule during this evaluation run.</summary>
     public List<Finding> Findings { get; init; } = [];
+    /// <summary>The total number of rules that were executed.</summary>
     public int RulesEvaluated { get; init; }
+    /// <summary>Per-rule timing and outcome metrics for diagnostics and reporting.</summary>
     public IReadOnlyList<RuleExecutionMetric> RuleMetrics { get; init; } = [];
+    /// <summary>Summary of how each changed file was classified for eligibility.</summary>
     public FileEligibilityStatistics FileStatistics { get; init; } = new();
+    /// <summary>True when at least one finding was produced by this evaluation run.</summary>
     public bool HasFindings => Findings.Count > 0;
 }
 
+/// <summary>The outcome of a single rule's execution within a run.</summary>
 public enum RuleOutcome { Passed, Triggered, TimedOut, Errored }
 
 /// <summary>Per-rule execution timing and outcome, attached to every <see cref="EvaluationResult"/>.</summary>
