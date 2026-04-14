@@ -103,13 +103,6 @@ public sealed class ScoreAggregator : IScoreAggregator
             double precision   = (tp + fp) > 0 ? (double)tp / (tp + fp) : 0.0;
             double recall      = (tp + fn) > 0 ? (double)tp / (tp + fn) : 0.0;
 
-            // Inconclusive rate relative to labeled pairs
-            int inconclusive = evals.Count(e =>
-                e.Status is EvaluationStatus.TruePositive or EvaluationStatus.FalsePositive
-                         or EvaluationStatus.FalseNegative or EvaluationStatus.TrueNegative
-                         or EvaluationStatus.Unknown);
-            double inconclusiveRate = 0.0; // retained for schema compat; Unknown is now its own field
-
             double avgUsefulness = await GetAvgUsefulnessAsync(rid, cancellationToken);
 
             var scorecard = new RuleScorecard(
@@ -119,7 +112,7 @@ public sealed class ScoreAggregator : IScoreAggregator
                 TriggerRate:      triggerRate,
                 Precision:        precision,
                 Recall:           recall,
-                InconclusiveRate: inconclusiveRate,
+                InconclusiveRate: 0.0,
                 AvgUsefulness:    avgUsefulness,
                 Notes:            string.Empty,
                 TruePositives:    tp,
