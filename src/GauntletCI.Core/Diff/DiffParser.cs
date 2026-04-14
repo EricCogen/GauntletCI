@@ -21,6 +21,14 @@ public static class DiffParser
     private static readonly Regex DeletedFileMarker =
         new(@"^deleted file mode", RegexOptions.Compiled);
 
+    /// <summary>
+    /// Parses a unified diff string into a <see cref="DiffContext"/> with file and hunk structure.
+    /// Supports both <c>git diff</c> format and bare unified diff format.
+    /// </summary>
+    /// <param name="rawDiff">The raw unified diff text to parse.</param>
+    /// <param name="commitSha">The commit SHA or sentinel string (e.g. "staged") to associate with the result.</param>
+    /// <param name="commitMessage">Optional commit message subject line to attach to the result.</param>
+    /// <returns>A fully populated <see cref="DiffContext"/> containing all parsed files and hunks.</returns>
     public static DiffContext Parse(string rawDiff, string commitSha = "", string? commitMessage = null)
     {
         var files = new List<DiffFile>();
