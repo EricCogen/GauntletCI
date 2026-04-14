@@ -63,15 +63,15 @@ public sealed class MarkdownReportExporter : IReportExporter
         foreach (var sc in scorecards)
         {
             var precision = (sc.TruePositives + sc.FalsePositives) > 0
-                ? $"{sc.Precision:P1}"
+                ? $"{sc.Precision * 100:F1}%"
                 : "--";
             var recall = (sc.TruePositives + sc.FalseNegatives) > 0
-                ? $"{sc.Recall:P1}"
+                ? $"{sc.Recall * 100:F1}%"
                 : "--";
 
             sb.AppendLine(
                 $"| {sc.RuleId} | {sc.Fixtures} | {sc.TruePositives} | {sc.FalsePositives} | " +
-                $"{sc.FalseNegatives} | {sc.TrueNegatives} | {sc.Unknown} | {precision} | {recall} | {sc.TriggerRate:P1} |");
+                $"{sc.FalseNegatives} | {sc.TrueNegatives} | {sc.Unknown} | {precision} | {recall} | {sc.TriggerRate * 100:F1}% |");
         }
         sb.AppendLine();
     }
@@ -90,7 +90,7 @@ public sealed class MarkdownReportExporter : IReportExporter
         foreach (var sc in scorecards)
         {
             sb.AppendLine(
-                $"| {sc.RuleId} | {sc.TriggerRate:P1} | {sc.Unknown} | {sc.AvgUsefulness:F1}/5 |");
+                $"| {sc.RuleId} | {sc.TriggerRate * 100:F1}% | {sc.Unknown} | {sc.AvgUsefulness:F1}/5 |");
         }
         sb.AppendLine();
     }
