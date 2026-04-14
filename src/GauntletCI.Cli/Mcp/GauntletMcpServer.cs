@@ -7,6 +7,7 @@ using GauntletCI.Cli.Audit;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
+using GauntletCI.Llm;
 using ModelContextProtocol.Server;
 
 namespace GauntletCI.Cli.Mcp;
@@ -21,6 +22,10 @@ public static class GauntletTools
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
+    private static ILlmEngine _engine = new NullLlmEngine();
+
+    public static void SetEngine(ILlmEngine engine) => _engine = engine;
+
     [McpServerTool, Description("Analyze staged changes in a git repository for pre-commit risk findings")]
     public static async Task<string> analyze_staged(
         [Description("Absolute path to git repository root. Defaults to current directory.")] string? repo = null)
@@ -30,6 +35,7 @@ public static class GauntletTools
         {
             var diff = await DiffParser.FromStagedAsync(repoPath);
             var result = await RuleOrchestrator.CreateDefault().RunAsync(diff);
+            await EnrichHighFindingsAsync(result.Findings);
             return SerializeFindings(result);
         }
         catch (Exception ex)
@@ -46,6 +52,7 @@ public static class GauntletTools
         {
             var diffContext = DiffParser.Parse(diff);
             var result = await RuleOrchestrator.CreateDefault().RunAsync(diffContext);
+            await EnrichHighFindingsAsync(result.Findings);
             return SerializeFindings(result);
         }
         catch (Exception ex)
@@ -63,6 +70,7 @@ public static class GauntletTools
         {
             var diff = await DiffParser.FromGitAsync(repo, commit);
             var result = await RuleOrchestrator.CreateDefault().RunAsync(diff);
+            await EnrichHighFindingsAsync(result.Findings);
             return SerializeFindings(result);
         }
         catch (Exception ex)
@@ -112,6 +120,21 @@ public static class GauntletTools
         }
     }
 
+    private static async Task EnrichHighFindingsAsync(IReadOnlyList<Finding> findings)
+    {
+        if (!_engine.IsAvailable) return;
+
+        var toEnrich = findings
+            .Where(f => f.Confidence == Confidence.High && f.LlmExplanation is null)
+            .Take(3)
+            .ToList();
+
+        await Task.WhenAll(toEnrich.Select(async f =>
+        {
+            f.LlmExplanation = await _engine.EnrichFindingAsync(f);
+        }));
+    }
+
     private static string SerializeFindings(EvaluationResult result)
     {
         var response = new
@@ -127,8 +150,10 @@ public static class GauntletTools
                 confidence = f.Confidence.ToString(),
                 filePath = f.FilePath,
                 line = f.Line,
+                llmExplanation = f.LlmExplanation,
             }).ToList(),
         };
         return JsonSerializer.Serialize(response, JsonOpts);
     }
 }
+
