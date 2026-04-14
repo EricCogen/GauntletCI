@@ -160,6 +160,28 @@ internal static class SchemaInitializer
             last_updated_utc    TEXT NOT NULL DEFAULT (datetime('now')),
             PRIMARY KEY (rule_id, tier)
         );
+
+        CREATE TABLE IF NOT EXISTS issues (
+            id              TEXT PRIMARY KEY,
+            repo_owner      TEXT NOT NULL,
+            repo_name       TEXT NOT NULL,
+            number          INTEGER NOT NULL,
+            title           TEXT,
+            body            TEXT,
+            labels_json     TEXT,
+            state           TEXT,
+            closed_at_utc   TEXT,
+            url             TEXT,
+            fetched_at_utc  TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE (repo_owner, repo_name, number)
+        );
+
+        CREATE TABLE IF NOT EXISTS fixture_issues (
+            fixture_id      TEXT NOT NULL REFERENCES fixtures(fixture_id),
+            issue_id        TEXT NOT NULL REFERENCES issues(id),
+            link_source     TEXT NOT NULL DEFAULT 'pr-body-ref',
+            PRIMARY KEY (fixture_id, issue_id)
+        );
         """;
 
     internal static readonly string[] Migrations =
