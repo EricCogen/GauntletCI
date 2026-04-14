@@ -37,6 +37,8 @@ public static class AnalyzeCommand
         var asciiFlag = new Option<bool>("--ascii", "Use ASCII-only output (for terminals without Unicode support)");
         var noBannerOption = new Option<bool>("--no-banner", "Disable ASCII banner");
         var githubAnnotationsFlag = new Option<bool>("--github-annotations", "Emit GitHub Actions workflow commands for inline PR annotations");
+        var withExpertCtxFlag = new Option<bool>("--with-expert-context",
+            "Attach matching expert facts from the local vector store to findings (requires 'gauntletci llm seed')");
 
         var cmd = new Command("analyze", "Analyse a git diff for pre-commit risks")
         {
@@ -52,6 +54,7 @@ public static class AnalyzeCommand
             asciiFlag,
             noBannerOption,
             githubAnnotationsFlag,
+            withExpertCtxFlag,
         };
 
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
@@ -68,6 +71,7 @@ public static class AnalyzeCommand
             var ascii      = ctx.ParseResult.GetValueForOption(asciiFlag);
             var noBanner   = ctx.ParseResult.GetValueForOption(noBannerOption);
             var ghAnnotate = ctx.ParseResult.GetValueForOption(githubAnnotationsFlag);
+            var withExpertCtx = ctx.ParseResult.GetValueForOption(withExpertCtxFlag);
 
             // Enforce single diff source
             int sourceCount = (diffFile is not null ? 1 : 0)
@@ -117,6 +121,22 @@ public static class AnalyzeCommand
                 {
                     foreach (var finding in result.Findings.Where(f => f.Confidence == Confidence.High))
                         finding.LlmExplanation = await llm.EnrichFindingAsync(finding);
+                }
+
+                if (withExpertCtx)
+                {
+                    var vectorDbPath = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                        ".gauntletci", "expert-embeddings.db");
+
+                    if (File.Exists(vectorDbPath))
+                    {
+                        var ct = ctx.GetCancellationToken();
+                        using var store    = new GauntletCI.Llm.Embeddings.VectorStore(vectorDbPath);
+                        using var embedEng = new GauntletCI.Llm.Embeddings.OllamaEmbeddingEngine();
+                        var adjudicator    = new GauntletCI.Llm.Embeddings.LlmAdjudicator(embedEng, store);
+                        await adjudicator.AdjudicateAsync(result.Findings, ct);
+                    }
                 }
 
                 if ((output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase))
