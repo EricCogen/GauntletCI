@@ -58,3 +58,43 @@ internal sealed class GhCommit
 {
     [JsonPropertyName("sha")] public string Sha { get; init; } = "";
 }
+
+internal sealed class GhIssue
+{
+    [JsonPropertyName("number")]       public int Number { get; init; }
+    [JsonPropertyName("title")]        public string Title { get; init; } = "";
+    [JsonPropertyName("body")]         public string? Body { get; init; }
+    [JsonPropertyName("state")]        public string State { get; init; } = "";
+    [JsonPropertyName("labels")]       public List<GhIssueLabel> Labels { get; init; } = [];
+    [JsonPropertyName("closed_at")]    public DateTime? ClosedAt { get; init; }
+    [JsonPropertyName("html_url")]     public string HtmlUrl { get; init; } = "";
+    [JsonPropertyName("pull_request")] public GhIssuePrRef? PullRequest { get; init; }
+}
+
+internal sealed class GhIssueLabel
+{
+    [JsonPropertyName("name")] public string Name { get; init; } = "";
+}
+
+internal sealed class GhIssuePrRef
+{
+    [JsonPropertyName("url")]       public string Url { get; init; } = "";
+    [JsonPropertyName("merged_at")] public DateTime? MergedAt { get; init; }
+}
+
+internal sealed class GhTimelineEvent
+{
+    [JsonPropertyName("event")]  public string Event { get; init; } = "";
+    [JsonPropertyName("source")] public GhTimelineSource? Source { get; init; }
+}
+
+internal sealed class GhTimelineSource
+{
+    [JsonPropertyName("type")]  public string Type { get; init; } = "";
+    [JsonPropertyName("issue")] public GhIssue? Issue { get; init; }
+}
+
+internal sealed class GhIssueSearchResult
+{
+    [JsonPropertyName("items")] public List<GhIssue> Items { get; init; } = [];
+}

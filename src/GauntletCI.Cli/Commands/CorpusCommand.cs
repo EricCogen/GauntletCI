@@ -33,6 +33,11 @@ public static class CorpusCommand
         corpus.AddCommand(CreateLabelAll());
         corpus.AddCommand(CreateResetStats());
         corpus.AddCommand(CreatePurge());
+
+        var issues = new Command("issues", "GitHub Issues corpus operations");
+        issues.AddCommand(CreateIssueSearch());
+        corpus.AddCommand(issues);
+
         return corpus;
     }
 
@@ -68,6 +73,14 @@ public static class CorpusCommand
                     var metadata = await pipeline.NormalizeAsync(hydrated, source: "manual", ct: ct);
 
                     PrintMetadata(metadata);
+
+                    var fixtureId = GauntletCI.Corpus.Storage.FixtureIdHelper.Build(
+                        hydrated.RepoOwner, hydrated.RepoName, hydrated.PullRequestNumber);
+                    using var enricher = IssueEnricher.CreateDefault();
+                    var linked = await enricher.EnrichAsync(
+                        db.Connection, fixtureId,
+                        hydrated.RepoOwner, hydrated.RepoName, hydrated.Body, ct);
+                    if (linked > 0) Console.WriteLine($"[corpus] Linked {linked} issue(s) to fixture");
                 }
                 catch (Exception ex)
                 {
@@ -494,6 +507,11 @@ public static class CorpusCommand
                         updateCmd.Parameters.AddWithValue("$count", hydrated.ReviewComments.Count);
                         updateCmd.Parameters.AddWithValue("$id", candidateId);
                         await updateCmd.ExecuteNonQueryAsync(ct);
+
+                        using var enricher = IssueEnricher.CreateDefault();
+                        var linked = await enricher.EnrichAsync(
+                            db.Connection, fixtureId, owner, repo, hydrated.Body, ct);
+                        if (linked > 0) Console.WriteLine($"[corpus] Linked {linked} issue(s) to fixture");
 
                         success++;
                     }
@@ -1022,6 +1040,89 @@ public static class CorpusCommand
             {
                 Console.Error.WriteLine($"[corpus] Error during reset-stats: {ex.Message}");
                 ctx.ExitCode = 1;
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus issues search ──────────────────────────────────────
+
+    private static Command CreateIssueSearch()
+    {
+        var languageOpt = new Option<string>("--language", () => "cs",           "Programming language filter (e.g. cs, python)");
+        var limitOpt    = new Option<int>   ("--limit",    () => 50,             "Maximum candidates to fetch");
+        var labelsOpt   = new Option<string>("--labels",   () => "bug,security", "Comma-separated GitHub issue labels to search for");
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+
+        var cmd = new Command("search", "Search for corpus candidates via closed GitHub issues");
+        cmd.AddOption(languageOpt);
+        cmd.AddOption(limitOpt);
+        cmd.AddOption(labelsOpt);
+        cmd.AddOption(dbOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var language = ctx.ParseResult.GetValueForOption(languageOpt)!;
+            var limit    = ctx.ParseResult.GetValueForOption(limitOpt);
+            var labels   = ctx.ParseResult.GetValueForOption(labelsOpt)!;
+            var dbPath   = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var ct       = ctx.GetCancellationToken();
+
+            var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+            if (string.IsNullOrEmpty(token))
+            {
+                Console.Error.WriteLine("[corpus] Error: GITHUB_TOKEN environment variable is required for issue search.");
+                ctx.ExitCode = 1;
+                return;
+            }
+
+            var query = new DiscoveryQuery
+            {
+                Languages     = new[] { language },
+                MaxCandidates = limit,
+            };
+
+            Console.WriteLine($"[corpus/issues] Searching for closed issues with labels: {labels}");
+
+            using var provider = new GitHubIssueDiscoveryProvider(token, labels);
+            var candidates = await provider.SearchCandidatesAsync(query, ct);
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                int inserted = 0;
+                foreach (var c in candidates)
+                {
+                    var id = $"{c.RepoOwner}/{c.RepoName}#{c.PullRequestNumber}";
+                    using var insertCmd = db.Connection.CreateCommand();
+                    insertCmd.CommandText = """
+                        INSERT OR IGNORE INTO candidates
+                            (id, source, repo_owner, repo_name, pr_number, url, language,
+                             created_at_utc, updated_at_utc, review_comment_count, candidate_reason)
+                        VALUES
+                            ($id, $source, $owner, $repo, $prNumber, $url, $language,
+                             $createdAt, $updatedAt, $reviewComments, $reason)
+                        """;
+                    insertCmd.Parameters.AddWithValue("$id",             id);
+                    insertCmd.Parameters.AddWithValue("$source",         c.Source);
+                    insertCmd.Parameters.AddWithValue("$owner",          c.RepoOwner);
+                    insertCmd.Parameters.AddWithValue("$repo",           c.RepoName);
+                    insertCmd.Parameters.AddWithValue("$prNumber",       c.PullRequestNumber);
+                    insertCmd.Parameters.AddWithValue("$url",            c.Url);
+                    insertCmd.Parameters.AddWithValue("$language",       (object?)c.Language ?? DBNull.Value);
+                    insertCmd.Parameters.AddWithValue("$createdAt",      c.CreatedAtUtc == default ? DBNull.Value : (object)c.CreatedAtUtc.ToString("O"));
+                    insertCmd.Parameters.AddWithValue("$updatedAt",      c.UpdatedAtUtc == default ? DBNull.Value : (object)c.UpdatedAtUtc.ToString("O"));
+                    insertCmd.Parameters.AddWithValue("$reviewComments", c.ReviewCommentCount);
+                    insertCmd.Parameters.AddWithValue("$reason",         (object?)c.CandidateReason ?? DBNull.Value);
+
+                    var rows = await insertCmd.ExecuteNonQueryAsync(ct);
+                    if (rows > 0) inserted++;
+                }
+
+                var skipped = candidates.Count - inserted;
+                Console.WriteLine($"[corpus/issues] Found {candidates.Count} candidates ({inserted} new, {skipped} already known)");
             }
         });
 
