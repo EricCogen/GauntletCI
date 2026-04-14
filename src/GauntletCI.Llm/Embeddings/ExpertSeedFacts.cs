@@ -7,6 +7,7 @@ namespace GauntletCI.Llm.Embeddings;
 /// </summary>
 public static class ExpertSeedFacts
 {
+    /// <summary>The complete set of hand-curated seed facts used to pre-populate the expert vector store.</summary>
     public static readonly IReadOnlyList<SeedFact> All =
     [
         new(
@@ -66,4 +67,8 @@ public static class ExpertSeedFacts
     ];
 }
 
+/// <summary>A single hand-curated expert fact sourced from a high-signal GitHub discussion.</summary>
+/// <param name="Id">Unique identifier matching the source issue or PR (e.g., <c>dotnet/runtime#issues/84530</c>).</param>
+/// <param name="Content">The expert fact sentence to embed and store.</param>
+/// <param name="Source">URL of the originating GitHub discussion for provenance.</param>
 public sealed record SeedFact(string Id, string Content, string Source);

@@ -12,6 +12,10 @@ namespace GauntletCI.Cli.Output;
 /// </summary>
 public static class GitHubAnnotationWriter
 {
+    /// <summary>
+    /// Writes one GitHub Actions annotation command per finding to stdout.
+    /// </summary>
+    /// <param name="result">The evaluation result whose findings are annotated.</param>
     public static void Write(EvaluationResult result)
     {
         foreach (var finding in result.Findings)
@@ -42,6 +46,11 @@ public static class GitHubAnnotationWriter
         }
     }
 
+    /// <summary>
+    /// Builds the annotation message body, appending LLM explanation and expert context when present.
+    /// </summary>
+    /// <param name="finding">The finding whose summary and enrichment data is serialised.</param>
+    /// <returns>A single-line string safe for use inside a GitHub Actions workflow command.</returns>
     public static string BuildMessage(Finding finding)
     {
         var sb = new StringBuilder();

@@ -20,12 +20,21 @@ public sealed class MaintainerFetcher : IDisposable
     private const double TopPercentile = 0.05; // top 5%
     private const int MinTopCount = 10;         // always take at least 10
 
+    /// <summary>
+    /// Initializes the fetcher with an externally owned or injected HTTP client.
+    /// </summary>
+    /// <param name="http">Pre-configured HTTP client (auth headers should already be set).</param>
+    /// <param name="ownsHttpClient">When true, disposes <paramref name="http"/> on <see cref="Dispose"/>.</param>
     public MaintainerFetcher(HttpClient http, bool ownsHttpClient = false)
     {
         _http = http;
         _ownsHttpClient = ownsHttpClient;
     }
 
+    /// <summary>
+    /// Creates a fully configured fetcher using the GITHUB_TOKEN environment variable for auth.
+    /// The returned instance owns its HTTP client and will dispose it on <see cref="Dispose"/>.
+    /// </summary>
     public static MaintainerFetcher CreateDefault()
     {
         var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
@@ -37,6 +46,7 @@ public sealed class MaintainerFetcher : IDisposable
         return new MaintainerFetcher(http, ownsHttpClient: true);
     }
 
+    /// <summary>Disposes the HTTP client when this instance owns it.</summary>
     public void Dispose()
     {
         if (_ownsHttpClient) _http.Dispose();
@@ -47,6 +57,9 @@ public sealed class MaintainerFetcher : IDisposable
     /// merged PRs and open/closed issues filtered by the target labels. Returns deduplicated
     /// MaintainerRecord list for LLM distillation.
     /// </summary>
+    /// <param name="targets">Target repos and labels to fetch; defaults to <see cref="MaintainerTarget.Defaults"/>.</param>
+    /// <param name="maxPerLabel">Maximum items to fetch per label per repo.</param>
+    /// <param name="ct">Cancellation token.</param>
     public async Task<IReadOnlyList<MaintainerRecord>> FetchAsync(
         MaintainerTarget[]? targets = null,
         int maxPerLabel = 100,
@@ -87,6 +100,7 @@ public sealed class MaintainerFetcher : IDisposable
         var contributors = JsonSerializer.Deserialize<List<GhContributor>>(json, JsonOpts) ?? [];
 
         var total   = contributors.Count;
+        // Top-5% threshold: at minimum 10 contributors, ceil to avoid fractional counts
         var takeN   = Math.Max(MinTopCount, (int)Math.Ceiling(total * TopPercentile));
         return contributors.Take(takeN).Select(c => c.Login).ToList();
     }

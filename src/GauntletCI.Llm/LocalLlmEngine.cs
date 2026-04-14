@@ -28,6 +28,8 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
     private int _promptsUsed;
     private bool _disposed;
 
+    /// <summary>Initializes the engine with the path to the local ONNX model directory.</summary>
+    /// <param name="modelPath">Directory containing the ONNX model files; defaults to <c>~/.gauntletci/models/phi3-mini</c> when <see langword="null"/>.</param>
     public LocalLlmEngine(string? modelPath = null)
     {
         _modelPath = modelPath
@@ -36,6 +38,7 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
                 ".gauntletci", "models", "phi3-mini");
     }
 
+    /// <summary>Returns <see langword="true"/> when the model files are cached on disk and this instance has not failed to load.</summary>
     public bool IsAvailable
     {
         get
@@ -46,6 +49,7 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
         }
     }
 
+    /// <summary>Builds an enrichment prompt and runs local ONNX inference to explain the finding.</summary>
     public async Task<string> EnrichFindingAsync(Finding finding, CancellationToken ct = default)
     {
         var prompt = PromptTemplates.EnrichFinding(
@@ -53,6 +57,7 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
         return await RunInferenceAsync(prompt, ct);
     }
 
+    /// <summary>Builds a summarization prompt from all finding summaries and runs local ONNX inference.</summary>
     public async Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct = default)
     {
         var summaries = findings.Select(f => f.Summary);
@@ -60,6 +65,7 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
         return await RunInferenceAsync(prompt, ct);
     }
 
+    /// <summary>Forwards a pre-built prompt directly to the local ONNX model and returns its completion.</summary>
     public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
         => RunInferenceAsync(prompt, ct);
 
@@ -168,6 +174,7 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
         }
     }
 
+    /// <summary>Releases the ONNX model, tokenizer, and all associated native handles.</summary>
     public void Dispose()
     {
         if (_disposed) return;

@@ -3,13 +3,21 @@ using System.Text.Json;
 
 namespace GauntletCI.Cli.Telemetry;
 
+/// <summary>Controls where telemetry events are stored and whether they are uploaded.</summary>
 public enum TelemetryMode
 {
+    /// <summary>Telemetry is disabled; no events are written or sent.</summary>
     Off,
+    /// <summary>Events are stored locally only; no network calls are made.</summary>
     Local,
+    /// <summary>Events are stored locally and uploaded as anonymous aggregates.</summary>
     Shared,
 }
 
+/// <summary>
+/// Reads and persists the user's telemetry consent decision in ~/.gauntletci/config.json.
+/// Migrates legacy consent.json automatically on first access.
+/// </summary>
 public static class TelemetryConsent
 {
     private static readonly string ConfigPath = Path.Combine(
@@ -38,14 +46,23 @@ public static class TelemetryConsent
 
     private static RootConfig? _cache;
 
+    /// <summary>Stable anonymous identifier for this installation, generated once and persisted.</summary>
     public static string InstallId => LoadTelemetry().InstallId;
 
+    /// <summary>True when the current telemetry mode is not <see cref="TelemetryMode.Off"/>.</summary>
     public static bool IsOptedIn => GetMode() != TelemetryMode.Off;
 
+    /// <summary>True when the user has explicitly chosen a mode (Off, Local, or Shared).</summary>
     public static bool HasDecided => ParseMode(LoadTelemetry().Mode).HasValue;
 
+    /// <summary>Returns the effective telemetry mode, defaulting to Off when undecided.</summary>
     public static TelemetryMode GetMode() => ParseMode(LoadTelemetry().Mode) ?? TelemetryMode.Off;
 
+    /// <summary>
+    /// Prompts the user interactively to choose a telemetry mode if they have not yet decided.
+    /// Skips the prompt in CI environments or when stdin/stdout is redirected.
+    /// </summary>
+    /// <returns>True when telemetry is enabled after the prompt (or was already enabled).</returns>
     public static bool PromptIfNeeded()
     {
         if (HasDecided) return IsOptedIn;
@@ -82,11 +99,19 @@ public static class TelemetryConsent
         return selected != TelemetryMode.Off;
     }
 
+    /// <summary>
+    /// Convenience wrapper that maps a boolean opt-in to Shared or Off mode.
+    /// </summary>
+    /// <param name="value">True to enable shared telemetry; false to disable.</param>
     public static void SetOptIn(bool value)
     {
         SetMode(value ? TelemetryMode.Shared : TelemetryMode.Off);
     }
 
+    /// <summary>
+    /// Persists the chosen telemetry mode to config.json and updates the in-memory cache.
+    /// </summary>
+    /// <param name="mode">The mode to activate.</param>
     public static void SetMode(TelemetryMode mode)
     {
         var record = LoadTelemetry() with

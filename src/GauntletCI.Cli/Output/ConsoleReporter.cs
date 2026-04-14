@@ -12,8 +12,10 @@ namespace GauntletCI.Cli.Output;
 /// </summary>
 public static class ConsoleReporter
 {
-    // Rules whose Evidence may contain sensitive matched content (secrets, PII).
-    // For these, the code snippet portion is redacted in CLI output — only file/line is shown.
+    /// <summary>
+    /// Rules whose evidence may contain raw matched content (secrets, PII).
+    /// For these, the code-snippet portion of the evidence is redacted in CLI output.
+    /// </summary>
     private static readonly HashSet<string> SensitiveRuleIds = ["GCI0012", "GCI0029"];
 
     /// <summary>
@@ -27,6 +29,11 @@ public static class ConsoleReporter
         return idx >= 0 ? $"{evidence[..(idx + 2)]}[REDACTED]" : evidence;
     }
 
+    /// <summary>
+    /// Prints a formatted risk-analysis report to the console, grouped by confidence level.
+    /// </summary>
+    /// <param name="result">The evaluation result containing findings to display.</param>
+    /// <param name="ascii">Use ASCII box characters instead of Unicode for limited terminals.</param>
     public static void Report(EvaluationResult result, bool ascii = false)
     {
         string hr  = ascii ? "=======================================================" : "═══════════════════════════════════════════════════════";
@@ -69,6 +76,11 @@ public static class ConsoleReporter
         }
     }
 
+    /// <summary>
+    /// Renders a single finding to the console, redacting evidence for sensitive rule IDs.
+    /// </summary>
+    /// <param name="finding">The finding to display.</param>
+    /// <param name="accentColor">Spectre.Console color name applied to the rule ID and label.</param>
     private static void PrintFinding(Finding finding, string accentColor)
     {
         AnsiConsole.MarkupLine($"[{accentColor}]  [[{finding.RuleId}]][/] [white]{Markup.Escape(finding.RuleName)}[/]");

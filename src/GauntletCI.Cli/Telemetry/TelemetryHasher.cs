@@ -14,6 +14,7 @@ public static class TelemetryHasher
     /// Returns the first 8 hex characters of SHA-256(input), lower-case.
     /// Used to produce a stable but anonymous repo identifier.
     /// </summary>
+    /// <param name="input">The raw string to hash (trimmed and lowercased before hashing).</param>
     public static string Hash8(string input)
     {
         if (string.IsNullOrEmpty(input)) return "00000000";
@@ -25,6 +26,7 @@ public static class TelemetryHasher
     /// Hashes the git remote URL of <paramref name="repoRoot"/> to produce
     /// an anonymous 8-character repo ID. Returns "local" if no remote exists.
     /// </summary>
+    /// <param name="repoRoot">Absolute path to the git repository root.</param>
     public static async Task<string> HashRepoAsync(string repoRoot)
     {
         try

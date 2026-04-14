@@ -21,9 +21,15 @@ public sealed class CorpusDb : IDisposable
         _connectionString = $"Data Source={dbPath}";
     }
 
+    /// <summary>The open SQLite connection; throws if <see cref="InitializeAsync"/> has not been called.</summary>
     public SqliteConnection Connection => _connection
         ?? throw new InvalidOperationException("Call InitializeAsync first.");
 
+    /// <summary>
+    /// Opens the SQLite connection and applies the DDL schema and any pending migrations.
+    /// Must be called once before accessing <see cref="Connection"/>.
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token for the async open and schema operations.</param>
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         _connection = new SqliteConnection(_connectionString);
@@ -50,6 +56,7 @@ public sealed class CorpusDb : IDisposable
         }
     }
 
+    /// <summary>Disposes the underlying SQLite connection.</summary>
     public void Dispose() => _connection?.Dispose();
 }
 

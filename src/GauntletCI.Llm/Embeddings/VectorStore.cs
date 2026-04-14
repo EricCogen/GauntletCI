@@ -24,6 +24,8 @@ public sealed class VectorStore : IDisposable
         );
         """;
 
+    /// <summary>Opens (or creates) the SQLite database at <paramref name="dbPath"/> and initializes the schema.</summary>
+    /// <param name="dbPath">Filesystem path to the SQLite database file.</param>
     public VectorStore(string dbPath)
     {
         _db = new SqliteConnection($"Data Source={dbPath};Pooling=False");
@@ -33,6 +35,7 @@ public sealed class VectorStore : IDisposable
         cmd.ExecuteNonQuery();
     }
 
+    /// <summary>Disposes the underlying <see cref="SqliteConnection"/>.</summary>
     public void Dispose() => _db.Dispose();
 
     /// <summary>Upserts an embedding record. id is caller-supplied (e.g. "dotnet/runtime#12345").</summary>
@@ -92,6 +95,7 @@ public sealed class VectorStore : IDisposable
             .ToList();
     }
 
+    /// <summary>Returns the total number of embedding records currently stored in the database.</summary>
     public int Count()
     {
         using var cmd = _db.CreateCommand();
@@ -101,6 +105,7 @@ public sealed class VectorStore : IDisposable
 
     // ── Math ──────────────────────────────────────────────────────────────────
 
+    /// <summary>Computes the cosine similarity between two equal-length vectors, clamped to [-1, 1].</summary>
     public static float CosineSimilarity(float[] a, float[] b)
     {
         if (a.Length != b.Length || a.Length == 0) return 0f;
@@ -111,12 +116,15 @@ public sealed class VectorStore : IDisposable
             magA += a[i] * a[i];
             magB += b[i] * b[i];
         }
+        // Cosine similarity = dot(a,b) / (|a| * |b|)
+        // Clamp to [-1, 1] to handle floating-point precision errors
         var denom = MathF.Sqrt(magA) * MathF.Sqrt(magB);
         return denom == 0f ? 0f : dot / denom;
     }
 
     // ── Serialisation ─────────────────────────────────────────────────────────
 
+    /// <summary>Serializes a float array to a raw byte array for SQLite BLOB storage.</summary>
     internal static byte[] FloatsToBytes(float[] floats)
     {
         var bytes = new byte[floats.Length * sizeof(float)];
@@ -124,6 +132,7 @@ public sealed class VectorStore : IDisposable
         return bytes;
     }
 
+    /// <summary>Deserializes a raw byte array read from SQLite back into a float vector.</summary>
     internal static float[] BytesToFloats(byte[] bytes)
     {
         var floats = new float[bytes.Length / sizeof(float)];
@@ -132,4 +141,5 @@ public sealed class VectorStore : IDisposable
     }
 }
 
+/// <summary>A single result entry returned by <see cref="VectorStore.Search"/>.</summary>
 public sealed record VectorSearchResult(string Id, string Content, string Source, float Score);
