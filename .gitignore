@@ -44,6 +44,8 @@ artifacts/
 !.github/CODE_OF_CONDUCT.md
 !.github/SECURITY.md
 !.github/copilot-instructions.md
+!docs/DEVELOPMENT.md
+!docs/TROUBLESHOOTING.md
 
 # Benchmark infrastructure — ensure tracked
 !tests/
