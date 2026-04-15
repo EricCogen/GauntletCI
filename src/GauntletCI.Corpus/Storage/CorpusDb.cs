@@ -58,6 +58,27 @@ public sealed class CorpusDb : IDisposable
 
     /// <summary>Disposes the underlying SQLite connection.</summary>
     public void Dispose() => _connection?.Dispose();
+
+    public async Task LogPipelineErrorAsync(
+        string step,
+        string? provider = null,
+        string? repo = null,
+        int? errorCode = null,
+        string message = "",
+        CancellationToken cancellationToken = default)
+    {
+        using var cmd = Connection.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO pipeline_errors (step, provider, repo, error_code, message)
+            VALUES ($step, $provider, $repo, $code, $message)
+            """;
+        cmd.Parameters.AddWithValue("$step",     step);
+        cmd.Parameters.AddWithValue("$provider", (object?)provider ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$repo",     (object?)repo     ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$code",     (object?)errorCode ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$message",  message);
+        await cmd.ExecuteNonQueryAsync(cancellationToken);
+    }
 }
 
 internal static class SchemaInitializer
@@ -188,6 +209,16 @@ internal static class SchemaInitializer
             issue_id        TEXT NOT NULL REFERENCES issues(id),
             link_source     TEXT NOT NULL DEFAULT 'pr-body-ref',
             PRIMARY KEY (fixture_id, issue_id)
+        );
+
+        CREATE TABLE IF NOT EXISTS pipeline_errors (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            step         TEXT NOT NULL,
+            provider     TEXT,
+            repo         TEXT,
+            error_code   INTEGER,
+            message      TEXT NOT NULL,
+            recorded_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
         );
         """;
 
