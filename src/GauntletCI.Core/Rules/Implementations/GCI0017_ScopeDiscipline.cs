@@ -10,6 +10,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0017 – Scope Discipline
 /// Flags diffs that touch too many distinct modules or mix production and non-production files.
 /// </summary>
+[ArchivedRule("PR size is a process metric, not a code risk")]
 public class GCI0017_ScopeDiscipline : RuleBase
 {
     public override string Id => "GCI0017";

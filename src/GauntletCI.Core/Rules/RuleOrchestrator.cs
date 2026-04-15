@@ -46,7 +46,9 @@ public class RuleOrchestrator
         // no manual registration needed — drop a new class in the assembly to register it
         var rules = typeof(RuleOrchestrator).Assembly
             .GetTypes()
-            .Where(t => t is { IsClass: true, IsAbstract: false } && ruleType.IsAssignableFrom(t))
+            .Where(t => t is { IsClass: true, IsAbstract: false }
+                     && ruleType.IsAssignableFrom(t)
+                     && !t.IsDefined(typeof(ArchivedRuleAttribute), inherit: false))
             .Select(t => (IRule)Activator.CreateInstance(t)!)
             .Where(r => IsRuleEnabled(r.Id, config))
             .ToList();

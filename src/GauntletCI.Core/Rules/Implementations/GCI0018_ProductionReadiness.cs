@@ -10,6 +10,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// Checks for TODO/FIXME markers, NotImplementedException, and debug artifacts.
 /// The "aggregate >3 other rules" synthesis is handled by RuleOrchestrator.PostProcess().
 /// </summary>
+[ArchivedRule("Vague meta-checklist; too broad to produce actionable findings")]
 public class GCI0018_ProductionReadiness : RuleBase
 {
     public override string Id => "GCI0018";

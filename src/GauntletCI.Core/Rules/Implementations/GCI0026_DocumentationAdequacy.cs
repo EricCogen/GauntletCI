@@ -11,6 +11,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// Detects added public methods and interfaces in .cs files without XML doc comments.
 /// Complements GCI0013 (which checks public classes).
 /// </summary>
+[ArchivedRule("XML doc completeness is a style concern, not a merge risk")]
 public class GCI0026_DocumentationAdequacy : RuleBase
 {
     public override string Id => "GCI0026";

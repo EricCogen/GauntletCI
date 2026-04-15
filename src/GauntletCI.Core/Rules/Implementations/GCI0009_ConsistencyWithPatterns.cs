@@ -11,6 +11,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// with async-convention names added to async codebases, and .ToLower()/.ToUpper()
 /// used in string comparisons.
 /// </summary>
+[ArchivedRule("Requires full repo context to answer; unanswerable from diff alone")]
 public class GCI0009_ConsistencyWithPatterns : RuleBase
 {
     public override string Id => "GCI0009";

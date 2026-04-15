@@ -10,6 +10,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// Detects test methods that have no meaningful assertion, asserting only non-null,
 /// or appear to be copy-paste duplicates.
 /// </summary>
+[ArchivedRule("Superseded by GCI0041 TestQualityGaps")]
 public class GCI0027_TestQuality : RuleBase
 {
     public override string Id => "GCI0027";

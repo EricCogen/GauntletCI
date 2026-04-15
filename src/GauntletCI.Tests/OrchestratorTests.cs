@@ -21,7 +21,7 @@ public class OrchestratorTests
             +var x = 1;
             """);
         var result = await orchestrator.RunAsync(diff);
-        Assert.Equal(39, result.RulesEvaluated);
+        Assert.Equal(23, result.RulesEvaluated);
     }
 
     [Fact]
@@ -39,24 +39,28 @@ public class OrchestratorTests
             """);
         var result = await orchestrator.RunAsync(diff);
         Assert.NotNull(result);
-        Assert.Equal(39, result.RulesEvaluated);
+        Assert.Equal(23, result.RulesEvaluated);
     }
 
     [Fact]
     public async Task PostProcess_WhenMoreThanThreeRulesFire_ShouldAddGci0018Synthesis()
     {
+        // Craft a diff with signals for 4+ distinct rules:
+        // GCI0010 (hardcoded secret), GCI0012 (SQL injection + weak crypto),
+        // GCI0033 (async void), GCI0016 (static mutable state)
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
             --- a/src/Service.cs
             +++ b/src/Service.cs
-            @@ -1,1 +1,10 @@
+            @@ -1,1 +1,12 @@
              // service
-            +// TODO: fix this
             +var password = "secret123";
             +var sql = "SELECT * FROM Users WHERE Name = '" + name + "'";
-            +Thread.Sleep(1000);
             +using var md5 = MD5.Create();
+            +private static List<string> _cache = new();
+            +public async void FireAndForget() { await DoWork(); }
+            +catch (Exception) { }
             +var host = "192.168.1.100";
             """;
         var diff = DiffParser.Parse(raw);
@@ -122,9 +126,10 @@ public class OrchestratorTests
             index abc..def 100644
             --- a/src/Service.cs
             +++ b/src/Service.cs
-            @@ -1,1 +1,2 @@
+            @@ -1,1 +1,3 @@
              // service
-            +// TODO: implement
+            +var password = "hunter2";
+            +var sql = "SELECT * FROM Users WHERE Name = '" + name + "'";
             """);
         var result = await orchestrator.RunAsync(diff);
         Assert.True(result.HasFindings);

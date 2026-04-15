@@ -9,6 +9,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0040 – Authorization Coverage
 /// Detects authorization gaps and misconfigurations in ASP.NET Core controllers and middleware.
 /// </summary>
+[ArchivedRule("Fires too broadly on non-auth PRs; overlaps GCI0012 SecurityRisk")]
 public class GCI0040_AuthorizationCoverage : RuleBase
 {
     public override string Id => "GCI0040";

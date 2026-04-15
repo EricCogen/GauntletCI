@@ -10,6 +10,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0019 – Confidence and Evidence
 /// Self-audit rule: flags large diffs with few findings, binary files, and tiny diffs.
 /// </summary>
+[ArchivedRule("Meta-rule about the engine itself; not a user-facing code risk")]
 public class GCI0019_ConfidenceAndEvidence : RuleBase, IPostProcessor
 {
     public override string Id => "GCI0019";

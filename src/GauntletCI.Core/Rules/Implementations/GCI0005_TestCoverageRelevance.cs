@@ -9,6 +9,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0005 – Test Coverage Relevance
 /// Flags code changes without test changes, and orphaned test changes.
 /// </summary>
+[ArchivedRule("Cannot reliably assess test coverage from a diff alone; produces too many false positives")]
 public class GCI0005_TestCoverageRelevance : RuleBase
 {
     public override string Id => "GCI0005";
