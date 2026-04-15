@@ -9,6 +9,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0008 – Complexity Control
 /// Detects excessive nesting, long methods, and duplicate logic.
 /// </summary>
+[ArchivedRule("High cyclomatic complexity is a predictor of future behavioral change risk, but it's a static analysis metric, not a change detector")]
 public class GCI0008_ComplexityControl : RuleBase
 {
     public override string Id => "GCI0008";

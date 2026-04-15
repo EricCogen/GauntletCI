@@ -9,6 +9,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0011 – Performance Risk
 /// Detects common performance anti-patterns in added code.
 /// </summary>
+[ArchivedRule("Detects .Count() > 0 vs .Any() and other micro-optimizations — code hygiene issues, not behavioral changes. They rarely cause the 'test passed, prod broke' scenario")]
 public class GCI0011_PerformanceRisk : RuleBase
 {
     public override string Id => "GCI0011";

@@ -12,6 +12,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// new package additions, suspicious/typosquatted names, and version downgrades.
 /// Only evaluates files whose path ends with .csproj.
 /// </summary>
+[ArchivedRule("Supply chain change, not code change")]
 public class GCI0042_PackageDependencyChanges : RuleBase
 {
     public override string Id => "GCI0042";
