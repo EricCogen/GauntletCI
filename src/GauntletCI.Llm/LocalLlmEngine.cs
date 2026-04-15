@@ -60,9 +60,10 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
     }
 
     /// <summary>Builds an enrichment prompt and runs local ONNX inference to explain the finding.</summary>
+    /// <remarks>Uses the constrained prompt template with strict anti-hallucination system instructions.</remarks>
     public async Task<string> EnrichFindingAsync(Finding finding, CancellationToken ct = default)
     {
-        var prompt = PromptTemplates.EnrichFinding(
+        var prompt = PromptTemplates.EnrichFindingConstrained(
             finding.RuleId, finding.RuleName, finding.Summary, finding.Evidence);
         return await RunInferenceAsync(prompt, ct);
     }
