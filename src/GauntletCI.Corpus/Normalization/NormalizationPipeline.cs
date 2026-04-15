@@ -181,22 +181,8 @@ public sealed class NormalizationPipeline
         };
     }
 
-    private static string GuessLanguage(string path)
-    {
-        var ext = Path.GetExtension(path).ToLowerInvariant();
-        return ext switch
-        {
-            ".cs"   => "C#",
-            ".ts"   => "TypeScript",
-            ".js"   => "JavaScript",
-            ".py"   => "Python",
-            ".go"   => "Go",
-            ".java" => "Java",
-            ".rs"   => "Rust",
-            ".rb"   => "Ruby",
-            _       => "",
-        };
-    }
+    private static string GuessLanguage(string path) =>
+        CorpusStringHelpers.GuessLanguage(path);
 
     // Minimal raw snapshot shapes for re-normalization deserialization
     private sealed class RawPrSnapshot
