@@ -12,6 +12,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// See also: GCI0029 (PII Entity Logging Leak) — detects PII terms in log arguments.
 /// These rules are complementary: GCI0023 checks format, GCI0029 checks content.
 /// </summary>
+[ArchivedRule("Logging format is a supply chain/compatibility concern, not an intent vs. implementation failure")]
 public class GCI0023_StructuredLogging : RuleBase
 {
     public override string Id => "GCI0023";
