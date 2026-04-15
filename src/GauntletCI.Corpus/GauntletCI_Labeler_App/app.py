@@ -24,8 +24,8 @@ from services.query_service import (
 )
 from services.rules_doc_parser import load_rule_definitions
 from services.suggestion_engine import generate_item_suggestion
+from seed_queue import seed as seed_queue
 from store import (
-    _labels_since_last_snapshot,
     _snapshot_aggregates,
     _table_exists,
     init_app_tables,
@@ -478,4 +478,7 @@ def evaluations():
 
 
 if __name__ == "__main__":
+    with connect(CONFIG["database_path"]) as _conn:
+        _total = seed_queue(_conn)
+        print(f"[startup] Queue seeded. Total tasks in label_queue: {_total}")
     app.run(debug=True, host="127.0.0.1", port=5000)

@@ -10,6 +10,120 @@ from db import connect
 from store import init_app_tables
 
 
+def seed(
+    conn,
+    limit: int = 150,
+    include_nonfired: int = 30,
+    rules: list[str] | None = None,
+    language: str = "C#",
+    tiers: str = "all",
+) -> int:
+    """Seed label_queue from actual_findings. Returns total tasks in queue after seeding.
+
+    Safe to call on every startup — uses INSERT OR IGNORE so existing entries are preserved.
+    """
+    init_app_tables(conn)
+
+    target_rules = rules or []
+    lang_filter = language.strip()
+    tier_filter: list[str] = []
+    if tiers.strip().lower() != "all":
+        tier_filter = [t.strip().lower() for t in tiers.split(",") if t.strip()]
+
+    conditions: list[str] = []
+    params: list[object] = []
+    if target_rules:
+        conditions.append(f"af.rule_id IN ({','.join(['?'] * len(target_rules))})")
+        params.extend(target_rules)
+    if lang_filter:
+        conditions.append("LOWER(f.language) = LOWER(?)")
+        params.append(lang_filter)
+    if tier_filter:
+        conditions.append(f"LOWER(f.tier) IN ({','.join(['?'] * len(tier_filter))})")
+        params.extend(tier_filter)
+    conditions.append("af.did_trigger = 1")
+    where = "WHERE " + " AND ".join(conditions)
+
+    fired_sql = f"""
+    WITH grouped AS (
+        SELECT af.fixture_id,
+               af.rule_id,
+               COUNT(*) AS finding_count,
+               MAX(af.actual_confidence) AS max_confidence,
+               f.has_tests_changed,
+               f.has_review_comments,
+               f.pr_size_bucket
+        FROM actual_findings af
+        JOIN fixtures f ON f.fixture_id = af.fixture_id
+        {where}
+        GROUP BY af.fixture_id, af.rule_id
+    )
+    SELECT *
+    FROM grouped
+    ORDER BY finding_count DESC, max_confidence DESC
+    LIMIT ?
+    """
+
+    sql_params = params.copy()
+    sql_params.append(limit)
+    fired_rows = conn.execute(fired_sql, tuple(sql_params)).fetchall()
+
+    for row in fired_rows:
+        bucket = "fired_high_signal" if row["finding_count"] >= 3 else "fired"
+        priority = int(row["finding_count"] * 10 + row["max_confidence"] * 10)
+        conn.execute(
+            """
+            INSERT OR IGNORE INTO label_queue (fixture_id, rule_id, queue_bucket, fired, priority)
+            VALUES (?, ?, ?, 1, ?)
+            """,
+            (row["fixture_id"], row["rule_id"], bucket, priority),
+        )
+
+    nonfired_limit = max(include_nonfired, 0)
+    if nonfired_limit:
+        all_rules = target_rules or [
+            r[0] for r in conn.execute("SELECT DISTINCT rule_id FROM actual_findings ORDER BY rule_id").fetchall()
+        ]
+        per_rule = max(1, math.ceil(nonfired_limit / max(len(all_rules), 1)))
+
+        nonfired_extra_clauses = ""
+        nonfired_extra_params: list[object] = []
+        if lang_filter:
+            nonfired_extra_clauses += " AND LOWER(f.language) = LOWER(?)"
+            nonfired_extra_params.append(lang_filter)
+        if tier_filter:
+            nonfired_extra_clauses += f" AND LOWER(f.tier) IN ({','.join(['?'] * len(tier_filter))})"
+            nonfired_extra_params.extend(tier_filter)
+
+        for rule_id in all_rules:
+            rows = conn.execute(
+                f"""
+                SELECT f.fixture_id
+                FROM fixtures f
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM actual_findings af
+                    WHERE af.fixture_id = f.fixture_id AND af.rule_id = ? AND af.did_trigger = 1
+                )
+                {nonfired_extra_clauses}
+                ORDER BY f.has_review_comments DESC, f.has_tests_changed ASC, f.created_at_utc DESC
+                LIMIT ?
+                """,
+                (rule_id, *nonfired_extra_params, per_rule),
+            ).fetchall()
+            for row in rows:
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO label_queue (fixture_id, rule_id, queue_bucket, fired, priority)
+                    VALUES (?, ?, 'nonfired_probe', 0, 1)
+                    """,
+                    (row["fixture_id"], rule_id),
+                )
+
+    conn.commit()
+    return conn.execute("SELECT COUNT(*) FROM label_queue").fetchone()[0]
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Seed label_queue from actual_findings.")
     parser.add_argument("--limit", type=int, default=150, help="Total fired items to queue.")
@@ -23,109 +137,15 @@ def main() -> None:
     config = load_config(base_dir)
     conn = connect(config["database_path"])
     try:
-        init_app_tables(conn)
-
         target_rules = [x.strip() for x in args.rules.split(",") if x.strip()]
-        lang_filter = args.language.strip()
-        tier_filter: list[str] = []
-        if args.tiers.strip().lower() != "all":
-            tier_filter = [t.strip().lower() for t in args.tiers.split(",") if t.strip()]
-
-        # Build WHERE clause for fired query
-        conditions: list[str] = []
-        params: list[object] = []
-        if target_rules:
-            conditions.append(f"af.rule_id IN ({','.join(['?'] * len(target_rules))})")
-            params.extend(target_rules)
-        if lang_filter:
-            conditions.append("LOWER(f.language) = LOWER(?)")
-            params.append(lang_filter)
-        if tier_filter:
-            conditions.append(f"LOWER(f.tier) IN ({','.join(['?'] * len(tier_filter))})")
-            params.extend(tier_filter)
-        conditions.append("af.did_trigger = 1")
-        where = "WHERE " + " AND ".join(conditions)
-
-        fired_sql = f"""
-        WITH grouped AS (
-            SELECT af.fixture_id,
-                   af.rule_id,
-                   COUNT(*) AS finding_count,
-                   MAX(af.actual_confidence) AS max_confidence,
-                   f.has_tests_changed,
-                   f.has_review_comments,
-                   f.pr_size_bucket
-            FROM actual_findings af
-            JOIN fixtures f ON f.fixture_id = af.fixture_id
-            {where}
-            GROUP BY af.fixture_id, af.rule_id
+        total = seed(
+            conn,
+            limit=args.limit,
+            include_nonfired=args.include_nonfired,
+            rules=target_rules or None,
+            language=args.language,
+            tiers=args.tiers,
         )
-        SELECT *
-        FROM grouped
-        ORDER BY finding_count DESC, max_confidence DESC
-        LIMIT ?
-        """
-
-        sql_params = params.copy()
-        sql_params.append(args.limit)
-        fired_rows = conn.execute(fired_sql, tuple(sql_params)).fetchall()
-
-        for row in fired_rows:
-            bucket = "fired_high_signal" if row["finding_count"] >= 3 else "fired"
-            priority = int(row["finding_count"] * 10 + row["max_confidence"] * 10)
-            conn.execute(
-                """
-                INSERT OR IGNORE INTO label_queue (fixture_id, rule_id, queue_bucket, fired, priority)
-                VALUES (?, ?, ?, 1, ?)
-                """,
-                (row["fixture_id"], row["rule_id"], bucket, priority),
-            )
-
-        nonfired_limit = max(args.include_nonfired, 0)
-        if nonfired_limit:
-            if target_rules:
-                rules = target_rules
-            else:
-                rules = [r[0] for r in conn.execute("SELECT DISTINCT rule_id FROM actual_findings ORDER BY rule_id").fetchall()]
-            per_rule = max(1, math.ceil(nonfired_limit / max(len(rules), 1)))
-
-            # Build language and tier filter clauses for nonfired probes
-            nonfired_extra_clauses = ""
-            nonfired_extra_params: list[object] = []
-            if lang_filter:
-                nonfired_extra_clauses += " AND LOWER(f.language) = LOWER(?)"
-                nonfired_extra_params.append(lang_filter)
-            if tier_filter:
-                nonfired_extra_clauses += f" AND LOWER(f.tier) IN ({','.join(['?'] * len(tier_filter))})"
-                nonfired_extra_params.extend(tier_filter)
-
-            for rule_id in rules:
-                rows = conn.execute(
-                    f"""
-                    SELECT f.fixture_id
-                    FROM fixtures f
-                    WHERE NOT EXISTS (
-                        SELECT 1
-                        FROM actual_findings af
-                        WHERE af.fixture_id = f.fixture_id AND af.rule_id = ? AND af.did_trigger = 1
-                    )
-                    {nonfired_extra_clauses}
-                    ORDER BY f.has_review_comments DESC, f.has_tests_changed ASC, f.created_at_utc DESC
-                    LIMIT ?
-                    """,
-                    (rule_id, *nonfired_extra_params, per_rule),
-                ).fetchall()
-                for row in rows:
-                    conn.execute(
-                        """
-                        INSERT OR IGNORE INTO label_queue (fixture_id, rule_id, queue_bucket, fired, priority)
-                        VALUES (?, ?, 'nonfired_probe', 0, 1)
-                        """,
-                        (row["fixture_id"], rule_id),
-                    )
-
-        conn.commit()
-        total = conn.execute("SELECT COUNT(*) FROM label_queue").fetchone()[0]
         print(f"Queue ready. Total tasks in label_queue: {total}")
     finally:
         conn.close()
