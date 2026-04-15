@@ -81,9 +81,13 @@ GauntletCI complements your existing tools; it does not replace them.
 
 ## 📦 Installation
 
+**Prerequisites:** [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later, Git.
+
 ```bash
 dotnet tool install -g GauntletCI
 ```
+
+> Building from source? See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ---
 
