@@ -36,7 +36,7 @@ param(
     [string[]]$RepoAllowlist = @(
         "AvaloniaUI/Avalonia",
         "App-vNext/Polly",
-        "AutoMapper/AutoMapper",
+        # Removed: AutoMapper/AutoMapper (archived/transferred)
         "Azure/azure-sdk-for-net",
         "AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
         "DapperLib/Dapper",
@@ -44,9 +44,9 @@ param(
         "FluentValidation/FluentValidation",
         "HangfireIO/Hangfire",
         "Humanizr/Humanizer",
-        "IdentityServer/IdentityServer4",
+        # Removed: IdentityServer/IdentityServer4 (archived)
         "JamesNK/Newtonsoft.Json",
-        "JetBrains/Annotations",
+        # Removed: JetBrains/Annotations (too small, <5 review-commented PRs)
         "MediatR/MediatR",
         "NLog/NLog",
         "PowerShell/PowerShell",
@@ -73,14 +73,14 @@ param(
         "googleapis/google-api-dotnet-client",
         "grpc/grpc-dotnet",
         "icsharpcode/SharpZipLib",
-        "jbogard/MediatR",
+        # Removed: jbogard/MediatR (duplicate of MediatR/MediatR after org rename)
         "jellyfin/jellyfin",
         "joshclose/CsvHelper",
         "mgravell/Pipelines.Sockets.Unofficial",
         "microsoft/PowerToys",
         "mongodb/mongo-csharp-driver",
         "moodmosaic/Fare",
-        "moq/moq4",
+        # Removed: moq/moq4 (archived; project moved to moq/moq)
         "mono/t4",
         "npgsql/npgsql",
         "nunit/nunit",
@@ -90,7 +90,13 @@ param(
         "serilog/serilog",
         "sshnet/SSH.NET",
         "xunit/xunit",
-        "zzzprojects/html-agility-pack"
+        "zzzprojects/html-agility-pack",
+        # Replacements: active repos with strong PR review culture
+        "akkadotnet/akka.net",           # Actor-model framework, ~5k stars, active reviews
+        "AngleSharp/AngleSharp",         # HTML/CSS parser, ~4.5k stars, active
+        "ClosedXML/ClosedXML",           # Excel manipulation, ~4k stars, active
+        "morelinq/MoreLINQ",             # LINQ extensions, ~3.7k stars, active
+        "spectreconsole/spectre.console" # Rich console UI, ~10k stars, very active
     )
 )
 
