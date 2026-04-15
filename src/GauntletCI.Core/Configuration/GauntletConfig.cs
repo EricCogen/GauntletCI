@@ -9,6 +9,12 @@ public class GauntletConfig
     /// <summary>Per-rule configuration keyed by rule ID (e.g. "GCI0002").</summary>
     public Dictionary<string, RuleConfig> Rules { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>
+    /// Controls which severity level causes a non-zero exit code.
+    /// Valid values: <c>"Block"</c> (default) or <c>"Warn"</c>.
+    /// </summary>
+    public string ExitOn { get; set; } = "Block";
+
     /// <summary>Paths to external policy files to merge.</summary>
     public string[] PolicyReferences { get; set; } = [];
 

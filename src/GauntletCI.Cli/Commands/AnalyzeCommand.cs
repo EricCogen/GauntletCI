@@ -39,6 +39,11 @@ public static class AnalyzeCommand
         var githubAnnotationsFlag = new Option<bool>("--github-annotations", "Emit GitHub Actions workflow commands for inline PR annotations");
         var withExpertCtxFlag = new Option<bool>("--with-expert-context",
             "Attach matching expert facts from the local vector store to findings (requires 'gauntletci llm seed')");
+        var verboseFlag = new Option<bool>("--verbose", "Show Info-severity findings in addition to Warn and Block");
+        var severityOption = new Option<string>(
+            "--severity",
+            () => "warn",
+            "Minimum severity to display: info, warn, block");
 
         var cmd = new Command("analyze", "Analyse a git diff for pre-commit risks")
         {
@@ -55,6 +60,8 @@ public static class AnalyzeCommand
             noBannerOption,
             githubAnnotationsFlag,
             withExpertCtxFlag,
+            verboseFlag,
+            severityOption,
         };
 
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
@@ -72,6 +79,8 @@ public static class AnalyzeCommand
             var noBanner   = ctx.ParseResult.GetValueForOption(noBannerOption);
             var ghAnnotate = ctx.ParseResult.GetValueForOption(githubAnnotationsFlag);
             var withExpertCtx = ctx.ParseResult.GetValueForOption(withExpertCtxFlag);
+            var verbose    = ctx.ParseResult.GetValueForOption(verboseFlag);
+            var severityStr = ctx.ParseResult.GetValueForOption(severityOption)!;
 
             // Enforce single diff source
             int sourceCount = (diffFile is not null ? 1 : 0)
@@ -108,7 +117,7 @@ public static class AnalyzeCommand
 
                 var config = ConfigLoader.Load(repo.FullName);
                 var ignoreList = IgnoreList.Load(repo.FullName);
-                var orchestrator = RuleOrchestrator.CreateDefault(config);
+                var orchestrator = RuleOrchestrator.CreateDefault(config, repoPath: repo.FullName);
 
                 // Run static analysis on changed C# files (null when no repo path or no .cs changes)
                 var repoPath = diffFile is null ? repo.FullName : null;
@@ -146,7 +155,10 @@ public static class AnalyzeCommand
                 }
                 else
                 {
-                    ConsoleReporter.Report(result, ascii);
+                    var minSeverity = verbose
+                        ? GauntletCI.Core.Model.RuleSeverity.Info
+                        : ParseMinSeverity(severityStr);
+                    ConsoleReporter.Report(result, ascii, minSeverity);
                 }
 
                 if (ghAnnotate)
@@ -182,7 +194,7 @@ public static class AnalyzeCommand
                     })],
                 });
 
-                ctx.ExitCode = result.HasFindings ? 1 : 0;
+                ctx.ExitCode = result.ShouldBlock(config.ExitOn) ? 1 : 0;
             }
             catch (Exception ex)
             {
@@ -193,4 +205,12 @@ public static class AnalyzeCommand
 
         return cmd;
     }
+
+    private static GauntletCI.Core.Model.RuleSeverity ParseMinSeverity(string s) =>
+        s.ToLowerInvariant() switch
+        {
+            "block" => GauntletCI.Core.Model.RuleSeverity.Block,
+            "info"  => GauntletCI.Core.Model.RuleSeverity.Info,
+            _       => GauntletCI.Core.Model.RuleSeverity.Warn,
+        };
 }

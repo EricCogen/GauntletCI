@@ -297,11 +297,64 @@ See [`docs/rules.md`](docs/rules.md) for the full rule catalogue.
 
 ## ⚙️ Configuration
 
-Run `gauntletci init` to generate a `.gauntletci.json` config file in your repository root. You can use it to:
+Run `gauntletci init` to generate a `.gauntletci.json` config file in your repository root.
 
-- Enable or disable specific rules
-- Set confidence thresholds
-- Configure ignore patterns
+### Severity Levels
+
+Every finding has a severity that controls display and exit-code behavior:
+
+| Severity | Color | Shown by default | Blocks commit |
+|----------|-------|-----------------|---------------|
+| **Block** | 🔴 Red | ✅ Yes | ✅ Yes (by default) |
+| **Warn** | 🟡 Yellow | ✅ Yes | ❌ No (unless `exitOn: "Warn"`) |
+| **Info** | ⬜ Grey | ❌ No (use `--verbose`) | ❌ No |
+| **None** | — | ❌ Never | ❌ Rule is skipped entirely |
+
+### Configure via `.editorconfig`
+
+```ini
+[*.cs]
+dotnet_diagnostic.GCI0003.severity = error       # Block
+dotnet_diagnostic.GCI0008.severity = warning     # Warn
+dotnet_diagnostic.GCI0011.severity = suggestion  # Info
+dotnet_diagnostic.GCI0023.severity = none        # Disable
+```
+
+### Configure via `.gauntletci.json`
+
+`.gauntletci.json` takes precedence over `.editorconfig`:
+
+```json
+{
+  "exitOn": "Block",
+  "rules": {
+    "GCI0008": { "severity": "Warn", "threshold": 20 },
+    "GCI0035": { "severity": "Block" },
+    "GCI0023": { "severity": "None" }
+  }
+}
+```
+
+**Priority order:** `.gauntletci.json` → `.editorconfig` → built-in defaults
+
+A [JSON schema](schemas/gauntletci-schema.json) is provided for IntelliSense in VS Code.
+
+### CLI Severity Flags
+
+```bash
+gauntletci analyze --staged               # Show Warn + Block (default)
+gauntletci analyze --staged --verbose     # Also show Info findings
+gauntletci analyze --staged --severity block  # Show only Block findings
+```
+
+### Exit Code Behavior
+
+| Condition | Exit code |
+|-----------|-----------|
+| No Block findings (default `exitOn: "Block"`) | `0` |
+| Any Block finding | `1` |
+| `exitOn: "Warn"` + any Warn or Block finding | `1` |
+| Internal error | `2` |
 
 ---
 

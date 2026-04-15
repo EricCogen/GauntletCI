@@ -18,6 +18,12 @@ public class Finding
     public required string SuggestedAction { get; set; }
     /// <summary>The confidence level assigned by the detecting rule.</summary>
     public Confidence Confidence { get; set; }
+    /// <summary>
+    /// The severity of this finding, determining display and exit-code behavior.
+    /// Set by <see cref="GauntletCI.Core.Rules.RuleOrchestrator"/> from the effective
+    /// severity resolved by <see cref="GauntletCI.Core.Configuration.ConfigurationService"/>.
+    /// </summary>
+    public RuleSeverity Severity { get; set; } = RuleSeverity.Info;
     /// <summary>The path of the file that contains the finding, if applicable.</summary>
     public string? FilePath { get; set; }
     /// <summary>The line number within <see cref="FilePath"/> where the finding was detected.</summary>

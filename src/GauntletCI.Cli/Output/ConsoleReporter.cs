@@ -6,9 +6,10 @@ using Spectre.Console;
 namespace GauntletCI.Cli.Output;
 
 /// <summary>
-/// Pretty-prints <see cref="EvaluationResult"/> findings to the console with colors.
-/// Findings are grouped by confidence: High first, then Medium, then Low.
-/// Pass ascii: true for terminals that cannot render Unicode box-drawing characters.
+/// Pretty-prints <see cref="EvaluationResult"/> findings to the console, grouped by severity.
+/// Block findings (red) and Warn findings (yellow) are shown by default.
+/// Info findings (grey) are shown only when <paramref name="minSeverity"/> is <see cref="RuleSeverity.Info"/>
+/// (i.e., when the caller passes <c>--verbose</c>).
 /// </summary>
 public static class ConsoleReporter
 {
@@ -30,14 +31,15 @@ public static class ConsoleReporter
     }
 
     /// <summary>
-    /// Prints a formatted risk-analysis report to the console, grouped by confidence level.
+    /// Prints a formatted risk-analysis report to the console, grouped by severity level.
     /// </summary>
     /// <param name="result">The evaluation result containing findings to display.</param>
     /// <param name="ascii">Use ASCII box characters instead of Unicode for limited terminals.</param>
-    public static void Report(EvaluationResult result, bool ascii = false)
+    /// <param name="minSeverity">Minimum severity to display. Defaults to <see cref="RuleSeverity.Warn"/>.</param>
+    public static void Report(EvaluationResult result, bool ascii = false, RuleSeverity minSeverity = RuleSeverity.Warn)
     {
         string hr  = ascii ? "=======================================================" : "═══════════════════════════════════════════════════════";
-        string sep = ascii ? "-- {0} CONFIDENCE ({1}) --------------------------" : "── {0} CONFIDENCE ({1}) ──────────────────────────";
+        string sep = ascii ? "-- {0} ({1}) --------------------------" : "── {0} ({1}) ──────────────────────────";
         string ok  = ascii ? "  OK No findings -- diff looks clean!" : "  ✓ No findings — diff looks clean!";
 
         AnsiConsole.MarkupLine($"[cyan]{hr}[/]");
@@ -59,20 +61,27 @@ public static class ConsoleReporter
 
         var groups = new[]
         {
-            (Confidence.High,   "HIGH",   "red"),
-            (Confidence.Medium, "MEDIUM", "yellow"),
-            (Confidence.Low,    "LOW",    "darkorange"),
+            (RuleSeverity.Block, "BLOCK", "red"),
+            (RuleSeverity.Warn,  "WARN",  "yellow"),
+            (RuleSeverity.Info,  "INFO",  "grey"),
         };
 
-        foreach (var (confidence, label, color) in groups)
+        bool anyVisible = false;
+        foreach (var (severity, label, color) in groups)
         {
-            var findings = result.Findings.Where(f => f.Confidence == confidence).ToList();
+            if (severity < minSeverity) continue;
+            var findings = result.Findings.Where(f => f.Severity == severity).ToList();
             if (findings.Count == 0) continue;
 
+            anyVisible = true;
             AnsiConsole.MarkupLine($"[{color}]{string.Format(sep, label, findings.Count)}[/]");
-
             foreach (var finding in findings)
                 PrintFinding(finding, color);
+        }
+
+        if (!anyVisible)
+        {
+            AnsiConsole.MarkupLine("[grey]  All findings are below the current severity threshold. Use --verbose to see Info findings.[/]");
         }
     }
 

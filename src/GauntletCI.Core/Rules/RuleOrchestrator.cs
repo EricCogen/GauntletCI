@@ -19,6 +19,7 @@ public class RuleOrchestrator
 {
     private readonly IReadOnlyList<IRule> _rules;
     private readonly GauntletConfig _config;
+    private readonly ConfigurationService _configService;
     private readonly TimeSpan _ruleTimeout;
     private readonly IChangedFileAnalyzer _fileAnalyzer;
 
@@ -29,18 +30,25 @@ public class RuleOrchestrator
     /// <param name="config">GauntletCI configuration; defaults to built-in settings when null.</param>
     /// <param name="ruleTimeout">Per-rule evaluation time limit; defaults to 30 seconds when null.</param>
     /// <param name="fileAnalyzer">File eligibility classifier; defaults to <see cref="ChangedFileAnalyzer"/> when null.</param>
-    public RuleOrchestrator(IEnumerable<IRule> rules, GauntletConfig? config = null, TimeSpan? ruleTimeout = null, IChangedFileAnalyzer? fileAnalyzer = null)
+    /// <param name="configService">Severity resolver; created from <paramref name="config"/> when null.</param>
+    public RuleOrchestrator(IEnumerable<IRule> rules, GauntletConfig? config = null, TimeSpan? ruleTimeout = null, IChangedFileAnalyzer? fileAnalyzer = null, ConfigurationService? configService = null)
     {
         _rules = [.. rules.OrderBy(r => r.Id)];
         _config = config ?? new GauntletConfig();
+        _configService = configService ?? new ConfigurationService(_config);
         _ruleTimeout = ruleTimeout ?? TimeSpan.FromSeconds(30);
         _fileAnalyzer = fileAnalyzer ?? new ChangedFileAnalyzer();
     }
 
     /// <summary>Creates an orchestrator with all built-in rules auto-discovered via reflection.</summary>
-    public static RuleOrchestrator CreateDefault(GauntletConfig? config = null, TimeSpan? ruleTimeout = null)
+    /// <param name="config">Optional configuration; defaults to built-in settings.</param>
+    /// <param name="ruleTimeout">Per-rule evaluation time limit; defaults to 30 seconds.</param>
+    /// <param name="repoPath">Repository root used to locate <c>.editorconfig</c> for severity resolution.</param>
+    public static RuleOrchestrator CreateDefault(GauntletConfig? config = null, TimeSpan? ruleTimeout = null, string? repoPath = null)
     {
         config ??= new GauntletConfig();
+        var configService = new ConfigurationService(config, repoPath);
+
         var ruleType = typeof(IRule);
         // Discover all IRule implementations via reflection at startup;
         // no manual registration needed — drop a new class in the assembly to register it
@@ -50,14 +58,14 @@ public class RuleOrchestrator
                      && ruleType.IsAssignableFrom(t)
                      && !t.IsDefined(typeof(ArchivedRuleAttribute), inherit: false))
             .Select(t => (IRule)Activator.CreateInstance(t)!)
-            .Where(r => IsRuleEnabled(r.Id, config))
+            .Where(r => IsRuleEnabled(r.Id, config, configService))
             .ToList();
 
         // Wire config into rules that need it
         foreach (var rule in rules.OfType<IConfigurableRule>())
             rule.Configure(config);
 
-        return new RuleOrchestrator(rules, config, ruleTimeout);
+        return new RuleOrchestrator(rules, config, ruleTimeout, configService: configService);
     }
 
     /// <summary>
@@ -114,6 +122,10 @@ public class RuleOrchestrator
         foreach (var rule in _rules)
         {
             ct.ThrowIfCancellationRequested();
+
+            var severity = _configService.GetEffectiveSeverity(rule.Id);
+            if (severity == RuleSeverity.None) continue;  // rule disabled via config
+
             using var ruleCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             ruleCts.CancelAfter(_ruleTimeout);
             var sw = Stopwatch.StartNew();
@@ -122,6 +134,7 @@ public class RuleOrchestrator
             try
             {
                 var findings = await rule.EvaluateAsync(context, ruleCts.Token);
+                foreach (var f in findings) f.Severity = severity;
                 allFindings.AddRange(findings);
                 if (findings.Count > 0) outcome = RuleOutcome.Triggered;
             }
@@ -138,6 +151,7 @@ public class RuleOrchestrator
                     WhyItMatters    = "A timeout may indicate pathologically complex diff input (Roslyn Bomb) or a hung analyzer.",
                     SuggestedAction = "Investigate the diff for unusual patterns or report this as a GauntletCI issue.",
                     Confidence      = Confidence.Medium,
+                    Severity        = RuleSeverity.Warn,
                 });
             }
             catch (Exception ex)
@@ -153,6 +167,7 @@ public class RuleOrchestrator
                     WhyItMatters    = "An errored rule may have missed real issues in this diff.",
                     SuggestedAction = "Report this error at https://github.com/EricCogen/GauntletCI/issues.",
                     Confidence      = Confidence.Low,
+                    Severity        = RuleSeverity.Warn,
                 });
             }
             finally
@@ -162,7 +177,6 @@ public class RuleOrchestrator
             metrics.Add(new RuleExecutionMetric(rule.Id, sw.ElapsedMilliseconds, outcome, allFindings.Count - findingsBefore));
         }
 
-        ApplySeverityOverrides(allFindings, _config);
         ApplyIgnoreList(allFindings, ignoreList);
         PostProcess(filteredDiff, allFindings);
 
@@ -176,28 +190,13 @@ public class RuleOrchestrator
         };
     }
 
-    private static bool IsRuleEnabled(string ruleId, GauntletConfig config)
+    private static bool IsRuleEnabled(string ruleId, GauntletConfig config, ConfigurationService configService)
     {
-        if (config.Rules.TryGetValue(ruleId, out var rc))
-            return rc.Enabled;
-        return true;
-    }
-
-    private static void ApplySeverityOverrides(List<Finding> findings, GauntletConfig config)
-    {
-        foreach (var finding in findings)
-        {
-            if (!config.Rules.TryGetValue(finding.RuleId, out var rc)) continue;
-            if (rc.Severity is null) continue;
-
-            finding.Confidence = rc.Severity.ToUpperInvariant() switch
-            {
-                "HIGH"   => Confidence.High,
-                "MEDIUM" => Confidence.Medium,
-                "LOW"    => Confidence.Low,
-                _        => finding.Confidence
-            };
-        }
+        // Explicit Enabled=false in config always wins
+        if (config.Rules.TryGetValue(ruleId, out var rc) && !rc.Enabled)
+            return false;
+        // Severity==None also disables the rule
+        return configService.GetEffectiveSeverity(ruleId) != RuleSeverity.None;
     }
 
     private static void ApplyIgnoreList(List<Finding> findings, IgnoreList? ignoreList)
@@ -226,6 +225,7 @@ public class RuleOrchestrator
                     WhyItMatters    = "Multiple concurrent risks compound each other and increase the chance of production incidents.",
                     SuggestedAction = "Address High-confidence findings first, then revisit Medium/Low before merging.",
                     Confidence      = Confidence.Medium,
+                    Severity        = RuleSeverity.Warn,
                 });
             }
 
@@ -257,6 +257,18 @@ public class EvaluationResult
     public FileEligibilityStatistics FileStatistics { get; init; } = new();
     /// <summary>True when at least one finding was produced by this evaluation run.</summary>
     public bool HasFindings => Findings.Count > 0;
+    /// <summary>
+    /// Returns true when the result should cause a non-zero exit code, according to
+    /// the configured <paramref name="exitOn"/> policy.
+    /// <list type="bullet">
+    ///   <item><description><c>"Block"</c> (default): true when any <see cref="RuleSeverity.Block"/> finding exists.</description></item>
+    ///   <item><description><c>"Warn"</c>: true when any <see cref="RuleSeverity.Warn"/> or higher finding exists.</description></item>
+    /// </list>
+    /// </summary>
+    public bool ShouldBlock(string exitOn = "Block") =>
+        exitOn.Equals("Warn", StringComparison.OrdinalIgnoreCase)
+            ? Findings.Any(f => f.Severity >= RuleSeverity.Warn)
+            : Findings.Any(f => f.Severity == RuleSeverity.Block);
 }
 
 /// <summary>The outcome of a single rule's execution within a run.</summary>
