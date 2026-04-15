@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://gauntletci.dev/schemas/gauntletci-schema.json",
+  "title": "GauntletCI Configuration",
+  "description": "Schema for .gauntletci.json — the optional GauntletCI configuration file placed at your repository root.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "rules": {
+      "type": "object",
+      "description": "Per-rule configuration overrides. Keys are rule IDs (e.g. 'GCI0001').",
+      "additionalProperties": {
+        "$ref": "#/definitions/RuleConfig"
+      }
+    },
+    "exitOn": {
+      "type": "string",
+      "description": "Controls which severity level causes a non-zero exit code. Defaults to 'Block'.",
+      "enum": ["Block", "Warn"],
+      "default": "Block"
+    },
+    "policyReferences": {
+      "type": "array",
+      "description": "Paths to external policy files to merge.",
+      "items": { "type": "string" }
+    },
+    "llm": {
+      "$ref": "#/definitions/LlmConfig"
+    },
+    "forbiddenImports": {
+      "type": "object",
+      "description": "Per-layer forbidden import rules for GCI0035. Key: source namespace fragment. Value: list of forbidden target fragments.",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    }
+  },
+  "definitions": {
+    "RuleConfig": {
+      "type": "object",
+      "description": "Configuration overrides for a single rule.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the rule is enabled. Defaults to true.",
+          "default": true
+        },
+        "severity": {
+          "type": "string",
+          "description": "Override the rule's default severity. 'None' disables the rule. Overrides .editorconfig.",
+          "enum": ["None", "Info", "Warn", "Block"]
+        },
+        "threshold": {
+          "type": "integer",
+          "description": "Optional numeric threshold for rules that support it (e.g. GCI0008 complexity threshold).",
+          "minimum": 1
+        },
+        "allowedPrereleasePrefixes": {
+          "type": "array",
+          "description": "Prerelease suffixes that are permitted (e.g. ['-rc', '-beta']) for GCI0042.",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "LlmConfig": {
+      "type": "object",
+      "description": "Premium CI/CD LLM configuration for remote enrichment.",
+      "additionalProperties": false,
+      "properties": {
+        "ciEndpoint": {
+          "type": "string",
+          "description": "OpenAI-compatible chat completions endpoint URL.",
+          "format": "uri"
+        },
+        "ciModel": {
+          "type": "string",
+          "description": "Model name to request (e.g. 'gpt-4o-mini').",
+          "default": "gpt-4o-mini"
+        },
+        "ciApiKeyEnv": {
+          "type": "string",
+          "description": "Environment variable name that holds the API key.",
+          "default": "GAUNTLETCI_LLM_KEY"
+        },
+        "licenseKeyEnv": {
+          "type": "string",
+          "description": "Environment variable name that holds the GauntletCI license key.",
+          "default": "GAUNTLETCI_LICENSE"
+        }
+      }
+    }
+  }
+}
