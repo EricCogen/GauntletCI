@@ -9,6 +9,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0034 – Null-Coalescing Expansion
 /// Fires when null-safe operators are added without null injection test evidence.
 /// </summary>
+[ArchivedRule("Pattern matching produces too many false positives; not a real bug")]
 public class GCI0034_NullCoalescingExpansion : RuleBase
 {
     public override string Id => "GCI0034";

@@ -9,6 +9,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0013 – Observability/Debuggability
 /// Flags missing logging, missing XML docs, and unlogged exception re-throws.
 /// </summary>
+[ArchivedRule("Overlaps GCI0023 StructuredLogging; XML doc completeness is style, not risk")]
 public class GCI0013_ObservabilityDebugability : RuleBase
 {
     public override string Id => "GCI0013";

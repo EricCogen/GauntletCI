@@ -10,6 +10,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0002 – Goal Alignment
 /// Detects diffs that are unrelated to the commit message or span too many unrelated areas.
 /// </summary>
+[ArchivedRule("Too LLM-dependent; cannot determine goal alignment from diff text alone")]
 public class GCI0002_GoalAlignment : RuleBase
 {
     public override string Id => "GCI0002";

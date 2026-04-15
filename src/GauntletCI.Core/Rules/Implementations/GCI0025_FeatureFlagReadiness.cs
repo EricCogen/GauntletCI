@@ -9,6 +9,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0025 – Feature Flag Readiness
 /// Detects large changes to critical-path files that have no feature flag or toggle reference.
 /// </summary>
+[ArchivedRule("Process concern, not a code defect")]
 public class GCI0025_FeatureFlagReadiness : RuleBase
 {
     public override string Id => "GCI0025";

@@ -10,6 +10,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0031 – Boundary Drift
 /// Fires when comparison operators against numeric literals are added without test coverage of those values.
 /// </summary>
+[ArchivedRule("Overlaps GCI0004 BreakingChangeRisk; redundant")]
 public class GCI0031_BoundaryDrift : RuleBase
 {
     public override string Id => "GCI0031";

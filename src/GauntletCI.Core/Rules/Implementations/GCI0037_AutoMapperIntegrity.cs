@@ -10,6 +10,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// Fires when AutoMapper, Mapster, AgileMapper, or TinyMapper mappings are added or changed
 /// without corresponding compile-time validation evidence in the diff.
 /// </summary>
+[ArchivedRule("Too library-specific to be broadly useful across the corpus")]
 public class GCI0037_AutoMapperIntegrity : RuleBase
 {
     public override string Id => "GCI0037";
