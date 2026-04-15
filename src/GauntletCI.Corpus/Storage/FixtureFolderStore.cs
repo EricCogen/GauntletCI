@@ -19,6 +19,7 @@ public sealed class FixtureFolderStore : IFixtureStore
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
         WriteIndented = true,
+        PropertyNameCaseInsensitive = true,
         Converters = { new JsonStringEnumConverter() },
     };
 
@@ -114,7 +115,59 @@ public sealed class FixtureFolderStore : IFixtureStore
         return results;
     }
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
+    public async Task<IReadOnlyList<ExpectedFinding>> ReadExpectedFindingsAsync(
+        string fixtureId, CancellationToken ct = default)
+    {
+        var fixturePath = FindExistingFixturePath(fixtureId);
+        if (fixturePath is null) return [];
+
+        var expectedPath = Path.Combine(fixturePath, "expected.json");
+        if (!File.Exists(expectedPath)) return [];
+
+        try
+        {
+            var json = await File.ReadAllTextAsync(expectedPath, ct);
+            return JsonSerializer.Deserialize<List<ExpectedFinding>>(json, JsonOpts) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    public async Task<IReadOnlyList<ActualFinding>> ReadActualFindingsAsync(
+        string fixtureId, CancellationToken ct = default)
+    {
+        var fixturePath = FindExistingFixturePath(fixtureId);
+        if (fixturePath is null) return [];
+
+        var actualPath = Path.Combine(fixturePath, "actual.json");
+        if (!File.Exists(actualPath)) return [];
+
+        try
+        {
+            var json = await File.ReadAllTextAsync(actualPath, ct);
+            return JsonSerializer.Deserialize<List<ActualFinding>>(json, JsonOpts) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
+
+    public async Task<string?> TryReadReviewCommentsAsync(
+        string fixtureId, CancellationToken ct = default)
+    {
+        var fixturePath = FindExistingFixturePath(fixtureId);
+        if (fixturePath is null) return null;
+
+        var reviewPath = Path.Combine(fixturePath, "raw", "review-comments.json");
+        if (!File.Exists(reviewPath)) return null;
+
+        return await File.ReadAllTextAsync(reviewPath, ct);
+    }
+
+
 
     private string EnsureFixtureDir(FixtureTier tier, string fixtureId)
     {

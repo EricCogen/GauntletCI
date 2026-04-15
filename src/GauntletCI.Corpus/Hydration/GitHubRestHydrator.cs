@@ -159,7 +159,6 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
             ReviewComments     = reviewComments,
             Commits            = ghCommits.Select(c => c.Sha).ToList(),
             DiffText           = diffText,
-            PatchText          = diffText,
             RawApiPayloadJson  = rawPrJson,
             HydratedAtUtc      = DateTime.UtcNow,
         };

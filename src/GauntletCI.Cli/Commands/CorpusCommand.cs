@@ -19,10 +19,22 @@ public static class CorpusCommand
 {
     public static Command Create()
     {
-        var corpus = new Command("corpus", "Manage the GauntletCI fixture corpus");
+        var corpus = new Command("corpus", """
+            Manage the GauntletCI fixture corpus.
+
+            Typical workflow:
+              1. corpus discover --provider gh-search --repo-allowlist owner/repo
+              2. corpus batch-hydrate --limit 50
+              3. corpus label-all --tier discovery
+              4. corpus run-all --tier discovery
+              5. corpus score
+              6. corpus report
+            """);
         corpus.AddCommand(CreateAddPr());
         corpus.AddCommand(CreateNormalize());
         corpus.AddCommand(CreateList());
+        corpus.AddCommand(CreateShow());
+        corpus.AddCommand(CreateStatus());
         corpus.AddCommand(CreateBatchHydrate());
         corpus.AddCommand(CreateDiscover());
         corpus.AddCommand(CreateRun());
@@ -33,6 +45,8 @@ public static class CorpusCommand
         corpus.AddCommand(CreateLabelAll());
         corpus.AddCommand(CreateResetStats());
         corpus.AddCommand(CreatePurge());
+        corpus.AddCommand(CreateErrors());
+        corpus.AddCommand(CreateDoctor());
 
         var issues = new Command("issues", "GitHub Issues corpus operations");
         issues.AddCommand(CreateIssueSearch());
@@ -288,6 +302,227 @@ public static class CorpusCommand
         Console.WriteLine($"[corpus] {fixtures.Count} fixture(s)");
     }
 
+    // ── gauntletci corpus show <fixture-id> ───────────────────────────────────
+
+    private static Command CreateShow()
+    {
+        var fixtureArg  = new Argument<string>("fixture-id", "Fixture ID to inspect");
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
+
+        var cmd = new Command("show", "Inspect a single corpus fixture: metadata, findings, labels, and diff stats");
+        cmd.AddArgument(fixtureArg);
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var fixtureId = ctx.ParseResult.GetValueForArgument(fixtureArg);
+            var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures  = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct        = ctx.GetCancellationToken();
+
+            var (db, store, _) = await BuildPipeline(dbPath, fixtures, ct);
+            using (db)
+            {
+                var meta = await store.GetMetadataAsync(fixtureId, ct);
+                if (meta is null)
+                {
+                    Console.Error.WriteLine($"[corpus] Fixture '{fixtureId}' not found.");
+                    ctx.ExitCode = 1;
+                    return;
+                }
+
+                var sep = new string('─', 60);
+                Console.WriteLine(sep);
+                Console.WriteLine($"  Fixture : {meta.FixtureId}");
+                Console.WriteLine($"  Tier    : {meta.Tier}");
+                var repoParts = meta.Repo.Split('/', 2);
+                var owner     = repoParts.Length > 1 ? repoParts[0] : meta.Repo;
+                var repoName  = repoParts.Length > 1 ? repoParts[1] : meta.Repo;
+                Console.WriteLine($"  PR      : https://github.com/{owner}/{repoName}/pull/{meta.PullRequestNumber}");
+                Console.WriteLine($"  Size    : {meta.PrSizeBucket} ({meta.FilesChanged} files changed)");
+                Console.WriteLine($"  Language: {meta.Language}");
+                Console.WriteLine($"  Tags    : {(meta.Tags.Count > 0 ? string.Join(", ", meta.Tags) : "(none)")}");
+                Console.WriteLine(sep);
+
+                // ── Diff stats ────────────────────────────────────────────────
+                var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, meta.Tier, fixtureId);
+                var diffPath    = Path.Combine(fixturePath, "diff.patch");
+                if (File.Exists(diffPath))
+                {
+                    var diffText   = await File.ReadAllTextAsync(diffPath, ct);
+                    var diffLines  = diffText.Split('\n');
+                    var filesCount = diffLines.Count(l => l.StartsWith("diff --git", StringComparison.Ordinal));
+                    var added      = diffLines.Count(l => l.StartsWith("+") && !l.StartsWith("+++"));
+                    var removed    = diffLines.Count(l => l.StartsWith("-") && !l.StartsWith("---"));
+                    Console.WriteLine($"  Diff    : {filesCount} file(s), +{added} -{removed} lines");
+                }
+
+                // ── Actual findings ───────────────────────────────────────────
+                var actual = await store.ReadActualFindingsAsync(fixtureId, ct);
+                if (actual.Count > 0)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("  ACTUAL FINDINGS (what GCI rules detected)");
+                    Console.WriteLine($"  {"Rule",-12}  {"Triggered",-10}  {"File",-40}  Evidence");
+                    Console.WriteLine($"  {new string('-', 100)}");
+                    foreach (var f in actual.OrderBy(f => f.RuleId))
+                    {
+                        var triggered = f.DidTrigger ? "YES" : "no";
+                        var filePath  = f.FilePath is null ? "" : (f.FilePath.Length > 38 ? "…" + f.FilePath[^37..] : f.FilePath);
+                        var evidence  = string.IsNullOrEmpty(f.Evidence) ? "" : f.Evidence;
+                        if (evidence.Length > 60) evidence = evidence[..57] + "…";
+                        Console.WriteLine($"  {f.RuleId,-12}  {triggered,-10}  {filePath,-40}  {evidence}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("  ACTUAL FINDINGS: none (run `corpus run --fixture <id>` first)");
+                }
+
+                // ── Expected findings / labels ────────────────────────────────
+                var expected = await store.ReadExpectedFindingsAsync(fixtureId, ct);
+                if (expected.Count > 0)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("  EXPECTED FINDINGS / LABELS");
+                    Console.WriteLine($"  {"Rule",-12}  {"ShouldTrigger",-14}  {"Confidence",-11}  {"Source",-22}  Reason");
+                    Console.WriteLine($"  {new string('-', 110)}");
+                    foreach (var e in expected.OrderBy(e => e.RuleId))
+                    {
+                        var reason = e.Reason.Length > 50 ? e.Reason[..47] + "…" : e.Reason;
+                        Console.WriteLine($"  {e.RuleId,-12}  {(e.ShouldTrigger ? "true" : "false"),-14}  {e.ExpectedConfidence.ToString("F2"),-11}  {e.LabelSource,-22}  {reason}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("  EXPECTED FINDINGS: none (run `corpus label --fixture <id>` first)");
+                }
+
+                // ── Review comment paths ──────────────────────────────────────
+                var reviewJson = await store.TryReadReviewCommentsAsync(fixtureId, ct);
+                if (reviewJson is not null)
+                {
+                    try
+                    {
+                        using var doc = System.Text.Json.JsonDocument.Parse(reviewJson);
+                        var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                        if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array)
+                            foreach (var el in doc.RootElement.EnumerateArray())
+                                if (el.TryGetProperty("path", out var p) && p.GetString() is { } ps)
+                                    paths.Add(ps);
+                        if (paths.Count > 0)
+                        {
+                            Console.WriteLine();
+                            Console.WriteLine($"  REVIEW COMMENT PATHS ({paths.Count} file(s) commented on)");
+                            foreach (var p in paths.OrderBy(p => p))
+                                Console.WriteLine($"    {p}");
+                        }
+                    }
+                    catch { /* ignore malformed review comments */ }
+                }
+
+                Console.WriteLine(sep);
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus status ──────────────────────────────────────────────
+
+    private static Command CreateStatus()
+    {
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
+
+        var cmd = new Command("status", "Show overall corpus health: fixture counts, label coverage, run coverage");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath   = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct       = ctx.GetCancellationToken();
+
+            var (db, store, _) = await BuildPipeline(dbPath, fixtures, ct);
+            using (db)
+            {
+                var all = await store.ListFixturesAsync(null, ct);
+
+                var byTier = all.GroupBy(m => m.Tier).ToDictionary(g => g.Key, g => g.ToList());
+
+                var sep = new string('─', 60);
+                Console.WriteLine(sep);
+                Console.WriteLine("  CORPUS STATUS");
+                Console.WriteLine(sep);
+
+                Console.WriteLine($"  Total fixtures: {all.Count}");
+                foreach (var tier in new[] { FixtureTier.Gold, FixtureTier.Silver, FixtureTier.Discovery })
+                {
+                    var count = byTier.TryGetValue(tier, out var list) ? list.Count : 0;
+                    Console.WriteLine($"    {tier,-12}: {count}");
+                }
+
+                int hasDiff = 0, hasRun = 0, hasLabels = 0;
+                var labelSourceCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+
+                foreach (var meta in all)
+                {
+                    var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, meta.Tier, meta.FixtureId);
+                    if (File.Exists(Path.Combine(fixturePath, "diff.patch")))    hasDiff++;
+                    if (File.Exists(Path.Combine(fixturePath, "actual.json")))   hasRun++;
+                    if (File.Exists(Path.Combine(fixturePath, "expected.json")))
+                    {
+                        hasLabels++;
+                        try
+                        {
+                            var json = await File.ReadAllTextAsync(Path.Combine(fixturePath, "expected.json"), ct);
+                            var labels = System.Text.Json.JsonSerializer.Deserialize<List<GauntletCI.Corpus.Models.ExpectedFinding>>(
+                                json,
+                                new System.Text.Json.JsonSerializerOptions
+                                {
+                                    PropertyNameCaseInsensitive = true,
+                                    Converters = { new JsonStringEnumConverter() },
+                                }) ?? [];
+                            foreach (var l in labels)
+                            {
+                                var src = l.LabelSource.ToString();
+                                labelSourceCounts.TryGetValue(src, out var c);
+                                labelSourceCounts[src] = c + 1;
+                            }
+                        }
+                        catch { /* skip */ }
+                    }
+                }
+
+                Console.WriteLine();
+                Console.WriteLine($"  Coverage:");
+                Console.WriteLine($"    Hydrated (diff.patch)  : {hasDiff}/{all.Count} ({Pct(hasDiff, all.Count)})");
+                Console.WriteLine($"    Rules run (actual.json): {hasRun}/{all.Count} ({Pct(hasRun, all.Count)})");
+                Console.WriteLine($"    Labeled (expected.json): {hasLabels}/{all.Count} ({Pct(hasLabels, all.Count)})");
+
+                if (labelSourceCounts.Count > 0)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("  Label sources:");
+                    foreach (var kv in labelSourceCounts.OrderByDescending(kv => kv.Value))
+                        Console.WriteLine($"    {kv.Key,-22}: {kv.Value}");
+                }
+
+                Console.WriteLine(sep);
+            }
+
+            static string Pct(int num, int den) => den == 0 ? "N/A" : $"{100.0 * num / den:F0}%";
+        });
+
+        return cmd;
+    }
+
     // ── gauntletci corpus discover --provider gh-search|gh-archive ───────────
 
     private static Command CreateDiscover()
@@ -304,7 +539,7 @@ public static class CorpusCommand
             Arity = ArgumentArity.ZeroOrMore,
             AllowMultipleArgumentsPerToken = true,
         };
-        var repoAllowlistOpt = new Option<string[]>("--repo-allowlist", "Only discover from these repos in owner/repo format (repeatable). When set, searches are targeted per-repo instead of global.")
+        var repoAllowlistOpt = new Option<string[]>("--repo-allowlist", "Only discover from these repos in owner/repo format (repeatable). Required when --provider gh-search.")
         {
             Arity = ArgumentArity.ZeroOrMore,
             AllowMultipleArgumentsPerToken = true,
@@ -343,6 +578,7 @@ public static class CorpusCommand
             var ct             = ctx.GetCancellationToken();
 
             IDiscoveryProvider provider;
+            var errorLog = new List<(string? Repo, int? Code, string Message)>();
 
             if (providerName.Equals("gh-search", StringComparison.OrdinalIgnoreCase))
             {
@@ -353,7 +589,14 @@ public static class CorpusCommand
                     ctx.ExitCode = 1;
                     return;
                 }
-                provider = new GitHubSearchDiscoveryProvider(token);
+                if (repoAllowlist.Length == 0)
+                {
+                    Console.Error.WriteLine("[corpus] Error: --repo-allowlist is required for gh-search. Pass one or more owner/repo values.");
+                    ctx.ExitCode = 1;
+                    return;
+                }
+                Action<string?, int?, string> errorCallback = (repo, code, msg) => errorLog.Add((repo, code, msg));
+                provider = new GitHubSearchDiscoveryProvider(token, errorCallback);
             }
             else if (providerName.Equals("gh-archive", StringComparison.OrdinalIgnoreCase))
             {
@@ -385,12 +628,47 @@ public static class CorpusCommand
 
             Console.WriteLine($"[corpus] Discovering candidates via {provider.GetProviderName()} (limit={limit}{(perRepoLimit > 0 ? $", per-repo={perRepoLimit}" : "")}) …");
 
-            var candidates = await provider.SearchCandidatesAsync(query, ct);
-
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
             using (db)
             {
+                var candidates = await provider.SearchCandidatesAsync(query, ct);
+
+                // Rate limit summary (gh-search only)
+                if (provider is GitHubSearchDiscoveryProvider ghSearch)
+                {
+                    var sb = new System.Text.StringBuilder("[corpus] Rate limit summary — Search: ");
+                    if (ghSearch.LastSearchRemaining.HasValue && ghSearch.LastSearchLimit.HasValue)
+                    {
+                        var used      = ghSearch.LastSearchLimit.Value - ghSearch.LastSearchRemaining.Value;
+                        var remaining = ghSearch.LastSearchRemaining.Value;
+                        sb.Append($"{used} used, {remaining} remaining");
+                        if (ghSearch.LastSearchResetUtc.HasValue)
+                        {
+                            var secs = Math.Max(0, (int)(ghSearch.LastSearchResetUtc.Value - DateTimeOffset.UtcNow).TotalSeconds);
+                            sb.Append($" (resets in {secs / 60}m {secs % 60}s)");
+                        }
+                    }
+                    else
+                    {
+                        sb.Append("(no data — no API calls made or all skipped)");
+                    }
+                    if (ghSearch.ThrottleCount > 0)
+                        sb.Append($" | Throttled: {ghSearch.ThrottleCount}×");
+                    Console.WriteLine(sb.ToString());
+
+                    if (ghSearch.LastSearchRemaining is <= 5)
+                        Console.WriteLine("[corpus] ⚠ Search quota nearly exhausted. Run 'corpus doctor' before next run.");
+                }
+
+                // Persist any errors collected during discovery
+                if (errorLog.Count > 0)
+                {
+                    foreach (var (repo, code, msg) in errorLog)
+                        await db.LogPipelineErrorAsync("discover", provider.GetProviderName(), repo, code, msg, ct);
+                    Console.WriteLine($"[corpus] {errorLog.Count} error(s) logged to DB (run 'corpus errors' to review).");
+                }
+
                 int inserted = 0;
 
                 foreach (var c in candidates)
@@ -455,6 +733,13 @@ public static class CorpusCommand
             var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
             var ct       = ctx.GetCancellationToken();
 
+            if (!Enum.TryParse<GauntletCI.Corpus.Models.FixtureTier>(tierStr, ignoreCase: true, out var tier))
+            {
+                Console.Error.WriteLine($"[corpus] Unknown tier '{tierStr}'. Use gold, silver, or discovery.");
+                ctx.ExitCode = 1;
+                return;
+            }
+
             var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
             if (string.IsNullOrEmpty(token))
             {
@@ -490,13 +775,6 @@ public static class CorpusCommand
 
                     var fixtureId = GauntletCI.Corpus.Storage.FixtureIdHelper.Build(owner, repo, prNumber);
                     Console.WriteLine($"[corpus] Hydrating {owner}/{repo}#{prNumber} → {fixtureId}");
-
-                    var tier = tierStr.ToLowerInvariant() switch
-                    {
-                        "gold"   => GauntletCI.Corpus.Models.FixtureTier.Gold,
-                        "silver" => GauntletCI.Corpus.Models.FixtureTier.Silver,
-                        _        => GauntletCI.Corpus.Models.FixtureTier.Discovery,
-                    };
 
                     try
                     {
@@ -539,7 +817,10 @@ public static class CorpusCommand
         cmd.CommandText = """
             SELECT c.repo_owner, c.repo_name, c.pr_number
             FROM candidates c
-            LEFT JOIN fixtures f ON f.fixture_id = (lower(c.repo_owner) || '_' || lower(c.repo_name) || '_pr' || c.pr_number)
+            LEFT JOIN fixtures f ON f.fixture_id = (
+                replace(replace(replace(lower(c.repo_owner), '/', '_'), '\', '_'), ' ', '-') || '_' ||
+                replace(replace(replace(lower(c.repo_name),  '/', '_'), '\', '_'), ' ', '-') || '_pr' || c.pr_number
+            )
             WHERE f.fixture_id IS NULL
             ORDER BY c.discovered_at_utc DESC
             LIMIT $limit
@@ -871,10 +1152,9 @@ public static class CorpusCommand
                     var diffText = await File.ReadAllTextAsync(diffPath, ct);
                     var engine   = new SilverLabelEngine(store);
 
-                    var inferred = await engine.InferLabelsAsync(fixtureId, diffText, ct);
-                    await engine.ApplyToFixtureAsync(fixtureId, diffText, overwrite, ct);
+                    var labelsWritten = await engine.ApplyToFixtureAsync(fixtureId, diffText, overwrite, ct);
 
-                    Console.WriteLine($"[corpus] Labeled {fixtureId}: {inferred.Count} heuristic label(s) applied");
+                    Console.WriteLine($"[corpus] Labeled {fixtureId}: {labelsWritten} label(s) written");
                 }
                 catch (Exception ex)
                 {
@@ -891,30 +1171,62 @@ public static class CorpusCommand
 
     private static Command CreateLabelAll()
     {
-        var tierOpt      = new Option<string>("--tier",      () => "discovery", "Fixture tier to process (gold|silver|discovery)");
-        var overwriteOpt = new Option<bool>  ("--overwrite", () => false,       "Overwrite existing HumanReview/Seed labels with heuristic labels");
-        var dbOpt        = new Option<string>("--db",        () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt  = new Option<string>("--fixtures",  () => "./data/fixtures",             "Path to fixtures root directory");
+        var tierOpt         = new Option<string>("--tier",         () => "discovery", "Fixture tier to process (gold|silver|discovery)");
+        var overwriteOpt    = new Option<bool>  ("--overwrite",    () => false,       "Overwrite existing HumanReview/Seed labels with heuristic labels");
+        var verboseOpt      = new Option<bool>  ("--verbose",      () => false,       "Print per-rule label breakdown for each fixture");
+        var llmLabelOpt     = new Option<bool>  ("--llm-label",    () => false,       "Enable LLM-based Tier 3 labeling");
+        var llmProviderOpt  = new Option<string>("--llm-provider", () => "ollama",    "LLM provider: ollama | anthropic | github-models | none");
+        var llmModelOpt     = new Option<string>("--llm-model",    () => "",          "Model override (provider default used if empty)");
+        var llmUrlOpt       = new Option<string>("--llm-url",      () => "http://localhost:11434", "Ollama base URL");
+        var dbOpt           = new Option<string>("--db",           () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt     = new Option<string>("--fixtures",     () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("label-all", "Apply silver heuristic labels to all fixtures in a tier");
         cmd.AddOption(tierOpt);
         cmd.AddOption(overwriteOpt);
+        cmd.AddOption(verboseOpt);
+        cmd.AddOption(llmLabelOpt);
+        cmd.AddOption(llmProviderOpt);
+        cmd.AddOption(llmModelOpt);
+        cmd.AddOption(llmUrlOpt);
         cmd.AddOption(dbOpt);
         cmd.AddOption(fixturesOpt);
 
         cmd.SetHandler(async (ctx) =>
         {
-            var tierStr   = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var overwrite = ctx.ParseResult.GetValueForOption(overwriteOpt);
-            var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var fixtures  = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var ct        = ctx.GetCancellationToken();
+            var tierStr    = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var overwrite  = ctx.ParseResult.GetValueForOption(overwriteOpt);
+            var verbose    = ctx.ParseResult.GetValueForOption(verboseOpt);
+            var llmLabel   = ctx.ParseResult.GetValueForOption(llmLabelOpt);
+            var provider   = ctx.ParseResult.GetValueForOption(llmProviderOpt)!;
+            var llmModel   = ctx.ParseResult.GetValueForOption(llmModelOpt)!;
+            var llmUrl     = ctx.ParseResult.GetValueForOption(llmUrlOpt)!;
+            var dbPath     = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures   = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct         = ctx.GetCancellationToken();
 
             if (!Enum.TryParse<FixtureTier>(tierStr, ignoreCase: true, out var tier))
             {
                 Console.Error.WriteLine($"[corpus] Unknown tier '{tierStr}'. Use gold, silver, or discovery.");
                 ctx.ExitCode = 1;
                 return;
+            }
+
+            ILlmLabeler llmLabeler = new NullLlmLabeler();
+            if (llmLabel)
+            {
+                string? modelOverride = string.IsNullOrWhiteSpace(llmModel) ? null : llmModel;
+                string? urlOverride   = (provider == "ollama") ? llmUrl : null;
+
+                if (provider == "ollama")
+                {
+                    llmLabeler = await SetupOllamaLabelerAsync(modelOverride, urlOverride ?? llmUrl, ct);
+                }
+                else
+                {
+                    llmLabeler = LlmLabelerFactory.Create(provider, modelOverride, urlOverride);
+                    Console.WriteLine($"[corpus] LLM labeling enabled via {provider}");
+                }
             }
 
             var (db, store, _) = await BuildPipeline(dbPath, fixtures, ct);
@@ -931,7 +1243,7 @@ public static class CorpusCommand
                 int labeled = 0;
                 int skipped = 0;
                 int totalLabels = 0;
-                var engine = new SilverLabelEngine(store);
+                var engine = new SilverLabelEngine(store, llmLabeler);
 
                 foreach (var metadata in allFixtures)
                 {
@@ -947,14 +1259,20 @@ public static class CorpusCommand
 
                     try
                     {
-                        var diffText = await File.ReadAllTextAsync(diffPath, ct);
-                        var inferred = await engine.InferLabelsAsync(metadata.FixtureId, diffText, ct);
-                        await engine.ApplyToFixtureAsync(metadata.FixtureId, diffText, overwrite, ct);
+                        var diffText      = await File.ReadAllTextAsync(diffPath, ct);
+                        var labelsWritten = await engine.ApplyToFixtureAsync(metadata.FixtureId, diffText, overwrite, ct);
 
-                        totalLabels += inferred.Count;
+                        totalLabels += labelsWritten;
                         labeled++;
 
-                        Console.WriteLine($"[corpus] OK   {metadata.FixtureId,-40} {inferred.Count,3} label(s)");
+                        Console.WriteLine($"[corpus] OK   {metadata.FixtureId,-40} {labelsWritten,3} label(s)");
+
+                        if (verbose)
+                        {
+                            var labelDetails = await store.ReadExpectedFindingsAsync(metadata.FixtureId, ct);
+                            foreach (var label in labelDetails.OrderBy(l => l.RuleId))
+                                Console.WriteLine($"    {label.RuleId,-10}  {(label.ShouldTrigger ? "TRUE" : "false"),-6}  {label.LabelSource,-22}  {label.Reason}");
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -964,7 +1282,7 @@ public static class CorpusCommand
                 }
 
                 Console.WriteLine();
-                Console.WriteLine($"[corpus] label-all complete: {labeled} labeled, {skipped} skipped, {totalLabels} total labels applied");
+                Console.WriteLine($"[corpus] label-all complete: {labeled} labeled, {skipped} skipped, {totalLabels} total labels written");
             }
         });
 
@@ -1133,6 +1451,152 @@ public static class CorpusCommand
         return cmd;
     }
 
+    // ── gauntletci corpus doctor ──────────────────────────────────────────────
+
+    private static Command CreateDoctor()
+    {
+        var dbOpt    = new Option<string>("--db",    () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var tokenOpt = new Option<string?>("--token", "GitHub token (overrides GITHUB_TOKEN env var)");
+
+        var cmd = new Command("doctor", "Check GitHub API connectivity, rate limits, and recent pipeline errors");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(tokenOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var token  = ctx.ParseResult.GetValueForOption(tokenOpt)
+                         ?? Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+            var ct     = ctx.GetCancellationToken();
+
+            if (string.IsNullOrEmpty(token))
+            {
+                Console.Error.WriteLine("[corpus] Error: GitHub token is required. Set GITHUB_TOKEN or pass --token.");
+                ctx.ExitCode = 1;
+                return;
+            }
+
+            Console.WriteLine("[corpus] Checking GitHub connectivity...");
+
+            using var http = new System.Net.Http.HttpClient();
+            http.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Corpus/1.0");
+            http.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
+
+            System.Net.Http.HttpResponseMessage rateLimitResponse;
+            try
+            {
+                rateLimitResponse = await http.GetAsync("https://api.github.com/rate_limit", ct);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[corpus] Error: Could not reach api.github.com — {ex.Message}");
+                ctx.ExitCode = 1;
+                return;
+            }
+
+            if (!rateLimitResponse.IsSuccessStatusCode)
+            {
+                Console.Error.WriteLine($"[corpus] Error: GitHub API returned {(int)rateLimitResponse.StatusCode}. Check your token.");
+                ctx.ExitCode = 1;
+                return;
+            }
+
+            Console.WriteLine("[corpus] ✓ Connected to api.github.com");
+            Console.WriteLine();
+
+            await using var stream = await rateLimitResponse.Content.ReadAsStreamAsync(ct);
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+
+            if (!doc.RootElement.TryGetProperty("resources", out var resources))
+            {
+                Console.Error.WriteLine("[corpus] Error: Unexpected rate_limit response shape.");
+                ctx.ExitCode = 1;
+                return;
+            }
+
+            var buckets = new[] { "core", "search", "graphql" };
+
+            const int colBucket    = 10;
+            const int colLimit     = 7;
+            const int colUsed      = 8;
+            const int colRemaining = 11;
+            const int colResets    = 11;
+
+            Console.WriteLine($"  {"Bucket",-colBucket}  {"Limit",-colLimit}  {"Used",-colUsed}  {"Remaining",-colRemaining}  {"Resets In",-colResets}");
+            Console.WriteLine($"  {"--------",-colBucket}  {"-----",-colLimit}  {"----",-colUsed}  {"---------",-colRemaining}  {"---------",-colResets}");
+
+            foreach (var bucket in buckets)
+            {
+                if (!resources.TryGetProperty(bucket, out var b))
+                    continue;
+
+                var limit     = b.TryGetProperty("limit",     out var lEl) ? lEl.GetInt32() : 0;
+                var used      = b.TryGetProperty("used",      out var uEl) ? uEl.GetInt32() : 0;
+                var remaining = b.TryGetProperty("remaining", out var rEl) ? rEl.GetInt32() : 0;
+                var resetEpoch = b.TryGetProperty("reset",    out var reEl) ? reEl.GetInt64() : 0;
+
+                var resetAt  = DateTimeOffset.FromUnixTimeSeconds(resetEpoch);
+                var timeLeft = resetAt - DateTimeOffset.UtcNow;
+                var resetsIn = timeLeft.TotalSeconds <= 0
+                    ? "0m 0s"
+                    : $"{(int)timeLeft.TotalMinutes}m {timeLeft.Seconds:D2}s";
+
+                string remainingDisplay;
+                if (bucket == "search")
+                {
+                    var pct = limit > 0 ? (double)remaining / limit : 1.0;
+                    remainingDisplay = pct < 0.2
+                        ? $"{remaining} ⚠"
+                        : $"{remaining} ✓";
+                }
+                else
+                {
+                    remainingDisplay = remaining.ToString();
+                }
+
+                Console.WriteLine($"  {bucket,-colBucket}  {limit,-colLimit}  {used,-colUsed}  {remainingDisplay,-colRemaining}  {resetsIn,-colResets}");
+            }
+
+            Console.WriteLine();
+
+            if (!File.Exists(dbPath))
+            {
+                Console.WriteLine("[corpus] (DB not found — skipping recent errors)");
+                return;
+            }
+
+            Console.WriteLine("[corpus] Recent pipeline errors (last 5):");
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                using var errCmd = db.Connection.CreateCommand();
+                errCmd.CommandText = "SELECT recorded_at, step, provider, repo, error_code, message FROM pipeline_errors ORDER BY id DESC LIMIT 5";
+                using var reader  = await errCmd.ExecuteReaderAsync(ct);
+                bool any = false;
+                while (await reader.ReadAsync(ct))
+                {
+                    any = true;
+                    var at   = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                    var step = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                    var prov = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                    var repo = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                    var code = reader.IsDBNull(4) ? "" : reader.GetInt32(4).ToString();
+                    var msg  = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                    if (msg.Length > 60) msg = msg[..57] + "...";
+                    Console.WriteLine($"  [{at}] {step}/{prov} {repo} ({code}): {msg}");
+                }
+                if (!any)
+                    Console.WriteLine("  (none)");
+            }
+        });
+
+        return cmd;
+    }
+
     // ── Shared helpers ────────────────────────────────────────────────────────
 
     // ── gauntletci corpus purge ───────────────────────────────────────────────
@@ -1270,6 +1734,61 @@ public static class CorpusCommand
         return cmd;
     }
 
+    // ── gauntletci corpus errors ──────────────────────────────────────────────
+
+    private static Command CreateErrors()
+    {
+        var dbOpt    = new Option<string>("--db",    () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var stepOpt  = new Option<string?>("--step", "Filter by pipeline step (e.g. discover)");
+        var limitOpt = new Option<int>("--limit",    () => 50, "Max rows to show");
+
+        var cmd = new Command("errors", "Show recent pipeline errors logged to the corpus database");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(stepOpt);
+        cmd.AddOption(limitOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var step   = ctx.ParseResult.GetValueForOption(stepOpt);
+            var limit  = ctx.ParseResult.GetValueForOption(limitOpt);
+            var ct     = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                using var cmd2 = db.Connection.CreateCommand();
+                cmd2.CommandText = step is not null
+                    ? "SELECT recorded_at, step, provider, repo, error_code, message FROM pipeline_errors WHERE step = $step ORDER BY id DESC LIMIT $limit"
+                    : "SELECT recorded_at, step, provider, repo, error_code, message FROM pipeline_errors ORDER BY id DESC LIMIT $limit";
+                cmd2.Parameters.AddWithValue("$limit", limit);
+                if (step is not null) cmd2.Parameters.AddWithValue("$step", step);
+
+                using var reader = await cmd2.ExecuteReaderAsync(ct);
+                bool any = false;
+                Console.WriteLine($"{"Time",-22} {"Step",-10} {"Provider",-12} {"Repo",-30} {"Code",-6} Message");
+                Console.WriteLine(new string('-', 100));
+                while (await reader.ReadAsync(ct))
+                {
+                    any = true;
+                    var recordedAt = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                    var stepVal    = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                    var prov       = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                    var repo       = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                    var code       = reader.IsDBNull(4) ? "" : reader.GetInt32(4).ToString();
+                    var msgVal     = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                    if (msgVal.Length > 80) msgVal = msgVal[..77] + "...";
+                    Console.WriteLine($"{recordedAt,-22} {stepVal,-10} {prov,-12} {repo,-30} {code,-6} {msgVal}");
+                }
+                if (!any)
+                    Console.WriteLine("  (no errors recorded)");
+            }
+        });
+
+        return cmd;
+    }
+
     private static async Task<(CorpusDb Db, FixtureFolderStore Store, NormalizationPipeline Pipeline)>
         BuildPipeline(string dbPath, string fixturesPath, CancellationToken ct)
     {
@@ -1278,6 +1797,65 @@ public static class CorpusCommand
         var store    = new FixtureFolderStore(db, fixturesPath);
         var pipeline = new NormalizationPipeline(store);
         return (db, store, pipeline);
+    }
+
+    /// <summary>
+    /// Detects hardware, selects an appropriate model, ensures Ollama is installed and running,
+    /// pulls the model if needed, and returns a ready <see cref="ILlmLabeler"/>.
+    /// Falls back to <see cref="NullLlmLabeler"/> with a console message on any failure.
+    /// </summary>
+    private static async Task<ILlmLabeler> SetupOllamaLabelerAsync(
+        string? modelOverride, string baseUrl, CancellationToken ct)
+    {
+        // 1. Hardware detection — pick best model if user didn't specify one
+        var hw = HardwareProfile.Detect();
+        var model = !string.IsNullOrWhiteSpace(modelOverride)
+            ? modelOverride
+            : hw.RecommendedModel;
+
+        Console.WriteLine($"[corpus] Hardware: {hw.ToSummaryString()}");
+        Console.WriteLine($"[corpus] Selected model: {model}{(modelOverride != null ? " (user-specified)" : " (auto-selected)")}");
+
+        // 2. Check Ollama is installed
+        if (!OllamaLlmLabeler.IsInstalled())
+        {
+            Console.Error.WriteLine("[corpus] Ollama is not installed. Install from https://ollama.com and re-run.");
+            return new NullLlmLabeler();
+        }
+
+        var labeler = new OllamaLlmLabeler(model, baseUrl);
+
+        // 3. Ensure the server is running (try to auto-start if not)
+        if (!await labeler.IsServerRunningAsync(ct))
+        {
+            Console.WriteLine("[corpus] Ollama server not running — attempting to start...");
+            if (!await labeler.TryStartServerAsync(ct: ct))
+            {
+                Console.Error.WriteLine("[corpus] Could not start Ollama server. Run 'ollama serve' in another terminal.");
+                labeler.Dispose();
+                return new NullLlmLabeler();
+            }
+            Console.WriteLine("[corpus] Ollama server started.");
+        }
+
+        // 4. Ensure model is pulled locally
+        if (!await labeler.IsModelAvailableAsync(ct))
+        {
+            Console.WriteLine($"[corpus] Model '{model}' not found locally — pulling (this may take several minutes)...");
+            var pulled = await labeler.TryPullModelAsync(
+                line => Console.WriteLine($"         {line}"), ct);
+
+            if (!pulled)
+            {
+                Console.Error.WriteLine($"[corpus] Failed to pull model '{model}'. Run 'ollama pull {model}' manually.");
+                labeler.Dispose();
+                return new NullLlmLabeler();
+            }
+            Console.WriteLine($"[corpus] Model '{model}' ready.");
+        }
+
+        Console.WriteLine($"[corpus] LLM labeling enabled via Ollama ({baseUrl}, model: {model})");
+        return labeler;
     }
 
     private static void PrintMetadata(GauntletCI.Corpus.Models.FixtureMetadata m)
