@@ -391,7 +391,7 @@ public static class CorpusCommand
                     foreach (var e in expected.OrderBy(e => e.RuleId))
                     {
                         var reason = e.Reason.Length > 50 ? e.Reason[..47] + "…" : e.Reason;
-                        Console.WriteLine($"  {e.RuleId,-12}  {(e.ShouldTrigger ? "true" : "false"),-14}  {e.ExpectedConfidence:F2,-11}  {e.LabelSource,-22}  {reason}");
+                        Console.WriteLine($"  {e.RuleId,-12}  {(e.ShouldTrigger ? "true" : "false"),-14}  {e.ExpectedConfidence.ToString("F2"),-11}  {e.LabelSource,-22}  {reason}");
                     }
                 }
                 else
