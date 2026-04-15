@@ -1,8 +1,10 @@
 {
   "mapped_gci_rules": [
-    "GCI017"
+    "GCI0003",
+    "GCI0004",
+    "GCI0016"
   ],
-  "description": "Production Readiness: Synthesis verdict — aggregate multiple high-severity risk signals.",
+  "description": "Sync-over-async + resource leak: removes IDisposable, introduces Task.Run().Result blocking in UI property getter.",
   "fixtures": [
     {
       "id": "gci0017-11",
@@ -10,7 +12,9 @@
       "category": "true-positive",
       "expected_outcome": "fire",
       "expected_gci_rules": [
-        "GCI017"
+        "GCI0003",
+        "GCI0004",
+        "GCI0016"
       ],
       "notes": "Removes IDisposable implementation (resource leak on every page render), introduces Task.Run().Result blocking in UI property getter, and drops the null-check guard — memory leak plus deadlock risk with no tests.",
       "origin": "real",
