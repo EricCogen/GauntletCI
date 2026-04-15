@@ -911,12 +911,14 @@ public static class CorpusCommand
     {
         var tierOpt      = new Option<string>("--tier",      () => "discovery", "Fixture tier to process (gold|silver|discovery)");
         var overwriteOpt = new Option<bool>  ("--overwrite", () => false,       "Overwrite existing HumanReview/Seed labels with heuristic labels");
+        var llmLabelOpt  = new Option<bool>  ("--llm-label", () => false,       "Enable LLM-based Tier 3 labeling (requires ANTHROPIC_API_KEY env var)");
         var dbOpt        = new Option<string>("--db",        () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var fixturesOpt  = new Option<string>("--fixtures",  () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("label-all", "Apply silver heuristic labels to all fixtures in a tier");
         cmd.AddOption(tierOpt);
         cmd.AddOption(overwriteOpt);
+        cmd.AddOption(llmLabelOpt);
         cmd.AddOption(dbOpt);
         cmd.AddOption(fixturesOpt);
 
@@ -924,6 +926,7 @@ public static class CorpusCommand
         {
             var tierStr   = ctx.ParseResult.GetValueForOption(tierOpt)!;
             var overwrite = ctx.ParseResult.GetValueForOption(overwriteOpt);
+            var llmLabel  = ctx.ParseResult.GetValueForOption(llmLabelOpt);
             var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixtures  = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
             var ct        = ctx.GetCancellationToken();
@@ -933,6 +936,16 @@ public static class CorpusCommand
                 Console.Error.WriteLine($"[corpus] Unknown tier '{tierStr}'. Use gold, silver, or discovery.");
                 ctx.ExitCode = 1;
                 return;
+            }
+
+            ILlmLabeler llmLabeler = new NullLlmLabeler();
+            if (llmLabel)
+            {
+                var apiKey = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
+                if (!string.IsNullOrEmpty(apiKey))
+                    llmLabeler = new AnthropicLlmLabeler(apiKey);
+                else
+                    Console.WriteLine("[corpus] ANTHROPIC_API_KEY not set — LLM labeling disabled");
             }
 
             var (db, store, _) = await BuildPipeline(dbPath, fixtures, ct);
@@ -949,7 +962,7 @@ public static class CorpusCommand
                 int labeled = 0;
                 int skipped = 0;
                 int totalLabels = 0;
-                var engine = new SilverLabelEngine(store);
+                var engine = new SilverLabelEngine(store, llmLabeler);
 
                 foreach (var metadata in allFixtures)
                 {
