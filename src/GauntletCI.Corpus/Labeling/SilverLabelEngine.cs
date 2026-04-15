@@ -4,7 +4,6 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using GauntletCI.Corpus.Interfaces;
 using GauntletCI.Corpus.Models;
-using GauntletCI.Corpus.Storage;
 
 namespace GauntletCI.Corpus.Labeling;
 
@@ -21,6 +20,7 @@ namespace GauntletCI.Corpus.Labeling;
 public sealed class SilverLabelEngine
 {
     private readonly IFixtureStore _store;
+    private readonly ILlmLabeler _llmLabeler;
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -70,10 +70,12 @@ public sealed class SilverLabelEngine
     /// <summary>
     /// Initializes the engine with the fixture store used to persist and read expected findings.
     /// </summary>
-    /// <param name="store">The fixture store providing read/write access to <c>expected.json</c> files.</param>
-    public SilverLabelEngine(IFixtureStore store)
+    /// <param name="store">The fixture store providing read/write access to fixture files.</param>
+    /// <param name="llmLabeler">Optional LLM labeler for Tier 3 fallback; defaults to <see cref="NullLlmLabeler"/>.</param>
+    public SilverLabelEngine(IFixtureStore store, ILlmLabeler? llmLabeler = null)
     {
         _store = store;
+        _llmLabeler = llmLabeler ?? new NullLlmLabeler();
     }
 
     /// <summary>
@@ -125,44 +127,124 @@ public sealed class SilverLabelEngine
     public async Task<int> ApplyToFixtureAsync(
         string fixtureId, string diffText, bool overwriteExisting = false, CancellationToken ct = default)
     {
+        // ── Tier 1: Diff + comment heuristics ────────────────────────────────
         var inferred = (await InferLabelsAsync(fixtureId, diffText, ct)).ToList();
 
-        // Also scan review comments if available
-        var reviewCommentsJson = await TryReadReviewCommentsAsync(fixtureId, ct);
+        IReadOnlyList<string> commentBodies = [];
+        IReadOnlySet<string> commentPaths   = new HashSet<string>(StringComparer.Ordinal);
+
+        var reviewCommentsJson = await _store.TryReadReviewCommentsAsync(fixtureId, ct);
         if (reviewCommentsJson is not null)
         {
-            var commentLabels = await InferLabelsFromCommentsAsync(reviewCommentsJson, ct);
-            foreach (var label in commentLabels)
+            try
             {
-                // Comment label wins if confidence is higher, or diff didn't flag this rule at all
-                var existing = inferred.FirstOrDefault(l => l.RuleId == label.RuleId);
-                if (existing is null)
-                    inferred.Add(label);
-                else if (label.ExpectedConfidence > existing.ExpectedConfidence)
+                using var doc = JsonDocument.Parse(reviewCommentsJson);
+                commentBodies = ExtractCommentBodies(doc.RootElement);
+                commentPaths  = ExtractCommentPaths(doc.RootElement);
+
+                var commentLabels = new List<ExpectedFinding>();
+                ApplyCommentHeuristics(commentBodies, commentLabels);
+
+                foreach (var label in commentLabels)
                 {
-                    inferred.Remove(existing);
-                    inferred.Add(label);
+                    var existing = inferred.FirstOrDefault(l => l.RuleId == label.RuleId);
+                    if (existing is null)
+                        inferred.Add(label);
+                    else if (label.ExpectedConfidence > existing.ExpectedConfidence)
+                    {
+                        inferred.Remove(existing);
+                        inferred.Add(label);
+                    }
                 }
+            }
+            catch (JsonException)
+            {
+                // Malformed JSON -- skip comment scanning
+            }
+        }
+
+        // ── Tier 2: File-path correlation ─────────────────────────────────────
+        var actualFindings = await _store.ReadActualFindingsAsync(fixtureId, ct);
+
+        if (commentPaths.Count > 0)
+        {
+            var positiveRuleIdsTier12 = inferred
+                .Where(l => l.ShouldTrigger)
+                .Select(l => l.RuleId)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var finding in actualFindings)
+            {
+                if (!finding.DidTrigger || finding.FilePath is null) continue;
+                if (!RulesWithHeuristics.Contains(finding.RuleId)) continue;
+                if (positiveRuleIdsTier12.Contains(finding.RuleId)) continue;
+
+                var normalizedPath = finding.FilePath.Replace('\\', '/').ToLowerInvariant();
+                if (commentPaths.Contains(normalizedPath))
+                {
+                    inferred.Add(MakeLabel(finding.RuleId,
+                        $"[file-path correlation] Reviewer commented on the same file as this finding: {finding.FilePath}",
+                        0.55));
+                    positiveRuleIdsTier12.Add(finding.RuleId);
+                }
+            }
+        }
+
+        // ── Tier 3: LLM fallback for uncertain findings ───────────────────────
+        var positiveRuleIdsAfterTier12 = inferred
+            .Where(l => l.ShouldTrigger)
+            .Select(l => l.RuleId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var diffSnippet = diffText.Length > 800 ? diffText[..800] : diffText;
+
+        foreach (var finding in actualFindings)
+        {
+            if (!finding.DidTrigger) continue;
+            if (!RulesWithHeuristics.Contains(finding.RuleId)) continue;
+            if (positiveRuleIdsAfterTier12.Contains(finding.RuleId)) continue;
+
+            var result = await _llmLabeler.ClassifyAsync(
+                finding.RuleId,
+                finding.Message,
+                finding.Evidence,
+                finding.FilePath,
+                commentBodies,
+                diffSnippet,
+                ct);
+
+            if (result is not null && !result.IsInconclusive)
+            {
+                inferred.Add(new ExpectedFinding
+                {
+                    RuleId             = finding.RuleId,
+                    ShouldTrigger      = result.ShouldTrigger,
+                    ExpectedConfidence = result.Confidence,
+                    Reason             = $"[llm] {result.Reason}",
+                    LabelSource        = LabelSource.LlmReview,
+                    IsInconclusive     = false,
+                });
+                positiveRuleIdsAfterTier12.Add(finding.RuleId);
             }
         }
 
         // For every rule with a heuristic that did NOT produce a positive signal,
         // emit a negative label so FalsePositive detection works in scoring.
-        var positiveRuleIds = inferred
+        var positiveRuleIdsFinal = inferred
             .Where(l => l.ShouldTrigger)
             .Select(l => l.RuleId)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         foreach (var ruleId in RulesWithHeuristics)
         {
-            if (!positiveRuleIds.Contains(ruleId))
+            if (!positiveRuleIdsFinal.Contains(ruleId))
             {
                 inferred.Add(MakeNegativeLabel(ruleId,
                     "Heuristic found no signal for this rule on diff or review comments", 0.40));
             }
         }
 
-        var existingLabels = await ReadExistingLabelsAsync(fixtureId, ct);
+        var existingLabels = await _store.ReadExpectedFindingsAsync(fixtureId, ct);
         var merged         = MergeLabels(existingLabels, inferred, overwriteExisting);
         await _store.SaveExpectedFindingsAsync(fixtureId, merged, ct);
         return merged.Count;
@@ -392,6 +474,31 @@ public sealed class SilverLabelEngine
             .ToList();
     }
 
+    private static IReadOnlySet<string> ExtractCommentPaths(JsonElement root)
+    {
+        var paths = new HashSet<string>(StringComparer.Ordinal);
+
+        void ExtractFromArray(JsonElement arr)
+        {
+            foreach (var el in arr.EnumerateArray())
+                if (el.TryGetProperty("path", out var path))
+                {
+                    var p = path.GetString();
+                    if (!string.IsNullOrEmpty(p))
+                        paths.Add(p.Replace('\\', '/').ToLowerInvariant());
+                }
+        }
+
+        if (root.ValueKind == JsonValueKind.Array)
+            ExtractFromArray(root);
+        else if (root.ValueKind == JsonValueKind.Object)
+            foreach (var prop in root.EnumerateObject())
+                if (prop.Value.ValueKind == JsonValueKind.Array)
+                    ExtractFromArray(prop.Value);
+
+        return paths;
+    }
+
     private static IReadOnlyList<string> ExtractCommentBodies(JsonElement root)
     {
         var bodies = new List<string>();
@@ -449,36 +556,6 @@ public sealed class SilverLabelEngine
         }
 
         return false;
-    }
-
-    private async Task<string?> TryReadReviewCommentsAsync(string fixtureId, CancellationToken ct)
-    {
-        var metadata = await _store.GetMetadataAsync(fixtureId, ct);
-        if (metadata is null || _store is not FixtureFolderStore ffs) return null;
-
-        var path = Path.Combine(
-            FixtureIdHelper.GetFixturePath(ffs.BasePath, metadata.Tier, fixtureId),
-            "raw", "review-comments.json");
-
-        if (!File.Exists(path)) return null;
-        return await File.ReadAllTextAsync(path, ct);
-    }
-
-    private async Task<IReadOnlyList<ExpectedFinding>> ReadExistingLabelsAsync(string fixtureId, CancellationToken ct)
-    {
-        var metadata = await _store.GetMetadataAsync(fixtureId, ct);
-        if (metadata is null) return [];
-
-        if (_store is not FixtureFolderStore ffs) return [];
-
-        var expectedPath = Path.Combine(
-            FixtureIdHelper.GetFixturePath(ffs.BasePath, metadata.Tier, fixtureId),
-            "expected.json");
-
-        if (!File.Exists(expectedPath)) return [];
-
-        var json = await File.ReadAllTextAsync(expectedPath, ct);
-        return JsonSerializer.Deserialize<List<ExpectedFinding>>(json, JsonOpts) ?? [];
     }
 
     private static IReadOnlyList<ExpectedFinding> MergeLabels(
