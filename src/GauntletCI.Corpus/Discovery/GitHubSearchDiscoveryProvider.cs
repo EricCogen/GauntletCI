@@ -52,6 +52,15 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
             if (results.Count >= query.MaxCandidates)
                 break;
 
+            // Pre-flight: verify repo is accessible, not archived, not renamed
+            var skip = await PreflightRepoAsync(repoSpec, query.MinStars, cancellationToken);
+            if (skip is not null)
+            {
+                Console.Error.WriteLine($"[gh-search] Skipping {repoSpec}: {skip}");
+                _errorCallback?.Invoke(repoSpec, null, $"[gh-search] Preflight skipped {repoSpec}: {skip}");
+                continue;
+            }
+
             var q   = BuildRepoQuery(query, repoSpec);
             var url = $"https://api.github.com/search/issues?q={Uri.EscapeDataString(q)}&sort=updated&order=desc&per_page=100&page=1";
 
@@ -165,6 +174,68 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
 
             results.Add(candidate);
             addedFromThisCall++;
+        }
+    }
+
+    /// <summary>
+    /// Checks <c>GET /repos/{owner}/{repo}</c> before searching.
+    /// Returns a skip-reason string if the repo should be skipped, or null if it is usable.
+    /// Detects: archived repos, transferred/renamed repos (canonical name mismatch), and repos
+    /// below the configured star threshold.
+    /// </summary>
+    private async Task<string?> PreflightRepoAsync(
+        string repoSpec, int minStars, CancellationToken cancellationToken)
+    {
+        var url = $"https://api.github.com/repos/{repoSpec}";
+        try
+        {
+            using var response = await _http.GetAsync(url, cancellationToken);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                return "repo not found (deleted, private, or never existed)";
+
+            if (response.StatusCode == System.Net.HttpStatusCode.MovedPermanently ||
+                (int)response.StatusCode == 301)
+                return "repo has moved permanently (update allowlist with new owner/name)";
+
+            if (!response.IsSuccessStatusCode)
+                return $"HTTP {(int)response.StatusCode} from repo metadata endpoint";
+
+            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+            var root = doc.RootElement;
+
+            // Archived check
+            if (root.TryGetProperty("archived", out var archivedEl) && archivedEl.GetBoolean())
+                return "repo is archived";
+
+            // Renamed/transferred check — canonical name differs from the requested spec
+            if (root.TryGetProperty("full_name", out var fullNameEl))
+            {
+                var canonical = fullNameEl.GetString() ?? repoSpec;
+                if (!string.Equals(canonical, repoSpec, StringComparison.OrdinalIgnoreCase))
+                    return $"repo was renamed/transferred — canonical name is '{canonical}' (update allowlist)";
+            }
+
+            // Star threshold check
+            if (minStars > 0 &&
+                root.TryGetProperty("stargazers_count", out var starsEl) &&
+                starsEl.GetInt32() < minStars)
+            {
+                return $"repo has {starsEl.GetInt32()} stars (below --min-stars {minStars})";
+            }
+
+            return null; // all clear
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // Non-fatal: log and let the search attempt proceed
+            _errorCallback?.Invoke(repoSpec, null, $"[gh-search] Preflight check failed for {repoSpec}: {ex.Message}");
+            return null;
         }
     }
 
