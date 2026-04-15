@@ -952,24 +952,14 @@ public static class CorpusCommand
             {
                 string? modelOverride = string.IsNullOrWhiteSpace(llmModel) ? null : llmModel;
                 string? urlOverride   = (provider == "ollama") ? llmUrl : null;
-                llmLabeler = LlmLabelerFactory.Create(provider, modelOverride, urlOverride);
 
-                // For Ollama, verify the server is reachable before committing to it
-                if (provider == "ollama" && llmLabeler is OllamaLlmLabeler ollamaLabeler)
+                if (provider == "ollama")
                 {
-                    if (await ollamaLabeler.IsAvailableAsync(ct))
-                    {
-                        Console.WriteLine($"[corpus] LLM labeling enabled via Ollama ({llmUrl}, model: {modelOverride ?? "mistral"})");
-                    }
-                    else
-                    {
-                        ollamaLabeler.Dispose();
-                        llmLabeler = new NullLlmLabeler();
-                        Console.WriteLine($"[corpus] Ollama not reachable at {llmUrl} — LLM labeling disabled. Start Ollama with: ollama serve");
-                    }
+                    llmLabeler = await SetupOllamaLabelerAsync(modelOverride, urlOverride ?? llmUrl, ct);
                 }
                 else
                 {
+                    llmLabeler = LlmLabelerFactory.Create(provider, modelOverride, urlOverride);
                     Console.WriteLine($"[corpus] LLM labeling enabled via {provider}");
                 }
             }
@@ -1334,6 +1324,65 @@ public static class CorpusCommand
         var store    = new FixtureFolderStore(db, fixturesPath);
         var pipeline = new NormalizationPipeline(store);
         return (db, store, pipeline);
+    }
+
+    /// <summary>
+    /// Detects hardware, selects an appropriate model, ensures Ollama is installed and running,
+    /// pulls the model if needed, and returns a ready <see cref="ILlmLabeler"/>.
+    /// Falls back to <see cref="NullLlmLabeler"/> with a console message on any failure.
+    /// </summary>
+    private static async Task<ILlmLabeler> SetupOllamaLabelerAsync(
+        string? modelOverride, string baseUrl, CancellationToken ct)
+    {
+        // 1. Hardware detection — pick best model if user didn't specify one
+        var hw = HardwareProfile.Detect();
+        var model = !string.IsNullOrWhiteSpace(modelOverride)
+            ? modelOverride
+            : hw.RecommendedModel;
+
+        Console.WriteLine($"[corpus] Hardware: {hw.ToSummaryString()}");
+        Console.WriteLine($"[corpus] Selected model: {model}{(modelOverride != null ? " (user-specified)" : " (auto-selected)")}");
+
+        // 2. Check Ollama is installed
+        if (!OllamaLlmLabeler.IsInstalled())
+        {
+            Console.Error.WriteLine("[corpus] Ollama is not installed. Install from https://ollama.com and re-run.");
+            return new NullLlmLabeler();
+        }
+
+        var labeler = new OllamaLlmLabeler(model, baseUrl);
+
+        // 3. Ensure the server is running (try to auto-start if not)
+        if (!await labeler.IsServerRunningAsync(ct))
+        {
+            Console.WriteLine("[corpus] Ollama server not running — attempting to start...");
+            if (!await labeler.TryStartServerAsync(ct: ct))
+            {
+                Console.Error.WriteLine("[corpus] Could not start Ollama server. Run 'ollama serve' in another terminal.");
+                labeler.Dispose();
+                return new NullLlmLabeler();
+            }
+            Console.WriteLine("[corpus] Ollama server started.");
+        }
+
+        // 4. Ensure model is pulled locally
+        if (!await labeler.IsModelAvailableAsync(ct))
+        {
+            Console.WriteLine($"[corpus] Model '{model}' not found locally — pulling (this may take several minutes)...");
+            var pulled = await labeler.TryPullModelAsync(
+                line => Console.WriteLine($"         {line}"), ct);
+
+            if (!pulled)
+            {
+                Console.Error.WriteLine($"[corpus] Failed to pull model '{model}'. Run 'ollama pull {model}' manually.");
+                labeler.Dispose();
+                return new NullLlmLabeler();
+            }
+            Console.WriteLine($"[corpus] Model '{model}' ready.");
+        }
+
+        Console.WriteLine($"[corpus] LLM labeling enabled via Ollama ({baseUrl}, model: {model})");
+        return labeler;
     }
 
     private static void PrintMetadata(GauntletCI.Corpus.Models.FixtureMetadata m)
