@@ -19,8 +19,17 @@ public sealed class SilverLabelEngineTests
         public Task SaveExpectedFindingsAsync(string fixtureId, IReadOnlyList<ExpectedFinding> findings, CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
 
+        public Task<IReadOnlyList<ExpectedFinding>> ReadExpectedFindingsAsync(string fixtureId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<ExpectedFinding>>([]);
+
         public Task SaveActualFindingsAsync(string fixtureId, string runId, IReadOnlyList<ActualFinding> findings, CancellationToken cancellationToken = default) =>
             throw new NotImplementedException();
+
+        public Task<IReadOnlyList<ActualFinding>> ReadActualFindingsAsync(string fixtureId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<IReadOnlyList<ActualFinding>>([]);
+
+        public Task<string?> TryReadReviewCommentsAsync(string fixtureId, CancellationToken cancellationToken = default) =>
+            Task.FromResult<string?>(null);
 
         public Task<IReadOnlyList<FixtureMetadata>> ListFixturesAsync(FixtureTier? tier = null, CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<FixtureMetadata>>([]);
