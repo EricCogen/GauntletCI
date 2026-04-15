@@ -29,12 +29,36 @@ All 615 tests must pass before committing.
 - `gauntletci corpus maintainers fetch` — fetches high-signal PRs from top .NET OSS contributors
 
 ## Session State
-- Todos DB seed: `C:\Users\ericc\.gauntletci\copilot\todos-seed.sql`
+- **Durable todos DB**: `C:\Users\ericc\.gauntletci\copilot\todos.db` ← source of truth
+- Sync script: `C:\Users\ericc\.gauntletci\copilot\sync-todos.py`
 - Checkpoints: `C:\Users\ericc\.gauntletci\copilot\checkpoints\`
 - Latest checkpoint: `005-banner-rewrite-tier1-tier2-complete.md`
-- To restore todos in a new session: run the SQL in todos-seed.sql via the sql tool
-  (The two ALTER TABLE lines may error harmlessly if columns already exist — skip them)
-- Verify: `SELECT status, COUNT(*) FROM todos GROUP BY status;` → done=45, pending=17, blocked=4
+
+### Restoring todos in a new session
+The `sql` tool uses a per-session DB (resets each session). At session start, load from the durable DB:
+```powershell
+cd "C:\Users\ericc\.gauntletci\copilot"
+python -c @"
+import sqlite3, json
+con = sqlite3.connect('todos.db')
+con.row_factory = sqlite3.Row
+todos = [dict(r) for r in con.execute('SELECT id, title, description, status FROM todos ORDER BY id')]
+deps  = [dict(r) for r in con.execute('SELECT todo_id, depends_on FROM todo_deps')]
+con.close()
+with open('todos-export.json', 'w') as f: json.dump({'todos': todos, 'deps': deps}, f)
+print(f'Exported {len(todos)} todos')
+"@
+```
+Then use the `sql` tool to INSERT from the exported data, or just query `todos.db` directly via PowerShell.
+
+To check current status without restoring: `python sync-todos.py --status`
+
+### Updating todo status
+After every status change, update BOTH the session SQL and the durable DB:
+```powershell
+python sync-todos.py --update <id> <status>
+```
+Do NOT maintain `todos-seed.sql` — it is retired. The durable DB is the only source of truth.
 
 ## Todo Priorities
 - P1 (done): foundation fixes
@@ -42,14 +66,9 @@ All 615 tests must pass before committing.
 - P3 (done): new rules GCI0021–0027, postmortem-mode, pr-annotations
 - P4 (done): moat telemetry pipeline (feedback, opt-in, hashing, upload, local store)
 - P4 (done): corpus ingestion (domain models, storage, manual ingestion, normalization)
+- P4 (pending): LLM adjudicator + vector DB wiring
 - P4 (pending): enterprise features (audit-export, mcp-server, risk-score, risk-classifier)
-- P4 (pending): corpus phase 2 (run, scoring, silver labels, batch hydration, gh-search, gh-archive, tests)
-- P4 (pending): ecosystem (vscode-extension, winget/brew, moat-bootstrap, block-mode, instrument-rules, model-download)
-
-## Seed Sync Convention (Option B)
-- After every `UPDATE todos SET status = '...' WHERE id = '...'`, immediately make a surgical
-  `edit` to the matching row in `todos-seed.sql` — just flip the status string for that one ID.
-- Also update the `-- Status:` header counts in todos-seed.sql when they change.
+- P4 (pending): ecosystem (vscode-extension, winget/brew, moat-bootstrap, block-mode)
 
 ## Key Conventions
 - Commit trailer: `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
