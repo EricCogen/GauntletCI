@@ -8,8 +8,15 @@ namespace GauntletCI.Corpus.Discovery;
 
 public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
 {
+    private const int ThrottleThreshold = 5;
+
     private readonly HttpClient _http;
     private readonly Action<string?, int?, string>? _errorCallback;
+
+    public int? LastSearchRemaining { get; private set; }
+    public int? LastSearchLimit { get; private set; }
+    public DateTimeOffset? LastSearchResetUtc { get; private set; }
+    public int ThrottleCount { get; private set; }
 
     public GitHubSearchDiscoveryProvider(string githubToken, Action<string?, int?, string>? errorCallback = null)
     {
@@ -61,8 +68,15 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
                                                || ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
             {
                 var code = (int?)ex.StatusCode;
-                Console.Error.WriteLine($"[gh-search] Skipping {repoSpec} ({code})");
-                _errorCallback?.Invoke(repoSpec, code, $"[gh-search] Skipping {repoSpec} ({code})");
+                var kind = code switch
+                {
+                    422 => "QueryError",
+                    404 => "NotFound",
+                    403 => "IpBlockOrAbuse",
+                    _   => "HttpError"
+                };
+                Console.Error.WriteLine($"[gh-search] {kind}: Skipping {repoSpec} ({code})");
+                _errorCallback?.Invoke(repoSpec, code, $"[gh-search] {kind}: Skipping {repoSpec} ({code})");
             }
         }
 
@@ -84,21 +98,42 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         {
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
             var code = (int)response.StatusCode;
-            var msg = $"[gh-search] HTTP {code} for {url}: {body[..Math.Min(200, body.Length)]}";
-            Console.Error.WriteLine($"[gh-search] HTTP {code} for {url}");
-            Console.Error.WriteLine($"[gh-search] Response: {body}");
-            errorCallback?.Invoke(null, code, msg);
+            var classification = ClassifyHttpError(response, body);
+            Console.Error.WriteLine($"[gh-search] {classification} for {url}");
+            errorCallback?.Invoke(null, code, $"[gh-search] {classification} | url={url}");
             response.EnsureSuccessStatusCode();
         }
 
-        if (response.Headers.TryGetValues("X-RateLimit-Remaining", out var remaining) &&
-            int.TryParse(remaining.FirstOrDefault(), out var remainingCount) &&
-            remainingCount <= 0)
+        // Parse rate limit headers and update tracking properties
+        if (response.Headers.TryGetValues("X-RateLimit-Remaining", out var remainingVals) &&
+            int.TryParse(remainingVals.FirstOrDefault(), out var remaining))
         {
-            var msg = "[gh-search] GitHub rate limit reached; returning partial results.";
-            Console.Error.WriteLine(msg);
-            errorCallback?.Invoke(null, 429, msg);
-            return;
+            LastSearchRemaining = remaining;
+
+            if (response.Headers.TryGetValues("X-RateLimit-Limit", out var limitVals) &&
+                int.TryParse(limitVals.FirstOrDefault(), out var limit))
+                LastSearchLimit = limit;
+
+            if (response.Headers.TryGetValues("X-RateLimit-Reset", out var resetVals) &&
+                long.TryParse(resetVals.FirstOrDefault(), out var resetEpoch))
+                LastSearchResetUtc = DateTimeOffset.FromUnixTimeSeconds(resetEpoch);
+
+            if (remaining <= 0)
+            {
+                var msg = "[gh-search] GitHub rate limit reached; returning partial results.";
+                Console.Error.WriteLine(msg);
+                errorCallback?.Invoke(null, 429, msg);
+                return;
+            }
+
+            if (remaining <= ThrottleThreshold)
+            {
+                var sleepMs = Math.Max(0, (int)(LastSearchResetUtc!.Value - DateTimeOffset.UtcNow).TotalMilliseconds) + 1000;
+                Console.Error.WriteLine($"[gh-search] Throttling: {remaining} search requests left. Sleeping {sleepMs / 1000}s until reset...");
+                errorCallback?.Invoke(null, null, $"[gh-search] Throttled: {remaining} remaining, sleeping {sleepMs / 1000}s");
+                ThrottleCount++;
+                await Task.Delay(sleepMs, cancellationToken);
+            }
         }
 
         await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
@@ -131,6 +166,37 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
             results.Add(candidate);
             addedFromThisCall++;
         }
+    }
+
+    private static string ClassifyHttpError(HttpResponseMessage response, string body)
+    {
+        int code = (int)response.StatusCode;
+
+        if (response.Headers.Contains("Retry-After"))
+            return $"SecondaryRateLimit: {code} - Retry-After: {response.Headers.GetValues("Retry-After").FirstOrDefault()}";
+
+        if (response.Headers.TryGetValues("X-RateLimit-Remaining", out var rem) &&
+            int.TryParse(rem.FirstOrDefault(), out var remaining) && remaining == 0)
+            return $"RateLimit: {code} - quota exhausted";
+
+        string? ghMessage = null;
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            if (doc.RootElement.TryGetProperty("message", out var msgEl))
+                ghMessage = msgEl.GetString();
+        }
+        catch { /* ignore parse errors */ }
+
+        return code switch
+        {
+            401 => $"AuthFailure: 401 - {ghMessage ?? "invalid or missing token"}",
+            403 => $"IpBlockOrAbuse: 403 - {ghMessage ?? "access denied"}",
+            404 => $"NotFound: 404 - {ghMessage ?? "resource not found"}",
+            422 => $"QueryError: 422 - {ghMessage ?? "unprocessable query"}",
+            429 => $"RateLimit: 429 - {ghMessage ?? "too many requests"}",
+            _   => $"HttpError: {code} - {ghMessage ?? body[..Math.Min(100, body.Length)]}",
+        };
     }
 
     private static string BuildRepoQuery(DiscoveryQuery query, string repoSpec)

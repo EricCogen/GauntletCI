@@ -46,6 +46,7 @@ public static class CorpusCommand
         corpus.AddCommand(CreateResetStats());
         corpus.AddCommand(CreatePurge());
         corpus.AddCommand(CreateErrors());
+        corpus.AddCommand(CreateDoctor());
 
         var issues = new Command("issues", "GitHub Issues corpus operations");
         issues.AddCommand(CreateIssueSearch());
@@ -632,6 +633,33 @@ public static class CorpusCommand
             using (db)
             {
                 var candidates = await provider.SearchCandidatesAsync(query, ct);
+
+                // Rate limit summary (gh-search only)
+                if (provider is GitHubSearchDiscoveryProvider ghSearch)
+                {
+                    var sb = new System.Text.StringBuilder("[corpus] Rate limit summary — Search: ");
+                    if (ghSearch.LastSearchRemaining.HasValue && ghSearch.LastSearchLimit.HasValue)
+                    {
+                        var used      = ghSearch.LastSearchLimit.Value - ghSearch.LastSearchRemaining.Value;
+                        var remaining = ghSearch.LastSearchRemaining.Value;
+                        sb.Append($"{used} used, {remaining} remaining");
+                        if (ghSearch.LastSearchResetUtc.HasValue)
+                        {
+                            var secs = Math.Max(0, (int)(ghSearch.LastSearchResetUtc.Value - DateTimeOffset.UtcNow).TotalSeconds);
+                            sb.Append($" (resets in {secs / 60}m {secs % 60}s)");
+                        }
+                    }
+                    else
+                    {
+                        sb.Append("(no data — no API calls made or all skipped)");
+                    }
+                    if (ghSearch.ThrottleCount > 0)
+                        sb.Append($" | Throttled: {ghSearch.ThrottleCount}×");
+                    Console.WriteLine(sb.ToString());
+
+                    if (ghSearch.LastSearchRemaining is <= 5)
+                        Console.WriteLine("[corpus] ⚠ Search quota nearly exhausted. Run 'corpus doctor' before next run.");
+                }
 
                 // Persist any errors collected during discovery
                 if (errorLog.Count > 0)
@@ -1417,6 +1445,152 @@ public static class CorpusCommand
 
                 var skipped = candidates.Count - inserted;
                 Console.WriteLine($"[corpus/issues] Found {candidates.Count} candidates ({inserted} new, {skipped} already known)");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus doctor ──────────────────────────────────────────────
+
+    private static Command CreateDoctor()
+    {
+        var dbOpt    = new Option<string>("--db",    () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var tokenOpt = new Option<string?>("--token", "GitHub token (overrides GITHUB_TOKEN env var)");
+
+        var cmd = new Command("doctor", "Check GitHub API connectivity, rate limits, and recent pipeline errors");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(tokenOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var token  = ctx.ParseResult.GetValueForOption(tokenOpt)
+                         ?? Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+            var ct     = ctx.GetCancellationToken();
+
+            if (string.IsNullOrEmpty(token))
+            {
+                Console.Error.WriteLine("[corpus] Error: GitHub token is required. Set GITHUB_TOKEN or pass --token.");
+                ctx.ExitCode = 1;
+                return;
+            }
+
+            Console.WriteLine("[corpus] Checking GitHub connectivity...");
+
+            using var http = new System.Net.Http.HttpClient();
+            http.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Corpus/1.0");
+            http.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
+
+            System.Net.Http.HttpResponseMessage rateLimitResponse;
+            try
+            {
+                rateLimitResponse = await http.GetAsync("https://api.github.com/rate_limit", ct);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[corpus] Error: Could not reach api.github.com — {ex.Message}");
+                ctx.ExitCode = 1;
+                return;
+            }
+
+            if (!rateLimitResponse.IsSuccessStatusCode)
+            {
+                Console.Error.WriteLine($"[corpus] Error: GitHub API returned {(int)rateLimitResponse.StatusCode}. Check your token.");
+                ctx.ExitCode = 1;
+                return;
+            }
+
+            Console.WriteLine("[corpus] ✓ Connected to api.github.com");
+            Console.WriteLine();
+
+            await using var stream = await rateLimitResponse.Content.ReadAsStreamAsync(ct);
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+
+            if (!doc.RootElement.TryGetProperty("resources", out var resources))
+            {
+                Console.Error.WriteLine("[corpus] Error: Unexpected rate_limit response shape.");
+                ctx.ExitCode = 1;
+                return;
+            }
+
+            var buckets = new[] { "core", "search", "graphql" };
+
+            const int colBucket    = 10;
+            const int colLimit     = 7;
+            const int colUsed      = 8;
+            const int colRemaining = 11;
+            const int colResets    = 11;
+
+            Console.WriteLine($"  {"Bucket",-colBucket}  {"Limit",-colLimit}  {"Used",-colUsed}  {"Remaining",-colRemaining}  {"Resets In",-colResets}");
+            Console.WriteLine($"  {"--------",-colBucket}  {"-----",-colLimit}  {"----",-colUsed}  {"---------",-colRemaining}  {"---------",-colResets}");
+
+            foreach (var bucket in buckets)
+            {
+                if (!resources.TryGetProperty(bucket, out var b))
+                    continue;
+
+                var limit     = b.TryGetProperty("limit",     out var lEl) ? lEl.GetInt32() : 0;
+                var used      = b.TryGetProperty("used",      out var uEl) ? uEl.GetInt32() : 0;
+                var remaining = b.TryGetProperty("remaining", out var rEl) ? rEl.GetInt32() : 0;
+                var resetEpoch = b.TryGetProperty("reset",    out var reEl) ? reEl.GetInt64() : 0;
+
+                var resetAt  = DateTimeOffset.FromUnixTimeSeconds(resetEpoch);
+                var timeLeft = resetAt - DateTimeOffset.UtcNow;
+                var resetsIn = timeLeft.TotalSeconds <= 0
+                    ? "0m 0s"
+                    : $"{(int)timeLeft.TotalMinutes}m {timeLeft.Seconds:D2}s";
+
+                string remainingDisplay;
+                if (bucket == "search")
+                {
+                    var pct = limit > 0 ? (double)remaining / limit : 1.0;
+                    remainingDisplay = pct < 0.2
+                        ? $"{remaining} ⚠"
+                        : $"{remaining} ✓";
+                }
+                else
+                {
+                    remainingDisplay = remaining.ToString();
+                }
+
+                Console.WriteLine($"  {bucket,-colBucket}  {limit,-colLimit}  {used,-colUsed}  {remainingDisplay,-colRemaining}  {resetsIn,-colResets}");
+            }
+
+            Console.WriteLine();
+
+            if (!File.Exists(dbPath))
+            {
+                Console.WriteLine("[corpus] (DB not found — skipping recent errors)");
+                return;
+            }
+
+            Console.WriteLine("[corpus] Recent pipeline errors (last 5):");
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                using var errCmd = db.Connection.CreateCommand();
+                errCmd.CommandText = "SELECT recorded_at, step, provider, repo, error_code, message FROM pipeline_errors ORDER BY id DESC LIMIT 5";
+                using var reader  = await errCmd.ExecuteReaderAsync(ct);
+                bool any = false;
+                while (await reader.ReadAsync(ct))
+                {
+                    any = true;
+                    var at   = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                    var step = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                    var prov = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                    var repo = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                    var code = reader.IsDBNull(4) ? "" : reader.GetInt32(4).ToString();
+                    var msg  = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                    if (msg.Length > 60) msg = msg[..57] + "...";
+                    Console.WriteLine($"  [{at}] {step}/{prov} {repo} ({code}): {msg}");
+                }
+                if (!any)
+                    Console.WriteLine("  (none)");
             }
         });
 
