@@ -31,6 +31,11 @@ All 615 tests must pass before committing.
 ## Session State
 - **Durable todos DB**: `C:\Users\ericc\.gauntletci\copilot\todos.db` ← source of truth
 - Sync script: `C:\Users\ericc\.gauntletci\copilot\sync-todos.py`
+- **Rules DB**: `C:\Users\ericc\.gauntletci\copilot\rules.db` ← rule metadata + corpus scores
+- Rules sync: `C:\Users\ericc\.gauntletci\copilot\sync-rules.py`
+  - `--rebuild` — full re-sync from C# source + corpus scores (run after adding/archiving a rule)
+  - `--scores`  — scores only from corpus DB (auto-run by build-corpus.ps1 after Step 5)
+  - `--status`  — print summary
 - Checkpoints: `C:\Users\ericc\.gauntletci\copilot\checkpoints\`
 - Latest checkpoint: `005-banner-rewrite-tier1-tier2-complete.md`
 

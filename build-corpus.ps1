@@ -301,6 +301,15 @@ if ($SkipTo -le 5) {
     if ($LASTEXITCODE -ne 0) { throw "Score failed" }
 }
 
+# ── Sync rules.db scores ─────────────────────────────────────────────────────
+if ($SkipTo -le 5) {
+    $syncScript = "$env:USERPROFILE\.gauntletci\copilot\sync-rules.py"
+    if (Test-Path $syncScript) {
+        Write-Host "  Syncing rules.db scores..." -ForegroundColor DarkGray
+        python $syncScript --scores
+    }
+}
+
 # ── Step 6: Report ────────────────────────────────────────────────────────────
 if ($SkipTo -le 6) {
     Step 6 "Generate markdown report → $Report"
