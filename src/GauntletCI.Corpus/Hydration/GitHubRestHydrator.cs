@@ -268,20 +268,6 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
         return (segs[0], segs[1], prNumber);
     }
 
-    private static string GuessLanguage(string path)
-    {
-        var ext = Path.GetExtension(path).ToLowerInvariant();
-        return ext switch
-        {
-            ".cs"   => "C#",
-            ".ts"   => "TypeScript",
-            ".js"   => "JavaScript",
-            ".py"   => "Python",
-            ".go"   => "Go",
-            ".java" => "Java",
-            ".rs"   => "Rust",
-            ".rb"   => "Ruby",
-            _       => "",
-        };
-    }
+    private static string GuessLanguage(string path) =>
+        CorpusStringHelpers.GuessLanguage(path);
 }
