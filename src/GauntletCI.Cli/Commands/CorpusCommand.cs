@@ -33,6 +33,8 @@ public static class CorpusCommand
         corpus.AddCommand(CreateAddPr());
         corpus.AddCommand(CreateNormalize());
         corpus.AddCommand(CreateList());
+        corpus.AddCommand(CreateShow());
+        corpus.AddCommand(CreateStatus());
         corpus.AddCommand(CreateBatchHydrate());
         corpus.AddCommand(CreateDiscover());
         corpus.AddCommand(CreateRun());
@@ -296,6 +298,227 @@ public static class CorpusCommand
 
         Console.WriteLine(sep);
         Console.WriteLine($"[corpus] {fixtures.Count} fixture(s)");
+    }
+
+    // ── gauntletci corpus show <fixture-id> ───────────────────────────────────
+
+    private static Command CreateShow()
+    {
+        var fixtureArg  = new Argument<string>("fixture-id", "Fixture ID to inspect");
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
+
+        var cmd = new Command("show", "Inspect a single corpus fixture: metadata, findings, labels, and diff stats");
+        cmd.AddArgument(fixtureArg);
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var fixtureId = ctx.ParseResult.GetValueForArgument(fixtureArg);
+            var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures  = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct        = ctx.GetCancellationToken();
+
+            var (db, store, _) = await BuildPipeline(dbPath, fixtures, ct);
+            using (db)
+            {
+                var meta = await store.GetMetadataAsync(fixtureId, ct);
+                if (meta is null)
+                {
+                    Console.Error.WriteLine($"[corpus] Fixture '{fixtureId}' not found.");
+                    ctx.ExitCode = 1;
+                    return;
+                }
+
+                var sep = new string('─', 60);
+                Console.WriteLine(sep);
+                Console.WriteLine($"  Fixture : {meta.FixtureId}");
+                Console.WriteLine($"  Tier    : {meta.Tier}");
+                var repoParts = meta.Repo.Split('/', 2);
+                var owner     = repoParts.Length > 1 ? repoParts[0] : meta.Repo;
+                var repoName  = repoParts.Length > 1 ? repoParts[1] : meta.Repo;
+                Console.WriteLine($"  PR      : https://github.com/{owner}/{repoName}/pull/{meta.PullRequestNumber}");
+                Console.WriteLine($"  Size    : {meta.PrSizeBucket} ({meta.FilesChanged} files changed)");
+                Console.WriteLine($"  Language: {meta.Language}");
+                Console.WriteLine($"  Tags    : {(meta.Tags.Count > 0 ? string.Join(", ", meta.Tags) : "(none)")}");
+                Console.WriteLine(sep);
+
+                // ── Diff stats ────────────────────────────────────────────────
+                var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, meta.Tier, fixtureId);
+                var diffPath    = Path.Combine(fixturePath, "diff.patch");
+                if (File.Exists(diffPath))
+                {
+                    var diffText   = await File.ReadAllTextAsync(diffPath, ct);
+                    var diffLines  = diffText.Split('\n');
+                    var filesCount = diffLines.Count(l => l.StartsWith("diff --git", StringComparison.Ordinal));
+                    var added      = diffLines.Count(l => l.StartsWith("+") && !l.StartsWith("+++"));
+                    var removed    = diffLines.Count(l => l.StartsWith("-") && !l.StartsWith("---"));
+                    Console.WriteLine($"  Diff    : {filesCount} file(s), +{added} -{removed} lines");
+                }
+
+                // ── Actual findings ───────────────────────────────────────────
+                var actual = await store.ReadActualFindingsAsync(fixtureId, ct);
+                if (actual.Count > 0)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("  ACTUAL FINDINGS (what GCI rules detected)");
+                    Console.WriteLine($"  {"Rule",-12}  {"Triggered",-10}  {"File",-40}  Evidence");
+                    Console.WriteLine($"  {new string('-', 100)}");
+                    foreach (var f in actual.OrderBy(f => f.RuleId))
+                    {
+                        var triggered = f.DidTrigger ? "YES" : "no";
+                        var filePath  = f.FilePath is null ? "" : (f.FilePath.Length > 38 ? "…" + f.FilePath[^37..] : f.FilePath);
+                        var evidence  = string.IsNullOrEmpty(f.Evidence) ? "" : f.Evidence;
+                        if (evidence.Length > 60) evidence = evidence[..57] + "…";
+                        Console.WriteLine($"  {f.RuleId,-12}  {triggered,-10}  {filePath,-40}  {evidence}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("  ACTUAL FINDINGS: none (run `corpus run --fixture <id>` first)");
+                }
+
+                // ── Expected findings / labels ────────────────────────────────
+                var expected = await store.ReadExpectedFindingsAsync(fixtureId, ct);
+                if (expected.Count > 0)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("  EXPECTED FINDINGS / LABELS");
+                    Console.WriteLine($"  {"Rule",-12}  {"ShouldTrigger",-14}  {"Confidence",-11}  {"Source",-22}  Reason");
+                    Console.WriteLine($"  {new string('-', 110)}");
+                    foreach (var e in expected.OrderBy(e => e.RuleId))
+                    {
+                        var reason = e.Reason.Length > 50 ? e.Reason[..47] + "…" : e.Reason;
+                        Console.WriteLine($"  {e.RuleId,-12}  {(e.ShouldTrigger ? "true" : "false"),-14}  {e.ExpectedConfidence:F2,-11}  {e.LabelSource,-22}  {reason}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("  EXPECTED FINDINGS: none (run `corpus label --fixture <id>` first)");
+                }
+
+                // ── Review comment paths ──────────────────────────────────────
+                var reviewJson = await store.TryReadReviewCommentsAsync(fixtureId, ct);
+                if (reviewJson is not null)
+                {
+                    try
+                    {
+                        using var doc = System.Text.Json.JsonDocument.Parse(reviewJson);
+                        var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                        if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Array)
+                            foreach (var el in doc.RootElement.EnumerateArray())
+                                if (el.TryGetProperty("path", out var p) && p.GetString() is { } ps)
+                                    paths.Add(ps);
+                        if (paths.Count > 0)
+                        {
+                            Console.WriteLine();
+                            Console.WriteLine($"  REVIEW COMMENT PATHS ({paths.Count} file(s) commented on)");
+                            foreach (var p in paths.OrderBy(p => p))
+                                Console.WriteLine($"    {p}");
+                        }
+                    }
+                    catch { /* ignore malformed review comments */ }
+                }
+
+                Console.WriteLine(sep);
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus status ──────────────────────────────────────────────
+
+    private static Command CreateStatus()
+    {
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
+
+        var cmd = new Command("status", "Show overall corpus health: fixture counts, label coverage, run coverage");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath   = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct       = ctx.GetCancellationToken();
+
+            var (db, store, _) = await BuildPipeline(dbPath, fixtures, ct);
+            using (db)
+            {
+                var all = await store.ListFixturesAsync(null, ct);
+
+                var byTier = all.GroupBy(m => m.Tier).ToDictionary(g => g.Key, g => g.ToList());
+
+                var sep = new string('─', 60);
+                Console.WriteLine(sep);
+                Console.WriteLine("  CORPUS STATUS");
+                Console.WriteLine(sep);
+
+                Console.WriteLine($"  Total fixtures: {all.Count}");
+                foreach (var tier in new[] { FixtureTier.Gold, FixtureTier.Silver, FixtureTier.Discovery })
+                {
+                    var count = byTier.TryGetValue(tier, out var list) ? list.Count : 0;
+                    Console.WriteLine($"    {tier,-12}: {count}");
+                }
+
+                int hasDiff = 0, hasRun = 0, hasLabels = 0;
+                var labelSourceCounts = new Dictionary<string, int>(StringComparer.Ordinal);
+
+                foreach (var meta in all)
+                {
+                    var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, meta.Tier, meta.FixtureId);
+                    if (File.Exists(Path.Combine(fixturePath, "diff.patch")))    hasDiff++;
+                    if (File.Exists(Path.Combine(fixturePath, "actual.json")))   hasRun++;
+                    if (File.Exists(Path.Combine(fixturePath, "expected.json")))
+                    {
+                        hasLabels++;
+                        try
+                        {
+                            var json = await File.ReadAllTextAsync(Path.Combine(fixturePath, "expected.json"), ct);
+                            var labels = System.Text.Json.JsonSerializer.Deserialize<List<GauntletCI.Corpus.Models.ExpectedFinding>>(
+                                json,
+                                new System.Text.Json.JsonSerializerOptions
+                                {
+                                    PropertyNameCaseInsensitive = true,
+                                    Converters = { new JsonStringEnumConverter() },
+                                }) ?? [];
+                            foreach (var l in labels)
+                            {
+                                var src = l.LabelSource.ToString();
+                                labelSourceCounts.TryGetValue(src, out var c);
+                                labelSourceCounts[src] = c + 1;
+                            }
+                        }
+                        catch { /* skip */ }
+                    }
+                }
+
+                Console.WriteLine();
+                Console.WriteLine($"  Coverage:");
+                Console.WriteLine($"    Hydrated (diff.patch)  : {hasDiff}/{all.Count} ({Pct(hasDiff, all.Count)})");
+                Console.WriteLine($"    Rules run (actual.json): {hasRun}/{all.Count} ({Pct(hasRun, all.Count)})");
+                Console.WriteLine($"    Labeled (expected.json): {hasLabels}/{all.Count} ({Pct(hasLabels, all.Count)})");
+
+                if (labelSourceCounts.Count > 0)
+                {
+                    Console.WriteLine();
+                    Console.WriteLine("  Label sources:");
+                    foreach (var kv in labelSourceCounts.OrderByDescending(kv => kv.Value))
+                        Console.WriteLine($"    {kv.Key,-22}: {kv.Value}");
+                }
+
+                Console.WriteLine(sep);
+            }
+
+            static string Pct(int num, int den) => den == 0 ? "N/A" : $"{100.0 * num / den:F0}%";
+        });
+
+        return cmd;
     }
 
     // ── gauntletci corpus discover --provider gh-search|gh-archive ───────────
@@ -911,6 +1134,7 @@ public static class CorpusCommand
     {
         var tierOpt         = new Option<string>("--tier",         () => "discovery", "Fixture tier to process (gold|silver|discovery)");
         var overwriteOpt    = new Option<bool>  ("--overwrite",    () => false,       "Overwrite existing HumanReview/Seed labels with heuristic labels");
+        var verboseOpt      = new Option<bool>  ("--verbose",      () => false,       "Print per-rule label breakdown for each fixture");
         var llmLabelOpt     = new Option<bool>  ("--llm-label",    () => false,       "Enable LLM-based Tier 3 labeling");
         var llmProviderOpt  = new Option<string>("--llm-provider", () => "ollama",    "LLM provider: ollama | anthropic | github-models | none");
         var llmModelOpt     = new Option<string>("--llm-model",    () => "",          "Model override (provider default used if empty)");
@@ -921,6 +1145,7 @@ public static class CorpusCommand
         var cmd = new Command("label-all", "Apply silver heuristic labels to all fixtures in a tier");
         cmd.AddOption(tierOpt);
         cmd.AddOption(overwriteOpt);
+        cmd.AddOption(verboseOpt);
         cmd.AddOption(llmLabelOpt);
         cmd.AddOption(llmProviderOpt);
         cmd.AddOption(llmModelOpt);
@@ -932,6 +1157,7 @@ public static class CorpusCommand
         {
             var tierStr    = ctx.ParseResult.GetValueForOption(tierOpt)!;
             var overwrite  = ctx.ParseResult.GetValueForOption(overwriteOpt);
+            var verbose    = ctx.ParseResult.GetValueForOption(verboseOpt);
             var llmLabel   = ctx.ParseResult.GetValueForOption(llmLabelOpt);
             var provider   = ctx.ParseResult.GetValueForOption(llmProviderOpt)!;
             var llmModel   = ctx.ParseResult.GetValueForOption(llmModelOpt)!;
@@ -1001,6 +1227,13 @@ public static class CorpusCommand
                         labeled++;
 
                         Console.WriteLine($"[corpus] OK   {metadata.FixtureId,-40} {labelsWritten,3} label(s)");
+
+                        if (verbose)
+                        {
+                            var labelDetails = await store.ReadExpectedFindingsAsync(metadata.FixtureId, ct);
+                            foreach (var label in labelDetails.OrderBy(l => l.RuleId))
+                                Console.WriteLine($"    {label.RuleId,-10}  {(label.ShouldTrigger ? "TRUE" : "false"),-6}  {label.LabelSource,-22}  {label.Reason}");
+                        }
                     }
                     catch (Exception ex)
                     {

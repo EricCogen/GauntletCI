@@ -9,4 +9,4 @@ public enum MergeState { Open, Merged, Closed }
 
 public enum HydrationStatus { Pending, InProgress, Completed, Failed }
 
-public enum LabelSource { Heuristic, HumanReview, Seed, LlmReview }
+public enum LabelSource { Heuristic, FilePathCorrelation, HumanReview, Seed, LlmReview }
