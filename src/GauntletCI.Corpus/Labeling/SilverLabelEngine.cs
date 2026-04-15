@@ -36,8 +36,8 @@ public sealed class SilverLabelEngine
     /// </summary>
     public static readonly IReadOnlySet<string> RulesWithHeuristics = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "GCI0003", "GCI0004", "GCI0005", "GCI0006", "GCI0007",
-        "GCI0010", "GCI0016", "GCI0021", "GCI0022", "GCI0023",
+        "GCI0003", "GCI0004", "GCI0006", "GCI0007",
+        "GCI0010", "GCI0016", "GCI0021", "GCI0023",
     };
 
     // Review comment keyword -> (ruleId, reason, confidence) mapping
@@ -252,7 +252,14 @@ public sealed class SilverLabelEngine
         }
 
         var existingLabels = await _store.ReadExpectedFindingsAsync(fixtureId, ct);
-        var merged         = MergeLabels(existingLabels, inferred, overwriteExisting);
+
+        // When overwriting, strip stale heuristic labels for rules removed from RulesWithHeuristics.
+        if (overwriteExisting)
+            existingLabels = existingLabels
+                .Where(l => l.LabelSource != LabelSource.Heuristic || RulesWithHeuristics.Contains(l.RuleId))
+                .ToList();
+
+        var merged = MergeLabels(existingLabels, inferred, overwriteExisting);
         await _store.SaveExpectedFindingsAsync(fixtureId, merged, ct);
         return merged.Count;
     }
