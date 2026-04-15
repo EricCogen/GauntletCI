@@ -35,7 +35,10 @@ public static class LlmLabelerFactory
 
     private static ILlmLabeler CreateOllama(string? model, string? baseUrl)
     {
-        var m = model   ?? "mistral";
+        // If no model specified, pick the best one for this machine's hardware
+        var m = !string.IsNullOrWhiteSpace(model)
+            ? model
+            : HardwareProfile.Detect().RecommendedModel;
         var u = baseUrl ?? "http://localhost:11434";
         return new OllamaLlmLabeler(m, u);
     }
