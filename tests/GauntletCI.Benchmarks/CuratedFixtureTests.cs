@@ -43,14 +43,8 @@ public class CuratedFixtureTests
         }
     }
 
-    // Rules that shifted IDs between the MISC fixture version and v2 codebase.
-    // Key = short MISC ID, Value = canonical v2 rule ID.
     private static readonly Dictionary<string, string> RuleIdRemap =
-        new(StringComparer.OrdinalIgnoreCase)
-        {
-            ["GCI017"] = "GCI_SYN_AGG", // Production Readiness moved to synthetic aggregate ID
-            ["GCI018"] = "GCI0020",     // Accountability Standard moved from slot 18 → 20 (GCI0018 is now Production Readiness)
-        };
+        new(StringComparer.OrdinalIgnoreCase);
 
     private static string NormalizeRuleId(string id)
     {
