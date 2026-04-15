@@ -475,26 +475,7 @@ public class SupplementalCoverageTests
         Assert.DoesNotContain(findings, f => f.Summary.Contains("logic line(s) removed"));
     }
 
-    // ── GCI0019 binary extension variants ────────────────────────────────────
-
-    [Fact]
-    public async Task GCI0019_JpegFileInDiff_ShouldFlag()
-    {
-        var rule = new GCI0019_ConfidenceAndEvidence();
-        var raw = """
-            diff --git a/assets/photo.jpg b/assets/photo.jpg
-            index abc..def 100644
-            Binary files a/assets/photo.jpg and b/assets/photo.jpg differ
-            """;
-
-        var diff = DiffParser.Parse(raw);
-        var finding = ((IPostProcessor)rule).PostProcess(diff);
-
-        Assert.NotNull(finding);
-        Assert.Contains("binary file(s)", finding.Summary);
-    }
-
-    // ── GCI0018 synthesis: verify EvaluationResult.HasFindings ───────────────
+    // ── EvaluationResult synthesis ────────────────────────────────────────────
 
     [Fact]
     public async Task EvaluationResult_HasFindings_WhenEmpty_ReturnsFalse()

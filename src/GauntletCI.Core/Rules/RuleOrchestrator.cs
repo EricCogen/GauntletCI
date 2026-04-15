@@ -55,8 +55,7 @@ public class RuleOrchestrator
         var rules = typeof(RuleOrchestrator).Assembly
             .GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false }
-                     && ruleType.IsAssignableFrom(t)
-                     && !t.IsDefined(typeof(ArchivedRuleAttribute), inherit: false))
+                     && ruleType.IsAssignableFrom(t))
             .Select(t => (IRule)Activator.CreateInstance(t)!)
             .Where(r => IsRuleEnabled(r.Id, config, configService))
             .ToList();

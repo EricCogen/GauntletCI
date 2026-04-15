@@ -15,10 +15,12 @@ namespace GauntletCI.Llm;
 public sealed class LocalLlmEngine : ILlmEngine, IDisposable
 {
     private const int DefaultMaxPromptsPerRun = 10;
+    private const int DefaultMaxInferenceMs = 60_000;
     private const int MaxOutputTokens = 256;
 
     private readonly string _modelPath;
     private readonly int _maxPromptsPerRun;
+    private readonly int _maxInferenceMs;
     private readonly object _lock = new();
 
     private OgaHandle? _ogaHandle;
@@ -31,17 +33,19 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
 
     /// <summary>Initializes the engine with the path to the local ONNX model directory.</summary>
     /// <param name="modelPath">Directory containing the ONNX model files; defaults to <c>~/.gauntletci/models/phi3-mini</c> when <see langword="null"/>.</param>
-    public LocalLlmEngine(string? modelPath = null)
-        : this(modelPath, DefaultMaxPromptsPerRun) { }
+    /// <param name="maxInferenceMs">Per-completion timeout in milliseconds; defaults to 60 000 ms.</param>
+    public LocalLlmEngine(string? modelPath = null, int maxInferenceMs = DefaultMaxInferenceMs)
+        : this(modelPath, DefaultMaxPromptsPerRun, maxInferenceMs) { }
 
-    /// <summary>Internal constructor used by tests to override the per-run prompt cap.</summary>
-    internal LocalLlmEngine(string? modelPath, int maxPromptsPerRun)
+    /// <summary>Internal constructor used by tests to override the per-run prompt cap and inference timeout.</summary>
+    internal LocalLlmEngine(string? modelPath, int maxPromptsPerRun, int maxInferenceMs = DefaultMaxInferenceMs)
     {
         _modelPath = modelPath
             ?? Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                 ".gauntletci", "models", "phi3-mini");
         _maxPromptsPerRun = maxPromptsPerRun;
+        _maxInferenceMs = maxInferenceMs;
     }
 
     /// <summary>Returns <see langword="true"/> when the model files are cached on disk and this instance has not failed to load.</summary>
@@ -116,9 +120,9 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
                         var token = generator.GetNextTokens()[0];
                         sb.Append(_tokenizerStream!.Decode(token));
 
-                        if (sw.ElapsedMilliseconds > 500)
+                        if (sw.ElapsedMilliseconds > _maxInferenceMs)
                         {
-                            Console.Error.WriteLine("[GauntletCI] LLM inference exceeded 500ms limit. Truncating.");
+                            Console.Error.WriteLine($"[GauntletCI] LLM inference exceeded {_maxInferenceMs}ms limit. Truncating.");
                             break;
                         }
                     }
