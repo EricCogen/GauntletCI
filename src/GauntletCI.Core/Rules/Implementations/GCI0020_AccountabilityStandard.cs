@@ -9,6 +9,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0020 – Accountability Standard
 /// Checks for embarrassing patterns: swallowed exceptions, secrets, commented-out code, empty roles.
 /// </summary>
+[ArchivedRule("Vague accountability criteria; not actionable from a diff")]
 public class GCI0020_AccountabilityStandard : RuleBase
 {
     public override string Id => "GCI0020";

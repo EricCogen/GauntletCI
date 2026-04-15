@@ -9,6 +9,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0014 – Rollback Safety
 /// Detects irreversible operations: DDL, file deletion, migration without Down().
 /// </summary>
+[ArchivedRule("Deployment and ops concern; not a code defect detectable from a diff")]
 public class GCI0014_RollbackSafety : RuleBase
 {
     public override string Id => "GCI0014";
