@@ -8,6 +8,9 @@ public interface IFixtureStore
     Task SaveMetadataAsync(FixtureMetadata metadata, CancellationToken cancellationToken = default);
     Task<FixtureMetadata?> GetMetadataAsync(string fixtureId, CancellationToken cancellationToken = default);
     Task SaveExpectedFindingsAsync(string fixtureId, IReadOnlyList<ExpectedFinding> findings, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ExpectedFinding>> ReadExpectedFindingsAsync(string fixtureId, CancellationToken cancellationToken = default);
     Task SaveActualFindingsAsync(string fixtureId, string runId, IReadOnlyList<ActualFinding> findings, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<ActualFinding>> ReadActualFindingsAsync(string fixtureId, CancellationToken cancellationToken = default);
+    Task<string?> TryReadReviewCommentsAsync(string fixtureId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<FixtureMetadata>> ListFixturesAsync(FixtureTier? tier = null, CancellationToken cancellationToken = default);
 }
