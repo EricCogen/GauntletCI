@@ -14,10 +14,11 @@ namespace GauntletCI.Llm;
 /// </summary>
 public sealed class LocalLlmEngine : ILlmEngine, IDisposable
 {
-    private const int MaxPromptsPerRun = 10;
+    private const int DefaultMaxPromptsPerRun = 10;
     private const int MaxOutputTokens = 256;
 
     private readonly string _modelPath;
+    private readonly int _maxPromptsPerRun;
     private readonly object _lock = new();
 
     private OgaHandle? _ogaHandle;
@@ -31,11 +32,16 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
     /// <summary>Initializes the engine with the path to the local ONNX model directory.</summary>
     /// <param name="modelPath">Directory containing the ONNX model files; defaults to <c>~/.gauntletci/models/phi3-mini</c> when <see langword="null"/>.</param>
     public LocalLlmEngine(string? modelPath = null)
+        : this(modelPath, DefaultMaxPromptsPerRun) { }
+
+    /// <summary>Internal constructor used by tests to override the per-run prompt cap.</summary>
+    internal LocalLlmEngine(string? modelPath, int maxPromptsPerRun)
     {
         _modelPath = modelPath
             ?? Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
                 ".gauntletci", "models", "phi3-mini");
+        _maxPromptsPerRun = maxPromptsPerRun;
     }
 
     /// <summary>Returns <see langword="true"/> when the model files are cached on disk and this instance has not failed to load.</summary>
@@ -73,9 +79,9 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
     {
         if (_disposed) return string.Empty;
 
-        if (_promptsUsed >= MaxPromptsPerRun)
+        if (_promptsUsed >= _maxPromptsPerRun)
         {
-            Console.Error.WriteLine("[GauntletCI] LLM prompt cap reached (10 per run). Skipping enrichment.");
+            Console.Error.WriteLine($"[GauntletCI] LLM prompt cap reached ({_maxPromptsPerRun} per run). Skipping enrichment.");
             return string.Empty;
         }
 

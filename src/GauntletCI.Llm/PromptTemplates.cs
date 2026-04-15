@@ -7,9 +7,19 @@ namespace GauntletCI.Llm;
 /// </summary>
 public static class PromptTemplates
 {
+    private const string SystemStart = "<|system|>\n";
     private const string UserStart = "<|user|>\n";
     private const string UserEnd = "<|end|>\n";
     private const string AssistantStart = "<|assistant|>\n";
+
+    private const string AntiHallucinationSystem =
+        "You are a precise code review assistant. Strict rules:\n" +
+        "1. Only state facts directly supported by the evidence provided.\n" +
+        "2. Do not invent technical details, CVE numbers, error types, or outcomes not visible in the code.\n" +
+        "3. Do not lie or fabricate information to sound more authoritative.\n" +
+        "4. If you are uncertain about a specific detail, omit it rather than guess.\n" +
+        "5. Do not repeat or rephrase the summary you were given.\n" +
+        "6. Output exactly one sentence. Maximum 30 words.";
 
     /// <summary>Builds a prompt to enrich a single finding with a one-sentence explanation.</summary>
     /// <param name="ruleId">The rule identifier (e.g., <c>GCI0001</c>) for context.</param>
@@ -26,7 +36,20 @@ public static class PromptTemplates
         $"{UserEnd}" +
         $"{AssistantStart}";
 
-    /// <summary>Builds a prompt to summarize a full set of findings into one paragraph.</summary>
+    /// <summary>
+    /// Builds a finding enrichment prompt with strict anti-hallucination system instructions.
+    /// Uses Phi-3's <c>&lt;|system|&gt;</c> token to inject rules before the user turn.
+    /// </summary>
+    public static string EnrichFindingConstrained(string ruleId, string ruleName, string summary, string evidence) =>
+        $"{SystemStart}{AntiHallucinationSystem}{UserEnd}" +
+        $"{UserStart}" +
+        $"A rule called \"{ruleName}\" ({ruleId}) flagged this issue:\n\n" +
+        $"Summary: {summary}\n" +
+        $"Evidence: {evidence}\n\n" +
+        $"Explain WHY this is risky in plain English for a developer." +
+        $"{UserEnd}" +
+        $"{AssistantStart}";
+
     /// <param name="findingSummaries">One summary string per finding, in any order.</param>
     public static string SummarizeReport(IEnumerable<string> findingSummaries) =>
         $"{UserStart}" +
