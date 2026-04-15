@@ -6,21 +6,23 @@ using System.Text.Json;
 namespace GauntletCI.Corpus.Labeling;
 
 /// <summary>
-/// Calls the Anthropic Messages API to classify a rule finding as true/false positive.
-/// Returns null on any HTTP or parse error.
+/// Calls a local Ollama instance (OpenAI-compatible /v1/chat/completions) to classify
+/// a rule finding as true/false positive. No API key required.
+/// Returns null on any HTTP or parse error (e.g., Ollama not running).
 /// </summary>
-public sealed class AnthropicLlmLabeler : ILlmLabeler, IDisposable
+public sealed class OllamaLlmLabeler : ILlmLabeler, IDisposable
 {
     private readonly HttpClient _http;
     private readonly string     _model;
+    private readonly string     _endpoint;
 
-    public AnthropicLlmLabeler(string apiKey, string model = "claude-haiku-4-5")
+    public OllamaLlmLabeler(string model = "mistral", string baseUrl = "http://localhost:11434")
     {
-        _model = model;
-        _http  = new HttpClient();
-        _http.DefaultRequestHeaders.Add("x-api-key", apiKey);
-        _http.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
-        _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        _model    = model;
+        _endpoint = $"{baseUrl.TrimEnd('/')}/v1/chat/completions";
+        _http     = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
+        _http.DefaultRequestHeaders.Accept.Add(
+            new MediaTypeWithQualityHeaderValue("application/json"));
     }
 
     public async Task<LlmLabelResult?> ClassifyAsync(
@@ -42,11 +44,12 @@ public sealed class AnthropicLlmLabeler : ILlmLabeler, IDisposable
             var requestBody = JsonSerializer.Serialize(new
             {
                 model      = _model,
-                max_tokens = 150,
                 messages   = new[] { new { role = "user", content = prompt } },
+                max_tokens = 150,
+                stream     = false,
             });
 
-            using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages");
+            using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint);
             request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
 
             using var response = await _http.SendAsync(request, ct);
@@ -54,15 +57,26 @@ public sealed class AnthropicLlmLabeler : ILlmLabeler, IDisposable
 
             var responseJson = await response.Content.ReadAsStringAsync(ct);
             using var doc = JsonDocument.Parse(responseJson);
-            var root = doc.RootElement;
 
-            if (!root.TryGetProperty("content", out var content)) return null;
-            if (content.ValueKind != JsonValueKind.Array || content.GetArrayLength() == 0) return null;
+            if (!doc.RootElement.TryGetProperty("choices", out var choices)) return null;
+            if (choices.ValueKind != JsonValueKind.Array || choices.GetArrayLength() == 0) return null;
 
-            var text = content[0].GetProperty("text").GetString();
+            var text = choices[0].GetProperty("message").GetProperty("content").GetString();
             return string.IsNullOrWhiteSpace(text) ? null : LlmLabelerHelpers.ParseJson(text);
         }
         catch { return null; }
+    }
+
+    /// <summary>Checks if Ollama is reachable at the configured base URL.</summary>
+    public async Task<bool> IsAvailableAsync(CancellationToken ct = default)
+    {
+        try
+        {
+            var baseUrl = _endpoint[..(_endpoint.LastIndexOf("/v1"))];
+            using var resp = await _http.GetAsync($"{baseUrl}/api/tags", ct);
+            return resp.IsSuccessStatusCode;
+        }
+        catch { return false; }
     }
 
     public void Dispose() => _http.Dispose();

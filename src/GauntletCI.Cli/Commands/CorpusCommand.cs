@@ -909,27 +909,36 @@ public static class CorpusCommand
 
     private static Command CreateLabelAll()
     {
-        var tierOpt      = new Option<string>("--tier",      () => "discovery", "Fixture tier to process (gold|silver|discovery)");
-        var overwriteOpt = new Option<bool>  ("--overwrite", () => false,       "Overwrite existing HumanReview/Seed labels with heuristic labels");
-        var llmLabelOpt  = new Option<bool>  ("--llm-label", () => false,       "Enable LLM-based Tier 3 labeling (requires ANTHROPIC_API_KEY env var)");
-        var dbOpt        = new Option<string>("--db",        () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt  = new Option<string>("--fixtures",  () => "./data/fixtures",             "Path to fixtures root directory");
+        var tierOpt         = new Option<string>("--tier",         () => "discovery", "Fixture tier to process (gold|silver|discovery)");
+        var overwriteOpt    = new Option<bool>  ("--overwrite",    () => false,       "Overwrite existing HumanReview/Seed labels with heuristic labels");
+        var llmLabelOpt     = new Option<bool>  ("--llm-label",    () => false,       "Enable LLM-based Tier 3 labeling");
+        var llmProviderOpt  = new Option<string>("--llm-provider", () => "ollama",    "LLM provider: ollama | anthropic | github-models | none");
+        var llmModelOpt     = new Option<string>("--llm-model",    () => "",          "Model override (provider default used if empty)");
+        var llmUrlOpt       = new Option<string>("--llm-url",      () => "http://localhost:11434", "Ollama base URL");
+        var dbOpt           = new Option<string>("--db",           () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt     = new Option<string>("--fixtures",     () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("label-all", "Apply silver heuristic labels to all fixtures in a tier");
         cmd.AddOption(tierOpt);
         cmd.AddOption(overwriteOpt);
         cmd.AddOption(llmLabelOpt);
+        cmd.AddOption(llmProviderOpt);
+        cmd.AddOption(llmModelOpt);
+        cmd.AddOption(llmUrlOpt);
         cmd.AddOption(dbOpt);
         cmd.AddOption(fixturesOpt);
 
         cmd.SetHandler(async (ctx) =>
         {
-            var tierStr   = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var overwrite = ctx.ParseResult.GetValueForOption(overwriteOpt);
-            var llmLabel  = ctx.ParseResult.GetValueForOption(llmLabelOpt);
-            var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var fixtures  = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var ct        = ctx.GetCancellationToken();
+            var tierStr    = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var overwrite  = ctx.ParseResult.GetValueForOption(overwriteOpt);
+            var llmLabel   = ctx.ParseResult.GetValueForOption(llmLabelOpt);
+            var provider   = ctx.ParseResult.GetValueForOption(llmProviderOpt)!;
+            var llmModel   = ctx.ParseResult.GetValueForOption(llmModelOpt)!;
+            var llmUrl     = ctx.ParseResult.GetValueForOption(llmUrlOpt)!;
+            var dbPath     = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures   = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct         = ctx.GetCancellationToken();
 
             if (!Enum.TryParse<FixtureTier>(tierStr, ignoreCase: true, out var tier))
             {
@@ -941,11 +950,28 @@ public static class CorpusCommand
             ILlmLabeler llmLabeler = new NullLlmLabeler();
             if (llmLabel)
             {
-                var apiKey = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
-                if (!string.IsNullOrEmpty(apiKey))
-                    llmLabeler = new AnthropicLlmLabeler(apiKey);
+                string? modelOverride = string.IsNullOrWhiteSpace(llmModel) ? null : llmModel;
+                string? urlOverride   = (provider == "ollama") ? llmUrl : null;
+                llmLabeler = LlmLabelerFactory.Create(provider, modelOverride, urlOverride);
+
+                // For Ollama, verify the server is reachable before committing to it
+                if (provider == "ollama" && llmLabeler is OllamaLlmLabeler ollamaLabeler)
+                {
+                    if (await ollamaLabeler.IsAvailableAsync(ct))
+                    {
+                        Console.WriteLine($"[corpus] LLM labeling enabled via Ollama ({llmUrl}, model: {modelOverride ?? "mistral"})");
+                    }
+                    else
+                    {
+                        ollamaLabeler.Dispose();
+                        llmLabeler = new NullLlmLabeler();
+                        Console.WriteLine($"[corpus] Ollama not reachable at {llmUrl} — LLM labeling disabled. Start Ollama with: ollama serve");
+                    }
+                }
                 else
-                    Console.WriteLine("[corpus] ANTHROPIC_API_KEY not set — LLM labeling disabled");
+                {
+                    Console.WriteLine($"[corpus] LLM labeling enabled via {provider}");
+                }
             }
 
             var (db, store, _) = await BuildPipeline(dbPath, fixtures, ct);
