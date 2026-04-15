@@ -66,7 +66,7 @@ internal static class LlmDaemonServer
         catch (OperationCanceledException) { }
         finally
         {
-            try { File.Delete(pidPath); } catch { }
+            try { File.Delete(pidPath); } catch (Exception) { }
         }
     }
 
@@ -79,7 +79,7 @@ internal static class LlmDaemonServer
         {
             string? line;
             try { line = await reader.ReadLineAsync(ct); }
-            catch { break; }
+            catch (Exception) { break; }
             if (line is null) break;
 
             DaemonResponse resp;
@@ -99,7 +99,7 @@ internal static class LlmDaemonServer
             }
 
             try { await writer.WriteLineAsync(JsonSerializer.Serialize(resp)); }
-            catch { break; }
+            catch (Exception) { break; }
         }
     }
 

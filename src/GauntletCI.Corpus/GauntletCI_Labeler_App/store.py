@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import json
 import uuid
 from datetime import datetime, timezone
-from pathlib import Path
 import sqlite3
 
 APP_SCHEMA = """

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import argparse
 import math
-import sqlite3
+
 from pathlib import Path
 
 from config_loader import load_config

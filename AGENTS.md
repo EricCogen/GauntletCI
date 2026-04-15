@@ -65,6 +65,34 @@ python sync-todos.py --update <id> <status>
 ```
 Do NOT maintain `todos-seed.sql` — it is retired. The durable DB is the only source of truth.
 
+## Dead Code Audit
+
+### Quick (deterministic) — run anytime
+```powershell
+.\audit-dead-code.ps1
+```
+Covers: Roslyn analyzer warnings, stale archived-rule test files, public types in exe-only
+projects, unused Python imports, orphaned HTML templates, duplicate private methods.
+
+### Full (semantic) — ask Copilot
+Paste this prompt into Copilot to trigger a full three-agent audit:
+
+> **"run the dead code audit"**
+
+What the agents cover:
+| Agent | Scope |
+|-------|-------|
+| C# deep audit | Roslyn, unused privates, dead branches, `NotImplementedException` stubs, empty catches, no-op overrides |
+| Public symbol cross-reference | Every public/internal class + method grep'd across entire src/ + tests/ |
+| Non-C# audit | Python functions, HTML templates, PowerShell params, YAML workflows, CSS/JS, .gitignore |
+
+**Known false positive:** `RuleTestExtensions` (GauntletCI.Tests) — extension method on `IRule`,
+used implicitly at every rule test call site via `rule.EvaluateAsync(diff, null)` syntax.
+Do not delete it.
+
+**After any archiving cycle:** run `sync-rules.py --rebuild` then `.\audit-dead-code.ps1`
+to verify no stale test files remain.
+
 ## Todo Priorities
 - P1 (done): foundation fixes
 - P2 (done): ship-it features

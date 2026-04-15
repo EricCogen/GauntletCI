@@ -10,7 +10,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// Retained as a reserved ID to avoid breaking configurations. Does not participate
 /// in rule discovery — use GCI0016 (Concurrency and State Risk) for async blocking checks.
 /// </summary>
-// Superseded by GCI0016 (Concurrency and State Risk)
+[GauntletCI.Core.Rules.ArchivedRule("Superseded by GCI0016 ConcurrencyAndStateRisk; retained as a reserved placeholder ID")]
 public class GCI0033_AsyncSinkhole
 {
     public Task<List<Finding>> EvaluateAsync(
@@ -19,4 +19,5 @@ public class GCI0033_AsyncSinkhole
         CancellationToken ct = default)
         => Task.FromResult(new List<Finding>());
 }
+
 
