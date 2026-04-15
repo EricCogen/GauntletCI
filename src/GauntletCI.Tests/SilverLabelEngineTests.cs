@@ -173,8 +173,8 @@ public sealed class SilverLabelEngineTests
         // Arrange
         var expected = new[]
         {
-            "GCI0003", "GCI0004", "GCI0005", "GCI0006", "GCI0007",
-            "GCI0010", "GCI0016", "GCI0021", "GCI0022", "GCI0023",
+            "GCI0003", "GCI0004", "GCI0006", "GCI0007",
+            "GCI0010", "GCI0016", "GCI0021", "GCI0023",
         };
 
         // Assert — every expected rule is present and the set is exactly this size
