@@ -99,8 +99,8 @@ public class GCI0035Tests
         rule.Configure(new GauntletConfig { ForbiddenImports = null });
         var findings = await rule.EvaluateAsync(diff, null);
 
-        Assert.Single(findings);
-        Assert.Contains(findings, f => f.Summary.Contains("not configured"));
+        Assert.Empty(findings);
+        // GCI0035 is opt-in: silent when ForbiddenImports is not configured
     }
 
     [Fact]

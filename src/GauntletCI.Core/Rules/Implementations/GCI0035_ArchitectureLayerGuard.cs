@@ -32,19 +32,9 @@ public class GCI0035_ArchitectureLayerGuard : RuleBase, IConfigurableRule
         var diff = context.Diff;
         var findings = new List<Finding>();
 
+        // Opt-in rule: silent when unconfigured
         if (_forbiddenImports.Count == 0)
-        {
-            if (diff.Files.Any())
-            {
-                findings.Add(CreateFinding(
-                    summary: "GCI0035 Architecture Layer Guard is not configured.",
-                    evidence: string.Empty,
-                    whyItMatters: "No forbidden import rules have been configured. To enforce architecture layer boundaries, add ForbiddenImports entries to your .gauntletci config.",
-                    suggestedAction: "Configure ForbiddenImports in your .gauntletci configuration file.",
-                    confidence: Confidence.Low));
-            }
             return Task.FromResult(findings);
-        }
 
         foreach (var file in diff.Files)
         {
