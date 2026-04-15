@@ -1293,20 +1293,23 @@ public static class CorpusCommand
 
     private static Command CreateResetStats()
     {
-        var dbOpt      = new Option<string>("--db",      () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var ruleOpt    = new Option<string?>("--rule",   "Limit reset to a specific rule ID (e.g. GCI0001)");
-        var confirmOpt = new Option<bool>("--confirm",   "Required: confirm you want to delete run and scoring data");
+        var dbOpt            = new Option<string>("--db",              () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var ruleOpt          = new Option<string?>("--rule",           "Limit reset to a specific rule ID (e.g. GCI0001)");
+        var confirmOpt       = new Option<bool>("--confirm",           "Required: confirm you want to delete run and scoring data");
+        var includeLabelsOpt = new Option<bool>("--include-labels",    "Also clear auto-generated expected_findings (Heuristic, FilePathCorrelation, LlmReview). Preserves HumanReview and Seed labels.");
 
         var cmd = new Command("reset-stats", "Delete rule run, scoring, and evaluation data from the corpus database");
         cmd.AddOption(dbOpt);
         cmd.AddOption(ruleOpt);
         cmd.AddOption(confirmOpt);
+        cmd.AddOption(includeLabelsOpt);
 
         cmd.SetHandler((ctx) =>
         {
-            var dbPath  = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var ruleId  = ctx.ParseResult.GetValueForOption(ruleOpt);
-            var confirm = ctx.ParseResult.GetValueForOption(confirmOpt);
+            var dbPath         = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var ruleId         = ctx.ParseResult.GetValueForOption(ruleOpt);
+            var confirm        = ctx.ParseResult.GetValueForOption(confirmOpt);
+            var includeLabels  = ctx.ParseResult.GetValueForOption(includeLabelsOpt);
 
             if (!confirm)
             {
@@ -1347,9 +1350,18 @@ public static class CorpusCommand
                 Exec($"DELETE FROM evaluations{ruleFilter}");
                 Exec($"DELETE FROM actual_findings{(ruleId is not null ? " WHERE rule_id = @rule" : "")}");
 
-                // For rule_runs, only delete if scoped (a run covers all rules) or if no filter.
+                // For rule_runs, only delete if no rule scope (a run covers all rules).
                 if (ruleId is null)
                     Exec("DELETE FROM rule_runs");
+
+                // Optionally clear auto-generated labels (preserve HumanReview and Seed).
+                if (includeLabels)
+                {
+                    var labelFilter = ruleId is not null
+                        ? " WHERE rule_id = @rule AND label_source NOT IN ('HumanReview','Seed')"
+                        : " WHERE label_source NOT IN ('HumanReview','Seed')";
+                    Exec($"DELETE FROM expected_findings{labelFilter}");
+                }
 
                 tx.Commit();
 
@@ -1357,6 +1369,8 @@ public static class CorpusCommand
                 Console.WriteLine($"[corpus] reset-stats complete{scope}: aggregates, evaluations, and actual_findings cleared.");
                 if (ruleId is null)
                     Console.WriteLine("[corpus] rule_runs cleared.");
+                if (includeLabels)
+                    Console.WriteLine("[corpus] Auto-generated expected_findings cleared (HumanReview and Seed labels preserved).");
             }
             catch (Exception ex)
             {
