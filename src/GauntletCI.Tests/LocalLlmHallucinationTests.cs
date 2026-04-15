@@ -193,8 +193,8 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
             return;
         }
 
-        // One engine instance, cap = 2 × probes (baseline + constrained for each)
-        using var engine = new LocalLlmEngine(null, Probes.Length * 2);
+        // One engine instance, cap = 2 × probes (baseline + constrained for each), 60s timeout
+        using var engine = new LocalLlmEngine(null, Probes.Length * 2, maxInferenceMs: 60_000);
 
         var sb = new StringBuilder();
         sb.AppendLine();
