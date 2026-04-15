@@ -182,9 +182,15 @@ public sealed class SilverLabelEngine
                 var normalizedPath = finding.FilePath.Replace('\\', '/').ToLowerInvariant();
                 if (commentPaths.Contains(normalizedPath))
                 {
-                    inferred.Add(MakeLabel(finding.RuleId,
-                        $"[file-path correlation] Reviewer commented on the same file as this finding: {finding.FilePath}",
-                        0.55));
+                    inferred.Add(new ExpectedFinding
+                    {
+                        RuleId             = finding.RuleId,
+                        ShouldTrigger      = true,
+                        ExpectedConfidence = 0.55,
+                        Reason             = $"[file-path correlation] Reviewer commented on '{finding.FilePath}'",
+                        LabelSource        = LabelSource.FilePathCorrelation,
+                        IsInconclusive     = false,
+                    });
                     positiveRuleIdsTier12.Add(finding.RuleId);
                 }
             }
@@ -196,13 +202,14 @@ public sealed class SilverLabelEngine
             .Select(l => l.RuleId)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        var diffSnippet = diffText.Length > 800 ? diffText[..800] : diffText;
-
         foreach (var finding in actualFindings)
         {
             if (!finding.DidTrigger) continue;
             if (!RulesWithHeuristics.Contains(finding.RuleId)) continue;
             if (positiveRuleIdsAfterTier12.Contains(finding.RuleId)) continue;
+
+            var diffSnippet = ExtractFileDiffHunk(diffText, finding.FilePath);
+            Console.WriteLine($"  [llm] Tier 3 calling {_llmLabeler.GetType().Name} for rule {finding.RuleId}");
 
             var result = await _llmLabeler.ClassifyAsync(
                 finding.RuleId,
@@ -472,6 +479,45 @@ public sealed class SilverLabelEngine
         return diffText.Split('\n')
             .Where(l => l.StartsWith("--- ") || l.StartsWith("+++ ") || l.StartsWith("diff --git"))
             .ToList();
+    }
+
+    private static string ExtractFileDiffHunk(string diffText, string? filePath, int maxChars = 800)
+    {
+        if (string.IsNullOrEmpty(filePath))
+            return diffText.Length > maxChars ? diffText[..maxChars] : diffText;
+
+        var normalized = filePath.Replace('\\', '/');
+
+        // Find the diff header for this specific file
+        var searchTarget = $"diff --git a/{normalized}";
+        var startIdx = diffText.IndexOf(searchTarget, StringComparison.OrdinalIgnoreCase);
+
+        if (startIdx < 0)
+        {
+            // Try matching just the filename in case paths differ slightly
+            var fileName = Path.GetFileName(normalized);
+            var lines = diffText.Split('\n');
+            var cumLen = 0;
+            foreach (var line in lines)
+            {
+                if (line.StartsWith("diff --git", StringComparison.Ordinal)
+                    && line.Contains(fileName, StringComparison.OrdinalIgnoreCase))
+                {
+                    startIdx = cumLen;
+                    break;
+                }
+                cumLen += line.Length + 1; // +1 for newline
+            }
+        }
+
+        if (startIdx < 0)
+            return diffText.Length > maxChars ? diffText[..maxChars] : diffText;
+
+        // Find the end of this file's section (next diff --git or end of string)
+        var nextDiff = diffText.IndexOf("\ndiff --git ", startIdx + 10, StringComparison.Ordinal);
+        var section  = nextDiff > 0 ? diffText[startIdx..nextDiff] : diffText[startIdx..];
+
+        return section.Length > maxChars ? section[..maxChars] : section;
     }
 
     private static IReadOnlySet<string> ExtractCommentPaths(JsonElement root)
