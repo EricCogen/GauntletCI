@@ -9,8 +9,9 @@ namespace GauntletCI.Corpus.Discovery;
 public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
 {
     private readonly HttpClient _http;
+    private readonly Action<string?, int?, string>? _errorCallback;
 
-    public GitHubSearchDiscoveryProvider(string githubToken)
+    public GitHubSearchDiscoveryProvider(string githubToken, Action<string?, int?, string>? errorCallback = null)
     {
         if (string.IsNullOrWhiteSpace(githubToken))
             throw new InvalidOperationException("GITHUB_TOKEN is required for gh-search provider");
@@ -19,6 +20,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", githubToken);
         _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Corpus/1.0");
         _http.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
+        _errorCallback = errorCallback;
     }
 
     public string GetProviderName() => "gh-search";
@@ -52,13 +54,15 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
 
             try
             {
-                await FetchPageAsync(url, query, seen, results, repoLimit, cancellationToken);
+                await FetchPageAsync(url, query, seen, results, repoLimit, cancellationToken, _errorCallback);
             }
             catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity
                                                || ex.StatusCode == System.Net.HttpStatusCode.NotFound
                                                || ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
             {
-                Console.Error.WriteLine($"[gh-search] Skipping {repoSpec} ({(int?)ex.StatusCode})");
+                var code = (int?)ex.StatusCode;
+                Console.Error.WriteLine($"[gh-search] Skipping {repoSpec} ({code})");
+                _errorCallback?.Invoke(repoSpec, code, $"[gh-search] Skipping {repoSpec} ({code})");
             }
         }
 
@@ -71,15 +75,19 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         HashSet<(string, string, int)> seen,
         List<PullRequestCandidate> results,
         int maxFromThisCall,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Action<string?, int?, string>? errorCallback = null)
     {
         using var response = await _http.GetAsync(url, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
             var body = await response.Content.ReadAsStringAsync(cancellationToken);
-            Console.Error.WriteLine($"[gh-search] HTTP {(int)response.StatusCode} for {url}");
+            var code = (int)response.StatusCode;
+            var msg = $"[gh-search] HTTP {code} for {url}: {body[..Math.Min(200, body.Length)]}";
+            Console.Error.WriteLine($"[gh-search] HTTP {code} for {url}");
             Console.Error.WriteLine($"[gh-search] Response: {body}");
+            errorCallback?.Invoke(null, code, msg);
             response.EnsureSuccessStatusCode();
         }
 
@@ -87,7 +95,9 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
             int.TryParse(remaining.FirstOrDefault(), out var remainingCount) &&
             remainingCount <= 0)
         {
-            Console.Error.WriteLine("[gh-search] GitHub rate limit reached; returning partial results.");
+            var msg = "[gh-search] GitHub rate limit reached; returning partial results.";
+            Console.Error.WriteLine(msg);
+            errorCallback?.Invoke(null, 429, msg);
             return;
         }
 

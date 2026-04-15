@@ -45,6 +45,7 @@ public static class CorpusCommand
         corpus.AddCommand(CreateLabelAll());
         corpus.AddCommand(CreateResetStats());
         corpus.AddCommand(CreatePurge());
+        corpus.AddCommand(CreateErrors());
 
         var issues = new Command("issues", "GitHub Issues corpus operations");
         issues.AddCommand(CreateIssueSearch());
@@ -576,6 +577,7 @@ public static class CorpusCommand
             var ct             = ctx.GetCancellationToken();
 
             IDiscoveryProvider provider;
+            var errorLog = new List<(string? Repo, int? Code, string Message)>();
 
             if (providerName.Equals("gh-search", StringComparison.OrdinalIgnoreCase))
             {
@@ -592,7 +594,8 @@ public static class CorpusCommand
                     ctx.ExitCode = 1;
                     return;
                 }
-                provider = new GitHubSearchDiscoveryProvider(token);
+                Action<string?, int?, string> errorCallback = (repo, code, msg) => errorLog.Add((repo, code, msg));
+                provider = new GitHubSearchDiscoveryProvider(token, errorCallback);
             }
             else if (providerName.Equals("gh-archive", StringComparison.OrdinalIgnoreCase))
             {
@@ -624,12 +627,20 @@ public static class CorpusCommand
 
             Console.WriteLine($"[corpus] Discovering candidates via {provider.GetProviderName()} (limit={limit}{(perRepoLimit > 0 ? $", per-repo={perRepoLimit}" : "")}) …");
 
-            var candidates = await provider.SearchCandidatesAsync(query, ct);
-
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
             using (db)
             {
+                var candidates = await provider.SearchCandidatesAsync(query, ct);
+
+                // Persist any errors collected during discovery
+                if (errorLog.Count > 0)
+                {
+                    foreach (var (repo, code, msg) in errorLog)
+                        await db.LogPipelineErrorAsync("discover", provider.GetProviderName(), repo, code, msg, ct);
+                    Console.WriteLine($"[corpus] {errorLog.Count} error(s) logged to DB (run 'corpus errors' to review).");
+                }
+
                 int inserted = 0;
 
                 foreach (var c in candidates)
@@ -1543,6 +1554,61 @@ public static class CorpusCommand
                 tx.Commit();
 
                 Console.WriteLine($"[corpus] purge: removed {removed} fixture(s) from DB and disk.");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus errors ──────────────────────────────────────────────
+
+    private static Command CreateErrors()
+    {
+        var dbOpt    = new Option<string>("--db",    () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var stepOpt  = new Option<string?>("--step", "Filter by pipeline step (e.g. discover)");
+        var limitOpt = new Option<int>("--limit",    () => 50, "Max rows to show");
+
+        var cmd = new Command("errors", "Show recent pipeline errors logged to the corpus database");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(stepOpt);
+        cmd.AddOption(limitOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var step   = ctx.ParseResult.GetValueForOption(stepOpt);
+            var limit  = ctx.ParseResult.GetValueForOption(limitOpt);
+            var ct     = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                using var cmd2 = db.Connection.CreateCommand();
+                cmd2.CommandText = step is not null
+                    ? "SELECT recorded_at, step, provider, repo, error_code, message FROM pipeline_errors WHERE step = $step ORDER BY id DESC LIMIT $limit"
+                    : "SELECT recorded_at, step, provider, repo, error_code, message FROM pipeline_errors ORDER BY id DESC LIMIT $limit";
+                cmd2.Parameters.AddWithValue("$limit", limit);
+                if (step is not null) cmd2.Parameters.AddWithValue("$step", step);
+
+                using var reader = await cmd2.ExecuteReaderAsync(ct);
+                bool any = false;
+                Console.WriteLine($"{"Time",-22} {"Step",-10} {"Provider",-12} {"Repo",-30} {"Code",-6} Message");
+                Console.WriteLine(new string('-', 100));
+                while (await reader.ReadAsync(ct))
+                {
+                    any = true;
+                    var recordedAt = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                    var stepVal    = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                    var prov       = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                    var repo       = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                    var code       = reader.IsDBNull(4) ? "" : reader.GetInt32(4).ToString();
+                    var msgVal     = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                    if (msgVal.Length > 80) msgVal = msgVal[..77] + "...";
+                    Console.WriteLine($"{recordedAt,-22} {stepVal,-10} {prov,-12} {repo,-30} {code,-6} {msgVal}");
+                }
+                if (!any)
+                    Console.WriteLine("  (no errors recorded)");
             }
         });
 
