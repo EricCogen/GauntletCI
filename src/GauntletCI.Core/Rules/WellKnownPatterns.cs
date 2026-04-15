@@ -9,9 +9,6 @@ internal static class WellKnownPatterns
     /// <summary>Log-level keywords indicating high-severity log calls that warrant review (GCI0007, GCI0013).</summary>
     public static readonly string[] HighSeverityLogKeywords = [ "error", "exception", "critical", "fatal", "warn", "warning" ];
 
-    /// <summary>Directory and file name fragments that indicate security-sensitive code paths reviewed by multiple rules.</summary>
-    public static readonly string[] CriticalPathKeywords = [ "auth", "security", "payment", "billing", "crypto", "encrypt", "secret", "credential", "token", "migration", "schema" ];
-
     /// <summary>
     /// Returns <c>true</c> when the given path belongs to a test or spec file.
     /// Used across rules to avoid false positives in test code.

@@ -50,7 +50,7 @@ internal static class LlmLabelerHelpers
                 Reason:         reason.GetString() ?? string.Empty,
                 IsInconclusive: conf < 0.4);
         }
-        catch { return null; }
+        catch (Exception) { return null; }
     }
 
     internal static string TruncateComments(IEnumerable<string> bodies, int maxChars = 500)

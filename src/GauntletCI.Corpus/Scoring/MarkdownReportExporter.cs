@@ -5,7 +5,7 @@ using GauntletCI.Corpus.Models;
 
 namespace GauntletCI.Corpus.Scoring;
 
-public sealed class MarkdownReportExporter : IReportExporter
+public sealed class MarkdownReportExporter
 {
     private readonly IScoreAggregator _aggregator;
 

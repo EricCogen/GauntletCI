@@ -168,14 +168,8 @@ public sealed class MaintainerFetcher : IDisposable
         }
     }
 
-    private static bool IsRateLimited(HttpResponseMessage resp)
-    {
-        if (resp.StatusCode == HttpStatusCode.TooManyRequests) return true;
-        if (resp.StatusCode == HttpStatusCode.Forbidden &&
-            resp.Headers.TryGetValues("x-ratelimit-remaining", out var vals) &&
-            vals.FirstOrDefault() == "0") return true;
-        return false;
-    }
+    private static bool IsRateLimited(HttpResponseMessage resp) =>
+        CorpusStringHelpers.IsRateLimited(resp);
 
     private static TimeSpan GetWaitTime(HttpResponseMessage resp, TimeSpan fallback)
     {

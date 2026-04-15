@@ -12,7 +12,7 @@ namespace GauntletCI.Corpus.Runners;
 /// <summary>
 /// Runs all registered GCI rules against a fixture diff and persists the results.
 /// </summary>
-public sealed class RuleCorpusRunner : IRuleCorpusRunner
+public sealed class RuleCorpusRunner
 {
     private readonly IFixtureStore _store;
     private readonly CorpusDb _db;
