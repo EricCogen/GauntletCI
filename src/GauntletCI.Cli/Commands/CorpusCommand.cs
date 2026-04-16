@@ -12,6 +12,7 @@ using GauntletCI.Corpus.Normalization;
 using GauntletCI.Corpus.Runners;
 using GauntletCI.Corpus.Scoring;
 using GauntletCI.Corpus.Storage;
+using GauntletCI.Core.Configuration;
 using Microsoft.Data.Sqlite;
 
 namespace GauntletCI.Cli.Commands;
@@ -1299,7 +1300,7 @@ public static class CorpusCommand
         var llmLabelOpt     = new Option<bool>  ("--llm-label",    () => false,       "Enable LLM-based Tier 3 labeling");
         var llmProviderOpt  = new Option<string>("--llm-provider", () => "ollama",    "LLM provider: ollama | anthropic | github-models | none");
         var llmModelOpt     = new Option<string>("--llm-model",    () => "",          "Model override (provider default used if empty)");
-        var llmUrlOpt       = new Option<string[]>("--llm-url",    () => ["http://localhost:11434"], "Ollama base URL. Repeat the flag or pass a comma-separated list to use multiple servers.");
+        var llmUrlOpt       = new Option<string[]>("--llm-url",    () => [], "Ollama base URL(s). Repeat the flag or pass a comma-separated list. Falls back to corpus.ollamaUrls in .gauntletci.json.");
         var dbOpt           = new Option<string>("--db",           () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var fixturesOpt     = new Option<string>("--fixtures",     () => "./data/fixtures",             "Path to fixtures root directory");
 
@@ -1322,7 +1323,27 @@ public static class CorpusCommand
             var llmLabel   = ctx.ParseResult.GetValueForOption(llmLabelOpt);
             var provider   = ctx.ParseResult.GetValueForOption(llmProviderOpt)!;
             var llmModel   = ctx.ParseResult.GetValueForOption(llmModelOpt)!;
-            var llmUrls    = NormalizeOllamaUrls(ctx.ParseResult.GetValueForOption(llmUrlOpt));
+            var rawUrls      = ctx.ParseResult.GetValueForOption(llmUrlOpt) ?? [];
+            // Load .gauntletci.json for Ollama URL/model fallback; returns safe defaults if file absent.
+            var configDir    = FindGitRoot(Environment.CurrentDirectory) ?? Environment.CurrentDirectory;
+            var corpusConfig = ConfigLoader.Load(configDir).Corpus ?? new CorpusConfig();
+            // URL resolution and config fallback are Ollama-only; normalize CLI values first to catch whitespace-only entries.
+            var normalizedCli = NormalizeOllamaUrls(provider == "ollama" ? rawUrls : []);
+            IReadOnlyList<string> llmUrls;
+            if (normalizedCli.Count > 0)
+                llmUrls = normalizedCli;
+            else if (provider == "ollama")
+            {
+                llmUrls = NormalizeOllamaUrls(corpusConfig.OllamaUrls);
+                if (llmUrls.Count > 0)
+                    Console.WriteLine($"[corpus] Using Ollama URLs from .gauntletci.json: {string.Join(", ", llmUrls)}");
+            }
+            else
+                llmUrls = [];
+            // Scope corpus.ollamaModel fallback to Ollama only; other providers use their own defaults when llmModel is empty.
+            var resolvedModel = provider == "ollama" && string.IsNullOrWhiteSpace(llmModel)
+                ? corpusConfig.OllamaModel
+                : (string.IsNullOrWhiteSpace(llmModel) ? null : llmModel);
             var dbPath     = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixtures   = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
             var ct         = ctx.GetCancellationToken();
@@ -1338,7 +1359,7 @@ public static class CorpusCommand
             int readyEndpointCount = 0;
             if (llmLabel)
             {
-                string? modelOverride = string.IsNullOrWhiteSpace(llmModel) ? null : llmModel;
+                string? modelOverride = resolvedModel;
 
                 if (provider == "ollama")
                 {
@@ -2139,15 +2160,18 @@ public static class CorpusCommand
     }
 
     private static IReadOnlyList<string> NormalizeOllamaUrls(IEnumerable<string>? rawUrls)
-    {
-        var normalized = (rawUrls ?? [])
-            .SelectMany(url => (url ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-            .Where(url => !string.IsNullOrWhiteSpace(url))
-            .Select(url => url.Trim().TrimEnd('/'))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
+        => OllamaUrlNormalizer.Normalize(rawUrls);
 
-        return normalized.Length > 0 ? normalized : ["http://localhost:11434"];
+    private static string? FindGitRoot(string startDirectory)
+    {
+        var current = new DirectoryInfo(startDirectory);
+        while (current is not null)
+        {
+            if (Directory.Exists(Path.Combine(current.FullName, ".git")))
+                return current.FullName;
+            current = current.Parent;
+        }
+        return null;
     }
 
     private static bool IsLocalOllamaUrl(string baseUrl)

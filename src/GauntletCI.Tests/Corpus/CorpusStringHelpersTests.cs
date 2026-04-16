@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http;
 using GauntletCI.Corpus;
+using GauntletCI.Corpus.Labeling;
 
 namespace GauntletCI.Tests.Corpus;
 
@@ -105,6 +106,53 @@ public class CorpusStringHelpersTests
         using var response = new HttpResponseMessage(HttpStatusCode.Forbidden);
         response.Headers.Add("x-ratelimit-remaining", "5");
         Assert.False(CorpusStringHelpers.IsRateLimited(response));
+    }
+
+    // ── NormalizeOllamaUrls ────────────────────────────────────────────────────
+
+    [Fact]
+    public void NormalizeOllamaUrls_NullInput_ReturnsEmpty()
+    {
+        Assert.Empty(OllamaUrlNormalizer.Normalize(null));
+    }
+
+    [Fact]
+    public void NormalizeOllamaUrls_EmptyInput_ReturnsEmpty()
+    {
+        Assert.Empty(OllamaUrlNormalizer.Normalize([]));
+    }
+
+    [Fact]
+    public void NormalizeOllamaUrls_SingleUrl_ReturnsTrimmedEntry()
+    {
+        var result = OllamaUrlNormalizer.Normalize(["http://localhost:11434/"]);
+        Assert.Single(result);
+        Assert.Equal("http://localhost:11434", result[0]);
+    }
+
+    [Fact]
+    public void NormalizeOllamaUrls_CommaSeparated_SplitsIntoMultipleEntries()
+    {
+        var result = OllamaUrlNormalizer.Normalize(["http://a:11434,http://b:11434"]);
+        Assert.Equal(2, result.Count);
+        Assert.Contains("http://a:11434", result);
+        Assert.Contains("http://b:11434", result);
+    }
+
+    [Fact]
+    public void NormalizeOllamaUrls_DuplicatesCaseInsensitive_Deduplicates()
+    {
+        var result = OllamaUrlNormalizer.Normalize(
+            ["http://Localhost:11434", "http://localhost:11434"]);
+        Assert.Single(result);
+    }
+
+    [Fact]
+    public void NormalizeOllamaUrls_BlankEntries_Filtered()
+    {
+        var result = OllamaUrlNormalizer.Normalize(["  ", "", "http://x:11434"]);
+        Assert.Single(result);
+        Assert.Equal("http://x:11434", result[0]);
     }
 
     [Fact]
