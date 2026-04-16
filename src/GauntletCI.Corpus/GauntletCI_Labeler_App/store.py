@@ -30,6 +30,21 @@ CREATE TABLE IF NOT EXISTS rule_rubrics (
     examples TEXT,
     updated_at_utc TEXT NOT NULL DEFAULT (datetime('now'))
 );
+
+CREATE INDEX IF NOT EXISTS idx_label_queue_status_priority
+    ON label_queue (status, priority DESC, id ASC);
+
+CREATE INDEX IF NOT EXISTS idx_label_queue_fixture_rule_fired
+    ON label_queue (fixture_id, rule_id, fired);
+
+CREATE INDEX IF NOT EXISTS idx_actual_findings_rule_trigger_fixture
+    ON actual_findings (rule_id, did_trigger, fixture_id);
+
+CREATE INDEX IF NOT EXISTS idx_actual_findings_trigger_fixture_rule
+    ON actual_findings (did_trigger, fixture_id, rule_id);
+
+CREATE INDEX IF NOT EXISTS idx_fixtures_language_tier_queue
+    ON fixtures (language COLLATE NOCASE, tier COLLATE NOCASE, has_review_comments DESC, has_tests_changed ASC, created_at_utc DESC, fixture_id);
 """
 
 AUDIT_SNAPSHOTS_DDL = """
@@ -297,4 +312,3 @@ def save_rubric(
         (rule_id, intent, trigger_conditions, non_trigger_conditions, inconclusive_conditions, examples),
     )
     conn.commit()
-
