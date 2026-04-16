@@ -62,6 +62,8 @@ Common overrides:
 | `-Report` | `./data/scorecard.md` | Output path for the markdown report |
 | `-SkipTo` | `1` | Resume from step N (1–6) |
 
+`run-corpus.ps1` also folds in any repositories previously recorded in the corpus DB as permanent hydration rejects (for example deleted/private repos) so later runs stop rediscovering and rehydrating them.
+
 ---
 
 ## Step 1 — `corpus discover`

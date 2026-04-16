@@ -116,6 +116,16 @@ internal static class SchemaInitializer
             error_message       TEXT
         );
 
+        CREATE TABLE IF NOT EXISTS repo_rejections (
+            repo_owner           TEXT NOT NULL,
+            repo_name            TEXT NOT NULL,
+            reason               TEXT NOT NULL,
+            source               TEXT NOT NULL,
+            first_rejected_at_utc TEXT NOT NULL DEFAULT (datetime('now')),
+            last_rejected_at_utc  TEXT NOT NULL DEFAULT (datetime('now')),
+            PRIMARY KEY (repo_owner, repo_name)
+        );
+
         CREATE TABLE IF NOT EXISTS fixtures (
             id                  TEXT PRIMARY KEY,
             fixture_id          TEXT NOT NULL UNIQUE,
