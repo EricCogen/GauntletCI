@@ -37,7 +37,7 @@ public sealed class SilverLabelEngine
     public static readonly IReadOnlySet<string> RulesWithHeuristics = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
         "GCI0003", "GCI0004", "GCI0006", "GCI0010",
-        "GCI0012", "GCI0016", "GCI0021", "GCI0023",
+        "GCI0012", "GCI0016", "GCI0021", "GCI0022", "GCI0023",
     };
 
     // Review comment keyword -> (ruleId, reason, confidence) mapping
