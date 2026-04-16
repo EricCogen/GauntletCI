@@ -202,36 +202,39 @@ public sealed class SilverLabelEngine
             .Select(l => l.RuleId)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var finding in actualFindings)
+        if (_llmLabeler is not NullLlmLabeler)
         {
-            if (!finding.DidTrigger) continue;
-            if (!RulesWithHeuristics.Contains(finding.RuleId)) continue;
-            if (positiveRuleIdsAfterTier12.Contains(finding.RuleId)) continue;
-
-            var diffSnippet = ExtractFileDiffHunk(diffText, finding.FilePath);
-            Console.WriteLine($"  [llm] Tier 3 calling {_llmLabeler.GetType().Name} for rule {finding.RuleId}");
-
-            var result = await _llmLabeler.ClassifyAsync(
-                finding.RuleId,
-                finding.Message,
-                finding.Evidence,
-                finding.FilePath,
-                commentBodies,
-                diffSnippet,
-                ct);
-
-            if (result is not null && !result.IsInconclusive)
+            foreach (var finding in actualFindings)
             {
-                inferred.Add(new ExpectedFinding
+                if (!finding.DidTrigger) continue;
+                if (!RulesWithHeuristics.Contains(finding.RuleId)) continue;
+                if (positiveRuleIdsAfterTier12.Contains(finding.RuleId)) continue;
+
+                var diffSnippet = ExtractFileDiffHunk(diffText, finding.FilePath);
+                Console.WriteLine($"  [llm] Tier 3 calling {_llmLabeler.GetType().Name} for rule {finding.RuleId}");
+
+                var result = await _llmLabeler.ClassifyAsync(
+                    finding.RuleId,
+                    finding.Message,
+                    finding.Evidence,
+                    finding.FilePath,
+                    commentBodies,
+                    diffSnippet,
+                    ct);
+
+                if (result is not null && !result.IsInconclusive)
                 {
-                    RuleId             = finding.RuleId,
-                    ShouldTrigger      = result.ShouldTrigger,
-                    ExpectedConfidence = result.Confidence,
-                    Reason             = $"[llm] {result.Reason}",
-                    LabelSource        = LabelSource.LlmReview,
-                    IsInconclusive     = false,
-                });
-                positiveRuleIdsAfterTier12.Add(finding.RuleId);
+                    inferred.Add(new ExpectedFinding
+                    {
+                        RuleId             = finding.RuleId,
+                        ShouldTrigger      = result.ShouldTrigger,
+                        ExpectedConfidence = result.Confidence,
+                        Reason             = $"[llm] {result.Reason}",
+                        LabelSource        = LabelSource.LlmReview,
+                        IsInconclusive     = false,
+                    });
+                    positiveRuleIdsAfterTier12.Add(finding.RuleId);
+                }
             }
         }
 
