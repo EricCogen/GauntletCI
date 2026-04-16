@@ -1,5 +1,5 @@
 ﻿# GauntletCI Corpus Pipeline Runner
-# Usage: .\build-corpus.ps1 [-Help] [-Provider "gh-search"] [-StartDate "2025-03-01"] [-EndDate "2025-03-31"] [-Limit 50] [-Language "C#"] [-MinComments 2] [-MinStars 500] [-Tier "discovery"] [-Db <path>] [-Fixtures <path>] [-Report <path>] [-SkipTo <step>] [-LlmLabel] [-LlmProvider "ollama"] [-LlmModel <name>] [-LlmUrl <url>] [-SkipSeedQueue]
+# Usage: .\build-corpus.ps1 [-Help] [-Provider "gh-search"] [-StartDate "2025-03-01"] [-EndDate "2025-03-31"] [-Limit 50] [-Language "C#"] [-MinComments 2] [-MinStars 500] [-Tier "discovery"] [-Db <path>] [-Fixtures <path>] [-Report <path>] [-SkipTo <step>] [-LlmLabel] [-LlmProvider "ollama"] [-LlmModel <name>] [-LlmUrl <url[]>] [-SkipSeedQueue]
 
 param(
     [switch] $Help,
@@ -24,7 +24,7 @@ param(
     [switch]$LlmLabel      = $false, # Enable Tier 3 LLM fallback during Step 4 / Step 8 label-all
     [string]$LlmProvider   = "ollama", # LLM provider for label-all: ollama | anthropic | github-models | none
     [string]$LlmModel      = "",    # Optional provider-specific model override for label-all
-    [string]$LlmUrl        = "http://10.0.0.5:11434/", # Ollama base URL for label-all
+    [string[]]$LlmUrl      = @("http://localhost:11434", "http://10.0.0.5:11434/"), # Ollama base URLs for label-all
     [switch]$SkipLabeler    = $false, # Skip launching the labeler Flask app after pipeline completes
     # Known game repositories and other low-signal repos to exclude from discovery.
     # Add owner/repo strings here to prevent them from entering the corpus.
@@ -139,7 +139,8 @@ if ($Help) {
     Write-Host "  -LlmLabel              Enable Tier 3 LLM fallback during Step 4 / Step 8 label-all"
     Write-Host "  -LlmProvider <name>    LLM provider for label-all: ollama | anthropic | github-models | none"
     Write-Host "  -LlmModel <name>       Optional model override for label-all"
-    Write-Host "  -LlmUrl <url>          Ollama base URL for label-all (default: http://10.0.0.5:11434/)"
+    Write-Host "  -LlmUrl <url[]>        Ollama base URL(s) for label-all. Repeat values to use multiple servers."
+    Write-Host "                         Defaults to: http://localhost:11434, http://10.0.0.5:11434/"
     Write-Host "  -SkipLabeler           Skip launching the labeler app after pipeline completes"
     Write-Host "  -SeedQueueLimit <n>    Max fired findings to queue for labeling (default: 150)"
     Write-Host "  -SeedQueueNonFired <n> Non-fired probe tasks per queue seed run (default: 30)"
@@ -220,8 +221,12 @@ function Get-LabelAllArgs {
         if ($LlmModel -ne "") {
             $labelArgs += "--llm-model", $LlmModel
         }
-        if ($LlmProvider -eq "ollama" -and $LlmUrl -ne "") {
-            $labelArgs += "--llm-url", $LlmUrl
+        if ($LlmProvider -eq "ollama") {
+            foreach ($url in $LlmUrl) {
+                if (-not [string]::IsNullOrWhiteSpace($url)) {
+                    $labelArgs += "--llm-url", $url
+                }
+            }
         }
     }
 
