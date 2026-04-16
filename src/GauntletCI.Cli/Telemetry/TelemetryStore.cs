@@ -105,7 +105,8 @@ public static class TelemetryStore
         try
         {
             acquired = mutex.WaitOne(TimeSpan.FromSeconds(10));
-            action();
+            if (acquired)
+                action();
         }
         finally
         {
