@@ -95,4 +95,66 @@ public class GCI0004Tests
             f.Summary.Contains("Calculate") &&
             f.Confidence == Confidence.Medium);
     }
+
+    [Fact]
+    public async Task OnlyAddedPublicMethod_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/Calculator.cs b/src/Calculator.cs
+            index abc..def 100644
+            --- a/src/Calculator.cs
+            +++ b/src/Calculator.cs
+            @@ -1,2 +1,3 @@
+             // calculator
+            +public int Add(int x, int y)
+             // end
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Public API removed"));
+    }
+
+    [Fact]
+    public async Task RemovedPrivateMethod_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/Calculator.cs b/src/Calculator.cs
+            index abc..def 100644
+            --- a/src/Calculator.cs
+            +++ b/src/Calculator.cs
+            @@ -1,3 +1,2 @@
+             // calculator
+            -private void ComputeInternal(int x)
+             // end
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public async Task SamePublicSignatureRemovedAndReadded_ShouldNotFlag()
+    {
+        // Same name AND same content re-added (e.g., just moved within file).
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,3 +1,3 @@
+             // service
+            -public void Execute(int id)
+            +public void Execute(int id)
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Public API removed"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Public API signature changed"));
+    }
 }
