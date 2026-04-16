@@ -1297,7 +1297,7 @@ public static class CorpusCommand
         var llmLabelOpt     = new Option<bool>  ("--llm-label",    () => false,       "Enable LLM-based Tier 3 labeling");
         var llmProviderOpt  = new Option<string>("--llm-provider", () => "ollama",    "LLM provider: ollama | anthropic | github-models | none");
         var llmModelOpt     = new Option<string>("--llm-model",    () => "",          "Model override (provider default used if empty)");
-        var llmUrlOpt       = new Option<string>("--llm-url",      () => "http://localhost:11434", "Ollama base URL");
+        var llmUrlOpt       = new Option<string[]>("--llm-url",    () => ["http://localhost:11434"], "Ollama base URL. Repeat the flag or pass a comma-separated list to use multiple servers.");
         var dbOpt           = new Option<string>("--db",           () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var fixturesOpt     = new Option<string>("--fixtures",     () => "./data/fixtures",             "Path to fixtures root directory");
 
@@ -1320,7 +1320,7 @@ public static class CorpusCommand
             var llmLabel   = ctx.ParseResult.GetValueForOption(llmLabelOpt);
             var provider   = ctx.ParseResult.GetValueForOption(llmProviderOpt)!;
             var llmModel   = ctx.ParseResult.GetValueForOption(llmModelOpt)!;
-            var llmUrl     = ctx.ParseResult.GetValueForOption(llmUrlOpt)!;
+            var llmUrls    = NormalizeOllamaUrls(ctx.ParseResult.GetValueForOption(llmUrlOpt));
             var dbPath     = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixtures   = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
             var ct         = ctx.GetCancellationToken();
@@ -1336,18 +1336,19 @@ public static class CorpusCommand
             if (llmLabel)
             {
                 string? modelOverride = string.IsNullOrWhiteSpace(llmModel) ? null : llmModel;
-                string? urlOverride   = (provider == "ollama") ? llmUrl : null;
 
                 if (provider == "ollama")
                 {
-                    llmLabeler = await SetupOllamaLabelerAsync(modelOverride, urlOverride ?? llmUrl, ct);
+                    llmLabeler = await SetupOllamaLabelerAsync(modelOverride, llmUrls, ct);
                 }
                 else
                 {
-                    llmLabeler = LlmLabelerFactory.Create(provider, modelOverride, urlOverride);
+                    llmLabeler = LlmLabelerFactory.Create(provider, modelOverride, null);
                     Console.WriteLine($"[corpus] LLM labeling enabled via {provider}");
                 }
             }
+
+            using var llmLabelerLease = llmLabeler as IDisposable;
 
             var (db, store, _) = await BuildPipeline(dbPath, fixtures, ct);
             using (db)
@@ -1364,45 +1365,84 @@ public static class CorpusCommand
                 int skipped = 0;
                 int totalLabels = 0;
                 var engine = new SilverLabelEngine(store, llmLabeler);
+                var parallelism = GetLabelAllParallelism(llmLabel, provider, llmUrls.Count);
+                var consoleLock = new object();
 
-                foreach (var metadata in allFixtures)
+                if (parallelism > 1)
+                    Console.WriteLine($"[corpus] Parallel LLM labeling enabled: {parallelism} workers across {llmUrls.Count} Ollama endpoints.");
+
+                if (parallelism == 1)
                 {
-                    var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, metadata.Tier, metadata.FixtureId);
-                    var diffPath    = Path.Combine(fixturePath, "diff.patch");
-
-                    if (!File.Exists(diffPath))
-                    {
-                        Console.WriteLine($"[corpus] SKIP {metadata.FixtureId,-40} — diff.patch not found");
-                        skipped++;
-                        continue;
-                    }
-
-                    try
-                    {
-                        var diffText      = await File.ReadAllTextAsync(diffPath, ct);
-                        var labelsWritten = await engine.ApplyToFixtureAsync(metadata.FixtureId, diffText, overwrite, ct);
-
-                        totalLabels += labelsWritten;
-                        labeled++;
-
-                        Console.WriteLine($"[corpus] OK   {metadata.FixtureId,-40} {labelsWritten,3} label(s)");
-
-                        if (verbose)
+                    foreach (var metadata in allFixtures)
+                        await ProcessFixtureAsync(metadata, ct);
+                }
+                else
+                {
+                    await Parallel.ForEachAsync(
+                        allFixtures,
+                        new ParallelOptions
                         {
-                            var labelDetails = await store.ReadExpectedFindingsAsync(metadata.FixtureId, ct);
-                            foreach (var label in labelDetails.OrderBy(l => l.RuleId))
-                                Console.WriteLine($"    {label.RuleId,-10}  {(label.ShouldTrigger ? "TRUE" : "false"),-6}  {label.LabelSource,-22}  {label.Reason}");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.Error.WriteLine($"[corpus] ERR  {metadata.FixtureId}: {ex.Message}");
-                        skipped++;
-                    }
+                            MaxDegreeOfParallelism = parallelism,
+                            CancellationToken = ct,
+                        },
+                        ProcessFixtureAsync);
                 }
 
                 Console.WriteLine();
                 Console.WriteLine($"[corpus] label-all complete: {labeled} labeled, {skipped} skipped, {totalLabels} total labels written");
+
+                async ValueTask ProcessFixtureAsync(FixtureMetadata metadata, CancellationToken token)
+                {
+                    var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, metadata.Tier, metadata.FixtureId);
+                    var diffPath    = Path.Combine(fixturePath, "diff.patch");
+                    var output      = new List<(bool IsError, string Line)>();
+
+                    if (!File.Exists(diffPath))
+                    {
+                        Interlocked.Increment(ref skipped);
+                        output.Add((false, $"[corpus] SKIP {metadata.FixtureId,-40} — diff.patch not found"));
+                        FlushOutput(output);
+                        return;
+                    }
+
+                    try
+                    {
+                        var diffText      = await File.ReadAllTextAsync(diffPath, token);
+                        var labelsWritten = await engine.ApplyToFixtureAsync(metadata.FixtureId, diffText, overwrite, token);
+
+                        Interlocked.Add(ref totalLabels, labelsWritten);
+                        Interlocked.Increment(ref labeled);
+                        output.Add((false, $"[corpus] OK   {metadata.FixtureId,-40} {labelsWritten,3} label(s)"));
+
+                        if (verbose)
+                        {
+                            var labelDetails = await store.ReadExpectedFindingsAsync(metadata.FixtureId, token);
+                            foreach (var label in labelDetails.OrderBy(l => l.RuleId))
+                                output.Add((false, $"    {label.RuleId,-10}  {(label.ShouldTrigger ? "TRUE" : "false"),-6}  {label.LabelSource,-22}  {label.Reason}"));
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Interlocked.Increment(ref skipped);
+                        output.Add((true, $"[corpus] ERR  {metadata.FixtureId}: {ex.Message}"));
+                    }
+
+                    FlushOutput(output);
+                }
+
+                void FlushOutput(IEnumerable<(bool IsError, string Line)> lines)
+                {
+                    lock (consoleLock)
+                    {
+                        foreach (var (isError, line) in lines)
+                        {
+                            if (isError)
+                                Console.Error.WriteLine(line);
+                            else
+                                Console.WriteLine(line);
+                        }
+                    }
+                }
             }
         });
 
@@ -2006,8 +2046,10 @@ public static class CorpusCommand
     /// Falls back to <see cref="NullLlmLabeler"/> with a console message on any failure.
     /// </summary>
     private static async Task<ILlmLabeler> SetupOllamaLabelerAsync(
-        string? modelOverride, string baseUrl, CancellationToken ct)
+        string? modelOverride, IReadOnlyList<string> baseUrls, CancellationToken ct)
     {
+        var normalizedUrls = NormalizeOllamaUrls(baseUrls);
+
         // 1. Hardware detection — pick best model if user didn't specify one
         var hw = HardwareProfile.Detect();
         var model = !string.IsNullOrWhiteSpace(modelOverride)
@@ -2017,47 +2059,108 @@ public static class CorpusCommand
         Console.WriteLine($"[corpus] Hardware: {hw.ToSummaryString()}");
         Console.WriteLine($"[corpus] Selected model: {model}{(modelOverride != null ? " (user-specified)" : " (auto-selected)")}");
 
-        // 2. Check Ollama is installed
-        if (!OllamaLlmLabeler.IsInstalled())
+        var hasOllamaCli = OllamaLlmLabeler.IsInstalled();
+        var readyEndpoints = new List<LlmEndpoint>();
+
+        foreach (var baseUrl in normalizedUrls)
         {
-            Console.Error.WriteLine("[corpus] Ollama is not installed. Install from https://ollama.com and re-run.");
+            var labeler = new OllamaLlmLabeler(model, baseUrl);
+            var isLocalEndpoint = IsLocalOllamaUrl(baseUrl);
+
+            if (!await labeler.IsServerRunningAsync(ct))
+            {
+                if (isLocalEndpoint && hasOllamaCli)
+                {
+                    Console.WriteLine($"[corpus] Ollama endpoint {baseUrl} not running — attempting to start...");
+                    if (!await labeler.TryStartServerAsync(ct: ct))
+                    {
+                        Console.Error.WriteLine($"[corpus] Could not start Ollama at {baseUrl}. Skipping endpoint.");
+                        labeler.Dispose();
+                        continue;
+                    }
+
+                    Console.WriteLine($"[corpus] Ollama endpoint {baseUrl} started.");
+                }
+                else
+                {
+                    Console.Error.WriteLine($"[corpus] Ollama endpoint unavailable: {baseUrl}. Skipping endpoint.");
+                    labeler.Dispose();
+                    continue;
+                }
+            }
+
+            if (!await labeler.IsModelAvailableAsync(ct))
+            {
+                if (isLocalEndpoint && hasOllamaCli)
+                {
+                    Console.WriteLine($"[corpus] Model '{model}' not found at {baseUrl} — pulling (this may take several minutes)...");
+                    var pulled = await labeler.TryPullModelAsync(
+                        line => Console.WriteLine($"         {line}"), ct);
+
+                    if (!pulled)
+                    {
+                        Console.Error.WriteLine($"[corpus] Failed to pull model '{model}' for {baseUrl}. Skipping endpoint.");
+                        labeler.Dispose();
+                        continue;
+                    }
+
+                    Console.WriteLine($"[corpus] Model '{model}' ready at {baseUrl}.");
+                }
+                else
+                {
+                    Console.Error.WriteLine($"[corpus] Model '{model}' is unavailable at {baseUrl}. Skipping endpoint.");
+                    labeler.Dispose();
+                    continue;
+                }
+            }
+
+            readyEndpoints.Add(new LlmEndpoint(baseUrl, labeler));
+        }
+
+        if (readyEndpoints.Count == 0)
+        {
+            Console.Error.WriteLine("[corpus] No Ollama endpoints are ready. Falling back to NullLlmLabeler.");
             return new NullLlmLabeler();
         }
 
-        var labeler = new OllamaLlmLabeler(model, baseUrl);
-
-        // 3. Ensure the server is running (try to auto-start if not)
-        if (!await labeler.IsServerRunningAsync(ct))
+        var enabledUrls = string.Join(", ", readyEndpoints.Select(e => e.Name));
+        if (readyEndpoints.Count == 1)
         {
-            Console.WriteLine("[corpus] Ollama server not running — attempting to start...");
-            if (!await labeler.TryStartServerAsync(ct: ct))
-            {
-                Console.Error.WriteLine("[corpus] Could not start Ollama server. Run 'ollama serve' in another terminal.");
-                labeler.Dispose();
-                return new NullLlmLabeler();
-            }
-            Console.WriteLine("[corpus] Ollama server started.");
+            Console.WriteLine($"[corpus] LLM labeling enabled via Ollama ({enabledUrls}, model: {model})");
+            return readyEndpoints[0].Labeler;
         }
 
-        // 4. Ensure model is pulled locally
-        if (!await labeler.IsModelAvailableAsync(ct))
-        {
-            Console.WriteLine($"[corpus] Model '{model}' not found locally — pulling (this may take several minutes)...");
-            var pulled = await labeler.TryPullModelAsync(
-                line => Console.WriteLine($"         {line}"), ct);
-
-            if (!pulled)
-            {
-                Console.Error.WriteLine($"[corpus] Failed to pull model '{model}'. Run 'ollama pull {model}' manually.");
-                labeler.Dispose();
-                return new NullLlmLabeler();
-            }
-            Console.WriteLine($"[corpus] Model '{model}' ready.");
-        }
-
-        Console.WriteLine($"[corpus] LLM labeling enabled via Ollama ({baseUrl}, model: {model})");
-        return labeler;
+        Console.WriteLine($"[corpus] LLM labeling enabled via Ollama ({readyEndpoints.Count} endpoints, model: {model})");
+        Console.WriteLine($"[corpus] Ollama endpoints: {enabledUrls}");
+        return new RoundRobinLlmLabeler(readyEndpoints);
     }
+
+    private static IReadOnlyList<string> NormalizeOllamaUrls(IEnumerable<string>? rawUrls)
+    {
+        var normalized = (rawUrls ?? [])
+            .SelectMany(url => (url ?? string.Empty).Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            .Where(url => !string.IsNullOrWhiteSpace(url))
+            .Select(url => url.Trim().TrimEnd('/'))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        return normalized.Length > 0 ? normalized : ["http://localhost:11434"];
+    }
+
+    private static bool IsLocalOllamaUrl(string baseUrl)
+    {
+        if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri))
+            return false;
+
+        return uri.IsLoopback
+            || uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+            || uri.Host.Equals(Environment.MachineName, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static int GetLabelAllParallelism(bool llmLabel, string provider, int ollamaUrlCount)
+        => llmLabel && provider.Equals("ollama", StringComparison.OrdinalIgnoreCase)
+            ? Math.Max(1, ollamaUrlCount)
+            : 1;
 
     private static void PrintMetadata(GauntletCI.Corpus.Models.FixtureMetadata m)
     {
