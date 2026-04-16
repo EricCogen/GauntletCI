@@ -6,7 +6,7 @@ using GauntletCI.Corpus.Models;
 
 namespace GauntletCI.Corpus.Discovery;
 
-public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
+public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider, IDisposable
 {
     private const int ThrottleThreshold = 5;
 
@@ -29,6 +29,8 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         _http.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
         _errorCallback = errorCallback;
     }
+
+    public void Dispose() => _http.Dispose();
 
     public string GetProviderName() => "gh-search";
 
