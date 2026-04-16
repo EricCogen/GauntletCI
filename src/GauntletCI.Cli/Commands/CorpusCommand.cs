@@ -611,6 +611,8 @@ public static class CorpusCommand
                 return;
             }
 
+            using var providerLifetime = provider as IDisposable;
+
             var languages = string.IsNullOrWhiteSpace(language)
                 ? Array.Empty<string>()
                 : new[] { language };
