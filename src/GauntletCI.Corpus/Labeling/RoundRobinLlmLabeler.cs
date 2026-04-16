@@ -63,7 +63,8 @@ public sealed class RoundRobinLlmLabeler : ILlmLabeler, IDisposable
         string diffSnippet,
         CancellationToken ct = default)
     {
-        var startIndex = Math.Abs(Interlocked.Increment(ref _nextIndex));
+        // Cast to uint before modulo to avoid OverflowException when _nextIndex wraps to int.MinValue.
+        var startIndex = (int)((uint)Interlocked.Increment(ref _nextIndex) % (uint)_endpoints.Count);
         var attemptedHealthyEndpoint = false;
 
         for (var offset = 0; offset < _endpoints.Count; offset++)
@@ -132,6 +133,8 @@ public sealed class RoundRobinLlmLabeler : ILlmLabeler, IDisposable
                 return false;
 
             state.DisabledUntilUtc = DateTime.UtcNow.Add(_cooldown);
+            // Reset so the endpoint gets a full failure window after cooldown expires.
+            state.ConsecutiveFailures = 0;
             return true;
         }
     }
