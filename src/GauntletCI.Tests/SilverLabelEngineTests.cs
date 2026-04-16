@@ -75,7 +75,7 @@ public sealed class SilverLabelEngineTests
     }
 
     [Fact]
-    public async Task InferLabelsFromComments_CommentMentioningSecret_EmitsGCI0012Label()
+    public async Task InferLabelsFromComments_CommentMentioningSecret_EmitsGCI0007Label()
     {
         // Arrange
         var json = CommentsJson("Are you sure you want to commit this password here?");
@@ -84,7 +84,7 @@ public sealed class SilverLabelEngineTests
         var labels = await _engine.InferLabelsFromCommentsAsync(json);
 
         // Assert
-        var label = Assert.Single(labels, l => l.RuleId == "GCI0012");
+        var label = Assert.Single(labels, l => l.RuleId == "GCI0007");
         Assert.True(label.ShouldTrigger);
     }
 
@@ -173,8 +173,8 @@ public sealed class SilverLabelEngineTests
         // Arrange
         var expected = new[]
         {
-            "GCI0003", "GCI0004", "GCI0006", "GCI0010",
-            "GCI0012", "GCI0016", "GCI0021", "GCI0023",
+            "GCI0003", "GCI0004", "GCI0006", "GCI0007",
+            "GCI0010", "GCI0016", "GCI0021", "GCI0023",
         };
 
         // Assert — every expected rule is present and the set is exactly this size
@@ -222,7 +222,7 @@ public sealed class SilverLabelEngineTests
     }
 
     [Fact]
-    public async Task InferLabels_DiffWithCredentialAssignment_EmitsGCI0012Label()
+    public async Task InferLabels_DiffWithCredentialAssignment_EmitsGCI0007Label()
     {
         // Arrange — added line assigns a literal string to a credential keyword variable
         var diff = """
@@ -236,7 +236,7 @@ public sealed class SilverLabelEngineTests
         var labels = await _engine.InferLabelsAsync("fix-001", diff);
 
         // Assert
-        Assert.Contains(labels, l => l.RuleId == "GCI0012" && l.ShouldTrigger);
+        Assert.Contains(labels, l => l.RuleId == "GCI0007" && l.ShouldTrigger);
     }
 
     [Fact]
