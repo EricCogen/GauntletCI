@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using System.IO;
 using GauntletCI.Corpus.Interfaces;
 using GauntletCI.Corpus.Labeling;
 using GauntletCI.Corpus.Models;
@@ -178,6 +179,31 @@ public sealed class CorpusAutoLabelTests
         var result = await labeler.ClassifyAsync("", "", "", null, [], "", CancellationToken.None);
 
         Assert.Null(result);
+    }
+
+    [Fact]
+    public async Task ApplyToFixture_NullLlmLabeler_DoesNotEmitTier3Log()
+    {
+        var actualFindings = new List<ActualFinding>
+        {
+            new() { RuleId = "GCI0004", DidTrigger = true, FilePath = "Src/PublicApi.cs", Message = "Breaking change risk" },
+        };
+
+        var store  = new FakeFixtureStore(actualFindings);
+        var engine = new SilverLabelEngine(store, new NullLlmLabeler());
+        var sw = new StringWriter();
+        var original = Console.Out;
+        Console.SetOut(sw);
+        try
+        {
+            await engine.ApplyToFixtureAsync("test-fixture", "--- a/Src/PublicApi.cs\n+++ b/Src/PublicApi.cs\n@@ -1 +1 @@\n+public class PublicApi {}");
+        }
+        finally
+        {
+            Console.SetOut(original);
+        }
+
+        Assert.DoesNotContain("Tier 3 calling NullLlmLabeler", sw.ToString());
     }
 
     // ─────────────────────────────────────────────────────────────────────────
