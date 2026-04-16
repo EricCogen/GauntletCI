@@ -24,7 +24,7 @@ param(
     [switch]$LlmLabel      = $false, # Enable Tier 3 LLM fallback during Step 4 / Step 8 label-all
     [string]$LlmProvider   = "ollama", # LLM provider for label-all: ollama | anthropic | github-models | none
     [string]$LlmModel      = "",    # Optional provider-specific model override for label-all
-    [string[]]$LlmUrl      = @("http://localhost:11434", "http://10.0.0.5:11434/"), # Ollama base URLs for label-all
+    [string[]]$LlmUrl      = @(), # Ollama base URL(s) for label-all; when empty, falls back to corpus.ollamaUrls in .gauntletci.json (see feature/audit-ollama-url-hardcoded)
     [switch]$SkipLabeler    = $false, # Skip launching the labeler Flask app after pipeline completes
     # Known game repositories and other low-signal repos to exclude from discovery.
     # Add owner/repo strings here to prevent them from entering the corpus.
