@@ -27,6 +27,9 @@ public class GauntletConfig
     /// Value: list of namespace fragments that the source layer must not import (e.g. ["Infrastructure", "AspNetCore"]).
     /// </summary>
     public Dictionary<string, List<string>>? ForbiddenImports { get; set; }
+
+    /// <summary>Corpus pipeline configuration (local dev tool settings).</summary>
+    public CorpusConfig Corpus { get; set; } = new();
 }
 
 /// <summary>Per-rule configuration overrides.</summary>
@@ -69,4 +72,24 @@ public class LlmConfig
     /// Required to enable CI LLM enrichment.
     /// </summary>
     public string LicenseKeyEnv { get; set; } = "GAUNTLETCI_LICENSE";
+}
+
+/// <summary>
+/// Corpus pipeline configuration. Controls local Ollama endpoints used during silver labeling.
+/// These settings are local to the developer's machine and should not be committed to source control.
+/// </summary>
+public class CorpusConfig
+{
+    /// <summary>
+    /// Ollama base URLs for silver labeling. Multiple URLs enable round-robin load distribution
+    /// across several local or remote Ollama servers.
+    /// Example: ["http://localhost:11434", "http://192.168.1.5:11434"]
+    /// </summary>
+    public string[] OllamaUrls { get; set; } = [];
+
+    /// <summary>
+    /// Default Ollama model override for the corpus pipeline. Null means auto-select based on hardware.
+    /// Example: "phi3:mini"
+    /// </summary>
+    public string? OllamaModel { get; set; }
 }
