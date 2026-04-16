@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using GauntletCI.Corpus.Discovery;
@@ -46,6 +47,7 @@ public static class CorpusCommand
         corpus.AddCommand(CreateResetStats());
         corpus.AddCommand(CreatePurge());
         corpus.AddCommand(CreateErrors());
+        corpus.AddCommand(CreateRejectedRepos());
         corpus.AddCommand(CreateDoctor());
 
         var issues = new Command("issues", "GitHub Issues corpus operations");
@@ -761,10 +763,28 @@ public static class CorpusCommand
 
                 int success = 0;
                 int total   = candidates.Count;
+                var rejectedRepos = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+                using var hydrator = GitHubRestHydrator.CreateDefault(fixtures);
 
                 foreach (var (owner, repo, prNumber) in candidates)
                 {
                     var url = $"https://github.com/{owner}/{repo}/pull/{prNumber}";
+                    var candidateId = $"{owner}/{repo}#{prNumber}";
+                    var repoSpec = $"{owner}/{repo}";
+
+                    if (rejectedRepos.TryGetValue(repoSpec, out var cachedRejectReason))
+                    {
+                        await UpsertHydrationStatusAsync(
+                            db.Connection,
+                            candidateId,
+                            "PermanentFailure",
+                            $"Skipped because repo was rejected earlier in this run: {cachedRejectReason}",
+                            hydrated: null,
+                            ct);
+                        Console.WriteLine($"[corpus] Skip {owner}/{repo}#{prNumber} — repo already rejected ({cachedRejectReason})");
+                        continue;
+                    }
 
                     if (dryRun)
                     {
@@ -778,12 +798,11 @@ public static class CorpusCommand
 
                     try
                     {
-                        using var hydrator = GitHubRestHydrator.CreateDefault(fixtures);
                         var hydrated = await hydrator.HydrateFromUrlAsync(url, ct);
                         await pipeline.NormalizeAsync(hydrated, source: "batch", tier: tier, ct: ct);
+                        await UpsertHydrationStatusAsync(db.Connection, candidateId, "Completed", null, hydrated, ct);
 
                         // Persist actual review comment count back to candidates so purge can use it
-                        var candidateId = $"{owner}/{repo}#{prNumber}";
                         using var updateCmd = db.Connection.CreateCommand();
                         updateCmd.CommandText = "UPDATE candidates SET review_comment_count = $count WHERE id = $id";
                         updateCmd.Parameters.AddWithValue("$count", hydrated.ReviewComments.Count);
@@ -799,6 +818,32 @@ public static class CorpusCommand
                     }
                     catch (Exception ex)
                     {
+                        var failureStatus = IsPermanentHydrationFailure(ex) ? "PermanentFailure" : "Failed";
+                        var repoRejectReason = failureStatus == "PermanentFailure"
+                            ? await hydrator.GetPermanentRepoRejectReasonAsync(owner, repo, ct)
+                            : null;
+
+                        await UpsertHydrationStatusAsync(
+                            db.Connection,
+                            candidateId,
+                            failureStatus,
+                            repoRejectReason is null ? ex.Message : $"{ex.Message} | repo reject: {repoRejectReason}",
+                            hydrated: null,
+                            ct);
+
+                        if (repoRejectReason is not null)
+                        {
+                            rejectedRepos[repoSpec] = repoRejectReason;
+                            await UpsertRepoRejectionAsync(
+                                db.Connection,
+                                owner,
+                                repo,
+                                repoRejectReason,
+                                source: "batch-hydrate",
+                                ct);
+                            Console.Error.WriteLine($"[corpus] Recorded repo reject {owner}/{repo}: {repoRejectReason}");
+                        }
+
                         Console.Error.WriteLine($"[corpus] Error hydrating {owner}/{repo}#{prNumber}: {ex.Message}");
                     }
                 }
@@ -821,7 +866,14 @@ public static class CorpusCommand
                 replace(replace(replace(lower(c.repo_owner), '/', '_'), '\', '_'), ' ', '-') || '_' ||
                 replace(replace(replace(lower(c.repo_name),  '/', '_'), '\', '_'), ' ', '-') || '_pr' || c.pr_number
             )
+            LEFT JOIN hydrations h
+                ON h.candidate_id = c.id
+            LEFT JOIN repo_rejections rr
+                ON rr.repo_owner = c.repo_owner
+               AND rr.repo_name = c.repo_name
             WHERE f.fixture_id IS NULL
+              AND rr.repo_owner IS NULL
+              AND COALESCE(h.status, 'Pending') NOT IN ('Completed', 'PermanentFailure')
             ORDER BY c.discovered_at_utc DESC
             LIMIT $limit
             """;
@@ -833,6 +885,74 @@ public static class CorpusCommand
             results.Add((reader.GetString(0), reader.GetString(1), reader.GetInt32(2)));
 
         return results;
+    }
+
+    private static bool IsPermanentHydrationFailure(Exception ex) =>
+        ex is HttpRequestException httpEx &&
+        httpEx.StatusCode is HttpStatusCode.NotFound
+            or HttpStatusCode.Gone
+            or HttpStatusCode.MovedPermanently;
+
+    private static async Task UpsertHydrationStatusAsync(
+        SqliteConnection conn,
+        string candidateId,
+        string status,
+        string? errorMessage,
+        HydratedPullRequest? hydrated,
+        CancellationToken ct)
+    {
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO hydrations
+                (id, candidate_id, base_sha, head_sha, files_changed_count, additions, deletions, hydrated_at_utc, status, error_message)
+            VALUES
+                ($id, $candidateId, $baseSha, $headSha, $filesChangedCount, $additions, $deletions, datetime('now'), $status, $errorMessage)
+            ON CONFLICT(id) DO UPDATE SET
+                base_sha            = excluded.base_sha,
+                head_sha            = excluded.head_sha,
+                files_changed_count = excluded.files_changed_count,
+                additions           = excluded.additions,
+                deletions           = excluded.deletions,
+                hydrated_at_utc     = excluded.hydrated_at_utc,
+                status              = excluded.status,
+                error_message       = excluded.error_message
+            """;
+        cmd.Parameters.AddWithValue("$id", candidateId);
+        cmd.Parameters.AddWithValue("$candidateId", candidateId);
+        cmd.Parameters.AddWithValue("$baseSha",           (object?)hydrated?.BaseSha ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$headSha",           (object?)hydrated?.HeadSha ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$filesChangedCount", hydrated?.FilesChangedCount ?? 0);
+        cmd.Parameters.AddWithValue("$additions",         hydrated?.Additions ?? 0);
+        cmd.Parameters.AddWithValue("$deletions",         hydrated?.Deletions ?? 0);
+        cmd.Parameters.AddWithValue("$status", status);
+        cmd.Parameters.AddWithValue("$errorMessage", (object?)errorMessage ?? DBNull.Value);
+        await cmd.ExecuteNonQueryAsync(ct);
+    }
+
+    private static async Task UpsertRepoRejectionAsync(
+        SqliteConnection conn,
+        string owner,
+        string repo,
+        string reason,
+        string source,
+        CancellationToken ct)
+    {
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = """
+            INSERT INTO repo_rejections
+                (repo_owner, repo_name, reason, source)
+            VALUES
+                ($owner, $repo, $reason, $source)
+            ON CONFLICT(repo_owner, repo_name) DO UPDATE SET
+                reason                = excluded.reason,
+                source                = excluded.source,
+                last_rejected_at_utc  = datetime('now')
+            """;
+        cmd.Parameters.AddWithValue("$owner", owner);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$reason", reason);
+        cmd.Parameters.AddWithValue("$source", source);
+        await cmd.ExecuteNonQueryAsync(ct);
     }
 
     // ── gauntletci corpus run --fixture <id> ─────────────────────────────────
@@ -1428,9 +1548,26 @@ public static class CorpusCommand
             await db.InitializeAsync(ct);
             using (db)
             {
+                var rejectedRepos = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                using (var rejectedCmd = db.Connection.CreateCommand())
+                {
+                    rejectedCmd.CommandText = "SELECT repo_owner || '/' || repo_name FROM repo_rejections";
+                    using var rejectedReader = await rejectedCmd.ExecuteReaderAsync(ct);
+                    while (await rejectedReader.ReadAsync(ct))
+                        rejectedRepos.Add(rejectedReader.GetString(0));
+                }
+
                 int inserted = 0;
+                int rejected = 0;
                 foreach (var c in candidates)
                 {
+                    var repoSpec = $"{c.RepoOwner}/{c.RepoName}";
+                    if (rejectedRepos.Contains(repoSpec))
+                    {
+                        rejected++;
+                        continue;
+                    }
+
                     var id = $"{c.RepoOwner}/{c.RepoName}#{c.PullRequestNumber}";
                     using var insertCmd = db.Connection.CreateCommand();
                     insertCmd.CommandText = """
@@ -1457,8 +1594,8 @@ public static class CorpusCommand
                     if (rows > 0) inserted++;
                 }
 
-                var skipped = candidates.Count - inserted;
-                Console.WriteLine($"[corpus/issues] Found {candidates.Count} candidates ({inserted} new, {skipped} already known)");
+                var skipped = candidates.Count - inserted - rejected;
+                Console.WriteLine($"[corpus/issues] Found {candidates.Count} candidates ({inserted} new, {skipped} already known, {rejected} rejected repo)");
             }
         });
 
@@ -1742,6 +1879,56 @@ public static class CorpusCommand
                 tx.Commit();
 
                 Console.WriteLine($"[corpus] purge: removed {removed} fixture(s) from DB and disk.");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus rejected-repos ──────────────────────────────────────
+
+    private static Command CreateRejectedRepos()
+    {
+        var dbOpt       = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var namesOnlyOpt = new Option<bool>("--names-only", () => false, "Print only owner/repo names, one per line");
+
+        var cmd = new Command("rejected-repos", "List repositories permanently rejected during corpus hydration");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(namesOnlyOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var namesOnly = ctx.ParseResult.GetValueForOption(namesOnlyOpt);
+            var ct        = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                using var listCmd = db.Connection.CreateCommand();
+                listCmd.CommandText = """
+                    SELECT repo_owner, repo_name, reason, source, first_rejected_at_utc, last_rejected_at_utc
+                    FROM repo_rejections
+                    ORDER BY repo_owner, repo_name
+                    """;
+
+                using var reader = await listCmd.ExecuteReaderAsync(ct);
+                while (await reader.ReadAsync(ct))
+                {
+                    var repoSpec = $"{reader.GetString(0)}/{reader.GetString(1)}";
+                    if (namesOnly)
+                    {
+                        Console.WriteLine(repoSpec);
+                        continue;
+                    }
+
+                    var reason    = reader.GetString(2);
+                    var source    = reader.GetString(3);
+                    var firstSeen = reader.GetString(4);
+                    var lastSeen  = reader.GetString(5);
+                    Console.WriteLine($"{repoSpec} | {reason} | source={source} | first={firstSeen} | last={lastSeen}");
+                }
             }
         });
 

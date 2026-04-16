@@ -51,7 +51,6 @@ param(
         # Removed: IdentityServer/IdentityServer4 (archived)
         "JamesNK/Newtonsoft.Json",
         # Removed: JetBrains/Annotations (too small, <5 review-commented PRs)
-        "MediatR/MediatR",
         "NLog/NLog",
         "PowerShell/PowerShell",
         "RicoSuter/NJsonSchema",
@@ -77,7 +76,8 @@ param(
         "googleapis/google-api-dotnet-client",
         "grpc/grpc-dotnet",
         "icsharpcode/SharpZipLib",
-        # Removed: jbogard/MediatR (duplicate of MediatR/MediatR after org rename)
+        # Removed: MediatR/MediatR (repo now rejects as deleted/private)
+        # Removed: jbogard/MediatR (duplicate of former MediatR org home)
         "jellyfin/jellyfin",
         "joshclose/CsvHelper",
         "mgravell/Pipelines.Sockets.Unofficial",
@@ -99,6 +99,7 @@ param(
         "akkadotnet/akka.net",           # Actor-model framework, ~5k stars, active reviews
         "AngleSharp/AngleSharp",         # HTML/CSS parser, ~4.5k stars, active
         "ClosedXML/ClosedXML",           # Excel manipulation, ~4k stars, active
+        "icsharpcode/ILSpy",             # Mature .NET toolchain project, strong contributor/review activity
         "morelinq/MoreLINQ",             # LINQ extensions, ~3.7k stars, active
         "spectreconsole/spectre.console" # Rich console UI, ~10k stars, very active
     )
@@ -238,6 +239,28 @@ Write-Host "Building solution..." -ForegroundColor Yellow
 dotnet build GauntletCI.slnx --nologo -v quiet
 if ($LASTEXITCODE -ne 0) { throw "Build failed" }
 
+$effectiveRepoBlocklist = @($RepoBlocklist)
+$dynamicRepoRejects = @()
+if (Test-Path $Db) {
+    $dynamicRepoRejects = @(
+        & dotnet run --project src/GauntletCI.Cli --no-build -- corpus rejected-repos --db $Db --names-only 2>$null |
+            Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+    )
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning "Could not load persisted rejected repos from $Db — continuing with static blocklist only."
+        $dynamicRepoRejects = @()
+    }
+}
+if ($dynamicRepoRejects.Count -gt 0) {
+    Write-Host "Loaded $($dynamicRepoRejects.Count) persisted rejected repos into the discovery filter." -ForegroundColor Yellow
+}
+$effectiveRepoBlocklist = @($RepoBlocklist + $dynamicRepoRejects | Sort-Object -Unique)
+$effectiveRepoAllowlist = @($RepoAllowlist | Where-Object { $effectiveRepoBlocklist -notcontains $_ })
+if ($effectiveRepoAllowlist.Count -lt $RepoAllowlist.Count) {
+    $removed = @($RepoAllowlist | Where-Object { $effectiveRepoBlocklist -contains $_ } | Sort-Object -Unique)
+    Write-Host "Excluded from effective allowlist: $($removed -join ', ')" -ForegroundColor Yellow
+}
+
 # ── Step 1: Discover ──────────────────────────────────────────────────────────
 if ($SkipTo -le 1) {
     Step 1 "Discover PR candidates from GH Archive"
@@ -257,10 +280,10 @@ if ($SkipTo -le 1) {
     if ($RepoAllowlist.Count -eq 0 -and $MinStars -gt 0) {
         $discoverArgs += "--min-stars", $MinStars
     }
-    foreach ($allowed in $RepoAllowlist) {
+    foreach ($allowed in $effectiveRepoAllowlist) {
         $discoverArgs += "--repo-allowlist", $allowed
     }
-    foreach ($blocked in $RepoBlocklist) {
+    foreach ($blocked in $effectiveRepoBlocklist) {
         $discoverArgs += "--repo-blocklist", $blocked
     }
 
@@ -309,7 +332,7 @@ if ($SkipTo -le 2) {
         "--fixtures", $Fixtures
     )
     if ($Language -ne "") { $purgeArgs += "--language", $Language }
-    foreach ($blocked in $RepoBlocklist) {
+    foreach ($blocked in $effectiveRepoBlocklist) {
         $purgeArgs += "--repo-blocklist", $blocked
     }
 
