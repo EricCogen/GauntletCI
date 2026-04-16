@@ -1333,13 +1333,14 @@ public static class CorpusCommand
             }
 
             ILlmLabeler llmLabeler = new NullLlmLabeler();
+            int readyEndpointCount = 0;
             if (llmLabel)
             {
                 string? modelOverride = string.IsNullOrWhiteSpace(llmModel) ? null : llmModel;
 
                 if (provider == "ollama")
                 {
-                    llmLabeler = await SetupOllamaLabelerAsync(modelOverride, llmUrls, ct);
+                    (llmLabeler, readyEndpointCount) = await SetupOllamaLabelerAsync(modelOverride, llmUrls, ct);
                 }
                 else
                 {
@@ -1365,11 +1366,11 @@ public static class CorpusCommand
                 int skipped = 0;
                 int totalLabels = 0;
                 var engine = new SilverLabelEngine(store, llmLabeler);
-                var parallelism = GetLabelAllParallelism(llmLabel, provider, llmUrls.Count);
+                var parallelism = GetLabelAllParallelism(llmLabel, provider, readyEndpointCount);
                 var consoleLock = new object();
 
                 if (parallelism > 1)
-                    Console.WriteLine($"[corpus] Parallel LLM labeling enabled: {parallelism} workers across {llmUrls.Count} Ollama endpoints.");
+                    Console.WriteLine($"[corpus] Parallel LLM labeling enabled: {parallelism} workers across {readyEndpointCount} Ollama endpoints.");
 
                 if (parallelism == 1)
                 {
@@ -1408,7 +1409,7 @@ public static class CorpusCommand
                     try
                     {
                         var diffText      = await File.ReadAllTextAsync(diffPath, token);
-                        var labelsWritten = await engine.ApplyToFixtureAsync(metadata.FixtureId, diffText, overwrite, token);
+                        var labelsWritten = await engine.ApplyToFixtureAsync(metadata.FixtureId, diffText, overwrite, token, line => output.Add((false, line)));
 
                         Interlocked.Add(ref totalLabels, labelsWritten);
                         Interlocked.Increment(ref labeled);
@@ -2045,7 +2046,7 @@ public static class CorpusCommand
     /// pulls the model if needed, and returns a ready <see cref="ILlmLabeler"/>.
     /// Falls back to <see cref="NullLlmLabeler"/> with a console message on any failure.
     /// </summary>
-    private static async Task<ILlmLabeler> SetupOllamaLabelerAsync(
+    private static async Task<(ILlmLabeler Labeler, int ReadyCount)> SetupOllamaLabelerAsync(
         string? modelOverride, IReadOnlyList<string> baseUrls, CancellationToken ct)
     {
         var normalizedUrls = NormalizeOllamaUrls(baseUrls);
@@ -2120,19 +2121,19 @@ public static class CorpusCommand
         if (readyEndpoints.Count == 0)
         {
             Console.Error.WriteLine("[corpus] No Ollama endpoints are ready. Falling back to NullLlmLabeler.");
-            return new NullLlmLabeler();
+            return (new NullLlmLabeler(), 0);
         }
 
         var enabledUrls = string.Join(", ", readyEndpoints.Select(e => e.Name));
         if (readyEndpoints.Count == 1)
         {
             Console.WriteLine($"[corpus] LLM labeling enabled via Ollama ({enabledUrls}, model: {model})");
-            return readyEndpoints[0].Labeler;
+            return (readyEndpoints[0].Labeler, 1);
         }
 
         Console.WriteLine($"[corpus] LLM labeling enabled via Ollama ({readyEndpoints.Count} endpoints, model: {model})");
         Console.WriteLine($"[corpus] Ollama endpoints: {enabledUrls}");
-        return new RoundRobinLlmLabeler(readyEndpoints);
+        return (new RoundRobinLlmLabeler(readyEndpoints), readyEndpoints.Count);
     }
 
     private static IReadOnlyList<string> NormalizeOllamaUrls(IEnumerable<string>? rawUrls)
