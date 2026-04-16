@@ -164,6 +164,47 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
         };
     }
 
+    /// <summary>
+    /// Checks whether the repository itself is permanently unsuitable for corpus hydration.
+    /// Returns a short reject reason for deleted, moved, or archived repositories; otherwise null.
+    /// </summary>
+    public async Task<string?> GetPermanentRepoRejectReasonAsync(
+        string owner, string repo, CancellationToken ct = default)
+    {
+        using var response = await _http.GetAsync($"https://api.github.com/repos/{owner}/{repo}", ct);
+
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            return "repo not found (deleted, private, or never existed)";
+
+        if (response.StatusCode == HttpStatusCode.Gone)
+            return "repo is gone";
+
+        if (response.StatusCode == HttpStatusCode.MovedPermanently || (int)response.StatusCode == 301)
+            return "repo has moved permanently (update allowlist with new owner/name)";
+
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        await using var stream = await response.Content.ReadAsStreamAsync(ct);
+        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+        var root = doc.RootElement;
+
+        if (root.TryGetProperty("archived", out var archivedEl) && archivedEl.GetBoolean())
+            return "repo is archived";
+
+        if (root.TryGetProperty("full_name", out var fullNameEl))
+        {
+            var fullName = fullNameEl.GetString();
+            if (!string.IsNullOrWhiteSpace(fullName) &&
+                !string.Equals(fullName, $"{owner}/{repo}", StringComparison.OrdinalIgnoreCase))
+            {
+                return "repo has moved permanently (update allowlist with new owner/name)";
+            }
+        }
+
+        return null;
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────────────
 
     private async Task<T> GetJsonAsync<T>(string url, CancellationToken ct)
