@@ -174,4 +174,64 @@ public class GitHubRestHydratorTests : IDisposable
         var commit = Assert.Single(result.Commits);
         Assert.Equal("def123", commit);
     }
+
+    [Fact]
+    public async Task GetPermanentRepoRejectReasonAsync_NotFoundRepo_ReturnsRejectReason()
+    {
+        using var handler = new FakeHttpHandler(_ => new HttpResponseMessage(HttpStatusCode.NotFound));
+        using var http = new HttpClient(handler);
+        http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Test");
+
+        var store = new RawSnapshotStore(_tempDir);
+        using var sut = new GitHubRestHydrator(http, store);
+
+        var result = await sut.GetPermanentRepoRejectReasonAsync("missing", "repo");
+
+        Assert.Equal("repo not found (deleted, private, or never existed)", result);
+    }
+
+    [Fact]
+    public async Task GetPermanentRepoRejectReasonAsync_ArchivedRepo_ReturnsRejectReason()
+    {
+        using var handler = new FakeHttpHandler(_ => Ok("""{"full_name":"owner/repo","archived":true}"""));
+        using var http = new HttpClient(handler);
+        http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Test");
+
+        var store = new RawSnapshotStore(_tempDir);
+        using var sut = new GitHubRestHydrator(http, store);
+
+        var result = await sut.GetPermanentRepoRejectReasonAsync("owner", "repo");
+
+        Assert.Equal("repo is archived", result);
+    }
+
+    [Fact]
+    public async Task GetPermanentRepoRejectReasonAsync_RenamedRepo_ReturnsRejectReason()
+    {
+        using var handler = new FakeHttpHandler(_ => Ok("""{"full_name":"new-owner/new-repo","archived":false}"""));
+        using var http = new HttpClient(handler);
+        http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Test");
+
+        var store = new RawSnapshotStore(_tempDir);
+        using var sut = new GitHubRestHydrator(http, store);
+
+        var result = await sut.GetPermanentRepoRejectReasonAsync("old-owner", "old-repo");
+
+        Assert.Equal("repo has moved permanently (update allowlist with new owner/name)", result);
+    }
+
+    [Fact]
+    public async Task GetPermanentRepoRejectReasonAsync_HealthyRepo_ReturnsNull()
+    {
+        using var handler = new FakeHttpHandler(_ => Ok("""{"full_name":"owner/repo","archived":false}"""));
+        using var http = new HttpClient(handler);
+        http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Test");
+
+        var store = new RawSnapshotStore(_tempDir);
+        using var sut = new GitHubRestHydrator(http, store);
+
+        var result = await sut.GetPermanentRepoRejectReasonAsync("owner", "repo");
+
+        Assert.Null(result);
+    }
 }

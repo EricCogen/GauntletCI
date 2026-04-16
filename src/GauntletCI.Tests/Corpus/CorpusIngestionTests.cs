@@ -516,4 +516,50 @@ public sealed class CandidateDeduplicationTests : IDisposable
 
         Assert.Equal(3, count);
     }
+
+    [Fact]
+    public async Task RepoRejectionsTable_UpsertByRepo_KeepsSingleRow()
+    {
+        const string upsertSql = """
+            INSERT INTO repo_rejections
+                (repo_owner, repo_name, reason, source)
+            VALUES
+                ($owner, $repo, $reason, $source)
+            ON CONFLICT(repo_owner, repo_name) DO UPDATE SET
+                reason               = excluded.reason,
+                source               = excluded.source,
+                last_rejected_at_utc = datetime('now')
+            """;
+
+        using (var cmd = _db.Connection.CreateCommand())
+        {
+            cmd.CommandText = upsertSql;
+            cmd.Parameters.AddWithValue("$owner", "dead");
+            cmd.Parameters.AddWithValue("$repo", "repo");
+            cmd.Parameters.AddWithValue("$reason", "repo not found");
+            cmd.Parameters.AddWithValue("$source", "batch-hydrate");
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        using (var cmd = _db.Connection.CreateCommand())
+        {
+            cmd.CommandText = upsertSql;
+            cmd.Parameters.AddWithValue("$owner", "dead");
+            cmd.Parameters.AddWithValue("$repo", "repo");
+            cmd.Parameters.AddWithValue("$reason", "repo is archived");
+            cmd.Parameters.AddWithValue("$source", "batch-hydrate");
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        using var countCmd = _db.Connection.CreateCommand();
+        countCmd.CommandText = "SELECT COUNT(*) FROM repo_rejections WHERE repo_owner='dead' AND repo_name='repo'";
+        var count = (long)(await countCmd.ExecuteScalarAsync())!;
+
+        using var reasonCmd = _db.Connection.CreateCommand();
+        reasonCmd.CommandText = "SELECT reason FROM repo_rejections WHERE repo_owner='dead' AND repo_name='repo'";
+        var reason = (string)(await reasonCmd.ExecuteScalarAsync())!;
+
+        Assert.Equal(1, count);
+        Assert.Equal("repo is archived", reason);
+    }
 }
