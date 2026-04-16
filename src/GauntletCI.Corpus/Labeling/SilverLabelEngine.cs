@@ -36,8 +36,8 @@ public sealed class SilverLabelEngine
     /// </summary>
     public static readonly IReadOnlySet<string> RulesWithHeuristics = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "GCI0003", "GCI0004", "GCI0006", "GCI0007",
-        "GCI0010", "GCI0016", "GCI0021", "GCI0023",
+        "GCI0003", "GCI0004", "GCI0006", "GCI0010",
+        "GCI0012", "GCI0016", "GCI0021", "GCI0023",
     };
 
     // Review comment keyword -> (ruleId, reason, confidence) mapping
@@ -58,7 +58,7 @@ public sealed class SilverLabelEngine
         (["thread safe", "thread-safe", "race condition", "concurrent", "lock"],
             "GCI0016", "Review comment mentions thread safety concern", 0.6),
         (["secret", "password", "credential", "api key", "api_key"],
-            "GCI0007", "Review comment mentions credential/secret concern", 0.75),
+            "GCI0012", "Review comment mentions credential/secret concern", 0.75),
         (["large file", "file size", "binary file", "binary blob"],
             "GCI0022", "Review comment mentions large or binary file", 0.6),
         (["migration", "schema change", "db migration", "database migration"],
@@ -278,12 +278,12 @@ public sealed class SilverLabelEngine
             labels.Add(MakeLabel("GCI0016", "Diff contains .Result or .Wait() on added lines (sync-over-async)", 0.6));
         }
 
-        // GCI0007 -- Secret/credential exposure
+        // GCI0012 -- Secret/credential exposure
         // Tightened: exclude CancellationToken, require assignment to literal string value
         // to avoid flagging benign token/password parameter names.
         if (addedLines.Any(IsCredentialAssignment))
         {
-            labels.Add(MakeLabel("GCI0007", "Diff contains credential keyword assigned to a literal string value on added lines", 0.7));
+            labels.Add(MakeLabel("GCI0012", "Diff contains credential keyword assigned to a literal string value on added lines", 0.7));
         }
 
         // GCI0003 -- Empty catch block
