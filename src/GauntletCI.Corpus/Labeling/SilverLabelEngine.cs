@@ -125,7 +125,7 @@ public sealed class SilverLabelEngine
     /// </summary>
     /// <returns>Total number of labels written to <c>expected.json</c>.</returns>
     public async Task<int> ApplyToFixtureAsync(
-        string fixtureId, string diffText, bool overwriteExisting = false, CancellationToken ct = default)
+        string fixtureId, string diffText, bool overwriteExisting = false, CancellationToken ct = default, Action<string>? log = null)
     {
         // ── Tier 1: Diff + comment heuristics ────────────────────────────────
         var inferred = (await InferLabelsAsync(fixtureId, diffText, ct)).ToList();
@@ -211,7 +211,7 @@ public sealed class SilverLabelEngine
                 if (positiveRuleIdsAfterTier12.Contains(finding.RuleId)) continue;
 
                 var diffSnippet = ExtractFileDiffHunk(diffText, finding.FilePath);
-                Console.WriteLine($"  [llm] Tier 3 calling {_llmLabeler.GetType().Name} for rule {finding.RuleId}");
+                (log ?? Console.WriteLine)($"  [llm] Tier 3 calling {_llmLabeler.GetType().Name} for rule {finding.RuleId}");
 
                 var result = await _llmLabeler.ClassifyAsync(
                     finding.RuleId,

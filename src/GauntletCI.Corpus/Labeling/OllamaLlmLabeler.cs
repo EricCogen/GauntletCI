@@ -28,7 +28,6 @@ public sealed class OllamaLlmLabeler : ILlmLabeler, IDisposable
             new MediaTypeWithQualityHeaderValue("application/json"));
     }
 
-    public string BaseUrl => _baseUrl;
 
     // -----------------------------------------------------------------------
     // Readiness checks
