@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -26,6 +27,7 @@ from services.rules_doc_parser import load_rule_definitions
 from services.suggestion_engine import generate_item_suggestion
 from seed_queue import seed as seed_queue
 from store import (
+    _labels_since_last_snapshot,
     _snapshot_aggregates,
     _table_exists,
     init_app_tables,
@@ -40,6 +42,7 @@ CONFIG = load_config(BASE_DIR)
 
 app = Flask(__name__)
 app.secret_key = CONFIG["secret_key"]
+DEBUG = True
 
 # Resolve relative to repo root (two levels up from app.py)
 _RULES_MD = Path(__file__).resolve().parent.parent.parent.parent / "docs" / "rules.md"
@@ -50,6 +53,33 @@ def get_conn():
     conn = connect(CONFIG["database_path"])
     init_app_tables(conn)
     return conn
+
+
+def _should_run_startup_seed() -> bool:
+    # Flask's debug reloader starts a parent process and then the real serving process.
+    # Only seed in the serving process to avoid paying startup cost twice.
+    return not DEBUG or os.environ.get("WERKZEUG_RUN_MAIN") == "true"
+
+
+def _seed_queue_on_startup() -> None:
+    if not _should_run_startup_seed():
+        print("[startup] Skipping queue seed in Flask reloader parent.")
+        return
+
+    with connect(CONFIG["database_path"]) as conn:
+        init_app_tables(conn)
+        pending = conn.execute("SELECT COUNT(*) FROM label_queue WHERE status = 'pending'").fetchone()[0]
+        in_progress = conn.execute("SELECT COUNT(*) FROM label_queue WHERE status = 'in_progress'").fetchone()[0]
+        total = conn.execute("SELECT COUNT(*) FROM label_queue").fetchone()[0]
+
+        if pending > 0 or in_progress > 0:
+            print(
+                f"[startup] Queue already populated. Pending={pending}, in_progress={in_progress}, total={total}. Skipping seed."
+            )
+            return
+
+        total = seed_queue(conn)
+        print(f"[startup] Queue seeded. Total tasks in label_queue: {total}")
 
 
 @app.template_filter("pct")
@@ -478,7 +508,5 @@ def evaluations():
 
 
 if __name__ == "__main__":
-    with connect(CONFIG["database_path"]) as _conn:
-        _total = seed_queue(_conn)
-        print(f"[startup] Queue seeded. Total tasks in label_queue: {_total}")
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    _seed_queue_on_startup()
+    app.run(debug=DEBUG, host="127.0.0.1", port=5000)

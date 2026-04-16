@@ -1,5 +1,5 @@
 ﻿# GauntletCI Corpus Pipeline Runner
-# Usage: .\run-corpus.ps1 [-Help] [-Provider "gh-search"] [-StartDate "2025-03-01"] [-EndDate "2025-03-31"] [-Limit 50] [-Language "C#"] [-MinComments 2] [-MinStars 500] [-Tier "discovery"] [-Db <path>] [-Fixtures <path>] [-Report <path>] [-SkipTo <step>] [-SkipSeedQueue]
+# Usage: .\build-corpus.ps1 [-Help] [-Provider "gh-search"] [-StartDate "2025-03-01"] [-EndDate "2025-03-31"] [-Limit 50] [-Language "C#"] [-MinComments 2] [-MinStars 500] [-Tier "discovery"] [-Db <path>] [-Fixtures <path>] [-Report <path>] [-SkipTo <step>] [-LlmLabel] [-LlmProvider "ollama"] [-LlmModel <name>] [-LlmUrl <url>] [-SkipSeedQueue]
 
 param(
     [switch] $Help,
@@ -21,6 +21,10 @@ param(
     [switch]$SkipSeedQueue  = $false, # Skip Step 7 (seed labeler queue) even if present
     [int]   $SeedQueueLimit = 150,   # Max fired items to add to the labeler queue
     [int]   $SeedQueueNonFired = 30, # Non-fired probe tasks to add per queue seed
+    [switch]$LlmLabel      = $false, # Enable Tier 3 LLM fallback during Step 4 / Step 8 label-all
+    [string]$LlmProvider   = "ollama", # LLM provider for label-all: ollama | anthropic | github-models | none
+    [string]$LlmModel      = "",    # Optional provider-specific model override for label-all
+    [string]$LlmUrl        = "http://10.0.0.5:11434/", # Ollama base URL for label-all
     [switch]$SkipLabeler    = $false, # Skip launching the labeler Flask app after pipeline completes
     # Known game repositories and other low-signal repos to exclude from discovery.
     # Add owner/repo strings here to prevent them from entering the corpus.
@@ -107,7 +111,7 @@ if ($Help) {
     Write-Host "══════════════════════════════════════════════════════════════" -ForegroundColor Cyan
     Write-Host ""
     Write-Host "USAGE" -ForegroundColor Yellow
-    Write-Host "  .\run-corpus.ps1 [options]"
+    Write-Host "  .\build-corpus.ps1 [options]"
     Write-Host ""
     Write-Host "OPTIONS" -ForegroundColor Yellow
     Write-Host "  -Help                  Show this help message"
@@ -132,6 +136,10 @@ if ($Help) {
     Write-Host "  -SkipIssueSearch       Skip Step 1.5 (issue-based discovery)"
     Write-Host "  -IssueLabels <labels>  Comma-separated issue labels to search (default: bug,security,vulnerability)"
     Write-Host "  -SkipSeedQueue         Skip Step 7 (labeler queue seed) even if seed_queue.py is present"
+    Write-Host "  -LlmLabel              Enable Tier 3 LLM fallback during Step 4 / Step 8 label-all"
+    Write-Host "  -LlmProvider <name>    LLM provider for label-all: ollama | anthropic | github-models | none"
+    Write-Host "  -LlmModel <name>       Optional model override for label-all"
+    Write-Host "  -LlmUrl <url>          Ollama base URL for label-all (default: http://10.0.0.5:11434/)"
     Write-Host "  -SkipLabeler           Skip launching the labeler app after pipeline completes"
     Write-Host "  -SeedQueueLimit <n>    Max fired findings to queue for labeling (default: 150)"
     Write-Host "  -SeedQueueNonFired <n> Non-fired probe tasks per queue seed run (default: 30)"
@@ -142,21 +150,24 @@ if ($Help) {
     Write-Host "  2  Hydrate    — fetch diffs + metadata from GitHub REST API"
     Write-Host "  2.5 Purge     — remove language-mismatched / no-review-comment fixtures"
     Write-Host "  3  Run rules  — evaluate all GCI rules against fixtures"
-    Write-Host "  4  Label      — apply silver heuristic labels"
+    Write-Host "  4  Label      — apply silver heuristic labels (optionally with LLM Tier 3 fallback)"
     Write-Host "  5  Score      — compute precision / recall aggregates"
     Write-Host "  6  Report     — write markdown scorecard to -Report path"
     Write-Host "  7  Seed queue — populate labeler queue from actual_findings (requires Python)"
-    Write-Host "  8  Label again — re-apply silver labels with --overwrite (final pass)"
+    Write-Host "  8  Label again — re-apply silver labels with --overwrite (optionally with LLM Tier 3 fallback)"
     Write-Host ""
     Write-Host "EXAMPLES" -ForegroundColor Yellow
     Write-Host "  # Full pipeline for yesterday"
-    Write-Host "  .\run-corpus.ps1"
+    Write-Host "  .\build-corpus.ps1"
     Write-Host ""
     Write-Host "  # Specific date range, C# only, 100 PRs"
-    Write-Host "  .\run-corpus.ps1 -StartDate 2025-03-01 -EndDate 2025-03-31 -Language C# -Limit 100"
+    Write-Host "  .\build-corpus.ps1 -StartDate 2025-03-01 -EndDate 2025-03-31 -Language C# -Limit 100"
     Write-Host ""
     Write-Host "  # Skip discovery and hydration — re-score existing fixtures"
-    Write-Host "  .\run-corpus.ps1 -SkipTo 3"
+    Write-Host "  .\build-corpus.ps1 -SkipTo 3"
+    Write-Host ""
+    Write-Host "  # Resume at label-all with Ollama Tier 3 fallback"
+    Write-Host "  .\build-corpus.ps1 -SkipTo 4 -LlmLabel -LlmProvider ollama"
     Write-Host ""
     Write-Host "NOTES" -ForegroundColor Yellow
     Write-Host "  Requires GITHUB_TOKEN env var for Step 1 (gh-search discover) and Step 2 (hydration)."
@@ -186,6 +197,35 @@ function Step($n, $label) {
     Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
     Write-Host "  Step ${n}: $label" -ForegroundColor Cyan
     Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
+}
+
+function Get-LabelAllArgs {
+    param(
+        [switch]$Overwrite
+    )
+
+    $labelArgs = @(
+        "corpus", "label-all",
+        "--db", $Db,
+        "--fixtures", $Fixtures,
+        "--tier", $Tier
+    )
+
+    if ($Overwrite) {
+        $labelArgs += "--overwrite"
+    }
+
+    if ($LlmLabel) {
+        $labelArgs += "--llm-label", "--llm-provider", $LlmProvider
+        if ($LlmModel -ne "") {
+            $labelArgs += "--llm-model", $LlmModel
+        }
+        if ($LlmProvider -eq "ollama" -and $LlmUrl -ne "") {
+            $labelArgs += "--llm-url", $LlmUrl
+        }
+    }
+
+    return ,$labelArgs
 }
 
 $cli = "dotnet run --project src/GauntletCI.Cli --no-build --"
@@ -310,9 +350,14 @@ if ($SkipTo -le 3) {
 
 # ── Step 4: Label (initial pass) ─────────────────────────────────────────────
 if ($SkipTo -le 4) {
-    Step 4 "Apply silver heuristic labels"
+    if ($LlmLabel) {
+        Step 4 "Apply silver heuristic labels with LLM Tier 3 fallback"
+    } else {
+        Step 4 "Apply silver heuristic labels"
+    }
 
-    Invoke-Expression "$cli corpus label-all --db $Db --fixtures $Fixtures"
+    $labelArgs = Get-LabelAllArgs
+    & dotnet run --project src/GauntletCI.Cli --no-build -- $labelArgs
     if ($LASTEXITCODE -ne 0) { throw "Label-all failed" }
 }
 
@@ -362,9 +407,14 @@ if ($SkipTo -le 7 -and -not $SkipSeedQueue) {
 
 # ── Step 8: Label (final pass with --overwrite) ───────────────────────────────
 if ($SkipTo -le 8) {
-    Step 8 "Re-apply silver labels (final pass, --overwrite)"
+    if ($LlmLabel) {
+        Step 8 "Re-apply silver labels with LLM Tier 3 fallback (final pass, --overwrite)"
+    } else {
+        Step 8 "Re-apply silver labels (final pass, --overwrite)"
+    }
 
-    Invoke-Expression "$cli corpus label-all --db $Db --fixtures $Fixtures --overwrite"
+    $labelArgs = Get-LabelAllArgs -Overwrite
+    & dotnet run --project src/GauntletCI.Cli --no-build -- $labelArgs
     if ($LASTEXITCODE -ne 0) { throw "Label-all (final) failed" }
 
     Write-Host ""
