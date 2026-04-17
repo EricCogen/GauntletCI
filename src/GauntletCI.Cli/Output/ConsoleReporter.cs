@@ -149,7 +149,7 @@ public static class ConsoleReporter
     /// </summary>
     private static void PrintEpSignal(Finding finding)
     {
-        AnsiConsole.MarkupLine($"[blue]  [{Markup.Escape(finding.RuleId)}: {Markup.Escape(finding.RuleName)}] SIGNAL[/]");
+        AnsiConsole.MarkupLine($"[blue]  [[{Markup.Escape(finding.RuleId)}: {Markup.Escape(finding.RuleName)}]] SIGNAL[/]");
         AnsiConsole.WriteLine();
 
         if (!string.IsNullOrWhiteSpace(finding.Summary))

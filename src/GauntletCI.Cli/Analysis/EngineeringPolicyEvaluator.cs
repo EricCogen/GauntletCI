@@ -169,9 +169,12 @@ internal static class EngineeringPolicyEvaluator
                             .Select(s => s.Trim())
                             .Where(s => s.Length > 0));
 
+                    // Strip any trailing colon or whitespace the model appends to ruleId
+                    var ruleId = r.RuleId!.TrimEnd(':', ' ');
+
                     return new Finding
                     {
-                        RuleId          = r.RuleId!,
+                        RuleId          = ruleId,
                         RuleName        = r.RuleName ?? "Engineering Policy",
                         Summary         = r.Summary!,
                         Evidence        = evidenceBullets,
