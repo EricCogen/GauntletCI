@@ -122,5 +122,7 @@ Prefix commit messages with a tag in brackets when the change falls into a known
 | `[TEST]` | Test-only changes (no production code touched) |
 | `[INFRA]` | CI/CD, build, or tooling changes |
 | `[DOCS]` | Documentation-only changes |
+| `[EXP]` | Experimental features (anything under `experimental` config, Advisory-severity findings) |
 
 Example: `[RULE] Add GCI0028 Entropy-Based Secret Detection`
+Example: `[EXP] Add engineering policy LLM evaluation step`
