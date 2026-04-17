@@ -16,6 +16,8 @@ public sealed class AnthropicLlmLabeler : ILlmLabeler, IDisposable
 
     public AnthropicLlmLabeler(string apiKey, string model = "claude-haiku-4-5")
     {
+        if (string.IsNullOrWhiteSpace(apiKey))
+            throw new ArgumentException("Anthropic API key must not be empty.", nameof(apiKey));
         _model = model;
         _http  = new HttpClient();
         _http.DefaultRequestHeaders.Add("x-api-key", apiKey);

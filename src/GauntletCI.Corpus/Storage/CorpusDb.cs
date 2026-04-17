@@ -52,7 +52,11 @@ public sealed class CorpusDb : IDisposable
                 m.CommandText = migration;
                 await m.ExecuteNonQueryAsync(cancellationToken);
             }
-            catch { /* column already exists */ }
+        catch (Exception ex) when (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase)
+                                 || ex.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase))
+        {
+            // Idempotent — column or table already exists; safe to ignore
+        }
         }
     }
 

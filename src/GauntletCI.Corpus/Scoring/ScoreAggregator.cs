@@ -79,6 +79,8 @@ public sealed class ScoreAggregator : IScoreAggregator
 
         var scorecards = new List<RuleScorecard>();
 
+        var allUsefulnessScores = await GetAllAvgUsefulnessAsync(cancellationToken);
+
         foreach (var key in allKeys)
         {
             var (rid, rtier) = key;
@@ -103,7 +105,7 @@ public sealed class ScoreAggregator : IScoreAggregator
             double precision   = (tp + fp) > 0 ? (double)tp / (tp + fp) : 0.0;
             double recall      = (tp + fn) > 0 ? (double)tp / (tp + fn) : 0.0;
 
-            double avgUsefulness = await GetAvgUsefulnessAsync(rid, cancellationToken);
+            double avgUsefulness = allUsefulnessScores.GetValueOrDefault(rid, 0.0);
 
             var scorecard = new RuleScorecard(
                 RuleId:           rid,
@@ -138,6 +140,21 @@ public sealed class ScoreAggregator : IScoreAggregator
         using var reader = await cmd.ExecuteReaderAsync(ct);
         while (await reader.ReadAsync(ct))
             result[reader.GetString(0)] = reader.GetString(1);
+        return result;
+    }
+
+    private async Task<Dictionary<string, double>> GetAllAvgUsefulnessAsync(CancellationToken ct)
+    {
+        using var cmd = _db.Connection.CreateCommand();
+        cmd.CommandText = "SELECT rule_id, AVG(usefulness) FROM evaluations GROUP BY rule_id";
+        var result = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+        using var reader = await cmd.ExecuteReaderAsync(ct);
+        while (await reader.ReadAsync(ct))
+        {
+            var rId = reader.GetString(0);
+            var avg = reader.IsDBNull(1) ? 0.0 : reader.GetDouble(1);
+            result[rId] = avg;
+        }
         return result;
     }
 
