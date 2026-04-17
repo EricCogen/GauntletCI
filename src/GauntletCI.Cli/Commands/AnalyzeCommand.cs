@@ -13,6 +13,7 @@ using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
 using GauntletCI.Core.StaticAnalysis;
 using GauntletCI.Llm;
+using Spectre.Console;
 
 namespace GauntletCI.Cli.Commands;
 
@@ -127,36 +128,60 @@ public static class AnalyzeCommand
                 var result = await orchestrator.RunAsync(diff, staticAnalysis, ignoreList: ignoreList);
 
                 using ILlmEngine llm = await LlmEngineSelector.ResolveAsync(config, withLlm && !noLlm);
-                if (llm.IsAvailable)
-                {
-                    foreach (var finding in result.Findings.Where(f => f.Confidence == Confidence.High))
-                        finding.LlmExplanation = await llm.EnrichFindingAsync(finding);
-                }
 
-                if (withExpertCtx)
-                {
-                    var vectorDbPath = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                        ".gauntletci", "expert-embeddings.db");
+                var isJsonOutput = (output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase);
+                var showSpinner  = llm.IsAvailable && !isJsonOutput && !Console.IsOutputRedirected;
 
-                    if (File.Exists(vectorDbPath))
+                async Task RunLlmStepsAsync(Action<string>? setStatus = null)
+                {
+                    setStatus ??= _ => { };
+
+                    if (llm.IsAvailable)
                     {
-                        var ct = ctx.GetCancellationToken();
-                        using var store    = new GauntletCI.Llm.Embeddings.VectorStore(vectorDbPath);
-                        using var embedEng = new GauntletCI.Llm.Embeddings.OllamaEmbeddingEngine();
-                        var adjudicator    = new GauntletCI.Llm.Embeddings.LlmAdjudicator(embedEng, store);
-                        await adjudicator.AdjudicateAsync(result.Findings, ct);
+                        var highFindings = result.Findings.Where(f => f.Confidence == Confidence.High).ToList();
+                        foreach (var finding in highFindings)
+                        {
+                            setStatus($"Enriching [{finding.RuleId}]...");
+                            finding.LlmExplanation = await llm.EnrichFindingAsync(finding);
+                        }
+                    }
+
+                    if (withExpertCtx)
+                    {
+                        var vectorDbPath = Path.Combine(
+                            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                            ".gauntletci", "expert-embeddings.db");
+
+                        if (File.Exists(vectorDbPath))
+                        {
+                            setStatus("Matching expert context...");
+                            var ct = ctx.GetCancellationToken();
+                            using var store    = new GauntletCI.Llm.Embeddings.VectorStore(vectorDbPath);
+                            using var embedEng = new GauntletCI.Llm.Embeddings.OllamaEmbeddingEngine();
+                            var adjudicator    = new GauntletCI.Llm.Embeddings.LlmAdjudicator(embedEng, store);
+                            await adjudicator.AdjudicateAsync(result.Findings, ct);
+                        }
+                    }
+
+                    // Engineering policy evaluation (experimental — config-driven, LLM-required)
+                    if (config.Experimental.EngineeringPolicy.Enabled && llm.IsAvailable)
+                    {
+                        setStatus("Consulting engineering policy...");
+                        var policyPath = Path.Combine(repo.FullName, config.Experimental.EngineeringPolicy.Path);
+                        var policyFindings = await EngineeringPolicyEvaluator.EvaluateAsync(
+                            diff, policyPath, llm, ctx.GetCancellationToken());
+                        result.Findings.AddRange(policyFindings);
                     }
                 }
 
-                // Engineering policy evaluation (experimental — config-driven, LLM-required)
-                if (config.Experimental.EngineeringPolicy.Enabled && llm.IsAvailable)
-                {
-                    var policyPath = Path.Combine(repo.FullName, config.Experimental.EngineeringPolicy.Path);
-                    var policyFindings = await EngineeringPolicyEvaluator.EvaluateAsync(
-                        diff, policyPath, llm, ctx.GetCancellationToken());
-                    result.Findings.AddRange(policyFindings);
-                }
+                if (showSpinner)
+                    await AnsiConsole.Status()
+                        .Spinner(Spinner.Known.Dots)
+                        .SpinnerStyle(Style.Parse("cyan dim"))
+                        .StartAsync("Consulting LLM...", async sc =>
+                            await RunLlmStepsAsync(s => sc.Status = s));
+                else
+                    await RunLlmStepsAsync();
 
                 if ((output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase))
                 {
