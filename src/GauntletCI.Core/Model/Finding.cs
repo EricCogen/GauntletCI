@@ -32,4 +32,6 @@ public class Finding
     public string? LlmExplanation { get; set; }         // optional LLM enrichment
     /// <summary>Optional expert knowledge fact matched against this finding.</summary>
     public ExpertFact? ExpertContext { get; set; }      // optional expert knowledge match
+    /// <summary>Optional verbatim code snippet extracted from the diff by an LLM evaluation step.</summary>
+    public string? CodeSnippet { get; set; }
 }
