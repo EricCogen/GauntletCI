@@ -80,11 +80,13 @@ internal static class EngineeringPolicyEvaluator
         var sb = new System.Text.StringBuilder();
         foreach (var file in diff.Files)
         {
-            var isTest = IsTestFile(file.NewPath ?? file.OldPath ?? "");
-            var prefix = isTest ? "[TEST FILE] " : "";
+            var path = file.NewPath ?? file.OldPath ?? "unknown";
+            var isTest = IsTestFile(path);
+            sb.AppendLine(isTest ? $"// FILE: {path} [test]" : $"// FILE: {path}");
             foreach (var hunk in file.Hunks)
             foreach (var line in hunk.Lines.Where(l => l.Kind == DiffLineKind.Added))
-                sb.AppendLine(prefix + line.Content);
+                sb.AppendLine(line.Content);
+            sb.AppendLine();
         }
 
         var text = sb.ToString();
@@ -96,9 +98,10 @@ internal static class EngineeringPolicyEvaluator
         Enforce only the invariants listed in the policy below. Return ONLY valid JSON — no explanation, no markdown fences.
 
         ## Important guidance
-        - Lines prefixed with [TEST FILE] come from test code. Be very conservative — most engineering policy
-          invariants (null guards, logging, resource cleanup, error propagation) do not apply to test code.
-          Only flag a test file if there is a clear and serious violation that would affect test reliability.
+        - Files are labelled with `[test]` in their header when they are test code. Apply proportional scrutiny:
+          SKIP for test files: null parameter guards, structured production logging, error propagation to callers.
+          STILL CHECK for test files: resource/temp-file cleanup (EP006), missing assertions or coverage gaps (EP009),
+          contract stability visible through tests (EP002), naming clarity (EP003), async correctness (EP007).
         - These are advisory observations, not proven facts. Use appropriately hedged language in your output:
           prefer "likely", "probably", "may", "appears to", "could indicate" over absolute assertions.
         - Only report violations you have high confidence in. Prefer fewer, high-quality findings over many uncertain ones.
@@ -108,7 +111,7 @@ internal static class EngineeringPolicyEvaluator
         """;
 
     private static string BuildUserMessage(string diffText) => $$"""
-        ## Diff (added lines only; [TEST FILE] prefix marks test code)
+        ## Diff (added lines; files marked [test] are test code)
         {{diffText}}
 
         ## Instructions
