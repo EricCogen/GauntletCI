@@ -43,12 +43,13 @@ internal static class EngineeringPolicyEvaluator
             Console.Error.WriteLine($"[GauntletCI] Engineering policy file could not be read: {ex.Message}. Skipping policy evaluation.");
             return [];
         }
-        var diffText = BuildDiffText(diff);
+        var diffText  = BuildDiffText(diff);
+        var fileNames = ExtractFileNames(diffText);
 
         string raw;
         try
         {
-            raw = await llm.CompleteAsync(BuildUserMessage(diffText), BuildSystemPrompt(policy), ct);
+            raw = await llm.CompleteAsync(BuildUserMessage(diffText, fileNames), BuildSystemPrompt(policy), ct);
         }
         catch (Exception ex)
         {
@@ -56,7 +57,7 @@ internal static class EngineeringPolicyEvaluator
             return [];
         }
 
-        return ParseFindings(raw);
+        return ParseFindings(raw, fileNames);
     }
 
     private static readonly HashSet<string> TestPathMarkers =
@@ -74,6 +75,16 @@ internal static class EngineeringPolicyEvaluator
             || lower.EndsWith("specs.cs", StringComparison.Ordinal)
             || lower.Split('/').Any(seg => TestPathMarkers.Contains(seg));
     }
+
+    private static List<string> ExtractFileNames(string diffText) =>
+        diffText
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Where(l => l.StartsWith("// FILE: ", StringComparison.Ordinal))
+            .Select(l => l["// FILE: ".Length..].Trim())
+            .SelectMany(p => new[] { p, Path.GetFileName(p) })
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
     private static string BuildDiffText(DiffContext diff)
     {
@@ -107,18 +118,10 @@ internal static class EngineeringPolicyEvaluator
         {policy}
         """;
 
-    private static string BuildUserMessage(string diffText)
+    private static string BuildUserMessage(string diffText, List<string> fileNames)
     {
-        // Extract real file names to inject into the prompt
-        var files = diffText
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Where(l => l.StartsWith("// FILE: ", StringComparison.Ordinal))
-            .Select(l => System.IO.Path.GetFileName(l["// FILE: ".Length..].Trim()))
-            .Distinct()
-            .Take(8)
-            .ToList();
-        var fileHint = files.Count > 0
-            ? $"\nFiles changed: {string.Join(", ", files)}"
+        var fileHint = fileNames.Count > 0
+            ? $"\nFiles changed: {string.Join(", ", fileNames.Where(f => f.Contains('.', StringComparison.Ordinal)).Take(8))}"
             : string.Empty;
 
         return $$"""
@@ -129,17 +132,21 @@ internal static class EngineeringPolicyEvaluator
             Review the diff against each engineering invariant in your policy.
             Return a JSON array of up to 3 violations, or [] if none.
 
+            IMPORTANT: Evidence MUST reference a real filename from the "Files changed" list above.
+            If you cannot find evidence in those specific files, do not include the finding.
+            Output [] if no violations exist in these files.
+
             Each element must have these fields:
             - "ruleId": short tag like "EP_SCOPE", "EP_CONTRACTS", "EP_OBSERVABILITY", "EP_FAILURE", "EP_TESTING", "EP_CORRECTNESS"
             - "ruleName": the exact policy area name from above
             - "summary": one hedged sentence describing the specific issue you saw in the diff
-            - "evidence": filename from the diff and what you specifically observed (e.g. "Foo.cs — exception swallowed in catch block")
+            - "evidence": MUST name a file from the list above and what you observed (e.g. "Foo.cs — exception swallowed in catch block")
             - "whyItMatters": one sentence on the engineering risk
             - "suggestedAction": one concrete fix
             """;
     }
 
-    private static IReadOnlyList<Finding> ParseFindings(string raw)
+    private static IReadOnlyList<Finding> ParseFindings(string raw, List<string> knownFiles)
     {
         try
         {
@@ -158,23 +165,20 @@ internal static class EngineeringPolicyEvaluator
                 return [];
 
             return records
-                .Where(r => !string.IsNullOrWhiteSpace(r.RuleId) && !string.IsNullOrWhiteSpace(r.Summary))
+                .Where(r => !string.IsNullOrWhiteSpace(r.RuleId)
+                         && !string.IsNullOrWhiteSpace(r.Summary)
+                         && !string.IsNullOrWhiteSpace(r.Evidence)
+                         && EvidenceReferencesKnownFile(r.Evidence!, knownFiles))
                 .Select(r =>
                 {
-                    // Normalize "|"-separated evidence into newline-separated bullets for the renderer
-                    var evidenceBullets = string.IsNullOrWhiteSpace(r.Evidence)
-                        ? string.Empty
-                        : string.Join("\n", r.Evidence
-                            .Split('|', StringSplitOptions.RemoveEmptyEntries)
-                            .Select(s => s.Trim())
-                            .Where(s => s.Length > 0));
-
-                    // Strip any trailing colon or whitespace the model appends to ruleId
-                    var ruleId = r.RuleId!.TrimEnd(':', ' ');
+                    var evidenceBullets = string.Join("\n", r.Evidence!
+                        .Split('|', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(s => s.Trim())
+                        .Where(s => s.Length > 0));
 
                     return new Finding
                     {
-                        RuleId          = ruleId,
+                        RuleId          = r.RuleId!.TrimEnd(':', ' '),
                         RuleName        = r.RuleName ?? "Engineering Policy",
                         Summary         = r.Summary!,
                         Evidence        = evidenceBullets,
@@ -187,10 +191,17 @@ internal static class EngineeringPolicyEvaluator
         }
         catch
         {
-            // LLM returned non-JSON — skip silently
             return [];
         }
     }
+
+    /// <summary>
+    /// Returns true if evidence references at least one known file, or if no known files exist
+    /// (e.g. stdin diff with no FILE markers — skip validation in that case).
+    /// </summary>
+    private static bool EvidenceReferencesKnownFile(string evidence, List<string> knownFiles) =>
+        knownFiles.Count == 0
+        || knownFiles.Any(f => evidence.Contains(f, StringComparison.OrdinalIgnoreCase));
 
     private sealed record PolicyFinding(
         string? RuleId,
