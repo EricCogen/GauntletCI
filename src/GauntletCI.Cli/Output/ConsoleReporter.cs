@@ -83,15 +83,26 @@ public static class ConsoleReporter
 
         if (!anyVisible)
         {
-            AnsiConsole.MarkupLine("[grey]  All findings are below the current severity threshold. Use --verbose to see Info findings.[/]");
+            // Only print "below threshold" if there are also no Advisory findings being shown
+            var advisoryFindings = result.Findings.Where(f => f.Severity == RuleSeverity.Advisory).ToList();
+            if (advisoryFindings.Count == 0)
+                AnsiConsole.MarkupLine("[grey]  All findings are below the current severity threshold. Use --verbose to see Info findings.[/]");
+
+            if (advisoryFindings.Count > 0)
+            {
+                AnsiConsole.MarkupLine($"[blue]{string.Format(sep, "ADVISORY", advisoryFindings.Count)}[/]");
+                foreach (var finding in advisoryFindings)
+                    PrintFinding(finding, "blue");
+            }
+            return;
         }
 
         // Advisory findings (LLM policy) — always shown, never gated by minSeverity
-        var advisoryFindings = result.Findings.Where(f => f.Severity == RuleSeverity.Advisory).ToList();
-        if (advisoryFindings.Count > 0)
+        var advisoryFindingsFinal = result.Findings.Where(f => f.Severity == RuleSeverity.Advisory).ToList();
+        if (advisoryFindingsFinal.Count > 0)
         {
-            AnsiConsole.MarkupLine($"[blue]{string.Format(sep, "ADVISORY", advisoryFindings.Count)}[/]");
-            foreach (var finding in advisoryFindings)
+            AnsiConsole.MarkupLine($"[blue]{string.Format(sep, "ADVISORY", advisoryFindingsFinal.Count)}[/]");
+            foreach (var finding in advisoryFindingsFinal)
                 PrintFinding(finding, "blue");
         }
     }

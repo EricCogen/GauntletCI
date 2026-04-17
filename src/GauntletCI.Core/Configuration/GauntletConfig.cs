@@ -123,12 +123,12 @@ public class EngineeringPolicyConfig
     /// <summary>
     /// Self-documenting description of this feature.
     /// Evaluates diffs against a structured engineering policy document using an LLM.
-    /// Requires a configured LLM endpoint. Findings are emitted as Advisory severity —
+    /// Requires an LLM to be available (local model or CI endpoint). Findings are emitted as Advisory severity —
     /// always shown in output but never block a commit.
     /// </summary>
     public string Description { get; set; } =
         "Evaluates diffs against a structured engineering policy document using an LLM. " +
-        "Requires a configured LLM endpoint. Findings are emitted as Advisory severity — " +
+        "Requires an LLM to be available (local model or CI endpoint). Findings are emitted as Advisory severity — " +
         "shown in output but never block a commit.";
 
     /// <summary>

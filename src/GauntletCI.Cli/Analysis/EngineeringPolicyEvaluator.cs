@@ -33,7 +33,16 @@ internal static class EngineeringPolicyEvaluator
             return [];
         }
 
-        var policy = await File.ReadAllTextAsync(policyPath, ct);
+        string policy;
+        try
+        {
+            policy = await File.ReadAllTextAsync(policyPath, ct);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[GauntletCI] Engineering policy file could not be read: {ex.Message}. Skipping policy evaluation.");
+            return [];
+        }
         var diffText = BuildDiffText(diff);
 
         var prompt = BuildPrompt(policy, diffText);
