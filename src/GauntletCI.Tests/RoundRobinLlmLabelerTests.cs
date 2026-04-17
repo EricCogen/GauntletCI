@@ -178,6 +178,38 @@ public sealed class RoundRobinLlmLabelerTests
     }
 
     // ────────────────────────────────────────────────────────────────────────
+    // Constructor guard clauses
+    // ────────────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void Constructor_throws_when_failureThreshold_is_zero()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new RoundRobinLlmLabeler([ new LlmEndpoint("e", new FakeLabeler()) ], failureThreshold: 0));
+    }
+
+    [Fact]
+    public void Constructor_throws_when_endpoints_is_null()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            new RoundRobinLlmLabeler((IEnumerable<LlmEndpoint>)null!));
+    }
+
+    [Fact]
+    public void Constructor_throws_when_endpoints_is_empty()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            new RoundRobinLlmLabeler([]));
+    }
+
+    [Fact]
+    public void Convenience_constructor_throws_when_labelers_is_null()
+    {
+        Assert.Throws<ArgumentNullException>(() =>
+            new RoundRobinLlmLabeler((IEnumerable<ILlmLabeler>)null!));
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
     // IDisposable — disposes underlying labelers that implement IDisposable
     // ────────────────────────────────────────────────────────────────────────
 
