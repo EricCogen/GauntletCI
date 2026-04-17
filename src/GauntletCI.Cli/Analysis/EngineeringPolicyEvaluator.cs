@@ -99,7 +99,7 @@ internal static class EngineeringPolicyEvaluator
 
         ## Output rules
         - Pattern: 3 to 8 words, noun phrase, no hedging. Example: "Failure-handling path weakened"
-        - Evidence: 2 to 5 concrete bullet strings, each tied to an observed diff fact. No speculation.
+        - Evidence: plain string. Separate multiple observations with " | ". Reference file:line when available.
         - Implication: 1 to 2 sentences. Use "may", "can", or "could" — not "likely" or "probably".
         - Action: One concrete engineering follow-up. Must be actionable.
         - Do not mention AI, LLM, model, or inference anywhere in the output.
@@ -118,16 +118,13 @@ internal static class EngineeringPolicyEvaluator
         Evaluate the diff against each engineering invariant in your policy.
         For each violation, return a JSON array. Return [] if there are no violations.
 
-        Schema:
+        Schema (evidence is a plain string; use " | " to separate multiple observations):
         [
           {
             "ruleId": "EP004",
             "ruleName": "Failure Handling",
             "pattern": "Failure-handling path weakened",
-            "evidence": [
-              "Exception catch block removed without replacement",
-              "No new error propagation path detected in touched scope"
-            ],
+            "evidence": "LoggingBus.cs:42 — continuation does not publish error on failure | RemoveLogger called without prior error publish",
             "implication": "Failure conditions may not be surfaced or propagated correctly at runtime.",
             "action": "Verify that all failure paths still raise or propagate exceptions as intended."
           }
@@ -152,19 +149,30 @@ internal static class EngineeringPolicyEvaluator
             if (records is null || records.Length == 0)
                 return [];
 
-            return records.Select(r => new Finding
-            {
-                RuleId          = r.RuleId ?? "EP000",
-                RuleName        = r.RuleName ?? "Engineering Policy",
-                Summary         = r.Pattern ?? string.Empty,
-                Evidence        = r.Evidence is { Length: > 0 } e
-                                    ? string.Join("\n", e)
-                                    : string.Empty,
-                WhyItMatters    = r.Implication ?? string.Empty,
-                SuggestedAction = r.Action ?? string.Empty,
-                Severity        = RuleSeverity.Advisory,
-                Confidence      = Confidence.Medium,
-            }).ToList();
+            return records
+                .Where(r => !string.IsNullOrWhiteSpace(r.RuleId) && !string.IsNullOrWhiteSpace(r.Pattern))
+                .Select(r =>
+                {
+                    // Normalize "|"-separated evidence into newline-separated bullets for the renderer
+                    var evidenceBullets = string.IsNullOrWhiteSpace(r.Evidence)
+                        ? string.Empty
+                        : string.Join("\n", r.Evidence
+                            .Split('|', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(s => s.Trim())
+                            .Where(s => s.Length > 0));
+
+                    return new Finding
+                    {
+                        RuleId          = r.RuleId!,
+                        RuleName        = r.RuleName ?? "Engineering Policy",
+                        Summary         = r.Pattern!,
+                        Evidence        = evidenceBullets,
+                        WhyItMatters    = r.Implication ?? string.Empty,
+                        SuggestedAction = r.Action ?? string.Empty,
+                        Severity        = RuleSeverity.Advisory,
+                        Confidence      = Confidence.Medium,
+                    };
+                }).ToList();
         }
         catch
         {
@@ -174,10 +182,10 @@ internal static class EngineeringPolicyEvaluator
     }
 
     private sealed record PolicyFinding(
-        string?   RuleId,
-        string?   RuleName,
-        string?   Pattern,
-        string[]? Evidence,
-        string?   Implication,
-        string?   Action);
+        string? RuleId,
+        string? RuleName,
+        string? Pattern,
+        string? Evidence,
+        string? Implication,
+        string? Action);
 }
