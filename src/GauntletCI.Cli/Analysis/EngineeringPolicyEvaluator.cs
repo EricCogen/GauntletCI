@@ -98,10 +98,11 @@ internal static class EngineeringPolicyEvaluator
         Enforce only the invariants listed in the policy below. Return ONLY valid JSON — no explanation, no markdown fences.
 
         ## Important guidance
-        - Files are labelled with `[test]` in their header when they are test code. Apply proportional scrutiny:
-          SKIP for test files: null parameter guards, structured production logging, error propagation to callers.
-          STILL CHECK for test files: resource/temp-file cleanup (EP006), missing assertions or coverage gaps (EP009),
-          contract stability visible through tests (EP002), naming clarity (EP003), async correctness (EP007).
+        - Files are labelled with `[test]` in their header when they are test code. Apply a very high bar:
+          only flag test files when there is near-certain risk of CI failure, flakiness, or data corruption
+          (e.g. missing disposal of file-system resources that could break subsequent runs, shared mutable state
+          causing race conditions, or an assertion on a critical invariant that is obviously wrong).
+          Do NOT flag style, logging, null guards, naming, missing coverage, or error propagation in test files.
         - These are advisory observations, not proven facts. Use appropriately hedged language in your output:
           prefer "likely", "probably", "may", "appears to", "could indicate" over absolute assertions.
         - Only report violations you have high confidence in. Prefer fewer, high-quality findings over many uncertain ones.
