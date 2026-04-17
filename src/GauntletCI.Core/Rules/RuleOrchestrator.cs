@@ -261,7 +261,7 @@ public class EvaluationResult
     /// the configured <paramref name="exitOn"/> policy.
     /// <list type="bullet">
     ///   <item><description><c>"Block"</c> (default): true when any <see cref="RuleSeverity.Block"/> finding exists.</description></item>
-    ///   <item><description><c>"Warn"</c>: true when any <see cref="RuleSeverity.Warn"/> or higher finding exists.</description></item>
+    ///   <item><description><c>"Warn"</c>: true when any <see cref="RuleSeverity.Warn"/> or <see cref="RuleSeverity.Block"/> finding exists. <see cref="RuleSeverity.Advisory"/> findings are never blocking regardless of this setting.</description></item>
     /// </list>
     /// </summary>
     public bool ShouldBlock(string exitOn = "Block") =>
