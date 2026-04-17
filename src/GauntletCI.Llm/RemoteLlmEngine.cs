@@ -44,31 +44,36 @@ public sealed class RemoteLlmEngine : ILlmEngine
         var prompt = PromptTemplates.EnrichFinding(
             finding.RuleId, finding.RuleName, finding.Summary, finding.Evidence);
 
-        return await CallAsync(prompt, ct);
+        return await CallAsync(prompt, systemPrompt: null, ct);
     }
 
     /// <summary>Builds a summarization prompt from all finding summaries and forwards it to the remote model.</summary>
     public async Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct = default)
     {
         var prompt = PromptTemplates.SummarizeReport(findings.Select(f => f.Summary));
-        return await CallAsync(prompt, ct);
+        return await CallAsync(prompt, systemPrompt: null, ct);
     }
 
     /// <summary>Forwards a pre-built prompt directly to the remote model and returns its completion.</summary>
     public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
-        => CallAsync(prompt, ct);
+        => CallAsync(prompt, systemPrompt: null, ct);
 
-    private async Task<string> CallAsync(string userPrompt, CancellationToken ct)
+    /// <summary>Forwards a prompt with an optional system message to the remote model.</summary>
+    public Task<string> CompleteAsync(string prompt, string? systemPrompt, CancellationToken ct = default)
+        => CallAsync(prompt, systemPrompt, ct);
+
+    private async Task<string> CallAsync(string userPrompt, string? systemPrompt, CancellationToken ct)
     {
+        object[] messages = systemPrompt is not null
+            ? [new { role = "system", content = systemPrompt }, new { role = "user", content = userPrompt }]
+            : [new { role = "user", content = userPrompt }];
+
         var body = new
         {
             model       = _model,
             max_tokens  = MaxFindingTokens,
             temperature = 0,
-            messages    = new[]
-            {
-                new { role = "user", content = userPrompt }
-            }
+            messages,
         };
 
         try
