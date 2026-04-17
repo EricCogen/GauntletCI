@@ -97,14 +97,11 @@ internal static class EngineeringPolicyEvaluator
         {
             var trimmed = raw.Trim();
 
-            // Strip markdown fences if the model wrapped the JSON anyway
-            if (trimmed.StartsWith("```"))
-            {
-                var start = trimmed.IndexOf('[');
-                var end   = trimmed.LastIndexOf(']');
-                if (start >= 0 && end > start)
-                    trimmed = trimmed[start..(end + 1)];
-            }
+            // Extract JSON array regardless of preamble text or markdown fences
+            var start = trimmed.IndexOf('[');
+            var end   = trimmed.LastIndexOf(']');
+            if (start >= 0 && end > start)
+                trimmed = trimmed[start..(end + 1)];
 
             var records = JsonSerializer.Deserialize<PolicyFinding[]>(trimmed,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
