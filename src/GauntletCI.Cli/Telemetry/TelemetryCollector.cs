@@ -81,7 +81,7 @@ public static class TelemetryCollector
             if (mode == TelemetryMode.Shared)
                 TelemetryUploader.UploadInBackground();
         }
-        catch { /* telemetry must never crash the tool */ }
+        catch (Exception ex) { Console.Error.WriteLine($"[GauntletCI] Telemetry collection failed: {ex.Message}"); }
     }
 
     private static string? ExtractExt(string? evidence)

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
 namespace GauntletCI.Core.Configuration;
@@ -61,18 +62,24 @@ public class IgnoreList
         File.AppendAllText(path, $"{entry}{Environment.NewLine}");
     }
 
+    private static readonly ConcurrentDictionary<string, Regex> _globCache = new();
+
     private static bool GlobMatches(string pattern, string input)
     {
         // Normalize separators
         pattern = pattern.Replace('\\', '/');
         input = input.Replace('\\', '/');
 
-        // Convert glob to regex: ** → .*, * → [^/]*, ? → [^/]
-        var regexStr = "^" + Regex.Escape(pattern)
-            .Replace(@"\*\*", ".*")
-            .Replace(@"\*", "[^/]*")
-            .Replace(@"\?", "[^/]") + "$";
+        var regex = _globCache.GetOrAdd(pattern, p =>
+        {
+            // Convert glob to regex: ** → .*, * → [^/]*, ? → [^/]
+            var regexStr = "^" + Regex.Escape(p)
+                .Replace(@"\*\*", ".*")
+                .Replace(@"\*", "[^/]*")
+                .Replace(@"\?", "[^/]") + "$";
+            return new Regex(regexStr, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        });
 
-        return Regex.IsMatch(input, regexStr, RegexOptions.IgnoreCase);
+        return regex.IsMatch(input);
     }
 }
