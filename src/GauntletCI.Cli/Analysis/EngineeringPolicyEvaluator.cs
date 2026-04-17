@@ -94,17 +94,15 @@ internal static class EngineeringPolicyEvaluator
     }
 
     private static string BuildSystemPrompt(string policy) => $"""
-        You are an engineering policy evaluation engine. You assess git diffs against a structured policy.
-        Return ONLY a valid JSON array — no explanation, no markdown fences, no prose.
+        You are a code reviewer evaluating git diffs against an engineering policy.
+        Enforce only the invariants listed in the policy below. Return ONLY valid JSON — no explanation, no markdown fences.
 
-        ## Output rules
-        - Pattern: 3 to 8 words, noun phrase, no hedging. Example: "Failure-handling path weakened"
-        - Evidence: plain string. Separate multiple observations with " | ". Reference file:line when available.
-        - Implication: 1 to 2 sentences. Use "may", "can", or "could" — not "likely" or "probably".
-        - Action: One concrete engineering follow-up. Must be actionable.
-        - Do not mention AI, LLM, model, or inference anywhere in the output.
+        ## Important guidance
         - All code shown is production code only. Test files are never included.
+        - Use hedged language where appropriate: "likely", "may", "appears to", "could indicate".
         - Only report violations you have high confidence in. Prefer fewer, high-quality findings.
+        - Do not mention AI, LLM, model, or inference anywhere in your output.
+        - DO NOT copy placeholder values from the schema example — generate your own observations from the actual diff.
 
         ## Engineering Policy
         {policy}
@@ -115,18 +113,18 @@ internal static class EngineeringPolicyEvaluator
         {{diffText}}
 
         ## Instructions
-        Evaluate the diff against each engineering invariant in your policy.
-        For each violation, return a JSON array. Return [] if there are no violations.
+        Review the diff against each engineering invariant in your policy.
+        For each violation found, return a JSON array. Return [] if there are no violations.
 
-        Schema (evidence is a plain string; use " | " to separate multiple observations):
+        Schema (replace ALL placeholder text with your own observations from the diff above):
         [
           {
-            "ruleId": "EP004",
-            "ruleName": "Failure Handling",
-            "pattern": "Failure-handling path weakened",
-            "evidence": "LoggingBus.cs:42 — continuation does not publish error on failure | RemoveLogger called without prior error publish",
-            "implication": "Failure conditions may not be surfaced or propagated correctly at runtime.",
-            "action": "Verify that all failure paths still raise or propagate exceptions as intended."
+            "ruleId": "EP_POLICY_AREA",
+            "ruleName": "Policy Area Name",
+            "summary": "Your hedged sentence describing the violation you observed in the diff.",
+            "evidence": "ActualFile.cs:LineNumber — what you actually observed in the diff",
+            "whyItMatters": "Your one sentence on why this engineering practice matters.",
+            "suggestedAction": "Your one actionable fix suggestion for the code above."
           }
         ]
         """;
@@ -150,7 +148,7 @@ internal static class EngineeringPolicyEvaluator
                 return [];
 
             return records
-                .Where(r => !string.IsNullOrWhiteSpace(r.RuleId) && !string.IsNullOrWhiteSpace(r.Pattern))
+                .Where(r => !string.IsNullOrWhiteSpace(r.RuleId) && !string.IsNullOrWhiteSpace(r.Summary))
                 .Select(r =>
                 {
                     // Normalize "|"-separated evidence into newline-separated bullets for the renderer
@@ -165,10 +163,10 @@ internal static class EngineeringPolicyEvaluator
                     {
                         RuleId          = r.RuleId!,
                         RuleName        = r.RuleName ?? "Engineering Policy",
-                        Summary         = r.Pattern!,
+                        Summary         = r.Summary!,
                         Evidence        = evidenceBullets,
-                        WhyItMatters    = r.Implication ?? string.Empty,
-                        SuggestedAction = r.Action ?? string.Empty,
+                        WhyItMatters    = r.WhyItMatters ?? string.Empty,
+                        SuggestedAction = r.SuggestedAction ?? string.Empty,
                         Severity        = RuleSeverity.Advisory,
                         Confidence      = Confidence.Medium,
                     };
@@ -184,8 +182,8 @@ internal static class EngineeringPolicyEvaluator
     private sealed record PolicyFinding(
         string? RuleId,
         string? RuleName,
-        string? Pattern,
+        string? Summary,
         string? Evidence,
-        string? Implication,
-        string? Action);
+        string? WhyItMatters,
+        string? SuggestedAction);
 }
