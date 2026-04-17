@@ -90,9 +90,9 @@ public static class ConsoleReporter
 
             if (advisoryFindings.Count > 0)
             {
-                AnsiConsole.MarkupLine($"[blue]{string.Format(sep, "ADVISORY", advisoryFindings.Count)}[/]");
+                AnsiConsole.MarkupLine($"[blue]{string.Format(sep, "ENGINEERING POLICY SIGNALS", advisoryFindings.Count)}[/]");
                 foreach (var finding in advisoryFindings)
-                    PrintFinding(finding, "blue");
+                    PrintEpSignal(finding);
             }
             return;
         }
@@ -101,9 +101,9 @@ public static class ConsoleReporter
         var advisoryFindingsFinal = result.Findings.Where(f => f.Severity == RuleSeverity.Advisory).ToList();
         if (advisoryFindingsFinal.Count > 0)
         {
-            AnsiConsole.MarkupLine($"[blue]{string.Format(sep, "ADVISORY", advisoryFindingsFinal.Count)}[/]");
+            AnsiConsole.MarkupLine($"[blue]{string.Format(sep, "ENGINEERING POLICY SIGNALS", advisoryFindingsFinal.Count)}[/]");
             foreach (var finding in advisoryFindingsFinal)
-                PrintFinding(finding, "blue");
+                PrintEpSignal(finding);
         }
     }
 
@@ -139,6 +139,45 @@ public static class ConsoleReporter
         {
             AnsiConsole.MarkupLine($"[blue]  Expert   : {Markup.Escape(expert.Content)}[/]");
             AnsiConsole.MarkupLine($"[grey]             Score {expert.Score:F2} · {Markup.Escape(expert.Source)}[/]");
+        }
+
+        AnsiConsole.WriteLine();
+    }
+
+    /// <summary>
+    /// Renders an Engineering Policy signal in the structured Pattern / Evidence / Implication / Action format.
+    /// </summary>
+    private static void PrintEpSignal(Finding finding)
+    {
+        AnsiConsole.MarkupLine($"[blue]  [{Markup.Escape(finding.RuleId)}: {Markup.Escape(finding.RuleName)}] SIGNAL[/]");
+        AnsiConsole.WriteLine();
+
+        if (!string.IsNullOrWhiteSpace(finding.Summary))
+        {
+            AnsiConsole.MarkupLine("[white]  Pattern:[/]");
+            AnsiConsole.MarkupLine($"  {Markup.Escape(finding.Summary)}");
+            AnsiConsole.WriteLine();
+        }
+
+        if (!string.IsNullOrWhiteSpace(finding.Evidence))
+        {
+            AnsiConsole.MarkupLine("[white]  Evidence:[/]");
+            foreach (var bullet in finding.Evidence.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                AnsiConsole.MarkupLine($"[grey]  - {Markup.Escape(bullet.Trim())}[/]");
+            AnsiConsole.WriteLine();
+        }
+
+        if (!string.IsNullOrWhiteSpace(finding.WhyItMatters))
+        {
+            AnsiConsole.MarkupLine("[white]  Implication:[/]");
+            AnsiConsole.MarkupLine($"  {Markup.Escape(finding.WhyItMatters)}");
+            AnsiConsole.WriteLine();
+        }
+
+        if (!string.IsNullOrWhiteSpace(finding.SuggestedAction))
+        {
+            AnsiConsole.MarkupLine("[cyan]  Action:[/]");
+            AnsiConsole.MarkupLine($"[cyan]  {Markup.Escape(finding.SuggestedAction)}[/]");
         }
 
         AnsiConsole.WriteLine();
