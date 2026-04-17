@@ -141,7 +141,7 @@ public static class AnalyzeCommand
                         var highFindings = result.Findings.Where(f => f.Confidence == Confidence.High).ToList();
                         foreach (var finding in highFindings)
                         {
-                            setStatus($"Enriching [{finding.RuleId}]...");
+                            setStatus($"Annotating [{finding.RuleId}]...");
                             finding.LlmExplanation = await llm.EnrichFindingAsync(finding);
                         }
                     }
@@ -154,7 +154,7 @@ public static class AnalyzeCommand
 
                         if (File.Exists(vectorDbPath))
                         {
-                            setStatus("Matching expert context...");
+                            setStatus("Adding context...");
                             var ct = ctx.GetCancellationToken();
                             using var store    = new GauntletCI.Llm.Embeddings.VectorStore(vectorDbPath);
                             using var embedEng = new GauntletCI.Llm.Embeddings.OllamaEmbeddingEngine();
@@ -166,7 +166,7 @@ public static class AnalyzeCommand
                     // Engineering policy evaluation (experimental — config-driven, LLM-required)
                     if (config.Experimental.EngineeringPolicy.Enabled && llm.IsAvailable)
                     {
-                        setStatus("Consulting engineering policy...");
+                        setStatus("Policy review...");
                         var policyPath = Path.Combine(repo.FullName, config.Experimental.EngineeringPolicy.Path);
                         var policyFindings = await EngineeringPolicyEvaluator.EvaluateAsync(
                             diff, policyPath, llm, ctx.GetCancellationToken());
@@ -178,7 +178,7 @@ public static class AnalyzeCommand
                     await AnsiConsole.Status()
                         .Spinner(Spinner.Known.Dots)
                         .SpinnerStyle(Style.Parse("cyan dim"))
-                        .StartAsync("Consulting LLM...", async sc =>
+                        .StartAsync("Thinking...", async sc =>
                             await RunLlmStepsAsync(s => sc.Status = s));
                 else
                     await RunLlmStepsAsync();
