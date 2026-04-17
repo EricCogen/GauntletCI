@@ -30,6 +30,9 @@ public class GauntletConfig
 
     /// <summary>Corpus pipeline configuration (local dev tool settings).</summary>
     public CorpusConfig Corpus { get; set; } = new();
+
+    /// <summary>Experimental feature flags. Settings here may change or be removed without notice.</summary>
+    public ExperimentalConfig Experimental { get; set; } = new();
 }
 
 /// <summary>Per-rule configuration overrides.</summary>
@@ -98,4 +101,39 @@ public class CorpusConfig
     /// Example: "phi3:mini"
     /// </summary>
     public string? OllamaModel { get; set; }
+}
+
+/// <summary>Experimental features. Settings here may change or be removed without notice.</summary>
+public class ExperimentalConfig
+{
+    /// <summary>LLM-powered engineering policy evaluation step.</summary>
+    public EngineeringPolicyConfig EngineeringPolicy { get; set; } = new();
+}
+
+/// <summary>
+/// Configuration for the experimental LLM-powered engineering policy evaluation step.
+/// When enabled, GauntletCI sends the diff and a structured policy document to the configured
+/// LLM and emits Advisory-severity findings for any detected policy violations.
+/// </summary>
+public class EngineeringPolicyConfig
+{
+    /// <summary>Enable the engineering policy evaluation step. Requires an LLM to be available.</summary>
+    public bool Enabled { get; set; } = false;
+
+    /// <summary>
+    /// Self-documenting description of this feature.
+    /// Evaluates diffs against a structured engineering policy document using an LLM.
+    /// Requires an LLM to be available (local model or CI endpoint). Findings are emitted as Advisory severity —
+    /// always shown in output but never block a commit.
+    /// </summary>
+    public string Description { get; set; } =
+        "Evaluates diffs against a structured engineering policy document using an LLM. " +
+        "Requires an LLM to be available (local model or CI endpoint). Findings are emitted as Advisory severity — " +
+        "shown in output but never block a commit.";
+
+    /// <summary>
+    /// Path to the engineering policy markdown file, relative to the repository root.
+    /// Defaults to .misc/engineering-policy.md.
+    /// </summary>
+    public string Path { get; set; } = ".misc/engineering-policy.md";
 }
