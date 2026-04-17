@@ -45,10 +45,10 @@ public class EngineeringPolicyEvaluatorTests
                   {
                     "ruleId": "EP001",
                     "ruleName": "Correctness and Intent",
-                    "pattern": "TODO comment left in added code",
+                    "summary": "TODO comment left in added code",
                     "evidence": "Foo.cs:10 — // TODO: implement",
-                    "implication": "Implies incomplete implementation.",
-                    "action": "Remove TODO or implement before merging."
+                    "whyItMatters": "Implies incomplete implementation.",
+                    "suggestedAction": "Remove TODO or implement before merging."
                   }
                 ]
                 """);
@@ -100,7 +100,7 @@ public class EngineeringPolicyEvaluatorTests
             await File.WriteAllTextAsync(policyFile, "## EP001");
             var llm = new StubLlmEngine(isAvailable: true, response: """
                 ```json
-                [{"ruleId":"EP001","ruleName":"Correctness","pattern":"s","evidence":"e","implication":"w","action":"a"}]
+                [{"ruleId":"EP001","ruleName":"Correctness","summary":"s","evidence":"e","whyItMatters":"w","suggestedAction":"a"}]
                 ```
                 """);
             var result = await EngineeringPolicyEvaluator.EvaluateAsync(EmptyDiff(), policyFile, llm);
@@ -119,7 +119,7 @@ public class EngineeringPolicyEvaluatorTests
             await File.WriteAllTextAsync(policyFile, "## EP001");
             var llm = new StubLlmEngine(isAvailable: true, response: """
                 Here are the findings I found:
-                [{"ruleId":"EP001","ruleName":"Correctness","pattern":"s","evidence":"e","implication":"w","action":"a"}]
+                [{"ruleId":"EP001","ruleName":"Correctness","summary":"s","evidence":"e","whyItMatters":"w","suggestedAction":"a"}]
                 """);
             var result = await EngineeringPolicyEvaluator.EvaluateAsync(EmptyDiff(), policyFile, llm);
             Assert.Single(result);
