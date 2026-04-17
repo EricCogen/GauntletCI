@@ -1,6 +1,4 @@
 {
-  "version": 2,
-  "test_command": "dotnet test",
   "rules": {
     "GCI0001": { "enabled": true },
     "GCI0002": { "enabled": true },
@@ -23,9 +21,7 @@
     "GCI0019": { "enabled": true },
     "GCI0020": { "enabled": true }
   },
-  "blocking_rules": ["GCI0012", "GCI0004"],
   "llm": {
-    "enabled": false,
-    "model_path": "~/.gauntletci/models/phi3-mini"
+    "modelPath": "~/.gauntletci/models/phi3-mini"
   }
 }

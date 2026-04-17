@@ -65,6 +65,12 @@ public class LlmConfig
     public string CiModel { get; set; } = "gpt-4o-mini";
 
     /// <summary>
+    /// Path to the local ONNX model directory used by <c>LocalLlmEngine</c>.
+    /// Defaults to <c>~/.gauntletci/models/phi3-mini</c> when null or absent.
+    /// </summary>
+    public string? ModelPath { get; set; }
+
+    /// <summary>
     /// Name of the environment variable that holds the API key for the CI endpoint.
     /// The key is never stored in config — always read from the environment at runtime.
     /// </summary>
