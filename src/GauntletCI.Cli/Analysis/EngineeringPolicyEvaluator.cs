@@ -81,8 +81,8 @@ internal static class EngineeringPolicyEvaluator
         foreach (var file in diff.Files)
         {
             var path = file.NewPath ?? file.OldPath ?? "unknown";
-            var isTest = IsTestFile(path);
-            sb.AppendLine(isTest ? $"// FILE: {path} [test]" : $"// FILE: {path}");
+            if (IsTestFile(path)) continue;  // test files never ship; skip entirely
+            sb.AppendLine($"// FILE: {path}");
             foreach (var hunk in file.Hunks)
             foreach (var line in hunk.Lines.Where(l => l.Kind == DiffLineKind.Added))
                 sb.AppendLine(line.Content);
@@ -98,11 +98,7 @@ internal static class EngineeringPolicyEvaluator
         Enforce only the invariants listed in the policy below. Return ONLY valid JSON — no explanation, no markdown fences.
 
         ## Important guidance
-        - Files are labelled with `[test]` in their header when they are test code. Apply a very high bar:
-          only flag test files when there is near-certain risk of CI failure, flakiness, or data corruption
-          (e.g. missing disposal of file-system resources that could break subsequent runs, shared mutable state
-          causing race conditions, or an assertion on a critical invariant that is obviously wrong).
-          Do NOT flag style, logging, null guards, naming, missing coverage, or error propagation in test files.
+        - All code shown is production code only. Test files are never included.
         - These are advisory observations, not proven facts. Use appropriately hedged language in your output:
           prefer "likely", "probably", "may", "appears to", "could indicate" over absolute assertions.
         - Only report violations you have high confidence in. Prefer fewer, high-quality findings over many uncertain ones.
