@@ -13,9 +13,10 @@ namespace GauntletCI.Llm;
 /// </summary>
 public sealed class RemoteLlmEngine : ILlmEngine
 {
-    private const int MaxEnrichTokens  = 256;   // single-sentence enrichment
-    private const int MaxCompleteTokens = 2048;  // policy evaluation / raw completions
-    private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(60);
+    private const int MaxEnrichTokens  = 256;    // single-sentence enrichment
+    private const int MaxCompleteTokens = 2048;   // policy evaluation / raw completions
+    private const int NumCtx            = 16384;  // Ollama context window (input+output tokens)
+    private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(120);
 
     private readonly string _endpoint;
     private readonly string _model;
@@ -74,7 +75,9 @@ public sealed class RemoteLlmEngine : ILlmEngine
             model       = _model,
             max_tokens  = maxTokens,
             temperature = 0,
+            seed        = 42,
             messages,
+            options     = new { num_ctx = NumCtx, repeat_penalty = 1.1, top_k = 1 },
         };
 
         try
