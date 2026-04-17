@@ -13,8 +13,9 @@ namespace GauntletCI.Llm;
 /// </summary>
 public sealed class RemoteLlmEngine : ILlmEngine
 {
-    private const int MaxFindingTokens = 256;
-    private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(30);
+    private const int MaxEnrichTokens  = 256;   // single-sentence enrichment
+    private const int MaxCompleteTokens = 2048;  // policy evaluation / raw completions
+    private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(60);
 
     private readonly string _endpoint;
     private readonly string _model;
@@ -44,25 +45,25 @@ public sealed class RemoteLlmEngine : ILlmEngine
         var prompt = PromptTemplates.EnrichFinding(
             finding.RuleId, finding.RuleName, finding.Summary, finding.Evidence);
 
-        return await CallAsync(prompt, systemPrompt: null, ct);
+        return await CallAsync(prompt, systemPrompt: null, MaxEnrichTokens, ct);
     }
 
     /// <summary>Builds a summarization prompt from all finding summaries and forwards it to the remote model.</summary>
     public async Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct = default)
     {
         var prompt = PromptTemplates.SummarizeReport(findings.Select(f => f.Summary));
-        return await CallAsync(prompt, systemPrompt: null, ct);
+        return await CallAsync(prompt, systemPrompt: null, MaxEnrichTokens, ct);
     }
 
     /// <summary>Forwards a pre-built prompt directly to the remote model and returns its completion.</summary>
     public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
-        => CallAsync(prompt, systemPrompt: null, ct);
+        => CallAsync(prompt, systemPrompt: null, MaxCompleteTokens, ct);
 
     /// <summary>Forwards a prompt with an optional system message to the remote model.</summary>
     public Task<string> CompleteAsync(string prompt, string? systemPrompt, CancellationToken ct = default)
-        => CallAsync(prompt, systemPrompt, ct);
+        => CallAsync(prompt, systemPrompt, MaxCompleteTokens, ct);
 
-    private async Task<string> CallAsync(string userPrompt, string? systemPrompt, CancellationToken ct)
+    private async Task<string> CallAsync(string userPrompt, string? systemPrompt, int maxTokens, CancellationToken ct)
     {
         object[] messages = systemPrompt is not null
             ? [new { role = "system", content = systemPrompt }, new { role = "user", content = userPrompt }]
@@ -71,7 +72,7 @@ public sealed class RemoteLlmEngine : ILlmEngine
         var body = new
         {
             model       = _model,
-            max_tokens  = MaxFindingTokens,
+            max_tokens  = maxTokens,
             temperature = 0,
             messages,
         };
