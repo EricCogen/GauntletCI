@@ -36,7 +36,7 @@ public static class AuditLog
             await File.AppendAllTextAsync(LogPath, line + Environment.NewLine, ct)
                       .ConfigureAwait(false);
         }
-        catch { /* audit log must never crash the tool */ }
+        catch (Exception ex) { Console.Error.WriteLine($"[GauntletCI] Audit log write failed: {ex.Message}"); }
         finally { _guard.Release(); }
     }
 
@@ -50,8 +50,12 @@ public static class AuditLog
         if (!File.Exists(LogPath))
             return [];
 
-        var lines = await File.ReadAllLinesAsync(LogPath, ct).ConfigureAwait(false);
-        var entries = new List<AuditLogEntry>(lines.Length);
+        var lines = new List<string>();
+        using var reader = new StreamReader(LogPath);
+        string? readLine;
+        while ((readLine = await reader.ReadLineAsync(ct).ConfigureAwait(false)) != null)
+            lines.Add(readLine);
+        var entries = new List<AuditLogEntry>(lines.Count);
         foreach (var line in lines)
         {
             if (string.IsNullOrWhiteSpace(line)) continue;
