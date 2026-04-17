@@ -1334,7 +1334,7 @@ public static class CorpusCommand
                 llmUrls = normalizedCli;
             else if (provider == "ollama")
             {
-                llmUrls = NormalizeOllamaUrls(corpusConfig.OllamaUrls);
+                llmUrls = NormalizeOllamaUrls(corpusConfig.OllamaEndpoints.Where(e => e.Enabled).Select(e => e.Url));
                 if (llmUrls.Count > 0)
                     Console.WriteLine($"[corpus] Using Ollama URLs from .gauntletci.json: {string.Join(", ", llmUrls)}");
             }
