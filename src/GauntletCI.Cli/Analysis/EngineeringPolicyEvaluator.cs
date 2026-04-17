@@ -97,37 +97,47 @@ internal static class EngineeringPolicyEvaluator
         You are a code reviewer evaluating git diffs against an engineering policy.
         Enforce only the invariants listed in the policy below. Return ONLY valid JSON — no explanation, no markdown fences.
 
-        ## Important guidance
-        - All code shown is production code only. Test files are never included.
-        - Use hedged language where appropriate: "likely", "may", "appears to", "could indicate".
-        - Only report violations you have high confidence in. Prefer fewer, high-quality findings.
-        - Do not mention AI, LLM, model, or inference anywhere in your output.
-        - DO NOT copy placeholder values from the schema example — generate your own observations from the actual diff.
+        ## Rules
+        - Only report violations you have high confidence in. Report at most 3 findings.
+        - Use hedged language: "likely", "may", "appears to", "could indicate".
+        - Evidence must reference a real filename from the diff, not a placeholder.
+        - Do not mention AI, LLM, model, or inference.
 
         ## Engineering Policy
         {policy}
         """;
 
-    private static string BuildUserMessage(string diffText) => $$"""
-        ## Diff (production code only)
-        {{diffText}}
+    private static string BuildUserMessage(string diffText)
+    {
+        // Extract real file names to inject into the prompt
+        var files = diffText
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
+            .Where(l => l.StartsWith("// FILE: ", StringComparison.Ordinal))
+            .Select(l => System.IO.Path.GetFileName(l["// FILE: ".Length..].Trim()))
+            .Distinct()
+            .Take(8)
+            .ToList();
+        var fileHint = files.Count > 0
+            ? $"\nFiles changed: {string.Join(", ", files)}"
+            : string.Empty;
 
-        ## Instructions
-        Review the diff against each engineering invariant in your policy.
-        For each violation found, return a JSON array. Return [] if there are no violations.
+        return $$"""
+            ## Diff (production code only){{fileHint}}
+            {{diffText}}
 
-        Schema (replace ALL placeholder text with your own observations from the diff above):
-        [
-          {
-            "ruleId": "EP_POLICY_AREA",
-            "ruleName": "Policy Area Name",
-            "summary": "Your hedged sentence describing the violation you observed in the diff.",
-            "evidence": "ActualFile.cs:LineNumber — what you actually observed in the diff",
-            "whyItMatters": "Your one sentence on why this engineering practice matters.",
-            "suggestedAction": "Your one actionable fix suggestion for the code above."
-          }
-        ]
-        """;
+            ## Instructions
+            Review the diff against each engineering invariant in your policy.
+            Return a JSON array of up to 3 violations, or [] if none.
+
+            Each element must have these fields:
+            - "ruleId": short tag like "EP_SCOPE", "EP_CONTRACTS", "EP_OBSERVABILITY", "EP_FAILURE", "EP_TESTING", "EP_CORRECTNESS"
+            - "ruleName": the exact policy area name from above
+            - "summary": one hedged sentence describing the specific issue you saw in the diff
+            - "evidence": filename from the diff and what you specifically observed (e.g. "Foo.cs — exception swallowed in catch block")
+            - "whyItMatters": one sentence on the engineering risk
+            - "suggestedAction": one concrete fix
+            """;
+    }
 
     private static IReadOnlyList<Finding> ParseFindings(string raw)
     {
