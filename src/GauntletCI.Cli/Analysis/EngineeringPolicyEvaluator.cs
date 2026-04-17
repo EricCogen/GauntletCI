@@ -12,7 +12,25 @@ namespace GauntletCI.Cli.Analysis;
 /// </summary>
 internal static class EngineeringPolicyEvaluator
 {
+    // LLM input cap: diff text is truncated to 12 000 chars before sending.
+    // At ~4 chars/token this is ≈3 000 tokens — well within the 16 K context window.
     private const int MaxDiffChars = 12_000;
+
+    private static readonly HashSet<string> CanonicalRuleIds =
+    [
+        "EP_SCOPE", "EP_CONTRACTS", "EP_OBSERVABILITY",
+        "EP_FAILURE", "EP_TESTING", "EP_CORRECTNESS"
+    ];
+
+    private static readonly Dictionary<string, string> CanonicalRuleNames = new()
+    {
+        ["EP_SCOPE"]         = "Scope and Containment",
+        ["EP_CONTRACTS"]     = "Contracts and Compatibility",
+        ["EP_OBSERVABILITY"] = "Observability and Diagnosability",
+        ["EP_FAILURE"]       = "Failure Handling",
+        ["EP_TESTING"]       = "Testing and Verification",
+        ["EP_CORRECTNESS"]   = "Correctness and Intent",
+    };
 
     /// <summary>
     /// Evaluates the diff against the policy file at <paramref name="policyPath"/> using the provided LLM.
@@ -109,7 +127,7 @@ internal static class EngineeringPolicyEvaluator
         Enforce only the invariants listed in the policy below. Return ONLY valid JSON — no explanation, no markdown fences.
 
         ## Rules
-        - Only report violations you have high confidence in. Report at most 3 findings.
+        - Only report violations you have high confidence in. Report at most 5 findings.
         - Use hedged language: "likely", "may", "appears to", "could indicate".
         - Evidence must reference a real filename from the diff, not a placeholder.
         - Do not mention AI, LLM, model, or inference.
@@ -130,7 +148,7 @@ internal static class EngineeringPolicyEvaluator
 
             ## Instructions
             Review the diff against each engineering invariant in your policy.
-            Return a JSON array of up to 3 violations, or [] if none.
+            Return a JSON array of up to 5 violations, or [] if none.
 
             IMPORTANT: Evidence MUST reference a real filename from the "Files changed" list above.
             If you cannot find evidence in those specific files, do not include the finding.
@@ -176,10 +194,11 @@ internal static class EngineeringPolicyEvaluator
                         .Select(s => s.Trim())
                         .Where(s => s.Length > 0));
 
+                    var normalizedId = NormalizeRuleId(r.RuleId!.TrimEnd(':', ' '));
                     return new Finding
                     {
-                        RuleId          = r.RuleId!.TrimEnd(':', ' '),
-                        RuleName        = r.RuleName ?? "Engineering Policy",
+                        RuleId          = normalizedId,
+                        RuleName        = CanonicalRuleNames[normalizedId],
                         Summary         = r.Summary!,
                         Evidence        = evidenceBullets,
                         WhyItMatters    = r.WhyItMatters ?? string.Empty,
@@ -193,6 +212,29 @@ internal static class EngineeringPolicyEvaluator
         {
             return [];
         }
+    }
+
+    /// <summary>
+    /// Maps any ruleId the LLM emits to the nearest canonical EP_ tag.
+    /// Non-canonical values are normalised by keyword matching; unknown → EP_CORRECTNESS.
+    /// </summary>
+    private static string NormalizeRuleId(string raw)
+    {
+        var upper = raw.ToUpperInvariant();
+        if (CanonicalRuleIds.Contains(upper)) return upper;
+
+        if (upper.Contains("OBSERV") || upper.Contains("DIAGNOS") || upper.Contains("LOG") || upper.Contains("MONITOR"))
+            return "EP_OBSERVABILITY";
+        if (upper.Contains("TEST") || upper.Contains("SPEC") || upper.Contains("VERIF"))
+            return "EP_TESTING";
+        if (upper.Contains("CONTRACT") || upper.Contains("COMPAT") || upper.Contains("BREAK") || upper.Contains("API"))
+            return "EP_CONTRACTS";
+        if (upper.Contains("FAIL") || upper.Contains("ERROR") || upper.Contains("EXCEPT") || upper.Contains("RECOVER"))
+            return "EP_FAILURE";
+        if (upper.Contains("SCOPE") || upper.Contains("COMPLEX") || upper.Contains("CONTAIN"))
+            return "EP_SCOPE";
+
+        return "EP_CORRECTNESS";
     }
 
     /// <summary>
