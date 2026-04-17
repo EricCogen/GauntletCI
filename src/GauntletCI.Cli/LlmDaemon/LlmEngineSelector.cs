@@ -39,7 +39,7 @@ internal static class LlmEngineSelector
             return daemon;
 
         // Daemon unavailable (model not cached or spawn failed) — direct load, silent
-        return new LocalLlmEngine();
+        return new LocalLlmEngine(config.Llm?.ModelPath);
     }
 
     private static ILlmEngine ResolveForCi(GauntletConfig config)
