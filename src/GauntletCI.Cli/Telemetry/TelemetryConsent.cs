@@ -185,7 +185,9 @@ public static class TelemetryConsent
 
         Directory.CreateDirectory(Path.GetDirectoryName(ConfigPath)!);
         var json = JsonSerializer.Serialize(_cache, JsonOptions);
-        File.WriteAllText(ConfigPath, json);
+        var tmp = ConfigPath + ".tmp";
+        File.WriteAllText(tmp, json);
+        File.Move(tmp, ConfigPath, overwrite: true);
     }
 
     private static TelemetryMode? ParseMode(string? value) => value?.ToLowerInvariant() switch

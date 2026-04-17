@@ -3,6 +3,7 @@ using System.CommandLine;
 using System.Text.Json;
 using GauntletCI.Cli.Resources;
 using GauntletCI.Cli.Telemetry;
+using GauntletCI.Core.Rules;
 using Spectre.Console;
 
 namespace GauntletCI.Cli.Commands;
@@ -121,10 +122,8 @@ public static class InitCommand
     private static Dictionary<string, object> BuildDefaultRules()
     {
         var rules = new Dictionary<string, object>();
-        for (int i = 1; i <= 27; i++)
-        {
-            rules[$"GCI{i:D4}"] = new { enabled = true };
-        }
+        foreach (var id in RuleOrchestrator.GetAllRuleIds())
+            rules[id] = new { enabled = true };
         return rules;
     }
 }
