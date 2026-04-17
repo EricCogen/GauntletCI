@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.CommandLine;
 using System.Text.Json;
-using GauntletCI.Cli.Analysis;
 using GauntletCI.Cli.Audit;
 using GauntletCI.Cli.LlmDaemon;
 using GauntletCI.Cli.Output;
@@ -147,15 +146,6 @@ public static class AnalyzeCommand
                         var adjudicator    = new GauntletCI.Llm.Embeddings.LlmAdjudicator(embedEng, store);
                         await adjudicator.AdjudicateAsync(result.Findings, ct);
                     }
-                }
-
-                // Engineering policy evaluation (experimental — config-driven, LLM-required)
-                if (config.Experimental.EngineeringPolicy.Enabled && llm.IsAvailable)
-                {
-                    var policyPath = Path.Combine(repo.FullName, config.Experimental.EngineeringPolicy.Path);
-                    var policyFindings = await EngineeringPolicyEvaluator.EvaluateAsync(
-                        diff, policyPath, llm, ctx.GetCancellationToken());
-                    result.Findings.AddRange(policyFindings);
                 }
 
                 if ((output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase))

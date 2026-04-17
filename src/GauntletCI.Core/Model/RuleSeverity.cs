@@ -16,6 +16,4 @@ public enum RuleSeverity
     Warn = 2,
     /// <summary>Blocking — always shown; causes a non-zero exit code by default.</summary>
     Block = 3,
-    /// <summary>Advisory — always shown; produced by LLM policy evaluation; never causes a non-zero exit code.</summary>
-    Advisory = 4,
 }
