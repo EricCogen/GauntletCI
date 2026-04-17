@@ -166,7 +166,7 @@ public static class AnalyzeCommand
                     // Engineering policy evaluation (experimental — config-driven, LLM-required)
                     if (config.Experimental.EngineeringPolicy.Enabled && llm.IsAvailable)
                     {
-                        setStatus("Policy review...");
+                        setStatus("Checking standards...");
                         var policyPath = Path.Combine(repo.FullName, config.Experimental.EngineeringPolicy.Path);
                         var policyFindings = await EngineeringPolicyEvaluator.EvaluateAsync(
                             diff, policyPath, llm, ctx.GetCancellationToken());
