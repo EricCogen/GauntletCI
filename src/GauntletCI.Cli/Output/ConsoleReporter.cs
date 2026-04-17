@@ -32,6 +32,8 @@ public static class ConsoleReporter
 
     /// <summary>
     /// Prints a formatted risk-analysis report to the console, grouped by severity level.
+    /// Block (red), Warn (yellow), and Info (grey) findings are gated by minSeverity.
+    /// Advisory findings (blue) from LLM policy evaluation are always shown regardless of minSeverity.
     /// </summary>
     /// <param name="result">The evaluation result containing findings to display.</param>
     /// <param name="ascii">Use ASCII box characters instead of Unicode for limited terminals.</param>
@@ -82,6 +84,15 @@ public static class ConsoleReporter
         if (!anyVisible)
         {
             AnsiConsole.MarkupLine("[grey]  All findings are below the current severity threshold. Use --verbose to see Info findings.[/]");
+        }
+
+        // Advisory findings (LLM policy) — always shown, never gated by minSeverity
+        var advisoryFindings = result.Findings.Where(f => f.Severity == RuleSeverity.Advisory).ToList();
+        if (advisoryFindings.Count > 0)
+        {
+            AnsiConsole.MarkupLine($"[blue]{string.Format(sep, "ADVISORY", advisoryFindings.Count)}[/]");
+            foreach (var finding in advisoryFindings)
+                PrintFinding(finding, "blue");
         }
     }
 
