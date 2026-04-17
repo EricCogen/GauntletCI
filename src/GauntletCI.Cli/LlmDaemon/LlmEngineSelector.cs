@@ -33,6 +33,15 @@ internal static class LlmEngineSelector
         if (IsRunningInCi())
             return ResolveForCi(config);
 
+        // Local dev with Ollama configured — prefer corpus.ollamaUrls[0] over ONNX daemon
+        var ollamaUrl = config.Corpus.OllamaUrls.FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(ollamaUrl))
+        {
+            var model    = config.Corpus.OllamaModel ?? "phi3:mini";
+            var endpoint = ollamaUrl.TrimEnd('/') + "/v1/chat/completions";
+            return new RemoteLlmEngine(endpoint, model, apiKey: "ollama");
+        }
+
         // Local dev: try daemon first, then fall back to direct load
         var daemon = await LlmDaemonClient.ConnectOrStartAsync(ct);
         if (daemon is not null)

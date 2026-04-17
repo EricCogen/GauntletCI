@@ -59,15 +59,35 @@ internal static class EngineeringPolicyEvaluator
         return ParseFindings(raw);
     }
 
+    private static readonly HashSet<string> TestPathMarkers =
+    [
+        "test", "tests", "spec", "specs", "unittest", "unittests", "integrationtest", "integrationtests"
+    ];
+
+    private static bool IsTestFile(string path)
+    {
+        var lower = path.Replace('\\', '/').ToLowerInvariant();
+        return lower.EndsWith(".tests.cs", StringComparison.Ordinal)
+            || lower.EndsWith("test.cs", StringComparison.Ordinal)
+            || lower.EndsWith("tests.cs", StringComparison.Ordinal)
+            || lower.EndsWith("spec.cs", StringComparison.Ordinal)
+            || lower.EndsWith("specs.cs", StringComparison.Ordinal)
+            || lower.Split('/').Any(seg => TestPathMarkers.Contains(seg));
+    }
+
     private static string BuildDiffText(DiffContext diff)
     {
-        var lines = diff.Files
-            .SelectMany(f => f.Hunks)
-            .SelectMany(h => h.Lines)
-            .Where(l => l.Kind == DiffLineKind.Added)
-            .Select(l => l.Content);
+        var sb = new System.Text.StringBuilder();
+        foreach (var file in diff.Files)
+        {
+            var isTest = IsTestFile(file.NewPath ?? file.OldPath ?? "");
+            var prefix = isTest ? "[TEST FILE] " : "";
+            foreach (var hunk in file.Hunks)
+            foreach (var line in hunk.Lines.Where(l => l.Kind == DiffLineKind.Added))
+                sb.AppendLine(prefix + line.Content);
+        }
 
-        var text = string.Join("\n", lines);
+        var text = sb.ToString();
         return text.Length > MaxDiffChars ? text[..MaxDiffChars] + "\n... (truncated)" : text;
     }
 
@@ -75,12 +95,20 @@ internal static class EngineeringPolicyEvaluator
         You are a code reviewer evaluating git diffs against an engineering policy.
         Enforce only the invariants listed in the policy below. Return ONLY valid JSON — no explanation, no markdown fences.
 
+        ## Important guidance
+        - Lines prefixed with [TEST FILE] come from test code. Be very conservative — most engineering policy
+          invariants (null guards, logging, resource cleanup, error propagation) do not apply to test code.
+          Only flag a test file if there is a clear and serious violation that would affect test reliability.
+        - These are advisory observations, not proven facts. Use appropriately hedged language in your output:
+          prefer "likely", "probably", "may", "appears to", "could indicate" over absolute assertions.
+        - Only report violations you have high confidence in. Prefer fewer, high-quality findings over many uncertain ones.
+
         ## Engineering Policy
         {policy}
         """;
 
     private static string BuildUserMessage(string diffText) => $$"""
-        ## Diff (added lines only)
+        ## Diff (added lines only; [TEST FILE] prefix marks test code)
         {{diffText}}
 
         ## Instructions
@@ -92,9 +120,10 @@ internal static class EngineeringPolicyEvaluator
           {
             "ruleId": "EP004",
             "ruleName": "Failure Handling",
-            "summary": "One sentence describing the violation.",
-            "evidence": "FileName.cs:42 — the offending snippet",
-            "whyItMatters": "One sentence on the risk.",
+            "summary": "One hedged sentence describing the likely violation (use 'likely', 'may', 'appears to', etc.).",
+            "evidence": "FileName.cs:42 — brief description of the location",
+            "codeSnippet": "// The verbatim offending line(s) from the diff, max 5 lines",
+            "whyItMatters": "One sentence on the probable risk.",
             "suggestedAction": "One sentence on how to fix it."
           }
         ]
@@ -124,6 +153,7 @@ internal static class EngineeringPolicyEvaluator
                 RuleName        = r.RuleName ?? "Engineering Policy",
                 Summary         = r.Summary ?? string.Empty,
                 Evidence        = r.Evidence ?? string.Empty,
+                CodeSnippet     = string.IsNullOrWhiteSpace(r.CodeSnippet) ? null : r.CodeSnippet.Trim(),
                 WhyItMatters    = r.WhyItMatters ?? string.Empty,
                 SuggestedAction = r.SuggestedAction ?? string.Empty,
                 Severity        = RuleSeverity.Advisory,
@@ -142,6 +172,7 @@ internal static class EngineeringPolicyEvaluator
         string? RuleName,
         string? Summary,
         string? Evidence,
+        string? CodeSnippet,
         string? WhyItMatters,
         string? SuggestedAction);
 }

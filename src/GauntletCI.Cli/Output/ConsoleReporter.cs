@@ -63,7 +63,7 @@ public static class ConsoleReporter
 
         var groups = new[]
         {
-            (RuleSeverity.Block, "BLOCK", "red"),
+            (RuleSeverity.Block, "POSSIBLE BLOCK", "red"),
             (RuleSeverity.Warn,  "WARN",  "yellow"),
             (RuleSeverity.Info,  "INFO",  "grey"),
         };
@@ -121,6 +121,13 @@ public static class ConsoleReporter
             ? MaskEvidenceSnippet(finding.Evidence)
             : finding.Evidence;
         AnsiConsole.MarkupLine($"[grey]  Evidence : {Markup.Escape(evidenceDisplay)}[/]");
+
+        if (!string.IsNullOrWhiteSpace(finding.CodeSnippet))
+        {
+            AnsiConsole.MarkupLine("[grey]  Snippet  :[/]");
+            foreach (var line in finding.CodeSnippet.Split('\n'))
+                AnsiConsole.MarkupLine($"[grey]    {Markup.Escape(line)}[/]");
+        }
 
         AnsiConsole.MarkupLine($"  Why      : {Markup.Escape(finding.WhyItMatters)}");
         AnsiConsole.MarkupLine($"[cyan]  Action   : {Markup.Escape(finding.SuggestedAction)}[/]");

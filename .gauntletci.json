@@ -23,5 +23,15 @@
   },
   "llm": {
     "modelPath": "~/.gauntletci/models/phi3-mini"
+  },
+  "corpus": {
+    "ollamaUrls": ["http://10.0.0.5:11434"],
+    "ollamaModel": "phi4-mini:latest"
+  },
+  "experimental": {
+    "engineeringPolicy": {
+      "enabled": true,
+      "path": "docs/core-engineering-rules.md"
+    }
   }
 }
