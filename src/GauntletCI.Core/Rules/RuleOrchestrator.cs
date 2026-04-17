@@ -40,6 +40,23 @@ public class RuleOrchestrator
         _fileAnalyzer = fileAnalyzer ?? new ChangedFileAnalyzer();
     }
 
+    /// <summary>The rules registered with this orchestrator, ordered by ID.</summary>
+    public IReadOnlyList<IRule> Rules => _rules;
+
+    /// <summary>Returns all rule IDs discoverable via reflection from this assembly, sorted.</summary>
+    public static IReadOnlyList<string> GetAllRuleIds()
+    {
+        var ruleType = typeof(IRule);
+        return typeof(RuleOrchestrator).Assembly
+            .GetTypes()
+            .Where(t => t is { IsClass: true, IsAbstract: false } && ruleType.IsAssignableFrom(t))
+            .Select(t => (IRule)(Activator.CreateInstance(t)
+                ?? throw new InvalidOperationException($"Activator.CreateInstance returned null for {t.FullName}.")))
+            .Select(r => r.Id)
+            .OrderBy(id => id)
+            .ToArray();
+    }
+
     /// <summary>Creates an orchestrator with all built-in rules auto-discovered via reflection.</summary>
     /// <param name="config">Optional configuration; defaults to built-in settings.</param>
     /// <param name="ruleTimeout">Per-rule evaluation time limit; defaults to 30 seconds.</param>
@@ -56,7 +73,8 @@ public class RuleOrchestrator
             .GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false }
                      && ruleType.IsAssignableFrom(t))
-            .Select(t => (IRule)Activator.CreateInstance(t)!)
+            .Select(t => (IRule)(Activator.CreateInstance(t)
+                ?? throw new InvalidOperationException($"Activator.CreateInstance returned null for {t.FullName}.")))
             .Where(r => IsRuleEnabled(r.Id, config, configService))
             .ToList();
 

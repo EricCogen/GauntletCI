@@ -93,7 +93,7 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
         if (!TryEnsureLoaded())
             return string.Empty;
 
-        _promptsUsed++;
+        Interlocked.Increment(ref _promptsUsed);
 
         return await Task.Run(() =>
         {

@@ -34,7 +34,8 @@ public static class TelemetryUploader
             if (pending.Count == 0) return;
 
             using var http = new HttpClient { Timeout = Timeout };
-            http.DefaultRequestHeaders.Add("X-GauntletCI-Version", "2.0.0");
+            http.DefaultRequestHeaders.Add("X-GauntletCI-Version",
+                System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0");
 
             var payload = new { events = pending };
             var response = await http.PostAsJsonAsync(Endpoint, payload);

@@ -80,7 +80,8 @@ public sealed class RuleCorpusRunner
         cmd.Parameters.AddWithValue("$fixture_id", fixtureId);
         cmd.Parameters.AddWithValue("$started",    startedAt.ToString("o"));
         cmd.Parameters.AddWithValue("$completed",  completedAt.ToString("o"));
-        cmd.Parameters.AddWithValue("$version",    "2.0.0");
+        cmd.Parameters.AddWithValue("$version",
+            System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0");
         await cmd.ExecuteNonQueryAsync(ct);
     }
 
