@@ -266,7 +266,7 @@ public class EvaluationResult
     /// </summary>
     public bool ShouldBlock(string exitOn = "Block") =>
         exitOn.Equals("Warn", StringComparison.OrdinalIgnoreCase)
-            ? Findings.Any(f => f.Severity >= RuleSeverity.Warn)
+            ? Findings.Any(f => f.Severity is RuleSeverity.Warn or RuleSeverity.Block)
             : Findings.Any(f => f.Severity == RuleSeverity.Block);
 }
 
