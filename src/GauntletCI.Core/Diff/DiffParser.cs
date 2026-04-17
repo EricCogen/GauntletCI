@@ -31,6 +31,9 @@ public static class DiffParser
     /// <returns>A fully populated <see cref="DiffContext"/> containing all parsed files and hunks.</returns>
     public static DiffContext Parse(string rawDiff, string commitSha = "", string? commitMessage = null)
     {
+        // Normalize line endings: CRLF → LF, then stray CR → LF
+        rawDiff = rawDiff.Replace("\r\n", "\n").Replace('\r', '\n');
+
         var files = new List<DiffFile>();
         var lines = rawDiff.Split('\n');
 
