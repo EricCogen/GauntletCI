@@ -24,4 +24,13 @@ public interface ILlmEngine : IDisposable
 
     /// <summary>Sends a raw prompt and returns the model's completion text.</summary>
     Task<string> CompleteAsync(string prompt, CancellationToken ct = default);
+
+    /// <summary>
+    /// Sends a prompt with a separate system instruction and returns the model's completion text.
+    /// Engines that support role separation (e.g. <see cref="RemoteLlmEngine"/>) pass
+    /// <paramref name="systemPrompt"/> as a <c>role: "system"</c> message; others fall back to
+    /// appending it inline before the user message.
+    /// </summary>
+    Task<string> CompleteAsync(string prompt, string? systemPrompt, CancellationToken ct = default)
+        => CompleteAsync(prompt, ct);
 }

@@ -45,12 +45,10 @@ internal static class EngineeringPolicyEvaluator
         }
         var diffText = BuildDiffText(diff);
 
-        var prompt = BuildPrompt(policy, diffText);
-
         string raw;
         try
         {
-            raw = await llm.CompleteAsync(prompt, ct);
+            raw = await llm.CompleteAsync(BuildUserMessage(diffText), BuildSystemPrompt(policy), ct);
         }
         catch (Exception ex)
         {
@@ -73,19 +71,21 @@ internal static class EngineeringPolicyEvaluator
         return text.Length > MaxDiffChars ? text[..MaxDiffChars] + "\n... (truncated)" : text;
     }
 
-    private static string BuildPrompt(string policy, string diffText) => $$"""
-        You are a code reviewer evaluating a git diff against an engineering policy.
+    private static string BuildSystemPrompt(string policy) => $"""
+        You are a code reviewer evaluating git diffs against an engineering policy.
+        Enforce only the invariants listed in the policy below. Return ONLY valid JSON — no explanation, no markdown fences.
 
         ## Engineering Policy
-        {{policy}}
+        {policy}
+        """;
 
+    private static string BuildUserMessage(string diffText) => $$"""
         ## Diff (added lines only)
         {{diffText}}
 
         ## Instructions
-        Review the diff against each engineering invariant above.
+        Review the diff against each engineering invariant in your policy.
         For each violation, return a JSON array. Return [] if there are no violations.
-        Return ONLY valid JSON — no explanation, no markdown fences.
 
         Schema:
         [
