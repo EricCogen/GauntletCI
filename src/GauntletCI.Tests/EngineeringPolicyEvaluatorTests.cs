@@ -43,7 +43,7 @@ public class EngineeringPolicyEvaluatorTests
             var llm = new StubLlmEngine(isAvailable: true, response: """
                 [
                   {
-                    "ruleId": "EP001",
+                    "ruleId": "EP_CORRECTNESS",
                     "ruleName": "Correctness and Intent",
                     "summary": "TODO comment left in added code",
                     "evidence": "Foo.cs:10 — // TODO: implement",
@@ -57,7 +57,7 @@ public class EngineeringPolicyEvaluatorTests
                 EmptyDiff(), policyFile, llm);
 
             Assert.Single(result);
-            Assert.Equal("EP001", result[0].RuleId);
+            Assert.Equal("EP_CORRECTNESS", result[0].RuleId);
             Assert.Equal(RuleSeverity.Advisory, result[0].Severity);
         }
         finally { File.Delete(policyFile); }
@@ -100,12 +100,12 @@ public class EngineeringPolicyEvaluatorTests
             await File.WriteAllTextAsync(policyFile, "## EP001");
             var llm = new StubLlmEngine(isAvailable: true, response: """
                 ```json
-                [{"ruleId":"EP001","ruleName":"Correctness","summary":"s","evidence":"e","whyItMatters":"w","suggestedAction":"a"}]
+                [{"ruleId":"EP_CORRECTNESS","ruleName":"Correctness and Intent","summary":"s","evidence":"e","whyItMatters":"w","suggestedAction":"a"}]
                 ```
                 """);
             var result = await EngineeringPolicyEvaluator.EvaluateAsync(EmptyDiff(), policyFile, llm);
             Assert.Single(result);
-            Assert.Equal("EP001", result[0].RuleId);
+            Assert.Equal("EP_CORRECTNESS", result[0].RuleId);
         }
         finally { File.Delete(policyFile); }
     }
@@ -119,11 +119,11 @@ public class EngineeringPolicyEvaluatorTests
             await File.WriteAllTextAsync(policyFile, "## EP001");
             var llm = new StubLlmEngine(isAvailable: true, response: """
                 Here are the findings I found:
-                [{"ruleId":"EP001","ruleName":"Correctness","summary":"s","evidence":"e","whyItMatters":"w","suggestedAction":"a"}]
+                [{"ruleId":"EP_CORRECTNESS","ruleName":"Correctness and Intent","summary":"s","evidence":"e","whyItMatters":"w","suggestedAction":"a"}]
                 """);
             var result = await EngineeringPolicyEvaluator.EvaluateAsync(EmptyDiff(), policyFile, llm);
             Assert.Single(result);
-            Assert.Equal("EP001", result[0].RuleId);
+            Assert.Equal("EP_CORRECTNESS", result[0].RuleId);
         }
         finally { File.Delete(policyFile); }
     }
