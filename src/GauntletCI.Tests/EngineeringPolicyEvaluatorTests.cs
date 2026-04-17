@@ -114,12 +114,32 @@ public class EngineeringPolicyEvaluatorTests
         Assert.Equal("EP001", result[0].RuleId);
     }
 
+    [Fact]
+    public async Task EvaluateAsync_parses_json_when_response_has_preamble_text()
+    {
+        var policyFile = Path.GetTempFileName();
+        await File.WriteAllTextAsync(policyFile, "## EP001");
+
+        var llm = new StubLlmEngine(isAvailable: true, response: """
+            Here are the findings I found:
+            [{"ruleId":"EP001","ruleName":"Correctness","summary":"s","evidence":"e","whyItMatters":"w","suggestedAction":"a"}]
+            """);
+
+        var result = await EngineeringPolicyEvaluator.EvaluateAsync(
+            EmptyDiff(), policyFile, llm);
+
+        File.Delete(policyFile);
+
+        Assert.Single(result);
+        Assert.Equal("EP001", result[0].RuleId);
+    }
+
     private sealed class StubLlmEngine(bool isAvailable, string response) : ILlmEngine
     {
         public bool IsAvailable => isAvailable;
-        public Task<string> CompleteAsync(string prompt, CancellationToken ct = default) => Task.FromResult(response);
-        public Task<string> EnrichFindingAsync(Finding finding, CancellationToken ct = default) => Task.FromResult(string.Empty);
-        public Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct = default) => Task.FromResult(string.Empty);
+        public Task<string> CompleteAsync(string prompt, CancellationToken ct) => Task.FromResult(response);
+        public Task<string> EnrichFindingAsync(Finding finding, CancellationToken ct) => Task.FromResult(string.Empty);
+        public Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct) => Task.FromResult(string.Empty);
         public void Dispose() { }
     }
 }
