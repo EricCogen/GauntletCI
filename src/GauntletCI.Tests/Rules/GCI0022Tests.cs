@@ -96,4 +96,28 @@ public class GCI0022Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("Raw INSERT without upsert"));
     }
+
+    [Fact]
+    public async Task EventPlusEqualsInStaticConstructor_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/AppEvents.cs b/src/AppEvents.cs
+            index abc..def 100644
+            --- a/src/AppEvents.cs
+            +++ b/src/AppEvents.cs
+            @@ -1,3 +1,8 @@
+             public class AppEvents {
+            +    static AppEvents()
+            +    {
+            +        AppDomain.CurrentDomain.UnhandledException += GlobalExceptionHandler;
+            +        AppDomain.CurrentDomain.ProcessExit += OnProcessExit;
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("deduplication"));
+    }
 }

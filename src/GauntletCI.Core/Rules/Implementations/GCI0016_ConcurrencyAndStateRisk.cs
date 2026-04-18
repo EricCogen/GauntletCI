@@ -40,7 +40,10 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
 
         // Don't flag event handlers (common legitimate use)
         bool isEventHandler = content.Contains("EventHandler", StringComparison.Ordinal) ||
-                               content.Contains("sender", StringComparison.Ordinal);
+                               content.Contains("object sender", StringComparison.Ordinal) ||
+                               content.Contains("EventArgs", StringComparison.Ordinal) ||
+                               content.Contains("sender,", StringComparison.Ordinal) ||
+                               content.Contains("sender)", StringComparison.Ordinal);
         if (isEventHandler) return;
 
         findings.Add(CreateFinding(

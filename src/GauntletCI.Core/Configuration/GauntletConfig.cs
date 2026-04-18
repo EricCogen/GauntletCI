@@ -31,6 +31,9 @@ public class GauntletConfig
     /// <summary>Corpus pipeline configuration (local dev tool settings).</summary>
     public CorpusConfig Corpus { get; set; } = new();
 
+    /// <summary>Pattern consistency configuration.</summary>
+    public PatternConsistencyConfig PatternConsistency { get; set; } = new();
+
     /// <summary>Experimental feature flags. Settings here may change or be removed without notice.</summary>
     public ExperimentalConfig Experimental { get; set; } = new();
 }
@@ -181,4 +184,18 @@ public class OllamaEndpoint
 
     /// <summary>Whether this endpoint is active. Disabled endpoints are skipped during round-robin. Defaults to true.</summary>
     public bool Enabled { get; set; } = true;
+}
+
+/// <summary>
+/// Configuration for GCI0046 Pattern Consistency Deviation.
+/// </summary>
+public class PatternConsistencyConfig
+{
+    /// <summary>
+    /// Method base names for which a sync-only implementation is intentional.
+    /// GCI0046 will not flag a finding when both <c>Foo</c> and <c>FooAsync</c>
+    /// are added in the same diff and <c>Foo</c> appears in this list.
+    /// Example: ["Subscribe", "Unsubscribe", "Register", "Deregister"]
+    /// </summary>
+    public string[] AllowedSyncAsyncPairs { get; set; } = [];
 }

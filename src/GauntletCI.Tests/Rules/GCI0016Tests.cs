@@ -100,4 +100,22 @@ public class GCI0016Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("lock"));
     }
+
+    [Fact]
+    public async Task AsyncVoidEventHandlerWithSender_ShouldNotFlag()
+    {
+        var diff = MakeDiff("    private async void OnClick(object sender, EventArgs e) { await DoWorkAsync(); }");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("async void"));
+    }
+
+    [Fact]
+    public async Task AsyncVoidEventHandlerWithEventArgs_ShouldNotFlag()
+    {
+        var diff = MakeDiff("    private async void OnChanged(object sender, PropertyChangedEventArgs e) { }");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("async void"));
+    }
 }

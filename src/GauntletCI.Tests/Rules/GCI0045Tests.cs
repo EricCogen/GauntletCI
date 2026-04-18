@@ -168,4 +168,27 @@ public class GCI0045Tests
 
         Assert.Contains(findings, f => f.Summary.Contains("delegation") || f.Summary.Contains("wrapper"));
     }
+
+    [Fact]
+    public async Task DelegationWrapperInTestFile_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/GauntletCI.Tests/FakeServiceTests.cs b/src/GauntletCI.Tests/FakeServiceTests.cs
+            index abc..def 100644
+            --- a/src/GauntletCI.Tests/FakeServiceTests.cs
+            +++ b/src/GauntletCI.Tests/FakeServiceTests.cs
+            @@ -1,3 +1,9 @@
+             public class FakeService {
+            +    public string GetA() => return _inner.GetA();
+            +    public string GetB() => return _inner.GetB();
+            +    public string GetC() => return _inner.GetC();
+            +    public string GetD() => return _inner.GetD();
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("delegation") || f.Summary.Contains("wrapper"));
+    }
 }
