@@ -44,6 +44,7 @@ artifacts/
 !.github/SECURITY.md
 !docs/DEVELOPMENT.md
 !docs/TROUBLESHOOTING.md
+!docs/features-benefits.md
 
 # Internal pipeline and tooling (commercial — not public)
 build-corpus.ps1
