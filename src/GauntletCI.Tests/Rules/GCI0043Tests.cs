@@ -205,4 +205,48 @@ public class GCI0043Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("as-cast"));
     }
+
+    [Fact]
+    public async Task RegularCommentWithAs_ShouldNotFire()
+    {
+        // "as" in a // comment should be ignored
+        var raw = """
+            diff --git a/src/AnalyzeCommand.cs b/src/AnalyzeCommand.cs
+            index abc..def 100644
+            --- a/src/AnalyzeCommand.cs
+            +++ b/src/AnalyzeCommand.cs
+            @@ -1,3 +1,5 @@
+             public class AnalyzeCommand {
+            +    // Skip posting to GitHub API when --pr-comment-suggest is active (it acts as a dry-run)
+            +    public void Run() { }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("as-cast"));
+    }
+
+    [Fact]
+    public async Task AsInStringLiteral_ShouldNotFire()
+    {
+        // "as" inside a string argument — not a C# as-cast operator
+        var raw = """
+            diff --git a/src/BaselineCommand.cs b/src/BaselineCommand.cs
+            index abc..def 100644
+            --- a/src/BaselineCommand.cs
+            +++ b/src/BaselineCommand.cs
+            @@ -1,3 +1,5 @@
+             public class BaselineCommand {
+            +    var cmd = new Command("create",
+            +        "Run analysis and record all findings as the new baseline");
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("as-cast"));
+    }
 }

@@ -3,6 +3,7 @@ using System.CommandLine;
 using System.Text.Json;
 using GauntletCI.Cli.Analysis;
 using GauntletCI.Cli.Audit;
+using GauntletCI.Cli.Baseline;
 using GauntletCI.Cli.LlmDaemon;
 using GauntletCI.Cli.Output;
 using GauntletCI.Cli.Presentation;
@@ -48,6 +49,9 @@ public static class AnalyzeCommand
             "--severity",
             () => "warn",
             "Minimum severity to display: info, warn, block");
+        var noBaselineFlag = new Option<bool>("--no-baseline", "Ignore the baseline file and show all findings");
+        var showContextOption = new Option<int>("--show-context", () => 0, "Include N surrounding diff lines around each finding evidence");
+        var prCommentSuggestFlag = new Option<bool>("--pr-comment-suggest", "Print PR review comment body to stdout; when used without --github-pr-comments this avoids posting to the GitHub API");
 
         var cmd = new Command("analyze", "Analyse a git diff for pre-commit risks")
         {
@@ -67,6 +71,9 @@ public static class AnalyzeCommand
             withExpertCtxFlag,
             verboseFlag,
             severityOption,
+            noBaselineFlag,
+            showContextOption,
+            prCommentSuggestFlag,
         };
 
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
@@ -87,6 +94,9 @@ public static class AnalyzeCommand
             var withExpertCtx = ctx.ParseResult.GetValueForOption(withExpertCtxFlag);
             var verbose    = ctx.ParseResult.GetValueForOption(verboseFlag);
             var severityStr = ctx.ParseResult.GetValueForOption(severityOption)!;
+            var noBaseline = ctx.ParseResult.GetValueForOption(noBaselineFlag);
+            var showContext = ctx.ParseResult.GetValueForOption(showContextOption);
+            var prCommentSuggest = ctx.ParseResult.GetValueForOption(prCommentSuggestFlag);
             var ct = ctx.GetCancellationToken();
 
             // Enforce single diff source
@@ -105,6 +115,13 @@ public static class AnalyzeCommand
             if (sourceCount == 0 && !Console.IsInputRedirected)
             {
                 Console.Error.WriteLine("[GauntletCI] Error: no diff source specified. Use --staged, --unstaged, --all-changes, --commit <sha>, --diff <file>, or pipe a diff to stdin.");
+                ctx.ExitCode = 1;
+                return;
+            }
+
+            if (prCommentSuggest && "json".Equals(output, StringComparison.OrdinalIgnoreCase))
+            {
+                Console.Error.WriteLine("[GauntletCI] Error: --pr-comment-suggest cannot be combined with --output json (produces invalid output). Use --output text or omit --output.");
                 ctx.ExitCode = 1;
                 return;
             }
@@ -138,6 +155,18 @@ public static class AnalyzeCommand
                 var staticAnalysis = await StaticAnalysisRunner.RunAsync(diff, repoPath, ct);
 
                 var result = await orchestrator.RunAsync(diff, staticAnalysis, ignoreList: ignoreList);
+
+                // Baseline delta mode: suppress findings whose fingerprint is in the baseline.
+                int suppressedByBaseline = 0;
+                if (!noBaseline)
+                {
+                    var baseline = BaselineStore.Load(repo.FullName);
+                    if (baseline is not null)
+                    {
+                        suppressedByBaseline = result.Findings.RemoveAll(
+                            f => baseline.Fingerprints.Contains(BaselineStore.ComputeFingerprint(f)));
+                    }
+                }
 
                 using ILlmEngine llm = await LlmEngineSelector.ResolveAsync(config, withLlm && !noLlm);
 
@@ -204,7 +233,25 @@ public static class AnalyzeCommand
 
                 if ((output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase))
                 {
-                    var json = JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+                    // Always emit a consistent schema regardless of baseline suppression.
+                    // RuleMetrics FindingCount is recomputed from remaining (non-suppressed) findings.
+                    var jsonResult = new
+                    {
+                        result.CommitSha,
+                        result.HasFindings,
+                        result.Findings,
+                        result.RulesEvaluated,
+                        RuleMetrics = result.RuleMetrics.Select(m => new
+                        {
+                            m.RuleId,
+                            m.DurationMs,
+                            m.Outcome,
+                            FindingCount = result.Findings.Count(f => f.RuleId == m.RuleId),
+                        }).ToList(),
+                        result.FileStatistics,
+                        SuppressedByBaseline = suppressedByBaseline,
+                    };
+                    var json = JsonSerializer.Serialize(jsonResult, new JsonSerializerOptions { WriteIndented = true });
                     Console.WriteLine(json);
                 }
                 else
@@ -212,13 +259,35 @@ public static class AnalyzeCommand
                     var minSeverity = verbose
                         ? GauntletCI.Core.Model.RuleSeverity.Info
                         : ParseMinSeverity(severityStr);
-                    ConsoleReporter.Report(result, ascii, minSeverity);
+                    ConsoleReporter.Report(result, ascii, minSeverity, suppressedByBaseline, diff, showContext);
+                }
+
+                if (prCommentSuggest)
+                {
+                    var inlineFindings = result.Findings.Where(f => !string.IsNullOrEmpty(f.FilePath) && f.Line.HasValue).ToList();
+                    var summaryFindings = result.Findings.Where(f => string.IsNullOrEmpty(f.FilePath) || !f.Line.HasValue).ToList();
+                    foreach (var finding in inlineFindings)
+                    {
+                        Console.WriteLine($"### {finding.FilePath}:{finding.Line}");
+                        Console.WriteLine();
+                        Console.WriteLine(GitHubPrReviewWriter.BuildCommentBody(finding));
+                        Console.WriteLine();
+                        Console.WriteLine("---");
+                        Console.WriteLine();
+                    }
+                    if (summaryFindings.Count > 0)
+                    {
+                        Console.WriteLine("### Summary Comment");
+                        Console.WriteLine();
+                        Console.WriteLine(GitHubPrReviewWriter.BuildReviewBody(summaryFindings, hasInlineComments: inlineFindings.Count > 0));
+                    }
                 }
 
                 if (ghAnnotate)
                     GitHubAnnotationWriter.Write(result);
 
-                if (ghPrComments)
+                // Skip posting to GitHub API when --pr-comment-suggest is active (it acts as a dry-run)
+                if (ghPrComments && !prCommentSuggest)
                     await GitHubPrReviewWriter.WriteAsync(result, ctx.GetCancellationToken());
 
                 await TelemetryCollector.CollectAsync(result, diff, repo.FullName, ct: ct);

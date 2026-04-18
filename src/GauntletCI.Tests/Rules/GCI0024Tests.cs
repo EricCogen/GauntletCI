@@ -157,4 +157,24 @@ public class GCI0024Tests
 
         Assert.Contains(findings, f => f.Summary.Contains("MemoryStream"));
     }
+
+    [Fact]
+    public async Task SystemCommandLineCommand_ShouldNotFlag()
+    {
+        // System.CommandLine.Command is not IDisposable — "Command" suffix removed from heuristic
+        var raw = """
+            diff --git a/src/Cli/MyCommand.cs b/src/Cli/MyCommand.cs
+            index abc..def 100644
+            --- a/src/Cli/MyCommand.cs
+            +++ b/src/Cli/MyCommand.cs
+            @@ -1,2 +1,3 @@
+             // cli
+            +var cmd = new Command("baseline", "Manage baselines");
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Command"));
+    }
 }

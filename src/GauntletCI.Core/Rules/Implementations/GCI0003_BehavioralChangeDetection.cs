@@ -71,23 +71,54 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
 
             foreach (var removed in removedSigs)
             {
+                // Private methods cannot break external callers — skip entirely.
+                if (removed.Content.Contains("private ", StringComparison.Ordinal)) continue;
+
                 var removedName = ExtractMethodName(removed.Content);
                 if (removedName is null) continue;
 
                 var matchingAdded = addedSigs.FirstOrDefault(a => ExtractMethodName(a.Content) == removedName);
                 if (matchingAdded is not null && NormalizeSignature(removed.Content) != NormalizeSignature(matchingAdded.Content))
                 {
+                    bool isCompatible = IsBackwardCompatibleExtension(removed.Content, matchingAdded.Content);
                     findings.Add(CreateFinding(
                         file,
                         summary: $"Method signature changed: '{removedName}' in {file.NewPath}",
                         evidence: $"Was: {removed.Content.Trim()} | Now: {matchingAdded.Content.Trim()}",
-                        whyItMatters: "Signature changes can break callers that haven't been updated.",
-                        suggestedAction: "Verify all callers are updated and consider adding an overload for backward compatibility.",
-                        confidence: Confidence.Medium,
+                        whyItMatters: isCompatible
+                            ? "New parameters have default values (backward-compatible), but callers using positional arguments may need review."
+                            : "Signature changes can break callers that haven't been updated.",
+                        suggestedAction: isCompatible
+                            ? "Confirm all existing callers still compile and behave correctly with the new defaults."
+                            : "Verify all callers are updated and consider adding an overload for backward compatibility.",
+                        confidence: isCompatible ? Confidence.Low : Confidence.Medium,
                         line: matchingAdded));
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Returns true when the only change is adding new parameters that all carry default values.
+    /// Such additions are backward-compatible: existing call sites compile without modification.
+    /// </summary>
+    private static bool IsBackwardCompatibleExtension(string removedSig, string addedSig)
+    {
+        var removedParams = ExtractParenContent(removedSig)?.Trim() ?? "";
+        var addedParams   = ExtractParenContent(addedSig)?.Trim()   ?? "";
+
+        if (addedParams.Length <= removedParams.Length) return false;
+        if (!addedParams.StartsWith(removedParams, StringComparison.Ordinal)) return false;
+
+        var extra = addedParams[removedParams.Length..].TrimStart(',').TrimStart();
+        return !string.IsNullOrWhiteSpace(extra) && extra.Contains('=', StringComparison.Ordinal);
+    }
+
+    private static string? ExtractParenContent(string sig)
+    {
+        var open  = sig.IndexOf('(');
+        var close = sig.LastIndexOf(')');
+        return open >= 0 && close > open ? sig[(open + 1)..close] : null;
     }
 
     private static string? ExtractMethodName(string line)
