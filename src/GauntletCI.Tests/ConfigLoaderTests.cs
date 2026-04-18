@@ -166,7 +166,7 @@ public class ConfigLoaderTests
     }
 
     [Fact]
-    public void Load_JsonWithCorpusConfig_DeserializesOllamaUrls()
+    public void Load_JsonWithCorpusConfig_DeserializesOllamaEndpoints()
     {
         var tempDir = Path.Combine(Path.GetTempPath(), $"gci_cfg_{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
@@ -175,7 +175,10 @@ public class ConfigLoaderTests
             var json = """
                 {
                   "corpus": {
-                    "ollamaUrls": ["http://localhost:11434", "http://10.0.0.5:11434"],
+                    "ollamaEndpoints": [
+                      { "url": "http://localhost:11434", "enabled": true },
+                      { "url": "http://10.0.0.5:11434", "enabled": false }
+                    ],
                     "ollamaModel": "phi3:mini"
                   }
                 }
@@ -185,9 +188,9 @@ public class ConfigLoaderTests
             var config = ConfigLoader.Load(tempDir);
 
             Assert.NotNull(config.Corpus);
-            Assert.Equal(2, config.Corpus.OllamaUrls.Length);
-            Assert.Contains("http://localhost:11434", config.Corpus.OllamaUrls);
-            Assert.Contains("http://10.0.0.5:11434", config.Corpus.OllamaUrls);
+            Assert.Equal(2, config.Corpus.OllamaEndpoints.Length);
+            Assert.Contains(config.Corpus.OllamaEndpoints, e => e.Url == "http://localhost:11434" && e.Enabled);
+            Assert.Contains(config.Corpus.OllamaEndpoints, e => e.Url == "http://10.0.0.5:11434" && !e.Enabled);
             Assert.Equal("phi3:mini", config.Corpus.OllamaModel);
         }
         finally
@@ -197,7 +200,36 @@ public class ConfigLoaderTests
     }
 
     [Fact]
-    public void Load_MissingCorpusSection_ReturnsEmptyOllamaUrls()
+    public void Load_OllamaEndpoint_DefaultsEnabledToTrue()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), $"gci_cfg_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            var json = """
+                {
+                  "corpus": {
+                    "ollamaEndpoints": [
+                      { "url": "http://localhost:11434" }
+                    ]
+                  }
+                }
+                """;
+            File.WriteAllText(Path.Combine(tempDir, ".gauntletci.json"), json);
+
+            var config = ConfigLoader.Load(tempDir);
+
+            Assert.Single(config.Corpus.OllamaEndpoints);
+            Assert.True(config.Corpus.OllamaEndpoints[0].Enabled);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void Load_MissingCorpusSection_ReturnsEmptyOllamaEndpoints()
     {
         var tempDir = Path.Combine(Path.GetTempPath(), $"gci_cfg_{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
@@ -208,7 +240,7 @@ public class ConfigLoaderTests
             var config = ConfigLoader.Load(tempDir);
 
             Assert.NotNull(config.Corpus);
-            Assert.Empty(config.Corpus.OllamaUrls);
+            Assert.Empty(config.Corpus.OllamaEndpoints);
             Assert.Null(config.Corpus.OllamaModel);
         }
         finally
