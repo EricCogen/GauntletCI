@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.ComponentModel;
-using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using GauntletCI.Cli.Audit;
@@ -26,7 +25,7 @@ public static class GauntletTools
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
     };
 
-    private static ILlmEngine _engine = new NullLlmEngine();
+    private static volatile ILlmEngine _engine = new NullLlmEngine();
 
     /// <summary>
     /// Overrides the LLM engine used to enrich high-confidence findings with natural-language explanations.
@@ -56,6 +55,10 @@ public static class GauntletTools
     public static async Task<string> analyze_diff(
         [Description("Raw unified diff content")] string diff)
     {
+        const int MaxDiffChars = 500_000;
+        if (diff.Length > MaxDiffChars)
+            return $"Error: diff input exceeds {MaxDiffChars:N0} character limit. Split the diff into smaller chunks.";
+
         try
         {
             var diffContext = DiffParser.Parse(diff);
@@ -93,9 +96,8 @@ public static class GauntletTools
         try
         {
             var orchestrator = RuleOrchestrator.CreateDefault();
-            var rulesField = typeof(RuleOrchestrator).GetField("_rules", BindingFlags.NonPublic | BindingFlags.Instance);
-            var rules = (IReadOnlyList<IRule>?)rulesField?.GetValue(orchestrator) ?? [];
-            var ruleList = rules.Select(r => new { id = r.Id, name = r.Name, description = r.Name }).ToList();
+            var rules = orchestrator.Rules;
+            var ruleList = rules.Select(r => new { id = r.Id, name = r.Name, description = $"{r.Id}: {r.Name}" }).ToList();
             return JsonSerializer.Serialize(ruleList, JsonOpts);
         }
         catch (Exception ex)

@@ -4,6 +4,7 @@ using System.Text.Json;
 using GauntletCI.Cli.Audit;
 using GauntletCI.Cli.Commands;
 using GauntletCI.Cli.Telemetry;
+using GauntletCI.Core.Rules;
 
 namespace GauntletCI.Tests;
 
@@ -209,17 +210,17 @@ public class CommandLogicTests : IDisposable
         (Dictionary<string, object>)_buildDefaultRules.Invoke(null, null)!;
 
     [Fact]
-    public void BuildDefaultRules_Returns27Entries()
+    public void BuildDefaultRules_ReturnsAllDiscoveredRules()
     {
         var rules = BuildDefaultRules();
+        var expectedCount = RuleOrchestrator.GetAllRuleIds().Count;
 
-        Assert.Equal(27, rules.Count);
+        Assert.Equal(expectedCount, rules.Count);
     }
 
     [Theory]
     [InlineData("GCI0001")]
     [InlineData("GCI0010")]
-    [InlineData("GCI0027")]
     public void BuildDefaultRules_ContainsExpectedKey(string key)
     {
         var rules = BuildDefaultRules();

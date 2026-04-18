@@ -209,6 +209,13 @@ public sealed class RoundRobinLlmLabelerTests
             new RoundRobinLlmLabeler((IEnumerable<ILlmLabeler>)null!));
     }
 
+    [Fact]
+    public void Convenience_constructor_throws_when_labelers_is_empty()
+    {
+        Assert.Throws<ArgumentException>(() =>
+            new RoundRobinLlmLabeler(Array.Empty<ILlmLabeler>()));
+    }
+
     // ────────────────────────────────────────────────────────────────────────
     // IDisposable — disposes underlying labelers that implement IDisposable
     // ────────────────────────────────────────────────────────────────────────

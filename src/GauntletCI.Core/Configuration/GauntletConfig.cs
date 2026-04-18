@@ -103,11 +103,11 @@ public class LlmConfig
 public class CorpusConfig
 {
     /// <summary>
-    /// Ollama base URLs for silver labeling. Multiple URLs enable round-robin load distribution
-    /// across several local or remote Ollama servers.
-    /// Example: ["http://localhost:11434", "http://192.168.1.5:11434"]
+    /// Ollama endpoints for silver labeling. Multiple entries enable round-robin load distribution.
+    /// Set <c>enabled: false</c> on an entry to disable it without removing it from config.
+    /// Example: [{ "url": "http://localhost:11434" }, { "url": "http://192.168.1.5:11434", "enabled": false }]
     /// </summary>
-    public string[] OllamaUrls { get; set; } = [];
+    public OllamaEndpoint[] OllamaEndpoints { get; set; } = [];
 
     /// <summary>
     /// Default Ollama model override for the corpus pipeline. Null means auto-select based on hardware.
@@ -157,4 +157,14 @@ public class EngineeringPolicyConfig
     /// Default: 12000 (~3000 tokens at 4 chars/token, fits in a 16K context window).
     /// </summary>
     public int MaxDiffChars { get; set; } = 12_000;
+}
+
+/// <summary>An Ollama server endpoint with an optional enabled toggle.</summary>
+public class OllamaEndpoint
+{
+    /// <summary>Base URL of the Ollama server (e.g. "http://localhost:11434").</summary>
+    public string Url { get; set; } = string.Empty;
+
+    /// <summary>Whether this endpoint is active. Disabled endpoints are skipped during round-robin. Defaults to true.</summary>
+    public bool Enabled { get; set; } = true;
 }
