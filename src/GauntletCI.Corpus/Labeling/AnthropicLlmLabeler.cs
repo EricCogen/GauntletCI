@@ -19,7 +19,7 @@ public sealed class AnthropicLlmLabeler : ILlmLabeler, IDisposable
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new ArgumentException("Anthropic API key must not be empty.", nameof(apiKey));
         _model = model;
-        _http  = new HttpClient();
+        _http  = new HttpClient { Timeout = TimeSpan.FromSeconds(120) };
         _http.DefaultRequestHeaders.Add("x-api-key", apiKey);
         _http.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
         _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));

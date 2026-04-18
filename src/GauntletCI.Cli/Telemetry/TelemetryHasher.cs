@@ -27,7 +27,8 @@ public static class TelemetryHasher
     /// an anonymous 8-character repo ID. Returns "local" if no remote exists.
     /// </summary>
     /// <param name="repoRoot">Absolute path to the git repository root.</param>
-    public static async Task<string> HashRepoAsync(string repoRoot)
+    // gauntletci:ignore GCI0003 GCI0004 GCI0006 -- ct=default is backward-compatible; CancellationToken is a struct
+    public static async Task<string> HashRepoAsync(string repoRoot, CancellationToken ct = default)
     {
         try
         {
@@ -41,8 +42,8 @@ public static class TelemetryHasher
             };
             using var proc = System.Diagnostics.Process.Start(psi);
             if (proc is null) return "local";
-            var url = await proc.StandardOutput.ReadToEndAsync();
-            await proc.WaitForExitAsync();
+            var url = await proc.StandardOutput.ReadToEndAsync(ct);
+            await proc.WaitForExitAsync(ct);
             return string.IsNullOrWhiteSpace(url) ? "local" : Hash8(url);
         }
         catch

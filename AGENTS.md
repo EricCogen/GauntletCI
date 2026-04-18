@@ -2,14 +2,14 @@
 
 ## Project
 GauntletCI is a deterministic pre-commit change-risk detection engine built in C#/.NET 8.
-Active branch: `v2`. Push with `git push origin HEAD`.
+Active branch: `main`. Push with `git push origin HEAD`.
 
 ## Build & Test
 ```
 dotnet build GauntletCI.slnx -v quiet --nologo
 dotnet test GauntletCI.slnx --no-build --nologo -q
 ```
-All 615 tests must pass before committing.
+All 760 tests must pass before committing.
 
 ## Architecture
 - `src/GauntletCI.Core/` — rule engine, diff parser, configuration, models
@@ -110,6 +110,20 @@ to verify no stale test files remain.
 - AGENTS.md and .github/copilot-instructions.md are exceptions (tracked)
 - Live LLM tests skipped without ANTHROPIC_API_KEY or OPENAI_API_KEY env vars
 - Banner suppression: CI env vars (CI, GITHUB_ACTIONS, TF_BUILD, BUILD_BUILDID, JENKINS_URL)
+
+## Pre-Commit & Push Rules (MANDATORY — follow every time)
+
+### Before committing
+1. Build must pass: `dotnet build GauntletCI.slnx -v quiet --nologo`
+2. All tests must pass: `dotnet test GauntletCI.slnx --no-build --nologo -q`
+3. Run GauntletCI on the staged diff: `git diff HEAD | dotnet run --project src/GauntletCI.Cli --no-build --`
+4. Check core-engineering-rules.md (ask Copilot: "check core-engineering-rules.md on my changes")
+5. **Both the self-audit (step 3) and the rules check (step 4) must pass — only then commit.**
+
+### Before pushing
+- **Always ask the user for approval before running `git push`.**
+- Phrase it as a yes/no question: "Ready to push — shall I go ahead?"
+- Only push after receiving a positive reply. Never push unilaterally.
 
 ## Commit Tags
 Prefix commit messages with a tag in brackets when the change falls into a known category:

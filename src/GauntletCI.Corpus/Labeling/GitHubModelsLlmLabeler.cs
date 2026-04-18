@@ -20,7 +20,7 @@ public sealed class GitHubModelsLlmLabeler : ILlmLabeler, IDisposable
     public GitHubModelsLlmLabeler(string githubToken, string model = "gpt-4o-mini")
     {
         _model = model;
-        _http  = new HttpClient();
+        _http  = new HttpClient { Timeout = TimeSpan.FromSeconds(120) };
         _http.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", githubToken);
         _http.DefaultRequestHeaders.Accept.Add(
