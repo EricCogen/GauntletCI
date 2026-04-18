@@ -50,6 +50,8 @@ public static class AnalyzeCommand
             () => "warn",
             "Minimum severity to display: info, warn, block");
         var noBaselineFlag = new Option<bool>("--no-baseline", "Ignore the baseline file and show all findings");
+        var showContextOption = new Option<int>("--show-context", () => 0, "Include N surrounding diff lines around each finding evidence");
+        var prCommentSuggestFlag = new Option<bool>("--pr-comment-suggest", "Print PR review comment body to stdout instead of posting to GitHub API");
 
         var cmd = new Command("analyze", "Analyse a git diff for pre-commit risks")
         {
@@ -70,6 +72,8 @@ public static class AnalyzeCommand
             verboseFlag,
             severityOption,
             noBaselineFlag,
+            showContextOption,
+            prCommentSuggestFlag,
         };
 
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
@@ -91,6 +95,8 @@ public static class AnalyzeCommand
             var verbose    = ctx.ParseResult.GetValueForOption(verboseFlag);
             var severityStr = ctx.ParseResult.GetValueForOption(severityOption)!;
             var noBaseline = ctx.ParseResult.GetValueForOption(noBaselineFlag);
+            var showContext = ctx.ParseResult.GetValueForOption(showContextOption);
+            var prCommentSuggest = ctx.ParseResult.GetValueForOption(prCommentSuggestFlag);
             var ct = ctx.GetCancellationToken();
 
             // Enforce single diff source
@@ -231,7 +237,28 @@ public static class AnalyzeCommand
                     var minSeverity = verbose
                         ? GauntletCI.Core.Model.RuleSeverity.Info
                         : ParseMinSeverity(severityStr);
-                    ConsoleReporter.Report(result, ascii, minSeverity, suppressedByBaseline);
+                    ConsoleReporter.Report(result, ascii, minSeverity, suppressedByBaseline, diff, showContext);
+                }
+
+                if (prCommentSuggest)
+                {
+                    var inlineFindings = result.Findings.Where(f => !string.IsNullOrEmpty(f.FilePath) && f.Line.HasValue).ToList();
+                    var summaryFindings = result.Findings.Where(f => string.IsNullOrEmpty(f.FilePath) || !f.Line.HasValue).ToList();
+                    foreach (var finding in inlineFindings)
+                    {
+                        Console.WriteLine($"### {finding.FilePath}:{finding.Line}");
+                        Console.WriteLine();
+                        Console.WriteLine(GitHubPrReviewWriter.BuildCommentBody(finding));
+                        Console.WriteLine();
+                        Console.WriteLine("---");
+                        Console.WriteLine();
+                    }
+                    if (summaryFindings.Count > 0)
+                    {
+                        Console.WriteLine("### Summary Comment");
+                        Console.WriteLine();
+                        Console.WriteLine(GitHubPrReviewWriter.BuildReviewBody(summaryFindings, hasInlineComments: inlineFindings.Count > 0));
+                    }
                 }
 
                 if (ghAnnotate)

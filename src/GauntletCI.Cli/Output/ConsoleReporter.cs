@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
 using Spectre.Console;
@@ -38,7 +39,7 @@ public static class ConsoleReporter
     /// <param name="result">The evaluation result containing findings to display.</param>
     /// <param name="ascii">Use ASCII box characters instead of Unicode for limited terminals.</param>
     /// <param name="minSeverity">Minimum severity to display. Defaults to <see cref="RuleSeverity.Warn"/>.</param>
-    public static void Report(EvaluationResult result, bool ascii = false, RuleSeverity minSeverity = RuleSeverity.Warn, int suppressedByBaseline = 0)
+    public static void Report(EvaluationResult result, bool ascii = false, RuleSeverity minSeverity = RuleSeverity.Warn, int suppressedByBaseline = 0, DiffContext? diff = null, int showContext = 0)
     {
         string hr  = ascii ? "=======================================================" : "═══════════════════════════════════════════════════════";
         string sep = ascii ? "-- {0} ({1}) --------------------------" : "── {0} ({1}) ──────────────────────────";
@@ -82,7 +83,7 @@ public static class ConsoleReporter
             anyVisible = true;
             AnsiConsole.MarkupLine($"[{color}]{string.Format(sep, label, findings.Count)}[/]");
             foreach (var finding in findings)
-                PrintFinding(finding, color);
+                PrintFinding(finding, color, diff, showContext);
         }
 
         if (!anyVisible)
@@ -122,7 +123,7 @@ public static class ConsoleReporter
     /// </summary>
     /// <param name="finding">The finding to display.</param>
     /// <param name="accentColor">Spectre.Console color name applied to the rule ID and label.</param>
-    private static void PrintFinding(Finding finding, string accentColor)
+    private static void PrintFinding(Finding finding, string accentColor, DiffContext? diff = null, int showContext = 0)
     {
         AnsiConsole.MarkupLine($"[{accentColor}]  [[{finding.RuleId}]][/] [white]{Markup.Escape(finding.RuleName)}[/]");
         AnsiConsole.MarkupLine($"  Summary  : {Markup.Escape(finding.Summary)}");
@@ -131,6 +132,20 @@ public static class ConsoleReporter
             ? MaskEvidenceSnippet(finding.Evidence)
             : finding.Evidence;
         AnsiConsole.MarkupLine($"[grey]  Evidence : {Markup.Escape(evidenceDisplay)}[/]");
+
+        if (showContext > 0 && diff is not null && finding.FilePath is not null && finding.Line.HasValue)
+        {
+            var contextLines = GetDiffContext(diff, finding.FilePath, finding.Line.Value, showContext);
+            if (contextLines.Count > 0)
+            {
+                AnsiConsole.MarkupLine("[grey]  Context  :[/]");
+                foreach (var (prefix, content) in contextLines)
+                {
+                    var color = prefix == "+" ? "green" : prefix == "-" ? "red" : "grey";
+                    AnsiConsole.MarkupLine($"[{color}]    {prefix} {Markup.Escape(content)}[/]");
+                }
+            }
+        }
 
         if (!string.IsNullOrWhiteSpace(finding.CodeSnippet))
         {
@@ -152,6 +167,31 @@ public static class ConsoleReporter
         }
 
         AnsiConsole.WriteLine();
+    }
+
+    /// <summary>Returns up to <paramref name="n"/> surrounding lines from the diff for a finding's file and line number.</summary>
+    private static List<(string Prefix, string Content)> GetDiffContext(DiffContext diff, string filePath, int lineNumber, int n)
+    {
+        var diffFile = diff.Files.FirstOrDefault(f =>
+            string.Equals(f.NewPath, filePath, StringComparison.OrdinalIgnoreCase) ||
+            f.NewPath.EndsWith(filePath.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase));
+
+        if (diffFile is null) return [];
+
+        var allLines = diffFile.Hunks.SelectMany(h => h.Lines).ToList();
+        var idx = allLines.FindIndex(l => l.LineNumber == lineNumber && l.Kind != DiffLineKind.Removed);
+        if (idx < 0)
+            idx = allLines.FindIndex(l => l.LineNumber == lineNumber);
+        if (idx < 0) return [];
+
+        var start = Math.Max(0, idx - n);
+        var end   = Math.Min(allLines.Count - 1, idx + n);
+
+        return allLines[start..(end + 1)].Select(l =>
+        {
+            var prefix = l.Kind == DiffLineKind.Added ? "+" : l.Kind == DiffLineKind.Removed ? "-" : " ";
+            return (prefix, l.Content);
+        }).ToList();
     }
 
     /// <summary>
