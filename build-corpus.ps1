@@ -140,7 +140,7 @@ if ($Help) {
     Write-Host "  -LlmProvider <name>    LLM provider for label-all: ollama | anthropic | github-models | none"
     Write-Host "  -LlmModel <name>       Optional model override for label-all"
     Write-Host "  -LlmUrl <url[]>        Ollama base URL(s) for label-all. Repeat values to use multiple servers."
-    Write-Host "                         Defaults to: http://localhost:11434, http://10.0.0.5:11434/"
+    Write-Host "                         Defaults to: http://localhost:11434"
     Write-Host "  -SkipLabeler           Skip launching the labeler app after pipeline completes"
     Write-Host "  -SeedQueueLimit <n>    Max fired findings to queue for labeling (default: 150)"
     Write-Host "  -SeedQueueNonFired <n> Non-fired probe tasks per queue seed run (default: 30)"
