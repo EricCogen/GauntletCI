@@ -135,17 +135,19 @@ to verify no stale test files remain.
 - Phrase it as a yes/no question: "Ready to push — shall I go ahead?"
 - Only push after receiving a positive reply. Never push unilaterally.
 
-### After push — merging to main
-- Ask the user: "Branch pushed. Shall I merge to main?"
-- Only merge on a positive reply.
-- Merge with `--no-ff` to preserve branch history: `git checkout main && git merge --no-ff <branch-name>`
-- Delete the branch after merging: `git branch -d <branch-name> && git push origin --delete <branch-name>`
-- Confirm: `git log --oneline -3`
+### After push — opening a PR
+- After pushing, ask: "Branch pushed. Shall I open a PR?"
+- Only open a PR on a positive reply.
+- Create with: `gh pr create --title "<tag> <title>" --body "<description>" --base main`
+- **Always clear the default PR template entirely.** Write a clean description from scratch: what changed, why, and any notable side effects. No placeholders, section headers, or checkbox scaffolding.
 
-### Pull request descriptions
-- When creating a PR (via GitHub CLI or UI), **always clear the default template entirely** before writing the description.
-- Write a clean description from scratch: what changed, why, and any notable side effects.
-- Do not leave any template placeholders, section headers, or checkbox scaffolding in the final PR body.
+### Merging the PR
+- After the PR is open, ask: "PR opened. Shall I merge?"
+- Only merge on a positive reply.
+- Merge with: `gh pr merge <number> --merge --delete-branch --admin`
+  - `--merge` preserves full branch history (merge commit, not squash or rebase)
+  - `--delete-branch` cleans up both local and remote branch automatically
+- Confirm: `git log --oneline -3`
 
 ## Commit Tags
 Prefix commit messages with a tag in brackets when the change falls into a known category:
