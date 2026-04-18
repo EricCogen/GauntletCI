@@ -157,4 +157,25 @@ public class GCI0004Tests
         Assert.DoesNotContain(findings, f => f.Summary.Contains("Public API removed"));
         Assert.DoesNotContain(findings, f => f.Summary.Contains("Public API signature changed"));
     }
+
+    [Fact]
+    public async Task PublicMethodOnlyOptionalParamsAdded_ShouldNotFlag()
+    {
+        // Backward-compatible extension — new params all have defaults
+        var raw = """
+            diff --git a/src/Calculator.cs b/src/Calculator.cs
+            index abc..def 100644
+            --- a/src/Calculator.cs
+            +++ b/src/Calculator.cs
+            @@ -1,3 +1,3 @@
+             // calculator
+            -public void Calculate(int x)
+            +public void Calculate(int x, string label = "default", bool verbose = false)
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("signature changed"));
+    }
 }

@@ -62,7 +62,7 @@ public class GCI0004_BreakingChangeRisk : RuleBase
                     // Signature changed — compare lines directly
                     var addedLine = file.AddedLines
                         .FirstOrDefault(l => ExtractMemberName(l.Content) == name && l.Content != removed.Content);
-                    if (addedLine != null)
+                    if (addedLine != null && !IsBackwardCompatibleExtension(removed.Content, addedLine.Content))
                     {
                         findings.Add(CreateFinding(
                             file,
@@ -118,5 +118,28 @@ public class GCI0004_BreakingChangeRisk : RuleBase
         var lastSpace = before.LastIndexOf(' ');
         if (lastSpace < 0) return null;
         return before[(lastSpace + 1)..].Trim('(');
+    }
+
+    /// <summary>
+    /// Returns true when the only change is adding new parameters that all carry default values,
+    /// making the extension backward-compatible (existing call sites need no updates).
+    /// </summary>
+    private static bool IsBackwardCompatibleExtension(string removedSig, string addedSig)
+    {
+        var removedParams = ExtractParenContent(removedSig)?.Trim() ?? "";
+        var addedParams   = ExtractParenContent(addedSig)?.Trim()   ?? "";
+
+        if (addedParams.Length <= removedParams.Length) return false;
+        if (!addedParams.StartsWith(removedParams, StringComparison.Ordinal)) return false;
+
+        var extra = addedParams[removedParams.Length..].TrimStart(',').TrimStart();
+        return !string.IsNullOrWhiteSpace(extra) && extra.Contains('=', StringComparison.Ordinal);
+    }
+
+    private static string? ExtractParenContent(string sig)
+    {
+        var open  = sig.IndexOf('(');
+        var close = sig.LastIndexOf(')');
+        return open >= 0 && close > open ? sig[(open + 1)..close] : null;
     }
 }

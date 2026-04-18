@@ -192,7 +192,7 @@ public class OllamaEndpoint
 public class PatternConsistencyConfig
 {
     /// <summary>
-    /// Method base names for which a sync-only implementation is intentional.
+    /// Method base names for which a sync+async pair is intentionally supported.
     /// GCI0046 will not flag a finding when both <c>Foo</c> and <c>FooAsync</c>
     /// are added in the same diff and <c>Foo</c> appears in this list.
     /// Example: ["Subscribe", "Unsubscribe", "Register", "Deregister"]

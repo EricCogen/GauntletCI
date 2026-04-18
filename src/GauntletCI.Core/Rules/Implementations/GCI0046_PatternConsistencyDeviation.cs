@@ -40,7 +40,7 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
     public void Configure(GauntletConfig config)
     {
         _allowedSyncAsyncPairs = new HashSet<string>(
-            config.PatternConsistency.AllowedSyncAsyncPairs,
+            config.PatternConsistency?.AllowedSyncAsyncPairs ?? [],
             StringComparer.Ordinal);
     }
 

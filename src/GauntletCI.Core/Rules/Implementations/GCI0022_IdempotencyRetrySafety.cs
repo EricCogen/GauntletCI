@@ -104,6 +104,9 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
 
     private void CheckEventHandlerWithoutDedup(DiffFile file, List<Finding> findings)
     {
+        // Test files intentionally exercise event subscription patterns — skip them
+        if (WellKnownPatterns.IsTestFile(file.NewPath)) return;
+
         var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
 
         for (int i = 0; i < allLines.Count; i++)
@@ -148,7 +151,9 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
     /// <summary>
     /// Returns true when the line at <paramref name="idx"/> appears to be inside a static constructor,
     /// which is inherently idempotent (runs exactly once per AppDomain lifetime).
-    /// Detects the pattern <c>static ClassName()</c> or <c>static()</c> within the preceding 20 lines.
+    /// Detects the pattern <c>static ClassName()</c> within the preceding 20 lines.
+    /// A static constructor has no return type, so the identifier immediately follows "static " with
+    /// no whitespace-separated token between it and the opening parenthesis.
     /// </summary>
     private static bool IsInsideStaticConstructor(List<DiffLine> allLines, int idx)
     {
@@ -156,28 +161,21 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
         for (int j = idx - 1; j >= searchStart; j--)
         {
             var trimmed = allLines[j].Content.Trim();
-            // Static constructors: no access modifier before "static", followed by TypeName()
-            // Pattern: optional whitespace + "static" + whitespace + word + "()"
-            // Regular static methods have a return type keyword (void, Task, bool, etc.) before the name
             if (!trimmed.StartsWith("static ")) continue;
-            // Must look like a constructor signature: "static TypeName()" or "static TypeName(){"
-            // A static method would be "static void/Task/bool/..." which has a keyword after "static "
+
+            // Extract everything after "static " and trim leading whitespace
             var afterStatic = trimmed["static ".Length..].TrimStart();
-            // If the next token is a C# keyword that can be a return type, it's a method not a constructor
-            if (afterStatic.StartsWith("void ", StringComparison.Ordinal) ||
-                afterStatic.StartsWith("Task", StringComparison.Ordinal) ||
-                afterStatic.StartsWith("bool ", StringComparison.Ordinal) ||
-                afterStatic.StartsWith("int ", StringComparison.Ordinal) ||
-                afterStatic.StartsWith("string ", StringComparison.Ordinal) ||
-                afterStatic.StartsWith("async ", StringComparison.Ordinal) ||
-                afterStatic.StartsWith("readonly ", StringComparison.Ordinal) ||
-                afterStatic.StartsWith("class ", StringComparison.Ordinal) ||
-                afterStatic.StartsWith("IEnumerable", StringComparison.Ordinal) ||
-                afterStatic.StartsWith("List<", StringComparison.Ordinal) ||
-                afterStatic.StartsWith("Dictionary<", StringComparison.Ordinal))
-                continue;
-            // The remainder should look like "TypeName()" — contains "()"
-            if (afterStatic.Contains("()")) return true;
+
+            // Find the first '(' — everything before it must contain NO whitespace.
+            // Static constructor: "static TypeName(" — one token before '('
+            // Static method:      "static ReturnType MethodName(" — two tokens before '('
+            var parenIdx = afterStatic.IndexOf('(');
+            if (parenIdx < 0) continue;
+
+            var beforeParen = afterStatic[..parenIdx].TrimEnd(); // trim trailing whitespace (e.g. "static Foo ()")
+            if (beforeParen.Contains(' ') || beforeParen.Contains('\t')) continue;
+
+            return true;
         }
         return false;
     }

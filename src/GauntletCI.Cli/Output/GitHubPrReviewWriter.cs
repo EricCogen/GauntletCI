@@ -206,7 +206,7 @@ public static class GitHubPrReviewWriter
         }
     }
 
-    private static string BuildReviewBody(List<Finding> summaryFindings, bool hasInlineComments)
+    public static string BuildReviewBody(List<Finding> summaryFindings, bool hasInlineComments)
     {
         if (summaryFindings.Count == 0)
             return hasInlineComments

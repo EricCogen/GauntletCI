@@ -38,6 +38,9 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 var content = addedLines[i].Content;
                 if (!content.Contains(".Value", StringComparison.Ordinal)) continue;
 
+                // Skip comment lines — .Value in a comment is not executable code
+                if (content.TrimStart().StartsWith("//")) continue;
+
                 // Check preceding lines for null guard
                 int start = Math.Max(0, i - 5);
                 bool hasGuard = addedLines[start..i]
@@ -66,12 +69,21 @@ public class GCI0006_EdgeCaseHandling : RuleBase
     {
         foreach (var file in diff.Files)
         {
+            // Test helpers do not need null guards — skip test files entirely
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+
             var addedLines = file.AddedLines.ToList();
             for (int i = 0; i < addedLines.Count; i++)
             {
                 var content = addedLines[i].Content;
-                // Detect new parameter declarations (method signature pattern)
-                if (!IsMethodSignature(content)) continue;
+                // Only flag public or protected methods — private/internal callers are controlled
+                if (!IsPublicOrProtectedSignature(content)) continue;
+
+                // Check "string" or "object" in the parameter section, not just the return type
+                var parenIdx = content.IndexOf('(');
+                var paramSection = parenIdx >= 0 ? content[parenIdx..] : "";
+                if (!paramSection.Contains("string ", StringComparison.Ordinal) &&
+                    !paramSection.Contains("object ", StringComparison.Ordinal)) continue;
 
                 // Check next 5 lines for null/range validation
                 int end = Math.Min(addedLines.Count, i + 6);
@@ -81,7 +93,7 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                                l.Content.Contains("ArgumentException", StringComparison.Ordinal) ||
                                l.Content.Contains("throw", StringComparison.Ordinal));
 
-                if (!hasValidation && (content.Contains("string ") || content.Contains("object ")))
+                if (!hasValidation)
                 {
                     findings.Add(CreateFinding(
                         file,
@@ -95,6 +107,14 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 }
             }
         }
+    }
+
+    private static bool IsPublicOrProtectedSignature(string line)
+    {
+        var t = line.Trim();
+        return t.Contains('(') && t.Contains(')') &&
+               (t.StartsWith("public ", StringComparison.Ordinal) ||
+                t.StartsWith("protected ", StringComparison.Ordinal));
     }
 
     private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)
@@ -114,15 +134,5 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 Confidence = Confidence.Medium,
             });
         }
-    }
-
-    private static bool IsMethodSignature(string line)
-    {
-        var t = line.Trim();
-        return t.Contains('(') && t.Contains(')') &&
-               (t.StartsWith("public ", StringComparison.Ordinal) ||
-                t.StartsWith("private ", StringComparison.Ordinal) ||
-                t.StartsWith("protected ", StringComparison.Ordinal) ||
-                t.StartsWith("internal ", StringComparison.Ordinal));
     }
 }

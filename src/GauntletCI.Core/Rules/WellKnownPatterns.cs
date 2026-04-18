@@ -16,7 +16,44 @@ internal static class WellKnownPatterns
     /// <param name="path">The file path to inspect.</param>
     public static bool IsTestFile(string path)
     {
-        var lower = path.ToLowerInvariant();
-        return lower.Contains("test") || lower.Contains("spec") || lower.Contains(".tests/") || lower.EndsWith("tests.cs");
+        var normPath = path.Replace('\\', '/');
+        var lastSlash = normPath.LastIndexOf('/');
+
+        // Directory segment checks (both original-case and lowercase variants).
+        if (lastSlash > 0)
+        {
+            foreach (var segment in normPath[..lastSlash].Split('/'))
+            {
+                var lower = segment.ToLowerInvariant();
+                // Exact match for spec/specs directories (covers RSpec, Jest, etc.)
+                if (lower == "spec" || lower == "specs") return true;
+                // Word-boundary "test(s)" check on lowercase segment (avoids "latest", "protest")
+                if (IsTestSegment(lower)) return true;
+                // PascalCase compound directory names: "IntegrationTests", "UnitTest", etc.
+                if (segment.EndsWith("Tests", StringComparison.Ordinal)
+                    || segment.EndsWith("Test", StringComparison.Ordinal)) return true;
+            }
+        }
+
+        // File name: use original casing to distinguish PascalCase "Tests"/"Test"/"Spec" suffix
+        // from English words that embed "test" (e.g. "Contest.cs", "Latest.cs", "Protest.cs").
+        var origFile  = lastSlash >= 0 ? normPath[(lastSlash + 1)..] : normPath;
+        var origNoExt = origFile.Contains('.') ? origFile[..origFile.LastIndexOf('.')] : origFile;
+        return origNoExt.StartsWith("test", StringComparison.OrdinalIgnoreCase)
+            || origNoExt.EndsWith("Tests", StringComparison.Ordinal)
+            || origNoExt.EndsWith("Test",  StringComparison.Ordinal)
+            || origNoExt.EndsWith("Spec",  StringComparison.OrdinalIgnoreCase);
+    }
+
+    // Returns true when a lowercase directory segment represents a test directory.
+    // Requires "test" to appear at a word boundary — avoids "latest", "protest", etc.
+    private static bool IsTestSegment(string segment)
+    {
+        if (segment.StartsWith("test")) return true;
+        // EndsWith "test": only when the character immediately before "test" is non-letter
+        // e.g. ".test", "-test", "_test" → yes; "latest" → 'a' precedes "test" → no
+        if (segment.Length > 4 && segment.EndsWith("test") && !char.IsLetter(segment[^5])) return true;
+        if (segment.Length > 5 && segment.EndsWith("tests") && !char.IsLetter(segment[^6])) return true;
+        return false;
     }
 }
