@@ -120,4 +120,31 @@ public class GCI0022Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("deduplication"));
     }
+
+    [Fact]
+    public async Task EventPlusEqualsInStaticMethod_ShouldFlag()
+    {
+        // static Guid BuildId() is a static METHOD (has a return type), not a constructor.
+        // The IsInsideStaticConstructor check must NOT exempt this case.
+        var raw = """
+            diff --git a/src/Telemetry.cs b/src/Telemetry.cs
+            index abc..def 100644
+            --- a/src/Telemetry.cs
+            +++ b/src/Telemetry.cs
+            @@ -1,5 +1,11 @@
+             public class Telemetry {
+            +    static Guid BuildId()
+            +    {
+            +        SomeEvent += Handler;
+            +        SomeEvent += Handler;
+            +        return Guid.NewGuid();
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("deduplication") || f.RuleId == "GCI0022");
+    }
 }

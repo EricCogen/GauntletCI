@@ -16,7 +16,21 @@ internal static class WellKnownPatterns
     /// <param name="path">The file path to inspect.</param>
     public static bool IsTestFile(string path)
     {
-        var lower = path.ToLowerInvariant();
-        return lower.Contains("test") || lower.Contains("spec") || lower.Contains(".tests/") || lower.EndsWith("tests.cs");
+        var norm = path.Replace('\\', '/').ToLowerInvariant();
+
+        // Any path segment containing "spec" is a strong test signal (unchanged)
+        if (norm.Contains("spec")) return true;
+
+        // Directory segments: "test" anywhere in a directory name is a strong signal
+        var lastSlash = norm.LastIndexOf('/');
+        if (lastSlash > 0 && norm[..lastSlash].Contains("test")) return true;
+
+        // File name: "test" must appear as a word-boundary prefix or suffix, not embedded
+        // mid-word (avoids false positives such as LatestOrderService.cs, ContestController.cs)
+        var fileName  = lastSlash >= 0 ? norm[(lastSlash + 1)..] : norm;
+        var nameNoExt = fileName.Contains('.') ? fileName[..fileName.LastIndexOf('.')] : fileName;
+        return nameNoExt.StartsWith("test")
+            || nameNoExt.EndsWith("test")
+            || nameNoExt.EndsWith("tests");
     }
 }
