@@ -187,7 +187,7 @@ public static class GitHubPrReviewWriter
                 return false;
             }
 
-            if ((int)response.StatusCode == 422 && inlineFindings.Count > 0)
+            if (response.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity && inlineFindings.Count > 0)
             {
                 Console.Error.WriteLine(
                     "[GauntletCI] --github-pr-comments: one or more finding lines are outside the diff — " +
@@ -196,7 +196,7 @@ public static class GitHubPrReviewWriter
             }
 
             Console.Error.WriteLine(
-                $"[GauntletCI] --github-pr-comments: API error {(int)response.StatusCode} — {responseBody}");
+                $"[GauntletCI] --github-pr-comments: API error {response.StatusCode} — {responseBody}");
             return false;
         }
         catch (Exception ex)
