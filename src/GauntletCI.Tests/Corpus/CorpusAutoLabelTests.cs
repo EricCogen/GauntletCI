@@ -6,6 +6,7 @@ using GauntletCI.Corpus.Models;
 
 namespace GauntletCI.Tests.Corpus;
 
+[Collection("ConsoleOut")]
 public sealed class CorpusAutoLabelTests
 {
     // ── Controllable fake fixture store ───────────────────────────────────────
