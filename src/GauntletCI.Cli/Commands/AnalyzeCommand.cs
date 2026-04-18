@@ -173,7 +173,9 @@ public static class AnalyzeCommand
                             : null;
                         var isLicensed  = !string.IsNullOrWhiteSpace(licenseKey);
                         var policyFindings = await EngineeringPolicyEvaluator.EvaluateAsync(
-                            diff, policyPath, llm, isLicensed, ctx.GetCancellationToken());
+                            diff, policyPath, llm, isLicensed,
+                            config.Experimental.EngineeringPolicy.MaxDiffChars,
+                            ctx.GetCancellationToken());
                         result.Findings.AddRange(policyFindings);
                     }
                 }
