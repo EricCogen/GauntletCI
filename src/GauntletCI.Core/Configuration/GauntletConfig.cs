@@ -94,6 +94,20 @@ public class LlmConfig
     /// Default: 2048 -- sufficient for EP policy findings and enrichment summaries.
     /// </summary>
     public int MaxCompleteTokens { get; set; } = 2_048;
+
+    /// <summary>
+    /// Ollama base URL used by <c>analyze --with-expert-context</c> for query embedding.
+    /// Must match the URL used when running <c>gauntletci llm seed</c>.
+    /// Default: <c>http://localhost:11434</c>.
+    /// </summary>
+    public string EmbeddingOllamaUrl { get; set; } = "http://localhost:11434";
+
+    /// <summary>
+    /// Ollama model used by <c>analyze --with-expert-context</c> for query embedding.
+    /// Must match the <c>--embedding-model</c> used when running <c>gauntletci llm seed</c>.
+    /// Default: <c>phi4-mini:latest</c> (pull with: <c>ollama pull phi4-mini</c>).
+    /// </summary>
+    public string EmbeddingModel { get; set; } = "phi4-mini:latest";
 }
 
 /// <summary>

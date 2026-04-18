@@ -22,10 +22,11 @@
     "GCI0020": { "enabled": true }
   },
   "llm": {
-    "modelPath": "~/.gauntletci/models/phi3-mini"
+    "modelPath": "~/.gauntletci/models/phi3-mini",
+    "embeddingOllamaUrl": "http://10.0.0.5:11434"
   },
   "corpus": {
-    "ollamaUrls": ["http://10.0.0.5:11434"],
+    "ollamaEndpoints": [{ "url": "http://10.0.0.5:11434", "enabled": true }],
     "ollamaModel": "phi4-mini:latest"
   },
   "experimental": {
