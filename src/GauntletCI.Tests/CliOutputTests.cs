@@ -53,6 +53,7 @@ public class ConsoleReporterTests
     }
 }
 
+[Collection("ConsoleOut")]
 public class GitHubAnnotationWriterTests
 {
     private static EvaluationResult MakeResult(params Finding[] findings) =>
