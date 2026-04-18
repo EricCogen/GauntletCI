@@ -5,6 +5,7 @@ using GauntletCI.Core.Rules;
 
 namespace GauntletCI.Tests;
 
+[Collection("ConsoleOut")]
 public class ConsoleReporterTests
 {
     [Fact]
