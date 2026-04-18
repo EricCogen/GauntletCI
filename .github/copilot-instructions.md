@@ -194,21 +194,37 @@ Apply this checklist when new todos are added too.
 
 ## Todo State Management
 
-### Seed Sync (Option B — always)
-After every `UPDATE todos SET status = '...' WHERE id = '...'`:
-1. Immediately make a surgical `edit` to the matching row in `todos-seed.sql`
-2. Update the `-- Status:` header counts in the seed when they change
+### Durable DB (source of truth)
+`C:\Users\ericc\.gauntletci\copilot\todos.db` — never use `todos-seed.sql` (retired).
 
-Never let the seed drift from the DB.
-
-### Seed file location
-`C:\Users\ericc\.gauntletci\copilot\todos-seed.sql`
+After every status change, update BOTH the session SQL and the durable DB:
+```powershell
+python sync-todos.py --update <id> <status>
+```
 
 ### Restore procedure (new session)
-1. Run the `ALTER TABLE` lines (errors harmless if columns exist)
-2. Run the full `INSERT OR IGNORE` block
-3. Run the deps `INSERT OR IGNORE` block
-4. Verify: `SELECT status, COUNT(*) FROM todos GROUP BY status;`
+Export from the durable DB and INSERT via the `sql` tool:
+```powershell
+cd "C:\Users\ericc\.gauntletci\copilot"
+python -c "import sqlite3,json; con=sqlite3.connect('todos.db'); con.row_factory=sqlite3.Row; todos=[dict(r) for r in con.execute('SELECT id,title,description,status FROM todos ORDER BY id')]; deps=[dict(r) for r in con.execute('SELECT todo_id,depends_on FROM todo_deps')]; con.close(); open('todos-export.json','w').write(json.dumps({'todos':todos,'deps':deps})); print(len(todos),'todos')"
+```
+Then verify: `SELECT status, COUNT(*) FROM todos GROUP BY status;`
+
+---
+
+## Pre-Commit & Push Rules (MANDATORY)
+
+### Before committing
+1. Build must pass: `dotnet build GauntletCI.slnx -v quiet --nologo`
+2. All tests must pass: `dotnet test GauntletCI.slnx --no-build --nologo -q`
+3. Run self-audit: `git diff HEAD > $env:TEMP\audit.diff && dotnet run --project src/GauntletCI.Cli --no-build -- analyze --diff $env:TEMP\audit.diff --no-banner`
+4. Check core-engineering-rules.md against the changes
+5. **Both self-audit (step 3) and rules check (step 4) must pass before committing.**
+
+### Before pushing
+- **Always ask the user for approval before running `git push`.**
+- Ask explicitly: "Ready to push — shall I go ahead?"
+- Only push after receiving a positive reply. Never push unilaterally.
 
 ---
 
