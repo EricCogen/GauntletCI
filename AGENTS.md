@@ -104,7 +104,7 @@ to verify no stale test files remain.
 - P4 (pending): ecosystem (vscode-extension, winget/brew, moat-bootstrap, block-mode)
 
 ## Key Conventions
-- Commit trailer: `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`
+- Do NOT include a Co-authored-by trailer in commit messages
 - Commit and push after each completed todo
 - No markdown files committed except README.md and files listed in .gitignore exceptions
 - AGENTS.md and .github/copilot-instructions.md are exceptions (tracked)
