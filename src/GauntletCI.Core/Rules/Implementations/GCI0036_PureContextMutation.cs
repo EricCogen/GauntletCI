@@ -2,6 +2,7 @@
 using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
+using GauntletCI.Core.Rules;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -30,6 +31,8 @@ public class GCI0036_PureContextMutation : RuleBase
 
     private void CheckPureContextMutations(DiffFile file, List<Finding> findings)
     {
+        if (WellKnownPatterns.IsTestFile(file.NewPath)) return;
+
         var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
 
         int braceDepth = 0;

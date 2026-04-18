@@ -21,9 +21,13 @@ public class GCI0029_PiiLoggingLeak : RuleBase
     [
         "email", "ssn", "socialsecurity", "phonenumber", "creditcard", "cardnumber",
         "dateofbirth", "passport", "nationalid", "taxid", "bankaccount",
-        "name", "address", "dob", "birthdate", "username", "zipcode", "postalcode",
+        "address", "dob", "birthdate", "username", "zipcode", "postalcode",
         "geolocation", "ipaddress", "deviceid", "token"
     ];
+
+    // "name" is weak — only fires when it appears in an assignment/interpolation context
+    // (e.g. name=, {name}, .name, "name") to avoid false positives on prose like "by name"
+    private static readonly string[] WeakPiiTerms = ["name"];
 
     private static readonly string[] LogPrefixes =
     [
@@ -56,6 +60,16 @@ public class GCI0029_PiiLoggingLeak : RuleBase
                 {
                     if (ContainsPiiTerm(content, term))
                     { matchedTerm = term; break; }
+                }
+
+                // Weak terms require assignment/interpolation context to reduce prose FPs
+                if (matchedTerm is null)
+                {
+                    foreach (var term in WeakPiiTerms)
+                    {
+                        if (ContainsPiiTerm(content, term) && ContainsWeakTermInContext(content, term))
+                        { matchedTerm = term; break; }
+                    }
                 }
                 if (matchedTerm is null) continue;
 
@@ -91,4 +105,17 @@ public class GCI0029_PiiLoggingLeak : RuleBase
     }
 
     private static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_';
+
+    /// <summary>
+    /// Returns true when a weak PII term (e.g. "name") appears in an assignment or interpolation
+    /// context rather than prose. Requires one of: .name, name=, name:, {name, "name" (quoted).
+    /// </summary>
+    private static bool ContainsWeakTermInContext(string content, string term)
+    {
+        return content.Contains($".{term}", StringComparison.OrdinalIgnoreCase) ||
+               content.Contains($"{term}=", StringComparison.OrdinalIgnoreCase) ||
+               content.Contains($"{term}:", StringComparison.OrdinalIgnoreCase) ||
+               content.Contains($"{{{term}", StringComparison.OrdinalIgnoreCase) ||
+               content.Contains($"\"{term}\"", StringComparison.OrdinalIgnoreCase);
+    }
 }

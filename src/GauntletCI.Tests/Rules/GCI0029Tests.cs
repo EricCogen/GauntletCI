@@ -109,4 +109,44 @@ public class GCI0029Tests
 
         Assert.Empty(findings);
     }
+
+    [Fact]
+    public async Task NameInProse_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/UserService.cs b/src/UserService.cs
+            index abc..def 100644
+            --- a/src/UserService.cs
+            +++ b/src/UserService.cs
+            @@ -1,3 +1,4 @@
+             public class UserService {
+            +    _logger.LogInformation("Getting user by name");
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("name"));
+    }
+
+    [Fact]
+    public async Task NamePropertyInLogCall_ShouldFlag()
+    {
+        var raw = """
+            diff --git a/src/UserService.cs b/src/UserService.cs
+            index abc..def 100644
+            --- a/src/UserService.cs
+            +++ b/src/UserService.cs
+            @@ -1,3 +1,4 @@
+             public class UserService {
+            +    _logger.LogInformation("User {name}", user.name);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("name"));
+    }
 }

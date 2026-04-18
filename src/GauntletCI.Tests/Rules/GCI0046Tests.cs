@@ -125,4 +125,37 @@ public class GCI0046Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("sync/async") || f.Summary.Contains("Async"));
     }
+
+    [Fact]
+    public async Task AllowlistedSyncAsyncPair_ShouldNotFire()
+    {
+        var raw = """
+            diff --git a/src/EventBus.cs b/src/EventBus.cs
+            index abc..def 100644
+            --- a/src/EventBus.cs
+            +++ b/src/EventBus.cs
+            @@ -1,3 +1,7 @@
+             public class EventBus {
+            +    public void Subscribe(string topic, Action handler) {
+            +        _handlers[topic] = handler;
+            +    }
+            +    public async Task SubscribeAsync(string topic, Func<Task> handler) {
+            +        await _store.RegisterAsync(topic, handler);
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var rule = new GCI0046_PatternConsistencyDeviation();
+        rule.Configure(new GauntletCI.Core.Configuration.GauntletConfig
+        {
+            PatternConsistency = new GauntletCI.Core.Configuration.PatternConsistencyConfig
+            {
+                AllowedSyncAsyncPairs = ["Subscribe"]
+            }
+        });
+        var findings = await rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Subscribe"));
+    }
 }
