@@ -39,19 +39,22 @@ artifacts/
 !docs/rules.md
 !docs/architecture.md
 !docs/cli-reference.md
-!docs/corpus-pipeline.md
 !.github/CONTRIBUTING.md
 !.github/CODE_OF_CONDUCT.md
 !.github/SECURITY.md
-!.github/copilot-instructions.md
 !docs/DEVELOPMENT.md
 !docs/TROUBLESHOOTING.md
+
+# Internal pipeline and tooling (commercial — not public)
+build-corpus.ps1
+audit-dead-code.ps1
+docs/benchmarks/
+/src/GauntletCI.Corpus/GauntletCI_Labeler_App/
 
 # Benchmark infrastructure — ensure tracked
 !tests/
 !tests/GauntletCI.Benchmarks/Fixtures/
 /data
-/src/GauntletCI.Corpus/GauntletCI_Labeler_App/.venv
 
 
 # Python bytecode
