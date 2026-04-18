@@ -16,7 +16,7 @@ This Charter defines the methodology and direction as the system matures. It is 
 
 The software development landscape of 2026 is defined by unprecedented velocity. AI-assisted coding tools have democratized the act of creation, generating syntactically flawless code at a scale previously unimaginable.[^1][^2]
 
-Yet, a shadow accompanies this acceleration. Engineering teams report a troubling divergence: CI pipelines glow green with passing tests and clean linter logs, while "unexplained" production incidents rise in frequency and severity.[^3] This phenomenon is the **Coverage Mirage**—the false sense of security derived from high quantitative metrics that conceal systemic, behavioral fragility.
+Yet, a shadow accompanies this acceleration. Engineering teams report a troubling divergence: CI pipelines glow green with passing tests and clean linter logs, while "unexplained" production incidents rise in frequency and severity.[^3][^16] This phenomenon is the **Coverage Mirage**—the false sense of security derived from high quantitative metrics that conceal systemic, behavioral fragility.
 
 Code can be formatted perfectly, pass every unit test, and satisfy every rule in a traditional SAST scanner, while still harboring hidden async deadlocks[^4], resource exhaustion vectors[^5], or silent data corruption paths specific to the .NET Common Language Runtime.[^6]
 
@@ -92,9 +92,9 @@ GauntletCI does not seek to replace the foundational tools of modern development
 
 | Category | Relationship to GauntletCI |
 | :--- | :--- |
-| **Generators (Copilot, Cursor)** | **Complementary.** These tools optimize for *Write Velocity*. GauntletCI optimizes for *Change Survivability*. We audit what they generate. |
-| **Linters / SAST (SonarQube, Snyk)** | **Differentiated.** These tools focus on *Syntactic Vulnerabilities* and *Style*. GauntletCI focuses on *Runtime Behavioral Risk* specific to the .NET CLR. |
-| **Frontier Reasoning (DeepSeek, o1)** | **Applied.** We leverage the broader advancements in AI reasoning but constrain them to a local, domain-specific, and privacy-preserving adjudication model. |
+| **Generators (Copilot, Cursor)** | **Complementary.** These tools optimize for *Write Velocity*.[^17] GauntletCI optimizes for *Change Survivability*. We audit what they generate. |
+| **Linters / SAST (SonarQube, Snyk)** | **Differentiated.** These tools focus on *Syntactic Vulnerabilities* and *Style*.[^18] GauntletCI focuses on *Runtime Behavioral Risk* specific to the .NET CLR. |
+| **Frontier Reasoning (DeepSeek, o1)** | **Applied.** We leverage the broader advancements in AI reasoning[^19] but constrain them to a local, domain-specific, and privacy-preserving adjudication model. |
 
 ---
 
@@ -154,3 +154,11 @@ This Charter is ratified by the maintainers of GauntletCI. It serves as the immu
 [^14]: Microsoft Research, *"Phi-3 Technical Report: A Highly Capable Language Model Locally on Your Phone,"* arXiv:2404.14219 (2024). <https://arxiv.org/abs/2404.14219>
 
 [^15]: Microsoft, *"Caching in .NET — Memory Cache,"* .NET Documentation (unbounded growth risk). <https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory>
+
+[^16]: Veracode, *State of Software Security 2024* — organizations with automated scanning still ship high flaw density, revealing a gap between CI quality signals and actual production risk. <https://www.veracode.com/state-of-software-security-report>
+
+[^17]: Eirini Kalliamvakou, *"Research: Quantifying GitHub Copilot's Impact in the Enterprise,"* GitHub Blog, 2023 — documents Copilot's 55% faster task completion, quantifying the write-velocity optimization. <https://github.blog/news-insights/research/research-quantifying-github-copilots-impact-in-the-enterprise/>
+
+[^18]: OWASP, *"Source Code Analysis Tools,"* OWASP Foundation — characterizes SAST tools as detecting syntactic and pattern-based vulnerabilities in source code, not runtime behavioral semantics. <https://owasp.org/www-community/Source_Code_Analysis_Tools>
+
+[^19]: DeepSeek-AI, *"DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning,"* arXiv:2501.12948 (2025); OpenAI, *"Learning to Reason with LLMs,"* OpenAI Blog (2024). <https://arxiv.org/abs/2501.12948> · <https://openai.com/index/learning-to-reason-with-llms/>
