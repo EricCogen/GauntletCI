@@ -113,10 +113,20 @@ to verify no stale test files remain.
 
 ## Pre-Commit & Push Rules (MANDATORY — follow every time)
 
+### Branching — always branch, never commit to main directly
+- **Create a branch before starting any work**, including small fixes.
+- **Branch naming:** `<type>/<short-description>`
+  - `fix/gci0010-secret-detection-false-positives`
+  - `rule/gci0028-entropy-detection`
+  - `feat/sarif-output`
+  - `test/gci0021-regression-cases`
+- Create with: `git checkout -b <branch-name>`
+- There is no fast-path. Every change — however small — gets its own branch.
+
 ### Before committing
 1. Build must pass: `dotnet build GauntletCI.slnx -v quiet --nologo`
 2. All tests must pass: `dotnet test GauntletCI.slnx --no-build --nologo -q`
-3. Run GauntletCI on the staged diff: `git diff HEAD | dotnet run --project src/GauntletCI.Cli --no-build --`
+3. Run GauntletCI on the staged diff: `git diff HEAD > $env:TEMP\gauntlet-audit.diff && dotnet run --project src/GauntletCI.Cli --no-build -- analyze --diff $env:TEMP\gauntlet-audit.diff --no-banner`
 4. Check core-engineering-rules.md (ask Copilot: "check core-engineering-rules.md on my changes")
 5. **Both the self-audit (step 3) and the rules check (step 4) must pass — only then commit.**
 
@@ -124,6 +134,18 @@ to verify no stale test files remain.
 - **Always ask the user for approval before running `git push`.**
 - Phrase it as a yes/no question: "Ready to push — shall I go ahead?"
 - Only push after receiving a positive reply. Never push unilaterally.
+
+### After push — merging to main
+- Ask the user: "Branch pushed. Shall I merge to main?"
+- Only merge on a positive reply.
+- Merge with `--no-ff` to preserve branch history: `git checkout main && git merge --no-ff <branch-name>`
+- Delete the branch after merging: `git branch -d <branch-name> && git push origin --delete <branch-name>`
+- Confirm: `git log --oneline -3`
+
+### Pull request descriptions
+- When creating a PR (via GitHub CLI or UI), **always clear the default template entirely** before writing the description.
+- Write a clean description from scratch: what changed, why, and any notable side effects.
+- Do not leave any template placeholders, section headers, or checkbox scaffolding in the final PR body.
 
 ## Commit Tags
 Prefix commit messages with a tag in brackets when the change falls into a known category:
