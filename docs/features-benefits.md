@@ -118,9 +118,11 @@ Drop-in composite action with inputs for commit SHA, fail-on-findings, inline PR
 
 ### Local LLM (fully offline)
 
-- Ollama-backed enrichment explains high-confidence findings in plain English
-- Expert knowledge vector store matches findings to curated .NET facts with similarity scores
-- Fact distillation from real GitHub issue data via local model
+- `analyze --with-llm` — Ollama enrichment explains High-confidence findings in plain English (verified: phi4-mini on Dapper, EF Core diffs)
+- `analyze --with-expert-context` — vector store attaches closest expert fact with similarity score to each finding (verified: 11 curated facts, phi4-mini embeddings)
+- `llm seed` — seeds 11 hand-curated .NET expert facts into `~/.gauntletci/expert-embeddings.db`; configurable model/URL
+- `llm distill --input <file.ndjson>` — extracts expert facts from real GitHub issue data via local Ollama and stores embeddings
+- Default model: `phi4-mini:latest`; configurable via `llm.embeddingOllamaUrl` and `llm.embeddingModel` in `.gauntletci.json`
 - No code, no findings, no file paths leave the machine
 
 ---
@@ -144,6 +146,7 @@ Drop-in composite action with inputs for commit SHA, fail-on-findings, inline PR
 
 22 rules validated against real .NET pull requests from top OSS projects.
 All findings were human-reviewed against the actual diff — not machine-labeled.
+All LLM features verified end-to-end against a live Ollama instance (phi4-mini:latest).
 
 | Rule | What was caught | Example project |
 |---|---|---|

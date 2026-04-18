@@ -25,7 +25,7 @@ public static class LlmCommand
     private static Command CreateSeed()
     {
         var dbOpt    = new Option<string>("--db",              () => DefaultVectorDb, "Path to expert embeddings SQLite DB");
-        var modelOpt = new Option<string>("--embedding-model", () => "nomic-embed-text", "Ollama embedding model name");
+        var modelOpt = new Option<string>("--embedding-model", () => "phi4-mini:latest", "Ollama embedding model name");
         var urlOpt   = new Option<string>("--ollama-url",      () => "http://localhost:11434", "Ollama base URL");
 
         var cmd = new Command("seed", "Seed the expert vector store with hand-curated .NET expert facts");
@@ -63,8 +63,8 @@ public static class LlmCommand
         var inputOpt  = new Option<string>("--input",           () => "./data/maintainer-records.ndjson", "NDJSON file from 'corpus maintainers fetch'");
         var dbOpt     = new Option<string>("--db",              () => DefaultVectorDb, "Path to expert embeddings SQLite DB");
         var maxOpt    = new Option<int>   ("--max",             () => 50,              "Max records to distil (sorted by reactions)");
-        var modelOpt  = new Option<string>("--ollama-model",    () => "phi3:mini",     "Ollama model for fact extraction");
-        var embedOpt  = new Option<string>("--embedding-model", () => "nomic-embed-text", "Ollama embedding model");
+        var modelOpt  = new Option<string>("--ollama-model",    () => "phi4-mini:latest", "Ollama model for fact extraction");
+        var embedOpt  = new Option<string>("--embedding-model", () => "phi4-mini:latest", "Ollama embedding model");
         var urlOpt    = new Option<string>("--ollama-url",      () => "http://localhost:11434", "Ollama base URL");
 
         var cmd = new Command("distill", "Extract expert facts from maintainer records and store as embeddings");
