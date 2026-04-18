@@ -142,7 +142,7 @@ Drop-in composite action with inputs for commit SHA, fail-on-findings, inline PR
 
 ## Validated Against Real OSS PRs
 
-26 valid firings were manually confirmed from a corpus of real .NET pull requests across top OSS projects.
+22 rules validated against real .NET pull requests from top OSS projects.
 All findings were human-reviewed against the actual diff — not machine-labeled.
 
 | Rule | What was caught | Example project |
