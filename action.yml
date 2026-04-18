@@ -19,6 +19,10 @@ inputs:
     description: "Exit with code 1 if any findings are produced (fails the check)."
     required: false
     default: "true"
+  inline-comments:
+    description: "Post findings as inline GitHub PR review comments. Requires pull-requests: write in the calling workflow."
+    required: false
+    default: "false"
   ascii:
     description: "Use ASCII-only output (recommended for CI logs)."
     required: false
@@ -54,11 +58,14 @@ runs:
       shell: bash
       env:
         GAUNTLETCI_NO_BANNER: "1"
+        GAUNTLETCI_PR_NUMBER: ${{ github.event.pull_request.number }}
+        GAUNTLETCI_COMMIT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       run: |
         set +e
         args="analyze --commit ${{ inputs.commit }}"
         [ "${{ inputs.no-llm }}" = "true" ] && args="$args --no-llm"
         [ "${{ inputs.ascii }}" = "true" ]  && args="$args --ascii"
+        [ "${{ inputs.inline-comments }}" = "true" ] && args="$args --github-pr-comments"
         TMPFILE=$(mktemp)
         set -o pipefail
         gauntletci $args 2>&1 | tee "$TMPFILE"

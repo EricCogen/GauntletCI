@@ -36,6 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -56,6 +57,9 @@ jobs:
         run: git diff ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }} > pr.diff
 
       - name: Analyze with GauntletCI
+        env:
+          GAUNTLETCI_PR_NUMBER: ${{ github.event.pull_request.number }}
+          GAUNTLETCI_COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
         run: >
           dotnet run --project src/GauntletCI.Cli --no-build --configuration Release --
-          analyze --no-banner --ascii --github-annotations --severity warn < pr.diff
+          analyze --no-banner --ascii --github-annotations --github-pr-comments --severity warn < pr.diff

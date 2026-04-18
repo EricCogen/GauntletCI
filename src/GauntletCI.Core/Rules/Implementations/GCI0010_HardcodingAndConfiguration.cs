@@ -140,6 +140,10 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
             var literals = ExtractStringLiterals(content);
             if (literals.Count == 0) continue;
 
+            // Skip lines where every string literal looks like an env var name (ALL_CAPS_UNDERSCORES).
+            // These are references to env var keys, not hardcoded secret values.
+            if (literals.All(IsEnvVarName)) continue;
+
             foreach (var pattern in SecretNamePatterns)
             {
                 if (!lower.Contains(pattern)) continue;
@@ -211,6 +215,11 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         trimmed.StartsWith("//", StringComparison.Ordinal) ||
         trimmed.StartsWith("*", StringComparison.Ordinal) ||
         trimmed.StartsWith("#", StringComparison.Ordinal);
+
+    // An env var name is ALL_CAPS with digits and underscores (e.g. GITHUB_TOKEN, MY_API_KEY).
+    // Such strings are references to env var keys, not literal secret values.
+    private static bool IsEnvVarName(string literal) =>
+        literal.Length > 0 && literal.All(c => char.IsUpper(c) || char.IsDigit(c) || c == '_');
 
     private static List<string> ExtractStringLiterals(string content)
     {

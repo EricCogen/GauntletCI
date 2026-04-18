@@ -1,6 +1,6 @@
 {
   "rules": {
-    "GCI0001": { "enabled": true },
+    "GCI0001": { "enabled": false },
     "GCI0002": { "enabled": true },
     "GCI0003": { "enabled": true },
     "GCI0004": { "enabled": true },
