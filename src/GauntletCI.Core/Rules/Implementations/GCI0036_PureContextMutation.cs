@@ -93,7 +93,7 @@ public class GCI0036_PureContextMutation : RuleBase
                 inGetter = false;
 
             // Check for mutations in pure context (added lines only)
-            if (line.Kind == DiffLineKind.Added && inPureContext && HasAssignment(trimmed))
+            if (line.Kind == DiffLineKind.Added && inPureContext && IsFieldOrPropertyAssignment(trimmed))
             {
                 findings.Add(CreateFinding(
                     file,
@@ -107,18 +107,37 @@ public class GCI0036_PureContextMutation : RuleBase
         }
     }
 
-    private static bool HasAssignment(string content)
+    private static bool IsFieldOrPropertyAssignment(string trimmed)
     {
+        ArgumentNullException.ThrowIfNull(trimmed);
+        // Skip local variable declarations and loop variables
+        if (trimmed.StartsWith("var ", StringComparison.Ordinal)) return false;
+        if (trimmed.StartsWith("for ", StringComparison.Ordinal) ||
+            trimmed.StartsWith("for(", StringComparison.Ordinal)) return false;
+
+        int eqIdx = FindAssignmentIndex(trimmed);
+        if (eqIdx < 0) return false;
+
+        // Strip compound-assignment operator character (+=, -=, etc.) then trim spaces
+        // so "total += x" → lhs = "total" (no space → real field mutation)
+        var lhs = trimmed[..eqIdx].TrimEnd('+', '-', '*', '/', '%', '|', '&', '^', ' ');
+
+        // If LHS still contains a space it's a type declaration (e.g. "int x", "Dictionary<K,V> result")
+        return !lhs.Contains(' ');
+    }
+
+    private static int FindAssignmentIndex(string content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
         for (int i = 0; i < content.Length; i++)
         {
             if (content[i] != '=') continue;
             char prev = i > 0 ? content[i - 1] : '\0';
             char next = i + 1 < content.Length ? content[i + 1] : '\0';
-            // Skip ==, !=, =>, <=, >=
             if (prev is '=' or '!' or '<' or '>') continue;
             if (next is '=' or '>') continue;
-            return true;
+            return i;
         }
-        return false;
+        return -1;
     }
 }
