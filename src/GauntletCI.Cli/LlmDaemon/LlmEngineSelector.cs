@@ -33,8 +33,8 @@ internal static class LlmEngineSelector
         if (IsRunningInCi())
             return ResolveForCi(config);
 
-        // Local dev with Ollama configured -- prefer corpus.ollamaUrls[0] over ONNX daemon
-        var ollamaUrl = config.Corpus.OllamaUrls.FirstOrDefault();
+        // Local dev with Ollama configured -- prefer corpus.ollamaEndpoints[0] over ONNX daemon
+        var ollamaUrl = config.Corpus.OllamaEndpoints.FirstOrDefault(e => e.Enabled)?.Url;
         if (!string.IsNullOrWhiteSpace(ollamaUrl))
         {
             var model    = config.Corpus.OllamaModel ?? "phi3:mini";
