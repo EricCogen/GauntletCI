@@ -29,3 +29,33 @@ jobs:
 
       - name: Test
         run: dotnet test GauntletCI.slnx --no-build --configuration Release --verbosity normal
+
+  gauntletci-analyze:
+    name: GauntletCI Self-Analysis
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore GauntletCI.slnx
+
+      - name: Build
+        run: dotnet build GauntletCI.slnx --no-restore --configuration Release
+
+      - name: Generate PR diff
+        run: git diff origin/${{ github.base_ref }}...HEAD > pr.diff
+
+      - name: Analyze with GauntletCI
+        run: >
+          dotnet run --project src/GauntletCI.Cli --no-build --configuration Release --
+          analyze --diff pr.diff --no-banner --ascii --github-annotations --severity warn
