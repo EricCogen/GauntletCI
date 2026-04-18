@@ -81,6 +81,19 @@ public class LlmConfig
     /// Required to enable CI LLM enrichment.
     /// </summary>
     public string LicenseKeyEnv { get; set; } = "GAUNTLETCI_LICENSE";
+
+    /// <summary>
+    /// Ollama context window size in tokens (input + output combined).
+    /// Set this to match your model's actual context window.
+    /// Default: 16384 (fits phi4-mini, phi3, mistral-7b).
+    /// </summary>
+    public int NumCtx { get; set; } = 16_384;
+
+    /// <summary>
+    /// Maximum tokens the model may generate per completion call.
+    /// Default: 2048 -- sufficient for EP policy findings and enrichment summaries.
+    /// </summary>
+    public int MaxCompleteTokens { get; set; } = 2_048;
 }
 
 /// <summary>
