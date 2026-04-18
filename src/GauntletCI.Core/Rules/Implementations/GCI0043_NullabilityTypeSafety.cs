@@ -112,6 +112,13 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
             // Skip XML doc comment lines — they contain "as" in natural prose
             if (content.TrimStart().StartsWith("///")) continue;
 
+            // Skip regular comment lines
+            if (content.TrimStart().StartsWith("//")) continue;
+
+            // Skip "as" that appears inside a string literal (odd quote count before it)
+            var asPos = content.IndexOf(" as ", StringComparison.Ordinal);
+            if (IsInsideStringLiteral(content, asPos)) continue;
+
             // Check the same line and ±2 neighboring added lines for null checks
             int start = Math.Max(0, i - 2);
             int end = Math.Min(addedLines.Count - 1, i + 2);
@@ -138,5 +145,21 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
                 confidence: Confidence.Low,
                 line: addedLines[i]));
         }
+    }
+
+    /// <summary>
+    /// Returns true when the character at <paramref name="position"/> is inside a string literal,
+    /// determined by counting unescaped double-quotes before that position.
+    /// </summary>
+    private static bool IsInsideStringLiteral(string content, int position)
+    {
+        if (position < 0) return false;
+        int quoteCount = 0;
+        for (int i = 0; i < position; i++)
+        {
+            if (content[i] == '"' && (i == 0 || content[i - 1] != '\\'))
+                quoteCount++;
+        }
+        return quoteCount % 2 != 0;
     }
 }

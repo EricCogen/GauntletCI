@@ -90,4 +90,87 @@ public class GCI0006Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
     }
+
+    [Fact]
+    public async Task ValueInCommentLine_ShouldNotFlag()
+    {
+        // .Value inside a code comment — not executable
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,1 +1,2 @@
+             // existing
+            +// match.Value shows the full attribute in findings
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("null dereference"));
+    }
+
+    [Fact]
+    public async Task PrivateMethodWithStringParam_ShouldNotFlag()
+    {
+        // Private methods — callers are controlled, no need for null guards
+        var raw = """
+            diff --git a/src/Processor.cs b/src/Processor.cs
+            index abc..def 100644
+            --- a/src/Processor.cs
+            +++ b/src/Processor.cs
+            @@ -1,1 +1,3 @@
+             // existing
+            +private void Helper(string input)
+            +{
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
+
+    [Fact]
+    public async Task PublicMethodStringReturnType_NoStringParam_ShouldNotFlag()
+    {
+        // "string" in return type only — no string parameter
+        var raw = """
+            diff --git a/src/Processor.cs b/src/Processor.cs
+            index abc..def 100644
+            --- a/src/Processor.cs
+            +++ b/src/Processor.cs
+            @@ -1,1 +1,3 @@
+             // existing
+            +public string BuildBody(List<Finding> findings, bool hasInline)
+            +{
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
+
+    [Fact]
+    public async Task PublicMethodInTestFile_ShouldNotFlag()
+    {
+        // Test file helpers don't need null guards
+        var raw = """
+            diff --git a/src/ServiceTests.cs b/src/ServiceTests.cs
+            index abc..def 100644
+            --- a/src/ServiceTests.cs
+            +++ b/src/ServiceTests.cs
+            @@ -1,1 +1,3 @@
+             // existing
+            +private static Finding MakeFinding(string ruleId = "GCI0001")
+            +{
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
 }

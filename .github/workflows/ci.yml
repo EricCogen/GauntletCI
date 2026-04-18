@@ -58,8 +58,9 @@ jobs:
 
       - name: Analyze with GauntletCI
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GAUNTLETCI_PR_NUMBER: ${{ github.event.pull_request.number }}
           GAUNTLETCI_COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
         run: >
           dotnet run --project src/GauntletCI.Cli --no-build --configuration Release --
-          analyze --no-banner --ascii --github-annotations --github-pr-comments --severity warn < pr.diff
+          analyze --no-banner --ascii --github-annotations --github-pr-comments --severity warn --no-baseline < pr.diff

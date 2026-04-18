@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Core.Diff;
+using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules.Implementations;
 
 namespace GauntletCI.Tests.Rules;
@@ -48,6 +49,65 @@ public class GCI0003Tests
         var findings = await Rule.EvaluateAsync(diff, null);
 
         Assert.Contains(findings, f => f.Summary.Contains("signature changed"));
+    }
+
+    [Fact]
+    public async Task PrivateMethodSignatureChange_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,2 +1,2 @@
+            -private void Helper(int x)
+            +private void Helper(int x, string y)
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("signature changed"));
+    }
+
+    [Fact]
+    public async Task PublicMethodOnlyOptionalParamsAdded_ShouldFlagAsLowConfidence()
+    {
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,2 +1,2 @@
+            -public void DoWork(int x)
+            +public void DoWork(int x, string label = "default", bool verbose = false)
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        var f = Assert.Single(findings, f => f.Summary.Contains("signature changed"));
+        Assert.Equal(Confidence.Low, f.Confidence);
+    }
+
+    [Fact]
+    public async Task PublicMethodRequiredParamAdded_ShouldFlagAsMediumConfidence()
+    {
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,2 +1,2 @@
+            -public void DoWork(int x)
+            +public void DoWork(int x, string y)
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        var f = Assert.Single(findings, f => f.Summary.Contains("signature changed"));
+        Assert.Equal(Confidence.Medium, f.Confidence);
     }
 
     [Fact]
