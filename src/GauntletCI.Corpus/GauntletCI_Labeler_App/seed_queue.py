@@ -131,6 +131,13 @@ def seed(
                       WHERE lq.fixture_id = af.fixture_id
                         AND lq.rule_id = af.rule_id
                         AND lq.fired = 1
+                        AND lq.queue_bucket = CASE
+                            WHEN (
+                                SELECT COUNT(*) FROM actual_findings af2
+                                WHERE af2.fixture_id = af.fixture_id AND af2.rule_id = af.rule_id
+                            ) >= 3 THEN 'fired_high_signal'
+                            ELSE 'fired'
+                        END
                   )
                 GROUP BY af.fixture_id, af.rule_id
                 ORDER BY finding_count DESC, max_confidence DESC
@@ -181,6 +188,7 @@ def seed(
                         ON lq.fixture_id = f.fixture_id
                        AND lq.rule_id = sr.rule_id
                        AND lq.fired = 0
+                       AND lq.queue_bucket = nonfired_probe
                     WHERE af.fixture_id IS NULL
                       AND lq.id IS NULL
                 ),

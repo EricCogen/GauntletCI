@@ -104,7 +104,15 @@ public static class TelemetryStore
         var acquired = false;
         try
         {
-            acquired = mutex.WaitOne(TimeSpan.FromSeconds(10));
+            try
+            {
+                acquired = mutex.WaitOne(TimeSpan.FromSeconds(10));
+            }
+            catch (AbandonedMutexException)
+            {
+                // Another process died while holding the mutex; it is now ours.
+                acquired = true;
+            }
             if (acquired)
                 action();
         }

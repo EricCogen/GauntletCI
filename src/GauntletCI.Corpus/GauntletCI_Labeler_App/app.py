@@ -42,9 +42,9 @@ CONFIG = load_config(BASE_DIR)
 
 app = Flask(__name__)
 app.secret_key = CONFIG["secret_key"]
-DEBUG = True
+DEBUG = os.environ.get("FLASK_DEBUG", "0") == "1"
 
-# Resolve relative to repo root (two levels up from app.py)
+# Resolve relative to repo root (four levels up from app.py)
 _RULES_MD = Path(__file__).resolve().parent.parent.parent.parent / "docs" / "rules.md"
 RULE_DEFINITIONS = load_rule_definitions(str(_RULES_MD))
 
@@ -282,7 +282,10 @@ def task(queue_id: int):
 @app.post("/task/<int:queue_id>/label")
 def submit_label(queue_id: int):
     decision = request.form.get("decision", "").strip()
-    confidence = float(request.form.get("confidence", "0.75") or 0.75)
+    try:
+        confidence = float(request.form.get("confidence", "") or 0.75)
+    except ValueError:
+        confidence = 0.75
     reason = request.form.get("reason", "").strip()
     fixture_id = request.form.get("fixture_id", "").strip()
     rule_id = request.form.get("rule_id", "").strip()
