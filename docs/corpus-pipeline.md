@@ -26,26 +26,26 @@ $env:GITHUB_TOKEN = "ghp_..."
 
 ## Quick Start (full pipeline)
 
-The `run-corpus.ps1` script at the repo root orchestrates all six steps with sensible defaults:
+The `build-corpus.ps1` script at the repo root orchestrates all six steps with sensible defaults:
 
 ```powershell
-.\run-corpus.ps1
+.\build-corpus.ps1
 ```
 
 Common overrides:
 
 ```powershell
 # Discover 200 C# PRs from the last 7 days with at least 3 review comments
-.\run-corpus.ps1 -Limit 200 -Language "C#" -MinComments 3 -StartDate "2025-01-01"
+.\build-corpus.ps1 -Limit 200 -Language "C#" -MinComments 3 -StartDate "2025-01-01"
 
 # Resume from step 3 (skip discover + hydrate)
-.\run-corpus.ps1 -SkipTo 3
+.\build-corpus.ps1 -SkipTo 3
 
 # Use custom paths
-.\run-corpus.ps1 -Db "./custom/corpus.db" -Fixtures "./custom/fixtures" -Report "./custom/scorecard.md"
+.\build-corpus.ps1 -Db "./custom/corpus.db" -Fixtures "./custom/fixtures" -Report "./custom/scorecard.md"
 ```
 
-**`run-corpus.ps1` parameters:**
+**`build-corpus.ps1` parameters:**
 
 | Parameter | Default | Description |
 |---|---|---|
@@ -62,7 +62,7 @@ Common overrides:
 | `-Report` | `./data/scorecard.md` | Output path for the markdown report |
 | `-SkipTo` | `1` | Resume from step N (1–6) |
 
-`run-corpus.ps1` also folds in any repositories previously recorded in the corpus DB as permanent hydration rejects (for example deleted/private repos) so later runs stop rediscovering and rehydrating them.
+`build-corpus.ps1` also folds in any repositories previously recorded in the corpus DB as permanent hydration rejects (for example deleted/private repos) so later runs stop rediscovering and rehydrating them.
 
 ---
 
