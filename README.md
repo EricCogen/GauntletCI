@@ -60,12 +60,13 @@ They are **behavior changes** — and they regularly slip through code review.
 
 GauntletCI rules have been validated against real-world pull requests:
 
-| Project             | What GauntletCI Caught                 |
-| ------------------- | -------------------------------------- |
-| dotnet/efcore       | O(n²) performance risk (LINQ in loops) |
-| StackExchange.Redis | Context mutation in property getter    |
-| Dapper              | Null-forgiving operator misuse         |
-| SharpCompress       | Numeric overflow risk                  |
+| Project                 | What GauntletCI Caught                     |
+| ----------------------- | ------------------------------------------ |
+| **dotnet/efcore**       | O(n²) performance risk (LINQ in loops)     |
+| **StackExchange.Redis** | Context mutation in property getter        |
+| **Dapper**              | Null-forgiving operator misuse             |
+| **SharpCompress**       | Numeric overflow risk                      |
+| **AngleSharp**          | Enum member removal breaking serialization |
 
 ---
 
