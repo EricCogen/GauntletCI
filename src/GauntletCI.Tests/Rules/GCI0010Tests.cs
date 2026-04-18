@@ -36,4 +36,33 @@ public class GCI0010Tests
 
         Assert.Contains(findings, f => f.Summary.Contains("connection string"));
     }
+
+    [Fact]
+    public async Task SecretVariable_AssignedStringLiteral_ShouldFlag()
+    {
+        var diff = MakeDiff("    var myToken = \"placeholder-value\";");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("token"));
+    }
+
+    [Fact]
+    public async Task TypeNameContainingToken_InComparison_ShouldNotFlag()
+    {
+        // "token" appears in a type name (HtmlTokenType) in a comparison, not in a variable assignment.
+        var diff = MakeDiff("    if (_type == HtmlTokenType.StartTag) return;");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("token"));
+    }
+
+    [Fact]
+    public async Task TypeNameContainingToken_WithStringLiteralOnRhs_ShouldNotFlag()
+    {
+        // "token" appears in a type name on the right-hand side; the variable name itself is neutral.
+        var diff = MakeDiff("    var prefix = \"Microsoft.IdentityModel.\" + nameof(SecurityTokenInvalidException);");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("token"));
+    }
 }
