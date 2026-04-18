@@ -101,6 +101,13 @@ public static class AnalyzeCommand
                 return;
             }
 
+            if (sourceCount == 0 && !Console.IsInputRedirected)
+            {
+                Console.Error.WriteLine("[GauntletCI] Error: no diff source specified. Use --staged, --unstaged, --all-changes, --commit <sha>, --diff <file>, or pipe a diff to stdin.");
+                ctx.ExitCode = 1;
+                return;
+            }
+
             CliBanner.PrintIfEnabled(new BannerContext
             {
                 NoBanner = noBanner,
