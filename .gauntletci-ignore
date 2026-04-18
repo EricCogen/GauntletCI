@@ -1,0 +1,10 @@
+# GauntletCI suppression file
+# Format:
+#   GCI0003                    -- suppress rule for all files
+#   GCI0003:src/path/**        -- suppress rule for matching paths only
+
+# TelemetryHasher.HashRepoAsync gained CancellationToken ct = default — additive, backward-compatible.
+# CancellationToken is a struct so GCI0006 null-guard suggestion is not applicable.
+GCI0003:src/GauntletCI.Cli/Telemetry/TelemetryHasher.cs
+GCI0004:src/GauntletCI.Cli/Telemetry/TelemetryHasher.cs
+GCI0006:src/GauntletCI.Cli/Telemetry/TelemetryHasher.cs

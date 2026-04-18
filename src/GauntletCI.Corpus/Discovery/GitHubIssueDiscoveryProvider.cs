@@ -21,7 +21,7 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider, IDisposab
             ? DefaultLabels
             : labelsFilter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        _http = new HttpClient();
+        _http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
         _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
         _http.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
         _http.DefaultRequestHeaders.Add("Authorization", $"token {token}");

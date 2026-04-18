@@ -23,7 +23,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider, IDisposa
         if (string.IsNullOrWhiteSpace(githubToken))
             throw new InvalidOperationException("GITHUB_TOKEN is required for gh-search provider");
 
-        _http = new HttpClient();
+        _http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", githubToken);
         _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Corpus/1.0");
         _http.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");

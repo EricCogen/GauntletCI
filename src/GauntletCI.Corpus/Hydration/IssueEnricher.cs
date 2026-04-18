@@ -40,7 +40,7 @@ public sealed class IssueEnricher : IDisposable
     public static IssueEnricher CreateDefault()
     {
         var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
-        var http = new HttpClient();
+        var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
         http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
         http.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
         if (!string.IsNullOrEmpty(token))
