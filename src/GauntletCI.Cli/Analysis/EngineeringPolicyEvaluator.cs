@@ -12,9 +12,8 @@ namespace GauntletCI.Cli.Analysis;
 /// </summary>
 internal static class EngineeringPolicyEvaluator
 {
-    // LLM input cap: diff text is truncated to 12 000 chars before sending.
-    // At ~4 chars/token this is ≈3 000 tokens — well within the 16 K context window.
-    private const int MaxDiffChars = 12_000;
+    // LLM input cap default — overridden by EngineeringPolicyConfig.MaxDiffChars.
+    // At ~4 chars/token this is ~3000 tokens, well within a 16K context window.
 
     private static readonly HashSet<string> CanonicalRuleIds =
     [
@@ -42,6 +41,7 @@ internal static class EngineeringPolicyEvaluator
         string policyPath,
         ILlmEngine llm,
         bool isLicensed = false,
+        int maxDiffChars = 12_000,
         CancellationToken ct = default)
     {
         if (!llm.IsAvailable)
@@ -65,16 +65,16 @@ internal static class EngineeringPolicyEvaluator
         }
 
         var rawDiffText = BuildRawDiffText(diff);
-        if (rawDiffText.Length > MaxDiffChars && !isLicensed)
+        if (rawDiffText.Length > maxDiffChars && !isLicensed)
         {
             Console.Error.WriteLine(
                 $"[GauntletCI] Engineering policy skipped: diff is {rawDiffText.Length:N0} chars " +
-                $"(community limit: {MaxDiffChars:N0}). Upgrade to Business or Enterprise to evaluate large diffs.");
+                $"(community limit: {maxDiffChars:N0}). Upgrade to Business or Enterprise to evaluate large diffs.");
             return [];
         }
 
-        var diffText  = rawDiffText.Length > MaxDiffChars
-            ? rawDiffText[..MaxDiffChars] + "\n... (truncated)"
+        var diffText  = rawDiffText.Length > maxDiffChars
+            ? rawDiffText[..maxDiffChars] + "\n... (truncated)"
             : rawDiffText;
         var fileNames = ExtractFileNames(diffText);
 

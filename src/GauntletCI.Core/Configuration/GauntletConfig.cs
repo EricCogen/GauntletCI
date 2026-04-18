@@ -136,4 +136,12 @@ public class EngineeringPolicyConfig
     /// Defaults to .misc/engineering-policy.md.
     /// </summary>
     public string Path { get; set; } = ".misc/engineering-policy.md";
+
+    /// <summary>
+    /// Maximum diff size in characters sent to the LLM. Diffs larger than this are rejected
+    /// for unlicensed (Community) users. Licensed users (Business/Enterprise) are allowed through
+    /// but the diff is still truncated to this limit to fit LLM context.
+    /// Default: 12000 (~3000 tokens at 4 chars/token, fits in a 16K context window).
+    /// </summary>
+    public int MaxDiffChars { get; set; } = 12_000;
 }
