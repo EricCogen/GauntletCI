@@ -34,9 +34,6 @@ CREATE TABLE IF NOT EXISTS rule_rubrics (
 CREATE INDEX IF NOT EXISTS idx_label_queue_status_priority
     ON label_queue (status, priority DESC, id ASC);
 
-CREATE INDEX IF NOT EXISTS idx_label_queue_fixture_rule_fired
-    ON label_queue (fixture_id, rule_id, fired);
-
 CREATE INDEX IF NOT EXISTS idx_actual_findings_rule_trigger_fixture
     ON actual_findings (rule_id, did_trigger, fixture_id);
 
