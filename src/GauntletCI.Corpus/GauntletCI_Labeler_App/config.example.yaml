@@ -1,8 +1,0 @@
-# Copy to config.yaml and update the paths for your machine.
-database_path: /absolute/path/to/gauntletci-corpus.db
-fixtures_root: /absolute/path/to/fixtures
-secret_key: change-me
-reviewer_name: Eric
-queue:
-  default_limit: 200
-  repeat_check_percent: 10
