@@ -41,9 +41,11 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
         foreach (var line in file.RemovedLines)
         {
             var content = line.Content.Trim();
+            // Attributes always appear at the start of a line (after trimming).
+            // Use StartsWith to avoid matching indexer syntax like dictionary[key] against [Key].
             foreach (var attr in SerializationAttributes)
             {
-                if (!content.Contains(attr, StringComparison.OrdinalIgnoreCase)) continue;
+                if (!content.StartsWith(attr, StringComparison.OrdinalIgnoreCase)) continue;
 
                 findings.Add(CreateFinding(
                     file,

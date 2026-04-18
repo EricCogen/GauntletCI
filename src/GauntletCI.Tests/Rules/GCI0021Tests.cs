@@ -92,4 +92,46 @@ public class GCI0021Tests
 
         Assert.Contains(findings, f => f.Summary.Contains("Serialization attribute removed"));
     }
+
+    [Fact]
+    public async Task DictionaryIndexerWithKeyVariable_ShouldNotFlag()
+    {
+        // dictionary[key] contains "[key]" which previously matched [Key] case-insensitively.
+        var raw = """
+            diff --git a/src/Store.cs b/src/Store.cs
+            index abc..def 100644
+            --- a/src/Store.cs
+            +++ b/src/Store.cs
+            @@ -1,3 +1,2 @@
+             public class Store {
+            -    dictionary[key] = value + 1;
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Serialization attribute removed"));
+    }
+
+    [Fact]
+    public async Task FieldNameLookupIndexer_ShouldNotFlag()
+    {
+        // fieldNameLookup[key] = i was a false positive via [key] matching [Key].
+        var raw = """
+            diff --git a/src/Mapper.cs b/src/Mapper.cs
+            index abc..def 100644
+            --- a/src/Mapper.cs
+            +++ b/src/Mapper.cs
+            @@ -1,3 +1,2 @@
+             public class Mapper {
+            -    if (key != null) fieldNameLookup[key] = i;
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Serialization attribute removed"));
+    }
 }
