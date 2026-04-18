@@ -33,13 +33,15 @@ internal static class LlmEngineSelector
         if (IsRunningInCi())
             return ResolveForCi(config);
 
-        // Local dev with Ollama configured — prefer corpus.ollamaUrls[0] over ONNX daemon
+        // Local dev with Ollama configured -- prefer corpus.ollamaUrls[0] over ONNX daemon
         var ollamaUrl = config.Corpus.OllamaUrls.FirstOrDefault();
         if (!string.IsNullOrWhiteSpace(ollamaUrl))
         {
             var model    = config.Corpus.OllamaModel ?? "phi3:mini";
             var endpoint = ollamaUrl.TrimEnd('/') + "/v1/chat/completions";
-            return new RemoteLlmEngine(endpoint, model, apiKey: "ollama");
+            var numCtx   = config.Llm?.NumCtx ?? 16_384;
+            var maxTok   = config.Llm?.MaxCompleteTokens ?? 2_048;
+            return new RemoteLlmEngine(endpoint, model, apiKey: "ollama", numCtx, maxTok);
         }
 
         // Local dev: try daemon first, then fall back to direct load
@@ -82,6 +84,7 @@ internal static class LlmEngineSelector
             return new NullLlmEngine();
         }
 
-        return new RemoteLlmEngine(llmCfg.CiEndpoint, llmCfg.CiModel, apiKey);
+        return new RemoteLlmEngine(llmCfg.CiEndpoint, llmCfg.CiModel, apiKey,
+            llmCfg.NumCtx, llmCfg.MaxCompleteTokens);
     }
 }
