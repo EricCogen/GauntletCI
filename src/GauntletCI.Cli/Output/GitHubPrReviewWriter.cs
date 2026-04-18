@@ -16,26 +16,26 @@ namespace GauntletCI.Cli.Output;
 /// </summary>
 public static class GitHubPrReviewWriter
 {
-    private static readonly HttpClient _http = new();
+    private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(15) };
     private static readonly JsonSerializerOptions _jsonOpts = new() { WriteIndented = false };
 
     /// <summary>
     /// Posts findings as a GitHub PR review. Soft-fails on missing env vars or API errors.
     /// If inline comments are rejected (422), retries as a summary-only review.
     /// </summary>
-    public static async Task WriteAsync(EvaluationResult result)
+    public static async Task WriteAsync(EvaluationResult result, CancellationToken ct = default)
     {
         if (result.Findings.Count == 0)
             return;
 
-        var token      = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+        var githubAuth = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
         var repository = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
         // Prefer explicit override so callers can pass the PR head SHA directly.
         var sha        = Environment.GetEnvironmentVariable("GAUNTLETCI_COMMIT_SHA")
                       ?? Environment.GetEnvironmentVariable("GITHUB_SHA");
         var prNumber   = ResolvePrNumber();
 
-        if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(repository) || string.IsNullOrEmpty(sha))
+        if (string.IsNullOrEmpty(githubAuth) || string.IsNullOrEmpty(repository) || string.IsNullOrEmpty(sha))
         {
             Console.Error.WriteLine(
                 "[GauntletCI] --github-pr-comments: missing GITHUB_TOKEN, GITHUB_REPOSITORY, or GITHUB_SHA — skipping inline comments.");
@@ -62,9 +62,9 @@ public static class GitHubPrReviewWriter
 
         // First attempt: inline comments + summary body.
         // If GitHub rejects (422, line not in diff), fall back to summary-only.
-        var retry = await TryPostReviewAsync(token, url, sha, inlineFindings, summaryFindings);
+        var retry = await TryPostReviewAsync(githubAuth, url, sha, inlineFindings, summaryFindings, ct);
         if (retry)
-            await TryPostReviewAsync(token, url, sha, [], [.. summaryFindings, .. inlineFindings]);
+            await TryPostReviewAsync(githubAuth, url, sha, [], [.. summaryFindings, .. inlineFindings], ct);
     }
 
     /// <summary>
@@ -137,11 +137,12 @@ public static class GitHubPrReviewWriter
 
     // Returns true if the caller should retry without inline comments (422 from GitHub).
     private static async Task<bool> TryPostReviewAsync(
-        string token,
+        string githubAuth,
         string url,
         string sha,
         List<Finding> inlineFindings,
-        List<Finding> summaryFindings)
+        List<Finding> summaryFindings,
+        CancellationToken ct)
     {
         var bodyText = BuildReviewBody(summaryFindings, hasInlineComments: inlineFindings.Count > 0);
 
@@ -163,7 +164,7 @@ public static class GitHubPrReviewWriter
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", githubAuth);
         request.Headers.UserAgent.Add(new ProductInfoHeaderValue("GauntletCI", "2.0"));
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
         request.Headers.Add("X-GitHub-Api-Version", "2022-11-28");
@@ -171,7 +172,7 @@ public static class GitHubPrReviewWriter
 
         try
         {
-            using var response = await _http.SendAsync(request);
+            using var response = await _http.SendAsync(request, ct);
 
             if (response.IsSuccessStatusCode)
                 return false;

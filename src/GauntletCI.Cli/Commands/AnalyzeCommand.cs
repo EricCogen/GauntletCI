@@ -210,7 +210,7 @@ public static class AnalyzeCommand
                     GitHubAnnotationWriter.Write(result);
 
                 if (ghPrComments)
-                    await GitHubPrReviewWriter.WriteAsync(result);
+                    await GitHubPrReviewWriter.WriteAsync(result, ctx.GetCancellationToken());
 
                 await TelemetryCollector.CollectAsync(result, diff, repo.FullName);
 
