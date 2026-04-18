@@ -38,11 +38,13 @@ public static class ConsoleReporter
     /// <param name="result">The evaluation result containing findings to display.</param>
     /// <param name="ascii">Use ASCII box characters instead of Unicode for limited terminals.</param>
     /// <param name="minSeverity">Minimum severity to display. Defaults to <see cref="RuleSeverity.Warn"/>.</param>
-    public static void Report(EvaluationResult result, bool ascii = false, RuleSeverity minSeverity = RuleSeverity.Warn)
+    public static void Report(EvaluationResult result, bool ascii = false, RuleSeverity minSeverity = RuleSeverity.Warn, int suppressedByBaseline = 0)
     {
         string hr  = ascii ? "=======================================================" : "═══════════════════════════════════════════════════════";
         string sep = ascii ? "-- {0} ({1}) --------------------------" : "── {0} ({1}) ──────────────────────────";
-        string ok  = ascii ? "  OK No findings -- diff looks clean!" : "  ✓ No findings — diff looks clean!";
+        string ok  = ascii
+            ? "  Scan complete. 0 detected signals. GauntletCI analyzes the diff only -- review context is still required."
+            : "  ✓ Scan complete. 0 detected signals. GauntletCI analyzes the diff only — review context is still required.";
 
         AnsiConsole.MarkupLine($"[cyan]{hr}[/]");
         AnsiConsole.MarkupLine("[cyan]  GauntletCI Risk Analysis Report[/]");
@@ -58,6 +60,8 @@ public static class ConsoleReporter
         if (!result.HasFindings)
         {
             AnsiConsole.MarkupLine($"[green]{ok}[/]");
+            if (suppressedByBaseline > 0)
+                AnsiConsole.MarkupLine($"[dim]  ({suppressedByBaseline} finding(s) suppressed by baseline)[/]");
             return;
         }
 
@@ -94,6 +98,9 @@ public static class ConsoleReporter
                 foreach (var finding in advisoryFindings)
                     PrintEpSignal(finding);
             }
+
+            if (suppressedByBaseline > 0)
+                AnsiConsole.MarkupLine($"[dim]  ({suppressedByBaseline} finding(s) suppressed by baseline)[/]");
             return;
         }
 
@@ -105,6 +112,9 @@ public static class ConsoleReporter
             foreach (var finding in advisoryFindingsFinal)
                 PrintEpSignal(finding);
         }
+
+        if (suppressedByBaseline > 0)
+            AnsiConsole.MarkupLine($"[dim]  ({suppressedByBaseline} finding(s) suppressed by baseline)[/]");
     }
 
     /// <summary>

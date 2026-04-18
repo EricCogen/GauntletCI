@@ -3,6 +3,7 @@ using System.CommandLine;
 using System.Text.Json;
 using GauntletCI.Cli.Analysis;
 using GauntletCI.Cli.Audit;
+using GauntletCI.Cli.Baseline;
 using GauntletCI.Cli.LlmDaemon;
 using GauntletCI.Cli.Output;
 using GauntletCI.Cli.Presentation;
@@ -48,6 +49,7 @@ public static class AnalyzeCommand
             "--severity",
             () => "warn",
             "Minimum severity to display: info, warn, block");
+        var noBaselineFlag = new Option<bool>("--no-baseline", "Ignore the baseline file and show all findings");
 
         var cmd = new Command("analyze", "Analyse a git diff for pre-commit risks")
         {
@@ -67,6 +69,7 @@ public static class AnalyzeCommand
             withExpertCtxFlag,
             verboseFlag,
             severityOption,
+            noBaselineFlag,
         };
 
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
@@ -87,6 +90,7 @@ public static class AnalyzeCommand
             var withExpertCtx = ctx.ParseResult.GetValueForOption(withExpertCtxFlag);
             var verbose    = ctx.ParseResult.GetValueForOption(verboseFlag);
             var severityStr = ctx.ParseResult.GetValueForOption(severityOption)!;
+            var noBaseline = ctx.ParseResult.GetValueForOption(noBaselineFlag);
             var ct = ctx.GetCancellationToken();
 
             // Enforce single diff source
@@ -138,6 +142,18 @@ public static class AnalyzeCommand
                 var staticAnalysis = await StaticAnalysisRunner.RunAsync(diff, repoPath, ct);
 
                 var result = await orchestrator.RunAsync(diff, staticAnalysis, ignoreList: ignoreList);
+
+                // Baseline delta mode: suppress findings whose fingerprint is in the baseline.
+                int suppressedByBaseline = 0;
+                if (!noBaseline)
+                {
+                    var baseline = BaselineStore.Load(repo.FullName);
+                    if (baseline is not null)
+                    {
+                        suppressedByBaseline = result.Findings.RemoveAll(
+                            f => baseline.Fingerprints.Contains(BaselineStore.ComputeFingerprint(f)));
+                    }
+                }
 
                 using ILlmEngine llm = await LlmEngineSelector.ResolveAsync(config, withLlm && !noLlm);
 
@@ -204,7 +220,10 @@ public static class AnalyzeCommand
 
                 if ((output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase))
                 {
-                    var json = JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true });
+                    var jsonResult = suppressedByBaseline > 0
+                        ? new { result.CommitSha, result.Findings, result.RulesEvaluated, result.RuleMetrics, result.FileStatistics, SuppressedByBaseline = suppressedByBaseline }
+                        : (object)result;
+                    var json = JsonSerializer.Serialize(jsonResult, new JsonSerializerOptions { WriteIndented = true });
                     Console.WriteLine(json);
                 }
                 else
@@ -212,7 +231,7 @@ public static class AnalyzeCommand
                     var minSeverity = verbose
                         ? GauntletCI.Core.Model.RuleSeverity.Info
                         : ParseMinSeverity(severityStr);
-                    ConsoleReporter.Report(result, ascii, minSeverity);
+                    ConsoleReporter.Report(result, ascii, minSeverity, suppressedByBaseline);
                 }
 
                 if (ghAnnotate)
