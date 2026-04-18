@@ -822,9 +822,12 @@ public static class CorpusCommand
                     catch (Exception ex)
                     {
                         var failureStatus = IsPermanentHydrationFailure(ex) ? "PermanentFailure" : "Failed";
-                        var repoRejectReason = failureStatus == "PermanentFailure"
-                            ? await hydrator.GetPermanentRepoRejectReasonAsync(owner, repo, ct)
-                            : null;
+                        string? repoRejectReason = null;
+                        if (failureStatus == "PermanentFailure")
+                        {
+                            try { repoRejectReason = await hydrator.GetPermanentRepoRejectReasonAsync(owner, repo, ct); }
+                            catch { /* secondary lookup failure; record original error and continue */ }
+                        }
 
                         await UpsertHydrationStatusAsync(
                             db.Connection,
