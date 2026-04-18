@@ -134,8 +134,9 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         {
             var content = line.Content;
             if (IsCommentLine(content.Trim())) continue;
-            var lower = content.ToLowerInvariant();
-            if (!content.Contains('=', StringComparison.Ordinal)) continue;
+
+            // Require a real assignment (=) not a comparison (==, !=, <=, >=).
+            if (!HasAssignment(content)) continue;
 
             var literals = ExtractStringLiterals(content);
             if (literals.Count == 0) continue;
@@ -144,9 +145,14 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
             // These are references to env var keys, not hardcoded secret values.
             if (literals.All(IsEnvVarName)) continue;
 
+            // Check secret keyword only in the left-hand side of the assignment (the variable name),
+            // not anywhere in the line — avoids false positives from type names like HtmlTokenType.
+            var eqIndex = FindAssignmentIndex(content);
+            var lhs = content[..eqIndex].ToLowerInvariant();
+
             foreach (var pattern in SecretNamePatterns)
             {
-                if (!lower.Contains(pattern)) continue;
+                if (!lhs.Contains(pattern)) continue;
 
                 findings.Add(CreateFinding(
                     file,
@@ -158,6 +164,39 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
                 break;
             }
         }
+    }
+
+    // Returns true only if the line contains a real assignment = (not ==, !=, <=, >=).
+    private static bool HasAssignment(string content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        for (int i = 0; i < content.Length; i++)
+        {
+            if (content[i] != '=') continue;
+            char prev = i > 0 ? content[i - 1] : '\0';
+            char next = i < content.Length - 1 ? content[i + 1] : '\0';
+            if (prev is '!' or '<' or '>' or '=') continue;
+            if (next is '=') continue;
+            if (prev is '>' && next is '>') continue; // => lambda
+            return true;
+        }
+        return false;
+    }
+
+    // Returns the index of the first real assignment = in the line.
+    private static int FindAssignmentIndex(string content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        for (int i = 0; i < content.Length; i++)
+        {
+            if (content[i] != '=') continue;
+            char prev = i > 0 ? content[i - 1] : '\0';
+            char next = i < content.Length - 1 ? content[i + 1] : '\0';
+            if (prev is '!' or '<' or '>' or '=') continue;
+            if (next is '=') continue;
+            return i;
+        }
+        return content.Length;
     }
 
     private void CheckHardcodedPorts(DiffFile file, List<Finding> findings)
