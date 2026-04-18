@@ -106,4 +106,81 @@ public class GCI0036Tests
 
         Assert.Empty(findings);
     }
+
+    [Fact]
+    public async Task LocalVarDeclarationInGetter_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/Foo.cs b/src/Foo.cs
+            index abc..def 100644
+            --- a/src/Foo.cs
+            +++ b/src/Foo.cs
+            @@ -1,6 +1,7 @@
+             public class Foo {
+                 private int _count;
+                 public int Count {
+                     get {
+            +            var result = _count * 2;
+                         return result;
+                     }
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public async Task ForLoopVarInGetter_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/Foo.cs b/src/Foo.cs
+            index abc..def 100644
+            --- a/src/Foo.cs
+            +++ b/src/Foo.cs
+            @@ -1,6 +1,7 @@
+             public class Foo {
+                 private List<int> _items;
+                 public int Count {
+                     get {
+            +            for (var i = 0; i < _items.Count; i++) { }
+                         return _items.Count;
+                     }
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public async Task TypeDeclarationInPureMethod_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/Foo.cs b/src/Foo.cs
+            index abc..def 100644
+            --- a/src/Foo.cs
+            +++ b/src/Foo.cs
+            @@ -1,5 +1,7 @@
+             public class Foo {
+                 [Pure]
+                 public Dictionary<string, string> GetMap() {
+            +        Dictionary<string, string> result = new();
+            +        string key = "default";
+                     return result;
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
 }

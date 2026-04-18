@@ -21,6 +21,19 @@ public class GCI0001_DiffIntegrity : RuleBase
     private static readonly string[] CodeExtensions =
         [".cs", ".ts", ".js", ".py", ".go", ".java", ".rb", ".rs", ".cpp", ".c", ".fs"];
 
+    private static readonly HashSet<string> LockFileNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "packages.lock.json", "package-lock.json", "yarn.lock",
+        "pnpm-lock.yaml", "Gemfile.lock", "poetry.lock",
+        "Cargo.lock", "go.sum", "composer.lock",
+    };
+
+    private static bool IsLockFile(string filePath)
+    {
+        ArgumentNullException.ThrowIfNull(filePath);
+        return LockFileNames.Contains(Path.GetFileName(filePath));
+    }
+
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -36,20 +49,18 @@ public class GCI0001_DiffIntegrity : RuleBase
     private void CheckMixedScope(DiffContext diff, IReadOnlyList<ChangedFileAnalysisRecord> skippedFiles, List<Finding> findings)
     {
         bool hasCodeFiles = diff.Files.Count > 0;
-        bool hasNonCodeFiles = skippedFiles.Any(x =>
-            x.Classification is FileEligibilityClassification.KnownNonSource
-                             or FileEligibilityClassification.UnknownUnsupported);
 
-        if (hasCodeFiles && hasNonCodeFiles)
+        var nonCodeFiles = skippedFiles
+            .Where(x => x.Classification is FileEligibilityClassification.KnownNonSource
+                                         or FileEligibilityClassification.UnknownUnsupported)
+            .Where(x => !IsLockFile(x.FilePath))
+            .ToList();
+
+        if (hasCodeFiles && nonCodeFiles.Count > 0)
         {
-            var nonCodeFilePaths = skippedFiles
-                .Where(x => x.Classification is FileEligibilityClassification.KnownNonSource
-                                             or FileEligibilityClassification.UnknownUnsupported)
-                .Select(x => x.FilePath);
-
             findings.Add(CreateFinding(
                 summary: "Diff contains mixed scope: code and non-code files changed together.",
-                evidence: $"Non-code files in diff: {string.Join(", ", nonCodeFilePaths)}",
+                evidence: $"Non-code files in diff: {string.Join(", ", nonCodeFiles.Select(x => x.FilePath))}",
                 whyItMatters: "Mixed-scope diffs are harder to review and increase the risk of unintended changes slipping through.",
                 suggestedAction: "Split into separate PRs: one for code changes, one for docs/config updates.",
                 confidence: Confidence.Medium));
