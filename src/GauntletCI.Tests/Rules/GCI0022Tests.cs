@@ -147,4 +147,26 @@ public class GCI0022Tests
 
         Assert.Contains(findings, f => f.Summary.Contains("deduplication") || f.RuleId == "GCI0022");
     }
+
+    [Fact]
+    public async Task EventHandlerInTestFile_ShouldNotFlag()
+    {
+        // Test code intentionally exercises the event pattern being tested — skip
+        var raw = """
+            diff --git a/src/GCI0022Tests.cs b/src/GCI0022Tests.cs
+            index abc..def 100644
+            --- a/src/GCI0022Tests.cs
+            +++ b/src/GCI0022Tests.cs
+            @@ -1,3 +1,5 @@
+             public class GCI0022Tests {
+            +    SomeEvent += Handler;
+            +    SomeEvent += Handler;
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("deduplication"));
+    }
 }

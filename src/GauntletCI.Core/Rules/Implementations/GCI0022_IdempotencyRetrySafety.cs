@@ -104,6 +104,9 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
 
     private void CheckEventHandlerWithoutDedup(DiffFile file, List<Finding> findings)
     {
+        // Test files intentionally exercise event subscription patterns — skip them
+        if (WellKnownPatterns.IsTestFile(file.NewPath)) return;
+
         var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
 
         for (int i = 0; i < allLines.Count; i++)

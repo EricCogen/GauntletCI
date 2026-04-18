@@ -33,10 +33,12 @@ public class GCI0024_ResourceLifecycle : RuleBase
         "new X509Certificate(", "new RSACryptoServiceProvider("
     ];
 
-    // Suffix-based heuristic (from GCI0030) — catches any type whose name ends in these
+    // Suffix-based heuristic (from GCI0030) — catches any type whose name ends in these.
+    // Note: "Command" is intentionally excluded; SqlCommand is covered by DisposableTypes above,
+    // and System.CommandLine.Command is not IDisposable — including the suffix causes FPs.
     private static readonly string[] DisposableSuffixes =
     [
-        "Stream", "Reader", "Writer", "Connection", "Command", "Client",
+        "Stream", "Reader", "Writer", "Connection", "Client",
         "Listener", "Channel", "Context", "Provider", "Session", "Transaction",
         "Certificate", "Scope", "Timer", "Enumerator"
     ];
