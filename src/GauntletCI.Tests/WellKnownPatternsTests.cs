@@ -36,6 +36,9 @@ public class WellKnownPatternsTests
     [InlineData("src/Controllers/ContestController.cs")]   // "contest" contains "test" mid-word
     [InlineData("src/Services/ProtestService.cs")]         // "protest" contains "test" mid-word
     [InlineData("src/Services/Latest/OrderService.cs")]    // directory "latest" contains "test" mid-word
+    [InlineData("Contest.cs")]                             // bare name "Contest" ends with "test" mid-word
+    [InlineData("Latest.cs")]                              // bare name "Latest" ends with "test" mid-word
+    [InlineData("Protest.cs")]                             // bare name "Protest" ends with "test" mid-word
     public async Task ProductionFileWithEmbeddedTestWord_ShouldNotBeSkipped(string path)
     {
         var diff = DiffParser.Parse(MakeDiff(path));

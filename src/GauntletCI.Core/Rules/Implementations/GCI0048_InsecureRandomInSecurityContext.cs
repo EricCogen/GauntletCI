@@ -9,7 +9,8 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// <summary>
 /// GCI0048 – Insecure Random in Security Context
 /// Detects <c>System.Random</c> instantiation within 5 lines of security-sensitive identifiers
-/// (token, secret, password, key, salt, etc.) in non-test files.
+/// such as <c>apikey</c>, <c>token</c>, <c>secret</c>, <c>password</c>, <c>privatekey</c>,
+/// <c>accesskey</c>, <c>salt</c>, or similar compound security terms in non-test files.
 /// <c>System.Random</c> is not cryptographically secure and must never be used to generate
 /// tokens, keys, salts, passwords, or similar values.
 /// </summary>

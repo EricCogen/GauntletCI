@@ -152,8 +152,19 @@ public static class BaselineCommand
 
         show.SetHandler((System.CommandLine.Invocation.InvocationContext ctx) =>
         {
-            var repo     = ctx.ParseResult.GetValueForOption(repoOption)!;
-            var baseline = BaselineStore.Load(repo.FullName);
+            var repo = ctx.ParseResult.GetValueForOption(repoOption)!;
+
+            BaselineFile? baseline;
+            try
+            {
+                baseline = BaselineStore.Load(repo.FullName);
+            }
+            catch (Exception ex)
+            {
+                AnsiConsole.MarkupLine($"[yellow]  ![/] Baseline file is invalid or unreadable: {Markup.Escape(ex.Message)}");
+                ctx.ExitCode = 1;
+                return;
+            }
 
             if (baseline is null)
             {

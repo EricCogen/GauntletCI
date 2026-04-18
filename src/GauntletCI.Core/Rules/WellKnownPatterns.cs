@@ -33,13 +33,17 @@ internal static class WellKnownPatterns
             }
         }
 
-        // File name: "test" must appear as a word-boundary prefix or suffix, not embedded
-        // mid-word (avoids false positives such as LatestOrderService.cs, ContestController.cs)
-        var fileName  = lastSlash >= 0 ? norm[(lastSlash + 1)..] : norm;
-        var nameNoExt = fileName.Contains('.') ? fileName[..fileName.LastIndexOf('.')] : fileName;
-        return nameNoExt.StartsWith("test")
-            || nameNoExt.EndsWith("test")
-            || nameNoExt.EndsWith("tests");
+        // File name: use original casing to distinguish PascalCase "Tests"/"Test" suffix from
+        // English words that embed "test" (e.g. "Contest.cs", "Latest.cs", "Protest.cs").
+        // "FooTests" ends with capital "Tests" → test file ✓
+        // "Contest"  ends with lowercase "test" → not a test file ✓
+        // StartsWith check is case-insensitive to catch "testFoo.cs" and "TestFoo.cs".
+        var normPath  = path.Replace('\\', '/');
+        var origFile  = lastSlash >= 0 ? normPath[(lastSlash + 1)..] : normPath;
+        var origNoExt = origFile.Contains('.') ? origFile[..origFile.LastIndexOf('.')] : origFile;
+        return origNoExt.StartsWith("test", StringComparison.OrdinalIgnoreCase)
+            || origNoExt.EndsWith("Tests", StringComparison.Ordinal)
+            || origNoExt.EndsWith("Test",  StringComparison.Ordinal);
     }
 
     // Returns true when a lowercase directory segment represents a test directory.

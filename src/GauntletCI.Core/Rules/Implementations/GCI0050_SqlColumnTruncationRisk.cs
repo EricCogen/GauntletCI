@@ -24,8 +24,9 @@ public class GCI0050_SqlColumnTruncationRisk : RuleBase
         @"\bn?varchar\s*\(\s*(\d+)\s*\)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     // [StringLength(N)] or [MaxLength(N)] EF / DataAnnotations attributes
+    // Captures through the closing )] so match.Value shows the full attribute in findings
     private static readonly Regex StringLengthAttributeRegex = new(
-        @"\[(?:StringLength|MaxLength)\s*\(\s*(\d+)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        @"\[(?:StringLength|MaxLength)\s*\(\s*(\d+)[^)]*\)\s*\]", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     // HasMaxLength(N) EF Fluent API
     private static readonly Regex HasMaxLengthRegex = new(
@@ -97,7 +98,7 @@ public class GCI0050_SqlColumnTruncationRisk : RuleBase
 
     /// <summary>
     /// Returns true when the file path suggests it contains database schema or migration definitions.
-    /// Targets EF migrations, SQL scripts, and DbContext / entity model files.
+    /// Targets EF migrations, DbContext / entity model, and fluent configuration files (.cs only).
     /// </summary>
     private static bool IsMigrationOrSchemaFile(string path)
     {
