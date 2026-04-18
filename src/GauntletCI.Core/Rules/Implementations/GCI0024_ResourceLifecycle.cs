@@ -4,6 +4,7 @@ using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.StaticAnalysis;
+using GauntletCI.Core.Rules;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -61,6 +62,8 @@ public class GCI0024_ResourceLifecycle : RuleBase
 
     private void CheckUnguardedDisposables(DiffFile file, List<Finding> findings)
     {
+        if (WellKnownPatterns.IsTestFile(file.NewPath)) return;
+
         var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
 
         for (int i = 0; i < allLines.Count; i++)
