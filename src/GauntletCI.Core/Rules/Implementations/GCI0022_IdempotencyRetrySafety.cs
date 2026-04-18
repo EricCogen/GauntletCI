@@ -169,7 +169,7 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
             var parenIdx = afterStatic.IndexOf('(');
             if (parenIdx < 0) continue;
 
-            var beforeParen = afterStatic[..parenIdx];
+            var beforeParen = afterStatic[..parenIdx].TrimEnd(); // trim trailing whitespace (e.g. "static Foo ()")
             if (beforeParen.Contains(' ') || beforeParen.Contains('\t')) continue;
 
             return true;

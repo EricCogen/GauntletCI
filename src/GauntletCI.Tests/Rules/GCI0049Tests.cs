@@ -136,6 +136,49 @@ public class GCI0049Tests
     }
 
     [Fact]
+    public async Task DecimalEquality_ShouldNotFire()
+    {
+        var raw = """
+            diff --git a/src/Finance/PriceChecker.cs b/src/Finance/PriceChecker.cs
+            index abc..def 100644
+            --- a/src/Finance/PriceChecker.cs
+            +++ b/src/Finance/PriceChecker.cs
+            @@ -3,4 +3,5 @@
+             class PriceChecker {
+            +    bool IsAtParity(decimal price) => price == 1.0m;
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public async Task FloatAndStringEqualityOnSameLine_ShouldFire()
+    {
+        // The float comparison (value == 0.0) should be detected even though
+        // the same line also has an unrelated string comparison (name == "x")
+        var raw = """
+            diff --git a/src/Core/Checker.cs b/src/Core/Checker.cs
+            index abc..def 100644
+            --- a/src/Core/Checker.cs
+            +++ b/src/Core/Checker.cs
+            @@ -3,4 +3,5 @@
+             class Checker {
+            +    bool Check(double value, string name) => value == 0.0 && name == "x";
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.NotEmpty(findings);
+        Assert.Contains(findings, f => f.RuleId == "GCI0049");
+    }
+
+    [Fact]
     public async Task CommentLine_ShouldNotFire()
     {
         var raw = """

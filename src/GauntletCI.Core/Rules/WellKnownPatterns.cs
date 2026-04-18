@@ -21,9 +21,17 @@ internal static class WellKnownPatterns
         // Any path segment containing "spec" is a strong test signal (unchanged)
         if (norm.Contains("spec")) return true;
 
-        // Directory segments: "test" anywhere in a directory name is a strong signal
+        // Directory segments: each segment must start or cleanly end with "test(s)".
+        // "latest" ends with "test" but has a letter before it — use word-boundary guard.
         var lastSlash = norm.LastIndexOf('/');
-        if (lastSlash > 0 && norm[..lastSlash].Contains("test")) return true;
+        if (lastSlash > 0)
+        {
+            foreach (var segment in norm[..lastSlash].Split('/'))
+            {
+                if (IsTestSegment(segment))
+                    return true;
+            }
+        }
 
         // File name: "test" must appear as a word-boundary prefix or suffix, not embedded
         // mid-word (avoids false positives such as LatestOrderService.cs, ContestController.cs)
@@ -32,5 +40,17 @@ internal static class WellKnownPatterns
         return nameNoExt.StartsWith("test")
             || nameNoExt.EndsWith("test")
             || nameNoExt.EndsWith("tests");
+    }
+
+    // Returns true when a lowercase directory segment represents a test directory.
+    // Requires "test" to appear at a word boundary — avoids "latest", "protest", etc.
+    private static bool IsTestSegment(string segment)
+    {
+        if (segment.StartsWith("test")) return true;
+        // EndsWith "test": only when the character immediately before "test" is non-letter
+        // e.g. ".test", "-test", "_test" → yes; "latest" → 'a' precedes "test" → no
+        if (segment.Length > 4 && segment.EndsWith("test") && !char.IsLetter(segment[^5])) return true;
+        if (segment.Length > 5 && segment.EndsWith("tests") && !char.IsLetter(segment[^6])) return true;
+        return false;
     }
 }

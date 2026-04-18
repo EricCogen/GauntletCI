@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.CommandLine;
-using System.Text.Json;
 using GauntletCI.Cli.Baseline;
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Rules;
@@ -119,16 +118,23 @@ public static class DoctorCommand
 
             // ── 5. Baseline ──────────────────────────────────────────────────
             AnsiConsole.MarkupLine("[bold]Baseline[/]");
-            var baseline = BaselineStore.Load(effectiveRoot);
-            if (baseline is not null)
+            try
             {
-                AnsiConsole.MarkupLine($"[green]  ✓[/] Active — {baseline.Fingerprints.Count} fingerprint(s), created {baseline.CreatedAt:u}");
-                if (baseline.Commit is not null)
-                    AnsiConsole.MarkupLine($"  [dim]  Commit: {Markup.Escape(baseline.Commit)}[/]");
+                var baseline = BaselineStore.Load(effectiveRoot);
+                if (baseline is not null)
+                {
+                    AnsiConsole.MarkupLine($"[green]  ✓[/] Active — {baseline.Fingerprints.Count} fingerprint(s), created {baseline.CreatedAt:u}");
+                    if (baseline.Commit is not null)
+                        AnsiConsole.MarkupLine($"  [dim]  Commit: {Markup.Escape(baseline.Commit)}[/]");
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine("[dim]  –  No baseline found (run 'gauntletci baseline create --staged' to create one)[/]");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                AnsiConsole.MarkupLine("[dim]  –  No baseline found (run 'gauntletci baseline create --staged' to create one)[/]");
+                AnsiConsole.MarkupLine($"[yellow]  ![/] Baseline file is invalid or unreadable: {Markup.Escape(ex.Message)}");
             }
 
             AnsiConsole.WriteLine();

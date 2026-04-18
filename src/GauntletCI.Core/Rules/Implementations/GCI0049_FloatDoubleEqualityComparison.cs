@@ -19,13 +19,16 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
     public override string Name => "Float/Double Equality Comparison";
 
     // Matches: == or != followed by a float/double literal (e.g. 0.0, 1.5f, 2.0d, .5F)
+    // Excludes decimal (m/M) suffixes — decimal equality is exact and not a precision pitfall.
+    // Both alternatives require at least one digit after the decimal point to prevent the
+    // regex engine from matching "1." (backtracking) when "1.0m" appears.
     private static readonly Regex FloatLiteralOnRightRegex = new(
-        @"(?:==|!=)\s*(?:[-+]?\d*\.\d+|\d+\.\d*)[fFdDmM]?\b",
+        @"(?:==|!=)\s*(?:[-+]?\d*\.\d+|\d+\.\d+)[fFdD]?\b",
         RegexOptions.Compiled);
 
     // Matches: float/double literal on the left side of == or !=
     private static readonly Regex FloatLiteralOnLeftRegex = new(
-        @"\b(?:[-+]?\d*\.\d+|\d+\.\d*)[fFdDmM]?\s*(?:==|!=)",
+        @"\b(?:[-+]?\d*\.\d+|\d+\.\d+)[fFdD]?\s*(?:==|!=)",
         RegexOptions.Compiled);
 
     // Matches: a (float) or (double) cast alongside == or !=
@@ -84,17 +87,23 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
     }
 
     /// <summary>
-    /// Returns true when the line is likely a string comparison (e.g., <c>x == "hello"</c>).
-    /// Avoids false positives where a quoted numeric string is compared with ==.
+    /// Returns true when the operand immediately adjacent to the first equality operator
+    /// is a quoted string literal (e.g., <c>x == "hello"</c> or <c>"hello" == x</c>).
+    /// Uses adjacent-only matching to avoid suppressing real float comparisons on lines
+    /// that also contain an unrelated string comparison (e.g., <c>value == 0.0 &amp;&amp; name == "x"</c>).
     /// </summary>
     private static bool IsLikelyStringComparison(string content)
     {
-        // If there is a double-quote near the equality operator, skip it
         var eqIdx = content.IndexOf("==", StringComparison.Ordinal);
         if (eqIdx < 0) eqIdx = content.IndexOf("!=", StringComparison.Ordinal);
         if (eqIdx < 0) return false;
 
-        var window = content[(eqIdx > 5 ? eqIdx - 5 : 0)..Math.Min(content.Length, eqIdx + 20)];
-        return window.Contains('"') || window.Contains('\'');
+        // Right operand: == "..." or != "..."
+        var afterOp = content[(eqIdx + 2)..].TrimStart();
+        if (afterOp.Length > 0 && (afterOp[0] == '"' || afterOp[0] == '\'')) return true;
+
+        // Left operand: "..." == or "..." !=
+        var beforeOp = content[..eqIdx].TrimEnd();
+        return beforeOp.Length > 0 && (beforeOp[^1] == '"' || beforeOp[^1] == '\'');
     }
 }

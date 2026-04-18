@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using GauntletCI.Core.Model;
 
 namespace GauntletCI.Cli.Baseline;
@@ -19,10 +20,17 @@ public static class BaselineStore
     /// <summary>Returns the absolute path to the baseline file for the given repo root.</summary>
     public static string GetPath(string repoRoot) => Path.Combine(repoRoot, FileName);
 
+    // Strips a leading "Line N: " prefix from evidence so fingerprints survive line-number shifts
+    private static readonly Regex LineNumberPrefixRegex = new(
+        @"^Line \d+:\s*", RegexOptions.Compiled);
+
     /// <summary>Computes a stable hex fingerprint for a single finding.</summary>
     public static string ComputeFingerprint(Finding f)
     {
-        var excerpt = f.Evidence.Length > 100 ? f.Evidence[..100] : f.Evidence;
+        // Normalize evidence: remove "Line N: " prefix so fingerprints survive minor line-number
+        // shifts (e.g. after unrelated edits that reflow hunk positions)
+        var evidence = LineNumberPrefixRegex.Replace(f.Evidence, string.Empty);
+        var excerpt = evidence.Length > 100 ? evidence[..100] : evidence;
         var raw = $"{f.RuleId}|{f.FilePath ?? ""}|{excerpt}";
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(raw));
         return Convert.ToHexString(hash).ToLowerInvariant();

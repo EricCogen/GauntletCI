@@ -10,7 +10,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0050 – SQL Column Truncation Risk
 /// Detects short string column definitions (<c>nvarchar(N)</c>, <c>varchar(N)</c>,
 /// <c>[StringLength(N)]</c>, <c>[MaxLength(N)]</c>, or <c>HasMaxLength(N)</c>)
-/// where N &lt; 100, in migration files, SQL files, or EF model files.
+/// where N &lt; 100, in EF migration and model files (<c>.cs</c>).
 /// Short column widths silently truncate user-supplied strings at the database layer,
 /// causing data loss without an exception.
 /// </summary>

@@ -51,7 +51,7 @@ public static class AnalyzeCommand
             "Minimum severity to display: info, warn, block");
         var noBaselineFlag = new Option<bool>("--no-baseline", "Ignore the baseline file and show all findings");
         var showContextOption = new Option<int>("--show-context", () => 0, "Include N surrounding diff lines around each finding evidence");
-        var prCommentSuggestFlag = new Option<bool>("--pr-comment-suggest", "Print PR review comment body to stdout instead of posting to GitHub API");
+        var prCommentSuggestFlag = new Option<bool>("--pr-comment-suggest", "Print PR review comment body to stdout; when used without --github-pr-comments this avoids posting to the GitHub API");
 
         var cmd = new Command("analyze", "Analyse a git diff for pre-commit risks")
         {
@@ -226,9 +226,24 @@ public static class AnalyzeCommand
 
                 if ((output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase))
                 {
-                    var jsonResult = suppressedByBaseline > 0
-                        ? new { result.CommitSha, result.Findings, result.RulesEvaluated, result.RuleMetrics, result.FileStatistics, SuppressedByBaseline = suppressedByBaseline }
-                        : (object)result;
+                    // Always emit a consistent schema regardless of baseline suppression.
+                    // RuleMetrics FindingCount is recomputed from remaining (non-suppressed) findings.
+                    var jsonResult = new
+                    {
+                        result.CommitSha,
+                        result.HasFindings,
+                        result.Findings,
+                        result.RulesEvaluated,
+                        RuleMetrics = result.RuleMetrics.Select(m => new
+                        {
+                            m.RuleId,
+                            m.DurationMs,
+                            m.Outcome,
+                            FindingCount = result.Findings.Count(f => f.RuleId == m.RuleId),
+                        }).ToList(),
+                        result.FileStatistics,
+                        SuppressedByBaseline = suppressedByBaseline,
+                    };
                     var json = JsonSerializer.Serialize(jsonResult, new JsonSerializerOptions { WriteIndented = true });
                     Console.WriteLine(json);
                 }
@@ -264,7 +279,8 @@ public static class AnalyzeCommand
                 if (ghAnnotate)
                     GitHubAnnotationWriter.Write(result);
 
-                if (ghPrComments)
+                // Skip posting to GitHub API when --pr-comment-suggest is active (it acts as a dry-run)
+                if (ghPrComments && !prCommentSuggest)
                     await GitHubPrReviewWriter.WriteAsync(result, ctx.GetCancellationToken());
 
                 await TelemetryCollector.CollectAsync(result, diff, repo.FullName, ct: ct);
