@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
+using GauntletCI.Core.Rules;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -114,6 +115,8 @@ public class GCI0045_ComplexityControl : RuleBase
     {
         foreach (var file in diff.Files)
         {
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+
             var delegatingMethods = file.AddedLines
                 .Where(l => DelegationCallRegex.IsMatch(l.Content))
                 .ToList();
