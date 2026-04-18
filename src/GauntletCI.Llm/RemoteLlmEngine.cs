@@ -14,25 +14,30 @@ namespace GauntletCI.Llm;
 public sealed class RemoteLlmEngine : ILlmEngine
 {
     private const int MaxEnrichTokens  = 256;    // single-sentence enrichment
-    private const int MaxCompleteTokens = 2048;   // policy evaluation / raw completions
-    private const int NumCtx            = 16384;  // Ollama context window (input+output tokens)
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(120);
 
     private readonly string _endpoint;
     private readonly string _model;
     private readonly string _apiKey;
+    private readonly int _maxCompleteTokens;
+    private readonly int _numCtx;
     private readonly HttpClient _http;
 
     /// <summary>Initializes the engine and configures the <see cref="HttpClient"/> with auth headers.</summary>
     /// <param name="endpoint">Full URL of the OpenAI-compatible chat completions endpoint.</param>
     /// <param name="model">Model identifier sent in each request body (e.g., <c>gpt-4o</c>).</param>
     /// <param name="apiKey">Bearer token used for authorization.</param>
-    public RemoteLlmEngine(string endpoint, string model, string apiKey)
+    /// <param name="numCtx">Ollama context window in tokens (input + output). Default: 16384.</param>
+    /// <param name="maxCompleteTokens">Max tokens the model may generate per call. Default: 2048.</param>
+    public RemoteLlmEngine(string endpoint, string model, string apiKey,
+        int numCtx = 16_384, int maxCompleteTokens = 2_048)
     {
-        _endpoint = endpoint;
-        _model    = model;
-        _apiKey   = apiKey;
-        _http     = new HttpClient { Timeout = RequestTimeout };
+        _endpoint           = endpoint;
+        _model              = model;
+        _apiKey             = apiKey;
+        _numCtx             = numCtx;
+        _maxCompleteTokens  = maxCompleteTokens;
+        _http               = new HttpClient { Timeout = RequestTimeout };
         _http.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
         _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
     }
@@ -58,11 +63,11 @@ public sealed class RemoteLlmEngine : ILlmEngine
 
     /// <summary>Forwards a pre-built prompt directly to the remote model and returns its completion.</summary>
     public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
-        => CallAsync(prompt, systemPrompt: null, MaxCompleteTokens, ct);
+        => CallAsync(prompt, systemPrompt: null, _maxCompleteTokens, ct);
 
     /// <summary>Forwards a prompt with an optional system message to the remote model.</summary>
     public Task<string> CompleteAsync(string prompt, string? systemPrompt, CancellationToken ct = default)
-        => CallAsync(prompt, systemPrompt, MaxCompleteTokens, ct);
+        => CallAsync(prompt, systemPrompt, _maxCompleteTokens, ct);
 
     private async Task<string> CallAsync(string userPrompt, string? systemPrompt, int maxTokens, CancellationToken ct)
     {
@@ -77,7 +82,7 @@ public sealed class RemoteLlmEngine : ILlmEngine
             temperature = 0,
             seed        = 42,
             messages,
-            options     = new { num_ctx = NumCtx, repeat_penalty = 1.1, top_k = 1 },
+            options     = new { num_ctx = _numCtx, repeat_penalty = 1.1, top_k = 1 },
         };
 
         try
