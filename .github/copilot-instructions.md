@@ -212,22 +212,6 @@ Then verify: `SELECT status, COUNT(*) FROM todos GROUP BY status;`
 
 ---
 
-## Pre-Commit & Push Rules (MANDATORY)
-
-### Before committing
-1. Build must pass: `dotnet build GauntletCI.slnx -v quiet --nologo`
-2. All tests must pass: `dotnet test GauntletCI.slnx --no-build --nologo -q`
-3. Run self-audit: `git diff HEAD > $env:TEMP\audit.diff && dotnet run --project src/GauntletCI.Cli --no-build -- analyze --diff $env:TEMP\audit.diff --no-banner`
-4. Check core-engineering-rules.md against the changes
-5. **Both self-audit (step 3) and rules check (step 4) must pass before committing.**
-
-### Before pushing
-- **Always ask the user for approval before running `git push`.**
-- Ask explicitly: "Ready to push — shall I go ahead?"
-- Only push after receiving a positive reply. Never push unilaterally.
-
----
-
 ## Anti-Patterns to Avoid
 
 ### Avoid conversational prompts
