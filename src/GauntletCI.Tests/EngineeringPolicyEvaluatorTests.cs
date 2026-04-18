@@ -128,6 +128,45 @@ public class EngineeringPolicyEvaluatorTests
         finally { File.Delete(policyFile); }
     }
 
+    [Fact]
+    public async Task EvaluateAsync_rejects_large_diff_when_unlicensed()
+    {
+        var policyFile = Path.GetTempFileName();
+        try
+        {
+            await File.WriteAllTextAsync(policyFile, "## EP001");
+            var largeDiff = "--- a/Foo.cs\n+++ b/Foo.cs\n@@ -1,1 +1,1 @@\n+" + new string('x', 13_000);
+            var diff = DiffParser.Parse(largeDiff);
+            var llm = new StubLlmEngine(isAvailable: true, response: "[]");
+
+            var result = await EngineeringPolicyEvaluator.EvaluateAsync(
+                diff, policyFile, llm, isLicensed: false);
+
+            Assert.Empty(result);
+        }
+        finally { File.Delete(policyFile); }
+    }
+
+    [Fact]
+    public async Task EvaluateAsync_allows_large_diff_when_licensed()
+    {
+        var policyFile = Path.GetTempFileName();
+        try
+        {
+            await File.WriteAllTextAsync(policyFile, "## EP001");
+            var largeDiff = "--- a/Foo.cs\n+++ b/Foo.cs\n@@ -1,1 +1,1 @@\n+" + new string('x', 13_000);
+            var diff = DiffParser.Parse(largeDiff);
+            var llm = new StubLlmEngine(isAvailable: true, response: "[]");
+
+            // Licensed users get through the gate (result empty only because stub returns [])
+            var result = await EngineeringPolicyEvaluator.EvaluateAsync(
+                diff, policyFile, llm, isLicensed: true);
+
+            Assert.Empty(result); // stub returns [] -- gate was not the reason
+        }
+        finally { File.Delete(policyFile); }
+    }
+
     private sealed class StubLlmEngine(bool isAvailable, string response) : ILlmEngine
     {
         public bool IsAvailable => isAvailable;

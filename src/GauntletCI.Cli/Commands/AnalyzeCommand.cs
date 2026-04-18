@@ -163,13 +163,17 @@ public static class AnalyzeCommand
                         }
                     }
 
-                    // Engineering policy evaluation (experimental — config-driven, LLM-required)
+                    // Engineering policy evaluation (experimental -- config-driven, LLM-required)
                     if (config.Experimental.EngineeringPolicy.Enabled && llm.IsAvailable)
                     {
                         setStatus("Checking standards...");
-                        var policyPath = Path.Combine(repo.FullName, config.Experimental.EngineeringPolicy.Path);
+                        var policyPath  = Path.Combine(repo.FullName, config.Experimental.EngineeringPolicy.Path);
+                        var licenseKey  = config.Llm is not null
+                            ? Environment.GetEnvironmentVariable(config.Llm.LicenseKeyEnv)
+                            : null;
+                        var isLicensed  = !string.IsNullOrWhiteSpace(licenseKey);
                         var policyFindings = await EngineeringPolicyEvaluator.EvaluateAsync(
-                            diff, policyPath, llm, ctx.GetCancellationToken());
+                            diff, policyPath, llm, isLicensed, ctx.GetCancellationToken());
                         result.Findings.AddRange(policyFindings);
                     }
                 }

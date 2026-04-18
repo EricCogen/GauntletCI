@@ -35,11 +35,13 @@ internal static class EngineeringPolicyEvaluator
     /// <summary>
     /// Evaluates the diff against the policy file at <paramref name="policyPath"/> using the provided LLM.
     /// Returns an empty list if the LLM is unavailable, the policy file is missing, or no violations are found.
+    /// Large diffs (over <see cref="MaxDiffChars"/> chars) are rejected unless <paramref name="isLicensed"/> is true.
     /// </summary>
     internal static async Task<IReadOnlyList<Finding>> EvaluateAsync(
         DiffContext diff,
         string policyPath,
         ILlmEngine llm,
+        bool isLicensed = false,
         CancellationToken ct = default)
     {
         if (!llm.IsAvailable)
@@ -61,7 +63,19 @@ internal static class EngineeringPolicyEvaluator
             Console.Error.WriteLine($"[GauntletCI] Engineering policy file could not be read: {ex.Message}. Skipping policy evaluation.");
             return [];
         }
-        var diffText  = BuildDiffText(diff);
+
+        var rawDiffText = BuildRawDiffText(diff);
+        if (rawDiffText.Length > MaxDiffChars && !isLicensed)
+        {
+            Console.Error.WriteLine(
+                $"[GauntletCI] Engineering policy skipped: diff is {rawDiffText.Length:N0} chars " +
+                $"(community limit: {MaxDiffChars:N0}). Upgrade to Business or Enterprise to evaluate large diffs.");
+            return [];
+        }
+
+        var diffText  = rawDiffText.Length > MaxDiffChars
+            ? rawDiffText[..MaxDiffChars] + "\n... (truncated)"
+            : rawDiffText;
         var fileNames = ExtractFileNames(diffText);
 
         string raw;
@@ -104,7 +118,7 @@ internal static class EngineeringPolicyEvaluator
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-    private static string BuildDiffText(DiffContext diff)
+    private static string BuildRawDiffText(DiffContext diff)
     {
         var sb = new System.Text.StringBuilder();
         foreach (var file in diff.Files)
@@ -117,9 +131,7 @@ internal static class EngineeringPolicyEvaluator
                 sb.AppendLine(line.Content);
             sb.AppendLine();
         }
-
-        var text = sb.ToString();
-        return text.Length > MaxDiffChars ? text[..MaxDiffChars] + "\n... (truncated)" : text;
+        return sb.ToString();
     }
 
     private static string BuildSystemPrompt(string policy) => $"""
