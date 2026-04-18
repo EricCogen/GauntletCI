@@ -103,8 +103,9 @@ public class GCI0050_SqlColumnTruncationRisk : RuleBase
     private static bool IsMigrationOrSchemaFile(string path)
     {
         var lower = path.Replace('\\', '/').ToLowerInvariant();
-        return lower.Contains("migration")
-            || lower.Contains("/migrations/")
+        // Use "/migration" (with leading slash) to avoid matching "ImmigrationService.cs"
+        return lower.Contains("/migration")
+            || lower.Contains("migration.cs")  // filename: "UserMigration.cs", "AddUsersMigration.cs"
             || lower.Contains("schema")
             || lower.Contains("dbcontext")
             || lower.Contains("entityconfig")

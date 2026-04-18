@@ -16,34 +16,33 @@ internal static class WellKnownPatterns
     /// <param name="path">The file path to inspect.</param>
     public static bool IsTestFile(string path)
     {
-        var norm = path.Replace('\\', '/').ToLowerInvariant();
+        var normPath = path.Replace('\\', '/');
+        var lastSlash = normPath.LastIndexOf('/');
 
-        // Any path segment containing "spec" is a strong test signal (unchanged)
-        if (norm.Contains("spec")) return true;
-
-        // Directory segments: each segment must start or cleanly end with "test(s)".
-        // "latest" ends with "test" but has a letter before it — use word-boundary guard.
-        var lastSlash = norm.LastIndexOf('/');
+        // Directory segment checks (both original-case and lowercase variants).
         if (lastSlash > 0)
         {
-            foreach (var segment in norm[..lastSlash].Split('/'))
+            foreach (var segment in normPath[..lastSlash].Split('/'))
             {
-                if (IsTestSegment(segment))
-                    return true;
+                var lower = segment.ToLowerInvariant();
+                // Exact match for spec/specs directories (covers RSpec, Jest, etc.)
+                if (lower == "spec" || lower == "specs") return true;
+                // Word-boundary "test(s)" check on lowercase segment (avoids "latest", "protest")
+                if (IsTestSegment(lower)) return true;
+                // PascalCase compound directory names: "IntegrationTests", "UnitTest", etc.
+                if (segment.EndsWith("Tests", StringComparison.Ordinal)
+                    || segment.EndsWith("Test", StringComparison.Ordinal)) return true;
             }
         }
 
-        // File name: use original casing to distinguish PascalCase "Tests"/"Test" suffix from
-        // English words that embed "test" (e.g. "Contest.cs", "Latest.cs", "Protest.cs").
-        // "FooTests" ends with capital "Tests" → test file ✓
-        // "Contest"  ends with lowercase "test" → not a test file ✓
-        // StartsWith check is case-insensitive to catch "testFoo.cs" and "TestFoo.cs".
-        var normPath  = path.Replace('\\', '/');
+        // File name: use original casing to distinguish PascalCase "Tests"/"Test"/"Spec" suffix
+        // from English words that embed "test" (e.g. "Contest.cs", "Latest.cs", "Protest.cs").
         var origFile  = lastSlash >= 0 ? normPath[(lastSlash + 1)..] : normPath;
         var origNoExt = origFile.Contains('.') ? origFile[..origFile.LastIndexOf('.')] : origFile;
         return origNoExt.StartsWith("test", StringComparison.OrdinalIgnoreCase)
             || origNoExt.EndsWith("Tests", StringComparison.Ordinal)
-            || origNoExt.EndsWith("Test",  StringComparison.Ordinal);
+            || origNoExt.EndsWith("Test",  StringComparison.Ordinal)
+            || origNoExt.EndsWith("Spec",  StringComparison.OrdinalIgnoreCase);
     }
 
     // Returns true when a lowercase directory segment represents a test directory.

@@ -31,7 +31,9 @@ public static class BaselineStore
         // shifts (e.g. after unrelated edits that reflow hunk positions)
         var evidence = LineNumberPrefixRegex.Replace(f.Evidence, string.Empty);
         var excerpt = evidence.Length > 100 ? evidence[..100] : evidence;
-        var raw = $"{f.RuleId}|{f.FilePath ?? ""}|{excerpt}";
+        // Normalize path separators so a baseline created on Windows matches on Linux/CI
+        var filePath = (f.FilePath ?? "").Replace('\\', '/');
+        var raw = $"{f.RuleId}|{filePath}|{excerpt}";
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(raw));
         return Convert.ToHexString(hash).ToLowerInvariant();
     }

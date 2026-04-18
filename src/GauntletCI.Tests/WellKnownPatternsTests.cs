@@ -39,6 +39,8 @@ public class WellKnownPatternsTests
     [InlineData("Contest.cs")]                             // bare name "Contest" ends with "test" mid-word
     [InlineData("Latest.cs")]                              // bare name "Latest" ends with "test" mid-word
     [InlineData("Protest.cs")]                             // bare name "Protest" ends with "test" mid-word
+    [InlineData("src/Inspectors/FooInspector.cs")]         // "inspectors" contains "spec" mid-word
+    [InlineData("src/Prospects/Lead.cs")]                  // "prospects" contains "spec" mid-word
     public async Task ProductionFileWithEmbeddedTestWord_ShouldNotBeSkipped(string path)
     {
         var diff = DiffParser.Parse(MakeDiff(path));
@@ -51,10 +53,15 @@ public class WellKnownPatternsTests
     // ── Actual test files: must be skipped ────────────────────────────────
 
     [Theory]
-    [InlineData("src/Tests/Foo.cs")]          // "Tests" directory segment
-    [InlineData("FooTests.cs")]               // file name ends with "Tests"
-    [InlineData("FooTest.cs")]                // file name ends with "Test"
-    [InlineData("TestFooService.cs")]         // file name starts with "Test"
+    [InlineData("src/Tests/Foo.cs")]                    // "Tests" directory segment
+    [InlineData("FooTests.cs")]                         // file name ends with "Tests"
+    [InlineData("FooTest.cs")]                          // file name ends with "Test"
+    [InlineData("TestFooService.cs")]                   // file name starts with "Test"
+    [InlineData("src/spec/Foo.cs")]                     // "spec" directory segment (RSpec style)
+    [InlineData("src/specs/Foo.cs")]                    // "specs" directory segment
+    [InlineData("FooSpec.cs")]                          // file name ends with "Spec"
+    [InlineData("src/IntegrationTests/FooTests.cs")]    // PascalCase compound directory
+    [InlineData("src/UnitTest/BarTest.cs")]             // PascalCase "UnitTest" directory
     public async Task ActualTestFile_ShouldBeSkipped(string path)
     {
         var diff = DiffParser.Parse(MakeDiff(path));

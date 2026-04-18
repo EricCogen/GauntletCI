@@ -179,6 +179,28 @@ public class GCI0049Tests
     }
 
     [Fact]
+    public async Task StringComparisonFirstThenFloat_ShouldFire()
+    {
+        // String comparison appears first on the line but float equality follows — must fire.
+        var raw = """
+            diff --git a/src/Core/Checker.cs b/src/Core/Checker.cs
+            index abc..def 100644
+            --- a/src/Core/Checker.cs
+            +++ b/src/Core/Checker.cs
+            @@ -3,4 +3,5 @@
+             class Checker {
+            +    bool Check(string name, double value) => name == "x" && value == 0.0;
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.NotEmpty(findings);
+        Assert.Contains(findings, f => f.RuleId == "GCI0049");
+    }
+
+    [Fact]
     public async Task CommentLine_ShouldNotFire()
     {
         var raw = """

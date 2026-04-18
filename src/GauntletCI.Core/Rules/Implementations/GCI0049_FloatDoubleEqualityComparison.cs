@@ -87,23 +87,32 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
     }
 
     /// <summary>
-    /// Returns true when the operand immediately adjacent to the first equality operator
-    /// is a quoted string literal (e.g., <c>x == "hello"</c> or <c>"hello" == x</c>).
-    /// Uses adjacent-only matching to avoid suppressing real float comparisons on lines
-    /// that also contain an unrelated string comparison (e.g., <c>value == 0.0 &amp;&amp; name == "x"</c>).
+    /// Returns true when every equality operator on the line is adjacent to a quoted string
+    /// literal — e.g. <c>name == "x"</c>. Returns false as soon as any operator is found
+    /// that is NOT adjacent to a string, so a line like <c>name == "x" &amp;&amp; value == 0.0</c>
+    /// is NOT suppressed (the float equality is still caught).
     /// </summary>
     private static bool IsLikelyStringComparison(string content)
     {
-        var eqIdx = content.IndexOf("==", StringComparison.Ordinal);
-        if (eqIdx < 0) eqIdx = content.IndexOf("!=", StringComparison.Ordinal);
-        if (eqIdx < 0) return false;
+        bool foundAny = false;
+        int searchFrom = 0;
+        while (searchFrom < content.Length)
+        {
+            int eqIdx  = content.IndexOf("==", searchFrom, StringComparison.Ordinal);
+            int neqIdx = content.IndexOf("!=", searchFrom, StringComparison.Ordinal);
+            // Pick the earlier operator; if neither found, stop
+            int opIdx = eqIdx >= 0 && (neqIdx < 0 || eqIdx <= neqIdx) ? eqIdx : neqIdx;
+            if (opIdx < 0) break;
+            foundAny = true;
 
-        // Right operand: == "..." or != "..."
-        var afterOp = content[(eqIdx + 2)..].TrimStart();
-        if (afterOp.Length > 0 && (afterOp[0] == '"' || afterOp[0] == '\'')) return true;
+            var afterOp  = content[(opIdx + 2)..].TrimStart();
+            var beforeOp = content[..opIdx].TrimEnd();
+            bool rightIsString = afterOp.Length  > 0 && (afterOp[0]   == '"' || afterOp[0]   == '\'');
+            bool leftIsString  = beforeOp.Length > 0 && (beforeOp[^1] == '"' || beforeOp[^1] == '\'');
 
-        // Left operand: "..." == or "..." !=
-        var beforeOp = content[..eqIdx].TrimEnd();
-        return beforeOp.Length > 0 && (beforeOp[^1] == '"' || beforeOp[^1] == '\'');
+            if (!rightIsString && !leftIsString) return false;
+            searchFrom = opIdx + 2;
+        }
+        return foundAny;
     }
 }

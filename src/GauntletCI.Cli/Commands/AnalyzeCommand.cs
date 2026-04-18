@@ -119,6 +119,13 @@ public static class AnalyzeCommand
                 return;
             }
 
+            if (prCommentSuggest && "json".Equals(output, StringComparison.OrdinalIgnoreCase))
+            {
+                Console.Error.WriteLine("[GauntletCI] Error: --pr-comment-suggest cannot be combined with --output json (produces invalid output). Use --output text or omit --output.");
+                ctx.ExitCode = 1;
+                return;
+            }
+
             CliBanner.PrintIfEnabled(new BannerContext
             {
                 NoBanner = noBanner,
