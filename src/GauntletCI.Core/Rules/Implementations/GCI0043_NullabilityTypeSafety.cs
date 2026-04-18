@@ -109,6 +109,9 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
             var content = addedLines[i].Content;
             if (!content.Contains(" as ", StringComparison.Ordinal)) continue;
 
+            // Skip XML doc comment lines — they contain "as" in natural prose
+            if (content.TrimStart().StartsWith("///")) continue;
+
             // Check the same line and ±2 neighboring added lines for null checks
             int start = Math.Max(0, i - 2);
             int end = Math.Min(addedLines.Count - 1, i + 2);

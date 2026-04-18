@@ -183,4 +183,30 @@ public class GCI0036Tests
 
         Assert.Empty(findings);
     }
+
+    [Fact]
+    public async Task AssignmentInGetterInTestFile_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/GauntletCI.Tests/FooTests.cs b/src/GauntletCI.Tests/FooTests.cs
+            index abc..def 100644
+            --- a/src/GauntletCI.Tests/FooTests.cs
+            +++ b/src/GauntletCI.Tests/FooTests.cs
+            @@ -1,7 +1,8 @@
+             public class FooTests {
+                 private int _count;
+                 public int Count {
+                     get {
+            +            _count = 42;
+                         return _count;
+                     }
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("mutation") || f.Summary.Contains("getter"));
+    }
 }

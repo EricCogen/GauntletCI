@@ -184,4 +184,25 @@ public class GCI0043Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("Null-forgiving"));
     }
+
+    [Fact]
+    public async Task XmlDocCommentWithAs_ShouldNotFire()
+    {
+        var raw = """
+            diff --git a/src/OrderService.cs b/src/OrderService.cs
+            index abc..def 100644
+            --- a/src/OrderService.cs
+            +++ b/src/OrderService.cs
+            @@ -1,3 +1,5 @@
+             public class OrderService {
+            +    /// <summary>Returns the result reported as a string.</summary>
+            +    public string GetReported() => "ok";
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("as-cast"));
+    }
 }

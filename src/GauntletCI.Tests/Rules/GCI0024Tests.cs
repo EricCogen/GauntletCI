@@ -116,4 +116,45 @@ public class GCI0024Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("HttpClient"));
     }
+
+    [Fact]
+    public async Task MemoryStreamInTestFile_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/GauntletCI.Tests/FileProcessorTests.cs b/src/GauntletCI.Tests/FileProcessorTests.cs
+            index abc..def 100644
+            --- a/src/GauntletCI.Tests/FileProcessorTests.cs
+            +++ b/src/GauntletCI.Tests/FileProcessorTests.cs
+            @@ -1,2 +1,4 @@
+             public class FileProcessorTests {
+            +    var ms = new MemoryStream();
+            +    ms.Write(new byte[] { 1, 2, 3 }, 0, 3);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("MemoryStream"));
+    }
+
+    [Fact]
+    public async Task MemoryStreamInProductionFile_ShouldFlag()
+    {
+        var raw = """
+            diff --git a/src/DataExporter.cs b/src/DataExporter.cs
+            index abc..def 100644
+            --- a/src/DataExporter.cs
+            +++ b/src/DataExporter.cs
+            @@ -1,2 +1,3 @@
+             public class DataExporter {
+            +    var ms = new MemoryStream();
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("MemoryStream"));
+    }
 }

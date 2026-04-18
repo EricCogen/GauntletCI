@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Text.RegularExpressions;
 using GauntletCI.Core.Analysis;
+using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 
@@ -10,7 +11,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// GCI0046 – Pattern Consistency Deviation
 /// Detects service locator anti-patterns and mixed sync/async naming within the same file.
 /// </summary>
-public class GCI0046_PatternConsistencyDeviation : RuleBase
+public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
 {
     public override string Id => "GCI0046";
     public override string Name => "Pattern Consistency Deviation";
@@ -32,6 +33,15 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase
         return string.Equals(fileName, "Program.cs", StringComparison.OrdinalIgnoreCase)
             || string.Equals(fileName, "Startup.cs", StringComparison.OrdinalIgnoreCase)
             || fileName.EndsWith("Extensions.cs", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private HashSet<string> _allowedSyncAsyncPairs = new(StringComparer.Ordinal);
+
+    public void Configure(GauntletConfig config)
+    {
+        _allowedSyncAsyncPairs = new HashSet<string>(
+            config.PatternConsistency.AllowedSyncAsyncPairs,
+            StringComparer.Ordinal);
     }
 
     public override Task<List<Finding>> EvaluateAsync(
@@ -86,6 +96,9 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase
         foreach (var baseName in asyncMethodBases)
         {
             if (!addedMethodNames.Contains(baseName)) continue;
+
+            // Skip pairs that are intentionally sync+async (configured allowlist)
+            if (_allowedSyncAsyncPairs.Contains(baseName)) continue;
 
             findings.Add(CreateFinding(
                 file,
