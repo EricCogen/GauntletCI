@@ -39,6 +39,8 @@ public static class AnalyzeCommand
         var asciiFlag = new Option<bool>("--ascii", "Use ASCII-only output (for terminals without Unicode support)");
         var noBannerOption = new Option<bool>("--no-banner", "Disable ASCII banner");
         var githubAnnotationsFlag = new Option<bool>("--github-annotations", "Emit GitHub Actions workflow commands for inline PR annotations");
+        var githubPrCommentsFlag  = new Option<bool>("--github-pr-comments",
+            "Post findings as a GitHub PR review with inline comments (requires pull-requests: write permission)");
         var withExpertCtxFlag = new Option<bool>("--with-expert-context",
             "Attach matching expert facts from the local vector store to findings (requires 'gauntletci llm seed')");
         var verboseFlag = new Option<bool>("--verbose", "Show Info-severity findings in addition to Warn and Block");
@@ -61,6 +63,7 @@ public static class AnalyzeCommand
             asciiFlag,
             noBannerOption,
             githubAnnotationsFlag,
+            githubPrCommentsFlag,
             withExpertCtxFlag,
             verboseFlag,
             severityOption,
@@ -79,7 +82,8 @@ public static class AnalyzeCommand
             var withLlm    = ctx.ParseResult.GetValueForOption(withLlmFlag);
             var ascii      = ctx.ParseResult.GetValueForOption(asciiFlag);
             var noBanner   = ctx.ParseResult.GetValueForOption(noBannerOption);
-            var ghAnnotate = ctx.ParseResult.GetValueForOption(githubAnnotationsFlag);
+            var ghAnnotate    = ctx.ParseResult.GetValueForOption(githubAnnotationsFlag);
+            var ghPrComments  = ctx.ParseResult.GetValueForOption(githubPrCommentsFlag);
             var withExpertCtx = ctx.ParseResult.GetValueForOption(withExpertCtxFlag);
             var verbose    = ctx.ParseResult.GetValueForOption(verboseFlag);
             var severityStr = ctx.ParseResult.GetValueForOption(severityOption)!;
@@ -204,6 +208,9 @@ public static class AnalyzeCommand
 
                 if (ghAnnotate)
                     GitHubAnnotationWriter.Write(result);
+
+                if (ghPrComments)
+                    await GitHubPrReviewWriter.WriteAsync(result);
 
                 await TelemetryCollector.CollectAsync(result, diff, repo.FullName);
 
