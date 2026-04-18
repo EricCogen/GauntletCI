@@ -35,7 +35,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: write
+      contents: read
     steps:
       - uses: actions/checkout@v6
         with:
@@ -53,9 +53,9 @@ jobs:
         run: dotnet build GauntletCI.slnx --no-restore --configuration Release
 
       - name: Generate PR diff
-        run: git diff origin/${{ github.base_ref }}...HEAD > pr.diff
+        run: git diff ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }} > pr.diff
 
       - name: Analyze with GauntletCI
         run: >
           dotnet run --project src/GauntletCI.Cli --no-build --configuration Release --
-          analyze --diff pr.diff --no-banner --ascii --github-annotations --severity warn
+          analyze --no-banner --ascii --github-annotations --severity warn < pr.diff
