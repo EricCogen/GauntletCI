@@ -41,7 +41,7 @@ public sealed class OllamaEmbeddingEngine : IEmbeddingEngine, IDisposable
         }
         else
         {
-            _http = new HttpClient();
+            _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
             _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
             _ownsHttpClient = true;
         }

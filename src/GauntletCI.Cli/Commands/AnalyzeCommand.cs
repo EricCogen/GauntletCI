@@ -87,6 +87,7 @@ public static class AnalyzeCommand
             var withExpertCtx = ctx.ParseResult.GetValueForOption(withExpertCtxFlag);
             var verbose    = ctx.ParseResult.GetValueForOption(verboseFlag);
             var severityStr = ctx.ParseResult.GetValueForOption(severityOption)!;
+            var ct = ctx.GetCancellationToken();
 
             // Enforce single diff source
             int sourceCount = (diffFile is not null ? 1 : 0)
@@ -119,14 +120,14 @@ public static class AnalyzeCommand
                 var diff = diffFile is not null
                     ? DiffParser.FromFile(diffFile.FullName)
                     : commit is not null
-                        ? await DiffParser.FromGitAsync(repo.FullName, commit)
+                        ? await DiffParser.FromGitAsync(repo.FullName, commit, ct)
                         : staged
-                            ? await DiffParser.FromStagedAsync(repo.FullName)
+                            ? await DiffParser.FromStagedAsync(repo.FullName, ct)
                             : unstaged
-                                ? await DiffParser.FromUnstagedAsync(repo.FullName)
+                                ? await DiffParser.FromUnstagedAsync(repo.FullName, ct)
                                 : allChanges
-                                    ? await DiffParser.FromAllChangesAsync(repo.FullName)
-                                    : DiffParser.Parse(await Console.In.ReadToEndAsync());
+                                    ? await DiffParser.FromAllChangesAsync(repo.FullName, ct)
+                                    : DiffParser.Parse(await Console.In.ReadToEndAsync(ct));
 
                 var config = ConfigLoader.Load(repo.FullName);
                 var ignoreList = IgnoreList.Load(repo.FullName);
@@ -134,7 +135,7 @@ public static class AnalyzeCommand
 
                 // Run static analysis on changed C# files (null when no repo path or no .cs changes)
                 var repoPath = diffFile is null ? repo.FullName : null;
-                var staticAnalysis = await StaticAnalysisRunner.RunAsync(diff, repoPath);
+                var staticAnalysis = await StaticAnalysisRunner.RunAsync(diff, repoPath, ct);
 
                 var result = await orchestrator.RunAsync(diff, staticAnalysis, ignoreList: ignoreList);
 
@@ -166,7 +167,6 @@ public static class AnalyzeCommand
                         if (File.Exists(vectorDbPath))
                         {
                             setStatus("Adding context...");
-                            var ct = ctx.GetCancellationToken();
                             using var store    = new GauntletCI.Llm.Embeddings.VectorStore(vectorDbPath);
                             using var embedEng = new GauntletCI.Llm.Embeddings.OllamaEmbeddingEngine();
                             var adjudicator    = new GauntletCI.Llm.Embeddings.LlmAdjudicator(embedEng, store);
@@ -219,7 +219,7 @@ public static class AnalyzeCommand
                 if (ghPrComments)
                     await GitHubPrReviewWriter.WriteAsync(result, ctx.GetCancellationToken());
 
-                await TelemetryCollector.CollectAsync(result, diff, repo.FullName);
+                await TelemetryCollector.CollectAsync(result, diff, repo.FullName, ct: ct);
 
                 // Append full-detail entry to local audit log
                 var diffSource = diffFile is not null ? "file"
@@ -247,7 +247,7 @@ public static class AnalyzeCommand
                         FilePath   = f.FilePath,
                         Line       = f.Line,
                     })],
-                });
+                }, ct);
 
                 ctx.ExitCode = result.ShouldBlock(config.ExitOn) ? 1 : 0;
             }

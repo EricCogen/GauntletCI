@@ -23,7 +23,8 @@ public static class TelemetryCollector
         EvaluationResult result,
         DiffContext diff,
         string repoRoot,
-        bool quiet = false)
+        bool quiet = false,
+        CancellationToken ct = default)
     {
         try
         {
@@ -31,7 +32,7 @@ public static class TelemetryCollector
             if (mode == TelemetryMode.Off) return;
 
             var installId = TelemetryConsent.InstallId;
-            var repoHash  = await TelemetryHasher.HashRepoAsync(repoRoot);
+            var repoHash  = await TelemetryHasher.HashRepoAsync(repoRoot, ct);
             var linesAdded   = diff.Files.Sum(f => f.Hunks.Sum(h => h.Lines.Count(l => l.Kind == DiffLineKind.Added)));
             var linesRemoved = diff.Files.Sum(f => f.Hunks.Sum(h => h.Lines.Count(l => l.Kind == DiffLineKind.Removed)));
 
