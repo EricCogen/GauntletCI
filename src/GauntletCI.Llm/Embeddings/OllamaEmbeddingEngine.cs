@@ -8,7 +8,7 @@ namespace GauntletCI.Llm.Embeddings;
 
 /// <summary>
 /// Embedding engine backed by Ollama's /api/embeddings endpoint.
-/// Default model: nomic-embed-text (pull with: ollama pull nomic-embed-text)
+/// Default model: phi4-mini:latest (pull with: ollama pull phi4-mini)
 /// Default URL: http://localhost:11434
 /// </summary>
 public sealed class OllamaEmbeddingEngine : IEmbeddingEngine, IDisposable
@@ -24,11 +24,11 @@ public sealed class OllamaEmbeddingEngine : IEmbeddingEngine, IDisposable
     public bool IsAvailable => true;
 
     /// <summary>Initializes the engine and configures the HTTP endpoint for the specified model.</summary>
-    /// <param name="model">Ollama model name to use for embeddings (e.g., <c>nomic-embed-text</c>).</param>
+    /// <param name="model">Ollama model name to use for embeddings (e.g., <c>phi4-mini:latest</c>).</param>
     /// <param name="baseUrl">Base URL of the Ollama server (default: <c>http://localhost:11434</c>).</param>
     /// <param name="http">Optional pre-configured <see cref="HttpClient"/>; a new one is created when <see langword="null"/>.</param>
     public OllamaEmbeddingEngine(
-        string model = "nomic-embed-text",
+        string model = "phi4-mini:latest",
         string baseUrl = "http://localhost:11434",
         HttpClient? http = null)
     {
