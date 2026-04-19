@@ -20,6 +20,10 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
     private static readonly string[] LoopKeywords =
         ["for (", "foreach (", "while ("];
 
+    // Unbounded loops: for/while can grow without limit. foreach is always bounded by its source.
+    private static readonly string[] UnboundedLoopKeywords =
+        ["for (", "while ("];
+
     private static bool IsTestFile(string path) =>
         path.Contains("test", StringComparison.OrdinalIgnoreCase) ||
         path.Contains("spec", StringComparison.OrdinalIgnoreCase);
@@ -29,6 +33,51 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
 
     private static bool HasLoopConstruct(string content) =>
         LoopKeywords.Any(k => content.Contains(k, StringComparison.Ordinal));
+
+    private static bool HasUnboundedLoopConstruct(string content) =>
+        UnboundedLoopKeywords.Any(k => content.Contains(k, StringComparison.Ordinal));
+
+    /// <summary>
+    /// Extracts the loop variable name from a foreach statement, e.g. "foreach (var hunk in file.Hunks)"
+    /// returns "hunk". Returns null for non-foreach constructs.
+    /// </summary>
+    private static string? ExtractForeachVariable(string content)
+    {
+        var trimmed = content.TrimStart();
+        if (!trimmed.StartsWith("foreach (", StringComparison.Ordinal) &&
+            !trimmed.StartsWith("foreach(", StringComparison.Ordinal)) return null;
+        // Pattern: foreach (var/Type name in ...)
+        var parenStart = trimmed.IndexOf('(');
+        if (parenStart < 0) return null;
+        var inner = trimmed[(parenStart + 1)..].TrimStart();
+        // Skip "var " or type name
+        int spaceAfterType = inner.IndexOf(' ');
+        if (spaceAfterType < 0) return null;
+        inner = inner[(spaceAfterType + 1)..].TrimStart();
+        // Next token is the variable name, terminated by space or ')'
+        int endOfVar = inner.IndexOfAny([' ', ')']);
+        return endOfVar > 0 ? inner[..endOfVar] : null;
+    }
+
+    /// <summary>
+    /// Returns true when the LINQ call's receiver starts with the loop variable (or its member),
+    /// meaning the LINQ is bounded filtering of the current iteration's data.
+    /// e.g. "hunk.Lines.Where(...)" with loopVar="hunk" → true (skip: bounded)
+    /// e.g. "allItems.Where(i => order.Id)" with loopVar="order" → false (flag: O(n²))
+    /// </summary>
+    private static bool LinqIsOnLoopVariable(string content, string loopVar)
+    {
+        foreach (var method in LinqMethods)
+        {
+            int idx = content.IndexOf(method, StringComparison.Ordinal);
+            if (idx <= 0) continue;
+            var receiver = content[..idx].TrimStart();
+            if (receiver.StartsWith(loopVar + ".", StringComparison.Ordinal) ||
+                receiver.Equals(loopVar, StringComparison.Ordinal))
+                return true;
+        }
+        return false;
+    }
 
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
@@ -76,16 +125,23 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
 
                 int lookbackStart = Math.Max(0, i - 10);
                 bool inLoop = false;
+                string? loopVar = null;
                 for (int j = lookbackStart; j < i; j++)
                 {
                     if (HasLoopConstruct(addedLines[j].Content))
                     {
                         inLoop = true;
+                        loopVar = ExtractForeachVariable(addedLines[j].Content);
                         break;
                     }
                 }
 
                 if (!inLoop) continue;
+
+                // Skip when the LINQ is called directly on the loop variable's own members —
+                // that's bounded filtering of the current iteration's data, not O(n²).
+                if (loopVar is not null && LinqIsOnLoopVariable(addedLines[i].Content, loopVar))
+                    continue;
 
                 findings.Add(CreateFinding(
                     file,
@@ -113,17 +169,18 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
                 if (!content.Contains(".Add(", StringComparison.Ordinal)) continue;
 
                 int lookbackStart = Math.Max(0, i - 10);
-                bool inLoop = false;
+                bool inUnboundedLoop = false;
                 for (int j = lookbackStart; j < i; j++)
                 {
-                    if (HasLoopConstruct(addedLines[j].Content))
+                    if (HasUnboundedLoopConstruct(addedLines[j].Content))
                     {
-                        inLoop = true;
+                        inUnboundedLoop = true;
                         break;
                     }
                 }
 
-                if (!inLoop) continue;
+                // Only flag unbounded loops (for/while). foreach is bounded by its source enumerable.
+                if (!inUnboundedLoop) continue;
 
                 findings.Add(CreateFinding(
                     file,

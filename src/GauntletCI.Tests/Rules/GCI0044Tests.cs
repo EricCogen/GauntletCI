@@ -77,8 +77,36 @@ public class GCI0044Tests
     }
 
     [Fact]
-    public async Task AddInsideLoop_ShouldFire()
+    public async Task AddInsideWhileLoop_ShouldFire()
     {
+        // Unbounded while loop with .Add — this is a genuine memory growth risk
+        var raw = """
+            diff --git a/src/AggregatorService.cs b/src/AggregatorService.cs
+            index abc..def 100644
+            --- a/src/AggregatorService.cs
+            +++ b/src/AggregatorService.cs
+            @@ -1,3 +1,9 @@
+             public class AggregatorService {
+            +    public List<Result> Poll() {
+            +        var results = new List<Result>();
+            +        while (reader.HasNext()) {
+            +            results.Add(reader.ReadNext());
+            +        }
+            +        return results;
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains(".Add"));
+    }
+
+    [Fact]
+    public async Task AddInsideForeachLoop_ShouldNotFire()
+    {
+        // foreach is bounded by its input — accumulating results is a standard safe pattern
         var raw = """
             diff --git a/src/AggregatorService.cs b/src/AggregatorService.cs
             index abc..def 100644
@@ -99,7 +127,7 @@ public class GCI0044Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f => f.Summary.Contains(".Add"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains(".Add"));
     }
 
     [Fact]

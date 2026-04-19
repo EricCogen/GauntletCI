@@ -62,6 +62,11 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
                 // Skip string literals — crude but effective: skip if inside a quoted region
                 if (IsLikelyStringComparison(content)) continue;
 
+                // Position-based string literal check (covers verbatim strings @"..."):
+                // count unescaped quotes before the match position to detect inside-string context.
+                var matchIdx = GetFirstMatchIndex(content);
+                if (IsInsideStringLiteralAt(content, matchIdx)) continue;
+
                 // Syntax guard: suppress if the match position is inside a comment or string literal.
                 if (context.Syntax?.IsInCommentOrStringLiteral(
                         file.NewPath, line.LineNumber, GetFirstMatchIndex(content)) == true)
@@ -105,6 +110,23 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
     {
         var m = regex.Match(content);
         if (m.Success && m.Index < min) min = m.Index;
+    }
+
+    /// <summary>
+    /// Returns true when the character at <paramref name="position"/> is inside a string literal,
+    /// determined by counting unescaped double-quotes before that position.
+    /// Works for both regular "..." and verbatim @"..." strings.
+    /// </summary>
+    private static bool IsInsideStringLiteralAt(string content, int position)
+    {
+        if (position <= 0) return false;
+        int quoteCount = 0;
+        for (int i = 0; i < Math.Min(position, content.Length); i++)
+        {
+            if (content[i] == '"' && (i == 0 || content[i - 1] != '\\'))
+                quoteCount++;
+        }
+        return quoteCount % 2 != 0;
     }
 
     /// <summary>

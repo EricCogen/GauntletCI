@@ -42,22 +42,28 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
     {
         foreach (var file in diff.Files)
         {
-            var addedLines = file.AddedLines.ToList();
-            for (int i = 0; i < addedLines.Count; i++)
-            {
-                var content = addedLines[i].Content.Trim();
+            // Use ALL hunk lines (added + context) so we can inspect the full catch body,
+            // even when only the catch declaration line itself is new.
+            var allLines = file.Hunks
+                .SelectMany(h => h.Lines)
+                .ToList();
 
-                // Detect catch blocks
+            for (int i = 0; i < allLines.Count; i++)
+            {
+                var dl = allLines[i];
+                if (dl.Kind != DiffLineKind.Added) continue;
+
+                var content = dl.Content.Trim();
                 if (!content.StartsWith("catch", StringComparison.Ordinal)) continue;
 
-                // Cancellation exceptions are commonly swallowed intentionally (shutdown/background work).
+                // Cancellation exceptions are commonly swallowed intentionally.
                 if (content.Contains("TaskCanceledException", StringComparison.Ordinal) ||
                     content.Contains("OperationCanceledException", StringComparison.Ordinal))
                 {
                     continue;
                 }
 
-                bool isSwallowed = IsCatchSwallowed(addedLines, i, out string evidence);
+                bool isSwallowed = IsCatchSwallowed(allLines, i, out string evidence);
                 if (isSwallowed)
                 {
                     findings.Add(CreateFinding(
@@ -67,7 +73,7 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
                         whyItMatters: "Empty or silent catch blocks hide failures, making bugs invisible and debugging nearly impossible.",
                         suggestedAction: "Log the exception, rethrow it, or handle it explicitly. Never swallow silently.",
                         confidence: Confidence.High,
-                        line: addedLines[i]));
+                        line: dl));
                 }
             }
         }

@@ -67,11 +67,11 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
 
             var removedSigs = file.RemovedLines
-                .Where(l => AccessModifiers.Any(m => l.Content.Contains(m)) && l.Content.Contains('('))
+                .Where(l => { var t = l.Content.TrimStart(); return AccessModifiers.Any(m => t.StartsWith(m, StringComparison.Ordinal)) && t.Contains('('); })
                 .ToList();
 
             var addedSigs = file.AddedLines
-                .Where(l => AccessModifiers.Any(m => l.Content.Contains(m)) && l.Content.Contains('('))
+                .Where(l => { var t = l.Content.TrimStart(); return AccessModifiers.Any(m => t.StartsWith(m, StringComparison.Ordinal)) && t.Contains('('); })
                 .ToList();
 
             foreach (var removed in removedSigs)

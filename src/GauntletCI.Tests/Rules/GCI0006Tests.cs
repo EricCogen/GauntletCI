@@ -49,9 +49,30 @@ public class GCI0006Tests
     }
 
     [Fact]
-    public async Task PublicMethodWithStringParam_ShouldFlag()
+    public async Task PublicMethodWithNullableStringParam_ShouldFlag()
     {
-        // Public method with string param, no null check in next lines
+        // Public method with nullable string? param and no null check — should flag
+        var raw = """
+            diff --git a/src/Processor.cs b/src/Processor.cs
+            index abc..def 100644
+            --- a/src/Processor.cs
+            +++ b/src/Processor.cs
+            @@ -1,1 +1,3 @@
+             // existing
+            +public void Process(string? input)
+            +{
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
+
+    [Fact]
+    public async Task PublicMethodWithNonNullableStringParam_ShouldNotFlag()
+    {
+        // Non-nullable string is compiler-enforced in nullable-enabled C# — no guard needed
         var raw = """
             diff --git a/src/Processor.cs b/src/Processor.cs
             index abc..def 100644
@@ -66,11 +87,11 @@ public class GCI0006Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f => f.Summary.Contains("parameter(s) added"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
     }
 
     [Fact]
-    public async Task PublicMethodWithStringParam_WithNullCheck_ShouldNotFlag()
+    public async Task PublicMethodWithNullableStringParam_WithNullCheck_ShouldNotFlag()
     {
         var raw = """
             diff --git a/src/Processor.cs b/src/Processor.cs
@@ -79,7 +100,7 @@ public class GCI0006Tests
             +++ b/src/Processor.cs
             @@ -1,1 +1,4 @@
              // existing
-            +public void Process(string input)
+            +public void Process(string? input)
             +{
             +    ArgumentNullException.ThrowIfNull(input);
             +}

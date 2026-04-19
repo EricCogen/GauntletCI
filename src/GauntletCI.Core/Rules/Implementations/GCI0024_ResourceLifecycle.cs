@@ -43,6 +43,19 @@ public class GCI0024_ResourceLifecycle : RuleBase
         "Certificate", "Scope", "Timer", "Enumerator"
     ];
 
+    // Types whose names end with a disposable suffix but are NOT IDisposable.
+    // Avoids false positives on well-known types that look disposable by name convention only.
+    private static readonly HashSet<string> KnownNonDisposableTypes = new(StringComparer.Ordinal)
+    {
+        "SyntaxContext",      // GauntletCI internal analysis context
+        "InvocationContext",  // System.CommandLine — not IDisposable
+        "ParseResult",        // System.CommandLine — not IDisposable
+        "AnalysisContext",    // GauntletCI internal
+        "DiffContext",        // GauntletCI internal
+        "HttpContext",        // ASP.NET Core — managed by the framework
+        "DbContext",          // EF Core — typically DI-managed
+    };
+
     private static readonly Regex NewTypeRegex =
         new(@"new ([A-Z][A-Za-z0-9]+)\(", RegexOptions.Compiled);
 
@@ -137,7 +150,8 @@ public class GCI0024_ResourceLifecycle : RuleBase
         if (match.Success)
         {
             var name = match.Groups[1].Value;
-            if (DisposableSuffixes.Any(suffix => name.EndsWith(suffix, StringComparison.Ordinal)))
+            if (!KnownNonDisposableTypes.Contains(name) &&
+                DisposableSuffixes.Any(suffix => name.EndsWith(suffix, StringComparison.Ordinal)))
                 return (name, false);
         }
 
