@@ -36,4 +36,6 @@ public class Finding
     public string? CodeSnippet { get; set; }
     /// <summary>Optional coverage annotation added by the Codecov correlation step.</summary>
     public string? CoverageNote { get; set; }
+    /// <summary>Optional ticket context fetched from Jira, Linear, or GitHub Issues.</summary>
+    public TicketInfo? TicketContext { get; set; }
 }

@@ -136,6 +136,17 @@ public static class GitHubPrReviewWriter
             sb.AppendLine($"📊 **Coverage:** {finding.CoverageNote}");
         }
 
+        if (finding.TicketContext is not null)
+        {
+            var t = finding.TicketContext;
+            var link = t.Url is not null ? $"[{t.Id}]({t.Url})" : t.Id;
+            sb.AppendLine();
+            sb.AppendLine($"🎫 **Ticket ({t.Provider}):** {link} — {t.Title}");
+            if (!string.IsNullOrWhiteSpace(t.Description))
+                sb.AppendLine($"> {t.Description}");
+            sb.AppendLine();
+        }
+
         sb.AppendLine();
         sb.Append($"<sub>Confidence: {finding.Confidence} | Severity: {finding.Severity}</sub>");
 
