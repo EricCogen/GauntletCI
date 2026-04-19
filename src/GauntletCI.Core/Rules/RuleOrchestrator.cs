@@ -131,6 +131,7 @@ public class RuleOrchestrator
             FileStatistics = fileStatistics,
             Diff           = filteredDiff,
             StaticAnalysis = staticAnalysis,
+            TargetFramework = staticAnalysis?.TargetFramework,
         };
 
         var allFindings = new List<Finding>();

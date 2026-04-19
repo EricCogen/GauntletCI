@@ -32,13 +32,15 @@ public static class StaticAnalysisRunner
         if (string.IsNullOrEmpty(repoPath))
             return null;
 
+        var tfm = TargetFrameworkDetector.Detect(repoPath);
+
         var csFiles = diff.Files
             .Where(f => !f.IsDeleted &&
                         f.NewPath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
             .ToList();
 
         if (csFiles.Count == 0)
-            return null;
+            return tfm is null ? null : new AnalyzerResult { TargetFramework = tfm, Success = true };
 
         var allDiagnostics = new List<AnalyzerDiagnostic>();
         var anySuccess = false;
@@ -82,7 +84,8 @@ public static class StaticAnalysisRunner
         {
             AnalyzedFile = $"[{csFiles.Count} file(s)]",
             Success = anySuccess,
-            Diagnostics = allDiagnostics
+            Diagnostics = allDiagnostics,
+            TargetFramework = tfm,
         };
     }
 }

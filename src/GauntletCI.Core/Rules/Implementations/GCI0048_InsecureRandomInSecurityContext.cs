@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
+using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -32,6 +33,12 @@ public class GCI0048_InsecureRandomInSecurityContext : RuleBase
         AnalysisContext context, CancellationToken ct = default)
     {
         var findings = new List<Finding>();
+        var isNet8Plus = TargetFrameworkDetector.IsNet8OrLater(context.TargetFramework);
+        var suggestedAction = isNet8Plus
+            ? "Replace with RandomNumberGenerator.GetBytes() or RandomNumberGenerator.GetHexString() " +
+              "(.NET 8+) for security-sensitive values."
+            : "Replace with RandomNumberGenerator.GetBytes() (System.Security.Cryptography) " +
+              "for security-sensitive values.";
 
         foreach (var file in context.Diff.Files)
         {
@@ -66,8 +73,7 @@ public class GCI0048_InsecureRandomInSecurityContext : RuleBase
                     whyItMatters: "System.Random is a pseudo-random number generator seeded from the system clock. " +
                                   "Its output is predictable and must never be used for cryptographic purposes " +
                                   "such as generating tokens, keys, salts, nonces, or passwords.",
-                    suggestedAction: "Replace with RandomNumberGenerator.GetBytes() (System.Security.Cryptography) " +
-                                     "or RandomNumberGenerator.GetHexString() (.NET 8+) for security-sensitive values.",
+                    suggestedAction: suggestedAction,
                     confidence: Confidence.High,
                     line: line));
             }

@@ -30,4 +30,11 @@ public sealed class AnalysisContext
 
     /// <summary>Optional static analysis results for the diff.</summary>
     public AnalyzerResult? StaticAnalysis { get; init; }
+
+    /// <summary>
+    /// Primary target framework moniker detected from the repo's .csproj files
+    /// (e.g. <c>net8.0</c>, <c>net9.0</c>). Null when detection was not possible.
+    /// Rules use this to tailor suggested actions to the target platform.
+    /// </summary>
+    public string? TargetFramework { get; init; }
 }

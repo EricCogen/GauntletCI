@@ -11,6 +11,11 @@ public class AnalyzerResult
     public string AnalyzedFile { get; init; } = string.Empty;
     public bool Success { get; init; }
     public string? ErrorMessage { get; init; }
+    /// <summary>
+    /// Primary target framework moniker detected from the repo's .csproj files
+    /// (e.g. <c>net8.0</c>, <c>net6.0</c>). Null when detection was not possible.
+    /// </summary>
+    public string? TargetFramework { get; init; }
 }
 
 public class AnalyzerDiagnostic

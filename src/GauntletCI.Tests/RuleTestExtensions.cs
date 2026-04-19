@@ -23,7 +23,8 @@ internal static class RuleTestExtensions
         this IRule rule,
         DiffContext diff,
         AnalyzerResult? staticAnalysis = null,
-        CancellationToken ct = default)
+        CancellationToken ct = default,
+        string? targetFramework = null)
     {
         var allRecords      = diff.Files.Select(f => FileAnalyzer.Analyze(f)).ToList();
         var eligibleRecords = allRecords.Where(r => r.IsEligible).ToList();
@@ -43,11 +44,12 @@ internal static class RuleTestExtensions
 
         var context = new AnalysisContext
         {
-            EligibleFiles  = eligibleRecords,
-            SkippedFiles   = skippedRecords,
-            FileStatistics = FileEligibilityStatistics.From(allRecords),
-            Diff           = filteredDiff,
-            StaticAnalysis = staticAnalysis,
+            EligibleFiles   = eligibleRecords,
+            SkippedFiles    = skippedRecords,
+            FileStatistics  = FileEligibilityStatistics.From(allRecords),
+            Diff            = filteredDiff,
+            StaticAnalysis  = staticAnalysis,
+            TargetFramework = targetFramework ?? staticAnalysis?.TargetFramework,
         };
 
         return rule.EvaluateAsync(context, ct);

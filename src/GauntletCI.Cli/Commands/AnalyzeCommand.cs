@@ -34,7 +34,7 @@ public static class AnalyzeCommand
         var outputOption = new Option<string>(
             "--output",
             () => "text",
-            "Output format: text or json");
+            "Output format: text, json, or sarif");
         var noLlmFlag = new Option<bool>("--no-llm", "Disable LLM enrichment (deprecated — LLM is now opt-in via --with-llm)") { IsHidden = true };
         var withLlmFlag = new Option<bool>("--with-llm", "Enable LLM enrichment of High-confidence findings (requires 'gauntletci model download', adds latency)");
         var asciiFlag = new Option<bool>("--ascii", "Use ASCII-only output (for terminals without Unicode support)");
@@ -119,7 +119,8 @@ public static class AnalyzeCommand
                 return;
             }
 
-            if (prCommentSuggest && "json".Equals(output, StringComparison.OrdinalIgnoreCase))
+            if (prCommentSuggest && ("json".Equals(output, StringComparison.OrdinalIgnoreCase)
+                || "sarif".Equals(output, StringComparison.OrdinalIgnoreCase)))
             {
                 Console.Error.WriteLine("[GauntletCI] Error: --pr-comment-suggest cannot be combined with --output json (produces invalid output). Use --output text or omit --output.");
                 ctx.ExitCode = 1;
@@ -131,7 +132,6 @@ public static class AnalyzeCommand
                 NoBanner = noBanner,
                 OutputFormat = output ?? "text",
             });
-
             try
             {
                 var diff = diffFile is not null
@@ -170,8 +170,9 @@ public static class AnalyzeCommand
 
                 using ILlmEngine llm = await LlmEngineSelector.ResolveAsync(config, withLlm && !noLlm);
 
-                var isJsonOutput = (output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase);
-                var showSpinner  = llm.IsAvailable && !isJsonOutput && !Console.IsOutputRedirected;
+                var isJsonOutput  = (output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase);
+                var isSarifOutput = (output ?? "text").Equals("sarif", StringComparison.OrdinalIgnoreCase);
+                var showSpinner   = llm.IsAvailable && !isJsonOutput && !isSarifOutput && !Console.IsOutputRedirected;
 
                 async Task RunLlmStepsAsync(Action<string>? setStatus = null)
                 {
@@ -231,7 +232,11 @@ public static class AnalyzeCommand
                 else
                     await RunLlmStepsAsync();
 
-                if ((output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase))
+                if (isSarifOutput)
+                {
+                    SarifWriter.Write(result);
+                }
+                else if ((output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase))
                 {
                     // Always emit a consistent schema regardless of baseline suppression.
                     // RuleMetrics FindingCount is recomputed from remaining (non-suppressed) findings.
