@@ -38,8 +38,16 @@ public class GCI0004_BreakingChangeRisk : RuleBase
 
             if (removedPublic.Count == 0) continue;
 
-            var addedSigNames = file.AddedLines
+            var addedPublicLines = file.AddedLines
                 .Where(l => IsPublicSignature(l.Content))
+                .ToList();
+
+            // Exact trimmed content still present → member is unchanged (overload scenario)
+            var addedSigContent = addedPublicLines
+                .Select(l => l.Content.Trim())
+                .ToHashSet();
+
+            var addedSigNames = addedPublicLines
                 .Select(l => ExtractMemberName(l.Content))
                 .Where(n => n != null)
                 .ToHashSet();
@@ -48,6 +56,9 @@ public class GCI0004_BreakingChangeRisk : RuleBase
             {
                 var name = ExtractMemberName(removed.Content);
                 if (name is null) continue;
+
+                // Exact signature is still present in added lines — unchanged overload, skip.
+                if (addedSigContent.Contains(removed.Content.Trim())) continue;
 
                 if (!addedSigNames.Contains(name))
                 {
@@ -61,9 +72,10 @@ public class GCI0004_BreakingChangeRisk : RuleBase
                 }
                 else
                 {
-                    // Signature changed — compare lines directly
-                    var addedLine = file.AddedLines
-                        .FirstOrDefault(l => ExtractMemberName(l.Content) == name && l.Content != removed.Content);
+                    // Signature changed — find a genuinely different added overload with the same name.
+                    var addedLine = addedPublicLines
+                        .FirstOrDefault(l => ExtractMemberName(l.Content) == name
+                                          && l.Content.Trim() != removed.Content.Trim());
                     if (addedLine != null && !IsBackwardCompatibleExtension(removed.Content, addedLine.Content))
                     {
                         findings.Add(CreateFinding(
