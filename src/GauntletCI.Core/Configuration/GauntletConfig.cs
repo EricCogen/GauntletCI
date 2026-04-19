@@ -36,6 +36,18 @@ public class GauntletConfig
 
     /// <summary>Experimental feature flags. Settings here may change or be removed without notice.</summary>
     public ExperimentalConfig Experimental { get; set; } = new();
+
+    /// <summary>CI/CD output integration settings (GitHub PR comments, Checks API, annotations).</summary>
+    public CiConfig Ci { get; set; } = new();
+
+    /// <summary>Notification webhook settings (Slack, Teams).</summary>
+    public NotificationsConfig Notifications { get; set; } = new();
+
+    /// <summary>Default output and display settings.</summary>
+    public OutputConfig Output { get; set; } = new();
+
+    /// <summary>Ticket provider integration settings (Jira, Linear, GitHub Issues).</summary>
+    public TicketProviderConfig TicketProvider { get; set; } = new();
 }
 
 /// <summary>Per-rule configuration overrides.</summary>
@@ -111,6 +123,19 @@ public class LlmConfig
     /// Default: <c>phi4-mini:latest</c> (pull with: <c>ollama pull phi4-mini</c>).
     /// </summary>
     public string EmbeddingModel { get; set; } = "phi4-mini:latest";
+
+    /// <summary>
+    /// Enable LLM enrichment of High-confidence findings by default.
+    /// Equivalent to passing --with-llm on every invocation.
+    /// </summary>
+    public bool Enabled { get; set; } = false;
+
+    /// <summary>
+    /// Attach expert context from the local vector store by default.
+    /// Equivalent to passing --with-expert-context on every invocation.
+    /// Requires 'gauntletci llm seed' to have been run.
+    /// </summary>
+    public bool ExpertContext { get; set; } = false;
 }
 
 /// <summary>
@@ -198,4 +223,63 @@ public class PatternConsistencyConfig
     /// Example: ["Subscribe", "Unsubscribe", "Register", "Deregister"]
     /// </summary>
     public string[] AllowedSyncAsyncPairs { get; set; } = [];
+}
+
+/// <summary>CI/CD output integration settings.</summary>
+public class CiConfig
+{
+    /// <summary>Post findings as a GitHub PR review with inline comments. Equivalent to --github-pr-comments.</summary>
+    public bool PrComments { get; set; } = false;
+
+    /// <summary>Post findings as a GitHub Checks API check run with annotations. Equivalent to --github-checks.</summary>
+    public bool Checks { get; set; } = false;
+
+    /// <summary>Emit GitHub Actions workflow commands for inline PR annotations. Equivalent to --github-annotations.</summary>
+    public bool Annotations { get; set; } = false;
+
+    /// <summary>Correlate findings with Codecov coverage data. Equivalent to --with-coverage.</summary>
+    public bool Coverage { get; set; } = false;
+}
+
+/// <summary>Notification webhook settings.</summary>
+public class NotificationsConfig
+{
+    /// <summary>
+    /// Slack Incoming Webhook URL. Posts Block findings to Slack.
+    /// Equivalent to --notify-slack. Can also be set via GAUNTLETCI_SLACK_WEBHOOK env var.
+    /// </summary>
+    public string? SlackWebhook { get; set; }
+
+    /// <summary>
+    /// Microsoft Teams Incoming Webhook URL. Posts Block findings to Teams.
+    /// Equivalent to --notify-teams. Can also be set via GAUNTLETCI_TEAMS_WEBHOOK env var.
+    /// </summary>
+    public string? TeamsWebhook { get; set; }
+}
+
+/// <summary>Default output and display settings.</summary>
+public class OutputConfig
+{
+    /// <summary>
+    /// Minimum severity to display: info, warn, block. Defaults to warn.
+    /// Equivalent to --severity. CLI flag overrides this value.
+    /// </summary>
+    public string MinSeverity { get; set; } = "warn";
+
+    /// <summary>Enable verbose output (show Info-severity findings). Equivalent to --verbose.</summary>
+    public bool Verbose { get; set; } = false;
+
+    /// <summary>Output format: text, json, or sarif. Defaults to text. Equivalent to --output.</summary>
+    public string Format { get; set; } = "text";
+}
+
+/// <summary>Ticket provider integration settings.</summary>
+public class TicketProviderConfig
+{
+    /// <summary>
+    /// Enable ticket context enrichment. Parses branch name and GITHUB_PR_BODY for issue keys
+    /// and fetches ticket details from Jira, Linear, or GitHub Issues.
+    /// Equivalent to --with-ticket-context.
+    /// </summary>
+    public bool Enabled { get; set; } = false;
 }

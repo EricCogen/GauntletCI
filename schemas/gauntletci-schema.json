@@ -34,6 +34,18 @@
         "type": "array",
         "items": { "type": "string" }
       }
+    },
+    "ci": {
+      "$ref": "#/definitions/CiConfig"
+    },
+    "notifications": {
+      "$ref": "#/definitions/NotificationsConfig"
+    },
+    "output": {
+      "$ref": "#/definitions/OutputConfig"
+    },
+    "ticketProvider": {
+      "$ref": "#/definitions/TicketProviderConfig"
     }
   },
   "definitions": {
@@ -88,6 +100,94 @@
           "type": "string",
           "description": "Environment variable name that holds the GauntletCI license key.",
           "default": "GAUNTLETCI_LICENSE"
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable LLM enrichment by default. Equivalent to --with-llm on every run.",
+          "default": false
+        },
+        "expertContext": {
+          "type": "boolean",
+          "description": "Attach expert context from the local vector store by default. Equivalent to --with-expert-context.",
+          "default": false
+        }
+      }
+    },
+    "CiConfig": {
+      "type": "object",
+      "description": "CI/CD output integration settings.",
+      "additionalProperties": false,
+      "properties": {
+        "prComments": {
+          "type": "boolean",
+          "description": "Post findings as a GitHub PR review with inline comments. Equivalent to --github-pr-comments.",
+          "default": false
+        },
+        "checks": {
+          "type": "boolean",
+          "description": "Post findings as a GitHub Checks API check run. Equivalent to --github-checks.",
+          "default": false
+        },
+        "annotations": {
+          "type": "boolean",
+          "description": "Emit GitHub Actions workflow commands for inline annotations. Equivalent to --github-annotations.",
+          "default": false
+        },
+        "coverage": {
+          "type": "boolean",
+          "description": "Correlate findings with Codecov coverage data. Equivalent to --with-coverage.",
+          "default": false
+        }
+      }
+    },
+    "NotificationsConfig": {
+      "type": "object",
+      "description": "Notification webhook settings.",
+      "additionalProperties": false,
+      "properties": {
+        "slackWebhook": {
+          "type": "string",
+          "description": "Slack Incoming Webhook URL. Posts Block findings to Slack. Equivalent to --notify-slack."
+        },
+        "teamsWebhook": {
+          "type": "string",
+          "description": "Microsoft Teams Incoming Webhook URL. Posts Block findings to Teams. Equivalent to --notify-teams."
+        }
+      }
+    },
+    "OutputConfig": {
+      "type": "object",
+      "description": "Default output and display settings.",
+      "additionalProperties": false,
+      "properties": {
+        "minSeverity": {
+          "type": "string",
+          "description": "Minimum severity to display. Equivalent to --severity. CLI flag overrides this.",
+          "enum": ["info", "warn", "block"],
+          "default": "warn"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Show Info-severity findings. Equivalent to --verbose.",
+          "default": false
+        },
+        "format": {
+          "type": "string",
+          "description": "Output format. Equivalent to --output. CLI flag overrides this.",
+          "enum": ["text", "json", "sarif"],
+          "default": "text"
+        }
+      }
+    },
+    "TicketProviderConfig": {
+      "type": "object",
+      "description": "Ticket provider integration settings.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable ticket context enrichment by default. Equivalent to --with-ticket-context.",
+          "default": false
         }
       }
     }
