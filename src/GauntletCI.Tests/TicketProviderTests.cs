@@ -87,28 +87,58 @@ public class TicketResolverTests
     [Fact]
     public void JiraProvider_IsNotAvailable_WhenEnvVarsMissing()
     {
-        Environment.SetEnvironmentVariable("JIRA_BASE_URL", null);
-        Environment.SetEnvironmentVariable("JIRA_API_TOKEN", null);
-        Environment.SetEnvironmentVariable("JIRA_USER_EMAIL", null);
-        var provider = new JiraTicketProvider();
-        Assert.False(provider.IsAvailable);
+        var prevUrl   = Environment.GetEnvironmentVariable("JIRA_BASE_URL");
+        var prevToken = Environment.GetEnvironmentVariable("JIRA_API_TOKEN");
+        var prevEmail = Environment.GetEnvironmentVariable("JIRA_USER_EMAIL");
+        try
+        {
+            Environment.SetEnvironmentVariable("JIRA_BASE_URL",   null);
+            Environment.SetEnvironmentVariable("JIRA_API_TOKEN",  null);
+            Environment.SetEnvironmentVariable("JIRA_USER_EMAIL", null);
+            var provider = new JiraTicketProvider();
+            Assert.False(provider.IsAvailable);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("JIRA_BASE_URL",   prevUrl);
+            Environment.SetEnvironmentVariable("JIRA_API_TOKEN",  prevToken);
+            Environment.SetEnvironmentVariable("JIRA_USER_EMAIL", prevEmail);
+        }
     }
 
     [Fact]
     public void LinearProvider_IsNotAvailable_WhenEnvVarMissing()
     {
-        Environment.SetEnvironmentVariable("LINEAR_API_KEY", null);
-        var provider = new LinearTicketProvider();
-        Assert.False(provider.IsAvailable);
+        var prev = Environment.GetEnvironmentVariable("LINEAR_API_KEY");
+        try
+        {
+            Environment.SetEnvironmentVariable("LINEAR_API_KEY", null);
+            var provider = new LinearTicketProvider();
+            Assert.False(provider.IsAvailable);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("LINEAR_API_KEY", prev);
+        }
     }
 
     [Fact]
     public void GitHubProvider_IsNotAvailable_WhenEnvVarMissing()
     {
-        Environment.SetEnvironmentVariable("GITHUB_TOKEN", null);
-        Environment.SetEnvironmentVariable("GITHUB_REPOSITORY", null);
-        var provider = new GitHubIssueProvider();
-        Assert.False(provider.IsAvailable);
+        var prevToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+        var prevRepo  = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
+        try
+        {
+            Environment.SetEnvironmentVariable("GITHUB_TOKEN",      null);
+            Environment.SetEnvironmentVariable("GITHUB_REPOSITORY", null);
+            var provider = new GitHubIssueProvider();
+            Assert.False(provider.IsAvailable);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("GITHUB_TOKEN",      prevToken);
+            Environment.SetEnvironmentVariable("GITHUB_REPOSITORY", prevRepo);
+        }
     }
 
     [Fact]
@@ -185,8 +215,16 @@ public class TicketResolverTests
     [Fact]
     public async Task AnnotateFindingsAsync_NoFindings_DoesNotThrow()
     {
-        // Should soft-fail without throwing even when branch has a key but no credentials
-        Environment.SetEnvironmentVariable("GITHUB_PR_BODY", null);
-        await TicketResolver.AnnotateFindingsAsync("main", [], CancellationToken.None);
+        // No findings → should return immediately without throwing, even on branches with no key.
+        var prev = Environment.GetEnvironmentVariable("GITHUB_PR_BODY");
+        try
+        {
+            Environment.SetEnvironmentVariable("GITHUB_PR_BODY", null);
+            await TicketResolver.AnnotateFindingsAsync("main", [], CancellationToken.None);
+        }
+        finally
+        {
+            Environment.SetEnvironmentVariable("GITHUB_PR_BODY", prev);
+        }
     }
 }

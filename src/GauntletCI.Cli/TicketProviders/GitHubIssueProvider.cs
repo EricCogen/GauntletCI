@@ -21,12 +21,12 @@ public sealed class GitHubIssueProvider : ITicketProvider
         // issueKey may be "#42" or "42"
         var number = issueKey.TrimStart('#');
 
-        var req = new HttpRequestMessage(HttpMethod.Get,
+        using var req = new HttpRequestMessage(HttpMethod.Get,
             $"https://api.github.com/repos/{repository}/issues/{number}");
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         req.Headers.Accept.ParseAdd("application/vnd.github+json");
 
-        var resp = await Http.SendAsync(req, ct);
+        using var resp = await Http.SendAsync(req, ct);
         if (!resp.IsSuccessStatusCode) return null;
 
         var json = await resp.Content.ReadAsStringAsync(ct);

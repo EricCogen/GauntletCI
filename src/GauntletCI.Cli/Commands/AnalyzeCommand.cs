@@ -189,7 +189,7 @@ public static class AnalyzeCommand
                     string? branchName = null;
                     try
                     {
-                        var gitProc = new System.Diagnostics.Process
+                        using var gitProc = new System.Diagnostics.Process
                         {
                             StartInfo = new System.Diagnostics.ProcessStartInfo("git", "rev-parse --abbrev-ref HEAD")
                             {
