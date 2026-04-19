@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
 
@@ -102,7 +103,7 @@ public static class GitHubPrReviewWriter
         if (!string.IsNullOrWhiteSpace(finding.Evidence))
         {
             sb.AppendLine();
-            sb.AppendLine($"> {finding.Evidence}");
+            sb.AppendLine(FormatEvidenceMarkdown(finding.Evidence));
         }
 
         if (!string.IsNullOrWhiteSpace(finding.WhyItMatters))
@@ -133,6 +134,47 @@ public static class GitHubPrReviewWriter
         sb.Append($"<sub>Confidence: {finding.Confidence} | Severity: {finding.Severity}</sub>");
 
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Formats an evidence string as GitHub-flavored Markdown.
+    /// <list type="bullet">
+    ///   <item><c>Was: X | Now: Y</c> → diff code block with a red removed line and a green added line.</item>
+    ///   <item><c>Removed: X</c> → diff code block with a single red removed line.</item>
+    ///   <item><c>Removed logic: A | B | C</c> → diff code block with one red line per item.</item>
+    ///   <item>Anything else → plain blockquote.</item>
+    /// </list>
+    /// </summary>
+    public static string FormatEvidenceMarkdown(string evidence)
+    {
+        if (string.IsNullOrWhiteSpace(evidence))
+            return string.Empty;
+
+        // Was: X | Now: Y  →  diff block with - (red) and + (green)
+        var wasNow = Regex.Match(evidence, @"^Was:\s*(.+?)\s*\|\s*Now:\s*(.+)$", RegexOptions.Singleline);
+        if (wasNow.Success)
+        {
+            var was = wasNow.Groups[1].Value.Trim();
+            var now = wasNow.Groups[2].Value.Trim();
+            return $"```diff\n- {was}\n+ {now}\n```";
+        }
+
+        // Removed logic: A | B | C  →  diff block with one red line per item
+        var removedLogic = Regex.Match(evidence, @"^Removed logic:\s*(.+)$", RegexOptions.Singleline);
+        if (removedLogic.Success)
+        {
+            var items = removedLogic.Groups[1].Value.Split(" | ", StringSplitOptions.RemoveEmptyEntries);
+            var lines = string.Join("\n", items.Select(i => $"- {i.Trim()}"));
+            return $"```diff\n{lines}\n```";
+        }
+
+        // Removed: X  →  diff block with a single red line
+        var removed = Regex.Match(evidence, @"^Removed:\s*(.+)$", RegexOptions.Singleline);
+        if (removed.Success)
+            return $"```diff\n- {removed.Groups[1].Value.Trim()}\n```";
+
+        // Fallback: plain blockquote
+        return $"> {evidence}";
     }
 
     // Returns true if the caller should retry without inline comments (422 from GitHub).

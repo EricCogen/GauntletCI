@@ -66,6 +66,59 @@ public class GitHubPrReviewWriterTests
         Assert.Contains("> await Task.Delay(0);", body);
     }
 
+    // --- FormatEvidenceMarkdown ---
+
+    [Fact]
+    public void FormatEvidenceMarkdown_WasNow_ReturnsDiffBlock()
+    {
+        var result = GitHubPrReviewWriter.FormatEvidenceMarkdown("Was: public void Foo(int a, int b) | Now: public void Foo(int a)");
+
+        Assert.Contains("```diff", result);
+        Assert.Contains("- public void Foo(int a, int b)", result);
+        Assert.Contains("+ public void Foo(int a)", result);
+    }
+
+    [Fact]
+    public void FormatEvidenceMarkdown_Removed_ReturnsDiffBlock()
+    {
+        var result = GitHubPrReviewWriter.FormatEvidenceMarkdown("Removed: public void OldMethod()");
+
+        Assert.Contains("```diff", result);
+        Assert.Contains("- public void OldMethod()", result);
+        Assert.DoesNotContain("+", result);
+    }
+
+    [Fact]
+    public void FormatEvidenceMarkdown_RemovedLogic_ReturnsDiffBlockWithMultipleLines()
+    {
+        var result = GitHubPrReviewWriter.FormatEvidenceMarkdown("Removed logic: return x > 0 | if (x == null) | throw new Exception()");
+
+        Assert.Contains("```diff", result);
+        Assert.Contains("- return x > 0", result);
+        Assert.Contains("- if (x == null)", result);
+        Assert.Contains("- throw new Exception()", result);
+    }
+
+    [Fact]
+    public void FormatEvidenceMarkdown_PlainText_ReturnsBlockquote()
+    {
+        var result = GitHubPrReviewWriter.FormatEvidenceMarkdown("await Task.Delay(0);");
+
+        Assert.StartsWith(">", result);
+        Assert.DoesNotContain("```", result);
+    }
+
+    [Fact]
+    public void BuildCommentBody_WasNowEvidence_RendersDiffBlock()
+    {
+        var f    = MakeFinding(evidence: "Was: Task.Run(Foo) | Now: await FooAsync()");
+        var body = GitHubPrReviewWriter.BuildCommentBody(f);
+
+        Assert.Contains("```diff", body);
+        Assert.Contains("- Task.Run(Foo)", body);
+        Assert.Contains("+ await FooAsync()", body);
+    }
+
     [Fact]
     public void BuildCommentBody_WithWhyItMatters_IncludesSection()
     {
