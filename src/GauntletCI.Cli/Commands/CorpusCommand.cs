@@ -1010,7 +1010,7 @@ public static class CorpusCommand
                     Console.WriteLine($"[corpus] Running GCI rules against {fixtureId}");
 
                     var diffText = await File.ReadAllTextAsync(diffPath, ct);
-                    var runner   = new RuleCorpusRunner(store, db, config);
+                    var runner   = new RuleCorpusRunner(store, db, config, configDir);
                     var findings = await runner.RunAsync(fixtureId, diffText, ct);
 
                     int high   = findings.Count(f => f.ActualConfidence >= 1.0);
@@ -1082,6 +1082,8 @@ public static class CorpusCommand
                 int completed     = 0;
                 int failed        = 0;
 
+                var runner = new RuleCorpusRunner(store, db, config, configDir);
+
                 foreach (var metadata in allFixtures)
                 {
                     var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, metadata.Tier, metadata.FixtureId);
@@ -1097,7 +1099,6 @@ public static class CorpusCommand
                     try
                     {
                         var diffText = await File.ReadAllTextAsync(diffPath, ct);
-                        var runner   = new RuleCorpusRunner(store, db, config);
                         var findings = await runner.RunAsync(metadata.FixtureId, diffText, ct);
 
                         totalFindings += findings.Count;
