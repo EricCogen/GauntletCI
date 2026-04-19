@@ -102,8 +102,8 @@ public static class IncidentClient
         }
     }
 
-    /// <summary>Posts a note to a PagerDuty incident.</summary>
-    public static async Task PostPagerDutyNoteAsync(
+    /// <summary>Posts a note to a PagerDuty incident. Returns true if the post succeeded.</summary>
+    public static async Task<bool> PostPagerDutyNoteAsync(
         string token,
         string incidentId,
         string content,
@@ -124,24 +124,34 @@ public static class IncidentClient
             {
                 var err = await response.Content.ReadAsStringAsync(ct);
                 Console.Error.WriteLine($"[GauntletCI] PagerDuty note post failed: {(int)response.StatusCode} — {err}");
+                return false;
             }
+
+            return true;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             Console.Error.WriteLine($"[GauntletCI] PagerDuty note error: {ex.Message}");
+            return false;
         }
     }
 
     // ── Opsgenie ─────────────────────────────────────────────────────────────
 
-    /// <summary>Fetches open Opsgenie alerts.</summary>
+    /// <summary>Fetches Opsgenie alerts within the given time window.</summary>
     public static async Task<List<IncidentSummary>> FetchOpsgenieAsync(
         string token,
+        DateTimeOffset since,
+        DateTimeOffset until,
         CancellationToken ct = default)
     {
         try
         {
-            const string url = "https://api.opsgenie.com/v2/alerts?query=status%3Aopen&limit=100";
+            // Opsgenie query language: createdAt > {epoch_ms} AND createdAt < {epoch_ms}
+            var sinceMs = since.ToUnixTimeMilliseconds();
+            var untilMs = until.ToUnixTimeMilliseconds();
+            var query = Uri.EscapeDataString($"createdAt > {sinceMs} AND createdAt < {untilMs}");
+            var url = $"https://api.opsgenie.com/v2/alerts?query={query}&limit=100&order=desc";
 
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Authorization = new AuthenticationHeaderValue("GenieKey", token);
@@ -276,6 +286,10 @@ public static class IncidentClient
             allIncidents = allIncidents.Select(i => new { i.Id, i.Title, i.Description, i.Source }).ToList(),
         };
 
-        return JsonSerializer.Serialize(obj, new JsonSerializerOptions { WriteIndented = true });
+        return JsonSerializer.Serialize(obj, new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        });
     }
 }
