@@ -12,10 +12,14 @@ public sealed class CorpusDb : IDisposable
     private readonly string _connectionString;
     private SqliteConnection? _connection;
 
-    /// <summary>Default corpus DB path: <c>~/.gauntletci/corpus.db</c>.</summary>
-    public static readonly string DefaultPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-        ".gauntletci", "corpus.db");
+    /// <summary>
+    /// Default corpus DB path: <c>./data/gauntletci-corpus.db</c>.
+    /// Override locally by setting the <c>GAUNTLETCI_CORPUS_DB</c> environment variable
+    /// (e.g. <c>~/.gauntletci/corpus.db</c>).
+    /// </summary>
+    public static string DefaultPath =>
+        Environment.GetEnvironmentVariable("GAUNTLETCI_CORPUS_DB")
+        ?? "./data/gauntletci-corpus.db";
 
     public CorpusDb(string? dbPath = null)
     {
