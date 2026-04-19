@@ -28,6 +28,13 @@ public sealed class AnalysisContext
     /// </summary>
     public DiffContext Diff { get; init; } = new();
 
+    /// <summary>
+    /// All changed files from the original diff, prior to eligibility filtering.
+    /// Use this in rules that target non-C# files (e.g., Dockerfiles, YAML, shell scripts).
+    /// </summary>
+    public IReadOnlyList<GauntletCI.Core.Diff.DiffFile> AllDiffFiles { get; init; }
+        = Array.Empty<GauntletCI.Core.Diff.DiffFile>();
+
     /// <summary>Optional static analysis results for the diff.</summary>
     public AnalyzerResult? StaticAnalysis { get; init; }
 

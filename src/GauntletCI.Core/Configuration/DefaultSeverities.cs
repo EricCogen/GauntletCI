@@ -38,6 +38,13 @@ internal static class DefaultSeverities
             ["GCI0035"] = RuleSeverity.Warn,
             ["GCI0038"] = RuleSeverity.Warn,
             ["GCI0041"] = RuleSeverity.Warn,
+
+            // Docker rules
+            ["GCI0101"] = RuleSeverity.Block,
+            ["GCI0102"] = RuleSeverity.Warn,
+            ["GCI0103"] = RuleSeverity.Warn,
+            ["GCI0104"] = RuleSeverity.Block,
+            // GCI0105 defaults to Info (no entry needed)
         };
 
     /// <summary>Returns the built-in default severity for <paramref name="ruleId"/>, or <see cref="RuleSeverity.Info"/> if not listed.</summary>

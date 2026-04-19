@@ -49,6 +49,7 @@ internal static class RuleTestExtensions
             SkippedFiles    = skippedRecords,
             FileStatistics  = FileEligibilityStatistics.From(allRecords),
             Diff            = filteredDiff,
+            AllDiffFiles    = diff.Files,
             StaticAnalysis  = staticAnalysis,
             Syntax          = syntax ?? staticAnalysis?.Syntax,
             TargetFramework = targetFramework ?? staticAnalysis?.TargetFramework,

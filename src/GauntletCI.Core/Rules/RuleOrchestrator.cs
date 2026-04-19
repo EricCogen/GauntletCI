@@ -130,6 +130,7 @@ public class RuleOrchestrator
             SkippedFiles    = skippedRecords,
             FileStatistics  = fileStatistics,
             Diff            = filteredDiff,
+            AllDiffFiles    = diff.Files,
             StaticAnalysis  = staticAnalysis,
             Syntax          = staticAnalysis?.Syntax,
             TargetFramework = staticAnalysis?.TargetFramework,
