@@ -18,6 +18,7 @@ public sealed class RuleCorpusRunner
     private readonly IFixtureStore _store;
     private readonly CorpusDb _db;
     private readonly GauntletConfig? _config;
+    private readonly string? _repoPath;
 
     /// <summary>The run ID from the most recent call to <see cref="RunAsync"/>.</summary>
     public string LastRunId { get; private set; } = string.Empty;
@@ -26,11 +27,16 @@ public sealed class RuleCorpusRunner
     /// Optional GauntletCI configuration; when supplied, disabled rules (e.g. <c>"enabled": false</c>
     /// in <c>.gauntletci.json</c>) are excluded from corpus evaluation runs.
     /// </param>
-    public RuleCorpusRunner(IFixtureStore store, CorpusDb db, GauntletConfig? config = null)
+    /// <param name="repoPath">
+    /// Optional path to the git root; when supplied, <c>.editorconfig</c> severity overrides are
+    /// applied consistently with <c>gauntletci analyze</c>.
+    /// </param>
+    public RuleCorpusRunner(IFixtureStore store, CorpusDb db, GauntletConfig? config = null, string? repoPath = null)
     {
-        _store  = store;
-        _db     = db;
-        _config = config;
+        _store    = store;
+        _db       = db;
+        _config   = config;
+        _repoPath = repoPath;
     }
 
     public async Task<IReadOnlyList<ActualFinding>> RunAsync(
@@ -41,7 +47,7 @@ public sealed class RuleCorpusRunner
         LastRunId     = runId;
 
         var diff   = DiffParser.Parse(diffText);
-        var result = await RuleOrchestrator.CreateDefault(_config).RunAsync(diff, null, null, cancellationToken);
+        var result = await RuleOrchestrator.CreateDefault(_config, repoPath: _repoPath).RunAsync(diff, null, null, cancellationToken);
 
         var findings = result.Findings
             .Select(f => new ActualFinding
