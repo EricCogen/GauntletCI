@@ -32,6 +32,8 @@ public class GCI0006_EdgeCaseHandling : RuleBase
     {
         foreach (var file in diff.Files)
         {
+            if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+
             var addedLines = file.AddedLines.ToList();
             for (int i = 0; i < addedLines.Count; i++)
             {
