@@ -29,14 +29,20 @@ public class GCI0012_SecurityRisk : RuleBase
         var diff = context.Diff;
         var findings = new List<Finding>();
 
-        foreach (var line in diff.AllAddedLines)
+        foreach (var file in diff.Files)
         {
-            CheckSqlInjection(line, findings);
-            CheckWeakHashing(line, findings);
-            CheckWeakCrypto(line, findings);
-            CheckDangerousApis(line, findings);
-            CheckHardcodedCredentials(line, findings);
-            CheckInsecureDeserialization(line, findings);
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+
+            foreach (var line in file.AddedLines)
+            {
+                CheckSqlInjection(line, findings);
+                CheckWeakHashing(line, findings);
+                CheckWeakCrypto(line, findings);
+                CheckDangerousApis(line, findings);
+                CheckHardcodedCredentials(line, findings);
+                CheckInsecureDeserialization(line, findings);
+            }
         }
 
         CheckAllowAnonymousAdded(diff, findings);
@@ -151,6 +157,9 @@ public class GCI0012_SecurityRisk : RuleBase
     {
         foreach (var file in diff.Files)
         {
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+
             bool hadAuthorize = file.RemovedLines.Any(l =>
                 l.Content.Contains("[Authorize", StringComparison.Ordinal));
             bool addedAllowAnonymous = file.AddedLines.Any(l =>
