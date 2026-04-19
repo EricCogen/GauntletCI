@@ -143,11 +143,6 @@ public static class AnalyzeCommand
                 return;
             }
 
-            CliBanner.PrintIfEnabled(new BannerContext
-            {
-                NoBanner = noBanner,
-                OutputFormat = output ?? "text",
-            });
             try
             {
                 var diff = diffFile is not null
@@ -163,24 +158,40 @@ public static class AnalyzeCommand
                                     : DiffParser.Parse(await Console.In.ReadToEndAsync(ct));
 
                 var config = ConfigLoader.Load(repo.FullName);
+                config.Ci            ??= new();
+                config.Output        ??= new();
+                config.Notifications ??= new();
+                config.TicketProvider ??= new();
 
-                // Merge config defaults — CLI flags win when explicitly set (true), config fills in the rest.
-                withLlm        = withLlm        || (config.Llm?.Enabled       == true);
-                withExpertCtx  = withExpertCtx  || (config.Llm?.ExpertContext  == true);
-                withTicketCtx  = withTicketCtx  || (config.TicketProvider.Enabled);
-                ghPrComments   = ghPrComments   || config.Ci.PrComments;
-                ghAnnotate     = ghAnnotate     || config.Ci.Annotations;
-                githubChecks   = githubChecks   || config.Ci.Checks;
-                withCoverage   = withCoverage   || config.Ci.Coverage;
-                verbose        = verbose        || config.Output.Verbose;
+                // Merge config defaults — CLI value wins when explicitly passed; config fills in the rest.
+                withLlm       = withLlm       || (config.Llm?.Enabled      == true);
+                withExpertCtx = withExpertCtx || (config.Llm?.ExpertContext == true);
+                if (ctx.ParseResult.FindResultFor(withTicketCtxFlag) is null)
+                    withTicketCtx = config.TicketProvider.Enabled;
+                if (ctx.ParseResult.FindResultFor(githubPrCommentsFlag) is null)
+                    ghPrComments = config.Ci.PrComments;
+                if (ctx.ParseResult.FindResultFor(githubAnnotationsFlag) is null)
+                    ghAnnotate = config.Ci.Annotations;
+                if (ctx.ParseResult.FindResultFor(githubChecksFlag) is null)
+                    githubChecks = config.Ci.Checks;
+                if (ctx.ParseResult.FindResultFor(withCoverageFlag) is null)
+                    withCoverage = config.Ci.Coverage;
+                if (ctx.ParseResult.FindResultFor(verboseFlag) is null)
+                    verbose = config.Output.Verbose;
 
                 // Severity: only apply config value if user did not explicitly pass --severity
                 if (ctx.ParseResult.FindResultFor(severityOption) is null)
                     severityStr = config.Output.MinSeverity;
 
-                // Output format: only apply config value if user did not explicitly pass --output
+                // Output format: resolved before banner so the correct writer is selected
                 if (ctx.ParseResult.FindResultFor(outputOption) is null && config.Output.Format != "text")
                     output = config.Output.Format;
+
+                CliBanner.PrintIfEnabled(new BannerContext
+                {
+                    NoBanner = noBanner,
+                    OutputFormat = output ?? "text",
+                });
 
                 // Notifications: CLI arg takes precedence, then config, then env var (handled downstream)
                 notifySlack ??= config.Notifications.SlackWebhook;

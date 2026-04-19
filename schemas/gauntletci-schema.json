@@ -46,6 +46,74 @@
     },
     "ticketProvider": {
       "$ref": "#/definitions/TicketProviderConfig"
+    },
+    "corpus": {
+      "type": ["object", "null"],
+      "description": "Corpus pipeline configuration (local dev tool settings).",
+      "additionalProperties": false,
+      "properties": {
+        "ollamaEndpoints": {
+          "type": "array",
+          "description": "Ollama endpoints for silver labeling. Multiple entries enable round-robin load distribution.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "url": { "type": "string", "description": "Base URL of the Ollama server." },
+              "enabled": { "type": "boolean", "description": "Whether this endpoint is active.", "default": true }
+            }
+          }
+        },
+        "ollamaModel": {
+          "type": ["string", "null"],
+          "description": "Default Ollama model override for the corpus pipeline. Null means auto-select."
+        }
+      }
+    },
+    "patternConsistency": {
+      "type": ["object", "null"],
+      "description": "Pattern consistency configuration for GCI0046 Pattern Consistency Deviation.",
+      "additionalProperties": false,
+      "properties": {
+        "allowedSyncAsyncPairs": {
+          "type": "array",
+          "description": "Method base names for which a sync+async pair is intentionally supported.",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "experimental": {
+      "type": ["object", "null"],
+      "description": "Experimental feature flags. Settings here may change or be removed without notice.",
+      "additionalProperties": false,
+      "properties": {
+        "engineeringPolicy": {
+          "type": "object",
+          "description": "Configuration for the experimental LLM-powered engineering policy evaluation step.",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable the engineering policy evaluation step. Requires an LLM to be available.",
+              "default": false
+            },
+            "description": {
+              "type": "string",
+              "description": "Self-documenting description of this feature."
+            },
+            "path": {
+              "type": "string",
+              "description": "Path to the engineering policy markdown file, relative to the repository root.",
+              "default": ".misc/engineering-policy.md"
+            },
+            "maxDiffChars": {
+              "type": "integer",
+              "description": "Maximum diff size in characters sent to the LLM.",
+              "default": 12000
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -100,6 +168,30 @@
           "type": "string",
           "description": "Environment variable name that holds the GauntletCI license key.",
           "default": "GAUNTLETCI_LICENSE"
+        },
+        "modelPath": {
+          "type": ["string", "null"],
+          "description": "Path to the local ONNX model directory used by LocalLlmEngine. Defaults to ~/.gauntletci/models/phi3-mini."
+        },
+        "numCtx": {
+          "type": "integer",
+          "description": "Ollama context window size in tokens (input + output combined).",
+          "default": 16384
+        },
+        "maxCompleteTokens": {
+          "type": "integer",
+          "description": "Maximum tokens the model may generate per completion call.",
+          "default": 2048
+        },
+        "embeddingOllamaUrl": {
+          "type": "string",
+          "description": "Ollama base URL used for query embedding (analyze --with-expert-context).",
+          "default": "http://localhost:11434"
+        },
+        "embeddingModel": {
+          "type": "string",
+          "description": "Ollama model used for query embedding. Must match the model used when running 'gauntletci llm seed'.",
+          "default": "phi4-mini:latest"
         },
         "enabled": {
           "type": "boolean",
