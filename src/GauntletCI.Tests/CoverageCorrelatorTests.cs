@@ -76,11 +76,39 @@ public class CoverageCorrelatorTests
             await CoverageCorrelator.AnnotateAsync(result);
 
             // Finding should be unchanged
-            Assert.Null(result.Findings[0].LlmExplanation);
+            Assert.Null(result.Findings[0].CoverageNote);
         }
         finally
         {
             Environment.SetEnvironmentVariable("CODECOV_TOKEN", prev);
         }
+    }
+
+    [Fact]
+    public void ParseCoverageResponse_NullMap_DoesNotAnnotateFindings()
+    {
+        // When the map is null (parse failure), no findings should be annotated.
+        // This is enforced in AnnotateAsync (early return); test the contract via ParseCoverageResponse.
+        var result = CoverageCorrelator.ParseCoverageResponse("""{ "no_files_key": [] }""");
+
+        Assert.Null(result);
+    }
+
+    [Fact]
+    public void ParseCoverageResponse_FileWithZeroCoverage_IsPresent()
+    {
+        var json = """
+            {
+              "files": [
+                { "name": "src/ZeroCov.cs", "totals": { "coverage": 0.0 } }
+              ]
+            }
+            """;
+
+        var map = CoverageCorrelator.ParseCoverageResponse(json);
+
+        Assert.NotNull(map);
+        Assert.True(map!.TryGetValue("src/ZeroCov.cs", out var cov));
+        Assert.Equal(0.0, cov);
     }
 }

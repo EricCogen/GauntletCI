@@ -90,13 +90,14 @@ public static class GitHubChecksWriter
 
     /// <summary>
     /// Builds the annotation list for the check run output.
-    /// Block findings are prioritized, capped at 50, and only findings with both FilePath and Line are included.
+    /// Block findings are prioritized first, then Warn, Info, Advisory.
+    /// Capped at 50; only findings with both FilePath and Line are included.
     /// </summary>
     internal static List<object> BuildAnnotations(EvaluationResult result)
     {
         return result.Findings
             .Where(f => !string.IsNullOrEmpty(f.FilePath) && f.Line.HasValue)
-            .OrderByDescending(f => f.Severity)
+            .OrderBy(f => SeverityPriority(f.Severity))
             .Take(50)
             .Select(f => (object)new
             {
@@ -110,6 +111,15 @@ public static class GitHubChecksWriter
             })
             .ToList();
     }
+
+    // Block=0 (highest priority), Warn=1, Info=2, Advisory=3 — enum values cannot be relied on.
+    private static int SeverityPriority(RuleSeverity s) => s switch
+    {
+        RuleSeverity.Block    => 0,
+        RuleSeverity.Warn     => 1,
+        RuleSeverity.Info     => 2,
+        _                     => 3,   // Advisory, None
+    };
 
     private static string ToAnnotationLevel(RuleSeverity severity) => severity switch
     {

@@ -80,15 +80,16 @@ public class GitHubChecksWriterTests
     }
 
     [Fact]
-    public void BuildAnnotations_PrioritizesBlockOverWarn()
+    public void BuildAnnotations_PrioritizesBlockOverAdvisory()
     {
-        var warnFinding  = MakeFinding(RuleSeverity.Warn,  filePath: "src/Warn.cs",  line: 1, ruleId: "GCI9001");
-        var blockFinding = MakeFinding(RuleSeverity.Block, filePath: "src/Block.cs", line: 2, ruleId: "GCI9002");
+        // Advisory enum value (4) > Block (3), so naive OrderByDescending would put Advisory first.
+        // Verify Block is always first regardless of enum value.
+        var advisoryFinding = MakeFinding(RuleSeverity.Advisory, filePath: "src/Advisory.cs", line: 1, ruleId: "GCI9003");
+        var blockFinding    = MakeFinding(RuleSeverity.Block,    filePath: "src/Block.cs",    line: 2, ruleId: "GCI9004");
 
-        var result      = MakeResult(warnFinding, blockFinding);
+        var result      = MakeResult(advisoryFinding, blockFinding);
         var annotations = GitHubChecksWriter.BuildAnnotations(result);
 
-        // Block annotation should appear before Warn annotation
         Assert.Equal(2, annotations.Count);
         var first = annotations[0].ToString()!;
         Assert.Contains("Block.cs", first);

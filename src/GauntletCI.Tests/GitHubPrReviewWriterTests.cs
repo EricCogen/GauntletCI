@@ -171,6 +171,18 @@ public class GitHubPrReviewWriterTests
         Assert.DoesNotContain("Expert context", body);
     }
 
+    [Fact]
+    public void BuildCommentBody_WithCoverageNote_IncludesCoverageSection()
+    {
+        var f    = MakeFinding();
+        f.CoverageNote = "⚠️ No test coverage detected for this file (Codecov).";
+        var body = GitHubPrReviewWriter.BuildCommentBody(f);
+
+        Assert.Contains("📊", body);
+        Assert.Contains("Coverage", body);
+        Assert.Contains("No test coverage", body);
+    }
+
     // --- ResolvePrNumber ---
 
     [Fact]

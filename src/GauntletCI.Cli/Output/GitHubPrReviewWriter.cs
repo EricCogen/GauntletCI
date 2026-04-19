@@ -130,6 +130,12 @@ public static class GitHubPrReviewWriter
             sb.AppendLine($"📚 **Expert context:** {ctx.Content} _(source: {ctx.Source})_");
         }
 
+        if (!string.IsNullOrWhiteSpace(finding.CoverageNote))
+        {
+            sb.AppendLine();
+            sb.AppendLine($"📊 **Coverage:** {finding.CoverageNote}");
+        }
+
         sb.AppendLine();
         sb.Append($"<sub>Confidence: {finding.Confidence} | Severity: {finding.Severity}</sub>");
 

@@ -54,7 +54,7 @@ public static class AnalyzeCommand
         var prCommentSuggestFlag = new Option<bool>("--pr-comment-suggest", "Print PR review comment body to stdout; when used without --github-pr-comments this avoids posting to the GitHub API");
         var notifySlackOption = new Option<string?>("--notify-slack", "Slack Incoming Webhook URL (or set GAUNTLETCI_SLACK_WEBHOOK env var). Posts Block findings to Slack.");
         var notifyTeamsOption = new Option<string?>("--notify-teams", "Teams Incoming Webhook URL (or set GAUNTLETCI_TEAMS_WEBHOOK env var). Posts Block findings to Teams.");
-        var withCoverageFlag = new Option<bool>("--with-coverage", "Correlate findings with Codecov/Coveralls coverage data (requires CODECOV_TOKEN or COVERALLS_REPO_TOKEN env var)");
+        var withCoverageFlag = new Option<bool>("--with-coverage", "Correlate findings with Codecov coverage data (requires CODECOV_TOKEN env var)");
         var githubChecksFlag = new Option<bool>("--github-checks", "Post findings as a GitHub Checks API check run with annotations (requires checks: write permission)");
 
         var cmd = new Command("analyze", "Analyse a git diff for pre-commit risks")
