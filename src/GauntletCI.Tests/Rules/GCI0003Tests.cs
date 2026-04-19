@@ -136,4 +136,26 @@ public class GCI0003Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("logic line(s) removed"));
     }
+
+    [Fact]
+    public async Task AccessModifierInsideStringLiteral_ShouldNotFlagSignatureChange()
+    {
+        // "internal " appears inside a string literal, not as an actual access modifier.
+        var raw = """
+            diff --git a/src/Core/Checker.cs b/src/Core/Checker.cs
+            index abc..def 100644
+            --- a/src/Core/Checker.cs
+            +++ b/src/Core/Checker.cs
+            @@ -1,3 +1,3 @@
+             public class Checker {
+            -    public bool HasModifier(string content) => content.Contains("internal ");
+            +    public bool HasModifier(string content) => content.Contains("internal ", StringComparison.Ordinal);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("signature changed"));
+    }
 }

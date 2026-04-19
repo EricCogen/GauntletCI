@@ -67,11 +67,11 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
 
             var removedSigs = file.RemovedLines
-                .Where(l => AccessModifiers.Any(m => l.Content.Contains(m)) && l.Content.Contains('('))
+                .Where(l => { var t = l.Content.TrimStart(); return AccessModifiers.Any(m => t.StartsWith(m)) && l.Content.Contains('('); })
                 .ToList();
 
             var addedSigs = file.AddedLines
-                .Where(l => AccessModifiers.Any(m => l.Content.Contains(m)) && l.Content.Contains('('))
+                .Where(l => { var t = l.Content.TrimStart(); return AccessModifiers.Any(m => t.StartsWith(m)) && l.Content.Contains('('); })
                 .ToList();
 
             foreach (var removed in removedSigs)
@@ -136,6 +136,17 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
         return before[(lastSpace + 1)..];
     }
 
-    private static string NormalizeSignature(string sig) =>
-        sig.Replace("async ", "", StringComparison.Ordinal).Trim();
+    private static string NormalizeSignature(string sig)
+    {
+        var s = sig.Replace("async ", "", StringComparison.Ordinal).Trim();
+        var open = s.IndexOf('(');
+        if (open < 0) return s;
+        int depth = 0;
+        for (int i = open; i < s.Length; i++)
+        {
+            if (s[i] == '(') depth++;
+            else if (s[i] == ')') { depth--; if (depth == 0) return s[..(i + 1)]; }
+        }
+        return s;
+    }
 }
