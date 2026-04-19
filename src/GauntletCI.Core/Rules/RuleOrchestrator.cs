@@ -126,11 +126,12 @@ public class RuleOrchestrator
 
         var context = new AnalysisContext
         {
-            EligibleFiles  = eligibleRecords,
-            SkippedFiles   = skippedRecords,
-            FileStatistics = fileStatistics,
-            Diff           = filteredDiff,
-            StaticAnalysis = staticAnalysis,
+            EligibleFiles   = eligibleRecords,
+            SkippedFiles    = skippedRecords,
+            FileStatistics  = fileStatistics,
+            Diff            = filteredDiff,
+            StaticAnalysis  = staticAnalysis,
+            Syntax          = staticAnalysis?.Syntax,
             TargetFramework = staticAnalysis?.TargetFramework,
         };
 

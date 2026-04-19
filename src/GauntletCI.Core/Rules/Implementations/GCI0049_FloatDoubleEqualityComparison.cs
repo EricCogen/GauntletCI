@@ -54,13 +54,18 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
             {
                 var content = line.Content;
 
-                // Skip comment lines
+                // Skip comment lines (simple prefix check)
                 var trimmed = content.TrimStart();
                 if (trimmed.StartsWith("//") || trimmed.StartsWith("*") || trimmed.StartsWith("/*"))
                     continue;
 
                 // Skip string literals — crude but effective: skip if inside a quoted region
                 if (IsLikelyStringComparison(content)) continue;
+
+                // Syntax guard: suppress if Roslyn confirms this line is inside a comment
+                // or string literal (covers end-of-line comments the StartsWith check misses).
+                if (context.Syntax?.IsInCommentOrStringLiteral(file.NewPath, line.LineNumber) == true)
+                    continue;
 
                 bool matches = FloatLiteralOnRightRegex.IsMatch(content)
                             || FloatLiteralOnLeftRegex.IsMatch(content)

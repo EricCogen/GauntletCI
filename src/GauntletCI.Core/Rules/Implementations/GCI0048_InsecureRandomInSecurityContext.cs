@@ -50,6 +50,11 @@ public class GCI0048_InsecureRandomInSecurityContext : RuleBase
                 var line = addedLines[i];
                 if (!NewRandomRegex.IsMatch(line.Content)) continue;
 
+                // Syntax guard: suppress if Roslyn confirms the match is inside a comment
+                // or string literal (e.g. quoted code samples, end-of-line comments).
+                if (context.Syntax?.IsInCommentOrStringLiteral(file.NewPath, line.LineNumber) == true)
+                    continue;
+
                 // Check ±5 surrounding added lines for security-sensitive identifiers
                 int start = Math.Max(0, i - 5);
                 int end   = Math.Min(addedLines.Count - 1, i + 5);
