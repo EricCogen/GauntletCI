@@ -42,32 +42,38 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
     {
         foreach (var file in diff.Files)
         {
-            var addedLines = file.AddedLines.ToList();
-            for (int i = 0; i < addedLines.Count; i++)
+            foreach (var hunk in file.Hunks)
             {
-                var content = addedLines[i].Content.Trim();
+                // Added+Context only — Removed lines excluded so a previously deleted
+                // throw/log cannot mask a genuinely empty new catch body.
+                var nonRemovedLines = hunk.Lines
+                    .Where(l => l.Kind != DiffLineKind.Removed)
+                    .ToList();
 
-                // Detect catch blocks
-                if (!content.StartsWith("catch", StringComparison.Ordinal)) continue;
-
-                // Cancellation exceptions are commonly swallowed intentionally (shutdown/background work).
-                if (content.Contains("TaskCanceledException", StringComparison.Ordinal) ||
-                    content.Contains("OperationCanceledException", StringComparison.Ordinal))
+                for (int i = 0; i < nonRemovedLines.Count; i++)
                 {
-                    continue;
-                }
+                    // Only flag catch blocks that are newly added.
+                    if (nonRemovedLines[i].Kind != DiffLineKind.Added) continue;
 
-                bool isSwallowed = IsCatchSwallowed(addedLines, i, out string evidence);
-                if (isSwallowed)
-                {
-                    findings.Add(CreateFinding(
-                        file,
-                        summary: $"Swallowed exception detected in {file.NewPath}",
-                        evidence: evidence,
-                        whyItMatters: "Empty or silent catch blocks hide failures, making bugs invisible and debugging nearly impossible.",
-                        suggestedAction: "Log the exception, rethrow it, or handle it explicitly. Never swallow silently.",
-                        confidence: Confidence.High,
-                        line: addedLines[i]));
+                    var content = nonRemovedLines[i].Content.Trim();
+                    if (!content.StartsWith("catch", StringComparison.Ordinal)) continue;
+
+                    if (content.Contains("TaskCanceledException", StringComparison.Ordinal) ||
+                        content.Contains("OperationCanceledException", StringComparison.Ordinal))
+                        continue;
+
+                    bool isSwallowed = IsCatchSwallowed(nonRemovedLines, i, out string evidence);
+                    if (isSwallowed)
+                    {
+                        findings.Add(CreateFinding(
+                            file,
+                            summary: $"Swallowed exception detected in {file.NewPath}",
+                            evidence: evidence,
+                            whyItMatters: "Empty or silent catch blocks hide failures, making bugs invisible and debugging nearly impossible.",
+                            suggestedAction: "Log the exception, rethrow it, or handle it explicitly. Never swallow silently.",
+                            confidence: Confidence.High,
+                            line: nonRemovedLines[i]));
+                    }
                 }
             }
         }
