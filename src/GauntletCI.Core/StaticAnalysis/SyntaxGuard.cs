@@ -33,62 +33,62 @@ public static class SyntaxGuard
     }
 
     /// <summary>
-    /// Returns <c>true</c> when the given 1-based <paramref name="lineNumber"/> falls
-    /// inside comment trivia or a string/interpolated-string literal token.
-    /// Use to suppress rules when the triggering text is quoted or commented-out code
-    /// rather than live executable code — including end-of-line comments that the
-    /// simple <c>StartsWith("//")</c> check misses.
+    /// Returns <c>true</c> when the character at the given 1-based <paramref name="lineNumber"/>
+    /// and 0-based <paramref name="columnOffset"/> falls inside comment trivia or a
+    /// string/interpolated-string literal token. Checks the specific match position rather
+    /// than the entire line so that code like
+    /// <c>if (x == 0.0) throw new Exception("msg")</c> is never suppressed just because
+    /// a string literal exists elsewhere on the line.
     /// </summary>
-    public static bool IsInCommentOrStringLiteral(SyntaxTree tree, int lineNumber)
+    public static bool IsInCommentOrStringLiteral(SyntaxTree tree, int lineNumber, int columnOffset = 0)
     {
         ArgumentNullException.ThrowIfNull(tree);
         var text = tree.GetText();
         if (lineNumber < 1 || lineNumber > text.Lines.Count) return false;
 
         var line = text.Lines[lineNumber - 1];
-        var root = tree.GetRoot();
+        if (columnOffset < 0) columnOffset = 0;
+        if (line.Span.IsEmpty) return false;
+        var position = line.Start + Math.Min(columnOffset, line.Span.Length - 1);
 
-        // Step 1: check all tokens whose Span overlaps with this line.
-        // Finds string literals anywhere on the line, and trailing-trivia comments.
-        foreach (var token in root.DescendantTokens(line.Span))
+        var root  = tree.GetRoot();
+        var token = root.FindToken(position, findInsideTrivia: true);
+
+        // Direct string literal token at this position
+        if (token.IsKind(SyntaxKind.StringLiteralToken)          ||
+            token.IsKind(SyntaxKind.InterpolatedStringTextToken) ||
+            token.IsKind(SyntaxKind.SingleLineRawStringLiteralToken))
+            return true;
+
+        // Ancestor is a string expression node
+        var node = token.Parent;
+        while (node is not null)
         {
-            // String literal tokens
-            if (token.IsKind(SyntaxKind.StringLiteralToken)          ||
-                token.IsKind(SyntaxKind.InterpolatedStringTextToken) ||
-                token.IsKind(SyntaxKind.SingleLineRawStringLiteralToken))
+            if (node.IsKind(SyntaxKind.StringLiteralExpression)   ||
+                node.IsKind(SyntaxKind.InterpolatedStringExpression))
                 return true;
-
-            // Walk up ancestors to catch content inside string expression nodes
-            var node = token.Parent;
-            while (node is not null)
-            {
-                if (node.IsKind(SyntaxKind.StringLiteralExpression)   ||
-                    node.IsKind(SyntaxKind.InterpolatedStringExpression))
-                    return true;
-                node = node.Parent;
-            }
-
-            // Trailing comment trivia on this line
-            foreach (var trivia in token.TrailingTrivia)
-            {
-                if (IsCommentKind(trivia.Kind()) && trivia.Span.IntersectsWith(line.Span))
-                    return true;
-            }
+            node = node.Parent;
         }
 
-        // Step 2: line-starting comments are stored as leading trivia of the NEXT token.
-        // Use FindToken at the first non-whitespace position on the line to find that token.
-        var lineStr    = line.ToString();
-        var wsLen      = lineStr.Length - lineStr.TrimStart().Length;
-        if (wsLen < lineStr.Length)
+        // Check if position falls inside comment trivia on this token
+        foreach (var trivia in token.LeadingTrivia)
         {
-            var firstNonWs = line.Start + wsLen;
-            var nextToken  = root.FindToken(firstNonWs, findInsideTrivia: true);
-            foreach (var trivia in nextToken.LeadingTrivia)
-            {
-                if (IsCommentKind(trivia.Kind()) && trivia.Span.IntersectsWith(line.Span))
-                    return true;
-            }
+            if (IsCommentKind(trivia.Kind()) && trivia.FullSpan.Contains(position))
+                return true;
+        }
+        foreach (var trivia in token.TrailingTrivia)
+        {
+            if (IsCommentKind(trivia.Kind()) && trivia.FullSpan.Contains(position))
+                return true;
+        }
+
+        // Also check the preceding token's trailing trivia (handles end-of-line comments
+        // where FindToken returns the token AFTER the comment, not the one before it)
+        var prevToken = token.GetPreviousToken();
+        foreach (var trivia in prevToken.TrailingTrivia)
+        {
+            if (IsCommentKind(trivia.Kind()) && trivia.FullSpan.Contains(position))
+                return true;
         }
 
         return false;

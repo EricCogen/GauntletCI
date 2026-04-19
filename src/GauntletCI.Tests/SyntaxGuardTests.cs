@@ -49,29 +49,41 @@ public class SyntaxGuardTests
     {
         var source = "var x = 1;\n// new Random() is insecure\nvar y = 2;";
         var tree = Parse(source);
-        Assert.True(SyntaxGuard.IsInCommentOrStringLiteral(tree, 2));
+        // Column 0 is inside the '//' comment
+        Assert.True(SyntaxGuard.IsInCommentOrStringLiteral(tree, 2, 0));
     }
 
     [Fact]
     public void IsInCommentOrString_WhenLineIsCode_ReturnsFalse()
     {
         var tree = Parse("var r = new Random();");
-        Assert.False(SyntaxGuard.IsInCommentOrStringLiteral(tree, 1));
+        // Column 8 is at 'new Random(' — live code
+        Assert.False(SyntaxGuard.IsInCommentOrStringLiteral(tree, 1, 8));
     }
 
     [Fact]
     public void IsInCommentOrString_WhenLineIsStringLiteral_ReturnsTrue()
     {
         var tree = Parse("var s = \"new Random() is bad\";");
-        Assert.True(SyntaxGuard.IsInCommentOrStringLiteral(tree, 1));
+        // Column 8 is inside the string literal
+        Assert.True(SyntaxGuard.IsInCommentOrStringLiteral(tree, 1, 8));
     }
 
     [Fact]
     public void IsInCommentOrString_WhenLineNumberOutOfRange_ReturnsFalse()
     {
         var tree = Parse("var x = 1;");
-        Assert.False(SyntaxGuard.IsInCommentOrStringLiteral(tree, 0));
-        Assert.False(SyntaxGuard.IsInCommentOrStringLiteral(tree, 999));
+        Assert.False(SyntaxGuard.IsInCommentOrStringLiteral(tree, 0, 0));
+        Assert.False(SyntaxGuard.IsInCommentOrStringLiteral(tree, 999, 0));
+    }
+
+    [Fact]
+    public void IsInCommentOrString_WhenCodeHasAdjacentStringOnSameLine_ReturnsFalse()
+    {
+        // The float literal `0.0` is live code — the adjacent string "bad" must not cause suppression
+        var tree = Parse("if (result == 0.0) throw new Exception(\"bad\");");
+        // Column 12 is at '== 0.0' — live code
+        Assert.False(SyntaxGuard.IsInCommentOrStringLiteral(tree, 1, 12));
     }
 
     // ── SyntaxContext pass-through semantics ──────────────────────────────
@@ -89,7 +101,7 @@ public class SyntaxGuardTests
     {
         var ctx = new SyntaxContext(new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>());
         // No tree — should NOT suppress (return false)
-        Assert.False(ctx.IsInCommentOrStringLiteral("src/Foo.cs", 1));
+        Assert.False(ctx.IsInCommentOrStringLiteral("src/Foo.cs", 1, 0));
     }
 
     [Fact]
@@ -100,7 +112,7 @@ public class SyntaxGuardTests
         {
             [@"C:\repo\src\Foo.cs"] = tree
         });
-        Assert.True(ctx.IsInCommentOrStringLiteral("src/Foo.cs", 1));
+        Assert.True(ctx.IsInCommentOrStringLiteral("src/Foo.cs", 1, 0));
     }
 
     // ── Integration: GCI0048 suppressed by syntax guard ───────────────────

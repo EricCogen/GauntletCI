@@ -62,9 +62,9 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
                 // Skip string literals — crude but effective: skip if inside a quoted region
                 if (IsLikelyStringComparison(content)) continue;
 
-                // Syntax guard: suppress if Roslyn confirms this line is inside a comment
-                // or string literal (covers end-of-line comments the StartsWith check misses).
-                if (context.Syntax?.IsInCommentOrStringLiteral(file.NewPath, line.LineNumber) == true)
+                // Syntax guard: suppress if the match position is inside a comment or string literal.
+                if (context.Syntax?.IsInCommentOrStringLiteral(
+                        file.NewPath, line.LineNumber, GetFirstMatchIndex(content)) == true)
                     continue;
 
                 bool matches = FloatLiteralOnRightRegex.IsMatch(content)
@@ -89,6 +89,22 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
         }
 
         return Task.FromResult(findings);
+    }
+
+    private static int GetFirstMatchIndex(string content)
+    {
+        int min = int.MaxValue;
+        UpdateMin(FloatLiteralOnRightRegex,   content, ref min);
+        UpdateMin(FloatLiteralOnLeftRegex,    content, ref min);
+        UpdateMin(FloatCastWithEqualityRegex, content, ref min);
+        UpdateMin(FloatTypeWithEqualityRegex, content, ref min);
+        return min == int.MaxValue ? 0 : min;
+    }
+
+    private static void UpdateMin(Regex regex, string content, ref int min)
+    {
+        var m = regex.Match(content);
+        if (m.Success && m.Index < min) min = m.Index;
     }
 
     /// <summary>

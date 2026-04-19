@@ -48,11 +48,11 @@ public class GCI0048_InsecureRandomInSecurityContext : RuleBase
             for (int i = 0; i < addedLines.Count; i++)
             {
                 var line = addedLines[i];
-                if (!NewRandomRegex.IsMatch(line.Content)) continue;
+                var match = NewRandomRegex.Match(line.Content);
+                if (!match.Success) continue;
 
-                // Syntax guard: suppress if Roslyn confirms the match is inside a comment
-                // or string literal (e.g. quoted code samples, end-of-line comments).
-                if (context.Syntax?.IsInCommentOrStringLiteral(file.NewPath, line.LineNumber) == true)
+                // Syntax guard: suppress if the match position is inside a comment or string literal.
+                if (context.Syntax?.IsInCommentOrStringLiteral(file.NewPath, line.LineNumber, match.Index) == true)
                     continue;
 
                 // Check ±5 surrounding added lines for security-sensitive identifiers

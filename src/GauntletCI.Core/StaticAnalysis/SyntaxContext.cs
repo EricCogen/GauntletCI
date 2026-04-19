@@ -42,11 +42,11 @@ public sealed class SyntaxContext
     /// Returns <c>true</c> when the line falls inside a comment or string literal.
     /// Returns <c>false</c> (don't suppress) when no syntax tree is available.
     /// </summary>
-    public bool IsInCommentOrStringLiteral(string filePath, int lineNumber)
+    public bool IsInCommentOrStringLiteral(string filePath, int lineNumber, int columnOffset = 0)
     {
         ArgumentNullException.ThrowIfNull(filePath);
         if (!TryGetTree(filePath, out var tree)) return false;
-        return SyntaxGuard.IsInCommentOrStringLiteral(tree!, lineNumber);
+        return SyntaxGuard.IsInCommentOrStringLiteral(tree!, lineNumber, columnOffset);
     }
 
     private bool TryGetTree(string filePath, out SyntaxTree? tree)
