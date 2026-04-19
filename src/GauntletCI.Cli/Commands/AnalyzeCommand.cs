@@ -8,6 +8,7 @@ using GauntletCI.Cli.LlmDaemon;
 using GauntletCI.Cli.Output;
 using GauntletCI.Cli.Presentation;
 using GauntletCI.Cli.Telemetry;
+using GauntletCI.Cli.TicketProviders;
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
@@ -56,6 +57,8 @@ public static class AnalyzeCommand
         var notifyTeamsOption = new Option<string?>("--notify-teams", "Teams Incoming Webhook URL (or set GAUNTLETCI_TEAMS_WEBHOOK env var). Posts Block findings to Teams.");
         var withCoverageFlag = new Option<bool>("--with-coverage", "Correlate findings with Codecov coverage data (requires CODECOV_TOKEN env var)");
         var githubChecksFlag = new Option<bool>("--github-checks", "Post findings as a GitHub Checks API check run with annotations (requires checks: write permission)");
+        var withTicketCtxFlag = new Option<bool>("--with-ticket-context",
+            "Fetch ticket info from Jira/Linear/GitHub Issues and attach to findings (reads branch name and JIRA_*, LINEAR_API_KEY, or GITHUB_TOKEN)");
 
         var cmd = new Command("analyze", "Analyse a git diff for pre-commit risks")
         {
@@ -82,6 +85,7 @@ public static class AnalyzeCommand
             notifyTeamsOption,
             withCoverageFlag,
             githubChecksFlag,
+            withTicketCtxFlag,
         };
 
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
@@ -107,6 +111,7 @@ public static class AnalyzeCommand
             var prCommentSuggest = ctx.ParseResult.GetValueForOption(prCommentSuggestFlag);
             var withCoverage  = ctx.ParseResult.GetValueForOption(withCoverageFlag);
             var githubChecks  = ctx.ParseResult.GetValueForOption(githubChecksFlag);
+            var withTicketCtx = ctx.ParseResult.GetValueForOption(withTicketCtxFlag);
             var ct = ctx.GetCancellationToken();
 
             // Enforce single diff source
@@ -178,6 +183,30 @@ public static class AnalyzeCommand
                     }
                 }
 
+                // Ticket context enrichment
+                if (withTicketCtx && result.Findings.Count > 0)
+                {
+                    string? branchName = null;
+                    try
+                    {
+                        var gitProc = new System.Diagnostics.Process
+                        {
+                            StartInfo = new System.Diagnostics.ProcessStartInfo("git", "rev-parse --abbrev-ref HEAD")
+                            {
+                                WorkingDirectory = repo.FullName,
+                                RedirectStandardOutput = true,
+                                UseShellExecute = false,
+                            }
+                        };
+                        gitProc.Start();
+                        branchName = (await gitProc.StandardOutput.ReadToEndAsync(ct)).Trim();
+                        await gitProc.WaitForExitAsync(ct);
+                    }
+                    catch { /* soft fail */ }
+
+                    await TicketResolver.AnnotateFindingsAsync(branchName, result.Findings, ct);
+                }
+
                 using ILlmEngine llm = await LlmEngineSelector.ResolveAsync(config, withLlm && !noLlm);
 
                 var isJsonOutput  = (output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase);
@@ -195,6 +224,13 @@ public static class AnalyzeCommand
                         {
                             setStatus($"Annotating [{finding.RuleId}]...");
                             finding.LlmExplanation = await llm.EnrichFindingAsync(finding);
+                            // When ticket context is attached, also adjudicate intent alignment
+                            if (withTicketCtx && finding.TicketContext is not null)
+                            {
+                                var ticketNote = await EnrichWithTicketContextAsync(llm, finding, ct);
+                                if (!string.IsNullOrWhiteSpace(ticketNote))
+                                    finding.LlmExplanation = $"{finding.LlmExplanation} | Ticket: {ticketNote}";
+                            }
                         }
                     }
 
@@ -367,4 +403,23 @@ public static class AnalyzeCommand
             "info"  => GauntletCI.Core.Model.RuleSeverity.Info,
             _       => GauntletCI.Core.Model.RuleSeverity.Warn,
         };
+
+    private static async Task<string?> EnrichWithTicketContextAsync(ILlmEngine llm, Finding finding, CancellationToken ct)
+    {
+        var ticket = finding.TicketContext!;
+        var prompt =
+            $"Ticket {ticket.Id}: \"{ticket.Title}\". {ticket.Description}\n\n" +
+            $"Finding: {finding.Summary}. {finding.WhyItMatters}\n\n" +
+            $"Does this change align with the stated ticket intent? " +
+            $"If yes, state 'Change aligns with ticket intent: {ticket.Id}' and suggest a downgrade rationale. " +
+            $"If no, explain briefly. Maximum 30 words.";
+        try
+        {
+            return await llm.CompleteAsync(prompt, ct);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }
