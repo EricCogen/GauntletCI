@@ -30,6 +30,73 @@ jobs:
       - name: Test
         run: dotnet test GauntletCI.slnx --no-build --configuration Release --verbosity normal
 
+  update-badge:
+    name: Update GauntletCI Badge
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build-and-test]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 2
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore GauntletCI.slnx
+
+      - name: Build
+        run: dotnet build GauntletCI.slnx --no-restore --configuration Release
+
+      - name: Run GauntletCI on last commit
+        id: analyze
+        run: |
+          git diff HEAD~1..HEAD > main.diff
+          set +e
+          OUTPUT=$(dotnet run --project src/GauntletCI.Cli --no-build --configuration Release -- \
+            analyze --no-banner --ascii < main.diff 2>&1)
+          EXIT_CODE=$?
+          set -e
+          FINDINGS=$(echo "$OUTPUT" | grep -oP 'Findings: \K\d+' || echo "0")
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          echo "findings=$FINDINGS" >> $GITHUB_OUTPUT
+
+      - name: Push badge to Gist
+        env:
+          GIST_SECRET: ${{ secrets.GIST_SECRET }}
+          GIST_ID: ${{ vars.GIST_ID }}
+        run: |
+          EXIT_CODE="${{ steps.analyze.outputs.exit_code }}"
+          FINDINGS="${{ steps.analyze.outputs.findings }}"
+
+          if [ "$EXIT_CODE" = "0" ]; then
+            COLOR="brightgreen"
+          elif [ "$FINDINGS" -gt 10 ]; then
+            COLOR="red"
+          else
+            COLOR="yellow"
+          fi
+
+          PLURAL=$([ "$FINDINGS" = "1" ] && echo "" || echo "s")
+          MESSAGE="${FINDINGS} finding${PLURAL}"
+
+          python3 -c "
+          import json, sys
+          badge = {'schemaVersion': 1, 'label': 'GauntletCI', 'message': sys.argv[1], 'color': sys.argv[2]}
+          payload = {'files': {'gauntletci-badge.json': {'content': json.dumps(badge)}}}
+          print(json.dumps(payload))
+          " "$MESSAGE" "$COLOR" | \
+          curl -s -X PATCH \
+            -H "Authorization: token $GIST_SECRET" \
+            -H "Content-Type: application/json" \
+            -d @- \
+            "https://api.github.com/gists/$GIST_ID"
+
   gauntletci-analyze:
     name: GauntletCI Self-Analysis
     if: github.event_name == 'pull_request'
