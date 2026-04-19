@@ -12,8 +12,14 @@ public sealed class CorpusDb : IDisposable
     private readonly string _connectionString;
     private SqliteConnection? _connection;
 
-    public CorpusDb(string dbPath = "./data/gauntletci-corpus.db")
+    /// <summary>Default corpus DB path: <c>~/.gauntletci/corpus.db</c>.</summary>
+    public static readonly string DefaultPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+        ".gauntletci", "corpus.db");
+
+    public CorpusDb(string? dbPath = null)
     {
+        dbPath ??= DefaultPath;
         var dir = Path.GetDirectoryName(dbPath);
         if (!string.IsNullOrEmpty(dir))
             Directory.CreateDirectory(dir);

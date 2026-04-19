@@ -67,7 +67,7 @@ public static class CorpusCommand
     private static Command CreateAddPr()
     {
         var urlOpt      = new Option<string>("--url",      "GitHub PR URL (https://github.com/owner/repo/pull/NNN)") { IsRequired = true };
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt       = new Option<string>("--db",       () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("add-pr", "Hydrate a pull request and add it to the corpus");
@@ -123,7 +123,7 @@ public static class CorpusCommand
         var ownerOpt    = new Option<string>("--owner",    "Repo owner override");
         var repoOpt     = new Option<string>("--repo",     "Repo name override");
         var prOpt       = new Option<int>   ("--pr",       "PR number override");
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt       = new Option<string>("--db",       () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("normalize", "Re-normalize a fixture from its existing raw/ snapshots");
@@ -208,7 +208,7 @@ public static class CorpusCommand
             Arity = ArgumentArity.ZeroOrMore,
         };
         var outputOpt   = new Option<string>("--output",   () => "text", "Output format: text or json");
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt       = new Option<string>("--db",       () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("list", "Enumerate and filter corpus fixtures");
@@ -310,7 +310,7 @@ public static class CorpusCommand
     private static Command CreateShow()
     {
         var fixtureArg  = new Argument<string>("fixture-id", "Fixture ID to inspect");
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt       = new Option<string>("--db",       () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("show", "Inspect a single corpus fixture: metadata, findings, labels, and diff stats");
@@ -439,7 +439,7 @@ public static class CorpusCommand
 
     private static Command CreateStatus()
     {
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt       = new Option<string>("--db",       () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("status", "Show overall corpus health: fixture counts, label coverage, run coverage");
@@ -548,7 +548,7 @@ public static class CorpusCommand
             AllowMultipleArgumentsPerToken = true,
         };
         var perRepoLimitOpt  = new Option<int>   ("--per-repo-limit", () => 0,              "Max candidates per repo when using allowlist (0 = unlimited, shared across --limit)");
-        var dbOpt          = new Option<string>("--db",           () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt          = new Option<string>("--db",           () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var fixturesOpt    = new Option<string>("--fixtures",     () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("discover", "Discover pull request candidates and persist them to the corpus database");
@@ -719,7 +719,7 @@ public static class CorpusCommand
         var limitOpt    = new Option<int>   ("--limit",    () => 10,          "Maximum number of candidates to hydrate");
         var tierOpt     = new Option<string>("--tier",     () => "discovery", "Target tier (gold|silver|discovery)");
         var dryRunOpt   = new Option<bool>  ("--dry-run",  () => false,       "Print what would be processed without hydrating");
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt       = new Option<string>("--db",       () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("batch-hydrate", "Bulk hydrate pending candidates from the corpus database");
@@ -966,7 +966,7 @@ public static class CorpusCommand
     private static Command CreateRun()
     {
         var fixtureOpt  = new Option<string>("--fixture",  "Fixture ID to run rules against") { IsRequired = true };
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt       = new Option<string>("--db",       () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("run", "Run GCI rules against a single corpus fixture");
@@ -1037,7 +1037,7 @@ public static class CorpusCommand
     private static Command CreateRunAll()
     {
         var tierOpt     = new Option<string?>("--tier",     "Filter by tier (gold|silver|discovery)");
-        var dbOpt       = new Option<string> ("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt       = new Option<string> ("--db",       () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var fixturesOpt = new Option<string> ("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("run-all", "Run GCI rules against all (or filtered) corpus fixtures");
@@ -1127,7 +1127,7 @@ public static class CorpusCommand
     {
         var ruleOpt     = new Option<string?>("--rule",     "Filter by rule ID (e.g. GCI0001)");
         var tierOpt     = new Option<string?>("--tier",     "Filter by tier (gold|silver|discovery)");
-        var dbOpt       = new Option<string> ("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt       = new Option<string> ("--db",       () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var fixturesOpt = new Option<string> ("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("score", "Compute rule scorecards from corpus fixture results");
@@ -1204,7 +1204,7 @@ public static class CorpusCommand
     private static Command CreateReport()
     {
         var outputOpt   = new Option<string>("--output",   () => "./corpus-report.md", "Output file path for the markdown report");
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt       = new Option<string>("--db",       () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("report", "Export a markdown scorecard report for all rules");
@@ -1243,7 +1243,7 @@ public static class CorpusCommand
     {
         var fixtureOpt   = new Option<string>("--fixture",   "Fixture ID to label") { IsRequired = true };
         var overwriteOpt = new Option<bool>  ("--overwrite", () => false, "Overwrite existing HumanReview/Seed labels with heuristic labels");
-        var dbOpt        = new Option<string>("--db",        () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt        = new Option<string>("--db",        () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var fixturesOpt  = new Option<string>("--fixtures",  () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("label", "Apply silver heuristic labels to a single corpus fixture");
@@ -1311,7 +1311,7 @@ public static class CorpusCommand
         var llmProviderOpt  = new Option<string>("--llm-provider", () => "ollama",    "LLM provider: ollama | anthropic | github-models | none");
         var llmModelOpt     = new Option<string>("--llm-model",    () => "",          "Model override (provider default used if empty)");
         var llmUrlOpt       = new Option<string[]>("--llm-url",    () => [], "Ollama base URL(s). Repeat the flag or pass a comma-separated list. Falls back to corpus.ollamaUrls in .gauntletci.json.");
-        var dbOpt           = new Option<string>("--db",           () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt           = new Option<string>("--db",           () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var fixturesOpt     = new Option<string>("--fixtures",     () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("label-all", "Apply silver heuristic labels to all fixtures in a tier");
@@ -1487,7 +1487,7 @@ public static class CorpusCommand
 
     private static Command CreateResetStats()
     {
-        var dbOpt            = new Option<string>("--db",              () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt            = new Option<string>("--db",              () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var ruleOpt          = new Option<string?>("--rule",           "Limit reset to a specific rule ID (e.g. GCI0001)");
         var confirmOpt       = new Option<bool>("--confirm",           "Required: confirm you want to delete run and scoring data");
         var includeLabelsOpt = new Option<bool>("--include-labels",    "Also clear auto-generated expected_findings (Heuristic, FilePathCorrelation, LlmReview). Preserves HumanReview and Seed labels.");
@@ -1583,7 +1583,7 @@ public static class CorpusCommand
         var languageOpt = new Option<string>("--language", () => "cs",           "Programming language filter (e.g. cs, python)");
         var limitOpt    = new Option<int>   ("--limit",    () => 50,             "Maximum candidates to fetch");
         var labelsOpt   = new Option<string>("--labels",   () => "bug,security", "Comma-separated GitHub issue labels to search for");
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt       = new Option<string>("--db",       () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
 
         var cmd = new Command("search", "Search for corpus candidates via closed GitHub issues");
         cmd.AddOption(languageOpt);
@@ -1680,7 +1680,7 @@ public static class CorpusCommand
 
     private static Command CreateDoctor()
     {
-        var dbOpt    = new Option<string>("--db",    () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt    = new Option<string>("--db",    () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var tokenOpt = new Option<string?>("--token", "GitHub token (overrides GITHUB_TOKEN env var)");
 
         var cmd = new Command("doctor", "Check GitHub API connectivity, rate limits, and recent pipeline errors");
@@ -1832,7 +1832,7 @@ public static class CorpusCommand
         var requireReviewCommentsOpt = new Option<bool>("--require-review-comments", () => false, "Remove fixtures that have no inline review comments");
         var repoBlocklistOpt         = new Option<string[]>("--repo-blocklist",      "Remove fixtures from these owner/repo names (e.g. 'Goob-Station/Goob-Station')") { AllowMultipleArgumentsPerToken = false, Arity = ArgumentArity.ZeroOrMore };
         var dryRunOpt                = new Option<bool>  ("--dry-run",              () => false, "Print what would be purged without making changes");
-        var dbOpt                    = new Option<string>("--db",                   () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt                    = new Option<string>("--db",                   () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var fixturesOpt              = new Option<string>("--fixtures",             () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("purge", "Remove low-quality fixtures from the corpus (language mismatch, no review comments, blocklisted repos)");
@@ -1963,7 +1963,7 @@ public static class CorpusCommand
 
     private static Command CreateRejectedRepos()
     {
-        var dbOpt       = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt       = new Option<string>("--db", () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var namesOnlyOpt = new Option<bool>("--names-only", () => false, "Print only owner/repo names, one per line");
 
         var cmd = new Command("rejected-repos", "List repositories permanently rejected during corpus hydration");
@@ -2013,7 +2013,7 @@ public static class CorpusCommand
 
     private static Command CreateErrors()
     {
-        var dbOpt    = new Option<string>("--db",    () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt    = new Option<string>("--db",    () => CorpusDb.DefaultPath, "Path to corpus SQLite database");
         var stepOpt  = new Option<string?>("--step", "Filter by pipeline step (e.g. discover)");
         var limitOpt = new Option<int>("--limit",    () => 50, "Max rows to show");
 
