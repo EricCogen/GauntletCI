@@ -32,6 +32,8 @@ public sealed class SyntaxContext
     /// </summary>
     public bool IsConfirmedObjectCreation(string filePath, int lineNumber, string typeName)
     {
+        ArgumentNullException.ThrowIfNull(filePath);
+        ArgumentNullException.ThrowIfNull(typeName);
         if (!TryGetTree(filePath, out var tree)) return true;
         return SyntaxGuard.HasObjectCreation(tree!, lineNumber, typeName);
     }
@@ -42,6 +44,7 @@ public sealed class SyntaxContext
     /// </summary>
     public bool IsInCommentOrStringLiteral(string filePath, int lineNumber)
     {
+        ArgumentNullException.ThrowIfNull(filePath);
         if (!TryGetTree(filePath, out var tree)) return false;
         return SyntaxGuard.IsInCommentOrStringLiteral(tree!, lineNumber);
     }

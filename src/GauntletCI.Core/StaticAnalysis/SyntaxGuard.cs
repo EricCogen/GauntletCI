@@ -20,6 +20,8 @@ public static class SyntaxGuard
     /// </summary>
     public static bool HasObjectCreation(SyntaxTree tree, int lineNumber, string typeName)
     {
+        ArgumentNullException.ThrowIfNull(tree);
+        ArgumentNullException.ThrowIfNull(typeName);
         var text = tree.GetText();
         if (lineNumber < 1 || lineNumber > text.Lines.Count) return false;
 
@@ -39,6 +41,7 @@ public static class SyntaxGuard
     /// </summary>
     public static bool IsInCommentOrStringLiteral(SyntaxTree tree, int lineNumber)
     {
+        ArgumentNullException.ThrowIfNull(tree);
         var text = tree.GetText();
         if (lineNumber < 1 || lineNumber > text.Lines.Count) return false;
 
