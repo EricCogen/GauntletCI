@@ -34,4 +34,6 @@ public class Finding
     public ExpertFact? ExpertContext { get; set; }      // optional expert knowledge match
     /// <summary>Optional verbatim code snippet extracted from the diff by an LLM evaluation step.</summary>
     public string? CodeSnippet { get; set; }
+    /// <summary>Optional coverage annotation added by the Codecov correlation step.</summary>
+    public string? CoverageNote { get; set; }
 }
