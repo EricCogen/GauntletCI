@@ -86,6 +86,22 @@ public class SyntaxGuardTests
         Assert.False(SyntaxGuard.IsInCommentOrStringLiteral(tree, 1, 12));
     }
 
+    [Fact]
+    public void IsInCommentOrString_WhenInsideInterpolatedExpressionHole_ReturnsFalse()
+    {
+        // new Random() inside the {…} hole is live code, not a string literal
+        var tree = Parse("var s = $\"seed={new Random().Next()}\";");
+        int col = "var s = $\"seed={".Length;  // position of 'new'
+        Assert.False(SyntaxGuard.IsInCommentOrStringLiteral(tree, 1, col));
+    }
+
+    [Fact]
+    public void HasObjectCreation_HandlesGlobalAlias()
+    {
+        var tree = Parse("var r = new global::System.Random();");
+        Assert.True(SyntaxGuard.HasObjectCreation(tree, 1, "Random"));
+    }
+
     // ── SyntaxContext pass-through semantics ──────────────────────────────
 
     [Fact]

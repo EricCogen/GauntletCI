@@ -55,18 +55,20 @@ public static class SyntaxGuard
         var token = root.FindToken(position, findInsideTrivia: true);
 
         // Direct string literal token at this position
-        if (token.IsKind(SyntaxKind.StringLiteralToken)          ||
-            token.IsKind(SyntaxKind.InterpolatedStringTextToken) ||
-            token.IsKind(SyntaxKind.SingleLineRawStringLiteralToken))
+        if (token.IsKind(SyntaxKind.StringLiteralToken)             ||
+            token.IsKind(SyntaxKind.InterpolatedStringTextToken)    ||
+            token.IsKind(SyntaxKind.SingleLineRawStringLiteralToken)||
+            token.IsKind(SyntaxKind.MultiLineRawStringLiteralToken))
             return true;
 
-        // Ancestor is a string expression node
+        // Ancestor is a plain string literal expression.
+        // Deliberately excludes InterpolatedStringExpression: the {…} holes are
+        // live code, so code that appears inside an interpolated expression should
+        // still be flagged (e.g. $"{new Random().Next()}" is a real finding).
         var node = token.Parent;
         while (node is not null)
         {
-            if (node.IsKind(SyntaxKind.StringLiteralExpression)   ||
-                node.IsKind(SyntaxKind.InterpolatedStringExpression))
-                return true;
+            if (node.IsKind(SyntaxKind.StringLiteralExpression)) return true;
             node = node.Parent;
         }
 
@@ -102,8 +104,9 @@ public static class SyntaxGuard
 
     private static string GetSimpleTypeName(TypeSyntax type) => type switch
     {
-        SimpleNameSyntax simple        => simple.Identifier.ValueText,
-        QualifiedNameSyntax qualified  => qualified.Right.Identifier.ValueText,
-        _                              => string.Empty,
+        SimpleNameSyntax simple              => simple.Identifier.ValueText,
+        QualifiedNameSyntax qualified        => qualified.Right.Identifier.ValueText,
+        AliasQualifiedNameSyntax aliased     => GetSimpleTypeName(aliased.Name),
+        _                                    => string.Empty,
     };
 }
