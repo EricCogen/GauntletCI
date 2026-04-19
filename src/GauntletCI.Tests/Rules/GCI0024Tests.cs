@@ -177,4 +177,46 @@ public class GCI0024Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("Command"));
     }
+
+    [Fact]
+    public async Task SyntaxContextAllocation_ShouldNotFlag()
+    {
+        // SyntaxContext ends with "Context" (a DisposableSuffix) but is not IDisposable.
+        var raw = """
+            diff --git a/src/Rules/MyRule.cs b/src/Rules/MyRule.cs
+            index abc..def 100644
+            --- a/src/Rules/MyRule.cs
+            +++ b/src/Rules/MyRule.cs
+            @@ -1,2 +1,3 @@
+             public class MyRule {
+            +    var ctx = new SyntaxContext(node, semanticModel);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("SyntaxContext"));
+    }
+
+    [Fact]
+    public async Task InvocationContextAllocation_ShouldNotFlag()
+    {
+        // InvocationContext (System.CommandLine) ends with "Context" but is not IDisposable.
+        var raw = """
+            diff --git a/src/Cli/MyCommand.cs b/src/Cli/MyCommand.cs
+            index abc..def 100644
+            --- a/src/Cli/MyCommand.cs
+            +++ b/src/Cli/MyCommand.cs
+            @@ -1,2 +1,3 @@
+             public class MyCommand {
+            +    var ctx = new InvocationContext(parseResult);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("InvocationContext"));
+    }
 }
