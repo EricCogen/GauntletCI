@@ -981,6 +981,9 @@ public static class CorpusCommand
             var fixtures  = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
             var ct        = ctx.GetCancellationToken();
 
+            var configDir = FindGitRoot(Environment.CurrentDirectory) ?? Environment.CurrentDirectory;
+            var config    = ConfigLoader.Load(configDir);
+
             var (db, store, _) = await BuildPipeline(dbPath, fixtures, ct);
             using (db)
             {
@@ -1007,7 +1010,7 @@ public static class CorpusCommand
                     Console.WriteLine($"[corpus] Running GCI rules against {fixtureId}");
 
                     var diffText = await File.ReadAllTextAsync(diffPath, ct);
-                    var runner   = new RuleCorpusRunner(store, db);
+                    var runner   = new RuleCorpusRunner(store, db, config, configDir);
                     var findings = await runner.RunAsync(fixtureId, diffText, ct);
 
                     int high   = findings.Count(f => f.ActualConfidence >= 1.0);
@@ -1049,6 +1052,9 @@ public static class CorpusCommand
             var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
             var ct       = ctx.GetCancellationToken();
 
+            var configDir = FindGitRoot(Environment.CurrentDirectory) ?? Environment.CurrentDirectory;
+            var config    = ConfigLoader.Load(configDir);
+
             FixtureTier? tier = null;
             if (!string.IsNullOrEmpty(tierStr))
             {
@@ -1076,6 +1082,8 @@ public static class CorpusCommand
                 int completed     = 0;
                 int failed        = 0;
 
+                var runner = new RuleCorpusRunner(store, db, config, configDir);
+
                 foreach (var metadata in allFixtures)
                 {
                     var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, metadata.Tier, metadata.FixtureId);
@@ -1091,7 +1099,6 @@ public static class CorpusCommand
                     try
                     {
                         var diffText = await File.ReadAllTextAsync(diffPath, ct);
-                        var runner   = new RuleCorpusRunner(store, db);
                         var findings = await runner.RunAsync(metadata.FixtureId, diffText, ct);
 
                         totalFindings += findings.Count;

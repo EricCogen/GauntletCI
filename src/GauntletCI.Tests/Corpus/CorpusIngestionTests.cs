@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Configuration;
 using GauntletCI.Corpus.Models;
 using GauntletCI.Corpus.Normalization;
 using GauntletCI.Corpus.Runners;
@@ -434,6 +435,20 @@ public sealed class RuleCorpusRunnerTests : IDisposable
 
         var actualPath = Path.Combine(_tempDir, "discovery", fixtureId, "actual.json");
         Assert.True(File.Exists(actualPath));
+    }
+    [Fact]
+    public async Task RunAsync_WithRuleDisabledInConfig_OmitsThatRulesFindings()
+    {
+        const string fixtureId = "owner_repo_pr_disabled_rule";
+        await _store.SaveMetadataAsync(MinimalMetadata(fixtureId));
+
+        var config = new GauntletConfig();
+        config.Rules["GCI0001"] = new RuleConfig { Enabled = false };
+
+        var runner   = new RuleCorpusRunner(_store, _db, config);
+        var findings = await runner.RunAsync(fixtureId, MixedScopeDiff);
+
+        Assert.DoesNotContain(findings, f => f.RuleId == "GCI0001");
     }
 }
 
