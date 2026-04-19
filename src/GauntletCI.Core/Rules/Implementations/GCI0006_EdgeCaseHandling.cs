@@ -49,7 +49,8 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                     .Any(l => l.Content.Contains("null", StringComparison.Ordinal) ||
                                l.Content.Contains("HasValue", StringComparison.Ordinal) ||
                                l.Content.Contains("is not null", StringComparison.Ordinal) ||
-                               l.Content.Contains("!= null", StringComparison.Ordinal));
+                               l.Content.Contains("!= null", StringComparison.Ordinal) ||
+                               l.Content.Contains(".Success", StringComparison.Ordinal));
 
                 if (!hasGuard)
                 {
@@ -84,8 +85,7 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 // Check "string" or "object" in the parameter section, not just the return type
                 var parenIdx = content.IndexOf('(');
                 var paramSection = parenIdx >= 0 ? content[parenIdx..] : "";
-                if (!paramSection.Contains("string ", StringComparison.Ordinal) &&
-                    !paramSection.Contains("object ", StringComparison.Ordinal)) continue;
+                if (!HasNullableReferenceParam(paramSection)) continue;
 
                 // Check next 5 lines for null/range validation
                 int end = Math.Min(addedLines.Count, i + 6);
@@ -109,6 +109,26 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 }
             }
         }
+    }
+
+    private static bool HasNullableReferenceParam(string paramSection)
+    {
+        foreach (var keyword in new[] { "string?", "object?" })
+        {
+            int idx = 0;
+            while (idx < paramSection.Length)
+            {
+                int found = paramSection.IndexOf(keyword, idx, StringComparison.Ordinal);
+                if (found < 0) break;
+                int afterQ = found + keyword.Length;
+                if (afterQ >= paramSection.Length) return true; // at end
+                char next = paramSection[afterQ];
+                if (next == ' ' || next == '[' || next == ',' || next == ')' || next == '<')
+                    return true;
+                idx = found + 1;
+            }
+        }
+        return false;
     }
 
     private static bool IsPublicOrProtectedSignature(string line)

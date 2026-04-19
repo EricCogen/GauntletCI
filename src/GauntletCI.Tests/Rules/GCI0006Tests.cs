@@ -59,7 +59,7 @@ public class GCI0006Tests
             +++ b/src/Processor.cs
             @@ -1,1 +1,3 @@
              // existing
-            +public void Process(string input)
+            +public void Process(string? input)
             +{
             """;
 
@@ -151,6 +151,49 @@ public class GCI0006Tests
         var findings = await Rule.EvaluateAsync(diff, null);
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
+
+    [Fact]
+    public async Task PublicMethodNonNullableStringParam_ShouldNotFlag()
+    {
+        // Non-nullable string in .NET 8 nullable context cannot be null — no guard needed.
+        var raw = """
+            diff --git a/src/Processor.cs b/src/Processor.cs
+            index abc..def 100644
+            --- a/src/Processor.cs
+            +++ b/src/Processor.cs
+            @@ -1,1 +1,3 @@
+             // existing
+            +public void Process(string input)
+            +{
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
+
+    [Fact]
+    public async Task ValueAccessAfterSuccessGuard_ShouldNotFlag()
+    {
+        // match.Success is a valid null guard for match.Groups[1].Value
+        var raw = """
+            diff --git a/src/Parser.cs b/src/Parser.cs
+            index abc..def 100644
+            --- a/src/Parser.cs
+            +++ b/src/Parser.cs
+            @@ -1,1 +1,4 @@
+             // existing
+            +if (match.Success)
+            +    return match.Groups[1].Value;
+            +return string.Empty;
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("null dereference"));
     }
 
     [Fact]
