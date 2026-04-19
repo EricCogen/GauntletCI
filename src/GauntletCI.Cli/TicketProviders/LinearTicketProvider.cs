@@ -19,13 +19,13 @@ public sealed class LinearTicketProvider : ITicketProvider
         var query  = new { query = "query($id:String!){issue(id:$id){id title description url}}", variables = new { id = issueKey } };
         var body   = JsonSerializer.Serialize(query);
 
-        var req = new HttpRequestMessage(HttpMethod.Post, "https://api.linear.app/graphql")
+        using var req = new HttpRequestMessage(HttpMethod.Post, "https://api.linear.app/graphql")
         {
             Content = new StringContent(body, Encoding.UTF8, "application/json")
         };
         req.Headers.Authorization = new AuthenticationHeaderValue(apiKey);
 
-        var resp = await Http.SendAsync(req, ct);
+        using var resp = await Http.SendAsync(req, ct);
         if (!resp.IsSuccessStatusCode) return null;
 
         var json = await resp.Content.ReadAsStringAsync(ct);

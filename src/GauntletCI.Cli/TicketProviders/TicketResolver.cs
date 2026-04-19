@@ -6,10 +6,11 @@ namespace GauntletCI.Cli.TicketProviders;
 public static class TicketResolver
 {
     // Jira: e.g. PROJ-1234, COMP-456 (uppercase letters + digits, dash, digits)
+    // Note: GH-42 matches this pattern (treating "GH" as a Jira project key) — Jira takes priority.
     private static readonly Regex JiraKey = new(@"\b([A-Z][A-Z0-9]+-\d+)\b", RegexOptions.Compiled);
     // Linear: e.g. eng-123, team-456 (lowercase letters, dash, digits)
     private static readonly Regex LinearKey = new(@"\b([a-z][a-z0-9]+-\d+)\b", RegexOptions.Compiled);
-    // GitHub: #42 or GH-42
+    // GitHub: #42 (GH-42 is handled by Jira regex above)
     private static readonly Regex GitHubKey = new(@"(?:#|GH-)(\d+)\b", RegexOptions.Compiled);
 
     /// <summary>

@@ -24,12 +24,12 @@ public sealed class JiraTicketProvider : ITicketProvider
         var email   = Environment.GetEnvironmentVariable("JIRA_USER_EMAIL")!;
         var creds   = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{email}:{token}"));
 
-        var req = new HttpRequestMessage(HttpMethod.Get,
+        using var req = new HttpRequestMessage(HttpMethod.Get,
             $"{baseUrl}/rest/api/3/issue/{issueKey}?fields=summary,description");
         req.Headers.Authorization = new AuthenticationHeaderValue("Basic", creds);
         req.Headers.Accept.ParseAdd("application/json");
 
-        var resp = await Http.SendAsync(req, ct);
+        using var resp = await Http.SendAsync(req, ct);
         if (!resp.IsSuccessStatusCode) return null;
 
         var json = await resp.Content.ReadAsStringAsync(ct);
@@ -54,12 +54,14 @@ public sealed class JiraTicketProvider : ITicketProvider
             return null;
         // Jira v3 uses Atlassian Document Format; extract plain text from paragraphs
         if (d.ValueKind == JsonValueKind.Object &&
-            d.TryGetProperty("content", out var content))
+            d.TryGetProperty("content", out var content) &&
+            content.ValueKind == JsonValueKind.Array)
         {
             var sb = new StringBuilder();
             foreach (var block in content.EnumerateArray())
             {
-                if (!block.TryGetProperty("content", out var inner)) continue;
+                if (!block.TryGetProperty("content", out var inner) ||
+                    inner.ValueKind != JsonValueKind.Array) continue;
                 foreach (var node in inner.EnumerateArray())
                 {
                     if (node.TryGetProperty("text", out var t)) sb.Append(t.GetString()).Append(' ');
