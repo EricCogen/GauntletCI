@@ -30,6 +30,8 @@ public class GCI0004_BreakingChangeRisk : RuleBase
     {
         foreach (var file in diff.Files)
         {
+            if (IsTestFile(file.NewPath ?? file.OldPath)) continue;
+
             var removedPublic = file.RemovedLines
                 .Where(l => IsPublicSignature(l.Content))
                 .ToList();
@@ -82,6 +84,8 @@ public class GCI0004_BreakingChangeRisk : RuleBase
     {
         foreach (var file in diff.Files)
         {
+            if (IsTestFile(file.NewPath ?? file.OldPath)) continue;
+
             var removedObsolete = file.RemovedLines
                 .Where(l => l.Content.Contains("[Obsolete", StringComparison.OrdinalIgnoreCase))
                 .ToList();
@@ -97,6 +101,22 @@ public class GCI0004_BreakingChangeRisk : RuleBase
                     confidence: Confidence.Medium));
             }
         }
+    }
+
+    private static bool IsTestFile(string? path)
+    {
+        if (path is null) return false;
+        var p = path.Replace('\\', '/');
+        return p.Contains("/test/", StringComparison.OrdinalIgnoreCase)
+            || p.Contains("/tests/", StringComparison.OrdinalIgnoreCase)
+            || p.Contains(".Tests/", StringComparison.OrdinalIgnoreCase)
+            || p.Contains(".Test/", StringComparison.OrdinalIgnoreCase)
+            || p.Contains("/Mock", StringComparison.OrdinalIgnoreCase)
+            || p.Contains("/Fake", StringComparison.OrdinalIgnoreCase)
+            || p.EndsWith("Tests.cs", StringComparison.OrdinalIgnoreCase)
+            || p.EndsWith("Test.cs", StringComparison.OrdinalIgnoreCase)
+            || p.EndsWith("Spec.cs", StringComparison.OrdinalIgnoreCase)
+            || p.EndsWith("Specs.cs", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsPublicSignature(string line)
