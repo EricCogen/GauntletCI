@@ -202,7 +202,7 @@ public static class AnalyzeCommand
                         branchName = (await gitProc.StandardOutput.ReadToEndAsync(ct)).Trim();
                         await gitProc.WaitForExitAsync(ct);
                     }
-                    catch { /* soft fail */ }
+                    catch (Exception ex) { Console.Error.WriteLine($"[ticket] Branch detection failed: {ex.Message}"); }
 
                     await TicketResolver.AnnotateFindingsAsync(branchName, result.Findings, ct);
                 }
