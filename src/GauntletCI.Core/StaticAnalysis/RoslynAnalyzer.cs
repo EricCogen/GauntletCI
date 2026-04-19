@@ -14,7 +14,12 @@ public class RoslynAnalyzer
     private static readonly CSharpCompilationOptions DefaultOptions =
         new(OutputKind.DynamicallyLinkedLibrary, reportSuppressedDiagnostics: false);
 
-    public async Task<AnalyzerResult> AnalyzeFileAsync(
+    /// <summary>
+    /// Analyzes a single file and returns both the diagnostics result and the parsed
+    /// <see cref="SyntaxTree"/>. The tree is used by <see cref="SyntaxContext"/> to
+    /// provide Roslyn-backed false-positive guards in downstream rules.
+    /// </summary>
+    public async Task<(AnalyzerResult Result, SyntaxTree? Tree)> AnalyzeFileAsync(
         string filePath,
         string sourceCode,
         IEnumerable<int>? changedLineNumbers = null,
@@ -55,21 +60,21 @@ public class RoslynAnalyzer
                 })
                 .ToList();
 
-            return new AnalyzerResult
+            return (new AnalyzerResult
             {
                 AnalyzedFile = filePath,
                 Diagnostics = filtered,
                 Success = true
-            };
+            }, syntaxTree);
         }
         catch (Exception ex)
         {
-            return new AnalyzerResult
+            return (new AnalyzerResult
             {
                 AnalyzedFile = filePath,
                 Success = false,
                 ErrorMessage = ex.Message
-            };
+            }, null);
         }
     }
 

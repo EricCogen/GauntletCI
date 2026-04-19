@@ -32,6 +32,13 @@ public sealed class AnalysisContext
     public AnalyzerResult? StaticAnalysis { get; init; }
 
     /// <summary>
+    /// Roslyn syntax trees for files analyzed in this run.
+    /// Used by rules to perform syntax-level false-positive guards.
+    /// Null when no C# files were analyzed or static analysis was skipped.
+    /// </summary>
+    public SyntaxContext? Syntax { get; init; }
+
+    /// <summary>
     /// Primary target framework moniker detected from the repo's .csproj files
     /// (e.g. <c>net8.0</c>, <c>net9.0</c>). Null when detection was not possible.
     /// Rules use this to tailor suggested actions to the target platform.

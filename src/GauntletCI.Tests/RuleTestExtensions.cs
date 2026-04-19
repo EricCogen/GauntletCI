@@ -24,7 +24,8 @@ internal static class RuleTestExtensions
         DiffContext diff,
         AnalyzerResult? staticAnalysis = null,
         CancellationToken ct = default,
-        string? targetFramework = null)
+        string? targetFramework = null,
+        SyntaxContext? syntax = null)
     {
         var allRecords      = diff.Files.Select(f => FileAnalyzer.Analyze(f)).ToList();
         var eligibleRecords = allRecords.Where(r => r.IsEligible).ToList();
@@ -49,6 +50,7 @@ internal static class RuleTestExtensions
             FileStatistics  = FileEligibilityStatistics.From(allRecords),
             Diff            = filteredDiff,
             StaticAnalysis  = staticAnalysis,
+            Syntax          = syntax ?? staticAnalysis?.Syntax,
             TargetFramework = targetFramework ?? staticAnalysis?.TargetFramework,
         };
 

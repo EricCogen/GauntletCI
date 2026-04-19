@@ -16,6 +16,14 @@ public class AnalyzerResult
     /// (e.g. <c>net8.0</c>, <c>net6.0</c>). Null when detection was not possible.
     /// </summary>
     public string? TargetFramework { get; init; }
+
+    /// <summary>
+    /// Per-file Roslyn syntax trees built during analysis.
+    /// Not serialized — used at runtime only by <see cref="SyntaxContext"/> guards.
+    /// Null when analysis was not run or all files failed to parse.
+    /// </summary>
+    [System.Text.Json.Serialization.JsonIgnore]
+    public SyntaxContext? Syntax { get; init; }
 }
 
 public class AnalyzerDiagnostic

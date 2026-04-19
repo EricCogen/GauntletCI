@@ -116,7 +116,7 @@ public class StaticAnalysisTests
             }
             """;
 
-        var result = await analyzer.AnalyzeFileAsync("Foo.cs", source);
+        var (result, _) = await analyzer.AnalyzeFileAsync("Foo.cs", source);
 
         Assert.True(result.Success);
         Assert.Equal("Foo.cs", result.AnalyzedFile);
@@ -128,7 +128,7 @@ public class StaticAnalysisTests
         var analyzer = new RoslynAnalyzer();
         var source = "class Foo { }";
 
-        var result = await analyzer.AnalyzeFileAsync("test.cs", source, [1, 2, 3]);
+        var (result, _) = await analyzer.AnalyzeFileAsync("test.cs", source, [1, 2, 3]);
 
         Assert.True(result.Success);
         Assert.NotNull(result.Diagnostics);
@@ -140,7 +140,7 @@ public class StaticAnalysisTests
         var analyzer = new RoslynAnalyzer();
         var source = "class Bar { }";
 
-        var result = await analyzer.AnalyzeFileAsync("bar.cs", source, null);
+        var (result, _) = await analyzer.AnalyzeFileAsync("bar.cs", source, null);
 
         Assert.True(result.Success);
     }
