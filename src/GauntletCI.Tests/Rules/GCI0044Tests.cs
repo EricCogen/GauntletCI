@@ -88,8 +88,9 @@ public class GCI0044Tests
              public class AggregatorService {
             +    public List<Result> Aggregate(IEnumerable<Item> items) {
             +        var results = new List<Result>();
-            +        foreach (var item in items) {
-            +            results.Add(Transform(item));
+            +        for (int i = 0; i < 100; i++)
+            +        {
+            +            results.Add(Transform(i));
             +        }
             +        return results;
             +    }
@@ -100,6 +101,34 @@ public class GCI0044Tests
         var findings = await Rule.EvaluateAsync(diff, null);
 
         Assert.Contains(findings, f => f.Summary.Contains(".Add"));
+    }
+
+    [Fact]
+    public async Task ForeachAddAccumulator_ShouldNotFire()
+    {
+        // foreach + .Add() is the standard accumulator pattern — should not be flagged
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,5 +1,8 @@
+             public class Service {
+                 public List<string> GetItems(IEnumerable<string> source) {
+                     var result = new List<string>();
+            +        foreach (var item in source)
+            +        {
+            +            result.Add(item);
+            +        }
+                     return result;
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.RuleId == "GCI0044" && f.Summary.Contains("Add("));
     }
 
     [Fact]

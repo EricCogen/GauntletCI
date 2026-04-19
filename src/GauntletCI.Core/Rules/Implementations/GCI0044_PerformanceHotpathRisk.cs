@@ -20,6 +20,9 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
     private static readonly string[] LoopKeywords =
         ["for (", "foreach (", "while ("];
 
+    // "foreach" is the standard accumulator pattern — only flag for/while unbounded growth
+    private static readonly string[] UnboundedLoopKeywords = ["for (", "while ("];
+
     private static bool IsTestFile(string path) =>
         path.Contains("test", StringComparison.OrdinalIgnoreCase) ||
         path.Contains("spec", StringComparison.OrdinalIgnoreCase);
@@ -29,6 +32,15 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
 
     private static bool HasLoopConstruct(string content) =>
         LoopKeywords.Any(k => content.Contains(k, StringComparison.Ordinal));
+
+    private static string StripAssignmentPrefix(string content)
+    {
+        // Strip "var x = " or "Type x = " prefix before the actual expression
+        var eqIdx = content.IndexOf('=');
+        if (eqIdx > 0 && eqIdx < content.Length - 1 && content[eqIdx - 1] != '!' && content[eqIdx - 1] != '<' && content[eqIdx - 1] != '>' && content[eqIdx + 1] != '=')
+            return content[(eqIdx + 1)..].TrimStart();
+        return content;
+    }
 
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
@@ -66,19 +78,21 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
     {
         foreach (var hunk in file.Hunks)
         {
-            var addedLines = hunk.Lines
-                .Where(l => l.Kind == DiffLineKind.Added)
+            // Include context lines so loop keywords on unchanged lines are detected
+            var nonRemovedLines = hunk.Lines
+                .Where(l => l.Kind != DiffLineKind.Removed)
                 .ToList();
 
-            for (int i = 0; i < addedLines.Count; i++)
+            for (int i = 0; i < nonRemovedLines.Count; i++)
             {
-                if (!HasLinqCall(addedLines[i].Content)) continue;
+                if (nonRemovedLines[i].Kind != DiffLineKind.Added) continue;
+                if (!HasLinqCall(nonRemovedLines[i].Content)) continue;
 
                 int lookbackStart = Math.Max(0, i - 10);
                 bool inLoop = false;
                 for (int j = lookbackStart; j < i; j++)
                 {
-                    if (HasLoopConstruct(addedLines[j].Content))
+                    if (HasLoopConstruct(nonRemovedLines[j].Content))
                     {
                         inLoop = true;
                         break;
@@ -90,11 +104,11 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
                 findings.Add(CreateFinding(
                     file,
                     summary: "LINQ query inside a loop",
-                    evidence: $"Line {addedLines[i].LineNumber}: {addedLines[i].Content.Trim()}",
+                    evidence: $"Line {nonRemovedLines[i].LineNumber}: {nonRemovedLines[i].Content.Trim()}",
                     whyItMatters: "LINQ queries inside loops cause repeated enumeration, yielding O(n²) or worse complexity that degrades performance at scale.",
                     suggestedAction: "Move the LINQ query outside the loop, pre-compute the result into a collection, or use a dictionary/lookup for O(1) access.",
                     confidence: Confidence.Medium,
-                    line: addedLines[i]));
+                    line: nonRemovedLines[i]));
             }
         }
     }
@@ -116,7 +130,7 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
                 bool inLoop = false;
                 for (int j = lookbackStart; j < i; j++)
                 {
-                    if (HasLoopConstruct(addedLines[j].Content))
+                    if (UnboundedLoopKeywords.Any(k => addedLines[j].Content.Contains(k, StringComparison.Ordinal)))
                     {
                         inLoop = true;
                         break;
