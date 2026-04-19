@@ -45,6 +45,7 @@ artifacts/
 !docs/DEVELOPMENT.md
 !docs/TROUBLESHOOTING.md
 !docs/features-benefits.md
+!Docker/docker.md
 
 # Internal pipeline and tooling (commercial — not public)
 build-corpus.ps1
