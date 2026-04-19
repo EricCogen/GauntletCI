@@ -31,7 +31,10 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
 
     private void CheckLogicRemovedWithoutTests(DiffContext diff, List<Finding> findings)
     {
-        var removedLogicLines = diff.AllRemovedLines
+        // Only count logic removals from production files — skip test and generated files.
+        var removedLogicLines = diff.Files
+            .Where(f => !WellKnownPatterns.IsTestFile(f.NewPath) && !WellKnownPatterns.IsGeneratedFile(f.NewPath))
+            .SelectMany(f => f.RemovedLines)
             .Where(l => !l.Content.TrimStart().StartsWith("//", StringComparison.Ordinal)
                      && LogicKeywords.Any(k => l.Content.Contains(k, StringComparison.Ordinal)))
             .ToList();
@@ -61,6 +64,8 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
     {
         foreach (var file in diff.Files)
         {
+            if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+
             var removedSigs = file.RemovedLines
                 .Where(l => AccessModifiers.Any(m => l.Content.Contains(m)) && l.Content.Contains('('))
                 .ToList();

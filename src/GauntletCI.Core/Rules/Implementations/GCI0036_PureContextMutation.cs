@@ -32,6 +32,7 @@ public class GCI0036_PureContextMutation : RuleBase
     private void CheckPureContextMutations(DiffFile file, List<Finding> findings)
     {
         if (WellKnownPatterns.IsTestFile(file.NewPath)) return;
+        if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) return;
 
         var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
 

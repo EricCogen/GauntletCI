@@ -56,4 +56,33 @@ internal static class WellKnownPatterns
         if (segment.Length > 5 && segment.EndsWith("tests") && !char.IsLetter(segment[^6])) return true;
         return false;
     }
+
+    /// <summary>
+    /// Returns <c>true</c> when the given path is an auto-generated file that should not be
+    /// subject to rule analysis (source generators, designer files, scaffolded API clients, etc.).
+    /// </summary>
+    /// <param name="path">The file path to inspect.</param>
+    public static bool IsGeneratedFile(string path)
+    {
+        var normPath = path.Replace('\\', '/');
+
+        // Directory segment: any path with a /Generated/ folder is auto-generated
+        if (normPath.Contains("/Generated/", StringComparison.OrdinalIgnoreCase)) return true;
+        // Build output or intermediate artifacts
+        if (normPath.Contains("/obj/", StringComparison.OrdinalIgnoreCase)) return true;
+
+        var fileName = normPath.Contains('/')
+            ? normPath[(normPath.LastIndexOf('/') + 1)..]
+            : normPath;
+
+        // Roslyn source generator outputs: Foo.g.cs, Foo.g.i.cs
+        if (fileName.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase)) return true;
+        if (fileName.EndsWith(".g.i.cs", StringComparison.OrdinalIgnoreCase)) return true;
+        // WinForms / WPF designer files
+        if (fileName.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase)) return true;
+        // Assembly-level attribute file emitted by SDK
+        if (fileName.Equals("AssemblyInfo.cs", StringComparison.OrdinalIgnoreCase)) return true;
+
+        return false;
+    }
 }

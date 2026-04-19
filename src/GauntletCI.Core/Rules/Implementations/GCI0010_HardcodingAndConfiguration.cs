@@ -42,6 +42,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         foreach (var file in context.Diff.Files)
         {
             if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
             CheckIpAddress(file, findings);
             CheckHardcodedUrl(file, findings);
             CheckConnectionString(file, findings);

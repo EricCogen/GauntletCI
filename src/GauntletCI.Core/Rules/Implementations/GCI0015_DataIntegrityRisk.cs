@@ -31,14 +31,21 @@ public class GCI0015_DataIntegrityRisk : RuleBase
 
         foreach (var file in diff.Files)
         {
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
             CheckMassAssignment(file, findings);
             CheckUnsafeHttpInputBinding(file, findings);
         }
 
-        foreach (var line in diff.AllAddedLines)
+        foreach (var file in diff.Files)
         {
-            CheckUncheckedCasts(line, findings);
-            CheckSqlIgnore(line, findings);
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+            foreach (var line in file.AddedLines)
+            {
+                CheckUncheckedCasts(line, findings);
+                CheckSqlIgnore(line, findings);
+            }
         }
 
         AddRoslynFindings(context.StaticAnalysis, findings);

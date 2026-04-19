@@ -65,6 +65,7 @@ public class GCI0024_ResourceLifecycle : RuleBase
     private void CheckUnguardedDisposables(DiffFile file, List<Finding> findings)
     {
         if (WellKnownPatterns.IsTestFile(file.NewPath)) return;
+        if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) return;
 
         var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
 
