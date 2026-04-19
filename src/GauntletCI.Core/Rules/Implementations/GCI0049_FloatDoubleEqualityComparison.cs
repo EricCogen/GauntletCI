@@ -59,18 +59,15 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
                 if (trimmed.StartsWith("//") || trimmed.StartsWith("*") || trimmed.StartsWith("/*"))
                     continue;
 
-                // Skip string literals — crude but effective: skip if inside a quoted region
-                if (IsLikelyStringComparison(content)) continue;
-
                 // Syntax guard: suppress if the match position is inside a comment or string literal.
                 if (context.Syntax?.IsInCommentOrStringLiteral(
                         file.NewPath, line.LineNumber, GetFirstMatchIndex(content)) == true)
                     continue;
 
-                bool matches = FloatLiteralOnRightRegex.IsMatch(content)
-                            || FloatLiteralOnLeftRegex.IsMatch(content)
-                            || FloatCastWithEqualityRegex.IsMatch(content)
-                            || FloatTypeWithEqualityRegex.IsMatch(content);
+                bool matches = HasMatchOutsideStringLiteral(FloatLiteralOnRightRegex, content)
+                            || HasMatchOutsideStringLiteral(FloatLiteralOnLeftRegex, content)
+                            || HasMatchOutsideStringLiteral(FloatCastWithEqualityRegex, content)
+                            || HasMatchOutsideStringLiteral(FloatTypeWithEqualityRegex, content);
 
                 if (!matches) continue;
 
@@ -105,6 +102,89 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
     {
         var m = regex.Match(content);
         if (m.Success && m.Index < min) min = m.Index;
+    }
+
+    /// <summary>
+    /// Returns true if <paramref name="position"/> falls inside a string literal in <paramref name="content"/>.
+    /// Handles regular strings (with \" escape) and verbatim strings (@"..." with "" escape).
+    /// Does not handle raw string literals (""" ... """) — treated conservatively as not-in-string.
+    /// </summary>
+    private static bool IsInsideStringLiteralAt(string content, int position)
+    {
+        bool inString = false;
+        bool isVerbatim = false;
+        int i = 0;
+
+        while (i < content.Length)
+        {
+            if (i == position) return inString;
+
+            char c = content[i];
+
+            if (!inString)
+            {
+                if (c == '@' && i + 1 < content.Length && content[i + 1] == '"')
+                {
+                    inString = true;
+                    isVerbatim = true;
+                    i += 2; // skip @"
+                    continue;
+                }
+                if (c == '"')
+                {
+                    inString = true;
+                    isVerbatim = false;
+                    i++;
+                    continue;
+                }
+            }
+            else if (isVerbatim)
+            {
+                if (c == '"' && i + 1 < content.Length && content[i + 1] == '"')
+                {
+                    i += 2; // escaped quote "" in verbatim string
+                    continue;
+                }
+                if (c == '"')
+                {
+                    inString = false;
+                    i++;
+                    continue;
+                }
+            }
+            else // regular string
+            {
+                if (c == '\\')
+                {
+                    i += 2; // skip escape sequence
+                    continue;
+                }
+                if (c == '"')
+                {
+                    inString = false;
+                    i++;
+                    continue;
+                }
+            }
+
+            i++;
+        }
+
+        return inString;
+    }
+
+    /// <summary>
+    /// Returns true if <paramref name="regex"/> has at least one match in <paramref name="content"/>
+    /// that falls outside a string literal.
+    /// </summary>
+    private static bool HasMatchOutsideStringLiteral(Regex regex, string content)
+    {
+        foreach (Match match in regex.Matches(content))
+        {
+            if (!IsInsideStringLiteralAt(content, match.Index))
+                return true;
+        }
+        return false;
     }
 
     /// <summary>

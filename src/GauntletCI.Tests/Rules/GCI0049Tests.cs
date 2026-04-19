@@ -219,4 +219,50 @@ public class GCI0049Tests
 
         Assert.Empty(findings);
     }
+
+    [Fact]
+    public async Task VerbatimStringWithEqualityOperator_ShouldNotFlag()
+    {
+        // A verbatim string literal containing == or != as regex content — not a real C# comparison
+        var raw = """
+            diff --git a/src/Parser.cs b/src/Parser.cs
+            index abc..def 100644
+            --- a/src/Parser.cs
+            +++ b/src/Parser.cs
+            @@ -1,3 +1,4 @@
+             public class Parser {
+                 public bool IsOp(string token) {
+            +        return Regex.IsMatch(token, @"(?:==|!=)\s*");
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public async Task RegularStringWithEqualityOperator_ShouldNotFlag()
+    {
+        // A regular string literal containing == as content (e.g. diagnostic message)
+        var raw = """
+            diff --git a/src/Analyzer.cs b/src/Analyzer.cs
+            index abc..def 100644
+            --- a/src/Analyzer.cs
+            +++ b/src/Analyzer.cs
+            @@ -1,3 +1,4 @@
+             public class Analyzer {
+                 void Report() {
+            +        throw new InvalidOperationException("Use epsilon check instead of == for doubles");
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
 }
