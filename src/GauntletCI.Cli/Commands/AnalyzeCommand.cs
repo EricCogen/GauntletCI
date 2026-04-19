@@ -52,6 +52,10 @@ public static class AnalyzeCommand
         var noBaselineFlag = new Option<bool>("--no-baseline", "Ignore the baseline file and show all findings");
         var showContextOption = new Option<int>("--show-context", () => 0, "Include N surrounding diff lines around each finding evidence");
         var prCommentSuggestFlag = new Option<bool>("--pr-comment-suggest", "Print PR review comment body to stdout; when used without --github-pr-comments this avoids posting to the GitHub API");
+        var notifySlackOption = new Option<string?>("--notify-slack", "Slack Incoming Webhook URL (or set GAUNTLETCI_SLACK_WEBHOOK env var). Posts Block findings to Slack.");
+        var notifyTeamsOption = new Option<string?>("--notify-teams", "Teams Incoming Webhook URL (or set GAUNTLETCI_TEAMS_WEBHOOK env var). Posts Block findings to Teams.");
+        var withCoverageFlag = new Option<bool>("--with-coverage", "Correlate findings with Codecov/Coveralls coverage data (requires CODECOV_TOKEN or COVERALLS_REPO_TOKEN env var)");
+        var githubChecksFlag = new Option<bool>("--github-checks", "Post findings as a GitHub Checks API check run with annotations (requires checks: write permission)");
 
         var cmd = new Command("analyze", "Analyse a git diff for pre-commit risks")
         {
@@ -74,6 +78,10 @@ public static class AnalyzeCommand
             noBaselineFlag,
             showContextOption,
             prCommentSuggestFlag,
+            notifySlackOption,
+            notifyTeamsOption,
+            withCoverageFlag,
+            githubChecksFlag,
         };
 
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
@@ -97,6 +105,8 @@ public static class AnalyzeCommand
             var noBaseline = ctx.ParseResult.GetValueForOption(noBaselineFlag);
             var showContext = ctx.ParseResult.GetValueForOption(showContextOption);
             var prCommentSuggest = ctx.ParseResult.GetValueForOption(prCommentSuggestFlag);
+            var withCoverage  = ctx.ParseResult.GetValueForOption(withCoverageFlag);
+            var githubChecks  = ctx.ParseResult.GetValueForOption(githubChecksFlag);
             var ct = ctx.GetCancellationToken();
 
             // Enforce single diff source
@@ -232,6 +242,9 @@ public static class AnalyzeCommand
                 else
                     await RunLlmStepsAsync();
 
+                if (withCoverage)
+                    await CoverageCorrelator.AnnotateAsync(result, ct);
+
                 if (isSarifOutput)
                 {
                     SarifWriter.Write(result);
@@ -294,6 +307,16 @@ public static class AnalyzeCommand
                 // Skip posting to GitHub API when --pr-comment-suggest is active (it acts as a dry-run)
                 if (ghPrComments && !prCommentSuggest)
                     await GitHubPrReviewWriter.WriteAsync(result, ctx.GetCancellationToken());
+
+                if (githubChecks)
+                    await GitHubChecksWriter.WriteAsync(result, ct);
+
+                var slackUrl = ctx.ParseResult.GetValueForOption(notifySlackOption)
+                            ?? Environment.GetEnvironmentVariable("GAUNTLETCI_SLACK_WEBHOOK");
+                var teamsUrl = ctx.ParseResult.GetValueForOption(notifyTeamsOption)
+                            ?? Environment.GetEnvironmentVariable("GAUNTLETCI_TEAMS_WEBHOOK");
+                if (slackUrl is not null || teamsUrl is not null)
+                    await SlackTeamsNotifier.NotifyAsync(result, slackUrl, teamsUrl, ct);
 
                 await TelemetryCollector.CollectAsync(result, diff, repo.FullName, ct: ct);
 
