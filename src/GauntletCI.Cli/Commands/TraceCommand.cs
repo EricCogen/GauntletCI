@@ -135,7 +135,7 @@ public static class TraceCommand
                     var pdIncidents = await IncidentClient.FetchPagerDutyAsync(pdToken, sinceDto, now, ct);
                     allIncidents.AddRange(pdIncidents);
                     if (!isJson)
-                        AnsiConsole.MarkupLine($"[dim]  📟  Fetched {pdIncidents.Count} PagerDuty incident(s)[/]");
+                        AnsiConsole.MarkupLine($"[dim]  {(ascii ? "[PD]" : "📟")}  Fetched {pdIncidents.Count} PagerDuty incident(s)[/]");
                 }
                 else
                 {
@@ -144,10 +144,10 @@ public static class TraceCommand
 
                 if (!string.IsNullOrWhiteSpace(ogToken))
                 {
-                    var ogAlerts = await IncidentClient.FetchOpsgenieAsync(ogToken, ct);
+                    var ogAlerts = await IncidentClient.FetchOpsgenieAsync(ogToken, sinceDto, now, ct);
                     allIncidents.AddRange(ogAlerts);
                     if (!isJson)
-                        AnsiConsole.MarkupLine($"[dim]  📟  Fetched {ogAlerts.Count} Opsgenie alert(s)[/]");
+                        AnsiConsole.MarkupLine($"[dim]  {(ascii ? "[OG]" : "📟")}  Fetched {ogAlerts.Count} Opsgenie alert(s)[/]");
                 }
                 else
                 {
@@ -173,9 +173,9 @@ public static class TraceCommand
                 if (!string.IsNullOrWhiteSpace(postToPd) && !string.IsNullOrWhiteSpace(pdToken))
                 {
                     var textContent = BuildHeatmapText(baseRef, result, correlations, allIncidents);
-                    await IncidentClient.PostPagerDutyNoteAsync(pdToken, postToPd, $"GauntletCI Change Risk Heatmap:\n{textContent}", ct);
-                    if (!isJson)
-                        AnsiConsole.MarkupLine($"[dim]  ✅  Posted heatmap note to PagerDuty incident {Markup.Escape(postToPd)}[/]");
+                    var posted = await IncidentClient.PostPagerDutyNoteAsync(pdToken, postToPd, $"GauntletCI Change Risk Heatmap:\n{textContent}", ct);
+                    if (!isJson && posted)
+                        AnsiConsole.MarkupLine($"[dim]  {(ascii ? "[OK]" : "✅")}  Posted heatmap note to PagerDuty incident {Markup.Escape(postToPd)}[/]");
                 }
                 else if (!string.IsNullOrWhiteSpace(postToPd) && string.IsNullOrWhiteSpace(pdToken))
                 {
@@ -213,7 +213,7 @@ public static class TraceCommand
         AnsiConsole.MarkupLine("[cyan]  GauntletCI Change Risk Heatmap[/]");
         AnsiConsole.MarkupLine($"[cyan]{hr}[/]");
         AnsiConsole.MarkupLine($"  Base ref : {Markup.Escape(baseRef)}");
-        AnsiConsole.MarkupLine($"  Window   : {since:u} → {now:u}");
+        AnsiConsole.MarkupLine($"  Window   : {since:u} {(ascii ? "->" : "→")} {now:u}");
         AnsiConsole.MarkupLine($"  Findings : {result.Findings.Count}");
         AnsiConsole.MarkupLine($"  Incidents: {allIncidents.Count}");
         AnsiConsole.WriteLine();

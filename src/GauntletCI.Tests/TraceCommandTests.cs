@@ -183,11 +183,11 @@ public class TraceCommandTests
 
         var findings = firstFile.GetProperty("findings");
         Assert.Equal(1, findings.GetArrayLength());
-        Assert.Equal("GCI0010", findings[0].GetProperty("RuleId").GetString());
+        Assert.Equal("GCI0010", findings[0].GetProperty("ruleId").GetString());
 
         var correlatedInc = firstFile.GetProperty("correlatedIncidents");
         Assert.Equal(1, correlatedInc.GetArrayLength());
-        Assert.Equal("INC010", correlatedInc[0].GetProperty("Id").GetString());
+        Assert.Equal("INC010", correlatedInc[0].GetProperty("id").GetString());
 
         var allInc = root.GetProperty("allIncidents");
         Assert.Equal(1, allInc.GetArrayLength());
