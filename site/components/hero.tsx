@@ -22,6 +22,10 @@ export function Hero() {
             GauntletCI identifies the high-risk logic shifts hidden in your diffs.
           </p>
 
+          <p className="mt-4 max-w-2xl text-base text-muted-foreground leading-relaxed text-pretty">
+            Detect breaking changes, regressions, and behavioral drift that pass tests and code review.
+          </p>
+
           <p className="mt-3 text-sm text-muted-foreground/70">
             Built for .NET and C# teams who want diff-aware risk detection before code review.
           </p>
