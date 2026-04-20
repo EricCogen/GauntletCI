@@ -50,7 +50,7 @@ export function Hero() {
             </div>
             <Button variant="outline" size="lg" asChild>
               <Link href="/rules">
-                View the Rule Library (GCI0001-GCI0037)
+                View the Rule Library
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
