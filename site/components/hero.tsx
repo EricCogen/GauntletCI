@@ -28,8 +28,8 @@ export function Hero() {
           
           <div className="mt-10 flex flex-col sm:flex-row items-center gap-4">
             <Button size="lg" asChild>
-              <Link href="#quickstart">
-                Get Started
+              <Link href="#pricing">
+                Pricing
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
