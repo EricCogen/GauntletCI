@@ -5,6 +5,7 @@ type CellValue = "check" | "none" | "license";
 interface FeatureRow {
   label: string;
   divider?: boolean;
+  proTooltip?: string;
   community: CellValue;
   pro: CellValue;
   teams: CellValue;
@@ -21,7 +22,7 @@ const features: FeatureRow[] = [
 
   // Pro
   { label: "Baseline Delta Mode",                  divider: true, community: "none", pro: "license", teams: "check", enterprise: "check" },
-  { label: "Local LLM Enrichment (AI Explanations)", community: "none", pro: "license", teams: "check", enterprise: "check" },
+  { label: "Local LLM Enrichment (AI Explanations)", proTooltip: "Requires local Ollama setup. Setup guide included with license.", community: "none", pro: "license", teams: "check", enterprise: "check" },
   { label: "AI Assistant Integration (MCP Server)", community: "none", pro: "license", teams: "check", enterprise: "check" },
 
   // Teams
@@ -36,7 +37,7 @@ const features: FeatureRow[] = [
   { label: "Complete Audit Trail Export",          community: "none", pro: "none", teams: "none", enterprise: "license" },
 ];
 
-function Cell({ value }: { value: CellValue }) {
+function Cell({ value, tooltip }: { value: CellValue; tooltip?: string }) {
   if (value === "check") {
     return (
       <div className="flex justify-center">
@@ -47,8 +48,21 @@ function Cell({ value }: { value: CellValue }) {
   if (value === "license") {
     return (
       <div className="flex items-center justify-center gap-1.5">
-        <Key className="h-3 w-3 text-amber-400/80 shrink-0" />
-        <span className="text-xs text-amber-400/80 hidden sm:inline">License</span>
+        {/* TODO: replace href="#" with real conversion/purchase path */}
+        <a href="#" className="flex items-center gap-1.5 group/license">
+          <Key className="h-3 w-3 text-amber-400/80 shrink-0 group-hover/license:text-amber-400 transition-colors" />
+          <span className="text-xs text-amber-400/80 hidden sm:inline group-hover/license:text-amber-400 group-hover/license:underline transition-colors">
+            License
+          </span>
+        </a>
+        {tooltip && (
+          <div className="relative group/tip">
+            <span className="text-muted-foreground/50 cursor-help text-xs select-none">ⓘ</span>
+            <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 p-2 bg-popover border border-border text-xs rounded-md opacity-0 group-hover/tip:opacity-100 transition-opacity pointer-events-none z-10 text-foreground/90 shadow-lg">
+              {tooltip}
+            </span>
+          </div>
+        )}
       </div>
     );
   }
@@ -116,7 +130,7 @@ export function Pricing() {
               <div className="px-5 py-3.5 text-sm text-foreground/90 flex items-center">{row.label}</div>
               {tiers.map((t) => (
                 <div key={t.key} className={`px-3 py-3.5 flex items-center justify-center ${t.bg}`}>
-                  <Cell value={row[t.key]} />
+                  <Cell value={row[t.key]} tooltip={t.key === "pro" ? row.proTooltip : undefined} />
                 </div>
               ))}
             </div>
@@ -129,7 +143,10 @@ export function Pricing() {
             <Check className="h-4 w-4 text-cyan-400" /> Included
           </span>
           <span className="flex items-center gap-2">
-            <Key className="h-4 w-4 text-amber-400/80" /> Requires active license for that tier
+            {/* TODO: replace href="#" with real conversion/purchase path */}
+            <a href="#" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <Key className="h-4 w-4 text-amber-400/80" /> Requires active license — click to get one
+            </a>
           </span>
           <span className="flex items-center gap-2">
             <Minus className="h-4 w-4 text-muted-foreground/25" /> Not available
