@@ -34,7 +34,7 @@ export function Header() {
               <Link href="#quickstart" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Quick Start
               </Link>
-              <Link href="https://github.com/ericcogen/gauntletci" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Docs
               </Link>
             </nav>
@@ -74,7 +74,7 @@ export function Header() {
             <Link href="#quickstart" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
               Quick Start
             </Link>
-            <Link href="https://github.com/ericcogen/gauntletci" className="text-sm text-muted-foreground hover:text-foreground">
+            <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
               Docs
             </Link>
             <div className="flex flex-col gap-2 pt-4 border-t border-border">
