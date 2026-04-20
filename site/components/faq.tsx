@@ -65,9 +65,10 @@ const commonQA = [
     question: "Does GauntletCI support local-first AI?",
     answer: (
       <>
-        Yes. The <code>--with-llm</code> flag sends high-confidence findings to a locally hosted Ollama model
-        (default: <code>phi4-mini:latest</code>) for plain-English explanation. No data leaves your machine.
-        The detection itself is always deterministic; the AI only adds context.
+        Yes. The <code>--with-llm</code> flag enriches high-confidence findings with a plain-English
+        explanation using a built-in ONNX inference engine running Phi-4 Mini. Run{" "}
+        <code>gauntletci model download</code> once to cache the model (~2 GB) locally. No API key,
+        no network call at analysis time. The detection itself is always deterministic; the AI only adds context.
       </>
     ),
   },
@@ -75,9 +76,9 @@ const commonQA = [
     question: "Can I use GauntletCI in an air-gapped environment?",
     answer: (
       <>
-        Yes. The core tool has no external runtime dependencies. The optional LLM feature uses a local Ollama
-        instance, which also has no external dependencies once the model is downloaded. Nothing in GauntletCI
-        requires internet access at analysis time.
+        Yes. The core tool has no external runtime dependencies. The optional LLM feature uses a
+        built-in ONNX engine with a model downloaded once via <code>gauntletci model download</code>.
+        After that, no internet access is needed at analysis time. Nothing in GauntletCI phones home.
       </>
     ),
   },
