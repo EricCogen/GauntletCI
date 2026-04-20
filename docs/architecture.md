@@ -104,7 +104,7 @@ Adding a new rule requires only dropping a new `IRule` class into the assembly �
 
 ### Rule IDs
 
-Rules are named `GCI0001` through `GCI0037`. `GCI0028` is reserved.
+Rules span `GCI0001`–`GCI0053`. `GCI0028` is reserved (never issued).
 
 ### Per-rule timeout
 
@@ -124,6 +124,56 @@ Rules are configured via `.gauntletci.json`:
 ```
 
 `severity` overrides the rule's default `Confidence` level. Valid values: `"High"`, `"Medium"`, `"Low"`.
+
+### Rule interdependencies and self-interference
+
+Because GauntletCI is analyzed by its own rules during development and in CI, some rules fire on the files that implement other rules. This is called **self-interference** — a rule detecting a pattern inside the implementation of another (or the same) rule.
+
+#### Why it happens
+
+Rules analyze raw diff text using text patterns, regex, and line-count heuristics. They have no awareness of which file they are scanning; they apply the same logic to all eligible `.cs` files. When a rule's own implementation uses the exact pattern the rule is designed to detect — or when two rules share overlapping pattern vocabularies — self-interference occurs.
+
+#### Block-severity false positives resolved (April 2026 audit)
+
+A full-codebase audit (`git diff empty-tree..HEAD`, 83 Block findings) revealed the following confirmed false positives, all since resolved:
+
+| Firing rule | Target | Root cause | Resolution |
+|---|---|---|---|
+| **GCI0046** PatternConsistencyDeviation | `GCI0038_DependencyInjectionSafety.cs` | `ServiceLocatorPatterns` string array contains the exact strings the rule detects | `IsInsideStringLiteral` quote-counting guard in `CheckServiceLocator` |
+| **GCI0042** TodoStubDetection | `GCI0042_TodoStubDetection.cs` | `/// GCI0042 — TODO/Stub Detection` XML doc comment triggered its own TODO detection | Skip lines starting with `///` |
+| **GCI0048** InsecureRandomInSecurityContext | `SyntaxGuard.cs` | Code-example comment `// e.g. $"{new Random().Next()}"` — Roslyn syntax guard is null in diff-only mode | `IsAfterLineComment` fallback guard after Roslyn guard |
+| **GCI0049** FloatDoubleEqualityComparison | `LlmAdjudicator.cs` | `(tp + fp) == 0 ? 0.0 : (double)tp / (tp + fp)` — `==` is an integer zero-guard, not a float comparison | `IntegerZeroGuardRegex` to detect safe-division ternaries |
+| **GCI0044** PerformanceHotpathRisk | All `Rules/Implementations/*.cs` (~14 files) | Analysis loops (`foreach (var file in diff.Files)`) triggered LINQ-in-loop detection for inner `.FirstOrDefault()`/`.Any()` calls | `IsRuleImplementationFile` path exclusion |
+| **GCI0044** PerformanceHotpathRisk | `VectorStore.cs` | `while (reader.Read()) { rows.Add(...) }` ADO.NET reader pattern flagged as unbounded collection growth | `.Read()` detection skips DB reader loops in `CheckAddInsideLoop` |
+| **GCI0043** NullabilityTypeSafety | All `Commands/*.cs` files (~12 files) | `GetValueForOption(opt)!` is System.CommandLine's idiomatic required-option pattern (3–48 occurrences per file exceeded the threshold of 1) | Filter excludes `GetValueForOption(` lines from the null-forgiving operator count |
+
+#### Remaining interactions (Warn / Info — not false positives)
+
+These cross-rule interactions are retained because they reflect real patterns in tool code. They would be suppressed by a normal `.gauntletci-baseline.json` workflow:
+
+| Firing rule | Target | What fires |
+|---|---|---|
+| GCI0038 DependencyInjectionSafety | `GCI0038.cs`, `GCI0039.cs`, `GCI0024.cs` | Service-locator pattern strings inside the rule's own `ServiceLocatorPatterns` array (Warn) |
+| GCI0024 ResourceLifecycle | `GCI0024.cs` | The rule's own `IDisposable` usage patterns fire on itself (Warn) |
+| GCI0036 PureContextMutation | `GCI0036.cs` | 11 Info findings on its own implementation |
+
+#### Guidelines for new rule authors
+
+Before shipping a new rule, run a self-interference check:
+
+```bash
+gauntletci analyze --all-changes --severity info --no-baseline
+```
+
+Review any Block findings on `Rules/Implementations/` or `GauntletCI.Cli/Commands/` files and ask:
+
+1. **Does the rule fire on its own implementation file?**  If the rule uses the same pattern it detects (a TODO rule with a TODO in its doc comment, a pattern-array rule whose array contains its own patterns), add an exclusion.
+
+2. **Does the rule fire on the analysis loop pattern?**  Rules that detect LINQ calls, loop constructs, or collection growth should consider whether `Rules/Implementations/` files (which use LINQ inside analysis loops as standard practice) warrant a path exclusion.
+
+3. **Does the rule fire on System.CommandLine idioms?**  CLI commands use `GetValueForOption(opt)!` extensively (guaranteed non-null for required options). Rules that count null-forgiving operators or pattern-match on `!` should filter this form.
+
+4. **Does the rule fire on string literal pattern arrays?**  Rules that store their detection strings in `static readonly string[]` fields may trigger pattern-matching rules that do not distinguish between code and data. Use the `IsInsideStringLiteral` quote-counting helper (available in `GCI0046` and `GCI0043`) to guard these cases.
 
 ---
 
