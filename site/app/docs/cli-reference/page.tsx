@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "CLI Reference | GauntletCI Docs",
   description: "Complete reference for all GauntletCI CLI commands and options.",
+  alternates: { canonical: "/docs/cli-reference" },
 };
 
 const analyzeFlags = [
