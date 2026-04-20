@@ -172,6 +172,34 @@ steps:
           notification, parse in a build script, or archive as a CI artifact.
         </p>
       </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-3">LLM enrichment in CI/CD</h2>
+        <p className="text-muted-foreground mb-4">
+          The built-in ONNX engine (Option 1 in the{" "}
+          <a href="/docs/local-llm" className="text-cyan-400 hover:underline">Local LLM Setup docs</a>)
+          is not available in CI. Loading a 2 GB model in an ephemeral runner is impractical.
+          To use <code className="bg-muted px-1 rounded text-xs">--with-llm</code> in CI, configure
+          a remote OpenAI-compatible endpoint:
+        </p>
+        <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm mb-4">
+          <pre className="text-foreground whitespace-pre">{`# In your CI environment secrets
+GAUNTLETCI_LLM_API_KEY=sk-...
+
+# In .gauntletci.json
+{
+  "llm": {
+    "ciEndpoint": "https://api.openai.com/v1",
+    "ciModel": "gpt-4o-mini"
+  }
+}`}</pre>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          If <code className="bg-muted px-1 rounded text-xs">--with-llm</code> is passed in CI
+          with no endpoint configured, GauntletCI prints a loud warning to stderr and skips
+          enrichment. Detection findings are still reported normally.
+        </p>
+      </section>
     </div>
   );
 }

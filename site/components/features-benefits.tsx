@@ -74,6 +74,17 @@ export function FeaturesBenefits() {
           </p>
         </div>
 
+        <div className="flex flex-col sm:flex-row gap-3 mb-12 max-w-3xl mx-auto">
+          <div className="flex-1 rounded-lg border border-cyan-500/30 bg-cyan-500/5 px-5 py-4 text-center">
+            <p className="text-xs font-semibold uppercase tracking-widest text-cyan-400 mb-1">Detection is deterministic</p>
+            <p className="text-xs text-muted-foreground">Rules are rule-based and produce the same output every time. No model, no API key, no network call required.</p>
+          </div>
+          <div className="flex-1 rounded-lg border border-border bg-card/50 px-5 py-4 text-center">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">LLM enrichment is optional</p>
+            <p className="text-xs text-muted-foreground">Local AI explanations are opt-in via <code className="bg-muted px-1 rounded">--with-llm</code>. They add plain-English context only. They do not affect which findings are reported.</p>
+          </div>
+        </div>
+
         <div className="flex flex-col divide-y divide-border">
           {items.map((item) => (
             <div key={item.feature} className="grid md:grid-cols-[2fr_1fr] gap-6 py-8 first:pt-0 last:pb-0">

@@ -65,8 +65,7 @@ export default function LocalLlmPage() {
         <p className="text-sm text-muted-foreground">
           The daemon is a local-dev optimization only. If it cannot be started, GauntletCI loads
           <code className="bg-muted px-1 rounded text-xs">LocalLlmEngine</code> directly in-process as a fallback.
-          In a CI/CD pipeline where you run analysis once per job, the daemon provides no benefit and
-          the in-process path is used automatically.
+          The daemon is never used in CI/CD - see the section below on CI/CD usage.
         </p>
       </section>
 
@@ -132,6 +131,54 @@ export default function LocalLlmPage() {
           <a href="https://ollama.com/download" target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">ollama.com/download</a>.
         </p>
       </div>
+
+      {/* ---- CI/CD ---- */}
+      <section className="border-t border-border pt-8">
+        <h2 className="text-2xl font-semibold mb-3">Using --with-llm in CI/CD</h2>
+
+        <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-5 mb-5">
+          <p className="text-sm font-semibold text-amber-400 mb-1">ONNX is not available in CI/CD</p>
+          <p className="text-sm text-muted-foreground">
+            Loading a 2 GB model in an ephemeral CI runner is impractical. GauntletCI
+            enforces this: when CI environment variables are detected (<code className="bg-muted px-1 rounded text-xs">CI</code>,{" "}
+            <code className="bg-muted px-1 rounded text-xs">GITHUB_ACTIONS</code>,{" "}
+            <code className="bg-muted px-1 rounded text-xs">TF_BUILD</code>, etc.), the ONNX
+            engine is bypassed entirely. Only remote LLM endpoints are used in CI.
+          </p>
+        </div>
+
+        <p className="text-sm text-muted-foreground mb-4">
+          To use <code className="bg-muted px-1 rounded text-xs">--with-llm</code> in a CI pipeline,
+          configure a remote OpenAI-compatible endpoint and a license key in your repository config or
+          as environment variables:
+        </p>
+
+        <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm mb-4">
+          <pre className="text-foreground whitespace-pre">{`{
+  "llm": {
+    "ciEndpoint": "https://api.openai.com/v1",
+    "ciModel": "gpt-4o-mini"
+  }
+}`}</pre>
+        </div>
+
+        <p className="text-sm text-muted-foreground mb-4">
+          Set the API key as a secret in your CI environment:
+        </p>
+        <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm mb-5">
+          <p><span className="text-cyan-400">$</span> <span className="text-foreground">GAUNTLETCI_LLM_API_KEY=sk-...</span></p>
+        </div>
+
+        <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-5">
+          <p className="text-sm font-semibold text-red-400 mb-1">Loud warning if misconfigured</p>
+          <p className="text-sm text-muted-foreground">
+            If <code className="bg-muted px-1 rounded text-xs">--with-llm</code> is passed in CI
+            but no endpoint or API key is configured, GauntletCI prints a structured warning to
+            stderr and skips enrichment. It does not silently no-op. Analysis still completes and
+            all deterministic findings are still reported.
+          </p>
+        </div>
+      </section>
 
       {/* ---- Privacy ---- */}
       <section className="border-t border-border pt-8">
