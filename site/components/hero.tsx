@@ -21,9 +21,7 @@ export function Hero() {
           </h1>
           
           <p className="mt-6 max-w-2xl text-lg text-muted-foreground leading-relaxed text-pretty">
-            GauntletCI analyzes what changed in your pull request and flags unverified behavioral 
-            changes before they slip through code review. Sub-second analysis, runs locally, 
-            high-signal output.
+            GauntletCI catches the invisible logic errors that pass every test but still crash your app because the code is doing something you didn&apos;t realize.
           </p>
           
           <div className="mt-10 flex flex-col sm:flex-row items-center gap-4">
