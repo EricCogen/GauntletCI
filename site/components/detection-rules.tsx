@@ -70,25 +70,27 @@ export function DetectionRules() {
           ))}
         </div>
         
-        <div className="mt-12 rounded-lg border border-border bg-card p-6 sm:p-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h3 className="text-lg font-semibold">What GauntletCI is not</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Not a linter, static analysis replacement, test runner, or formatter. 
-                Focuses only on change-risk.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {["Not a linter", "Not a formatter", "Not a test runner"].map((item, index) => (
-                <span
-                  key={index}
-                  className="inline-flex items-center rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
+        <div className="mt-12 rounded-xl border border-border bg-card p-6 sm:p-8">
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold">What GauntletCI is not</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              It focuses only on change-risk in your diff. It does not replace these tools.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              { label: "Not a linter", detail: "It does not enforce style, formatting, or naming conventions." },
+              { label: "Not a test runner", detail: "It does not execute your tests or measure code coverage." },
+              { label: "Not a SAST scanner", detail: "It does not scan your entire codebase for known vulnerability patterns." },
+            ].map((item) => (
+              <div key={item.label} className="flex items-start gap-3 rounded-lg border border-border bg-background/50 px-4 py-3">
+                <span className="mt-0.5 text-muted-foreground/50 text-lg font-bold leading-none select-none">x</span>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{item.detail}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
