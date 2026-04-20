@@ -73,6 +73,20 @@ const commonQA = [
     ),
   },
   {
+    question: "Is GauntletCI a linter, SAST scanner, or test runner?",
+    answer: (
+      <>
+        No to all three. GauntletCI focuses only on change-risk in your diff -- it does not replace any of these
+        tools and is designed to complement them.
+        <ul className="mt-3 space-y-2 list-none">
+          <li><span className="font-semibold text-foreground">Not a linter:</span> It does not enforce style, formatting, or naming conventions.</li>
+          <li><span className="font-semibold text-foreground">Not a test runner:</span> It does not execute your tests or measure code coverage.</li>
+          <li><span className="font-semibold text-foreground">Not a SAST scanner:</span> It does not scan your entire codebase for known vulnerability patterns.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
     question: "Can I use GauntletCI in an air-gapped environment?",
     answer: (
       <>
