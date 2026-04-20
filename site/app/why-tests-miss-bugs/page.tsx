@@ -43,9 +43,19 @@ const categories = [
   },
 ];
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Why Tests Miss Bugs",
+  "description": "Tests pass but bugs still reach production. Learn the 6 categories of risk that escape test suites and why a green build is not the same as safe code.",
+  "url": "https://gauntletci.com/why-tests-miss-bugs",
+  "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
+};
+
 export default function WhyTestsMissBugsPage() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Header />
       <main className="min-h-screen bg-background pt-24">
 

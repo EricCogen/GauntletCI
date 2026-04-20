@@ -7,9 +7,20 @@ export const metadata: Metadata = {
   alternates: { canonical: "/docs" },
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Getting Started with GauntletCI",
+  "description": "Install GauntletCI and run your first diff analysis in under two minutes.",
+  "url": "https://gauntletci.com/docs",
+  "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
+};
+
 export default function DocsPage() {
   return (
-    <div className="space-y-10">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <div className="space-y-10">
       <div>
         <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">Documentation</p>
         <h1 className="text-4xl font-bold tracking-tight mb-4">Getting Started</h1>
@@ -110,5 +121,6 @@ export default function DocsPage() {
         </div>
       </section>
     </div>
+    </>
   );
 }

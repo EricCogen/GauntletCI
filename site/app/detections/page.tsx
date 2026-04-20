@@ -117,9 +117,19 @@ const linePrefix: Record<string, string> = {
   context: " ",
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Real Detections: What GauntletCI Catches",
+  "description": "Annotated real-world examples of bugs GauntletCI detects before they reach code review. Removed guards, async anti-patterns, PII leaks, breaking API changes, and more.",
+  "url": "https://gauntletci.com/detections",
+  "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
+};
+
 export default function DetectionsPage() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Header />
       <main className="min-h-screen bg-background pt-24">
 

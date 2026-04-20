@@ -23,9 +23,20 @@ const table = [
   { feature: "Free tier",              gauntlet: "All 30 rules, no account",           semgrep: "Limited free, account required" },
 ];
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "GauntletCI vs Semgrep: Diff-Scoped Behavioral Rules vs Pattern Matching",
+  "description": "GauntletCI detects behavioral risks in only the lines that changed. Semgrep scans files with custom patterns. Compare scope, setup, privacy, and use cases.",
+  "url": "https://gauntletci.com/compare/gauntletci-vs-semgrep",
+  "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
+};
+
 export default function SemgrepComparePage() {
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28 space-y-20">
 
         {/* Hero */}
@@ -202,6 +213,6 @@ export default function SemgrepComparePage() {
         </div>
 
       </div>
-    </div>
+    </>
   );
 }

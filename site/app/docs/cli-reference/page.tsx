@@ -25,9 +25,20 @@ const exitCodes = [
   { code: "2", meaning: "Unhandled error or exception" },
 ];
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "GauntletCI CLI Reference",
+  "description": "Complete reference for all GauntletCI CLI commands and options.",
+  "url": "https://gauntletci.com/docs/cli-reference",
+  "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
+};
+
 export default function CliReferencePage() {
   return (
-    <div className="space-y-10">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <div className="space-y-10">
       <div>
         <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">CLI Reference</p>
         <h1 className="text-4xl font-bold tracking-tight mb-4">Command Reference</h1>
@@ -170,5 +181,6 @@ export default function CliReferencePage() {
         </div>
       </section>
     </div>
+    </>
   );
 }

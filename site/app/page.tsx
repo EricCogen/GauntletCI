@@ -8,6 +8,7 @@ import { FeaturesBenefits } from "@/components/features-benefits";
 import { Comparison } from "@/components/comparison";
 import { Integrations } from "@/components/integrations";
 import { ProvenReliability } from "@/components/proven-reliability";
+import { WhyTeams } from "@/components/why-teams";
 import { QuickStart } from "@/components/quick-start";
 import { DetectionRules } from "@/components/detection-rules";
 import { Pricing } from "@/components/pricing";
@@ -29,6 +30,7 @@ export default function Home() {
       <Integrations />
       <Comparison />
       <ProvenReliability />
+      <WhyTeams />
       <QuickStart />
       <DetectionRules />
       <Faq />

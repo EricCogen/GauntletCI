@@ -6,9 +6,20 @@ export const metadata: Metadata = {
   alternates: { canonical: "/docs/integrations" },
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "GauntletCI CI/CD Integrations",
+  "description": "Integrate GauntletCI with GitHub Actions, Azure Pipelines, and other CI/CD systems.",
+  "url": "https://gauntletci.com/docs/integrations",
+  "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
+};
+
 export default function IntegrationsPage() {
   return (
-    <div className="space-y-10">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <div className="space-y-10">
       <div>
         <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">CI/CD Integrations</p>
         <h1 className="text-4xl font-bold tracking-tight mb-4">CI/CD Integrations</h1>
@@ -201,5 +212,6 @@ GAUNTLETCI_LLM_API_KEY=sk-...
         </p>
       </section>
     </div>
+    </>
   );
 }

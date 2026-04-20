@@ -1,77 +1,100 @@
-import { CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+
+const studies = [
+  {
+    project: "dotnet/efcore",
+    category: "Performance",
+    rule: "GCI0044",
+    scenario: "A PR refactored a query helper method. The new implementation introduced LINQ inside a loop over a large result set.",
+    finding: "O(n2) performance risk flagged before commit. The pattern would have been invisible in code review -- each piece looked fine in isolation.",
+    tag: "LINQ in hot path",
+  },
+  {
+    project: "StackExchange.Redis",
+    category: "Behavioral",
+    rule: "GCI0036",
+    scenario: "A property getter was refactored to lazily initialize a backing field. The initialization had a side effect that mutated shared context.",
+    finding: "Pure context mutation in property getter caught pre-commit. No test covered the initialization path. The bug would have appeared only under concurrent access.",
+    tag: "State mutation",
+  },
+  {
+    project: "AngleSharp",
+    category: "Breaking Change",
+    rule: "GCI0021",
+    scenario: "An enum member used in JSON serialization was removed during a cleanup pass. All tests passed because they used different enum values.",
+    finding: "Enum member removal detected as a serialization contract break. Existing stored or transmitted JSON would have failed to deserialize after deploy.",
+    tag: "Serialization contract",
+  },
+  {
+    project: "Dapper",
+    category: "Nullability",
+    rule: "GCI0043",
+    scenario: "A null-forgiving operator was added to suppress a compiler warning on a value that could legitimately be null at runtime.",
+    finding: "Null-forgiving operator misuse flagged. The suppressed warning was masking a real null path that would throw in production on certain query results.",
+    tag: "Null safety",
+  },
+];
+
+const categoryColor: Record<string, string> = {
+  Performance: "text-orange-400 bg-orange-500/10 border-orange-500/20",
+  Behavioral: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
+  "Breaking Change": "text-red-400 bg-red-500/10 border-red-500/20",
+  Nullability: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+};
 
 export function ProvenReliability() {
-  const validations = [
-    {
-      project: "dotnet/efcore",
-      finding: "O(n²) performance risk (LINQ in loops)",
-    },
-    {
-      project: "StackExchange.Redis",
-      finding: "Context mutation in property getter",
-    },
-    {
-      project: "Dapper",
-      finding: "Null-forgiving operator misuse",
-    },
-    {
-      project: "SharpCompress",
-      finding: "Numeric overflow risk",
-    },
-    {
-      project: "AngleSharp",
-      finding: "Enum member removal breaking serialization",
-    },
-  ];
-
   return (
     <section id="reliability" className="py-20 sm:py-28 bg-card/30">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          <div>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-balance">
-              Validated against real-world pull requests
-            </h2>
-            <p className="mt-4 text-lg text-muted-foreground leading-relaxed text-pretty">
-              GauntletCI rules have been tested against production codebases from major 
-              open-source .NET projects, catching issues that regular code review missed.
-            </p>
-            <div className="mt-8 space-y-4">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-cyan-400 mt-0.5 shrink-0" />
-                <span className="text-muted-foreground">Detects behavior changes without test coverage</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-cyan-400 mt-0.5 shrink-0" />
-                <span className="text-muted-foreground">Catches API and serialization breaking changes</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-cyan-400 mt-0.5 shrink-0" />
-                <span className="text-muted-foreground">Identifies security vulnerabilities early</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="rounded-lg border border-border bg-card overflow-hidden">
-            <div className="border-b border-border bg-secondary/50 px-4 py-3">
-              <span className="text-sm font-medium">Proven Detections</span>
-            </div>
-            <div className="divide-y divide-border">
-              {validations.map((item, index) => (
-                <div key={index} className="flex items-center justify-between gap-4 px-4 py-4">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="h-8 w-8 rounded bg-secondary flex items-center justify-center shrink-0">
-                      <span className="text-xs font-mono text-cyan-400">{item.project.charAt(0)}</span>
-                    </div>
-                    <span className="font-mono text-sm truncate">{item.project}</span>
-                  </div>
-                  <span className="text-sm text-muted-foreground text-right">{item.finding}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="text-center mb-12">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-balance">
+            Validated against real open-source PRs
+          </h2>
+          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
+            GauntletCI rules were developed by running the engine against historical pull
+            requests from major .NET OSS projects. These are the findings that would have
+            been caught before merge.
+          </p>
         </div>
+
+        <div className="grid sm:grid-cols-2 gap-5">
+          {studies.map((s) => (
+            <div key={s.project} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border">
+                <div className="flex items-center gap-2.5">
+                  <div className="h-7 w-7 rounded bg-secondary flex items-center justify-center shrink-0">
+                    <span className="text-xs font-mono text-cyan-400">{s.project.charAt(0).toUpperCase()}</span>
+                  </div>
+                  <span className="font-mono text-sm font-medium">{s.project}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-xs text-muted-foreground/50">{s.rule}</span>
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${categoryColor[s.category]}`}>
+                    {s.tag}
+                  </span>
+                </div>
+              </div>
+              <div className="p-5 space-y-3 flex-1">
+                <div>
+                  <p className="text-xs font-semibold text-muted-foreground/50 uppercase tracking-widest mb-1">The change</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{s.scenario}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-cyan-400/70 uppercase tracking-widest mb-1">What GauntletCI flagged</p>
+                  <p className="text-sm text-foreground/80 leading-relaxed">{s.finding}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-8 text-center text-sm text-muted-foreground">
+          <Link href="/detections" className="text-cyan-400 hover:text-cyan-300 transition-colors">
+            See annotated detection examples &rarr;
+          </Link>
+        </p>
       </div>
     </section>
   );
 }
+

@@ -6,9 +6,20 @@ export const metadata: Metadata = {
   alternates: { canonical: "/docs/local-llm" },
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "GauntletCI Local LLM Setup",
+  "description": "Set up local LLM enrichment for offline AI-powered explanations. No Ollama required - GauntletCI includes a built-in ONNX engine with Phi-4 Mini.",
+  "url": "https://gauntletci.com/docs/local-llm",
+  "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
+};
+
 export default function LocalLlmPage() {
   return (
-    <div className="space-y-10">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <div className="space-y-10">
       <div>
         <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">Local LLM Setup</p>
         <h1 className="text-4xl font-bold tracking-tight mb-4">Local LLM Setup</h1>
@@ -191,5 +202,6 @@ export default function LocalLlmPage() {
         </p>
       </section>
     </div>
+    </>
   );
 }

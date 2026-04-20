@@ -44,9 +44,19 @@ const patterns = [
   },
 ];
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Detect Breaking Changes Before Merge",
+  "description": "Breaking changes in .NET code are often invisible at compile time. Learn the patterns that break callers at runtime and how to detect them before the PR merges.",
+  "url": "https://gauntletci.com/detect-breaking-changes-before-merge",
+  "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
+};
+
 export default function DetectBreakingChangesPage() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Header />
       <main className="min-h-screen bg-background pt-24">
 

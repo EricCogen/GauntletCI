@@ -6,9 +6,20 @@ export const metadata: Metadata = {
   alternates: { canonical: "/docs/configuration" },
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "GauntletCI Configuration Reference",
+  "description": "Reference for .gauntletci.json - per-repository configuration for GauntletCI.",
+  "url": "https://gauntletci.com/docs/configuration",
+  "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
+};
+
 export default function ConfigurationPage() {
   return (
-    <div className="space-y-10">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <div className="space-y-10">
       <div>
         <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">Configuration</p>
         <h1 className="text-4xl font-bold tracking-tight mb-4">Configuration Reference</h1>
@@ -149,5 +160,6 @@ export default function ConfigurationPage() {
         </p>
       </section>
     </div>
+    </>
   );
 }
