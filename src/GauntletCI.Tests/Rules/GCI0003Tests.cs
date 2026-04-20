@@ -136,4 +136,93 @@ public class GCI0003Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("logic line(s) removed"));
     }
+
+    [Fact]
+    public async Task ExpressionBodyChange_ShouldNotFlagSignatureChange()
+    {
+        // Only the expression body changes — the signature (name + params) is identical.
+        var raw = """
+            diff --git a/src/Core/Checker.cs b/src/Core/Checker.cs
+            index abc..def 100644
+            --- a/src/Core/Checker.cs
+            +++ b/src/Core/Checker.cs
+            @@ -1,3 +1,3 @@
+             public class Checker {
+            -    public bool HasModifier(string content) => content.Contains("internal ");
+            +    public bool HasModifier(string content) => content.Contains("internal ", StringComparison.Ordinal);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("signature changed"));
+    }
+
+    [Fact]
+    public async Task AccessModifierInStringLiteralWithParen_ShouldNotFlagSignatureChange()
+    {
+        // A non-signature line containing "internal " in a string plus "(" should not
+        // be treated as a method signature (exercises TrimStart().StartsWith() guard).
+        var raw = """
+            diff --git a/src/Core/Checker.cs b/src/Core/Checker.cs
+            index abc..def 100644
+            --- a/src/Core/Checker.cs
+            +++ b/src/Core/Checker.cs
+            @@ -1,3 +1,3 @@
+             public class Checker {
+            -    var msg = "internal method(old)";
+            +    var msg = "internal method(new)";
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("signature changed"));
+    }
+
+    [Fact]
+    public async Task AttributeDecoratedMethod_ShouldFlagSignatureChange()
+    {
+        // [Obsolete] attribute before "public" should not prevent signature detection.
+        var raw = """
+            diff --git a/src/Core/Api.cs b/src/Core/Api.cs
+            index abc..def 100644
+            --- a/src/Core/Api.cs
+            +++ b/src/Core/Api.cs
+            @@ -1,3 +1,3 @@
+             public class Api {
+            -    [Obsolete] public void Process(string input) { }
+            +    [Obsolete] public void Process(string input, int timeout) { }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("signature changed"));
+    }
+
+    [Fact]
+    public async Task GenericConstraintChange_ShouldFlagSignatureChange()
+    {
+        // A where-clause change is a signature-level breaking change and must be flagged.
+        var raw = """
+            diff --git a/src/Core/Api.cs b/src/Core/Api.cs
+            index abc..def 100644
+            --- a/src/Core/Api.cs
+            +++ b/src/Core/Api.cs
+            @@ -1,3 +1,3 @@
+             public class Api {
+            -    public void Process<T>(T input) where T : struct { }
+            +    public void Process<T>(T input) where T : class { }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("signature changed"));
+    }
 }
