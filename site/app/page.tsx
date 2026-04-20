@@ -3,6 +3,7 @@ import { Hero } from "@/components/hero";
 import { Stats } from "@/components/stats";
 import { Features } from "@/components/features";
 import { FeaturesBenefits } from "@/components/features-benefits";
+import { Comparison } from "@/components/comparison";
 import { ProvenReliability } from "@/components/proven-reliability";
 import { QuickStart } from "@/components/quick-start";
 import { DetectionRules } from "@/components/detection-rules";
@@ -17,6 +18,7 @@ export default function Home() {
       <Stats />
       <Features />
       <FeaturesBenefits />
+      <Comparison />
       <ProvenReliability />
       <QuickStart />
       <DetectionRules />
