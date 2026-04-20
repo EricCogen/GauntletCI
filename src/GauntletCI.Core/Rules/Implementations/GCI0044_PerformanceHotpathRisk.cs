@@ -20,23 +20,35 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
     private static readonly string[] LoopKeywords =
         ["for (", "foreach (", "while ("];
 
+    // "foreach" is the standard accumulator pattern — only flag for/while unbounded growth
+    private static readonly string[] UnboundedLoopKeywords = ["for (", "while ("];
+
     private static bool IsTestFile(string path) =>
         path.Contains("test", StringComparison.OrdinalIgnoreCase) ||
         path.Contains("spec", StringComparison.OrdinalIgnoreCase);
 
-    private static bool HasLinqCall(string content) =>
-        LinqMethods.Any(m => content.Contains(m, StringComparison.Ordinal));
+    private static bool HasLinqCall(string content)
+    {
+        foreach (var m in LinqMethods)
+            if (content.Contains(m, StringComparison.Ordinal)) return true;
+        return false;
+    }
 
-    private static bool HasLoopConstruct(string content) =>
-        LoopKeywords.Any(k => content.Contains(k, StringComparison.Ordinal));
+    private static bool HasLoopConstruct(string content)
+    {
+        foreach (var k in LoopKeywords)
+            if (content.Contains(k, StringComparison.Ordinal)) return true;
+        return false;
+    }
 
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
         var findings = new List<Finding>();
 
-        foreach (var file in context.Diff.Files.Where(f => !IsTestFile(f.NewPath)))
+        foreach (var file in context.Diff.Files)
         {
+            if (IsTestFile(file.NewPath)) continue;
             CheckThreadSleep(file, findings);
             CheckLinqInsideLoop(file, findings);
             CheckAddInsideLoop(file, findings);
@@ -66,19 +78,21 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
     {
         foreach (var hunk in file.Hunks)
         {
-            var addedLines = hunk.Lines
-                .Where(l => l.Kind == DiffLineKind.Added)
-                .ToList();
+            // Include context lines so loop keywords on unchanged lines are detected
+            var nonRemovedLines = new List<DiffLine>();
+            foreach (var l in hunk.Lines)
+                if (l.Kind != DiffLineKind.Removed) nonRemovedLines.Add(l);
 
-            for (int i = 0; i < addedLines.Count; i++)
+            for (int i = 0; i < nonRemovedLines.Count; i++)
             {
-                if (!HasLinqCall(addedLines[i].Content)) continue;
+                if (nonRemovedLines[i].Kind != DiffLineKind.Added) continue;
+                if (!HasLinqCall(nonRemovedLines[i].Content)) continue;
 
                 int lookbackStart = Math.Max(0, i - 10);
                 bool inLoop = false;
                 for (int j = lookbackStart; j < i; j++)
                 {
-                    if (HasLoopConstruct(addedLines[j].Content))
+                    if (HasLoopConstruct(nonRemovedLines[j].Content))
                     {
                         inLoop = true;
                         break;
@@ -90,11 +104,11 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
                 findings.Add(CreateFinding(
                     file,
                     summary: "LINQ query inside a loop",
-                    evidence: $"Line {addedLines[i].LineNumber}: {addedLines[i].Content.Trim()}",
+                    evidence: $"Line {nonRemovedLines[i].LineNumber}: {nonRemovedLines[i].Content.Trim()}",
                     whyItMatters: "LINQ queries inside loops cause repeated enumeration, yielding O(n²) or worse complexity that degrades performance at scale.",
                     suggestedAction: "Move the LINQ query outside the loop, pre-compute the result into a collection, or use a dictionary/lookup for O(1) access.",
                     confidence: Confidence.Medium,
-                    line: addedLines[i]));
+                    line: nonRemovedLines[i]));
             }
         }
     }
@@ -103,24 +117,30 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
     {
         foreach (var hunk in file.Hunks)
         {
-            var addedLines = hunk.Lines
-                .Where(l => l.Kind == DiffLineKind.Added)
-                .ToList();
+            // Use non-removed lines for lookback so loop keywords on context lines are detected
+            var nonRemovedLines = new List<DiffLine>();
+            foreach (var l in hunk.Lines)
+                if (l.Kind != DiffLineKind.Removed) nonRemovedLines.Add(l);
 
-            for (int i = 0; i < addedLines.Count; i++)
+            for (int i = 0; i < nonRemovedLines.Count; i++)
             {
-                var content = addedLines[i].Content;
+                if (nonRemovedLines[i].Kind != DiffLineKind.Added) continue;
+                var content = nonRemovedLines[i].Content;
                 if (!content.Contains(".Add(", StringComparison.Ordinal)) continue;
 
                 int lookbackStart = Math.Max(0, i - 10);
                 bool inLoop = false;
                 for (int j = lookbackStart; j < i; j++)
                 {
-                    if (HasLoopConstruct(addedLines[j].Content))
+                    foreach (var k in UnboundedLoopKeywords)
                     {
-                        inLoop = true;
-                        break;
+                        if (nonRemovedLines[j].Content.Contains(k, StringComparison.Ordinal))
+                        {
+                            inLoop = true;
+                            break;
+                        }
                     }
+                    if (inLoop) break;
                 }
 
                 if (!inLoop) continue;
@@ -128,11 +148,11 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
                 findings.Add(CreateFinding(
                     file,
                     summary: "Unbounded collection growth (.Add) inside a loop",
-                    evidence: $"Line {addedLines[i].LineNumber}: {content.Trim()}",
+                    evidence: $"Line {nonRemovedLines[i].LineNumber}: {content.Trim()}",
                     whyItMatters: "Repeatedly calling .Add inside a loop on an unbounded collection can exhaust memory if the loop runs over large input or indefinitely.",
                     suggestedAction: "Pre-allocate the collection with a known capacity, or use a streaming pattern (yield return / IAsyncEnumerable) instead of accumulating all results.",
                     confidence: Confidence.Medium,
-                    line: addedLines[i]));
+                    line: nonRemovedLines[i]));
             }
         }
     }
