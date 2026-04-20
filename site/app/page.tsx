@@ -4,6 +4,7 @@ import { Stats } from "@/components/stats";
 import { Features } from "@/components/features";
 import { FeaturesBenefits } from "@/components/features-benefits";
 import { Comparison } from "@/components/comparison";
+import { Integrations } from "@/components/integrations";
 import { ProvenReliability } from "@/components/proven-reliability";
 import { QuickStart } from "@/components/quick-start";
 import { DetectionRules } from "@/components/detection-rules";
@@ -18,6 +19,7 @@ export default function Home() {
       <Stats />
       <Features />
       <FeaturesBenefits />
+      <Integrations />
       <Comparison />
       <ProvenReliability />
       <QuickStart />
