@@ -50,7 +50,7 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                                l.Content.Contains("HasValue", StringComparison.Ordinal) ||
                                l.Content.Contains("is not null", StringComparison.Ordinal) ||
                                l.Content.Contains("!= null", StringComparison.Ordinal) ||
-                               l.Content.Contains(".Success", StringComparison.Ordinal));
+                               IsSuccessGuardFor(content, l.Content));
 
                 if (!hasGuard)
                 {
@@ -113,22 +113,56 @@ public class GCI0006_EdgeCaseHandling : RuleBase
 
     private static bool HasNullableReferenceParam(string paramSection)
     {
-        foreach (var keyword in new[] { "string?", "object?" })
+        // Walk character by character, tracking generic depth so we skip type arguments
+        // like Dictionary<string?, int> and only match top-level parameters.
+        int angleDepth = 0;
+        for (int i = 0; i < paramSection.Length; i++)
         {
-            int idx = 0;
-            while (idx < paramSection.Length)
+            char c = paramSection[i];
+            if (c == '<') { angleDepth++; continue; }
+            if (c == '>') { angleDepth = Math.Max(0, angleDepth - 1); continue; }
+            if (angleDepth > 0) continue;
+
+            foreach (var keyword in new[] { "string?", "object?" })
             {
-                int found = paramSection.IndexOf(keyword, idx, StringComparison.Ordinal);
-                if (found < 0) break;
-                int afterQ = found + keyword.Length;
-                if (afterQ >= paramSection.Length) return true; // at end
-                char next = paramSection[afterQ];
-                if (next == ' ' || next == '[' || next == ',' || next == ')' || next == '<')
-                    return true;
-                idx = found + 1;
+                if (i + keyword.Length > paramSection.Length) continue;
+                if (!paramSection.AsSpan(i).StartsWith(keyword, StringComparison.Ordinal)) continue;
+
+                // Leading boundary: must be preceded by a non-identifier char
+                bool leadOk = i == 0 || paramSection[i - 1] is ' ' or '(' or ',' or '<';
+                if (!leadOk) continue;
+
+                // Trailing boundary: must be followed by a non-identifier char
+                int after = i + keyword.Length;
+                bool trailOk = after >= paramSection.Length ||
+                               paramSection[after] is ' ' or '[' or ',' or ')' or '<';
+                if (trailOk) return true;
             }
         }
         return false;
+    }
+
+    // Returns true only when the .Success check in guardLine refers to the same root
+    // identifier as the .Value access in valueLine (e.g. "match.Success" guards "match.Groups[1].Value").
+    private static bool IsSuccessGuardFor(string valueLine, string guardLine)
+    {
+        int valIdx = valueLine.IndexOf(".Value", StringComparison.Ordinal);
+        if (valIdx <= 0) return false;
+
+        // Walk backward from the dot to collect the expression chain (e.g. "match.Groups[1]")
+        int start = valIdx - 1;
+        while (start > 0 && valueLine[start - 1] is char pc &&
+               (char.IsLetterOrDigit(pc) || pc is '_' or '.' or '[' or ']'))
+            start--;
+
+        var expr = valueLine[start..valIdx]; // e.g. "match.Groups[1]"
+
+        // Extract the root identifier — the first segment before '.' or '['
+        int boundary = expr.IndexOfAny(['.', '[']);
+        var root = boundary > 0 ? expr[..boundary] : expr;
+        root = new string(root.Where(c => char.IsLetterOrDigit(c) || c == '_').ToArray());
+
+        return root.Length > 0 && guardLine.Contains(root + ".Success", StringComparison.Ordinal);
     }
 
     private static bool IsPublicOrProtectedSignature(string line)

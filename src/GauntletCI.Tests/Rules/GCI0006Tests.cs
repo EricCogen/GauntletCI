@@ -156,7 +156,7 @@ public class GCI0006Tests
     [Fact]
     public async Task PublicMethodNonNullableStringParam_ShouldNotFlag()
     {
-        // Non-nullable string in .NET 8 nullable context cannot be null — no guard needed.
+        // Non-nullable string annotation in nullable context; this rule does not require a guard here.
         var raw = """
             diff --git a/src/Processor.cs b/src/Processor.cs
             index abc..def 100644
@@ -194,6 +194,49 @@ public class GCI0006Tests
         var findings = await Rule.EvaluateAsync(diff, null);
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("null dereference"));
+    }
+
+    [Fact]
+    public async Task UnrelatedSuccessGuard_ShouldStillFlag()
+    {
+        // op.Success does not prove that nullable is non-null — should still flag
+        var raw = """
+            diff --git a/src/Parser.cs b/src/Parser.cs
+            index abc..def 100644
+            --- a/src/Parser.cs
+            +++ b/src/Parser.cs
+            @@ -1,1 +1,4 @@
+             // existing
+            +if (op.Success)
+            +    return nullable.Value;
+            +return string.Empty;
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("null dereference"));
+    }
+
+    [Fact]
+    public async Task NullableInsideGenericParam_ShouldNotFlag()
+    {
+        // Dictionary<string?, int> is non-nullable at the top level — no guard needed
+        var raw = """
+            diff --git a/src/Processor.cs b/src/Processor.cs
+            index abc..def 100644
+            --- a/src/Processor.cs
+            +++ b/src/Processor.cs
+            @@ -1,1 +1,3 @@
+             // existing
+            +public void Process(Dictionary<string?, int> map)
+            +{
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
     }
 
     [Fact]
