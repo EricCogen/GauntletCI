@@ -44,7 +44,7 @@ export function DetectionRules() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-balance">
-            30 built-in detection rules
+            35 built-in detection rules
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
             Comprehensive coverage across behavioral risk categories.
