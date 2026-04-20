@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Check, Minus, Key } from "lucide-react";
 
 type CellValue = "check" | "none" | "license";
@@ -5,7 +6,7 @@ type CellValue = "check" | "none" | "license";
 interface FeatureRow {
   label: string;
   divider?: boolean;
-  proTooltip?: string;
+  proTooltip?: React.ReactNode;
   community: CellValue;
   pro: CellValue;
   teams: CellValue;
@@ -22,7 +23,7 @@ const features: FeatureRow[] = [
 
   // Pro
   { label: "Baseline Delta Mode",                  divider: true, community: "none", pro: "license", teams: "check", enterprise: "check" },
-  { label: "Local LLM Enrichment (AI Explanations)", proTooltip: "Requires local Ollama setup. Setup guide included with license.", community: "none", pro: "license", teams: "check", enterprise: "check" },
+  { label: "Local LLM Enrichment (AI Explanations)", proTooltip: <>Uses the built-in ONNX engine - no Ollama needed. Run <code className="bg-muted px-0.5 rounded">gauntletci model download</code> once to cache the model locally. <Link href="/docs/local-llm" className="underline text-cyan-400">Setup guide</Link> included with license.</>, community: "none", pro: "license", teams: "check", enterprise: "check" },
   { label: "AI Assistant Integration (MCP Server)", community: "none", pro: "license", teams: "check", enterprise: "check" },
 
   // Teams
@@ -48,8 +49,7 @@ function Cell({ value, tooltip }: { value: CellValue; tooltip?: string }) {
   if (value === "license") {
     return (
       <div className="flex items-center justify-center gap-1.5">
-        {/* TODO: replace href="#" with real conversion/purchase path */}
-        <a href="#" className="flex items-center gap-1.5 group/license">
+        <a href="https://github.com/EricCogen/GauntletCI" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 group/license">
           <Key className="h-3 w-3 text-amber-400/80 shrink-0 group-hover/license:text-amber-400 transition-colors" />
           <span className="text-xs text-amber-400/80 hidden sm:inline group-hover/license:text-amber-400 group-hover/license:underline transition-colors">
             License

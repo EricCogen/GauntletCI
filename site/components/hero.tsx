@@ -22,6 +22,10 @@ export function Hero() {
             GauntletCI identifies the high-risk logic shifts hidden in your diffs.
           </p>
 
+          <p className="mt-3 text-sm text-muted-foreground/70">
+            Built for .NET and C# teams who want diff-aware risk detection before code review.
+          </p>
+
           <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl w-full text-left">
             <div className="rounded-lg border border-border bg-card p-5">
               <p className="text-xs font-semibold text-cyan-400 uppercase tracking-widest mb-2">The Problem: Diffs are Deceptive</p>
