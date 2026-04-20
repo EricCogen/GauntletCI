@@ -96,6 +96,29 @@ public class GCI0042Tests
     }
 
     [Fact]
+    public async Task TodoInXmlDocComment_ShouldNotFire()
+    {
+        var raw = """
+            diff --git a/src/MyRule.cs b/src/MyRule.cs
+            index abc..def 100644
+            --- a/src/MyRule.cs
+            +++ b/src/MyRule.cs
+            @@ -1,3 +1,7 @@
+             public class MyRule {
+            +    /// <summary>
+            +    /// TODO/Stub Detection rule — fires on incomplete markers.
+            +    /// </summary>
+            +    public void Evaluate() { }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
     public async Task TodoInTestFile_ShouldNotFire()
     {
         var raw = """
