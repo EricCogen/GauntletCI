@@ -21,7 +21,7 @@ const stats = [
     icon: ShieldCheck,
     value: "30",
     label: "Detection rules",
-    sub: "GCI0001-GCI0053.",
+    sub: "Across 7 risk categories.",
     color: "text-emerald-400",
     bg: "bg-emerald-500/10",
   },
