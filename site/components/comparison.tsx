@@ -25,7 +25,7 @@ const rows: ComparisonRow[] = [
     gauntlet: "yes", sonar: "no", semgrep: "partial", snyk: "no", codeql: "no", codeclimate: "no",
   },
   {
-    label: "100% local — no code leaves the machine",
+    label: "100% local - no code leaves the machine",
     sublabel: "No cloud upload, no SaaS account required",
     gauntlet: "yes", sonar: "partial", semgrep: "partial", snyk: "no", codeql: "partial", codeclimate: "no",
   },
