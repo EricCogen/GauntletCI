@@ -127,6 +127,28 @@ public class GCI0046Tests
     }
 
     [Fact]
+    public async Task PatternDefinitionStringLiteral_ShouldNotFire()
+    {
+        var raw = """
+            diff --git a/src/MyDetector.cs b/src/MyDetector.cs
+            index abc..def 100644
+            --- a/src/MyDetector.cs
+            +++ b/src/MyDetector.cs
+            @@ -1,3 +1,8 @@
+             public class MyDetector {
+            +    private static readonly string[] Patterns =
+            +        [".GetService<", ".GetRequiredService<", "ServiceLocator.Current"];
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f =>
+            f.Summary.Contains("Service locator") || f.Summary.Contains("service locator"));
+    }
+
+    [Fact]
     public async Task AllowlistedSyncAsyncPair_ShouldNotFire()
     {
         var raw = """

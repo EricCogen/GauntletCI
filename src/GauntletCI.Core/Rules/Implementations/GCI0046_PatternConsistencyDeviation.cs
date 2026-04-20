@@ -35,6 +35,21 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
             || fileName.EndsWith("Extensions.cs", StringComparison.OrdinalIgnoreCase);
     }
 
+    // Returns true when the pattern appears inside a string literal on this line
+    // (i.e., an odd number of unescaped quotes precede the match position).
+    private static bool IsInsideStringLiteral(string content, string pattern)
+    {
+        int idx = content.IndexOf(pattern, StringComparison.Ordinal);
+        if (idx < 0) return false;
+        int quotes = 0;
+        for (int i = 0; i < idx; i++)
+        {
+            if (content[i] == '"' && (i == 0 || content[i - 1] != '\\'))
+                quotes++;
+        }
+        return quotes % 2 == 1;
+    }
+
     private HashSet<string> _allowedSyncAsyncPairs = new(StringComparer.Ordinal);
 
     public void Configure(GauntletConfig config)
@@ -68,6 +83,9 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
                 p => line.Content.Contains(p, StringComparison.Ordinal));
 
             if (matched is null) continue;
+
+            // Skip pattern-definition arrays: the match is inside a string literal
+            if (IsInsideStringLiteral(line.Content, matched)) continue;
 
             findings.Add(CreateFinding(
                 file,
