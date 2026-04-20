@@ -178,8 +178,10 @@ public class ConfigLoaderTests
                     "ollamaEndpoints": [
                       { "url": "http://localhost:11434", "enabled": true },
                       { "url": "http://10.0.0.5:11434", "enabled": false }
-                    ],
-                    "ollamaModel": "phi3:mini"
+                    ]
+                  },
+                  "llm": {
+                    "model": "phi4-mini:latest"
                   }
                 }
                 """;
@@ -191,7 +193,7 @@ public class ConfigLoaderTests
             Assert.Equal(2, config.Corpus.OllamaEndpoints.Length);
             Assert.Contains(config.Corpus.OllamaEndpoints, e => e.Url == "http://localhost:11434" && e.Enabled);
             Assert.Contains(config.Corpus.OllamaEndpoints, e => e.Url == "http://10.0.0.5:11434" && !e.Enabled);
-            Assert.Equal("phi3:mini", config.Corpus.OllamaModel);
+            Assert.Equal("phi4-mini:latest", config.Llm?.Model);
         }
         finally
         {
@@ -241,7 +243,6 @@ public class ConfigLoaderTests
 
             Assert.NotNull(config.Corpus);
             Assert.Empty(config.Corpus.OllamaEndpoints);
-            Assert.Null(config.Corpus.OllamaModel);
         }
         finally
         {

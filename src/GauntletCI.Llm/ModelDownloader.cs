@@ -2,13 +2,13 @@
 namespace GauntletCI.Llm;
 
 /// <summary>
-/// Downloads the Phi-3 Mini INT4 ONNX model from HuggingFace on first run.
-/// Files are cached in ~/.gauntletci/models/phi3-mini/.
+/// Downloads the Phi-4 Mini INT4 ONNX model from HuggingFace on first run.
+/// Files are cached in ~/.gauntletci/models/phi4-mini/.
 /// </summary>
 public class ModelDownloader
 {
     private const string BaseUrl =
-        "https://huggingface.co/microsoft/Phi-3-mini-4k-instruct-onnx/resolve/main/" +
+        "https://huggingface.co/microsoft/Phi-4-mini-instruct-onnx/resolve/main/" +
         "cpu_and_mobile/cpu-int4-rtn-block-32-acc-level-4/";
 
     private static readonly string[] RequiredFiles =
@@ -20,8 +20,8 @@ public class ModelDownloader
         "tokenizer.json",
         "tokenizer.model",
         "tokenizer_config.json",
-        "phi3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx",
-        "phi3-mini-4k-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx.data",
+        "phi-4-mini-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx",
+        "phi-4-mini-instruct-cpu-int4-rtn-block-32-acc-level-4.onnx.data",
     ];
 
     private readonly string _modelDir;
@@ -49,7 +49,7 @@ public class ModelDownloader
         }
 
         Directory.CreateDirectory(_modelDir);
-        progress?.Report($"Downloading Phi-3 Mini (INT4 ONNX) to {_modelDir} ...");
+        progress?.Report($"Downloading Phi-4 Mini (INT4 ONNX) to {_modelDir} ...");
         progress?.Report("Note: model.onnx.data is ~2 GB — this may take several minutes.");
 
         using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };

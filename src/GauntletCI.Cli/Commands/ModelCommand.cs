@@ -9,7 +9,7 @@ public static class ModelCommand
 {
     private static readonly string DefaultModelDir = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-        ".gauntletci", "models", "phi3-mini");
+        ".gauntletci", "models", "phi4-mini");
 
     public static Command Create()
     {
@@ -26,7 +26,7 @@ public static class ModelCommand
             () => DefaultModelDir,
             "Directory to download the model into");
 
-        var cmd = new Command("download", "Download the Phi-3 Mini INT4 ONNX model (~2 GB) for offline enrichment")
+        var cmd = new Command("download", "Download the Phi-4 Mini INT4 ONNX model (~2 GB) for offline enrichment")
         {
             dirOption,
         };

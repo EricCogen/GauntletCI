@@ -46,7 +46,7 @@ internal sealed class LlmDaemonClient : ILlmEngine
         // Only auto-start if the model is already downloaded
         var modelDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            ".gauntletci", "models", "phi3-mini");
+            ".gauntletci", "models", "phi4-mini");
         if (!new ModelDownloader(modelDir).IsModelCached())
             return null;
 

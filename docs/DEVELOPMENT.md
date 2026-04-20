@@ -54,7 +54,7 @@ Some tests require environment variables to run:
 
 | Env var | Enables |
 |---------|---------|
-| `GAUNTLETCI_HALLUCINATION_PROBE=1` | Phi-3 Mini hallucination probe (loads 2.6 GB ONNX model, ~6 min) |
+| `GAUNTLETCI_HALLUCINATION_PROBE=1` | Phi-4 Mini hallucination probe (loads 2.6 GB ONNX model, ~6 min) |
 | `ANTHROPIC_API_KEY` | Anthropic-backed LLM integration tests |
 | `OPENAI_API_KEY` | OpenAI-compatible LLM integration tests |
 
@@ -78,10 +78,10 @@ GauntletCI.slnx
 │   │   ├── Commands/           # One file per command group
 │   │   └── Telemetry/          # TelemetryEvent, TelemetryStore, ConsentMode
 │   ├── GauntletCI.Llm/         # LLM integration
-│   │   ├── LocalLlmEngine.cs   # ONNX Phi-3 Mini (CPU/DirectML)
+│   │   ├── LocalLlmEngine.cs   # ONNX Phi-4 Mini (CPU/DirectML)
 │   │   ├── RemoteLlmEngine.cs  # OpenAI-compatible REST endpoint
 │   │   ├── NullLlmEngine.cs    # No-op default (no model required)
-│   │   ├── PromptTemplates.cs  # Phi-3 chat format prompts
+│   │   ├── PromptTemplates.cs  # Phi-4 chat format prompts
 │   │   └── Embeddings/         # OllamaEmbeddingEngine, VectorStore, Distillery
 │   └── GauntletCI.Corpus/      # Corpus pipeline (hydration, labeling, storage)
 │       └── Storage/            # CorpusDb, SchemaInitializer, FixtureIdHelper

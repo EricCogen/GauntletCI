@@ -68,7 +68,7 @@ public class LlmLabelerFactoryTests
     [Fact]
     public void Create_OllamaProvider_ReturnsOllamaLabeler()
     {
-        var labeler = LlmLabelerFactory.Create("ollama", "phi3:mini", "http://localhost:11434");
+        var labeler = LlmLabelerFactory.Create("ollama", "phi4-mini:latest", "http://localhost:11434");
         Assert.IsType<OllamaLlmLabeler>(labeler);
         (labeler as IDisposable)?.Dispose();
     }

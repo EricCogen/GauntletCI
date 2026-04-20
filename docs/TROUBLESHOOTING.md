@@ -98,7 +98,7 @@ Use `gauntletci ignore add GCI00XX` to add a one-time suppression for a specific
 
 ### `gauntletci model download` is slow or stalls
 
-The Phi-3 Mini ONNX model is ~2.6 GB. Download speed depends on your connection. The model is cached at `~/.gauntletci/models/phi3-mini` after the first download.
+The Phi-4 Mini ONNX model is ~2.6 GB. Download speed depends on your connection. The model is cached at `~/.gauntletci/models/phi4-mini` after the first download.
 
 If the download stalls, cancel and retry — the download is resumable.
 

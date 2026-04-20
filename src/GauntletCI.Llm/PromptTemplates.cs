@@ -2,8 +2,8 @@
 namespace GauntletCI.Llm;
 
 /// <summary>
-/// Prompt templates for Phi-3 Mini.
-/// Phi-3 uses &lt;|user|&gt;, &lt;|end|&gt;, &lt;|assistant|&gt; chat tokens.
+/// Prompt templates for Phi-4 Mini.
+/// Phi-4 uses &lt;|user|&gt;, &lt;|end|&gt;, &lt;|assistant|&gt; chat tokens.
 /// </summary>
 public static class PromptTemplates
 {
@@ -38,7 +38,7 @@ public static class PromptTemplates
 
     /// <summary>
     /// Builds a finding enrichment prompt with strict anti-hallucination system instructions.
-    /// Uses Phi-3's <c>&lt;|system|&gt;</c> token to inject rules before the user turn.
+    /// Uses Phi-4's <c>&lt;|system|&gt;</c> token to inject rules before the user turn.
     /// </summary>
     public static string EnrichFindingConstrained(string ruleId, string ruleName, string summary, string evidence) =>
         $"{SystemStart}{AntiHallucinationSystem}{UserEnd}" +

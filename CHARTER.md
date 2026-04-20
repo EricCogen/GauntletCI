@@ -68,7 +68,7 @@ For every change set analyzed, GauntletCI executes the following process:
 3.  **Cross-Reference Failure Modes:** The system maps the semantic change to the relevant subset of the **Corpus of Failure**.
 4.  **Adjudicate Survival:** The tool issues a verdict. Did the implementation *survive* the test? Or did it introduce a new vulnerability to a known failure mode?
 
-#### 3.3 The Role of the Local Model (Phi-3-Mini ONNX)
+#### 3.3 The Role of the Local Model (Phi-4-Mini ONNX)
 
 The local model[^14] is not a code generator. It is a **Contextual Adjudicator**. Its sole purpose is to bridge the gap between the deterministic Roslyn rule violation and the human-readable context of the pull request. It provides the *explanation* of *why* a specific line of code is a high-risk vector in this *specific* scenario, referencing the Charter's tenets. This ensures the "Expert Adjudication" is grounded in the Charter, not hallucination.
 
@@ -151,7 +151,7 @@ This Charter is ratified by the maintainers of GauntletCI. It serves as the immu
 
 [^13]: ONNX Runtime, *ONNX Runtime Documentation.* <https://onnxruntime.ai/docs/>
 
-[^14]: Microsoft Research, *"Phi-3 Technical Report: A Highly Capable Language Model Locally on Your Phone,"* arXiv:2404.14219 (2024). <https://arxiv.org/abs/2404.14219>
+[^14]: Microsoft Research, *"Phi-4 Technical Report: A Highly Capable Language Model Locally on Your Phone,"* arXiv:2404.14219 (2024). <https://arxiv.org/abs/2404.14219>
 
 [^15]: Microsoft, *"Caching in .NET — Memory Cache,"* .NET Documentation (unbounded growth risk). <https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory>
 

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using GauntletCI.Core.Configuration;
 
 namespace GauntletCI.Corpus.Labeling;
 
@@ -36,7 +37,7 @@ public sealed record HardwareProfile
             {
                 if (TotalRamGb >= 32) return "llama3";       // 8B, ~5GB quantized
                 if (TotalRamGb >= 16) return "mistral";      // 7B, ~4.5GB quantized
-                if (TotalRamGb >= 8)  return "phi3:mini";    // 3.8B, ~2.2GB quantized
+                if (TotalRamGb >= 8)  return LlmDefaults.OllamaModel; // 3.8B, ~2.5GB quantized
                 return "tinyllama";
             }
 
@@ -45,14 +46,14 @@ public sealed record HardwareProfile
             {
                 if (GpuVramGb >= 10) return "llama3";        // 8B fits in 10GB VRAM
                 if (GpuVramGb >= 6)  return "mistral";       // 7B Q4 fits in 6GB
-                if (GpuVramGb >= 4)  return "phi3:mini";     // 3.8B fits in 4GB
+                if (GpuVramGb >= 4)  return LlmDefaults.OllamaModel; // 3.8B fits in 4GB (~2.5GB)
                 return "tinyllama";
             }
 
             // CPU-only: system RAM must hold the model + OS overhead (assume 3GB OS headroom)
             var usableGb = TotalRamGb - 3.0;
             if (usableGb >= 8)  return "mistral";            // 7B Q4 needs ~4.5GB
-            if (usableGb >= 4)  return "phi3:mini";          // 3.8B Q4 needs ~2.2GB
+            if (usableGb >= 4)  return LlmDefaults.OllamaModel;      // 3.8B Q4 needs ~2.5GB
             if (usableGb >= 2)  return "tinyllama";          // 1.1B needs ~0.7GB
             return "tinyllama";
         }

@@ -70,7 +70,7 @@ public static class DoctorCommand
             AnsiConsole.MarkupLine($"  ExitOn      : {config.ExitOn}");
             AnsiConsole.MarkupLine($"  LLM model   : {config.Llm?.CiModel ?? "(none — local only)"}");
             AnsiConsole.MarkupLine($"  Ollama URL  : {config.Llm?.EmbeddingOllamaUrl ?? "http://localhost:11434"}");
-            AnsiConsole.MarkupLine($"  Embedding   : {config.Llm?.EmbeddingModel ?? "phi4-mini:latest"}");
+            AnsiConsole.MarkupLine($"  Ollama model: {config.Llm?.Model ?? LlmDefaults.OllamaModel}");
             AnsiConsole.MarkupLine($"  EP policy   : {(config.Experimental.EngineeringPolicy.Enabled ? "[green]enabled[/]" : "[dim]disabled[/]")}");
 
             AnsiConsole.WriteLine();

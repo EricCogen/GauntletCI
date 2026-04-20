@@ -43,7 +43,7 @@ const items = [
   {
     icon: BrainCircuit,
     feature: "Local LLM Enrichment (Fully Offline)",
-    what: "Runs high-confidence findings through a locally hosted Phi-3 Mini model and appends a plain-English explanation. No API key, no network call — the model runs on your hardware.",
+    what: "Runs high-confidence findings through a locally hosted Phi-4 Mini model and appends a plain-English explanation. No API key, no network call — the model runs on your hardware.",
     benefit: "Junior developers get actionable context on why a finding matters and what to do about it, without asking a senior engineer. Generated locally so it can safely reference the actual diff.",
   },
   {
