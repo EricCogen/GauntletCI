@@ -73,7 +73,6 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: 'GauntletCI - Pre-commit Change-Risk Detection',
   description: 'Analyze what changed in your code and flag unverified behavioral changes before they reach code review. Sub-second analysis, runs locally, high-signal output.',
-  generator: 'v0.app',
   icons: {
     icon: [
       {
@@ -87,6 +86,11 @@ export const metadata: Metadata = {
       {
         url: '/icon.svg',
         type: 'image/svg+xml',
+      },
+      {
+        url: '/icon-512x512.png',
+        sizes: '512x512',
+        type: 'image/png',
       },
     ],
     apple: '/apple-icon.png',
