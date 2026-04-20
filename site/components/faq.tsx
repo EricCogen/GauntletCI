@@ -1,3 +1,88 @@
+const commonQA = [
+  {
+    question: "What is diff-based code analysis?",
+    answer: (
+      <>
+        Diff-based analysis looks only at the lines added or removed in a commit or pull request, not the full
+        codebase. Every finding GauntletCI produces is directly tied to a change you made, not a pre-existing
+        issue in code you never touched.
+      </>
+    ),
+  },
+  {
+    question: "How is GauntletCI different from traditional static analysis?",
+    answer: (
+      <>
+        Traditional static analysis tools scan the whole codebase for known patterns. GauntletCI scans only
+        what changed in the diff and asks whether the change breaks an assumption that your tests may not cover.
+        The scope difference is the key: whole-repo vs. exactly what changed.
+      </>
+    ),
+  },
+  {
+    question: "Why do tests miss bugs?",
+    answer: (
+      <>
+        Tests verify what you <em>expected</em> to happen. They do not verify what you did not expect. A logic
+        change that looks safe can alter a guard clause, shift a branch, or orphan a check that tests never
+        exercised. GauntletCI flags those behavioral changes in the diff before they reach review.
+      </>
+    ),
+  },
+  {
+    question: "What is shift-left code analysis?",
+    answer: (
+      <>
+        Shift-left means moving feedback earlier in the development cycle, closer to when code is written.
+        GauntletCI gives you change-risk feedback before you commit, which eliminates the push, wait 15 minutes,
+        CI fails, fix loop entirely.
+      </>
+    ),
+  },
+  {
+    question: "How does GauntletCI work with GitHub Actions?",
+    answer: (
+      <>
+        Add the workflow to your repo. It runs on every pull request, diffs the branch against the base,
+        posts findings as inline review comments on the exact diff lines that triggered them, and exits with
+        code 1 if blocking findings are detected. See the{" "}
+        <a href="/docs/integrations" className="text-cyan-400 hover:underline">CI/CD Integrations</a> doc for
+        the full YAML.
+      </>
+    ),
+  },
+  {
+    question: "Is GauntletCI a Roslyn analyzer?",
+    answer: (
+      <>
+        The detection engine is built on Roslyn, but GauntletCI is not a Roslyn analyzer in the traditional
+        sense. It does not run during compilation or integrate with the MSBuild diagnostic pipeline. It runs
+        as a separate CLI step against a diff, either pre-commit or in CI.
+      </>
+    ),
+  },
+  {
+    question: "Does GauntletCI support local-first AI?",
+    answer: (
+      <>
+        Yes. The <code>--with-llm</code> flag sends high-confidence findings to a locally hosted Ollama model
+        (default: <code>phi4-mini:latest</code>) for plain-English explanation. No data leaves your machine.
+        The detection itself is always deterministic; the AI only adds context.
+      </>
+    ),
+  },
+  {
+    question: "Can I use GauntletCI in an air-gapped environment?",
+    answer: (
+      <>
+        Yes. The core tool has no external runtime dependencies. The optional LLM feature uses a local Ollama
+        instance, which also has no external dependencies once the model is downloaded. Nothing in GauntletCI
+        requires internet access at analysis time.
+      </>
+    ),
+  },
+];
+
 const faqs = [
   {
     question: `"I already have Roslyn, SonarQube, and linters. Why do I need another tool screaming at me?"`,
@@ -75,6 +160,22 @@ export function Faq() {
                 <br />
                 <span className="font-semibold text-foreground">Reality:</span>{" "}
                 {faq.reality}
+              </dd>
+            </div>
+          ))}
+        </dl>
+
+        <h3 className="text-2xl font-bold text-center tracking-tight mt-20 mb-10">
+          Common Questions
+        </h3>
+        <dl className="space-y-6">
+          {commonQA.map((item, i) => (
+            <div key={i} className="rounded-xl border border-border bg-card p-6">
+              <dt className="text-base font-semibold text-foreground">
+                {item.question}
+              </dt>
+              <dd className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                {item.answer}
               </dd>
             </div>
           ))}
