@@ -25,13 +25,13 @@ export function Header() {
               <span className="text-lg font-semibold tracking-tight">GauntletCI</span>
             </Link>
             <nav className="hidden md:flex items-center gap-6">
-              <Link href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Features
               </Link>
-              <Link href="#reliability" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/#reliability" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Proven Results
               </Link>
-              <Link href="#quickstart" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <Link href="/#quickstart" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Quick Start
               </Link>
               <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -47,10 +47,10 @@ export function Header() {
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild>
-              <Link href="#pricing">Pricing</Link>
+              <Link href="/#pricing">Pricing</Link>
             </Button>
             <Button size="sm" asChild>
-              <Link href="#quickstart">Get Started</Link>
+              <Link href="/#quickstart">Get Started</Link>
             </Button>
           </div>
           <button
@@ -65,13 +65,13 @@ export function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-border bg-background">
           <nav className="flex flex-col p-4 gap-4">
-            <Link href="#features" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
+            <Link href="/#features" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
               Features
             </Link>
-            <Link href="#reliability" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
+            <Link href="/#reliability" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
               Proven Results
             </Link>
-            <Link href="#quickstart" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
+            <Link href="/#quickstart" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
               Quick Start
             </Link>
             <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
@@ -85,7 +85,7 @@ export function Header() {
                 </Link>
               </Button>
               <Button variant="outline" size="sm" asChild>
-                <Link href="#pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
+                <Link href="/#pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
               </Button>
               <Button size="sm" asChild>
                 <Link href="#quickstart">Get Started</Link>
