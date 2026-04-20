@@ -7,7 +7,7 @@ export function Stats() {
   ];
 
   return (
-    <section className="border-y border-border bg-card/50">
+    <section id="stats" className="border-y border-border bg-card/50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 lg:grid-cols-4 divide-x divide-y lg:divide-y-0 divide-border">
           {stats.map((stat, index) => (
