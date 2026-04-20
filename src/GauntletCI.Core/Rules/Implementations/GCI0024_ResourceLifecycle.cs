@@ -43,6 +43,23 @@ public class GCI0024_ResourceLifecycle : RuleBase
         "Certificate", "Scope", "Timer", "Enumerator"
     ];
 
+    // Types that end with a disposable-looking suffix but do NOT implement IDisposable.
+    // The suffix heuristic is skipped for these to avoid false positives.
+    private static readonly HashSet<string> KnownNonDisposableTypes = new(StringComparer.Ordinal)
+    {
+        // Microsoft.CodeAnalysis / Roslyn analysis context types
+        "SyntaxContext", "AnalysisContext", "SemanticContext",
+        "SyntaxNodeAnalysisContext", "OperationAnalysisContext", "CodeBlockAnalysisContext",
+        // System.CommandLine types
+        "InvocationContext",
+        // ASP.NET Core filter/action context types (not disposable on their own)
+        "HttpContext", "RouteContext", "FilterContext", "ActionContext",
+        "AuthorizationFilterContext", "ResourceExecutingContext", "ResourceExecutedContext",
+        "ResultExecutingContext", "ResultExecutedContext", "ExceptionContext",
+        // Other common non-disposable context types
+        "ValidationContext", "NavigationContext",
+    };
+
     private static readonly Regex NewTypeRegex =
         new(@"new ([A-Z][A-Za-z0-9]+)\(", RegexOptions.Compiled);
 
@@ -132,13 +149,20 @@ public class GCI0024_ResourceLifecycle : RuleBase
                 return (knownType.Replace("new ", "").TrimEnd('('), true);
         }
 
-        // Suffix heuristic — Medium confidence (type name resembles a disposable but isn't confirmed)
+        // Suffix heuristic — Medium confidence
         var match = NewTypeRegex.Match(content);
         if (match.Success)
         {
             var name = match.Groups[1].Value;
-            if (DisposableSuffixes.Any(suffix => name.EndsWith(suffix, StringComparison.Ordinal)))
-                return (name, false);
+            foreach (var suffix in DisposableSuffixes)
+            {
+                if (name.EndsWith(suffix, StringComparison.Ordinal))
+                {
+                    // Skip types known NOT to be disposable despite having a disposable-looking suffix
+                    if (KnownNonDisposableTypes.Contains(name)) return (null, false);
+                    return (name, false);
+                }
+            }
         }
 
         return (null, false);
