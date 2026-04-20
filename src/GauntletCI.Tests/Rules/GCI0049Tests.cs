@@ -244,6 +244,29 @@ public class GCI0049Tests
     }
 
     [Fact]
+    public async Task GuardedIntegerZeroCheckWithCast_ShouldNotFire()
+    {
+        // Safe division pattern: integer zero-guard in ternary followed by (double) cast in the branch.
+        // The == 0 is an integer check, not a float equality comparison.
+        var raw = """
+            diff --git a/src/Metrics/Scorer.cs b/src/Metrics/Scorer.cs
+            index abc..def 100644
+            --- a/src/Metrics/Scorer.cs
+            +++ b/src/Metrics/Scorer.cs
+            @@ -1,4 +1,6 @@
+             public class Scorer {
+            +    double Precision(int tp, int fp) =>
+            +        (tp + fp) == 0 ? 0.0 : (double)tp / (tp + fp);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
     public async Task RegularStringWithEqualityOperator_ShouldNotFlag()
     {
         // A regular string containing == 0.0 — should not fire (it's inside a string literal)

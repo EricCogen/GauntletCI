@@ -41,6 +41,15 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
         @"\b(?:float|double)\b.*(?:==|!=)|(?:==|!=).*\b(?:float|double)\b",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
+    // Matches the safe-division guard pattern: integer zero-check before a ternary
+    // e.g. (a + b) == 0 ? 0.0 : (double)a / (a + b)
+    // In this pattern, (double)/(float) casts appear in the ternary branch, not the comparison.
+    private static readonly Regex IntegerZeroGuardRegex = new(
+        @"(?:==|!=)\s*0\s*\?", RegexOptions.Compiled);
+
+    private static bool IsGuardedIntegerZeroCheck(string content) =>
+        IntegerZeroGuardRegex.IsMatch(content);
+
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -64,10 +73,14 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
                         file.NewPath, line.LineNumber, GetFirstOperatorIndex(content)) == true)
                     continue;
 
+                // When the line is an integer zero-guard ternary (e.g. count == 0 ? 0.0 : (double)a/b),
+                // the (double)/(float) cast and the == appear in different clauses — skip cast/type checks.
+                bool hasSafeDivGuard = IsGuardedIntegerZeroCheck(content);
+
                 bool matches = HasMatchOutsideStringLiteral(FloatLiteralOnRightRegex, content)
                             || HasMatchOutsideStringLiteral(FloatLiteralOnLeftRegex, content)
-                            || HasMatchOutsideStringLiteral(FloatCastWithEqualityRegex, content)
-                            || HasMatchOutsideStringLiteral(FloatTypeWithEqualityRegex, content);
+                            || (!hasSafeDivGuard && HasMatchOutsideStringLiteral(FloatCastWithEqualityRegex, content))
+                            || (!hasSafeDivGuard && HasMatchOutsideStringLiteral(FloatTypeWithEqualityRegex, content));
 
                 if (!matches) continue;
 
