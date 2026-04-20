@@ -2,7 +2,7 @@ import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
 import { Stats } from "@/components/stats";
 import { Features } from "@/components/features";
-import { WhyTeams } from "@/components/why-teams";
+import { FeaturesBenefits } from "@/components/features-benefits";
 import { ProvenReliability } from "@/components/proven-reliability";
 import { QuickStart } from "@/components/quick-start";
 import { DetectionRules } from "@/components/detection-rules";
@@ -16,7 +16,7 @@ export default function Home() {
       <Hero />
       <Stats />
       <Features />
-      <WhyTeams />
+      <FeaturesBenefits />
       <ProvenReliability />
       <QuickStart />
       <DetectionRules />
