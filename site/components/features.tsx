@@ -15,7 +15,7 @@ export function Features() {
     {
       icon: Lock,
       title: "100% local execution",
-      description: "No code leaves your machine. Auto-redaction prevents sensitive data exposure. Works air-gapped.",
+      description: "Core analysis runs entirely on your machine by default. Auto-redaction prevents sensitive data exposure. Works air-gapped.",
     },
     {
       icon: Server,
