@@ -34,6 +34,86 @@
         "type": "array",
         "items": { "type": "string" }
       }
+    },
+    "ci": {
+      "$ref": "#/definitions/CiConfig"
+    },
+    "notifications": {
+      "$ref": "#/definitions/NotificationsConfig"
+    },
+    "output": {
+      "$ref": "#/definitions/OutputConfig"
+    },
+    "ticketProvider": {
+      "$ref": "#/definitions/TicketProviderConfig"
+    },
+    "corpus": {
+      "type": ["object", "null"],
+      "description": "Corpus pipeline configuration (local dev tool settings).",
+      "additionalProperties": false,
+      "properties": {
+        "ollamaEndpoints": {
+          "type": "array",
+          "description": "Ollama endpoints for silver labeling. Multiple entries enable round-robin load distribution.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "url": { "type": "string", "description": "Base URL of the Ollama server." },
+              "enabled": { "type": "boolean", "description": "Whether this endpoint is active.", "default": true }
+            }
+          }
+        },
+        "ollamaModel": {
+          "type": ["string", "null"],
+          "description": "Default Ollama model override for the corpus pipeline. Null means auto-select."
+        }
+      }
+    },
+    "patternConsistency": {
+      "type": ["object", "null"],
+      "description": "Pattern consistency configuration for GCI0046 Pattern Consistency Deviation.",
+      "additionalProperties": false,
+      "properties": {
+        "allowedSyncAsyncPairs": {
+          "type": "array",
+          "description": "Method base names for which a sync+async pair is intentionally supported.",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "experimental": {
+      "type": ["object", "null"],
+      "description": "Experimental feature flags. Settings here may change or be removed without notice.",
+      "additionalProperties": false,
+      "properties": {
+        "engineeringPolicy": {
+          "type": "object",
+          "description": "Configuration for the experimental LLM-powered engineering policy evaluation step.",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable the engineering policy evaluation step. Requires an LLM to be available.",
+              "default": false
+            },
+            "description": {
+              "type": "string",
+              "description": "Self-documenting description of this feature."
+            },
+            "path": {
+              "type": "string",
+              "description": "Path to the engineering policy markdown file, relative to the repository root.",
+              "default": ".misc/engineering-policy.md"
+            },
+            "maxDiffChars": {
+              "type": "integer",
+              "description": "Maximum diff size in characters sent to the LLM.",
+              "default": 12000
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -88,6 +168,118 @@
           "type": "string",
           "description": "Environment variable name that holds the GauntletCI license key.",
           "default": "GAUNTLETCI_LICENSE"
+        },
+        "modelPath": {
+          "type": ["string", "null"],
+          "description": "Path to the local ONNX model directory used by LocalLlmEngine. Defaults to ~/.gauntletci/models/phi3-mini."
+        },
+        "numCtx": {
+          "type": "integer",
+          "description": "Ollama context window size in tokens (input + output combined).",
+          "default": 16384
+        },
+        "maxCompleteTokens": {
+          "type": "integer",
+          "description": "Maximum tokens the model may generate per completion call.",
+          "default": 2048
+        },
+        "embeddingOllamaUrl": {
+          "type": "string",
+          "description": "Ollama base URL used for query embedding (analyze --with-expert-context).",
+          "default": "http://localhost:11434"
+        },
+        "embeddingModel": {
+          "type": "string",
+          "description": "Ollama model used for query embedding. Must match the model used when running 'gauntletci llm seed'.",
+          "default": "phi4-mini:latest"
+        },
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable LLM enrichment by default. Equivalent to --with-llm on every run.",
+          "default": false
+        },
+        "expertContext": {
+          "type": "boolean",
+          "description": "Attach expert context from the local vector store by default. Equivalent to --with-expert-context.",
+          "default": false
+        }
+      }
+    },
+    "CiConfig": {
+      "type": "object",
+      "description": "CI/CD output integration settings.",
+      "additionalProperties": false,
+      "properties": {
+        "prComments": {
+          "type": "boolean",
+          "description": "Post findings as a GitHub PR review with inline comments. Equivalent to --github-pr-comments.",
+          "default": false
+        },
+        "checks": {
+          "type": "boolean",
+          "description": "Post findings as a GitHub Checks API check run. Equivalent to --github-checks.",
+          "default": false
+        },
+        "annotations": {
+          "type": "boolean",
+          "description": "Emit GitHub Actions workflow commands for inline annotations. Equivalent to --github-annotations.",
+          "default": false
+        },
+        "coverage": {
+          "type": "boolean",
+          "description": "Correlate findings with Codecov coverage data. Equivalent to --with-coverage.",
+          "default": false
+        }
+      }
+    },
+    "NotificationsConfig": {
+      "type": "object",
+      "description": "Notification webhook settings.",
+      "additionalProperties": false,
+      "properties": {
+        "slackWebhook": {
+          "type": "string",
+          "description": "Slack Incoming Webhook URL. Posts Block findings to Slack. Equivalent to --notify-slack."
+        },
+        "teamsWebhook": {
+          "type": "string",
+          "description": "Microsoft Teams Incoming Webhook URL. Posts Block findings to Teams. Equivalent to --notify-teams."
+        }
+      }
+    },
+    "OutputConfig": {
+      "type": "object",
+      "description": "Default output and display settings.",
+      "additionalProperties": false,
+      "properties": {
+        "minSeverity": {
+          "type": "string",
+          "description": "Minimum severity to display. Equivalent to --severity. CLI flag overrides this.",
+          "enum": ["info", "warn", "block"],
+          "default": "warn"
+        },
+        "verbose": {
+          "type": "boolean",
+          "description": "Show Info-severity findings. Equivalent to --verbose.",
+          "default": false
+        },
+        "format": {
+          "type": "string",
+          "description": "Output format. Equivalent to --output. CLI flag overrides this.",
+          "enum": ["text", "json", "sarif"],
+          "default": "text"
+        }
+      }
+    },
+    "TicketProviderConfig": {
+      "type": "object",
+      "description": "Ticket provider integration settings.",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Enable ticket context enrichment by default. Equivalent to --with-ticket-context.",
+          "default": false
         }
       }
     }

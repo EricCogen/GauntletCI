@@ -112,6 +112,8 @@ public static class AnalyzeCommand
             var withCoverage  = ctx.ParseResult.GetValueForOption(withCoverageFlag);
             var githubChecks  = ctx.ParseResult.GetValueForOption(githubChecksFlag);
             var withTicketCtx = ctx.ParseResult.GetValueForOption(withTicketCtxFlag);
+            var notifySlack   = ctx.ParseResult.GetValueForOption(notifySlackOption);
+            var notifyTeams   = ctx.ParseResult.GetValueForOption(notifyTeamsOption);
             var ct = ctx.GetCancellationToken();
 
             // Enforce single diff source
@@ -142,11 +144,6 @@ public static class AnalyzeCommand
                 return;
             }
 
-            CliBanner.PrintIfEnabled(new BannerContext
-            {
-                NoBanner = noBanner,
-                OutputFormat = output ?? "text",
-            });
             try
             {
                 var diff = diffFile is not null
@@ -162,6 +159,45 @@ public static class AnalyzeCommand
                                     : DiffParser.Parse(await Console.In.ReadToEndAsync(ct));
 
                 var config = ConfigLoader.Load(repo.FullName);
+                config.Ci            ??= new();
+                config.Output        ??= new();
+                config.Notifications ??= new();
+                config.TicketProvider ??= new();
+
+                // Merge config defaults — CLI value wins when explicitly passed; config fills in the rest.
+                withLlm       = withLlm       || (config.Llm?.Enabled      == true);
+                withExpertCtx = withExpertCtx || (config.Llm?.ExpertContext == true);
+                if (ctx.ParseResult.FindResultFor(withTicketCtxFlag) is null)
+                    withTicketCtx = config.TicketProvider.Enabled;
+                if (ctx.ParseResult.FindResultFor(githubPrCommentsFlag) is null)
+                    ghPrComments = config.Ci.PrComments;
+                if (ctx.ParseResult.FindResultFor(githubAnnotationsFlag) is null)
+                    ghAnnotate = config.Ci.Annotations;
+                if (ctx.ParseResult.FindResultFor(githubChecksFlag) is null)
+                    githubChecks = config.Ci.Checks;
+                if (ctx.ParseResult.FindResultFor(withCoverageFlag) is null)
+                    withCoverage = config.Ci.Coverage;
+                if (ctx.ParseResult.FindResultFor(verboseFlag) is null)
+                    verbose = config.Output.Verbose;
+
+                // Severity: only apply config value if user did not explicitly pass --severity
+                if (ctx.ParseResult.FindResultFor(severityOption) is null)
+                    severityStr = config.Output.MinSeverity;
+
+                // Output format: resolved before banner so the correct writer is selected
+                if (ctx.ParseResult.FindResultFor(outputOption) is null && config.Output.Format != "text")
+                    output = config.Output.Format;
+
+                CliBanner.PrintIfEnabled(new BannerContext
+                {
+                    NoBanner = noBanner,
+                    OutputFormat = output ?? "text",
+                });
+
+                // Notifications: CLI arg takes precedence, then config, then env var (handled downstream)
+                notifySlack ??= config.Notifications.SlackWebhook;
+                notifyTeams ??= config.Notifications.TeamsWebhook;
+
                 var ignoreList = IgnoreList.Load(repo.FullName);
                 var orchestrator = RuleOrchestrator.CreateDefault(config, repoPath: repo.FullName);
 
@@ -347,10 +383,8 @@ public static class AnalyzeCommand
                 if (githubChecks)
                     await GitHubChecksWriter.WriteAsync(result, ct);
 
-                var slackUrl = ctx.ParseResult.GetValueForOption(notifySlackOption)
-                            ?? Environment.GetEnvironmentVariable("GAUNTLETCI_SLACK_WEBHOOK");
-                var teamsUrl = ctx.ParseResult.GetValueForOption(notifyTeamsOption)
-                            ?? Environment.GetEnvironmentVariable("GAUNTLETCI_TEAMS_WEBHOOK");
+                var slackUrl = notifySlack ?? Environment.GetEnvironmentVariable("GAUNTLETCI_SLACK_WEBHOOK");
+                var teamsUrl = notifyTeams ?? Environment.GetEnvironmentVariable("GAUNTLETCI_TEAMS_WEBHOOK");
                 if (slackUrl is not null || teamsUrl is not null)
                     await SlackTeamsNotifier.NotifyAsync(result, slackUrl, teamsUrl, ct);
 
