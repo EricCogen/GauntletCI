@@ -7,7 +7,7 @@ using Microsoft.ML.OnnxRuntimeGenAI;
 namespace GauntletCI.Llm;
 
 /// <summary>
-/// Local ONNX LLM engine using Microsoft.ML.OnnxRuntimeGenAI with Phi-3 Mini.
+/// Local ONNX LLM engine using Microsoft.ML.OnnxRuntimeGenAI with Phi-4 Mini.
 /// Runs on GPU via DirectML when available; falls back to CPU automatically.
 /// Model is loaded lazily on first use and cached for the lifetime of this instance.
 /// Dispose when done to release native resources.
@@ -32,7 +32,7 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
     private bool _disposed;
 
     /// <summary>Initializes the engine with the path to the local ONNX model directory.</summary>
-    /// <param name="modelPath">Directory containing the ONNX model files; defaults to <c>~/.gauntletci/models/phi3-mini</c> when <see langword="null"/>.</param>
+    /// <param name="modelPath">Directory containing the ONNX model files; defaults to <c>~/.gauntletci/models/phi4-mini</c> when <see langword="null"/>.</param>
     /// <param name="maxInferenceMs">Per-completion timeout in milliseconds; defaults to 60 000 ms.</param>
     public LocalLlmEngine(string? modelPath = null, int maxInferenceMs = DefaultMaxInferenceMs)
         : this(modelPath, DefaultMaxPromptsPerRun, maxInferenceMs) { }
@@ -43,7 +43,7 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
         _modelPath = modelPath
             ?? Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                ".gauntletci", "models", "phi3-mini");
+                ".gauntletci", "models", "phi4-mini");
         _maxPromptsPerRun = maxPromptsPerRun;
         _maxInferenceMs = maxInferenceMs;
     }

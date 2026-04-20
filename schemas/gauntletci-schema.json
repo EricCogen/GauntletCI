@@ -66,7 +66,8 @@
         },
         "ollamaModel": {
           "type": ["string", "null"],
-          "description": "Default Ollama model override for the corpus pipeline. Null means auto-select."
+          "description": "Deprecated. Use llm.model instead.",
+          "deprecated": true
         }
       }
     },
@@ -171,7 +172,7 @@
         },
         "modelPath": {
           "type": ["string", "null"],
-          "description": "Path to the local ONNX model directory used by LocalLlmEngine. Defaults to ~/.gauntletci/models/phi3-mini."
+          "description": "Path to the local ONNX model directory used by LocalLlmEngine. Defaults to ~/.gauntletci/models/phi4-mini."
         },
         "numCtx": {
           "type": "integer",
@@ -188,10 +189,15 @@
           "description": "Ollama base URL used for query embedding (analyze --with-expert-context).",
           "default": "http://localhost:11434"
         },
+        "model": {
+          "type": "string",
+          "description": "Ollama model used for LLM enrichment and expert-context embedding.",
+          "default": "phi4-mini:latest"
+        },
         "embeddingModel": {
           "type": "string",
-          "description": "Ollama model used for query embedding. Must match the model used when running 'gauntletci llm seed'.",
-          "default": "phi4-mini:latest"
+          "description": "Deprecated. Use model instead.",
+          "deprecated": true
         },
         "enabled": {
           "type": "boolean",

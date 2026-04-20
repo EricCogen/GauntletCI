@@ -7,7 +7,7 @@ using Xunit.Abstractions;
 namespace GauntletCI.Tests;
 
 /// <summary>
-/// Measures Phi-3 Mini's tendency to hallucinate under two prompt regimes:
+/// Measures Phi-4 Mini's tendency to hallucinate under two prompt regimes:
 ///   BASELINE    — current EnrichFinding prompt (no system constraints)
 ///   CONSTRAINED — EnrichFindingConstrained with anti-hallucination system rules
 ///
@@ -30,7 +30,7 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
     private static bool ModelCached() =>
         new ModelDownloader(Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            ".gauntletci", "models", "phi3-mini")).IsModelCached();
+            ".gauntletci", "models", "phi4-mini")).IsModelCached();
 
     // ── Probe catalogue ──────────────────────────────────────────────────────
 
@@ -189,7 +189,7 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
         }
         if (!ModelCached())
         {
-            output.WriteLine("SKIPPED: Phi-3 Mini model not cached at ~/.gauntletci/models/phi3-mini");
+            output.WriteLine("SKIPPED: Phi-4 Mini model not cached at ~/.gauntletci/models/phi4-mini");
             return;
         }
 
@@ -199,7 +199,7 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
         var sb = new StringBuilder();
         sb.AppendLine();
         sb.AppendLine("═══════════════════════════════════════════════════════════════════");
-        sb.AppendLine("  GauntletCI • Phi-3 Mini Hallucination Probe");
+        sb.AppendLine("  GauntletCI • Phi-4 Mini Hallucination Probe");
         sb.AppendLine($"  {Probes.Length} probes × 2 conditions = {Probes.Length * 2} completions");
         sb.AppendLine("═══════════════════════════════════════════════════════════════════");
 

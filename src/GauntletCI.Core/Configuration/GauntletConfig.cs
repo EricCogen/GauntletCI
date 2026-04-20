@@ -81,7 +81,7 @@ public class LlmConfig
 
     /// <summary>
     /// Path to the local ONNX model directory used by <c>LocalLlmEngine</c>.
-    /// Defaults to <c>~/.gauntletci/models/phi3-mini</c> when null or absent.
+    /// Defaults to <c>~/.gauntletci/models/phi4-mini</c> when null or absent.
     /// </summary>
     public string? ModelPath { get; set; }
 
@@ -118,11 +118,10 @@ public class LlmConfig
     public string EmbeddingOllamaUrl { get; set; } = "http://localhost:11434";
 
     /// <summary>
-    /// Ollama model used by <c>analyze --with-expert-context</c> for query embedding.
-    /// Must match the <c>--embedding-model</c> used when running <c>gauntletci llm seed</c>.
+    /// Ollama model used for LLM enrichment and expert-context embedding.
     /// Default: <c>phi4-mini:latest</c> (pull with: <c>ollama pull phi4-mini</c>).
     /// </summary>
-    public string EmbeddingModel { get; set; } = "phi4-mini:latest";
+    public string Model { get; set; } = LlmDefaults.OllamaModel;
 
     /// <summary>
     /// Enable LLM enrichment of High-confidence findings by default.
@@ -150,12 +149,6 @@ public class CorpusConfig
     /// Example: [{ "url": "http://localhost:11434" }, { "url": "http://192.168.1.5:11434", "enabled": false }]
     /// </summary>
     public OllamaEndpoint[] OllamaEndpoints { get; set; } = [];
-
-    /// <summary>
-    /// Default Ollama model override for the corpus pipeline. Null means auto-select based on hardware.
-    /// Example: "phi3:mini"
-    /// </summary>
-    public string? OllamaModel { get; set; }
 }
 
 /// <summary>Experimental features. Settings here may change or be removed without notice.</summary>
