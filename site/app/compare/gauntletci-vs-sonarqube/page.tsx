@@ -288,6 +288,7 @@ export default function VsSonarQubePage() {
         </section>
 
       </div>
+    </div>
     </>
   );
 }

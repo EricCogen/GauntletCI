@@ -213,6 +213,7 @@ export default function SemgrepComparePage() {
         </div>
 
       </div>
+    </div>
     </>
   );
 }

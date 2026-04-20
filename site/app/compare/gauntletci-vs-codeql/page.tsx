@@ -295,6 +295,7 @@ export default function VsCodeQLPage() {
         </section>
 
       </div>
+    </div>
     </>
   );
 }

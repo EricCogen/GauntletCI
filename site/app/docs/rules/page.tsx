@@ -415,6 +415,7 @@ export default function RulesPage() {
           for details.
         </p>
       </div>
+    </div>
     </>
   );
 }
