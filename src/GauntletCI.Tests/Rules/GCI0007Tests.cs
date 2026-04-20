@@ -117,4 +117,54 @@ public class GCI0007Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("Swallowed exception"));
     }
+
+    [Fact]
+    public async Task CatchWithContextLineLog_ShouldNotFlag()
+    {
+        // The log call is a context line (pre-existing code), not a newly added line.
+        // Body scan must include context lines to correctly suppress this finding.
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,2 +1,5 @@
+             // service
+            +catch (Exception ex)
+            +{
+             _logger.LogError(ex, "Error occurred");
+            +}
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Swallowed exception"));
+    }
+
+    [Fact]
+    public async Task CatchWithRemovedThrowAndEmptyBody_ShouldFlag()
+    {
+        // A throw was removed from the catch body; the body is now empty.
+        // The removed throw must NOT suppress detection — Removed lines are excluded.
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,2 +1,4 @@
+             // service
+            +catch (Exception ex)
+            +{
+            -    throw;
+            +}
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f =>
+            f.Summary.Contains("Swallowed exception") &&
+            f.Confidence == Confidence.High);
+    }
 }
