@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 const table = [
   { feature: "Analysis scope",         gauntlet: "Changed diff lines only",           semgrep: "Full file or full repo scan" },
-  { feature: "Rule authoring",         gauntlet: "30 built-in, zero config",           semgrep: "Custom YAML patterns required" },
+  { feature: "Rule authoring",         gauntlet: "20+ built-in, zero config",          semgrep: "Custom YAML patterns required" },
   { feature: "Behavioral drift detection", gauntlet: "Yes - removed logic, API contract changes", semgrep: "Limited - pattern matches only" },
   { feature: "Pre-commit speed",       gauntlet: "Under 1 second",                     semgrep: "Seconds to minutes (file-scoped)" },
   { feature: "False positives on unchanged code", gauntlet: "None - diff-scoped by design", semgrep: "Yes - scans pre-existing issues too" },
@@ -20,7 +20,7 @@ const table = [
   { feature: "LLM enrichment",         gauntlet: "Built-in ONNX, fully offline",       semgrep: "No" },
   { feature: "Baseline delta mode",    gauntlet: "Yes - suppress pre-existing issues", semgrep: "No" },
   { feature: "CI gate + inline comments", gauntlet: "Yes (Teams tier)",                semgrep: "Yes (paid)" },
-  { feature: "Free tier",              gauntlet: "All 30 rules, no account",           semgrep: "Limited free, account required" },
+  { feature: "Free tier",              gauntlet: "All 20+ rules, no account",          semgrep: "Limited free, account required" },
 ];
 
 const jsonLd = {
@@ -76,7 +76,7 @@ export default function SemgrepComparePage() {
               Zero false positives on pre-existing issues.
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              No YAML to write. 30 built-in rules cover behavioral drift, security, async safety,
+              No YAML to write. 20+ built-in rules cover behavioral drift, security, async safety,
               data integrity, and architecture violations - all running in under one second with
               no account or network call required.
             </p>
