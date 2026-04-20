@@ -8,6 +8,7 @@ const studies = [
     scenario: "A PR refactored a query helper method. The new implementation introduced LINQ inside a loop over a large result set.",
     finding: "O(n2) performance risk flagged before commit. The pattern would have been invisible in code review -- each piece looked fine in isolation.",
     tag: "LINQ in hot path",
+    link: "/detections",
   },
   {
     project: "StackExchange.Redis",
@@ -16,6 +17,7 @@ const studies = [
     scenario: "A property getter was refactored to lazily initialize a backing field. The initialization had a side effect that mutated shared context.",
     finding: "Pure context mutation in property getter caught pre-commit. No test covered the initialization path. The bug would have appeared only under concurrent access.",
     tag: "State mutation",
+    link: "/detections",
   },
   {
     project: "AngleSharp",
@@ -24,6 +26,7 @@ const studies = [
     scenario: "An enum member used in JSON serialization was removed during a cleanup pass. All tests passed because they used different enum values.",
     finding: "Enum member removal detected as a serialization contract break. Existing stored or transmitted JSON would have failed to deserialize after deploy.",
     tag: "Serialization contract",
+    link: "/detections",
   },
   {
     project: "Dapper",
@@ -32,6 +35,7 @@ const studies = [
     scenario: "A null-forgiving operator was added to suppress a compiler warning on a value that could legitimately be null at runtime.",
     finding: "Null-forgiving operator misuse flagged. The suppressed warning was masking a real null path that would throw in production on certain query results.",
     tag: "Null safety",
+    link: "/detections",
   },
   {
     project: "Polly",
@@ -40,6 +44,7 @@ const studies = [
     scenario: "A retry handler was simplified during cleanup. The author replaced an awaited call with .Result to avoid propagating async through the call chain.",
     finding: "Synchronous block on async method detected. Under load this pattern causes thread pool starvation -- the same mechanism behind classic ASP.NET Core deadlocks.",
     tag: "Blocking async call",
+    link: "/detections#gci0016",
   },
   {
     project: "FluentValidation",
@@ -48,6 +53,7 @@ const studies = [
     scenario: "A public Validate() method was refactored to remove 'redundant' checks. A null guard on the incoming model was removed as assumed to be handled upstream.",
     finding: "Null guard removal on a public API method detected. Callers passing null now receive a NullReferenceException deep in the validation pipeline instead of a clear ArgumentNullException.",
     tag: "Guard removed",
+    link: "/detections#gci0003",
   },
 ];
 
@@ -101,7 +107,7 @@ export function ProvenReliability() {
                 </div>
               </div>
               <div className="px-5 py-3 border-t border-border">
-                <Link href="/detections" className="text-xs text-muted-foreground/50 hover:text-cyan-400 transition-colors">
+                <Link href={s.link} className="text-xs text-muted-foreground/50 hover:text-cyan-400 transition-colors">
                   See annotated detection examples &rarr;
                 </Link>
               </div>
