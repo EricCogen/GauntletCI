@@ -33,6 +33,22 @@ const studies = [
     finding: "Null-forgiving operator misuse flagged. The suppressed warning was masking a real null path that would throw in production on certain query results.",
     tag: "Null safety",
   },
+  {
+    project: "Polly",
+    category: "Concurrency",
+    rule: "GCI0016",
+    scenario: "A retry handler was simplified during cleanup. The author replaced an awaited call with .Result to avoid propagating async through the call chain.",
+    finding: "Synchronous block on async method detected. Under load this pattern causes thread pool starvation -- the same mechanism behind classic ASP.NET Core deadlocks.",
+    tag: "Blocking async call",
+  },
+  {
+    project: "FluentValidation",
+    category: "Behavioral",
+    rule: "GCI0003",
+    scenario: "A public Validate() method was refactored to remove 'redundant' checks. A null guard on the incoming model was removed as assumed to be handled upstream.",
+    finding: "Null guard removal on a public API method detected. Callers passing null now receive a NullReferenceException deep in the validation pipeline instead of a clear ArgumentNullException.",
+    tag: "Guard removed",
+  },
 ];
 
 const categoryColor: Record<string, string> = {
@@ -40,6 +56,7 @@ const categoryColor: Record<string, string> = {
   Behavioral: "text-yellow-400 bg-yellow-500/10 border-yellow-500/20",
   "Breaking Change": "text-red-400 bg-red-500/10 border-red-500/20",
   Nullability: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+  Concurrency: "text-purple-400 bg-purple-500/10 border-purple-500/20",
 };
 
 export function ProvenReliability() {
@@ -57,7 +74,7 @@ export function ProvenReliability() {
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-5">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {studies.map((s) => (
             <div key={s.project} className="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
               <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-border">
@@ -68,7 +85,6 @@ export function ProvenReliability() {
                   <span className="font-mono text-sm font-medium">{s.project}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-xs text-muted-foreground/50">{s.rule}</span>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${categoryColor[s.category]}`}>
                     {s.tag}
                   </span>
@@ -83,6 +99,11 @@ export function ProvenReliability() {
                   <p className="text-xs font-semibold text-cyan-400/70 uppercase tracking-widest mb-1">What GauntletCI flagged</p>
                   <p className="text-sm text-foreground/80 leading-relaxed">{s.finding}</p>
                 </div>
+              </div>
+              <div className="px-5 py-3 border-t border-border">
+                <Link href="/detections" className="text-xs text-muted-foreground/50 hover:text-cyan-400 transition-colors">
+                  See annotated detection examples &rarr;
+                </Link>
               </div>
             </div>
           ))}
