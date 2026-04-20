@@ -44,25 +44,25 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
         {
             foreach (var hunk in file.Hunks)
             {
-                // Added+Context only — Removed lines excluded so a previously deleted
-                // throw/log cannot mask a genuinely empty new catch body.
-                var nonRemovedLines = hunk.Lines
-                    .Where(l => l.Kind != DiffLineKind.Removed)
-                    .ToList();
+                // Collect Added+Context lines only — excluding Removed lines so a previously
+                // deleted throw/log cannot mask a genuinely empty new catch body.
+                var hunkLines = new List<DiffLine>();
+                foreach (var l in hunk.Lines)
+                    if (l.Kind != DiffLineKind.Removed) hunkLines.Add(l);
 
-                for (int i = 0; i < nonRemovedLines.Count; i++)
+                for (int i = 0; i < hunkLines.Count; i++)
                 {
-                    // Only flag catch blocks that are newly added.
-                    if (nonRemovedLines[i].Kind != DiffLineKind.Added) continue;
+                    // Only evaluate catch blocks on Added lines (newly introduced catch).
+                    if (hunkLines[i].Kind != DiffLineKind.Added) continue;
 
-                    var content = nonRemovedLines[i].Content.Trim();
+                    var content = hunkLines[i].Content.Trim();
                     if (!content.StartsWith("catch", StringComparison.Ordinal)) continue;
 
                     if (content.Contains("TaskCanceledException", StringComparison.Ordinal) ||
                         content.Contains("OperationCanceledException", StringComparison.Ordinal))
                         continue;
 
-                    bool isSwallowed = IsCatchSwallowed(nonRemovedLines, i, out string evidence);
+                    bool isSwallowed = IsCatchSwallowed(hunkLines, i, out string evidence);
                     if (isSwallowed)
                     {
                         findings.Add(CreateFinding(
@@ -72,25 +72,25 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
                             whyItMatters: "Empty or silent catch blocks hide failures, making bugs invisible and debugging nearly impossible.",
                             suggestedAction: "Log the exception, rethrow it, or handle it explicitly. Never swallow silently.",
                             confidence: Confidence.High,
-                            line: nonRemovedLines[i]));
+                            line: hunkLines[i]));
                     }
                 }
             }
         }
     }
 
-    private static bool IsCatchSwallowed(List<DiffLine> addedLines, int catchIdx, out string evidence)
+    private static bool IsCatchSwallowed(List<DiffLine> hunkLines, int catchIdx, out string evidence)
     {
-        evidence = addedLines[catchIdx].Content.Trim();
+        evidence = hunkLines[catchIdx].Content.Trim();
 
         // Look for { and } around the catch body
         int depth = 0;
         bool inBody = false;
         bool hasContent = false;
 
-        for (int j = catchIdx; j < Math.Min(addedLines.Count, catchIdx + 10); j++)
+        for (int j = catchIdx; j < Math.Min(hunkLines.Count, catchIdx + 10); j++)
         {
-            var line = addedLines[j].Content.Trim();
+            var line = hunkLines[j].Content.Trim();
             foreach (char c in line)
             {
                 if (c == '{') { depth++; inBody = true; }

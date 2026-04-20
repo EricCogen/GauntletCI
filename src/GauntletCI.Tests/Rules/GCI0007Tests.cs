@@ -128,7 +128,7 @@ public class GCI0007Tests
             index abc..def 100644
             --- a/src/Service.cs
             +++ b/src/Service.cs
-            @@ -1,4 +1,6 @@
+            @@ -1,2 +1,5 @@
              // service
             +catch (Exception ex)
             +{
@@ -152,7 +152,7 @@ public class GCI0007Tests
             index abc..def 100644
             --- a/src/Service.cs
             +++ b/src/Service.cs
-            @@ -1,5 +1,5 @@
+            @@ -1,2 +1,4 @@
              // service
             +catch (Exception ex)
             +{
