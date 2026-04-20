@@ -33,6 +33,7 @@ rootCommand.AddCommand(McpCommand.Create());
 rootCommand.AddCommand(ModelCommand.Create());
 rootCommand.AddCommand(LlmCommand.Create());
 rootCommand.AddCommand(PostmortemCommand.Create());
+rootCommand.AddCommand(TraceCommand.Create());
 rootCommand.AddCommand(FeedbackCommand.Create());
 rootCommand.AddCommand(TelemetryCommand.Create());
 
