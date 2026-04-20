@@ -75,9 +75,9 @@ export function FeaturesBenefits() {
         </div>
 
         <div className="flex flex-col divide-y divide-border">
-          {items.map((item) => (
-            <div key={item.feature} className="grid md:grid-cols-[2fr_1fr] gap-6 py-8 first:pt-0 last:pb-0">
-              {/* Left: feature + what it does */}
+          {items.map((item, index) => {
+            const isEven = index % 2 === 1;
+            const featureCol = (
               <div className="flex gap-5">
                 <div className="mt-0.5 shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-md bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30">
                   <item.icon className="h-5 w-5 text-cyan-400" />
@@ -87,16 +87,21 @@ export function FeaturesBenefits() {
                   <p className="text-sm text-muted-foreground leading-relaxed">{item.what}</p>
                 </div>
               </div>
-
-              {/* Right: the benefit */}
-              <div className="md:pl-4">
+            );
+            const benefitCol = (
+              <div className={isEven ? "md:pr-4" : "md:pl-4"}>
                 <div className="rounded-md bg-cyan-500/5 border border-cyan-500/20 p-4 h-full flex flex-col justify-center">
                   <p className="text-xs font-semibold uppercase tracking-widest text-cyan-400/70 mb-1.5">The benefit</p>
                   <p className="text-sm text-foreground/80 leading-relaxed">{item.benefit}</p>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+            return (
+              <div key={item.feature} className="grid md:grid-cols-[2fr_1fr] gap-6 py-8 first:pt-0 last:pb-0">
+                {isEven ? <>{benefitCol}{featureCol}</> : <>{featureCol}{benefitCol}</>}
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
