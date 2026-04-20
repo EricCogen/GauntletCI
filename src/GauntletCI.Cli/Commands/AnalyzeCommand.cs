@@ -281,7 +281,7 @@ public static class AnalyzeCommand
                             setStatus("Adding context...");
                             using var store    = new GauntletCI.Llm.Embeddings.VectorStore(vectorDbPath);
                             var embedUrl       = config.Llm?.EmbeddingOllamaUrl ?? "http://localhost:11434";
-                            var embedModel     = config.Llm?.EmbeddingModel ?? "nomic-embed-text";
+                            var embedModel     = config.Llm?.Model ?? LlmDefaults.OllamaModel;
                             using var embedEng = new GauntletCI.Llm.Embeddings.OllamaEmbeddingEngine(embedModel, embedUrl);
                             var adjudicator    = new GauntletCI.Llm.Embeddings.LlmAdjudicator(embedEng, store);
                             await adjudicator.AdjudicateAsync(result.Findings, ct);

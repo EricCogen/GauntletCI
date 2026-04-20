@@ -24,10 +24,10 @@ public class HardwareProfileTests
     }
 
     [Fact]
-    public void RecommendedModel_AppleSilicon_8GbRam_ReturnsPhi3Mini()
+    public void RecommendedModel_AppleSilicon_8GbRam_ReturnsPhi4Mini()
     {
         var profile = new HardwareProfile { IsAppleSilicon = true, TotalRamBytes = Gb(8) };
-        Assert.Equal("phi3:mini", profile.RecommendedModel);
+        Assert.Equal("phi4-mini:latest", profile.RecommendedModel);
     }
 
     [Fact]
@@ -54,10 +54,10 @@ public class HardwareProfileTests
     }
 
     [Fact]
-    public void RecommendedModel_DedicatedGpu_4GbVram_ReturnsPhi3Mini()
+    public void RecommendedModel_DedicatedGpu_4GbVram_ReturnsPhi4Mini()
     {
         var profile = new HardwareProfile { IsAppleSilicon = false, GpuVramBytes = Gb(4) };
-        Assert.Equal("phi3:mini", profile.RecommendedModel);
+        Assert.Equal("phi4-mini:latest", profile.RecommendedModel);
     }
 
     [Fact]
@@ -78,11 +78,11 @@ public class HardwareProfileTests
     }
 
     [Fact]
-    public void RecommendedModel_CpuOnly_7GbRam_ReturnsPhi3Mini()
+    public void RecommendedModel_CpuOnly_7GbRam_ReturnsPhi4Mini()
     {
-        // usable = 7 - 3 = 4 → "phi3:mini"
+        // usable = 7 - 3 = 4 → "phi4-mini:latest"
         var profile = new HardwareProfile { IsAppleSilicon = false, GpuVramBytes = 0, TotalRamBytes = Gb(7) };
-        Assert.Equal("phi3:mini", profile.RecommendedModel);
+        Assert.Equal("phi4-mini:latest", profile.RecommendedModel);
     }
 
     [Fact]

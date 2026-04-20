@@ -21,11 +21,11 @@ artifacts/
 .tmp-tools/
 .misc/
 
-# GauntletCI model cache (Phi-3 Mini ONNX — ~2.8 GB, never commit)
+# GauntletCI model cache (Phi-4 Mini ONNX — ~2.8 GB, never commit)
 .gauntletci/
 **/*.onnx
 **/*.onnx.data
-**/phi3-mini-4k-instruct-*
+**/phi4-mini-instruct-*
 
 # Markdown policy: only README.md is committed; all others stay local
 *.md

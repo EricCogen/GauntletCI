@@ -6,7 +6,7 @@
 |---|---|
 | `GauntletCI.Core` | Rule engine, diff parser, static analysis runner, configuration models, domain types |
 | `GauntletCI.Cli` | System.CommandLine entry point, output formatters, telemetry pipeline, all CLI commands |
-| `GauntletCI.Llm` | ONNX runtime integration (Phi-3 Mini); `NullLlmEngine` is the default no-op |
+| `GauntletCI.Llm` | ONNX runtime integration (Phi-4 Mini); `NullLlmEngine` is the default no-op |
 | `GauntletCI.Corpus` | Corpus ingestion pipeline — pull request hydration, normalization, scoring |
 | `GauntletCI.Tests` | xUnit test suite for Core and Cli |
 | `GauntletCI.BenchmarkReporter` | Benchmark report generation |
@@ -56,7 +56,7 @@ gauntletci analyze [options]
         ▼
 6. LLM enrichment           LlmEngineSelector.ResolveAsync()  [opt-in: --with-llm]
         │                  Enriches High-confidence findings with a natural-language
-        │                  explanation via Phi-3 Mini ONNX or a CI endpoint (see below).
+        │                  explanation via Phi-4 Mini ONNX or a CI endpoint (see below).
         │
         ▼
 7. Output                   ConsoleReporter (text) | JsonSerializer (--output json)
@@ -258,7 +258,7 @@ GauntletCI supports two LLM enrichment paths:
 
 ### Local ONNX (default opt-in path)
 
-- Requires `gauntletci model download` to fetch Phi-3 Mini weights.
+- Requires `gauntletci model download` to fetch Phi-4 Mini weights.
 - Activated per-run with `--with-llm`.
 - Runs in a sidecar daemon process (`LlmDaemonServer`) to isolate ONNX memory from the main process.
 - `NullLlmEngine` is the no-op default when no model is present, adding zero dependencies to a standard run.

@@ -37,7 +37,7 @@ internal static class LlmEngineSelector
         var ollamaUrl = config.Corpus.OllamaEndpoints.FirstOrDefault(e => e.Enabled)?.Url;
         if (!string.IsNullOrWhiteSpace(ollamaUrl))
         {
-            var model    = config.Corpus.OllamaModel ?? "phi3:mini";
+            var model    = config.Llm?.Model ?? LlmDefaults.OllamaModel;
             var endpoint = ollamaUrl.TrimEnd('/') + "/v1/chat/completions";
             var numCtx   = config.Llm?.NumCtx ?? 16_384;
             var maxTok   = config.Llm?.MaxCompleteTokens ?? 2_048;

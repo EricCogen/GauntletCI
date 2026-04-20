@@ -13,7 +13,7 @@ All tests must pass before committing.
 ## Architecture
 - `src/GauntletCI.Core/` — rule engine, diff parser, configuration, models
 - `src/GauntletCI.Cli/` — System.CommandLine CLI (beta4), banner, commands
-- `src/GauntletCI.Llm/` — LLM integration: NullLlmEngine (default), LocalLlmEngine (ONNX/Phi-3), RemoteLlmEngine (OpenAI-compatible); Embeddings sub-folder contains OllamaEmbeddingEngine, VectorStore, Distillery, LlmAdjudicator, ExpertSeedFacts
+- `src/GauntletCI.Llm/` — LLM integration: NullLlmEngine (default), LocalLlmEngine (ONNX/Phi-4), RemoteLlmEngine (OpenAI-compatible); Embeddings sub-folder contains OllamaEmbeddingEngine, VectorStore, Distillery, LlmAdjudicator, ExpertSeedFacts
 - `src/GauntletCI.Corpus/` — corpus pipeline: hydration, labeling, maintainer fetcher, storage (SQLite)
 - `src/GauntletCI.Tests/` — xUnit tests
 - Rules: `src/GauntletCI.Core/Rules/Implementations/GCI00XX_*.cs` — each implements `IRule`

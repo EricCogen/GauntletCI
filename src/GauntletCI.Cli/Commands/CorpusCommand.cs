@@ -1336,7 +1336,8 @@ public static class CorpusCommand
             var rawUrls      = ctx.ParseResult.GetValueForOption(llmUrlOpt) ?? [];
             // Load .gauntletci.json for Ollama URL/model fallback; returns safe defaults if file absent.
             var configDir    = FindGitRoot(Environment.CurrentDirectory) ?? Environment.CurrentDirectory;
-            var corpusConfig = ConfigLoader.Load(configDir).Corpus ?? new CorpusConfig();
+            var gauntletCfg  = ConfigLoader.Load(configDir);
+            var corpusConfig = gauntletCfg.Corpus ?? new CorpusConfig();
             // URL resolution and config fallback are Ollama-only; normalize CLI values first to catch whitespace-only entries.
             var normalizedCli = NormalizeOllamaUrls(provider == "ollama" ? rawUrls : []);
             IReadOnlyList<string> llmUrls;
@@ -1350,9 +1351,9 @@ public static class CorpusCommand
             }
             else
                 llmUrls = [];
-            // Scope corpus.ollamaModel fallback to Ollama only; other providers use their own defaults when llmModel is empty.
+            // Scope llm.model fallback to Ollama only; other providers use their own defaults when llmModel is empty.
             var resolvedModel = provider == "ollama" && string.IsNullOrWhiteSpace(llmModel)
-                ? corpusConfig.OllamaModel
+                ? gauntletCfg.Llm?.Model
                 : (string.IsNullOrWhiteSpace(llmModel) ? null : llmModel);
             var dbPath     = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixtures   = ctx.ParseResult.GetValueForOption(fixturesOpt)!;

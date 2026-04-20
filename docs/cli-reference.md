@@ -400,7 +400,7 @@ gauntletci corpus label-all --tier silver --overwrite
 
 ## model
 
-Manage the local LLM model used for finding enrichment. GauntletCI uses the **Phi-3 Mini INT4 ONNX** model (~2 GB) for offline enrichment of High-confidence findings.
+Manage the local LLM model used for finding enrichment. GauntletCI uses the **Phi-4 Mini INT4 ONNX** model (~2 GB) for offline enrichment of High-confidence findings.
 
 ```
 gauntletci model <subcommand> [options]
@@ -410,7 +410,7 @@ gauntletci model <subcommand> [options]
 
 ### model download
 
-Download the Phi-3 Mini INT4 ONNX model for offline enrichment.
+Download the Phi-4 Mini INT4 ONNX model for offline enrichment.
 
 ```
 gauntletci model download [options]
@@ -418,14 +418,14 @@ gauntletci model download [options]
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--dir <path>` | `string` | `~/.gauntletci/models/phi3-mini` | Directory to download the model into |
+| `--dir <path>` | `string` | `~/.gauntletci/models/phi4-mini` | Directory to download the model into |
 
 ```bash
 # Download to default location
 gauntletci model download
 
 # Download to a custom directory
-gauntletci model download --dir /mnt/models/phi3-mini
+gauntletci model download --dir /mnt/models/phi4-mini
 ```
 
 After downloading, pass `--with-llm` to `analyze` to enable enrichment.

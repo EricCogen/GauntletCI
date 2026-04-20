@@ -50,7 +50,7 @@ public static class McpCommand
             }
 
             Console.Error.WriteLine("[mcp] GauntletCI MCP server running (stdio)");
-            Console.Error.WriteLine("[mcp] Add to Claude Desktop: { \"mcpServers\": { \"gauntletci\": { \"command\": \"gauntletci\", \"args\": [\"mcp\", \"serve\", \"--ollama-model\", \"phi3\"] } } }");
+            Console.Error.WriteLine("[mcp] Add to Claude Desktop: { \"mcpServers\": { \"gauntletci\": { \"command\": \"gauntletci\", \"args\": [\"mcp\", \"serve\", \"--ollama-model\", \"phi4-mini\"] } } }");
 
             var builder = Host.CreateApplicationBuilder();
             builder.Logging.AddConsole(options =>

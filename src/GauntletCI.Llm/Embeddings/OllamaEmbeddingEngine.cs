@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using GauntletCI.Core.Configuration;
 
 namespace GauntletCI.Llm.Embeddings;
 
@@ -28,7 +29,7 @@ public sealed class OllamaEmbeddingEngine : IEmbeddingEngine, IDisposable
     /// <param name="baseUrl">Base URL of the Ollama server (default: <c>http://localhost:11434</c>).</param>
     /// <param name="http">Optional pre-configured <see cref="HttpClient"/>; a new one is created when <see langword="null"/>.</param>
     public OllamaEmbeddingEngine(
-        string model = "phi4-mini:latest",
+        string model = LlmDefaults.OllamaModel,
         string baseUrl = "http://localhost:11434",
         HttpClient? http = null)
     {
