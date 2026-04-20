@@ -35,10 +35,11 @@ export function SecurityPrivacy() {
                 <span className="text-cyan-400">Privacy-Always.</span>
               </h2>
               <p className="mt-5 text-lg text-muted-foreground text-pretty">
-                GauntletCI is designed for high-security environments. Analysis
-                is performed entirely on your own hardware, making it the only
-                behavioral auditor that works in air-gapped, data-residency, and
-                zero-trust networks without compromise.
+                GauntletCI is security automation designed for high-security
+                environments. Analysis is performed entirely on your own
+                hardware, making it the only behavioral auditor that works in
+                air-gapped, data-residency, and zero-trust networks without
+                compromise.
               </p>
               <div className="mt-6 inline-flex items-center gap-2 text-sm text-emerald-400 font-medium">
                 <ShieldCheck className="h-4 w-4" />

@@ -9,7 +9,7 @@ export function Features() {
     },
     {
       icon: Eye,
-      title: "Diff-first detection",
+      title: "Diff-first risk analysis",
       description: "Analyzes only what changed. No style or formatting checks, behavioral risk only, scoped to the exact lines you touched.",
     },
     {

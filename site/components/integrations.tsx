@@ -4,7 +4,7 @@ const groups = [
   {
     label: "CI / CD",
     items: [
-      { name: "GitHub Actions", logo: "/logos/github.svg",  description: "Drop-in composite action. Fails the check, posts inline annotations." },
+      { name: "GitHub Actions", logo: "/logos/github.svg",  description: "Drop-in composite action for pull request analysis. Fails the check, posts inline annotations." },
       { name: "GitHub Checks",  logo: "/logos/github.svg",  description: "--github-checks posts findings as native Checks on the PR head commit." },
       { name: "Docker",         logo: "/logos/docker.svg",  description: "Official runtime image for self-hosted runners and air-gapped pipelines." },
     ],
