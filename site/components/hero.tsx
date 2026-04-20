@@ -44,7 +44,7 @@ export function Hero() {
               </p>
             </div>
             <div className="rounded-lg border border-border bg-card p-5">
-              <p className="text-xs font-semibold text-green-400 uppercase tracking-widest mb-2">The Solution: Automated Auditing</p>
+              <p className="text-xs font-semibold text-green-400 uppercase tracking-widest mb-2">The Solution: Audit-Driven Development</p>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 GauntletCI acts as an automated auditor for your pull requests. It flags unintended side effects and broken assumptions before they leave your machine, ensuring your logic matches your intent.
               </p>
