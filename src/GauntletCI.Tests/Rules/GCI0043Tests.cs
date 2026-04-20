@@ -249,4 +249,32 @@ public class GCI0043Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("as-cast"));
     }
+
+    [Fact]
+    public async Task GetValueForOptionNullForgiving_ShouldNotFire()
+    {
+        // GetValueForOption(opt)! is System.CommandLine's idiomatic pattern for
+        // required options — the value is always set and the ! is safe, so
+        // multiple occurrences should not trigger the null-forgiving finding.
+        var raw = """
+            diff --git a/src/GauntletCI.Cli/Commands/AnalyzeCommand.cs b/src/GauntletCI.Cli/Commands/AnalyzeCommand.cs
+            index abc..def 100644
+            --- a/src/GauntletCI.Cli/Commands/AnalyzeCommand.cs
+            +++ b/src/GauntletCI.Cli/Commands/AnalyzeCommand.cs
+            @@ -1,3 +1,9 @@
+             public class AnalyzeCommand {
+            +    private static void Handle(InvocationContext ctx) {
+            +        var repo    = ctx.ParseResult.GetValueForOption(repoOption)!;
+            +        var output  = ctx.ParseResult.GetValueForOption(outputOption)!;
+            +        var severity = ctx.ParseResult.GetValueForOption(severityOption)!;
+            +        Process(repo, output, severity);
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Null-forgiving"));
+    }
 }
