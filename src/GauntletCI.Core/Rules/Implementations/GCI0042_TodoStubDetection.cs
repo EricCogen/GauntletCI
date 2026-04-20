@@ -32,11 +32,15 @@ public class GCI0042_TodoStubDetection : RuleBase
             foreach (var line in file.AddedLines)
             {
                 var content = line.Content;
+                var trimmed = content.TrimStart();
+
+                // XML doc comments are meta-documentation, not production stubs
+                if (trimmed.StartsWith("///", StringComparison.Ordinal)) continue;
 
                 if (StubKeywords.Any(k => content.Contains(k, StringComparison.OrdinalIgnoreCase)))
-                    evidence.Add($"Line {line.LineNumber}: {content.Trim()}");
+                    evidence.Add($"Line {line.LineNumber}: {trimmed}");
                 else if (content.Contains("throw new NotImplementedException", StringComparison.Ordinal))
-                    evidence.Add($"Line {line.LineNumber}: {content.Trim()}");
+                    evidence.Add($"Line {line.LineNumber}: {trimmed}");
             }
 
             if (evidence.Count == 0) continue;
