@@ -10,7 +10,7 @@ export function Features() {
     {
       icon: Eye,
       title: "Diff-first detection",
-      description: "Analyzes only what changed. No style or formatting checks — behavioral risk only, scoped to the exact lines you touched.",
+      description: "Analyzes only what changed. No style or formatting checks, behavioral risk only, scoped to the exact lines you touched.",
     },
     {
       icon: Lock,
@@ -20,7 +20,7 @@ export function Features() {
     {
       icon: Server,
       title: "Baseline delta mode",
-      description: "Snapshot existing findings and suppress them. Subsequent runs show only net-new risks — no legacy noise.",
+      description: "Snapshot existing findings and suppress them. Subsequent runs show only net-new risks, no legacy noise.",
     },
     {
       icon: Target,
@@ -50,7 +50,7 @@ export function Features() {
     {
       icon: Shield,
       title: "Privacy-focused",
-      description: "All analysis runs locally. Telemetry is optional and anonymous — never includes code, diffs, or findings.",
+      description: "All analysis runs locally. Telemetry is optional and anonymous. Never includes code, diffs, or findings.",
     },
   ];
 
@@ -62,7 +62,7 @@ export function Features() {
             Designed for high signal
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-            GauntletCI avoids noise by design. Focus on what matters — behavioral changes that
+            GauntletCI avoids noise by design. Focus on what matters: behavioral changes that
             could slip through code review.
           </p>
         </div>

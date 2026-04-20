@@ -44,7 +44,7 @@ const groups = [
       { name: "Claude",         logo: "/logos/anthropic.svg", description: "gauntletci mcp serve exposes analyze and audit as callable tools." },
       { name: "Cursor",         logo: "/logos/cursor.svg",    description: "Ask Cursor to run GauntletCI on the current diff from inside the IDE." },
       { name: "GitHub Copilot", logo: "/logos/github.svg",    description: "Copilot Chat can invoke GauntletCI for deterministic risk answers." },
-      { name: "Windsurf",       logo: "/logos/codeium.svg",   description: "Full MCP tool support — analyze, audit, and rule listing." },
+      { name: "Windsurf",       logo: "/logos/codeium.svg",   description: "Full MCP tool support: analyze, audit, and rule listing." },
     ],
   },
 ];
@@ -58,7 +58,7 @@ export function Integrations() {
             Integrations
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-            GauntletCI plugs into the tools your team already uses — without sending
+            GauntletCI plugs into the tools your team already uses, without sending
             your code anywhere.
           </p>
         </div>
