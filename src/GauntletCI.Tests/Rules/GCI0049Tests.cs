@@ -223,7 +223,7 @@ public class GCI0049Tests
     [Fact]
     public async Task VerbatimStringWithEqualityOperator_ShouldNotFlag()
     {
-        // A verbatim string literal containing == or != as regex content — not a real C# comparison
+        // A verbatim string containing float-like patterns — should not fire
         var raw = """
             diff --git a/src/Parser.cs b/src/Parser.cs
             index abc..def 100644
@@ -232,7 +232,7 @@ public class GCI0049Tests
             @@ -1,3 +1,4 @@
              public class Parser {
                  public bool IsOp(string token) {
-            +        return Regex.IsMatch(token, @"(?:==|!=)\s*");
+            +        return Regex.IsMatch(token, @"(?:== 0.0|!= 1.5)");
                  }
              }
             """;
@@ -246,7 +246,7 @@ public class GCI0049Tests
     [Fact]
     public async Task RegularStringWithEqualityOperator_ShouldNotFlag()
     {
-        // A regular string literal containing == as content (e.g. diagnostic message)
+        // A regular string containing == 0.0 — should not fire (it's inside a string literal)
         var raw = """
             diff --git a/src/Analyzer.cs b/src/Analyzer.cs
             index abc..def 100644
@@ -255,7 +255,7 @@ public class GCI0049Tests
             @@ -1,3 +1,4 @@
              public class Analyzer {
                  void Report() {
-            +        throw new InvalidOperationException("Use epsilon check instead of == for doubles");
+            +        throw new InvalidOperationException("value == 0.0 is not reliable for float comparison");
                  }
              }
             """;

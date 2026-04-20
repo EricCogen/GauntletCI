@@ -59,9 +59,9 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
                 if (trimmed.StartsWith("//") || trimmed.StartsWith("*") || trimmed.StartsWith("/*"))
                     continue;
 
-                // Syntax guard: suppress if the match position is inside a comment or string literal.
+                // Syntax guard: suppress if the first operator position is inside a comment or string literal.
                 if (context.Syntax?.IsInCommentOrStringLiteral(
-                        file.NewPath, line.LineNumber, GetFirstMatchIndex(content)) == true)
+                        file.NewPath, line.LineNumber, GetFirstOperatorIndex(content)) == true)
                     continue;
 
                 bool matches = HasMatchOutsideStringLiteral(FloatLiteralOnRightRegex, content)
@@ -88,26 +88,46 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
         return Task.FromResult(findings);
     }
 
-    private static int GetFirstMatchIndex(string content)
+    private static int GetFirstOperatorIndex(string content)
     {
         int min = int.MaxValue;
-        UpdateMin(FloatLiteralOnRightRegex,   content, ref min);
-        UpdateMin(FloatLiteralOnLeftRegex,    content, ref min);
-        UpdateMin(FloatCastWithEqualityRegex, content, ref min);
-        UpdateMin(FloatTypeWithEqualityRegex, content, ref min);
+        UpdateMinOperator(FloatLiteralOnRightRegex,   content, ref min);
+        UpdateMinOperator(FloatLiteralOnLeftRegex,    content, ref min);
+        UpdateMinOperator(FloatCastWithEqualityRegex, content, ref min);
+        UpdateMinOperator(FloatTypeWithEqualityRegex, content, ref min);
         return min == int.MaxValue ? 0 : min;
     }
 
-    private static void UpdateMin(Regex regex, string content, ref int min)
+    private static void UpdateMinOperator(Regex regex, string content, ref int min)
     {
         var m = regex.Match(content);
-        if (m.Success && m.Index < min) min = m.Index;
+        if (m.Success)
+        {
+            int opIdx = GetEqualityOperatorIndex(m);
+            if (opIdx < min) min = opIdx;
+        }
+    }
+
+    /// <summary>
+    /// Returns the absolute index of the equality operator (<c>==</c> or <c>!=</c>)
+    /// within <paramref name="match"/>. Falls back to <see cref="Match.Index"/> if not found.
+    /// </summary>
+    private static int GetEqualityOperatorIndex(Match match)
+    {
+        for (int i = 0; i < match.Value.Length - 1; i++)
+        {
+            char c = match.Value[i], n = match.Value[i + 1];
+            if ((c == '=' && n == '=') || (c == '!' && n == '='))
+                return match.Index + i;
+        }
+        return match.Index;
     }
 
     /// <summary>
     /// Returns true if <paramref name="position"/> falls inside a string literal in <paramref name="content"/>.
     /// Handles regular strings (with \" escape) and verbatim strings (@"..." with "" escape).
-    /// Does not handle raw string literals (""" ... """) — treated conservatively as not-in-string.
+    /// Does not handle raw string literals (""" ... """); when syntax context is unavailable,
+    /// raw string literals may produce false positives.
     /// </summary>
     private static bool IsInsideStringLiteralAt(string content, int position)
     {
@@ -181,39 +201,12 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
     {
         foreach (Match match in regex.Matches(content))
         {
-            if (!IsInsideStringLiteralAt(content, match.Index))
+            int opIdx = GetEqualityOperatorIndex(match);
+            if (!IsInsideStringLiteralAt(content, opIdx))
                 return true;
         }
         return false;
     }
 
-    /// <summary>
-    /// Returns true when every equality operator on the line is adjacent to a quoted string
-    /// literal — e.g. <c>name == "x"</c>. Returns false as soon as any operator is found
-    /// that is NOT adjacent to a string, so a line like <c>name == "x" &amp;&amp; value == 0.0</c>
-    /// is NOT suppressed (the float equality is still caught).
-    /// </summary>
-    private static bool IsLikelyStringComparison(string content)
-    {
-        bool foundAny = false;
-        int searchFrom = 0;
-        while (searchFrom < content.Length)
-        {
-            int eqIdx  = content.IndexOf("==", searchFrom, StringComparison.Ordinal);
-            int neqIdx = content.IndexOf("!=", searchFrom, StringComparison.Ordinal);
-            // Pick the earlier operator; if neither found, stop
-            int opIdx = eqIdx >= 0 && (neqIdx < 0 || eqIdx <= neqIdx) ? eqIdx : neqIdx;
-            if (opIdx < 0) break;
-            foundAny = true;
-
-            var afterOp  = content[(opIdx + 2)..].TrimStart();
-            var beforeOp = content[..opIdx].TrimEnd();
-            bool rightIsString = afterOp.Length  > 0 && (afterOp[0]   == '"' || afterOp[0]   == '\'');
-            bool leftIsString  = beforeOp.Length > 0 && (beforeOp[^1] == '"' || beforeOp[^1] == '\'');
-
-            if (!rightIsString && !leftIsString) return false;
-            searchFrom = opIdx + 2;
-        }
-        return foundAny;
-    }
 }
+
