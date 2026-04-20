@@ -4,7 +4,7 @@ import { AlertTriangle, Database, Cpu, Shield, Activity, GitBranch, TestTube } f
 export const metadata: Metadata = {
   title: "Rule Library | GauntletCI Docs",
   description:
-    "35 deterministic rules for detecting behavioral regressions, security risks, breaking changes, and code quality issues in C# and .NET pull request diffs.",
+    "Deterministic rules for detecting behavioral regressions, security risks, breaking changes, and code quality issues in C# and .NET pull request diffs.",
   alternates: { canonical: "/docs/rules" },
 };
 
@@ -314,7 +314,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "ItemList",
   "name": "GauntletCI Detection Rules",
-  "description": "35 deterministic rules for detecting behavioral regressions, security risks, breaking changes, and code quality issues in C# .NET diffs.",
+  "description": "Deterministic rules for detecting behavioral regressions, security risks, breaking changes, and code quality issues in C# .NET diffs.",
   "url": "https://gauntletci.com/docs/rules",
   "numberOfItems": totalRules,
   "itemListElement": categories.flatMap((cat, ci) =>
