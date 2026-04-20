@@ -70,7 +70,7 @@ export default function DocsPage() {
       <section>
         <h2 className="text-2xl font-semibold mb-4">What it analyzes</h2>
         <p className="text-muted-foreground mb-4">
-          GauntletCI reads the exact lines added and removed in your diff and evaluates them against 35 deterministic rules. It flags:
+          GauntletCI reads the exact lines added and removed in your diff and evaluates them against deterministic rules. It flags:
         </p>
         <ul className="space-y-2 text-sm text-muted-foreground list-none">
           {[
@@ -105,7 +105,7 @@ export default function DocsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
             { href: "/docs/cli-reference", label: "CLI Reference", desc: "All commands and flags" },
-            { href: "/docs/rules", label: "Rule Library", desc: "All 35 detection rules" },
+            { href: "/docs/rules", label: "Rule Library", desc: "All detection rules" },
             { href: "/docs/configuration", label: "Configuration", desc: ".gauntletci.json reference" },
             { href: "/docs/integrations", label: "CI/CD Integrations", desc: "GitHub Actions and more" },
           ].map((link) => (

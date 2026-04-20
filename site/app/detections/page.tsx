@@ -214,7 +214,7 @@ export default function DetectionsPage() {
               href="/docs/rules"
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-card/80 transition-colors"
             >
-              View all 35 detection rules
+              View all detection rules
             </Link>
           </div>
 
