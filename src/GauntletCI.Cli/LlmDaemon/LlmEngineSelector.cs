@@ -57,34 +57,47 @@ internal static class LlmEngineSelector
     {
         var llmCfg = config.Llm;
         if (llmCfg is null)
-            return new NullLlmEngine();
+            return WarnAndSkip(
+                "--with-llm was passed but no 'llm' block exists in .gauntletci.json.",
+                "The built-in ONNX engine is not available in CI. A remote endpoint is required.",
+                "Add an 'llm' block with 'ciEndpoint' and set the license key env var to enable enrichment in CI.");
 
         // License key check (stub — non-empty env var is sufficient for now)
         var licenseKey = Environment.GetEnvironmentVariable(llmCfg.LicenseKeyEnv);
         if (string.IsNullOrWhiteSpace(licenseKey))
-        {
-            Console.Error.WriteLine(
-                $"[GauntletCI] LLM enrichment in CI requires a license key in " +
-                $"${llmCfg.LicenseKeyEnv}. Skipping enrichment.");
-            return new NullLlmEngine();
-        }
+            return WarnAndSkip(
+                $"--with-llm was passed but no license key was found in ${llmCfg.LicenseKeyEnv}.",
+                "LLM enrichment in CI requires a valid GauntletCI license key.",
+                $"Set ${llmCfg.LicenseKeyEnv} in your pipeline secrets and retry.");
 
         if (string.IsNullOrWhiteSpace(llmCfg.CiEndpoint))
-        {
-            Console.Error.WriteLine(
-                "[GauntletCI] llm.ci_endpoint not set in .gauntletci.json. Skipping enrichment.");
-            return new NullLlmEngine();
-        }
+            return WarnAndSkip(
+                "--with-llm was passed but 'llm.ciEndpoint' is not set in .gauntletci.json.",
+                "The built-in ONNX engine is not available in CI. A remote OpenAI-compatible endpoint is required.",
+                "Set 'llm.ciEndpoint' to your remote LLM URL (e.g. https://api.openai.com/v1/chat/completions).");
 
         var apiKey = Environment.GetEnvironmentVariable(llmCfg.CiApiKeyEnv);
         if (string.IsNullOrWhiteSpace(apiKey))
-        {
-            Console.Error.WriteLine(
-                $"[GauntletCI] LLM API key not found in ${llmCfg.CiApiKeyEnv}. Skipping enrichment.");
-            return new NullLlmEngine();
-        }
+            return WarnAndSkip(
+                $"--with-llm was passed but no API key was found in ${llmCfg.CiApiKeyEnv}.",
+                "A remote LLM endpoint is configured but the API key env var is missing.",
+                $"Set ${llmCfg.CiApiKeyEnv} in your pipeline secrets and retry.");
 
         return new RemoteLlmEngine(llmCfg.CiEndpoint, llmCfg.CiModel, apiKey,
             llmCfg.NumCtx, llmCfg.MaxCompleteTokens);
+    }
+
+    private static NullLlmEngine WarnAndSkip(string problem, string reason, string fix)
+    {
+        var bar = new string('-', 72);
+        Console.Error.WriteLine();
+        Console.Error.WriteLine($"[GauntletCI] WARNING {bar.Substring(20)}");
+        Console.Error.WriteLine($"  Problem : {problem}");
+        Console.Error.WriteLine($"  Reason  : {reason}");
+        Console.Error.WriteLine($"  Fix     : {fix}");
+        Console.Error.WriteLine($"  Result  : LLM enrichment skipped. Analysis will continue without it.");
+        Console.Error.WriteLine($"[GauntletCI] {bar.Substring(13)}");
+        Console.Error.WriteLine();
+        return new NullLlmEngine();
     }
 }
