@@ -219,4 +219,50 @@ public class GCI0049Tests
 
         Assert.Empty(findings);
     }
+
+    [Fact]
+    public async Task VerbatimStringWithEqualityOperator_ShouldNotFlag()
+    {
+        // A verbatim string containing float-like patterns — should not fire
+        var raw = """
+            diff --git a/src/Parser.cs b/src/Parser.cs
+            index abc..def 100644
+            --- a/src/Parser.cs
+            +++ b/src/Parser.cs
+            @@ -1,3 +1,4 @@
+             public class Parser {
+                 public bool IsOp(string token) {
+            +        return Regex.IsMatch(token, @"(?:== 0.0|!= 1.5)");
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public async Task RegularStringWithEqualityOperator_ShouldNotFlag()
+    {
+        // A regular string containing == 0.0 — should not fire (it's inside a string literal)
+        var raw = """
+            diff --git a/src/Analyzer.cs b/src/Analyzer.cs
+            index abc..def 100644
+            --- a/src/Analyzer.cs
+            +++ b/src/Analyzer.cs
+            @@ -1,3 +1,4 @@
+             public class Analyzer {
+                 void Report() {
+            +        throw new InvalidOperationException("value == 0.0 is not reliable for float comparison");
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
 }
