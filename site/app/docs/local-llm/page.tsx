@@ -51,8 +51,21 @@ export default function LocalLlmPage() {
         </div>
         <p className="text-sm text-muted-foreground">
           High-confidence findings include a plain-English explanation of the risk and a suggested
-          action. GauntletCI keeps the model loaded in a background daemon between runs to minimize
-          startup latency.
+          action. The ONNX engine runs fully in-process - no external runtime or service is required.
+        </p>
+      </section>
+
+      <section className="rounded-lg border border-border bg-card/40 p-5 space-y-3">
+        <p className="text-sm font-semibold mb-1">How the daemon works (and when it does not matter)</p>
+        <p className="text-sm text-muted-foreground">
+          On a developer machine, GauntletCI keeps the model loaded in a background daemon between runs.
+          This avoids a 2-3 second reload on each invocation when you run <code className="bg-muted px-1 rounded text-xs">gauntletci analyze</code> multiple times in a session.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          The daemon is a local-dev optimization only. If it cannot be started, GauntletCI loads
+          <code className="bg-muted px-1 rounded text-xs">LocalLlmEngine</code> directly in-process as a fallback.
+          In a CI/CD pipeline where you run analysis once per job, the daemon provides no benefit and
+          the in-process path is used automatically.
         </p>
       </section>
 
