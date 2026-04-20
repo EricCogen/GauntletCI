@@ -27,6 +27,12 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
         path.Contains("test", StringComparison.OrdinalIgnoreCase) ||
         path.Contains("spec", StringComparison.OrdinalIgnoreCase);
 
+    // Rule implementation files use LINQ inside analysis loops as standard practice;
+    // these are engine internals, not production hotpath code.
+    private static bool IsRuleImplementationFile(string path) =>
+        path.Contains("Rules/Implementations", StringComparison.OrdinalIgnoreCase) ||
+        path.Contains(@"Rules\Implementations", StringComparison.OrdinalIgnoreCase);
+
     private static bool HasLinqCall(string content)
     {
         foreach (var m in LinqMethods)
@@ -49,6 +55,7 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
         foreach (var file in context.Diff.Files)
         {
             if (IsTestFile(file.NewPath)) continue;
+            if (IsRuleImplementationFile(file.NewPath)) continue;
             CheckThreadSleep(file, findings);
             CheckLinqInsideLoop(file, findings);
             CheckAddInsideLoop(file, findings);
@@ -136,6 +143,9 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
                     {
                         if (nonRemovedLines[j].Content.Contains(k, StringComparison.Ordinal))
                         {
+                            // DB reader loops are bounded by query results — not a hotpath risk.
+                            if (nonRemovedLines[j].Content.Contains(".Read()", StringComparison.Ordinal))
+                                break;
                             inLoop = true;
                             break;
                         }
