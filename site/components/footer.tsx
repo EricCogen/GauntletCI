@@ -13,9 +13,9 @@ export function Footer() {
                 <Image
                   src="/logo.png"
                   alt="GauntletCI logo"
-                  width={32}
-                  height={32}
-                  className="h-8 w-8"
+                  width={96}
+                  height={126}
+                  className="h-8 w-auto"
                 />
                 <span className="text-lg font-semibold tracking-tight">GauntletCI</span>
               </Link>
