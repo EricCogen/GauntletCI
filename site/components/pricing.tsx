@@ -145,7 +145,7 @@ export function Pricing() {
           <span className="flex items-center gap-2">
             {/* TODO: replace href="#" with real conversion/purchase path */}
             <a href="#" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <Key className="h-4 w-4 text-amber-400/80" /> Requires active license — click to get one
+              <Key className="h-4 w-4 text-amber-400/80" /> Requires active license; click to get one
             </a>
           </span>
           <span className="flex items-center gap-2">

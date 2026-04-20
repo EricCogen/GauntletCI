@@ -22,7 +22,7 @@ export function Hero() {
           
           <p className="mt-6 max-w-2xl text-lg text-muted-foreground leading-relaxed text-pretty">
             GauntletCI analyzes what changed in your pull request and flags unverified behavioral 
-            changes — before they slip through code review. Sub-second analysis, runs locally, 
+            changes before they slip through code review. Sub-second analysis, runs locally, 
             high-signal output.
           </p>
           
