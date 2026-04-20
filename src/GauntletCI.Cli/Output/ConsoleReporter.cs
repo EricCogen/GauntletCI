@@ -166,6 +166,14 @@ public static class ConsoleReporter
             AnsiConsole.MarkupLine($"[grey]             Score {expert.Score:F2} · {Markup.Escape(expert.Source)}[/]");
         }
 
+        if (finding.TicketContext is { } ticket)
+        {
+            var ticketRef = ticket.Url is not null ? $"{ticket.Id} ({ticket.Url})" : ticket.Id;
+            AnsiConsole.MarkupLine($"[cyan]  Ticket   : [[{Markup.Escape(ticket.Provider)}]] {Markup.Escape(ticketRef)} — {Markup.Escape(ticket.Title)}[/]");
+            if (!string.IsNullOrWhiteSpace(ticket.Description))
+                AnsiConsole.MarkupLine($"[grey]             {Markup.Escape(ticket.Description)}[/]");
+        }
+
         AnsiConsole.WriteLine();
     }
 
