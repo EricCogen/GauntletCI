@@ -77,6 +77,32 @@ public class GCI0044Tests
     }
 
     [Fact]
+    public async Task LinqInsideExistingLoop_ShouldFire()
+    {
+        // Loop keyword is on a context (unchanged) line; only the LINQ call is added.
+        // Verifies that CheckLinqInsideLoop scans non-removed lines, not just added lines.
+        var raw = """
+            diff --git a/src/ReportService.cs b/src/ReportService.cs
+            index abc..def 100644
+            --- a/src/ReportService.cs
+            +++ b/src/ReportService.cs
+            @@ -1,5 +1,6 @@
+             public class ReportService {
+                 public void Generate(List<Order> orders) {
+                     foreach (var order in orders) {
+            +            var items = allItems.Where(i => i.OrderId == order.Id).ToList();
+                     }
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("LINQ"));
+    }
+
+    [Fact]
     public async Task AddInsideLoop_ShouldFire()
     {
         var raw = """
@@ -88,8 +114,9 @@ public class GCI0044Tests
              public class AggregatorService {
             +    public List<Result> Aggregate(IEnumerable<Item> items) {
             +        var results = new List<Result>();
-            +        foreach (var item in items) {
-            +            results.Add(Transform(item));
+            +        for (int i = 0; i < 100; i++)
+            +        {
+            +            results.Add(Transform(i));
             +        }
             +        return results;
             +    }
@@ -100,6 +127,34 @@ public class GCI0044Tests
         var findings = await Rule.EvaluateAsync(diff, null);
 
         Assert.Contains(findings, f => f.Summary.Contains(".Add"));
+    }
+
+    [Fact]
+    public async Task ForeachAddAccumulator_ShouldNotFire()
+    {
+        // foreach + .Add() is the standard accumulator pattern — should not be flagged
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,5 +1,8 @@
+             public class Service {
+                 public List<string> GetItems(IEnumerable<string> source) {
+                     var result = new List<string>();
+            +        foreach (var item in source)
+            +        {
+            +            result.Add(item);
+            +        }
+                     return result;
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.RuleId == "GCI0044" && f.Summary == "Unbounded collection growth (.Add) inside a loop");
     }
 
     [Fact]
