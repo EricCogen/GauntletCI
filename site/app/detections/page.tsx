@@ -151,7 +151,7 @@ export default function DetectionsPage() {
           {/* Detections */}
           <div className="space-y-10">
             {detections.map((detection) => (
-              <div key={detection.id} className="space-y-3">
+              <div key={detection.id} id={detection.id.toLowerCase()} className="space-y-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-mono text-xs text-muted-foreground/50">{detection.id}</span>
                   <h2 className="text-lg font-semibold text-foreground">{detection.title}</h2>
