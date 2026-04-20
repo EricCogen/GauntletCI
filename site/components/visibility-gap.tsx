@@ -1,3 +1,5 @@
+import { CheckCircle2, Eye, AlertTriangle } from "lucide-react";
+
 export function VisibilityGap() {
   return (
     <section id="visibility-gap" className="py-24 sm:py-32">
@@ -17,17 +19,23 @@ export function VisibilityGap() {
 
         <div className="mx-auto max-w-4xl grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
           <div className="flex flex-col items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center text-xl font-bold text-muted-foreground">1</div>
+            <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
+              <CheckCircle2 className="h-6 w-6 text-green-400" />
+            </div>
             <p className="font-semibold text-foreground">Tests pass</p>
             <p className="text-sm text-muted-foreground">Your test suite confirms existing behavior is unchanged. It cannot confirm that new behavior is safe.</p>
           </div>
           <div className="flex flex-col items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center text-xl font-bold text-muted-foreground">2</div>
+            <div className="h-12 w-12 rounded-full bg-blue-500/10 flex items-center justify-center">
+              <Eye className="h-6 w-6 text-blue-400" />
+            </div>
             <p className="font-semibold text-foreground">Diff looks clean</p>
             <p className="text-sm text-muted-foreground">The change is small, readable, and passes review. The risk is in what the change does at runtime, not what it looks like on screen.</p>
           </div>
           <div className="flex flex-col items-center gap-3">
-            <div className="h-12 w-12 rounded-full bg-cyan-500/20 flex items-center justify-center text-xl font-bold text-cyan-400">!</div>
+            <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
+              <AlertTriangle className="h-6 w-6 text-destructive" />
+            </div>
             <p className="font-semibold text-foreground">Logic shifts silently</p>
             <p className="text-sm text-muted-foreground">An estimated 80% of production regressions originate from changes that looked safe in review. The compiler approved them. The tests passed. The behavior changed.</p>
           </div>
