@@ -138,14 +138,38 @@ steps:
 
       <section>
         <h2 className="text-2xl font-semibold mb-3">JSON output for downstream tooling</h2>
-        <p className="text-muted-foreground mb-3">
+        <p className="text-muted-foreground mb-4">
           Use <code className="bg-muted px-1 rounded text-xs">--output json</code> to consume findings in scripts,
           dashboards, or custom integrations.
         </p>
-        <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm">
+
+        <p className="text-sm font-semibold mb-2">With jq</p>
+        <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm mb-5">
           <span className="text-cyan-400">$</span>{" "}
           <span className="text-foreground">gauntletci analyze --staged --output json | jq .findings</span>
         </div>
+
+        <p className="text-sm font-semibold mb-2">With PowerShell (no jq required)</p>
+        <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm mb-5">
+          <span className="text-cyan-400">PS&gt;</span>{" "}
+          <span className="text-foreground">gauntletci analyze --staged --output json | ConvertFrom-Json | Select-Object -ExpandProperty findings</span>
+        </div>
+
+        <p className="text-sm font-semibold mb-2">With Python (no jq required)</p>
+        <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm mb-5">
+          <p><span className="text-cyan-400">$</span>{" "}
+          <span className="text-foreground">{`gauntletci analyze --staged --output json | python -c "import sys,json; data=json.load(sys.stdin); print(json.dumps(data['findings'], indent=2))"`}</span></p>
+        </div>
+
+        <p className="text-sm font-semibold mb-2">Save to file</p>
+        <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm mb-3">
+          <span className="text-cyan-400">$</span>{" "}
+          <span className="text-foreground">gauntletci analyze --staged --output json &gt; report.json</span>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Writing to a file works with any downstream tool: upload to S3, attach to a Slack
+          notification, parse in a build script, or archive as a CI artifact.
+        </p>
       </section>
     </div>
   );
