@@ -71,8 +71,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'GauntletCI - Pre-commit Change-Risk Detection',
-  description: 'Analyze what changed in your code and flag unverified behavioral changes before they reach code review. Sub-second analysis, runs locally, high-signal output.',
+  title: 'GauntletCI: Catch Breaking Changes Before They Merge',
+  description: 'Find regressions that pass tests and code review. 100% local execution. No cloud. Sub-second diff analysis for C# and .NET.',
   icons: {
     icon: [
       {
