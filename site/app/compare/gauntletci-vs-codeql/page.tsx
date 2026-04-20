@@ -269,7 +269,7 @@ export default function VsCodeQLPage() {
               Get started
             </Link>
             <Link
-              href="/rules"
+              href="/docs/rules"
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-card/80 transition-colors"
             >
               View the rule library
