@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { href: "/docs", label: "Getting Started" },
   { href: "/docs/cli-reference", label: "CLI Reference" },
-  { href: "/docs/rules", label: "Rule Library" },
+  { href: "/rules", label: "Rule Library" },
   { href: "/docs/configuration", label: "Configuration" },
   { href: "/docs/integrations", label: "CI/CD Integrations" },
   { href: "/docs/local-llm", label: "Local LLM Setup" },
