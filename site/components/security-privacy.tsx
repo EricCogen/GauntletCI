@@ -42,7 +42,7 @@ export function SecurityPrivacy() {
               </p>
               <div className="mt-6 inline-flex items-center gap-2 text-sm text-emerald-400 font-medium">
                 <ShieldCheck className="h-4 w-4" />
-                Trusted in air-gapped, HIPAA-adjacent, and SOC 2 environments
+                Designed to be trusted in air-gapped, HIPAA-adjacent, and SOC 2 environments
               </div>
             </div>
 
