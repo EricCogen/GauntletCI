@@ -38,7 +38,7 @@ const items = [
     icon: Lock,
     feature: "100% Local Execution & Privacy",
     what: "All analysis runs entirely on the machine where the command runs. No diff, no finding, no file path is ever transmitted. Evidence strings for PII and secrets are auto-redacted in output.",
-    benefit: "Works in air-gapped environments, on proprietary codebases, and in organizations with strict data residency requirements, no policy exceptions needed. An unconditional guarantee, not a setting.",
+    benefit: "Works in air-gapped environments, on proprietary codebases, and in organizations with strict data residency requirements, no policy exceptions needed. Local execution is the default and requires no configuration.",
   },
   {
     icon: BrainCircuit,

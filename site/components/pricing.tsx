@@ -154,8 +154,7 @@ export function Pricing() {
         </div>
 
         <p className="mt-8 text-center text-sm text-muted-foreground">
-          All analysis is 100% local. No code leaves your machine.{" "}
-          <span className="text-foreground font-medium">Always.</span>
+          Core analysis runs entirely on your machine. No code is sent to any external service by default.
         </p>
       </div>
     </section>
