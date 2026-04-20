@@ -27,7 +27,7 @@ export default function LocalLlmPage() {
 
       {/* ---- Path 1: Built-in ONNX ---- */}
       <section>
-        <h2 className="text-2xl font-semibold mb-1">Option 1: Built-in ONNX engine (recommended)</h2>
+        <h2 className="text-2xl font-semibold mb-1">Option 1: Built-in ONNX engine</h2>
         <p className="text-sm text-muted-foreground mb-4">
           No external runtime required. GauntletCI ships with a built-in ONNX inference engine
           powered by <code className="bg-muted px-1 rounded text-xs">Microsoft.ML.OnnxRuntimeGenAI</code>.
