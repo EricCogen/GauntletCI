@@ -49,7 +49,7 @@ export function Hero() {
               <span className="text-foreground">dotnet tool install -g GauntletCI</span>
             </div>
             <Button variant="outline" size="lg" asChild>
-              <Link href="/rules">
+              <Link href="/docs/rules">
                 View the Rule Library
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
