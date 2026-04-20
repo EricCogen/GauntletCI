@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Core.Configuration;
+using GauntletCI.Core.Licensing;
 using GauntletCI.Llm;
 
 namespace GauntletCI.Cli.LlmDaemon;
@@ -62,13 +63,13 @@ internal static class LlmEngineSelector
                 "The built-in ONNX engine is not available in CI. A remote endpoint is required.",
                 "Add an 'llm' block with 'ciEndpoint' and set the license key env var to enable enrichment in CI.");
 
-        // License key check (stub — non-empty env var is sufficient for now)
-        var licenseKey = Environment.GetEnvironmentVariable(llmCfg.LicenseKeyEnv);
-        if (string.IsNullOrWhiteSpace(licenseKey))
+        // License key check via LicenseService (reads env var or ~/.gauntletci/gauntletci.key)
+        var license = LicenseService.Load(llmCfg.LicenseKeyEnv);
+        if (!license.IsLicensed)
             return WarnAndSkip(
-                $"--with-llm was passed but no license key was found in ${llmCfg.LicenseKeyEnv}.",
-                "LLM enrichment in CI requires a valid GauntletCI license key.",
-                $"Set ${llmCfg.LicenseKeyEnv} in your pipeline secrets and retry.");
+                $"--with-llm was passed but no valid license was found (checked ${llmCfg.LicenseKeyEnv} and ~/.gauntletci/gauntletci.key).",
+                license.Error ?? "LLM enrichment in CI requires a valid GauntletCI Pro or higher license.",
+                "Get a license at https://gauntletci.com/pricing and place it in ~/.gauntletci/gauntletci.key or set the env var.");
 
         if (string.IsNullOrWhiteSpace(llmCfg.CiEndpoint))
             return WarnAndSkip(

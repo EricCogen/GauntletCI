@@ -11,6 +11,7 @@ using GauntletCI.Cli.Telemetry;
 using GauntletCI.Cli.TicketProviders;
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
+using GauntletCI.Core.Licensing;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
 using GauntletCI.Core.StaticAnalysis;
@@ -293,10 +294,8 @@ public static class AnalyzeCommand
                     {
                         setStatus("Checking standards...");
                         var policyPath  = Path.Combine(repo.FullName, config.Experimental.EngineeringPolicy.Path);
-                        var licenseKey  = config.Llm is not null
-                            ? Environment.GetEnvironmentVariable(config.Llm.LicenseKeyEnv)
-                            : null;
-                        var isLicensed  = !string.IsNullOrWhiteSpace(licenseKey);
+                        var license    = LicenseService.Load(config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE");
+                        var isLicensed = license.IsLicensed;
                         var policyFindings = await EngineeringPolicyEvaluator.EvaluateAsync(
                             diff, policyPath, llm, isLicensed,
                             config.Experimental.EngineeringPolicy.MaxDiffChars,
