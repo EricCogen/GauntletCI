@@ -189,6 +189,8 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             while (idx < trimmedLine.Length && trimmedLine[idx] == ' ') idx++;
         }
         var rest = trimmedLine[idx..];
-        return AccessModifiers.Any(m => rest.StartsWith(m, StringComparison.Ordinal));
+        foreach (var m in AccessModifiers)
+            if (rest.StartsWith(m, StringComparison.Ordinal)) return true;
+        return false;
     }
 }
