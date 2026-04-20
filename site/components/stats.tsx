@@ -1,7 +1,7 @@
 export function Stats() {
   const stats = [
     { value: "<1s", label: "Analysis time" },
-    { value: "0-3", label: "Findings per run" },
+    { value: "≤3", label: "Findings per run" },
     { value: "28", label: "Detection rules" },
     { value: "100%", label: "Local execution" },
   ];

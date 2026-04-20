@@ -2,9 +2,11 @@ import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
 import { Stats } from "@/components/stats";
 import { Features } from "@/components/features";
+import { WhyTeams } from "@/components/why-teams";
 import { ProvenReliability } from "@/components/proven-reliability";
 import { QuickStart } from "@/components/quick-start";
 import { DetectionRules } from "@/components/detection-rules";
+import { Pricing } from "@/components/pricing";
 import { Footer } from "@/components/footer";
 
 export default function Home() {
@@ -14,9 +16,11 @@ export default function Home() {
       <Hero />
       <Stats />
       <Features />
+      <WhyTeams />
       <ProvenReliability />
       <QuickStart />
       <DetectionRules />
+      <Pricing />
       <Footer />
     </main>
   );

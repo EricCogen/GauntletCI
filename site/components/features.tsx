@@ -15,7 +15,7 @@ export function Features() {
     {
       icon: Target,
       title: "High-signal output",
-      description: "Designed to surface 0–3 findings per run. No noise, only actionable insights.",
+      description: "Designed to surface up to 3 findings per run. No noise, only actionable insights.",
     },
     {
       icon: Server,

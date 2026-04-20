@@ -28,7 +28,7 @@ export function QuickStart() {
             Get started in 5 minutes
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-            Install the tool, run it on your current changes, and see 0–3 high-signal findings. 
+            Install the tool, run it on your current changes, and see up to 3 high-signal findings. 
             No setup required.
           </p>
         </div>
