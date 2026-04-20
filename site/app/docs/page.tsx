@@ -4,6 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Getting Started | GauntletCI Docs",
   description: "Install GauntletCI and run your first diff analysis in under two minutes.",
+  alternates: { canonical: "/docs" },
 };
 
 export default function DocsPage() {

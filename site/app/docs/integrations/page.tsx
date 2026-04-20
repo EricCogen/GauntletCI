@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "CI/CD Integrations | GauntletCI Docs",
   description: "Integrate GauntletCI with GitHub Actions, Azure Pipelines, and other CI/CD systems.",
+  alternates: { canonical: "/docs/integrations" },
 };
 
 export default function IntegrationsPage() {

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Configuration | GauntletCI Docs",
   description: "Reference for .gauntletci.json — per-repository configuration for GauntletCI.",
+  alternates: { canonical: "/docs/configuration" },
 };
 
 export default function ConfigurationPage() {

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Local LLM Setup | GauntletCI Docs",
   description: "Set up local LLM enrichment for offline AI-powered explanations. No Ollama required - GauntletCI includes a built-in ONNX engine with Phi-4 Mini.",
+  alternates: { canonical: "/docs/local-llm" },
 };
 
 export default function LocalLlmPage() {
