@@ -40,7 +40,7 @@ export function DetectionRules() {
   ];
 
   return (
-    <section className="py-20 sm:py-28 bg-card/30">
+    <section id="detection-rules" className="py-20 sm:py-28 bg-card/30">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-balance">
