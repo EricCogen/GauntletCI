@@ -152,9 +152,14 @@ export default function DetectionsPage() {
           <div className="space-y-10">
             {detections.map((detection) => (
               <div key={detection.id} id={detection.id.toLowerCase()} className="space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-mono text-xs text-muted-foreground/50">{detection.id}</span>
-                  <h2 className="text-lg font-semibold text-foreground">{detection.title}</h2>
+                <div className="flex flex-wrap items-center gap-2 group">
+                  <a href={`#${detection.id.toLowerCase()}`} className="font-mono text-xs text-muted-foreground/50 hover:text-cyan-400 transition-colors" aria-label={`Link to ${detection.id}`}>
+                    {detection.id}
+                  </a>
+                  <h2 className="text-lg font-semibold text-foreground">
+                    {detection.title}
+                    <a href={`#${detection.id.toLowerCase()}`} className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground/40 hover:text-cyan-400 text-sm font-normal" aria-hidden="true">#</a>
+                  </h2>
                   <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${severityColor[detection.severity]}`}>
                     {detection.severity}
                   </span>
