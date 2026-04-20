@@ -10,6 +10,7 @@ import { ProvenReliability } from "@/components/proven-reliability";
 import { QuickStart } from "@/components/quick-start";
 import { DetectionRules } from "@/components/detection-rules";
 import { Pricing } from "@/components/pricing";
+import { Faq } from "@/components/faq";
 import { Footer } from "@/components/footer";
 
 export default function Home() {
@@ -26,6 +27,7 @@ export default function Home() {
       <ProvenReliability />
       <QuickStart />
       <DetectionRules />
+      <Faq />
       <Pricing />
       <Footer />
     </main>
