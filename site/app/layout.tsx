@@ -10,7 +10,7 @@ const jsonLd = {
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Windows, macOS, Linux",
   "description": "Deterministic pre-commit change-risk detection for .NET. Sub-second analysis, runs locally, high-signal output.",
-  "url": "https://ericcogen.github.io/GauntletCI",
+  "url": "https://gauntletci.com",
   "offers": [
     {
       "@type": "Offer",
@@ -71,8 +71,10 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://gauntletci.com'),
   title: 'GauntletCI: Catch Breaking Changes Before They Merge',
   description: 'Find regressions that pass tests and code review. 100% local execution. No cloud. Sub-second diff analysis for C# and .NET.',
+  alternates: { canonical: '/' },
   icons: {
     icon: [
       {
