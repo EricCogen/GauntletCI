@@ -47,8 +47,7 @@ export function DetectionRules() {
             30 built-in detection rules
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-            Comprehensive coverage across behavioral risk categories. Rule IDs range from
-            GCI0001-GCI0053.
+            Comprehensive coverage across behavioral risk categories.
           </p>
         </div>
         
