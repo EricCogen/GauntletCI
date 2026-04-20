@@ -29,6 +29,12 @@ public class GCI0048_InsecureRandomInSecurityContext : RuleBase
         "accesskey", "access_key", "salt", "nonce", "credential", "passphrase", "hmac",
     ];
 
+    private static bool IsAfterLineComment(string content, int matchIndex)
+    {
+        int commentStart = content.IndexOf("//", StringComparison.Ordinal);
+        return commentStart >= 0 && commentStart < matchIndex;
+    }
+
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -54,6 +60,10 @@ public class GCI0048_InsecureRandomInSecurityContext : RuleBase
                 // Syntax guard: suppress if the match position is inside a comment or string literal.
                 if (context.Syntax?.IsInCommentOrStringLiteral(file.NewPath, line.LineNumber, match.Index) == true)
                     continue;
+
+                // Lightweight fallback for raw-diff analysis (no syntax tree):
+                // suppress when the match falls after a // comment marker on the same line.
+                if (IsAfterLineComment(line.Content, match.Index)) continue;
 
                 // Check ±5 surrounding added lines for security-sensitive identifiers
                 int start = Math.Max(0, i - 5);

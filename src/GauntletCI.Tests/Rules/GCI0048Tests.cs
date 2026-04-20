@@ -103,6 +103,28 @@ public class GCI0048Tests
     }
 
     [Fact]
+    public async Task NewRandomInCodeExampleComment_ShouldNotFire()
+    {
+        var raw = """
+            diff --git a/src/Utils/Guard.cs b/src/Utils/Guard.cs
+            index abc..def 100644
+            --- a/src/Utils/Guard.cs
+            +++ b/src/Utils/Guard.cs
+            @@ -1,4 +1,7 @@
+             public class Guard {
+            +    // Returns true when the token is in an interpolated hole — e.g.
+            +    // $"{new Random().Next()}" is a real finding that should fire.
+            +    public bool Check(SyntaxToken token) => token.IsKind(SyntaxKind.IdentifierToken);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
     public async Task NewRandomNearSalt_ShouldFire()
     {
         var raw = """
