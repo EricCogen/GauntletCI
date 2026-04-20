@@ -74,6 +74,13 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://gauntletci.com'),
   title: 'GauntletCI: Catch Breaking Changes Before They Merge',
   description: 'Find regressions that pass tests and code review. 100% local execution. No cloud. Sub-second diff analysis for C# and .NET.',
+  keywords: [
+    'csharp', 'dotnet', 'risk-analysis', 'static-analysis', 'pre-commit',
+    'code-review', 'compliance', 'roslyn-analyzer', 'security-automation',
+    'sast', 'shift-left', 'github-actions', 'privacy-focused', 'local-first',
+    'audit-driven-development', 'local-first-ai', 'diff-analyser',
+    'change-risk-engine', 'pr-analysis',
+  ],
   alternates: { canonical: '/' },
   icons: {
     icon: [

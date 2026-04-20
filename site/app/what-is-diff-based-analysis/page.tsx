@@ -10,9 +10,19 @@ export const metadata: Metadata = {
   alternates: { canonical: "/what-is-diff-based-analysis" },
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "What Is Diff-Based Analysis?",
+  "description": "Diff-based analysis examines only the lines you changed, not the entire codebase. Learn why this approach is faster, more precise, and more actionable than full-codebase scanning.",
+  "url": "https://gauntletci.com/what-is-diff-based-analysis",
+  "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
+};
+
 export default function WhatIsDiffBasedAnalysisPage() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Header />
       <main className="min-h-screen bg-background pt-24">
 

@@ -76,9 +76,20 @@ function Cell({ value, cyan }: { value: CellVal; cyan?: boolean }) {
   return <Minus className="h-4 w-4 mx-auto text-muted-foreground/30" />;
 }
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "GauntletCI vs. SonarQube: Diff Analysis vs. Whole-Repo Static Analysis",
+  "description": "Compare GauntletCI and SonarQube. GauntletCI analyzes only what changed, runs 100% locally, and catches behavioral regressions in pre-commit.",
+  "url": "https://gauntletci.com/compare/gauntletci-vs-sonarqube",
+  "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
+};
+
 export default function VsSonarQubePage() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <div className="min-h-screen bg-background text-foreground">
       {/* Hero */}
       <section className="border-b border-border py-16 sm:py-20">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
@@ -277,6 +288,6 @@ export default function VsSonarQubePage() {
         </section>
 
       </div>
-    </div>
+    </>
   );
 }
