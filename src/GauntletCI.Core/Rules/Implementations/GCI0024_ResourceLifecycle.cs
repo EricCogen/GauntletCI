@@ -51,7 +51,7 @@ public class GCI0024_ResourceLifecycle : RuleBase
         "SyntaxContext", "AnalysisContext", "SemanticContext",
         "SyntaxNodeAnalysisContext", "OperationAnalysisContext", "CodeBlockAnalysisContext",
         // System.CommandLine types
-        "InvocationContext", "ParseResult",
+        "InvocationContext",
         // ASP.NET Core filter/action context types (not disposable on their own)
         "HttpContext", "RouteContext", "FilterContext", "ActionContext",
         "AuthorizationFilterContext", "ResourceExecutingContext", "ResourceExecutedContext",
@@ -154,10 +154,15 @@ public class GCI0024_ResourceLifecycle : RuleBase
         if (match.Success)
         {
             var name = match.Groups[1].Value;
-            // Skip types known NOT to be disposable despite having a disposable-looking suffix
-            if (KnownNonDisposableTypes.Contains(name)) return (null, false);
-            if (DisposableSuffixes.Any(suffix => name.EndsWith(suffix, StringComparison.Ordinal)))
-                return (name, false);
+            foreach (var suffix in DisposableSuffixes)
+            {
+                if (name.EndsWith(suffix, StringComparison.Ordinal))
+                {
+                    // Skip types known NOT to be disposable despite having a disposable-looking suffix
+                    if (KnownNonDisposableTypes.Contains(name)) return (null, false);
+                    return (name, false);
+                }
+            }
         }
 
         return (null, false);

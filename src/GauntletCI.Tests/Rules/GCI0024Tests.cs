@@ -189,7 +189,7 @@ public class GCI0024Tests
             +++ b/src/Rules/MyRule.cs
             @@ -1,2 +1,3 @@
              public class MyRule {
-            +    var ctx = new SyntaxContext(node, semanticModel);
+            +    public void Do() { var ctx = new SyntaxContext(node, semanticModel); }
              }
             """;
 
@@ -210,7 +210,7 @@ public class GCI0024Tests
             +++ b/src/Cli/MyCommand.cs
             @@ -1,2 +1,3 @@
              public class MyCommand {
-            +    var ctx = new InvocationContext(parseResult);
+            +    public void Do() { var ctx = new InvocationContext(parseResult); }
              }
             """;
 
