@@ -15,7 +15,7 @@ export function Hero() {
           </div>
 
           <h1 className="max-w-4xl text-4xl font-bold tracking-tight sm:text-6xl lg:text-7xl text-balance">
-            Does Your Code Still Do What You Think It Does?
+            Is Your Code Still Doing What You Intended?
           </h1>
 
           <p className="mt-6 max-w-2xl text-xl text-muted-foreground leading-relaxed text-pretty">
