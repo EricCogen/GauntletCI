@@ -29,7 +29,7 @@ const stats = [
     icon: Lock,
     value: "100%",
     label: "Local execution",
-    sub: "Zero code uploads.",
+    sub: "Code never leaves your machine.",
     color: "text-amber-400",
     bg: "bg-amber-500/10",
   },
