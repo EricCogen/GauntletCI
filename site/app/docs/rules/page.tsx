@@ -310,6 +310,24 @@ const categories: Category[] = [
 
 const totalRules = categories.reduce((sum, c) => sum + c.rules.length, 0);
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "name": "GauntletCI Detection Rules",
+  "description": "30 deterministic rules for detecting behavioral regressions, security risks, breaking changes, and code quality issues in C# .NET diffs.",
+  "url": "https://gauntletci.com/docs/rules",
+  "numberOfItems": totalRules,
+  "itemListElement": categories.flatMap((cat, ci) =>
+    cat.rules.map((rule, ri) => ({
+      "@type": "ListItem",
+      "position": ci * 10 + ri + 1,
+      "name": `${rule.id} ${rule.name}`,
+      "url": `https://gauntletci.com/docs/rules#${rule.id}`,
+      "description": rule.description,
+    }))
+  ),
+};
+
 function SeverityBadge({ severity }: { severity: Rule["severity"] }) {
   const styles = {
     Block: "bg-red-500/10 text-red-400 ring-red-400/20",
@@ -325,7 +343,9 @@ function SeverityBadge({ severity }: { severity: Rule["severity"] }) {
 
 export default function RulesPage() {
   return (
-    <div className="space-y-10">
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <div className="space-y-10">
       <div>
         <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-3">
           Rule Library
@@ -395,6 +415,6 @@ export default function RulesPage() {
           for details.
         </p>
       </div>
-    </div>
+    </>
   );
 }

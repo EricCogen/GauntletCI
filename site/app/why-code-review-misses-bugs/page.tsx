@@ -37,9 +37,19 @@ const blindSpots = [
   },
 ];
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Why Code Review Misses Bugs",
+  "description": "Code review catches style and obvious logic errors. It routinely misses behavioral drift, contract changes, and implicit assumptions. Here is why.",
+  "url": "https://gauntletci.com/why-code-review-misses-bugs",
+  "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
+};
+
 export default function WhyCodeReviewMissesBugsPage() {
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <Header />
       <main className="min-h-screen bg-background pt-24">
 
