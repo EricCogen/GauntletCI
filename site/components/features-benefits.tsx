@@ -13,7 +13,7 @@ const items = [
   {
     icon: ShieldAlert,
     feature: "Deterministic Change-Risk Detection",
-    what: "Rules analyze the exact lines added or removed in a diff, not the whole file. Each rule targets a specific class of risk: removed logic without tests, breaking API changes, hardcoded secrets, unsafe casts, missing null guards, and more.",
+    what: "20+ rules analyze the exact lines added or removed in a diff, not the whole file. Each rule targets a specific class of risk: removed logic without tests, breaking API changes, hardcoded secrets, unsafe casts, missing null guards, and more.",
     benefit: "A second opinion on every commit that focuses entirely on what changed and why it might fail in production, catching the things that look fine in review but break at runtime.",
   },
   {
