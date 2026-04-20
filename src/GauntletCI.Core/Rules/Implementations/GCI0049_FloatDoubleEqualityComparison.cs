@@ -59,18 +59,15 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
                 if (trimmed.StartsWith("//") || trimmed.StartsWith("*") || trimmed.StartsWith("/*"))
                     continue;
 
-                // Skip string literals — crude but effective: skip if inside a quoted region
-                if (IsLikelyStringComparison(content)) continue;
-
-                // Syntax guard: suppress if the match position is inside a comment or string literal.
+                // Syntax guard: suppress if the first operator position is inside a comment or string literal.
                 if (context.Syntax?.IsInCommentOrStringLiteral(
-                        file.NewPath, line.LineNumber, GetFirstMatchIndex(content)) == true)
+                        file.NewPath, line.LineNumber, GetFirstOperatorIndex(content)) == true)
                     continue;
 
-                bool matches = FloatLiteralOnRightRegex.IsMatch(content)
-                            || FloatLiteralOnLeftRegex.IsMatch(content)
-                            || FloatCastWithEqualityRegex.IsMatch(content)
-                            || FloatTypeWithEqualityRegex.IsMatch(content);
+                bool matches = HasMatchOutsideStringLiteral(FloatLiteralOnRightRegex, content)
+                            || HasMatchOutsideStringLiteral(FloatLiteralOnLeftRegex, content)
+                            || HasMatchOutsideStringLiteral(FloatCastWithEqualityRegex, content)
+                            || HasMatchOutsideStringLiteral(FloatTypeWithEqualityRegex, content);
 
                 if (!matches) continue;
 
@@ -91,49 +88,125 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
         return Task.FromResult(findings);
     }
 
-    private static int GetFirstMatchIndex(string content)
+    private static int GetFirstOperatorIndex(string content)
     {
         int min = int.MaxValue;
-        UpdateMin(FloatLiteralOnRightRegex,   content, ref min);
-        UpdateMin(FloatLiteralOnLeftRegex,    content, ref min);
-        UpdateMin(FloatCastWithEqualityRegex, content, ref min);
-        UpdateMin(FloatTypeWithEqualityRegex, content, ref min);
+        UpdateMinOperator(FloatLiteralOnRightRegex,   content, ref min);
+        UpdateMinOperator(FloatLiteralOnLeftRegex,    content, ref min);
+        UpdateMinOperator(FloatCastWithEqualityRegex, content, ref min);
+        UpdateMinOperator(FloatTypeWithEqualityRegex, content, ref min);
         return min == int.MaxValue ? 0 : min;
     }
 
-    private static void UpdateMin(Regex regex, string content, ref int min)
+    private static void UpdateMinOperator(Regex regex, string content, ref int min)
     {
         var m = regex.Match(content);
-        if (m.Success && m.Index < min) min = m.Index;
+        if (m.Success)
+        {
+            int opIdx = GetEqualityOperatorIndex(m);
+            if (opIdx < min) min = opIdx;
+        }
     }
 
     /// <summary>
-    /// Returns true when every equality operator on the line is adjacent to a quoted string
-    /// literal — e.g. <c>name == "x"</c>. Returns false as soon as any operator is found
-    /// that is NOT adjacent to a string, so a line like <c>name == "x" &amp;&amp; value == 0.0</c>
-    /// is NOT suppressed (the float equality is still caught).
+    /// Returns the absolute index of the equality operator (<c>==</c> or <c>!=</c>)
+    /// within <paramref name="match"/>. Falls back to <see cref="Match.Index"/> if not found.
     /// </summary>
-    private static bool IsLikelyStringComparison(string content)
+    private static int GetEqualityOperatorIndex(Match match)
     {
-        bool foundAny = false;
-        int searchFrom = 0;
-        while (searchFrom < content.Length)
+        for (int i = 0; i < match.Value.Length - 1; i++)
         {
-            int eqIdx  = content.IndexOf("==", searchFrom, StringComparison.Ordinal);
-            int neqIdx = content.IndexOf("!=", searchFrom, StringComparison.Ordinal);
-            // Pick the earlier operator; if neither found, stop
-            int opIdx = eqIdx >= 0 && (neqIdx < 0 || eqIdx <= neqIdx) ? eqIdx : neqIdx;
-            if (opIdx < 0) break;
-            foundAny = true;
-
-            var afterOp  = content[(opIdx + 2)..].TrimStart();
-            var beforeOp = content[..opIdx].TrimEnd();
-            bool rightIsString = afterOp.Length  > 0 && (afterOp[0]   == '"' || afterOp[0]   == '\'');
-            bool leftIsString  = beforeOp.Length > 0 && (beforeOp[^1] == '"' || beforeOp[^1] == '\'');
-
-            if (!rightIsString && !leftIsString) return false;
-            searchFrom = opIdx + 2;
+            char c = match.Value[i], n = match.Value[i + 1];
+            if ((c == '=' && n == '=') || (c == '!' && n == '='))
+                return match.Index + i;
         }
-        return foundAny;
+        return match.Index;
     }
+
+    /// <summary>
+    /// Returns true if <paramref name="position"/> falls inside a string literal in <paramref name="content"/>.
+    /// Handles regular strings (with \" escape) and verbatim strings (@"..." with "" escape).
+    /// Does not handle raw string literals (""" ... """); when syntax context is unavailable,
+    /// raw string literals may produce false positives.
+    /// </summary>
+    private static bool IsInsideStringLiteralAt(string content, int position)
+    {
+        bool inString = false;
+        bool isVerbatim = false;
+        int i = 0;
+
+        while (i < content.Length)
+        {
+            if (i == position) return inString;
+
+            char c = content[i];
+
+            if (!inString)
+            {
+                if (c == '@' && i + 1 < content.Length && content[i + 1] == '"')
+                {
+                    inString = true;
+                    isVerbatim = true;
+                    i += 2; // skip @"
+                    continue;
+                }
+                if (c == '"')
+                {
+                    inString = true;
+                    isVerbatim = false;
+                    i++;
+                    continue;
+                }
+            }
+            else if (isVerbatim)
+            {
+                if (c == '"' && i + 1 < content.Length && content[i + 1] == '"')
+                {
+                    i += 2; // escaped quote "" in verbatim string
+                    continue;
+                }
+                if (c == '"')
+                {
+                    inString = false;
+                    i++;
+                    continue;
+                }
+            }
+            else // regular string
+            {
+                if (c == '\\')
+                {
+                    i += 2; // skip escape sequence
+                    continue;
+                }
+                if (c == '"')
+                {
+                    inString = false;
+                    i++;
+                    continue;
+                }
+            }
+
+            i++;
+        }
+
+        return inString;
+    }
+
+    /// <summary>
+    /// Returns true if <paramref name="regex"/> has at least one match in <paramref name="content"/>
+    /// that falls outside a string literal.
+    /// </summary>
+    private static bool HasMatchOutsideStringLiteral(Regex regex, string content)
+    {
+        foreach (Match match in regex.Matches(content))
+        {
+            int opIdx = GetEqualityOperatorIndex(match);
+            if (!IsInsideStringLiteralAt(content, opIdx))
+                return true;
+        }
+        return false;
+    }
+
 }
+
