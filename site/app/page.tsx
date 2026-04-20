@@ -13,6 +13,7 @@ import { DetectionRules } from "@/components/detection-rules";
 import { Pricing } from "@/components/pricing";
 import { Faq } from "@/components/faq";
 import { SecurityPrivacy } from "@/components/security-privacy";
+import { DefinitionBlock } from "@/components/definition-block";
 import { Footer } from "@/components/footer";
 
 export default function Home() {
@@ -33,6 +34,7 @@ export default function Home() {
       <Faq />
       <SecurityPrivacy />
       <Pricing />
+      <DefinitionBlock />
       <Footer />
     </main>
   );
