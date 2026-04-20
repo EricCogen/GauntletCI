@@ -24,7 +24,7 @@ export function SecurityPrivacy() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-card/80 via-card/60 to-cyan-950/20 p-8 sm:p-12 lg:p-16">
           <div className="grid gap-10 lg:grid-cols-2 lg:gap-16 items-center">
-            {/* Left — headline */}
+            {/* Left - headline */}
             <div>
               <div className="inline-flex items-center gap-2 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-cyan-400 mb-6">
                 <ShieldCheck className="h-3.5 w-3.5" />
@@ -46,7 +46,7 @@ export function SecurityPrivacy() {
               </div>
             </div>
 
-            {/* Right — pillars */}
+            {/* Right - pillars */}
             <div className="space-y-5">
               {pillars.map(({ icon: Icon, title, body }) => (
                 <div

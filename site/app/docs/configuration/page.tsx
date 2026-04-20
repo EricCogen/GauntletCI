@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Configuration | GauntletCI Docs",
-  description: "Reference for .gauntletci.json — per-repository configuration for GauntletCI.",
+  description: "Reference for .gauntletci.json - per-repository configuration for GauntletCI.",
   alternates: { canonical: "/docs/configuration" },
 };
 
@@ -72,7 +72,7 @@ export default function ConfigurationPage() {
           <div className="rounded-lg border border-border p-5">
             <div className="flex items-center gap-3 mb-2">
               <code className="text-cyan-400 font-mono text-sm">exitOn</code>
-              <span className="text-xs text-muted-foreground">string — default: "Block"</span>
+              <span className="text-xs text-muted-foreground">string - default: "Block"</span>
             </div>
             <p className="text-sm text-muted-foreground">
               Controls which finding severity causes a non-zero exit code.
@@ -84,7 +84,7 @@ export default function ConfigurationPage() {
           <div className="rounded-lg border border-border p-5">
             <div className="flex items-center gap-3 mb-2">
               <code className="text-cyan-400 font-mono text-sm">llm.model</code>
-              <span className="text-xs text-muted-foreground">string — default: "phi4-mini:latest"</span>
+              <span className="text-xs text-muted-foreground">string - default: "phi4-mini:latest"</span>
             </div>
             <p className="text-sm text-muted-foreground">
               The Ollama model used for both LLM enrichment (<code className="bg-muted px-1 rounded text-xs">--with-llm</code>) and
