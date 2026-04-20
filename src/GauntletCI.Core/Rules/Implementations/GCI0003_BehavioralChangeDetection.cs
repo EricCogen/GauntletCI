@@ -67,17 +67,17 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
 
             var removedSigs = file.RemovedLines
-                .Where(l => AccessModifiers.Any(m => l.Content.Contains(m)) && l.Content.Contains('('))
+                .Where(l => { var t = l.Content.TrimStart(); return HasAccessModifier(t) && l.Content.Contains('('); })
                 .ToList();
 
             var addedSigs = file.AddedLines
-                .Where(l => AccessModifiers.Any(m => l.Content.Contains(m)) && l.Content.Contains('('))
+                .Where(l => { var t = l.Content.TrimStart(); return HasAccessModifier(t) && l.Content.Contains('('); })
                 .ToList();
 
             foreach (var removed in removedSigs)
             {
                 // Private methods cannot break external callers — skip entirely.
-                if (removed.Content.Contains("private ", StringComparison.Ordinal)) continue;
+                if (removed.Content.TrimStart().StartsWith("private ", StringComparison.Ordinal)) continue;
 
                 var removedName = ExtractMethodName(removed.Content);
                 if (removedName is null) continue;
@@ -136,6 +136,59 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
         return before[(lastSpace + 1)..];
     }
 
-    private static string NormalizeSignature(string sig) =>
-        sig.Replace("async ", "", StringComparison.Ordinal).Trim();
+    private static string NormalizeSignature(string sig)
+    {
+        var s = sig.Replace("async ", "", StringComparison.Ordinal).Trim();
+        var open = s.IndexOf('(');
+        if (open < 0) return s;
+
+        // Find the matching closing paren with string-literal-aware depth tracking
+        // so default values like string s = ")" don't cause early termination.
+        int depth = 0;
+        bool inString = false;
+        char delim = '"';
+        int closeIdx = -1;
+        for (int i = open; i < s.Length; i++)
+        {
+            char c = s[i];
+            if (inString)
+            {
+                if (c == '\\') { i++; continue; } // skip escaped char in regular string
+                if (c == delim) inString = false;
+                continue;
+            }
+            if (c is '"' or '\'') { inString = true; delim = c; continue; }
+            if (c == '(') depth++;
+            else if (c == ')') { depth--; if (depth == 0) { closeIdx = i; break; } }
+        }
+        if (closeIdx < 0) return s;
+
+        // Include where-clauses (which precede the body) but drop method body (=> or {).
+        for (int i = closeIdx + 1; i < s.Length; i++)
+        {
+            if (s[i] == '{') return s[..i].TrimEnd();
+            if (s[i] == '=' && i + 1 < s.Length && s[i + 1] == '>') return s[..i].TrimEnd();
+        }
+        return s;
+    }
+
+    // Returns true when the trimmed line starts with a C# access modifier,
+    // accounting for optional attribute prefix(es) like [Obsolete].
+    private static bool HasAccessModifier(string trimmedLine)
+    {
+        int idx = 0;
+        while (idx < trimmedLine.Length && trimmedLine[idx] == '[')
+        {
+            int depth = 0;
+            while (idx < trimmedLine.Length)
+            {
+                char c = trimmedLine[idx++];
+                if (c == '[') depth++;
+                else if (c == ']') { if (--depth == 0) break; }
+            }
+            while (idx < trimmedLine.Length && trimmedLine[idx] == ' ') idx++;
+        }
+        var rest = trimmedLine[idx..];
+        return AccessModifiers.Any(m => rest.StartsWith(m, StringComparison.Ordinal));
+    }
 }
