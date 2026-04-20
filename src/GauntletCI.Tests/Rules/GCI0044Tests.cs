@@ -77,6 +77,32 @@ public class GCI0044Tests
     }
 
     [Fact]
+    public async Task LinqInsideExistingLoop_ShouldFire()
+    {
+        // Loop keyword is on a context (unchanged) line; only the LINQ call is added.
+        // Verifies that CheckLinqInsideLoop scans non-removed lines, not just added lines.
+        var raw = """
+            diff --git a/src/ReportService.cs b/src/ReportService.cs
+            index abc..def 100644
+            --- a/src/ReportService.cs
+            +++ b/src/ReportService.cs
+            @@ -1,5 +1,6 @@
+             public class ReportService {
+                 public void Generate(List<Order> orders) {
+                     foreach (var order in orders) {
+            +            var items = allItems.Where(i => i.OrderId == order.Id).ToList();
+                     }
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("LINQ"));
+    }
+
+    [Fact]
     public async Task AddInsideLoop_ShouldFire()
     {
         var raw = """
@@ -128,7 +154,7 @@ public class GCI0044Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.DoesNotContain(findings, f => f.RuleId == "GCI0044" && f.Summary.Contains("Add("));
+        Assert.DoesNotContain(findings, f => f.RuleId == "GCI0044" && f.Summary == "Unbounded collection growth (.Add) inside a loop");
     }
 
     [Fact]
