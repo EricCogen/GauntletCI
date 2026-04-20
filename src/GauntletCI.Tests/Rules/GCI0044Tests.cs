@@ -200,4 +200,61 @@ public class GCI0044Tests
 
         Assert.Empty(findings);
     }
+
+    [Fact]
+    public async Task LinqInRuleImplementationFile_ShouldNotFire()
+    {
+        // Rule implementation files use LINQ inside analysis loops as standard practice.
+        // These are engine internals, not production hotpaths — should not be flagged.
+        var raw = """
+            diff --git a/src/GauntletCI.Core/Rules/Implementations/GCI0099_Example.cs b/src/GauntletCI.Core/Rules/Implementations/GCI0099_Example.cs
+            index abc..def 100644
+            --- a/src/GauntletCI.Core/Rules/Implementations/GCI0099_Example.cs
+            +++ b/src/GauntletCI.Core/Rules/Implementations/GCI0099_Example.cs
+            @@ -1,9 +1,9 @@
+             public class GCI0099 : RuleBase {
+            +    private void Check(DiffFile file, List<Finding> findings) {
+            +        foreach (var line in file.AddedLines) {
+            +            var match = Patterns.FirstOrDefault(p => line.Content.Contains(p));
+            +            if (match is null) continue;
+            +            findings.Add(CreateFinding(file, match));
+            +        }
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.RuleId == "GCI0044" && f.Summary.Contains("LINQ"));
+    }
+
+    [Fact]
+    public async Task AddInsideDbReaderWhileLoop_ShouldNotFire()
+    {
+        // while (reader.Read()) { rows.Add(...) } is the standard ADO.NET reader pattern.
+        // The loop is bounded by query results — not a hotpath risk.
+        var raw = """
+            diff --git a/src/GauntletCI.Llm/Embeddings/VectorStore.cs b/src/GauntletCI.Llm/Embeddings/VectorStore.cs
+            index abc..def 100644
+            --- a/src/GauntletCI.Llm/Embeddings/VectorStore.cs
+            +++ b/src/GauntletCI.Llm/Embeddings/VectorStore.cs
+            @@ -1,8 +1,8 @@
+             public class VectorStore {
+            +    public List<Row> Query() {
+            +        var rows = new List<Row>();
+            +        using var reader = cmd.ExecuteReader();
+            +        while (reader.Read()) {
+            +            rows.Add(new Row(reader.GetString(0), reader.GetString(1)));
+            +        }
+            +        return rows;
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.RuleId == "GCI0044" && f.Summary.Contains(".Add"));
+    }
 }
