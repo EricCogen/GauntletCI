@@ -2,6 +2,7 @@ import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
 import { Stats } from "@/components/stats";
 import { VisibilityGap } from "@/components/visibility-gap";
+import { TerminalBlock } from "@/components/terminal-block";
 import { Features } from "@/components/features";
 import { FeaturesBenefits } from "@/components/features-benefits";
 import { Comparison } from "@/components/comparison";
@@ -20,6 +21,7 @@ export default function Home() {
       <Hero />
       <Stats />
       <VisibilityGap />
+      <TerminalBlock />
       <Features />
       <FeaturesBenefits />
       <Integrations />
