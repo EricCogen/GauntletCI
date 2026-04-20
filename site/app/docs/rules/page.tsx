@@ -351,7 +351,7 @@ export default function RulesPage() {
           Rule Library
         </p>
         <h1 className="text-4xl font-bold tracking-tight mb-4">
-          {totalRules} deterministic detection rules
+          20+ deterministic detection rules
         </h1>
         <p className="text-lg text-muted-foreground">
           Every rule targets a specific class of behavioral, security, or structural risk in your
