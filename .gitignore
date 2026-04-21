@@ -46,6 +46,7 @@ artifacts/
 !docs/TROUBLESHOOTING.md
 !docs/features-benefits.md
 !Docker/docker.md
+!worker/README.md
 
 # Internal pipeline and tooling (commercial — not public)
 build-corpus.ps1
@@ -58,6 +59,11 @@ docs/benchmarks/
 !tests/GauntletCI.Benchmarks/Fixtures/
 /data
 
+
+# Node / Cloudflare Worker
+node_modules/
+worker/.wrangler/
+worker/dist/
 
 # Python bytecode
 **/__pycache__/
