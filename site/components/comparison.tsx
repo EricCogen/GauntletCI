@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Check, Minus, AlertCircle } from "lucide-react";
 
 type CellValue = "yes" | "no" | "partial";
@@ -64,12 +65,12 @@ const rows: ComparisonRow[] = [
 ];
 
 const competitors = [
-  { key: "gauntlet",    label: "GauntletCI",   highlight: true },
-  { key: "sonar",       label: "SonarQube",    highlight: false },
-  { key: "semgrep",     label: "Semgrep",      highlight: false },
-  { key: "snyk",        label: "Snyk",         highlight: false },
-  { key: "codeql",      label: "CodeQL",       highlight: false },
-  { key: "codeclimate", label: "Code Climate", highlight: false },
+  { key: "gauntlet",    label: "GauntletCI",   highlight: true,  href: null },
+  { key: "sonar",       label: "SonarQube",    highlight: false, href: "/compare/gauntletci-vs-sonarqube" },
+  { key: "semgrep",     label: "Semgrep",      highlight: false, href: "/compare/gauntletci-vs-semgrep" },
+  { key: "snyk",        label: "Snyk",         highlight: false, href: null },
+  { key: "codeql",      label: "CodeQL",       highlight: false, href: "/compare/gauntletci-vs-codeql" },
+  { key: "codeclimate", label: "Code Climate", highlight: false, href: null },
 ] as const;
 
 function Cell({ value, highlight }: { value: CellValue; highlight: boolean }) {
@@ -114,9 +115,18 @@ export function Comparison() {
             <div className="px-5 py-4 text-sm font-semibold text-muted-foreground">Capability</div>
             {competitors.map((c) => (
               <div key={c.key} className={`px-3 py-4 text-center ${c.highlight ? "bg-cyan-500/5" : ""}`}>
-                <span className={`text-sm font-semibold ${c.highlight ? "text-cyan-400" : "text-foreground/70"}`}>
-                  {c.label}
-                </span>
+                {c.href ? (
+                  <Link href={c.href} className="group inline-flex flex-col items-center gap-0.5">
+                    <span className={`text-sm font-semibold ${c.highlight ? "text-cyan-400" : "text-foreground/70 group-hover:text-foreground transition-colors"}`}>
+                      {c.label}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground/50 group-hover:text-cyan-400 transition-colors">deep dive &rsaquo;</span>
+                  </Link>
+                ) : (
+                  <span className={`text-sm font-semibold ${c.highlight ? "text-cyan-400" : "text-foreground/70"}`}>
+                    {c.label}
+                  </span>
+                )}
               </div>
             ))}
           </div>
