@@ -33,7 +33,7 @@ const blindSpots = [
   },
   {
     title: "Social pressure compresses review time",
-    body: "PRs that have been waiting in the queue get approved faster as reviewers feel social pressure to unblock colleagues. PRs from senior engineers or tech leads receive statistically less scrutiny than PRs from junior developers -- a bias documented in organizational research on peer review. PRs marked urgent, blocking a release, or associated with a deadline get rubber-stamped precisely when the risk of a shallow review is highest. This dynamic is not a failure of individual discipline; it is a structural property of any human review process under time pressure. The social signal of 'approved' is not a reliable proxy for the technical signal of 'safe to merge', and the two diverge most sharply at exactly the moments when rigorous review matters most.",
+    body: "PRs that have been waiting in the queue get approved faster as reviewers feel social pressure to unblock colleagues. PRs from senior engineers or tech leads receive less critical review than PRs from junior developers -- a pattern observed in qualitative studies of peer review dynamics, including Bacchelli and Bird's 2013 fieldwork at Microsoft. PRs marked urgent, blocking a release, or associated with a deadline get approved without detailed review precisely when the risk of a shallow review is highest. This dynamic is not a failure of individual discipline; it is a structural property of any human review process under time pressure. The social signal of 'approved' is not a reliable proxy for the technical signal of 'safe to merge', and the two diverge most sharply at exactly the moments when rigorous review matters most.",
     example: "A critical hotfix PR with five changed files gets three approvals in 11 minutes on a Friday afternoon before a release. One of the changed files removes a rate limiting guard that was preventing a known abuse pattern from reaching the database.",
   },
   {
@@ -109,7 +109,12 @@ export default function WhyCodeReviewMissesBugsPage() {
                 Czerwonka et al. (ICSE 2015): "Code reviews at Microsoft are mostly used
                 to improve code and find alternative solutions, not to find bugs."
                 The study documented that fewer than 15% of review comments address
-                actual functional defects.
+                actual functional defects. Subsequent replications report similar
+                patterns at different organizations, though rates vary by team size,
+                domain, and whether structured checklists are used. Counter-evidence
+                exists: teams that enforce mandatory security checklists and strict
+                PR size limits report meaningfully higher defect-detection rates
+                in review, per Bacchelli and Bird (2013).
               </p>
             </div>
             <p className="text-muted-foreground leading-relaxed">
