@@ -70,12 +70,12 @@ export default function WhatIsDiffBasedAnalysisPage() {
           {/* How it works */}
           <section className="space-y-5">
             <h2 className="text-2xl font-bold tracking-tight">How diff-based analysis works</h2>
-            <figure className="float-left mr-6 mb-4 w-[300px] rounded-lg overflow-hidden border border-border">
+            <figure className="my-8 rounded-xl overflow-hidden border border-border">
               <img
                 src="/articles/what-is-diff-based-analysis-hero.png"
                 alt="Scope determines signal: full scan shows 47 findings from 498 lines; diff-only shows 1 finding from 6 changed lines — same codebase, narrower scope eliminates noise"
-                width={560}
-                height={220}
+                width={1120}
+                height={440}
                 className="w-full h-auto"
               />
             </figure>
