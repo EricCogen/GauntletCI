@@ -96,6 +96,20 @@ export default function DetectBreakingChangesPage() {
             </p>
           </div>
 
+          {/* Hero illustration */}
+          <figure className="rounded-xl overflow-hidden border border-border">
+            <img
+              src="/articles/detect-breaking-changes-before-merge-hero.png"
+              alt="Abstract illustration of a merge arrow stopped by a glowing gate, with a broken chain representing an API contract break on the incoming side"
+              width={1792}
+              height={1024}
+              className="w-full h-auto"
+            />
+            <figcaption className="px-4 py-3 text-sm text-muted-foreground bg-muted/30 text-center">
+              A behavioral regression stopped at the commit gate -- before it crosses into the shared codebase.
+            </figcaption>
+          </figure>
+
           {/* Why the compiler is not enough */}
           <section className="space-y-5">
             <h2 className="text-2xl font-bold tracking-tight">Why the compiler is not enough</h2>
