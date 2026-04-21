@@ -93,20 +93,6 @@ export default function WhyCodeReviewMissesBugsPage() {
             </div>
           </div>
 
-          {/* Hero illustration */}
-          <figure className="rounded-xl overflow-hidden border border-border">
-            <img
-              src="/articles/why-code-review-misses-bugs-hero.png"
-              alt="Abstract illustration of a code diff where a deleted safety check fades into shadow while reviewer attention flows to the green additions"
-              width={1792}
-              height={1024}
-              className="w-full h-auto"
-            />
-            <figcaption className="px-4 py-3 text-sm text-muted-foreground bg-muted/30 text-center">
-              A removed guard clause hides in plain sight while reviewer attention follows the green additions.
-            </figcaption>
-          </figure>
-
           {/* What the research says */}
           <section className="space-y-5">
             <h2 className="text-2xl font-bold tracking-tight">What the research says</h2>
@@ -183,6 +169,18 @@ export default function WhyCodeReviewMissesBugsPage() {
           {/* Blind spots */}
           <section className="space-y-6">
             <h2 className="text-2xl font-bold tracking-tight">8 categories review consistently misses</h2>
+            <figure className="float-right ml-6 mb-4 w-[26%] rounded-lg overflow-hidden border border-border">
+              <img
+                src="/articles/why-code-review-misses-bugs-hero.png"
+                alt="Code diff where a deleted safety check fades into shadow while reviewer attention follows the green additions"
+                width={540}
+                height={380}
+                className="w-full h-auto"
+              />
+              <figcaption className="px-2 py-2 text-xs text-muted-foreground text-center bg-muted/30 leading-snug">
+                Deletions disappear. Additions get scrutinized.
+              </figcaption>
+            </figure>
             <p className="text-muted-foreground leading-relaxed">
               These are not exotic edge cases. They are the most common root causes of
               production regressions in codebases that have active, well-intentioned code

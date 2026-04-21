@@ -128,23 +128,21 @@ export default function WhyTestsMissBugsPage() {
             </div>
           </div>
 
-          {/* Hero illustration */}
-          <figure className="rounded-xl overflow-hidden border border-border">
-            <img
-              src="/articles/why-tests-miss-bugs-hero.png"
-              alt="Abstract illustration of passing green test indicators with a hairline fracture beneath and a bug hiding just outside test coverage"
-              width={1792}
-              height={1024}
-              className="w-full h-auto"
-            />
-            <figcaption className="px-4 py-3 text-sm text-muted-foreground bg-muted/30 text-center">
-              A green build confirms what tests expected. It cannot confirm what was removed.
-            </figcaption>
-          </figure>
-
           {/* The Green Build Fallacy */}
           <section className="space-y-5">
             <h2 className="text-2xl font-bold tracking-tight">The Green Build Fallacy</h2>
+            <figure className="float-right ml-6 mb-4 w-[22%] rounded-lg overflow-hidden border border-border">
+              <img
+                src="/articles/why-tests-miss-bugs-hero.png"
+                alt="Passing green test indicators with a hairline fracture beneath and a bug hiding just outside test coverage"
+                width={460}
+                height={460}
+                className="w-full h-auto"
+              />
+              <figcaption className="px-2 py-2 text-xs text-muted-foreground text-center bg-muted/30 leading-snug">
+                Green confirms what you expected. It cannot confirm what you removed.
+              </figcaption>
+            </figure>
             <p className="text-muted-foreground leading-relaxed">
               Most engineering teams treat a passing CI pipeline as a meaningful safety signal, and it
               is, to a point. A green build confirms that the tests you wrote still pass against the code
