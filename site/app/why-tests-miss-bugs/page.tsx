@@ -121,6 +121,20 @@ export default function WhyTestsMissBugsPage() {
             </p>
           </div>
 
+          {/* Hero illustration */}
+          <figure className="rounded-xl overflow-hidden border border-border">
+            <img
+              src="/articles/why-tests-miss-bugs-hero.png"
+              alt="Abstract illustration of passing green test indicators with a hairline fracture beneath and a bug hiding just outside test coverage"
+              width={1792}
+              height={1024}
+              className="w-full h-auto"
+            />
+            <figcaption className="px-4 py-3 text-sm text-muted-foreground bg-muted/30 text-center">
+              A green build confirms what tests expected. It cannot confirm what was removed.
+            </figcaption>
+          </figure>
+
           {/* The Green Build Fallacy */}
           <section className="space-y-5">
             <h2 className="text-2xl font-bold tracking-tight">The Green Build Fallacy</h2>
