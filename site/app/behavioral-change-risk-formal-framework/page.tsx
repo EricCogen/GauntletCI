@@ -77,8 +77,8 @@ export default function BCRFormalFrameworkPage() {
                 Modern continuous integration (CI) pipelines rely heavily on automated test suites to validate software
                 changes. A passing test suite is widely interpreted as a signal of correctness. However, a growing body
                 of empirical research demonstrates that test suites are structurally incapable of detecting specific
-                classes of behavioral modification. This gap — wherein a code change alters runtime behavior without
-                triggering a test failure — represents a distinct and under-researched category of software risk.
+                classes of behavioral modification. This gap, wherein a code change alters runtime behavior without
+                triggering a test failure, represents a distinct and under-researched category of software risk.
               </p>
               <p>
                 This article defines <strong className="text-foreground">Behavioral Change Risk (BCR)</strong> and
@@ -106,7 +106,7 @@ export default function BCRFormalFrameworkPage() {
               The software industry has invested decades in refining the practice of automated testing. Unit tests,
               integration tests, and end-to-end tests form the backbone of modern CI/CD pipelines. The logic is
               intuitive: if a code change does not break any existing tests, the change is presumed safe. This binary
-              signal — green build or red build — governs the decision to merge, deploy, and release software to
+              signal, green build or red build, governs the decision to merge, deploy, and release software to
               production. This paper refers to the implicit assumption that a passing build implies behavioral
               correctness as the{" "}
               <strong>Green Build Validity Assumption</strong>: a heuristic that is operationally useful but
@@ -141,7 +141,7 @@ export default function BCRFormalFrameworkPage() {
             <h2 className="text-2xl font-bold tracking-tight">2. The Structural Blindness of Test Suites</h2>
             <p className="text-muted-foreground leading-relaxed">
               To understand why tests miss certain bugs, one must first understand what a test can and cannot verify.
-              A test case consists of three components: an input, an execution, and an oracle — an assertion that
+              A test case consists of three components: an input, an execution, and an oracle: an assertion that
               evaluates the output. The <strong>oracle problem</strong><Cite n={5} /> states that a test can only
               detect a fault if that fault produces an observable output that violates a specific, pre-written
               assertion.
@@ -154,12 +154,12 @@ export default function BCRFormalFrameworkPage() {
               </p>
             </div>
             <p className="text-muted-foreground leading-relaxed">
-              Consider a developer who removes a null-check guard clause — the code changes from{" "}
+              Consider a developer who removes a null-check guard clause; the code changes from{" "}
               <code className="text-xs bg-secondary px-1 py-0.5 rounded">if (user == null) return;</code> to a state
               where the guard is simply absent. If the test suite never exercises the code path with a null user, all
               tests will continue to pass. The behavior of the system has changed: it will now throw a{" "}
               <code className="text-xs bg-secondary px-1 py-0.5 rounded">NullReferenceException</code> where it
-              previously handled the condition gracefully — but no test will fail. The change is{" "}
+              previously handled the condition gracefully, but no test will fail. The change is{" "}
               <em>invisible</em> to the validation mechanism.
             </p>
             <p className="text-muted-foreground leading-relaxed">
@@ -187,7 +187,7 @@ export default function BCRFormalFrameworkPage() {
               Mutation testing, which introduces artificial faults to evaluate test suite sensitivity, is the most
               rigorous proxy for test suite effectiveness currently available. However, recent work has shown that
               traditional mutation operators do not adequately model real-world faults.<Cite n={4} /> Many real faults
-              involve the <em>removal</em> of behavior — a change that is difficult to simulate with standard
+              involve the <em>removal</em> of behavior, a change that is difficult to simulate with standard
               syntactic mutants.
             </p>
           </section>
@@ -215,14 +215,14 @@ export default function BCRFormalFrameworkPage() {
                   <span className="shrink-0 font-mono text-cyan-400">1.</span>
                   <span>
                     <code className="bg-background/60 px-2 py-0.5 rounded font-mono text-xs">B(C + ΔC) ≠ B(C)</code>
-                    {" "} — the modification alters observable behavior; and
+                    {" "}: the modification alters observable behavior; and
                   </span>
                 </li>
                 <li className="flex gap-3">
                   <span className="shrink-0 font-mono text-cyan-400">2.</span>
                   <span>
                     <code className="bg-background/60 px-2 py-0.5 rounded font-mono text-xs">ΔB ∉ V(T, C + ΔC)</code>
-                    {" "} — the altered behavior is not covered by any assertion in the test suite.
+                    {" "}: the altered behavior is not covered by any assertion in the test suite.
                   </span>
                 </li>
               </ol>
@@ -233,13 +233,13 @@ export default function BCRFormalFrameworkPage() {
             <p className="text-muted-foreground leading-relaxed">
               In plain terms: <strong>BCR is the divergence between what the system does and what the tests can see.</strong>{" "}
               It exists whenever <code className="text-xs bg-secondary px-1 py-0.5 rounded font-mono">B(C + ΔC)</code>{" "}
-              expands beyond <code className="text-xs bg-secondary px-1 py-0.5 rounded font-mono">V(T, C + ΔC)</code> —
-              whenever the actual behavior space of the modified system outgrows the validated behavior space of its
+              expands beyond <code className="text-xs bg-secondary px-1 py-0.5 rounded font-mono">V(T, C + ΔC)</code>,
+              the actual behavior space of the modified system outgrowing the validated behavior space of its
               test suite.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               This definition distinguishes BCR from a traditional software defect. A <em>bug</em> is code that
-              violates a stated requirement — it is detectable because a test or specification can be written to catch
+              violates a stated requirement; it is detectable because a test or specification can be written to catch
               it. BCR is categorically different: the code may behave exactly as the developer intended, and yet
               introduce behavioral change that no existing test is positioned to observe. It is not a failure of
               implementation. It is a <strong>validation gap</strong>.
@@ -331,7 +331,7 @@ export default function BCRFormalFrameworkPage() {
             <h2 className="text-2xl font-bold tracking-tight">5. The Diagnostic Value of Flaky Tests</h2>
             <p className="text-muted-foreground leading-relaxed">
               One of the most counter-intuitive findings in recent software engineering research concerns flaky
-              tests — tests that exhibit non-deterministic behavior, passing and failing without apparent code
+              tests, which exhibit non-deterministic behavior, passing and failing without apparent code
               changes. The conventional engineering response is to quarantine, disable, or automatically retry
               flaky tests to reduce CI noise.
             </p>
@@ -355,14 +355,14 @@ export default function BCRFormalFrameworkPage() {
             </div>
             <p className="text-sm text-muted-foreground">
               The Chromium CI system is substantially larger than most industrial codebases; the precise fault
-              suppression rate will vary by system. The directional finding — that automated flakiness filtering
-              discards genuine fault signal — is corroborated by independent work on non-deterministic test
+              suppression rate will vary by system. The directional finding, that automated flakiness filtering
+              discards genuine fault signal, is corroborated by independent work on non-deterministic test
               behavior.<Cite n={8} />
             </p>
             <p className="text-muted-foreground leading-relaxed">
               A flaky test is often a test that is <em>sensitive</em> to a behavioral change that deterministic
               tests ignore. It may fail due to a timing shift, a resource contention issue, or an altered execution
-              order — all of which are genuine behavioral changes. By silencing the flaky test, the CI system
+              order, all of which are genuine behavioral changes. By silencing the flaky test, the CI system
               silences the <strong>signal</strong>.
             </p>
             <p className="text-muted-foreground leading-relaxed">
@@ -392,8 +392,8 @@ export default function BCRFormalFrameworkPage() {
                   Pull requests were selected with a bias toward changes involving substantive review activity, which
                   introduces a selection effect favoring higher-complexity changes over routine maintenance commits.
                   Each pull request was evaluated against the behavioral change taxonomy described in §4 using the
-                  automated rule engine. The corpus metadata — repository names, pull request numbers, size
-                  classification, test-change presence, and per-finding counts — is published at{" "}
+                  automated rule engine. The corpus metadata (repository names, pull request numbers, size
+                  classification, test-change presence, and per-finding counts) is published at{" "}
                   <a
                     href="https://github.com/EricCogen/GauntletCI/blob/main/data/corpus-fixtures.csv"
                     className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2 break-all"
@@ -446,7 +446,7 @@ export default function BCRFormalFrameworkPage() {
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   of pull requests submitted without test file modifications (118 of 166) contained at least one
                   behavioral risk indicator. When test authorship effort is absent, risk patterns are not merely
-                  possible — they are prevalent.
+                  possible; they are prevalent.
                 </p>
               </div>
             </div>
@@ -458,16 +458,16 @@ export default function BCRFormalFrameworkPage() {
                 unknown: findings represent automated pattern matches, and false positives are expected. The corpus
                 was not a random sample of production software; it was drawn from well-maintained open-source
                 projects with active code review histories, which may exhibit different behavioral change patterns
-                than closed-source enterprise or legacy codebases. Formal empirical validation — including human
+                than closed-source enterprise or legacy codebases. Formal empirical validation (including human
                 labeling of findings, precision and recall measurement, and controlled studies across broader
-                repository populations — is identified as future work.
+                repository populations) is identified as future work.
               </p>
             </div>
 
             <p className="text-muted-foreground leading-relaxed">
               The preliminary signal is nonetheless consistent with the BCR framework&apos;s central prediction:
               behavioral risk patterns occur in a substantial fraction of real-world pull requests, and their
-              incidence is elevated precisely in the pull requests that arrive without test coverage updates — the
+              incidence is elevated precisely in the pull requests that arrive without test coverage updates: the
               gap that BCRV is designed to address.
             </p>
           </section>
@@ -485,8 +485,8 @@ export default function BCRFormalFrameworkPage() {
 
             <h3 className="text-xl font-semibold tracking-tight pt-2">7.1 Requirements for Addressing BCR</h3>
             <p className="text-muted-foreground leading-relaxed">
-              Before introducing the methodology, the requirements it must satisfy are worth stating explicitly —
-              because they emerge from the problem, not from the solution.
+              Before introducing the methodology, the requirements it must satisfy are worth stating explicitly,
+              since they emerge from the problem, not from the solution.
             </p>
             <div className="space-y-3">
               {[
@@ -498,7 +498,7 @@ export default function BCRFormalFrameworkPage() {
                 {
                   n: "2",
                   label: "Semantics-aware",
-                  detail: "The methodology must reason about behavioral meaning — what the code does and what it no longer does — rather than structural properties such as line count or test coverage percentage alone.",
+                  detail: "The methodology must reason about behavioral meaning (what the code does and what it no longer does) rather than structural properties such as line count or test coverage percentage alone.",
                 },
                 {
                   n: "3",
@@ -543,8 +543,8 @@ export default function BCRFormalFrameworkPage() {
             </p>
             <p className="text-muted-foreground leading-relaxed">
               BCRV is also the economically rational choice. Auditing a diff at the moment of authorship requires
-              evaluating tens or hundreds of changed lines in context. The alternative — discovering the behavioral
-              gap in production — requires reproducing the fault, tracing it back through deployment history, and
+              evaluating tens or hundreds of changed lines in context. The alternative, discovering the behavioral
+              gap in production, requires reproducing the fault, tracing it back through deployment history, and
               remediating under pressure. The <strong>engineering tax</strong> of a pre-commit audit is a fraction
               of the cost of a post-incident post-mortem. Shift-left is not a slogan; it is arithmetic.
             </p>
@@ -594,7 +594,7 @@ export default function BCRFormalFrameworkPage() {
                 },
                 {
                   stage: "Stage 3: Risk Mitigation",
-                  detail: "If a behavioral change is identified as unvalidated, one of three actions is taken: (1) Add an assertion to capture the new behavior. (2) Document the accepted risk — record the change as intentional with explicit justification. (3) Revert or redesign the change to eliminate the unvalidated behavioral shift.",
+                  detail: "If a behavioral change is identified as unvalidated, one of three actions is taken: (1) Add an assertion to capture the new behavior. (2) Document the accepted risk: record the change as intentional with explicit justification. (3) Revert or redesign the change to eliminate the unvalidated behavioral shift.",
                 },
               ].map((s) => (
                 <div key={s.stage} className="rounded-lg border border-border bg-card/40 p-5 space-y-2">
@@ -636,8 +636,8 @@ export default function BCRFormalFrameworkPage() {
               demonstrated that coverage metrics are a poor predictor of test suite effectiveness. Just et al.<Cite n={7} />{" "}
               showed that mutation testing, while valuable, does not fully capture real-world fault characteristics.
               The oracle problem was formally surveyed by Barr et al.,<Cite n={5} /> establishing the theoretical
-              bound on test-based validation. The core bound — that a test can only detect faults observable through
-              pre-written assertions — has not been substantially revised; subsequent work has focused on automated
+              bound on test-based validation. The core bound, that a test can only detect faults observable through
+              pre-written assertions, has not been substantially revised; subsequent work has focused on automated
               oracle generation as a mitigation rather than a challenge to the bound itself.<Cite n={9} />
             </p>
 
@@ -657,7 +657,7 @@ export default function BCRFormalFrameworkPage() {
               the full system, has a parallel history in unit testing research. Wloka et al. introduced JUnitMX,
               a change-aware unit testing tool that uses a change model to guide the authoring of new tests in
               direct response to specific code modifications.<Cite n={12} /> The tool operationalizes the principle
-              that test authoring effort should be directed by what changed, not by what exists — an orientation
+              that test authoring effort should be directed by what changed, not by what exists, an orientation
               that anticipates the diff-centric analysis proposed by BCRV.
             </p>
             <p className="text-muted-foreground leading-relaxed">
@@ -695,7 +695,7 @@ export default function BCRFormalFrameworkPage() {
             <p className="text-muted-foreground leading-relaxed">
               Two additional limitations warrant explicit acknowledgment. First, BCRV depends on the quality of
               the human auditor. A reviewer who lacks domain knowledge of the changed system may fail to recognize
-              the behavioral significance of a flagged pattern — a risk that increases as codebases grow and team
+              the behavioral significance of a flagged pattern, a risk that increases as codebases grow and team
               ownership becomes diffuse. Second, <strong>audit fatigue</strong> is a real operational concern. If
               every diff surfaces a large number of flags, reviewers will begin to dismiss findings as noise,
               recreating the same suppression problem that motivates the methodology. Effective BCRV practice
@@ -730,8 +730,8 @@ export default function BCRFormalFrameworkPage() {
               systematic fault taxonomy study. Categories may overlap, under-specify, or conflate distinct
               phenomena. Additionally, the corpus findings reported in §6 are produced by an automated rule engine
               with no human-labeled ground truth: the correlation between GauntletCI&apos;s confidence scores and
-              actual behavioral divergence has not been empirically established. The selection bias in the corpus
-              — favoring pull requests with substantive review activity — may inflate the observed BCR rate
+              actual behavioral divergence has not been empirically established. The selection bias in the corpus,
+              favoring pull requests with substantive review activity, may inflate the observed BCR rate
               relative to a random sample of commits.
             </p>
 
@@ -749,7 +749,7 @@ export default function BCRFormalFrameworkPage() {
             <h3 className="text-xl font-semibold tracking-tight">Construct Validity</h3>
             <p className="text-muted-foreground leading-relaxed">
               Two construct validity threats warrant acknowledgment. First, behavioral change is operationalized
-              as pattern matches against known BCR indicators — a structural proxy for the formal definition in
+              as pattern matches against known BCR indicators, a structural proxy for the formal definition in
               §3. A pattern match is not a proof that{" "}
               <code className="text-xs bg-secondary px-1 py-0.5 rounded font-mono">ΔB ∉ V(T, C + ΔC)</code>;
               it is a heuristic signal that the diff contains a change class historically associated with
@@ -766,7 +766,7 @@ export default function BCRFormalFrameworkPage() {
             <h2 className="text-2xl font-bold tracking-tight">11. Conclusion</h2>
             <p className="text-muted-foreground leading-relaxed">
               The green checkmark of a passing CI build has become the primary expression of the Green Build
-              Validity Assumption in practice — a symbol of software quality that obscures a structural blind
+              Validity Assumption in practice, a symbol of software quality that obscures a structural blind
               spot. Tests validate what was written; they cannot validate what was removed. They assert expected
               outcomes; they are silent on the consequences of altered behavior.
             </p>
