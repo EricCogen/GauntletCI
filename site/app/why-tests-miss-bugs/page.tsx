@@ -476,6 +476,16 @@ export default function WhyTestsMissBugsPage() {
               ))}
             </div>
             <p className="text-muted-foreground leading-relaxed">
+              There is also a structural bias built into the act of writing tests itself. Tests are written
+              to confirm expectations, not to challenge them. A developer who implements a method and then
+              writes its tests will naturally gravitate toward the inputs that make the method work —
+              because those are the inputs the developer had in mind when writing the code. The edge cases
+              that are not in the developer's mental model are not in the test suite either. This is not a
+              failure of diligence; it is a property of how humans form and verify mental models. The same
+              confirmation bias that makes a developer confident their code is correct makes the tests they
+              write an imperfect instrument for proving that confidence wrong.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
               The practical implication is that tests should be understood as a necessary but not sufficient
               condition for production correctness. They are the right tool for verifying intended behavior
               against known inputs. They are not the right tool for detecting structural changes to the
