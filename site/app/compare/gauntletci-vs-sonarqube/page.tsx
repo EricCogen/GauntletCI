@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   description:
     "Compare GauntletCI and SonarQube. GauntletCI analyzes only what changed, runs 100% locally, and catches behavioral regressions in pre-commit. SonarQube scans the whole repo in CI.",
   alternates: { canonical: "/compare/gauntletci-vs-sonarqube" },
+  openGraph: { images: [{ url: '/og/compare-sonarqube.png', width: 1200, height: 630 }] },
 };
 
 const tableRows = [

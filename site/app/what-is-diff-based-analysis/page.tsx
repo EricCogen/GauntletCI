@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   description:
     "Diff-based analysis examines only the lines you changed, not the entire codebase. Learn why this approach is faster, more precise, and more actionable than full-codebase scanning.",
   alternates: { canonical: "/what-is-diff-based-analysis" },
+  openGraph: { images: [{ url: '/og/what-is-diff-based-analysis.png', width: 1200, height: 630 }] },
 };
 
 const jsonLd = {
@@ -55,7 +56,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
               When you stage changes with{" "}
               <code className="text-xs font-mono bg-card border border-border rounded px-1.5 py-0.5">git add</code>,
               Git records a diff: the exact lines added, modified, and removed. A diff-based
-              analysis engine operates on this diff as its primary -- and only -- input. It does
+              analysis engine operates on this diff as its sole input. It does
               not load, parse, or scan any file that was not touched by the current changeset.
               Every finding the tool produces is directly traceable to a line in the current diff.
             </p>
@@ -63,14 +64,14 @@ export default function WhatIsDiffBasedAnalysisPage() {
               The engine reads each changed hunk, identifies the structural role of the modified
               lines (is this a guard clause? a public method signature? a serialization attribute?
               a dependency injection registration?), and evaluates a set of targeted rules against
-              those structural properties. Critically, each rule fires on the delta -- the change
-              itself -- not on the surrounding stable code that has been in production for months.
+              those structural properties. Critically, each rule fires on the delta (the change
+              itself), not on the surrounding stable code that has been in production for months.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               The example below shows a single-line deletion. A guard clause that validated the
               method input has been removed. A full-codebase scanner may or may not surface this
               depending on whether it has a rule for missing input validation. A diff-based scanner
-              surfaces it immediately because it can see the deletion -- the negative change -- and
+              surfaces it immediately because it can see the deletion (the removed line) and
               knows what was there before.
             </p>
             <div className="rounded-xl border border-border bg-card overflow-hidden">
@@ -101,17 +102,19 @@ export default function WhatIsDiffBasedAnalysisPage() {
             <p className="text-muted-foreground leading-relaxed">
               A 2013 study published at the International Conference on Software Engineering
               examined why developers do not use static analysis tools even when those tools are
-              available [1]. The top-ranked reason was not performance, not installation friction,
-              and not lack of IDE integration. It was false positives. Developers who encounter a
-              tool that fires on pre-existing, known-benign patterns quickly learn to ignore it.
-              Once a tool trains developers to ignore it, it has negative utility -- it adds
-              cognitive load with no corresponding benefit.
+              available <a href="#cite-1" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[1]</a>. The top-ranked reason was false positives, ahead of
+              performance, installation friction, and IDE integration gaps. Developers who encounter
+              a tool that fires on pre-existing, known-benign patterns quickly learn to ignore it.
+              Once a tool trains developers to ignore it, it has negative utility: it adds
+              cognitive load with no corresponding benefit. Studies examining different tool types
+              and organizational contexts identify performance overhead and integration friction as
+              additional significant barriers, though false positives rank consistently near the top.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               Google observed the same dynamic at scale. In their 2018 Communications of the ACM
               paper on lessons from building static analysis tools across the full Google codebase,
               the authors describe how they deliberately ship only checks where confidence is very
-              high [2]. Their internal tools were not rejected because they were slow or hard to
+              high <a href="#cite-2" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[2]</a>. Their internal tools were not rejected because they were slow or hard to
               install. They were rejected when the signal-to-noise ratio dropped below the
               threshold where a developer found it worth reading findings at all. The team
               eventually required that any new check demonstrate a low false positive rate on
@@ -121,18 +124,20 @@ export default function WhatIsDiffBasedAnalysisPage() {
               Full-codebase scanning amplifies the false positive problem structurally. Every scan
               re-reports the same issues that were in the codebase before the developer touched
               anything. Technical debt accumulated years ago floods the results. A developer who
-              changed two lines in one file sees hundreds of findings across the project -- none of
-              which are things they introduced, and most of which their team has already decided to
-              defer. The tool is technically correct, but it is not useful for the task the
+              changed two lines in one file sees hundreds of findings across the project, none of
+              which are things they introduced and most of which their team has already decided to
+              defer.The tool is technically correct, but it is not useful for the task the
               developer is actually doing.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               Beller et al. evaluated static analysis adoption in open source projects and found
               that even teams that had integrated static analysis into their CI pipelines frequently
-              disabled or silenced large categories of warnings over time [3]. The trajectory is
+              disabled or silenced large categories of warnings over time <a href="#cite-3" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[3]</a>. The trajectory is
               predictable: a team adopts a scanner, the finding count grows, developers start
               suppressing rules, and eventually the tool runs silently in CI producing output
-              nobody reads.
+              nobody reads. Teams that maintain sustained adoption typically roll out rule sets
+              incrementally rather than enabling all checks at once; adoption patterns vary
+              significantly by team size and codebase maturity.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               Diff-based analysis sidesteps this failure mode by construction. Because it only
@@ -158,34 +163,36 @@ export default function WhatIsDiffBasedAnalysisPage() {
               Signal-to-noise ratio (SNR) is the fraction of tool findings that represent genuine,
               actionable risk versus total findings. A tool with high recall but low SNR produces
               many true positives alongside many false positives. Because developers cannot cheaply
-              distinguish which is which -- doing so would require the analysis they were hoping
-              the tool would do for them -- they treat all findings as suspect and eventually treat
+              distinguish which is which (doing so would require the analysis they were hoping
+              the tool would do for them), they treat all findings as suspect and eventually treat
               all findings as ignorable.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               Ayewah et al. studied false positive rates in FindBugs (now SpotBugs) deployments
-              and found that false positive rates varied enormously by rule category [4]. Some rule
+              and found that false positive rates varied enormously by rule category <a href="#cite-4" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[4]</a>. Some rule
               categories were nearly always correct. Others fired on benign patterns more often than
               not. The practical lesson was not to tune the rules in isolation but to restrict which
-              rules run in which contexts -- a finding that is 40% likely to be a false positive
+              rules run in which contexts: a finding that is 40% likely to be a false positive
               in a full-codebase scan may be 90% likely to be a true positive when scoped to lines
-              that were just modified.
+              that were just modified. More recent tooling has reduced false positive rates in some
+              categories; the core finding that context governs precision remains consistent.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              GauntletCI rules are written for the diff context. A rule about removing a guard
-              clause fires only when a guard clause is removed in the current diff -- not when a
-              guard clause is absent from a stable file that has been in production for two years
-              and whose absence was a deliberate design decision. The same rule, the same logic,
-              but radically different SNR because the context is different. Scoping rules to the
-              delta rather than the full file is the primary mechanism by which diff-based analysis
-              achieves a higher SNR than equivalent rules running over a full codebase.
+              Rules scoped to the diff context fire only when a problem is introduced by the
+              current change. A rule about removing a guard clause fires when a guard clause is
+              removed in the current diff; it does not fire when a guard clause is absent from a
+              stable file that has been in production for two years and whose absence was a
+              deliberate design decision. The same rule logic, applied at different scope,
+              produces radically different SNR. Scoping rules to the delta rather than the full
+              file is the primary mechanism by which diff-based analysis achieves a higher SNR
+              than equivalent rules running over a full codebase.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               High SNR has a compounding benefit. When a developer acts on every finding they
               receive, the tool becomes part of their normal workflow. They do not develop the
               habit of dismissing findings without reading them. This means that when a genuinely
-              critical finding appears -- a removed authentication check, a hardcoded secret, a
-              broken serialization contract -- it gets the same attention every other finding
+              critical finding appears (a removed authentication check, a hardcoded secret, a
+              broken serialization contract) it gets the same attention every other finding
               receives, rather than being lost in a backlog of noise.
             </p>
           </section>
@@ -257,7 +264,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
               <code className="text-xs font-mono bg-card border border-border rounded px-1.5 py-0.5">-38,12 +38,10</code>{" "}
               means the hunk shows 12 lines from the old file starting at line 38, and 10 lines
               from the new file starting at line 38. The two-line reduction is the deleted guard
-              clause -- two removed lines, no replaced lines.
+              clause: two removed lines, no replaced lines.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               After parsing, each rule receives a structured representation: a list of changed
@@ -265,8 +272,8 @@ export default function WhatIsDiffBasedAnalysisPage() {
               numbers, and their change type (added, removed, or context). Rules do not do any text
               parsing of their own. They pattern-match against the structured representation. A rule
               that looks for removed guard clauses queries: in any hunk, is there a sequence of
-              removed lines that matches the pattern of a guard clause -- a conditional followed by
-              a throw or early return -- at the top of a method body? If yes, fire. If no, move on.
+              removed lines that matches the pattern of a guard clause (a conditional followed by
+              a throw or early return) at the top of a method body? If yes, fire. If no, move on.
               The rule never reads the surrounding file.
             </p>
             <p className="text-muted-foreground leading-relaxed">
@@ -290,7 +297,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
               Analysis tools can run at several points in the development lifecycle. Each
               integration point has different characteristics for feedback latency, developer
               context, and cost of remediation. Diff-based analysis is well-suited to the earliest
-              integration points precisely because it operates on diffs -- and a diff is always
+              integration points precisely because it operates on diffs; a diff is always
               available as long as there are staged or unstaged changes.
             </p>
 
@@ -299,7 +306,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
               Pre-commit is the earliest integration point. The developer has just finished writing
               code and is about to record a snapshot. The diff is the exact set of changes they
               intend to commit. Running analysis here means the developer receives findings before
-              the change becomes part of repository history. Fixing a finding is a file edit -- no
+              the change becomes part of repository history. Fixing a finding is a file edit: no
               branch, no PR, no review cycle required. The cost is measured in seconds.
             </p>
             <p className="text-muted-foreground leading-relaxed">
@@ -330,11 +337,11 @@ export default function WhatIsDiffBasedAnalysisPage() {
             <h3 className="text-lg font-semibold mt-4">IDE and editor integration</h3>
             <p className="text-muted-foreground leading-relaxed">
               Some teams run analysis on save or on file change within the editor. This is the
-              fastest feedback loop possible -- sub-second latency, finding surfaced inline while
-              the code is still on screen. GauntletCI can be invoked with a diff piped from the
-              editor change buffer, making real-time IDE integration achievable. The tradeoff is
-              that partial changes -- code that is syntactically incomplete or not yet compiling
-              -- can produce noisy results. Many teams use IDE integration for advisory findings
+              fastest feedback loop possible: sub-second latency, with findings surfaced inline
+              while the code is still on screen. GauntletCI can be invoked with a diff piped from
+              the editor change buffer, making real-time IDE integration achievable. The tradeoff
+              is that partial changes (code that is syntactically incomplete or not yet compiling)
+              can produce noisy results. Many teams use IDE integration for advisory findings
               and pre-commit integration for hard gates that block the commit.
             </p>
 
@@ -361,7 +368,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
             <p className="text-muted-foreground leading-relaxed">
               The table below captures the practical differences between a full-codebase scanner
               running on a schedule or in CI and a diff-based engine running at pre-commit. These
-              are complementary approaches, not competing ones -- but understanding the tradeoffs
+              are complementary approaches, not competing ones; understanding the tradeoffs
               helps teams decide when to rely on each and where to invest in tuning.
             </p>
             <div className="overflow-x-auto">
@@ -379,11 +386,11 @@ export default function WhatIsDiffBasedAnalysisPage() {
                     ["Run time", "Minutes to hours on large codebases", "Under one second"],
                     ["When it runs", "Scheduled or CI pipeline", "Pre-commit, on every save"],
                     ["Signal type", "Existing issues in the full codebase", "Risk introduced by this change"],
-                    ["Noise", "High -- existing issues reappear every run", "Low -- only new delta is analyzed"],
-                    ["Actionability", "Requires triage across the full backlog", "Directly actionable -- one change, one finding"],
-                    ["False positive rate", "Higher -- rules fire on any matching pattern", "Lower -- rules scoped to changed lines only"],
+                    ["Noise", "High: existing issues reappear every run", "Low: only new delta is analyzed"],
+                    ["Actionability", "Requires triage across the full backlog", "Directly actionable: one change, one finding"],
+                    ["False positive rate", "Higher: rules fire on any matching pattern", "Lower: rules scoped to changed lines only"],
                     ["Developer interrupt cost", "Findings arrive minutes later in CI or on a schedule", "Findings arrive before the commit is recorded"],
-                    ["Trust trajectory", "Declines as finding count grows and backlog accumulates", "Stable -- findings are always about current work"],
+                    ["Trust trajectory", "Declines as finding count grows and backlog accumulates", "Stable: findings are always about current work"],
                     ["CI feedback latency", "Full scan blocks CI for minutes to hours", "Pre-commit prevents the issue from reaching CI at all"],
                   ].map(([dim, full, diff]) => (
                     <tr key={dim as string}>
@@ -420,7 +427,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
             </p>
             <p className="text-muted-foreground leading-relaxed">
               Diff-based analysis is uniquely positioned to deliver pre-commit feedback because
-              its input -- the diff -- is exactly what the pre-commit hook has available. There
+              its input is the diff: exactly what the pre-commit hook has available. There
               is no need to check out the full repository, run a build, or wait for a CI
               environment. The staged diff is available immediately, and the analysis completes
               before the commit is finalized.
@@ -433,7 +440,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
                 why code review misses bugs
               </Link>{" "}
               for a detailed treatment of the systematic blind spots in human review. Diff-based
-              analysis fills those gaps deterministically -- it will always apply the same rules
+              analysis fills those gaps deterministically: it will always apply the same rules
               to the same diff and produce the same findings, regardless of reviewer fatigue,
               diff size, or social pressure to approve quickly.
             </p>
@@ -444,7 +451,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
                 detecting breaking changes before merge
               </Link>.
               That article covers how diff-based rules identify breaking changes in public
-              interfaces, REST contracts, and binary-compatibility-sensitive types -- categories
+              interfaces, REST contracts, and binary-compatibility-sensitive types, categories
               of change that are almost invisible in code review but trivially detectable in a
               structured diff.
             </p>
@@ -455,12 +462,12 @@ export default function WhatIsDiffBasedAnalysisPage() {
             <h3 className="font-semibold text-cyan-300">Diff-based analysis is complementary, not competitive</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
               Full-codebase scanning tools like SonarQube, Semgrep, and CodeQL serve a different
-              purpose: finding existing issues across the full codebase on a schedule. GauntletCI
-              does not replace them. It adds a pre-commit gate that flags the risk introduced by
-              the current change -- before that risk becomes part of the baseline the scanner has
-              to manage. Running both gives you defense in depth: new risk is caught at the
-              earliest possible moment, and existing risk is tracked over time with a dedicated
-              tool suited to that task.
+              purpose: finding existing issues across the full codebase on a schedule. A diff-based
+              pre-commit tool does not replace them; it adds a pre-commit gate that flags the risk
+              introduced by the current change before that risk becomes part of the baseline the
+              scanner has to manage. Running both approaches provides defense in depth: new risk is
+              caught at the earliest possible moment, and existing risk is tracked over time with a
+              dedicated tool suited to that task.
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
               For teams migrating to a scanner from a codebase with no prior analysis, diff-based
@@ -484,7 +491,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
                 </p>
                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                   The systematic blind spots in human review that diff-based analysis fills
-                  deterministically -- including deleted validations, implicit contracts, and
+                  deterministically, including deleted validations, implicit contracts, and
                   concurrency anti-patterns.
                 </p>
               </Link>
@@ -507,7 +514,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
           <section className="space-y-4 border-t border-border pt-12">
             <h2 className="text-2xl font-bold tracking-tight">References</h2>
             <ol className="space-y-4 list-none">
-              <li className="flex gap-3">
+              <li id="cite-1" className="flex gap-3">
                 <span className="text-muted-foreground/50 font-mono text-xs mt-0.5 shrink-0">[1]</span>
                 <span className="text-sm text-muted-foreground leading-relaxed">
                   B. Johnson, Y. Song, E. Murphy-Hill, and R. Bowdidge, &quot;Why Don&apos;t Software
@@ -523,7 +530,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
                   </a>
                 </span>
               </li>
-              <li className="flex gap-3">
+              <li id="cite-2" className="flex gap-3">
                 <span className="text-muted-foreground/50 font-mono text-xs mt-0.5 shrink-0">[2]</span>
                 <span className="text-sm text-muted-foreground leading-relaxed">
                   C. Sadowski, J. van Gogh, C. Jaspan, E. Soderberg, and C. Winter, &quot;Lessons from
@@ -539,7 +546,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
                   </a>
                 </span>
               </li>
-              <li className="flex gap-3">
+              <li id="cite-3" className="flex gap-3">
                 <span className="text-muted-foreground/50 font-mono text-xs mt-0.5 shrink-0">[3]</span>
                 <span className="text-sm text-muted-foreground leading-relaxed">
                   M. Beller, R. Bholanath, S. McIntosh, and A. Zaidman, &quot;Analyzing the State of
@@ -555,7 +562,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
                   </a>
                 </span>
               </li>
-              <li className="flex gap-3">
+              <li id="cite-4" className="flex gap-3">
                 <span className="text-muted-foreground/50 font-mono text-xs mt-0.5 shrink-0">[4]</span>
                 <span className="text-sm text-muted-foreground leading-relaxed">
                   N. Ayewah, W. Pugh, J. D. Morgenthaler, J. Penix, and Y. Zhou, &quot;Using Static

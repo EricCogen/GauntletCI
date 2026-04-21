@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   description:
     "Breaking changes in .NET code are often invisible at compile time. Learn the patterns that break callers at runtime and how to catch them before the PR merges.",
   alternates: { canonical: "/detect-breaking-changes-before-merge" },
+  openGraph: { images: [{ url: '/og/detect-breaking-changes-before-merge.png', width: 1200, height: 630 }] },
 };
 
 const patterns = [
@@ -17,7 +18,7 @@ const patterns = [
       { name: "Removed public method", detail: "Callers that compile today fail at runtime after deploy if the method existed in a referenced assembly. GCI0004 flags this as high severity." },
       { name: "Changed method signature", detail: "Adding required parameters or changing parameter types breaks callers that used the old signature. Callers compiled against the old signature get MissingMethodException at runtime." },
       { name: "Removed interface member", detail: "Classes that implement the interface still compile. Classes in other assemblies that call the removed member fail at runtime with MissingMethodException." },
-      { name: "Sealed class where previously unsealed", detail: "Callers that subclass the type at runtime -- including mocking frameworks and dependency injection containers -- fail with TypeLoadException." },
+      { name: "Sealed class where previously unsealed", detail: "Callers that subclass the type at runtime (including mocking frameworks and dependency injection containers) fail with TypeLoadException." },
       { name: "Removed public property", detail: "Properties serialized to JSON, bound in XAML data bindings, or read via reflection by frameworks such as AutoMapper fail silently or throw at runtime." },
       { name: "Changed return type", detail: "Changing a return type is a binary breaking change even if both types share a common interface. Callers compiled against the old signature receive MissingMethodException." },
     ],
@@ -38,7 +39,7 @@ const patterns = [
       { name: "Removed service registration", detail: "Code that resolves the service at runtime receives null or throws InvalidOperationException. GCI0038 flags removal of AddSingleton, AddScoped, and AddTransient calls." },
       { name: "Changed constructor signature", detail: "DI containers that resolve by convention fail to construct the type at runtime if required parameters are added or types change." },
       { name: "Changed service lifetime", detail: "Scoped services injected into singletons produce runtime errors or subtle state-sharing bugs that are hard to reproduce in unit tests." },
-      { name: "Replaced concrete registration with interface", detail: "Code that resolves the concrete type directly -- common in integration tests and some framework integrations -- fails with an unresolved dependency error at runtime." },
+      { name: "Replaced concrete registration with interface", detail: "Code that resolves the concrete type directly (common in integration tests and some framework integrations) fails with an unresolved dependency error at runtime." },
     ],
   },
   {
@@ -101,7 +102,7 @@ export default function DetectBreakingChangesPage() {
             <p className="text-muted-foreground leading-relaxed">
               The .NET compiler catches type errors and missing references within a project or
               solution. It does not verify runtime contracts. A method signature change may
-              compile successfully if all call sites within the repository are updated -- but
+              compile successfully if all call sites within the repository are updated, but
               external consumers, serialized payloads in databases or message queues, and
               dynamically resolved services have no compile-time check at all.
             </p>
@@ -134,8 +135,12 @@ export default function DetectBreakingChangesPage() {
               More importantly, semver requires the library author to know which changes are
               breaking in the first place. Research by Dig and Johnson found that 80 percent of
               the 147 breaking API changes they studied across open source Java projects were
-              caused by refactoring -- changes the author considered routine cleanup rather than
-              intentional API evolution [1]. A developer who renames a method during a refactor
+              caused by refactoring: changes the author considered routine cleanup rather than
+              intentional API evolution{" "}
+              <a href="#cite-1" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[1]</a>
+              . The study examined open-source Java projects; no large-scale .NET-specific dataset
+              substantially contradicts the proportion, though the precise rate likely varies by
+              ecosystem and project type. A developer who renames a method during a refactor
               sprint is unlikely to reach for the changelog before committing. Semver provides
               no signal until after the commit is merged and the package is published.
             </p>
@@ -144,9 +149,11 @@ export default function DetectBreakingChangesPage() {
               of preventing it at the author. Hora et al. measured how downstream projects
               reacted when their library dependencies introduced breaking changes and found that
               many projects simply stopped updating the dependency, accumulating security and
-              correctness debt rather than absorbing the migration cost [2]. The practical
+              correctness debt rather than absorbing the migration cost{" "}
+              <a href="#cite-2" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[2]</a>
+              . The practical
               implication is that library authors who introduce unintentional breaking changes do
-              not just cause immediate runtime failures -- they cause long-term ecosystem
+              not just cause immediate runtime failures; they cause long-term ecosystem
               fragmentation. Pre-commit detection converts this class of problem from an
               ecosystem-level event into a single-developer edit.
             </p>
@@ -181,8 +188,8 @@ export default function DetectBreakingChangesPage() {
                 <span className="text-cyan-400 font-bold shrink-0">2.</span>
                 <span>
                   <strong className="text-foreground">Plugin and extension architectures.</strong>{" "}
-                  Any host application that loads assemblies at runtime -- MEF, Roslyn
-                  analyzers, ASP.NET Core middleware loaded via reflection -- cannot recompile
+                  Any host application that loads assemblies at runtime (MEF, Roslyn
+                  analyzers, ASP.NET Core middleware loaded via reflection) cannot recompile
                   the plugins when the host API changes. The failure surface is entirely in the
                   runtime layer, and it typically surfaces in production long after the host
                   was updated.
@@ -203,9 +210,10 @@ export default function DetectBreakingChangesPage() {
             </ul>
             <p className="text-muted-foreground leading-relaxed">
               Microsoft tracks hundreds of compatibility breaks introduced across .NET framework
-              versions, many of which involve scenarios where the compiler produced no error [3].
-              The documentation distinguishes binary incompatible changes from source
-              incompatible changes -- two distinct failure modes that require different
+              versions, many of which involve scenarios where the compiler produced no error{" "}
+              <a href="#cite-3" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[3]</a>
+              . The documentation distinguishes binary incompatible changes from source
+              incompatible changes: two distinct failure modes that require different
               mitigation strategies and that a build server running inside a single solution
               boundary cannot detect.
             </p>
@@ -245,7 +253,7 @@ export default function DetectBreakingChangesPage() {
             <p className="text-muted-foreground leading-relaxed">
               <strong className="text-foreground">AutoMapper major versions.</strong>{" "}
               AutoMapper removed its static API in version 9.0. Applications using the static
-              API compiled against version 8.x would fail to compile against 9.x -- but those
+              API compiled against version 8.x would fail to compile against 9.x, but those
               that had already compiled and were running against 8.x would break only when the
               package version was updated and the host restarted. Teams running integration
               tests against the actual binary rather than recompiling from source would not
@@ -278,7 +286,7 @@ export default function DetectBreakingChangesPage() {
             </div>
             <p className="text-muted-foreground leading-relaxed">
               A developer decides that notifications should always be sent and removes the
-              parameter during a cleanup commit. The library is published as v1.1 -- a minor
+              parameter during a cleanup commit. The library is published as v1.1, a minor
               version bump, because the developer considers it a simplification rather than a
               breaking change:
             </p>
@@ -335,7 +343,7 @@ export default function DetectBreakingChangesPage() {
             <p className="text-muted-foreground leading-relaxed">
               The patterns below represent the structural changes that most commonly cause
               runtime failures across .NET applications. Each pattern can be introduced by a
-              well-intentioned commit -- a refactor, a cleanup, a schema update -- that passes
+              well-intentioned commit (a refactor, a cleanup, a schema update) that passes
               all automated tests because the test suite was written against the post-change
               codebase and does not exercise the consumer boundary at the binary level.
             </p>
@@ -364,8 +372,8 @@ export default function DetectBreakingChangesPage() {
             <h2 className="text-2xl font-bold tracking-tight">What GauntletCI checks: the rule set for breaking change detection</h2>
             <p className="text-muted-foreground leading-relaxed">
               GauntletCI ships a library of deterministic rules that map directly to the
-              breaking change categories above. Each rule is applied to the staged diff -- the
-              lines that are actually changing -- so the analysis is scoped to the risk
+              breaking change categories above. Each rule is applied to the staged diff (the
+              lines that are actually changing), so the analysis is scoped to the risk
               introduced by this specific commit, not the entire codebase. The following rules
               are most relevant to breaking change detection:
             </p>
@@ -416,7 +424,10 @@ export default function DetectBreakingChangesPage() {
             <p className="text-muted-foreground leading-relaxed">
               Code review alone cannot reliably catch these patterns at the pace modern teams
               merge. Boehm and Basili documented that the cost to fix a defect rises by roughly
-              an order of magnitude for each phase it survives past the point of introduction [4].
+              an order of magnitude for each phase it survives past the point of introduction{" "}
+              <a href="#cite-4" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[4]</a>
+              . The specific multipliers vary by project context, but the directional finding
+              has been replicated across multiple software engineering cost models.
               A breaking change caught in the diff before the commit costs a single edit. The
               same breaking change caught in production costs an incident, a rollback, and an
               investigation.{" "}
@@ -437,21 +448,22 @@ export default function DetectBreakingChangesPage() {
               involved.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              GauntletCI analyzes the staged diff and flags the structural patterns above as
-              high-severity findings. The analysis is deterministic -- the same diff produces
-              the same findings every time. There is no model to tune and no threshold to
-              configure for the structural rules. Every public API removal, every serialization
-              contract break, and every unsafe concurrency pattern in the diff is flagged on
-              every run.
+              Static analysis scoped to the staged diff rather than the entire codebase
+              delivers feedback at the only moment when the cost of a fix is minimal: before
+              the commit exists. The analysis surface is bounded by the size of the commit, so
+              the check completes in milliseconds regardless of codebase size. GauntletCI
+              implements this model with deterministic structural rules: every public API
+              removal, every serialization contract break, and every unsafe concurrency pattern
+              in the diff produces a finding on every run.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              This determinism matters in practice. Probabilistic tools that produce different
-              results on different runs train developers to dismiss findings as noise. A rule
-              that fires every time a public method is removed without a replacement overload
-              will never produce a false negative for that pattern. Developers learn quickly
-              which findings reflect genuine structural risk and which require deliberate
-              acknowledgment -- and that distinction preserves the signal quality of every
-              finding the tool produces.
+              Determinism is what separates structural rules from probabilistic analysis. A
+              tool that produces inconsistent results trains developers to dismiss findings as
+              noise. A structural rule that fires every time a public method is removed without
+              a replacement overload carries no false-negative rate for that pattern. Developers
+              quickly learn which finding types require mandatory action and which allow
+              deliberate acknowledgment, and that distinction preserves the signal value of
+              every finding the tool produces.
             </p>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="rounded-lg border border-border bg-card/50 p-4">
@@ -493,7 +505,7 @@ export default function DetectBreakingChangesPage() {
           <section className="space-y-4 border-t border-border pt-12">
             <h2 className="text-lg font-bold tracking-tight text-muted-foreground">References</h2>
             <ol className="space-y-3 text-xs text-muted-foreground leading-relaxed list-none pl-0">
-              <li className="flex gap-3">
+              <li id="cite-1" className="flex gap-3">
                 <span className="shrink-0 font-semibold text-foreground">[1]</span>
                 <span>
                   Dig, D. and Johnson, R. "How Do APIs Evolve? A Story of Refactoring."
@@ -510,7 +522,7 @@ export default function DetectBreakingChangesPage() {
                   </a>
                 </span>
               </li>
-              <li className="flex gap-3">
+              <li id="cite-2" className="flex gap-3">
                 <span className="shrink-0 font-semibold text-foreground">[2]</span>
                 <span>
                   Hora, A., et al. "How Do Developers React When Their Libraries Break?"
@@ -525,7 +537,7 @@ export default function DetectBreakingChangesPage() {
                   </a>
                 </span>
               </li>
-              <li className="flex gap-3">
+              <li id="cite-3" className="flex gap-3">
                 <span className="shrink-0 font-semibold text-foreground">[3]</span>
                 <span>
                   Microsoft .NET Breaking Changes documentation.{" "}
@@ -539,7 +551,7 @@ export default function DetectBreakingChangesPage() {
                   </a>
                 </span>
               </li>
-              <li className="flex gap-3">
+              <li id="cite-4" className="flex gap-3">
                 <span className="shrink-0 font-semibold text-foreground">[4]</span>
                 <span>
                   Boehm, B. and Basili, V.R. "Software Defect Reduction Top 10 List."
