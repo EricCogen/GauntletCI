@@ -37,9 +37,6 @@ export function Header() {
               <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Docs
               </Link>
-              <Link href="/articles" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Articles
-              </Link>
             </nav>
           </div>
           <div className="hidden md:flex items-center gap-4">
@@ -79,9 +76,6 @@ export function Header() {
             </Link>
             <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
               Docs
-            </Link>
-            <Link href="/articles" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
-              Articles
             </Link>
             <div className="flex flex-col gap-2 pt-4 border-t border-border">
               <Button variant="outline" size="sm" asChild>
