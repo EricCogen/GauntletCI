@@ -8,47 +8,48 @@ export const metadata: Metadata = {
   description:
     "Code review catches style and obvious logic errors. It routinely misses behavioral drift, contract changes, and implicit assumptions. Here is why.",
   alternates: { canonical: "/why-code-review-misses-bugs" },
+  authors: [{ name: "Eric Cogen" }],
 };
 
 const blindSpots = [
   {
     title: "Reviewers see what is there, not what was removed",
-    body: "Diffs show additions in green and deletions in red, but human attention naturally gravitates toward the new code being introduced. A removed null guard, a deleted validation step, or a missing error handler is easy to miss in a large diff because the new code path looks complete -- it just no longer handles the cases the deleted lines covered. Research by Bacchelli and Bird found that reviewers focus primarily on the correctness of additions and rarely audit deletions with the same rigor. This asymmetry means that behavioral regressions caused by removed defensive code are among the most common review misses in practice, and they appear in postmortems with a note that reads 'passed code review.'",
+    body: <>Diffs show additions in green and deletions in red, but human attention naturally gravitates toward the new code being introduced. A removed null guard, a deleted validation step, or a missing error handler is easy to miss in a large diff because the new code path looks complete; it just no longer handles the cases the deleted lines covered. Research by Bacchelli and Bird found that reviewers focus primarily on the correctness of additions and rarely audit deletions with the same rigor.<a href="#cite-2" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[2]</a>{" "}This asymmetry means that behavioral regressions caused by removed defensive code are among the most common review misses in practice, and they appear in postmortems with a note that reads &apos;passed code review.&apos;</>,
     example: "A null check before a repository write is removed during a refactor. The diff shows 40 lines of clean new code. The deletion is on line 8 of a 50-line hunk. Three reviewers approve. The first null input in production throws a NullReferenceException in a code path that was safe for three years.",
   },
   {
     title: "Context switching limits depth",
-    body: "A reviewer working through a 400-line diff across 12 files cannot hold the full behavior of every changed function in working memory. Review depth degrades sharply with diff size -- studies from Microsoft Research have documented this effect directly, showing that reviewer effectiveness declines as PR size increases beyond roughly 200 lines. The most risky changes are often buried in the middle of a large PR where attention is thinnest and reviewer fatigue is highest. Splitting large PRs helps, but in practice many teams merge large PRs because the cost of splitting them feels higher than the perceived risk of missing something in review.",
-    example: "A 600-line PR touches an auth middleware, a data access layer, and three API controllers. The critical change -- a removed authorization check in one controller -- is on file 9 of 12. It receives 4 seconds of review time and three approvals.",
+    body: "A reviewer working through a 400-line diff across 12 files cannot hold the full behavior of every changed function in working memory. Review depth degrades sharply with diff size; studies from Microsoft Research have documented this effect directly, showing that reviewer effectiveness declines as PR size increases beyond roughly 200 lines. The most risky changes are often buried in the middle of a large PR where attention is thinnest and reviewer fatigue is highest. Splitting large PRs helps, but many teams merge large PRs because the cost of splitting them feels higher than the perceived risk of missing something in review.",
+    example: "A 600-line PR touches an auth middleware, a data access layer, and three API controllers. The critical change, a removed authorization check in one controller, is on file 9 of 12. It receives 4 seconds of review time and three approvals.",
   },
   {
     title: "Implicit contracts are invisible in the diff",
-    body: "When a method changes its parameter type or a public interface removes a member, the reviewer verifies that all call sites within the PR were updated. But external consumers -- serialized payloads in a database, client SDKs, stored procedures, or microservices calling the changed API -- are outside the diff entirely. These implicit contracts exist in the runtime, not in the code under review, and no amount of careful reading will surface them. McIntosh et al. found that API contract violations are disproportionately represented in post-merge defect reports relative to their frequency in code, suggesting that reviewers systematically underweight this category of risk. The only way to catch implicit contract breaks is to analyze what the change removed from the public surface, which requires structural analysis of the diff rather than comprehension of the new code.",
+    body: <>When a method changes its parameter type or a public interface removes a member, the reviewer verifies that all call sites within the PR were updated. But external consumers (serialized payloads in a database, client SDKs, stored procedures, or microservices calling the changed API) are outside the diff entirely. These implicit contracts exist in the runtime, not in the code under review, and no amount of careful reading will surface them. McIntosh et al. found that API contract violations are disproportionately represented in post-merge defect reports relative to their frequency in code, suggesting that reviewers systematically underweight this category of risk.<a href="#cite-3" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[3]</a>{" "}The only way to catch implicit contract breaks is to analyze what the change removed from the public surface, which requires structural analysis of the diff rather than comprehension of the new code.</>,
     example: "A DTO property is renamed from 'userId' to 'user_id' for naming consistency. The PR updates all server-side references. A mobile client serialized against the old field name silently reads null for three weeks before anyone reports an issue.",
   },
   {
     title: "Async and concurrency risk is structurally invisible",
-    body: "An async void method, a .Result call on a Task, or a static mutable field accessed without synchronization looks like syntactically normal code to a reviewer who is not specifically scanning for concurrency anti-patterns. These issues require both specialized knowledge and deliberate, focused attention -- they cannot be caught by a reader scanning for logical correctness in the usual sense. They rarely appear in checklist-driven reviews because most review checklists target obvious correctness, not threading semantics. In .NET specifically, the deadlock-by-.Result-on-async-method pattern is well documented as a category of bug that code review almost never catches before production exposure, because the code looks identical to correct synchronous code until it is running under real load.",
+    body: "An async void method, a .Result call on a Task, or a static mutable field accessed without synchronization looks like syntactically normal code to a reviewer who is not specifically scanning for concurrency anti-patterns. These issues require both specialized knowledge and deliberate, focused attention; they cannot be caught by a reader scanning for logical correctness in the usual sense. They rarely appear in checklist-driven reviews because most review checklists target obvious correctness, not threading semantics. In .NET specifically, the deadlock-by-.Result-on-async-method pattern is well documented as a category of bug that code review almost never catches before production exposure, because the code looks identical to correct synchronous code until it is running under real load.",
     example: "A service method is converted to async but one caller is not updated and adds a .Wait() call on the returned Task. In tests the call completes immediately. Under real load the ThreadPool starves and the service deadlocks intermittently with no clear error message.",
   },
   {
     title: "Social pressure compresses review time",
-    body: "PRs that have been waiting in the queue get approved faster as reviewers feel social pressure to unblock colleagues. PRs from senior engineers or tech leads receive less critical review than PRs from junior developers -- a pattern observed in qualitative studies of peer review dynamics, including Bacchelli and Bird's 2013 fieldwork at Microsoft. PRs marked urgent, blocking a release, or associated with a deadline get approved without detailed review precisely when the risk of a shallow review is highest. This dynamic is not a failure of individual discipline; it is a structural property of any human review process under time pressure. The social signal of 'approved' is not a reliable proxy for the technical signal of 'safe to merge', and the two diverge most sharply at exactly the moments when rigorous review matters most.",
+    body: <>PRs that have been waiting in the queue get approved faster as reviewers feel social pressure to unblock colleagues. PRs from senior engineers or tech leads receive less critical review than PRs from junior developers, a pattern observed in qualitative studies of peer review dynamics, including Bacchelli and Bird&apos;s 2013 fieldwork at Microsoft.<a href="#cite-2" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[2]</a>{" "}PRs marked urgent, blocking a release, or associated with a deadline get approved without detailed review. That is precisely when the risk of a shallow review is highest. This dynamic is not a failure of individual discipline; it is a structural property of any human review process under time pressure. The social signal of &apos;approved&apos; is not a reliable proxy for the technical signal of &apos;safe to merge.&apos; They diverge most sharply precisely when rigorous review matters most.</>,
     example: "A critical hotfix PR with five changed files gets three approvals in 11 minutes on a Friday afternoon before a release. One of the changed files removes a rate limiting guard that was preventing a known abuse pattern from reaching the database.",
   },
   {
     title: "Security patterns require specialized, active awareness",
-    body: "Spotting SQL injection risk, identifying a weak cryptographic primitive, recognizing a PII field being written to a log statement, or noticing an authorization gap in a new endpoint requires the reviewer to be actively in a security-focused mental mode for the duration of the review. Most reviewers are not in that mode for every PR, because sustaining that level of vigilance across all review tasks is cognitively expensive. The Boehm and Basili defect cost model shows that security defects found after deployment cost orders of magnitude more to remediate than defects found during development, yet the review process provides no structural mechanism to guarantee that security awareness is applied consistently to every change. Security-specific automated analysis -- which applies the same rules every time with no fatigue -- is a structural improvement over relying on reviewer attention alone.",
+    body: <>Spotting SQL injection risk, identifying a weak cryptographic primitive, recognizing a PII field being written to a log statement, or noticing an authorization gap in a new endpoint requires the reviewer to be actively in a security-focused mental mode for the duration of the review. Most reviewers are not in that mode for every PR, because sustaining that level of vigilance across all review tasks is cognitively expensive. The Boehm and Basili defect cost model shows that security defects found after deployment cost orders of magnitude more to remediate than defects found during development, yet the review process provides no structural mechanism to guarantee that security awareness is applied consistently to every change.<a href="#cite-4" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[4]</a>{" "}Security-specific automated analysis, which applies the same rules every time with no fatigue, is a structural improvement over relying on reviewer attention alone.</>,
     example: "A new logging statement is added for debugging: logger.LogInformation('Processing request for user with token: ' + request.Token). The token is a credential. It ships to production and is indexed by the logging platform, accessible to everyone with log read access.",
   },
   {
     title: "Test coverage gaps are not visible in the diff",
-    body: "A reviewer can see that new code was added, but cannot easily determine whether the existing test suite exercises the new or changed code paths in a meaningful way. Coverage tools exist, but they are rarely consulted during review, and they measure line coverage rather than behavioral coverage of the specific delta introduced by the PR. A reviewer approving a change that adds a new error handling branch has no fast way to verify whether a test exercises that branch specifically, whether existing tests happen to hit it incidentally, or whether the behavior is entirely untested. This blind spot compounds the structural gap described in more detail in the companion article on why tests miss bugs -- the two mechanisms that were supposed to catch regressions have overlapping blind spots, not complementary ones.",
+    body: "A reviewer can see that new code was added, but cannot easily determine whether the existing test suite exercises the new or changed code paths in a meaningful way. Coverage tools exist, but they are rarely consulted during review, and they measure line coverage rather than behavioral coverage of the specific delta introduced by the PR. A reviewer approving a change that adds a new error handling branch has no fast way to verify whether a test exercises that branch specifically, whether existing tests happen to hit it incidentally, or whether the behavior is entirely untested. This blind spot compounds the structural gap described in more detail in the companion article on why tests miss bugs; the two mechanisms that were supposed to catch regressions have overlapping blind spots, not complementary ones.",
     example: "A new branch is added to handle HTTP 429 responses from a downstream service. It looks correct on review. No test covers it specifically. The upstream service starts returning 429 three months later and the new handler throws because a variable was not initialized in that code path.",
   },
   {
     title: "Configuration and environment changes escape behavioral review",
-    body: "Changes to connection strings, feature flags, environment variable names, default timeout values, or dependency injection lifetimes look innocuous in a diff and are rarely reviewed with the same attention as logic changes. But these changes can alter the runtime behavior of the entire application in ways that no amount of code correctness analysis will reveal. A renamed environment variable silently falls back to a default value. A changed DI lifetime turns a scoped service into a singleton and causes state to leak across requests. These categories of change are structurally invisible to reviewers because their effect only appears at runtime -- the code reads correctly, it compiles cleanly, and all tests pass, but the system behaves differently in ways that only manifest under realistic conditions.",
+    body: "Changes to connection strings, feature flags, environment variable names, default timeout values, or dependency injection lifetimes look innocuous in a diff and are rarely reviewed with the same attention as logic changes. But these changes can alter the runtime behavior of the entire application in ways that no amount of code correctness analysis will reveal. A renamed environment variable silently falls back to a default value. A changed DI lifetime turns a scoped service into a singleton and causes state to leak across requests. These categories of change are structurally invisible to reviewers because their effect only appears at runtime; the code reads correctly, it compiles cleanly, and all tests pass, but the system behaves differently in ways that only manifest under realistic conditions.",
     example: "A service registration is changed from AddScoped to AddSingleton to address a perceived performance concern. The service holds per-request state internally. In tests each request is isolated. In production, state from one user's request bleeds into the next user's request.",
   },
 ];
@@ -59,6 +60,7 @@ const jsonLd = {
   "headline": "Why Code Review Misses Bugs",
   "description": "Code review catches style and obvious logic errors. It routinely misses behavioral drift, contract changes, and implicit assumptions. Here is why.",
   "url": "https://gauntletci.com/why-code-review-misses-bugs",
+  "author": { "@type": "Person", "name": "Eric Cogen" },
   "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
 };
 
@@ -81,6 +83,11 @@ export default function WhyCodeReviewMissesBugsPage() {
               at catching obvious errors and enforcing style. It is structurally limited at
               catching the changes that cause production incidents.
             </p>
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-sm font-medium text-foreground">Eric Cogen</span>
+              <span className="text-muted-foreground/40 text-sm">·</span>
+              <span className="text-sm text-muted-foreground">Founder, GauntletCI</span>
+            </div>
           </div>
 
           {/* What the research says */}
@@ -88,11 +95,11 @@ export default function WhyCodeReviewMissesBugsPage() {
             <h2 className="text-2xl font-bold tracking-tight">What the research says</h2>
             <p className="text-muted-foreground leading-relaxed">
               The limitations of code review as a defect-finding mechanism are not a matter of
-              opinion -- they are documented in peer-reviewed research. Czerwonka et al. at
+              opinion; they are documented in peer-reviewed research. Czerwonka et al. at
               Microsoft Research conducted a large-scale study of code review outcomes and
-              concluded that code reviews are not an effective strategy for finding bugs.
+              concluded that code reviews are not an effective strategy for finding bugs.<a href="#cite-1" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[1]</a>{" "}
               Most defects found in review are style, naming, and readability issues.
-              Functional defects -- the kind that cause production failures -- escape review
+              Functional defects, the kind that cause production failures, escape review
               at a high rate relative to their cost and their impact on users.
             </p>
             <p className="text-muted-foreground leading-relaxed">
@@ -102,25 +109,26 @@ export default function WhyCodeReviewMissesBugsPage() {
               process. When outcomes are measured, the dominant finding category is style and
               understanding-related comments, not defects. The expectation that review will
               catch behavioral regressions is not consistently supported by the data from
-              teams that have measured it.
+              teams that have measured it.<a href="#cite-2" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[2]</a>
             </p>
             <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-5">
               <p className="text-sm text-amber-400 font-medium leading-relaxed">
                 Czerwonka et al. (ICSE 2015): "Code reviews at Microsoft are mostly used
-                to improve code and find alternative solutions, not to find bugs."
+                to improve code and find alternative solutions, not to find bugs."<a href="#cite-1" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[1]</a>{" "}
                 The study documented that fewer than 15% of review comments address
                 actual functional defects. Subsequent replications report similar
                 patterns at different organizations, though rates vary by team size,
                 domain, and whether structured checklists are used. Counter-evidence
                 exists: teams that enforce mandatory security checklists and strict
                 PR size limits report meaningfully higher defect-detection rates
-                in review, per Bacchelli and Bird (2013).
+                in review, per Bacchelli and Bird (2013).<a href="#cite-2" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[2]</a>
               </p>
             </div>
             <p className="text-muted-foreground leading-relaxed">
-              McIntosh et al. further documented that review coverage -- the percentage of
-              changes that receive any review at all -- correlates with long-term software
-              quality outcomes. But coverage and rigor are not the same thing. A PR can
+              McIntosh et al. further documented that review coverage, the percentage of
+              changes that receive any review at all, correlates with long-term software
+              quality outcomes.<a href="#cite-3" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[3]</a>{" "}
+              But coverage and rigor are not the same thing. A PR can
               receive a review that is technically thorough on the lines present while
               completely missing a removed guard clause or an implicit contract change.
               The structural blind spots of review exist independent of reviewer effort
@@ -136,26 +144,22 @@ export default function WhyCodeReviewMissesBugsPage() {
               the question "does this code do what the author intended?" effectively. It answers
               the question "does this change break an assumption made somewhere else in the
               system?" poorly, because the second question requires exhaustive structural
-              analysis of the diff -- not human pattern recognition under time pressure with
+              analysis of the diff, not human pattern recognition under time pressure with
               incomplete knowledge of the full system.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              The review process asks a human to read code under time pressure, with incomplete
-              context about the runtime behavior of the system, and form an opinion about whether
-              it is safe to merge. That human brings domain knowledge, intent verification, and
-              design judgment that no tool can replicate. But the same human cannot reliably
-              detect that a removed line was the only thing standing between a valid state and
-              a NullReferenceException that will surface three months after the merge, because
-              detecting that requires exhaustive analysis of what was removed, not comprehension
-              of what is present.
+              Code review asks a human to read code under time pressure with incomplete
+              runtime context. That human brings domain knowledge, intent verification, and
+              design judgment that no tool can replicate. The same human cannot reliably
+              detect that a removed line was the only guard between a valid state and a
+              NullReferenceException surfacing three months later. Detecting that requires
+              exhaustive analysis of what was removed. Not comprehension of what remains.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               Behavioral drift, contract changes, and removed safety checks are structural
               properties of a diff. Detecting them requires rule-based analysis of what was
-              removed and what changed -- not the holistic comprehension that humans do well.
-              This is the gap that automated pre-commit analysis is designed to close, not by
-              replacing review, but by handling the structural analysis so reviewers can
-              focus on the judgment that only humans can provide.
+              removed, not the holistic comprehension that humans do well. This is the gap
+              automated pre-commit analysis closes.
             </p>
           </section>
 
@@ -249,21 +253,19 @@ export default function WhyCodeReviewMissesBugsPage() {
             <h2 className="text-2xl font-bold tracking-tight">How PR size amplifies every blind spot</h2>
             <p className="text-muted-foreground leading-relaxed">
               Every blind spot described above gets worse as PR size increases. The relationship
-              between diff size and review effectiveness is not linear -- it degrades sharply
-              beyond a threshold. Microsoft Research data suggests reviewers can maintain
-              effective attention for roughly 200 to 400 lines of diff. Beyond that, the cognitive
-              load of tracking what each changed file does, how the files interact, and what the
-              pre-change behavior was exceeds working memory capacity, and reviewers shift from
-              line-level analysis to impression-level judgment.
+              between diff size and review effectiveness is not linear; it degrades sharply
+              beyond a threshold. Microsoft Research shows reviewers maintain effective attention
+              for roughly 200 to 400 lines of diff. Beyond that, the cognitive load exceeds
+              working memory capacity. Reviewers shift from line-level analysis to
+              impression-level judgment.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              In practice, teams that enforce strict PR size limits see measurably better review
-              outcomes. But size limits do not eliminate the structural blind spots -- they reduce
-              the probability that any specific reviewer misses a specific item. A reviewer
-              carefully reading a 100-line diff will still not notice that a removed line was
-              the only error handler for a specific code path, because that requires knowledge
-              of what the removed line was doing in the broader runtime context, not just
-              comprehension of what the remaining code does.
+              Teams that enforce strict PR size limits see measurably better review outcomes.
+              But size limits do not eliminate the structural blind spots; they reduce the
+              probability that any specific reviewer misses a specific item. A reviewer
+              carefully reading a 100-line diff will not notice that a removed line was the
+              only error handler for that code path. Smaller diffs reduce probability.
+              They do not change the mechanism.
             </p>
             <div className="grid sm:grid-cols-3 gap-4">
               {[
@@ -300,8 +302,9 @@ export default function WhyCodeReviewMissesBugsPage() {
             <p className="text-muted-foreground leading-relaxed">
               Boehm and Basili's foundational work on defect cost across the software lifecycle
               established that defects found after deployment cost substantially more to fix than
-              defects found before coding is complete -- with multipliers of 10x to 100x
-              depending on system type and defect category. This ratio is widely cited, but
+              defects found before coding is complete, with multipliers of 10x to 100x
+              depending on system type and defect category.<a href="#cite-4" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[4]</a>{" "}
+              This ratio is widely cited, but
               the implication for code review is rarely stated explicitly: if review misses a
               defect that was present at commit time, every hour between commit and detection
               multiplies the cost to fix.
@@ -312,16 +315,13 @@ export default function WhyCodeReviewMissesBugsPage() {
               the author a context switch, a new commit, a re-review cycle, and potentially
               a re-run of CI. The same defect found in production costs an incident response,
               a root cause analysis, a hotfix branch, an emergency deploy, and postmortem
-              documentation -- hours to days of engineering time for a finding that could
+              documentation: hours to days of engineering time for a finding that could
               have been fixed in under a minute at commit time.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               This is not an argument that code review should be removed. It is an argument
               that code review should be the second line of defense, not the first and only
-              line. When the structural issues that automated analysis can catch have already
-              been resolved before the PR is opened, reviewers can focus entirely on what
-              humans do better than tools: verifying intent, catching design problems, and
-              sharing knowledge about the broader system.
+              line. Reviewers focus best when the structural work is already done.
             </p>
             <div className="flex items-stretch gap-2">
               {[
@@ -336,7 +336,7 @@ export default function WhyCodeReviewMissesBugsPage() {
               ))}
             </div>
             <p className="text-xs text-muted-foreground">
-              Relative cost of remediating the same defect at different stages. Source: Boehm and Basili, 2001.
+              Relative cost of remediating the same defect at different stages. Source: Boehm and Basili, 2001.<a href="#cite-4" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[4]</a>
             </p>
           </section>
 
@@ -348,16 +348,15 @@ export default function WhyCodeReviewMissesBugsPage() {
               and team alignment that no tool can replicate. When a reviewer asks "why did you
               choose this approach instead of the existing pattern?" they are exercising judgment
               that has nothing to do with detecting removed null guards. These two functions
-              should not compete -- they should be layered.
+              should not compete; they should be layered.
             </p>
             <p className="text-muted-foreground leading-relaxed">
               What automated diff analysis can do is close the structural blind spots: the
               patterns that require exhaustive analysis of what was removed and changed, not
-              human comprehension of what the code does. GauntletCI runs before the commit
-              is created and flags behavioral and structural risks that reviewers are likely
-              to miss. The goal is not to remove review -- it is to ensure that by the time
-              a PR opens, the obvious structural risks are already resolved and reviewers
-              can spend their limited attention where it creates the most value.
+              human comprehension of what the code does. Running automated checks before the
+              PR opens flags behavioral and structural risks that reviewers are likely to miss.
+              The goal is not to remove review. The goal is to ensure that by the time a PR
+              opens, structural risks are already resolved.
             </p>
             <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-5">
               <p className="text-sm text-cyan-300 leading-relaxed">
@@ -367,6 +366,9 @@ export default function WhyCodeReviewMissesBugsPage() {
                 and sharing context about the system.
               </p>
             </div>
+            <p className="text-muted-foreground leading-relaxed">
+              Review does not become less valuable. It becomes better spent.
+            </p>
           </section>
 
           {/* Cross-links */}
@@ -387,7 +389,7 @@ export default function WhyCodeReviewMissesBugsPage() {
                   What is diff-based analysis?
                 </Link>
                 <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                  How analyzing only the changed lines -- rather than the whole codebase --
+                  How analyzing only the changed lines, rather than the whole codebase,
                   produces faster, lower-noise findings that are directly actionable at commit time.
                 </p>
               </div>
@@ -398,7 +400,7 @@ export default function WhyCodeReviewMissesBugsPage() {
           <section className="space-y-5 border-t border-border pt-12">
             <h2 className="text-2xl font-bold tracking-tight">References</h2>
             <ol className="space-y-4 list-decimal list-inside marker:text-muted-foreground/40">
-              <li className="text-sm text-muted-foreground leading-relaxed pl-2">
+              <li id="cite-1" className="text-sm text-muted-foreground leading-relaxed pl-2">
                 Czerwonka, J., et al. "Code Reviews Do Not Find Bugs: How the Current Code Review
                 Best Practice Slows Us Down." ICSE Companion 2015. Microsoft Research.{" "}
                 <a
@@ -410,7 +412,7 @@ export default function WhyCodeReviewMissesBugsPage() {
                   https://www.microsoft.com/en-us/research/publication/code-reviews-do-not-find-bugs/
                 </a>
               </li>
-              <li className="text-sm text-muted-foreground leading-relaxed pl-2">
+              <li id="cite-2" className="text-sm text-muted-foreground leading-relaxed pl-2">
                 Bacchelli, A. and Bird, C. "Expectations, Outcomes, and Challenges of Modern Code
                 Review." ICSE 2013. ACM Digital Library.{" "}
                 <a
@@ -422,7 +424,7 @@ export default function WhyCodeReviewMissesBugsPage() {
                   https://dl.acm.org/doi/10.5555/2486788.2486882
                 </a>
               </li>
-              <li className="text-sm text-muted-foreground leading-relaxed pl-2">
+              <li id="cite-3" className="text-sm text-muted-foreground leading-relaxed pl-2">
                 McIntosh, S., et al. "The Impact of Code Review Coverage and Code Review
                 Participation on Software Quality." MSR 2014. ACM Digital Library.{" "}
                 <a
@@ -434,7 +436,7 @@ export default function WhyCodeReviewMissesBugsPage() {
                   https://dl.acm.org/doi/10.1145/2597073.2597076
                 </a>
               </li>
-              <li className="text-sm text-muted-foreground leading-relaxed pl-2">
+              <li id="cite-4" className="text-sm text-muted-foreground leading-relaxed pl-2">
                 Boehm, B. and Basili, V. R. "Software Defect Reduction Top 10 List."
                 IEEE Computer, 34(1), January 2001. Pages 135 to 137.
               </li>
