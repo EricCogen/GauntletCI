@@ -38,7 +38,7 @@ const features: FeatureRow[] = [
   { label: "Complete Audit Trail Export",          community: "none", pro: "none", teams: "none", enterprise: "license" },
 ];
 
-function Cell({ value, tooltip }: { value: CellValue; tooltip?: string }) {
+function Cell({ value, tierKey, tooltip }: { value: CellValue; tierKey?: string; tooltip?: React.ReactNode }) {
   if (value === "check") {
     return (
       <div className="flex justify-center">
@@ -47,9 +47,11 @@ function Cell({ value, tooltip }: { value: CellValue; tooltip?: string }) {
     );
   }
   if (value === "license") {
+    const href = tierKey ? (STRIPE_LINKS[tierKey] ?? "#") : "#";
+    const isExternal = !href.startsWith("mailto:");
     return (
       <div className="flex items-center justify-center gap-1.5">
-        <a href="https://github.com/EricCogen/GauntletCI" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 group/license">
+        <a href={href} target={isExternal ? "_blank" : undefined} rel={isExternal ? "noopener noreferrer" : undefined} className="flex items-center gap-1.5 group/license">
           <Key className="h-3 w-3 text-amber-400/80 shrink-0 group-hover/license:text-amber-400 transition-colors" />
           <span className="text-xs text-amber-400/80 hidden sm:inline group-hover/license:text-amber-400 group-hover/license:underline transition-colors">
             License
@@ -72,6 +74,12 @@ function Cell({ value, tooltip }: { value: CellValue; tooltip?: string }) {
     </div>
   );
 }
+
+const STRIPE_LINKS: Record<string, string> = {
+  pro:        "https://buy.stripe.com/28E00k5GzdKpfSo3SxaEE00",
+  teams:      "https://buy.stripe.com/bJecN63yr49Pay42OtaEE01",
+  enterprise: "mailto:sales@gauntletci.com?subject=GauntletCI%20Enterprise",
+};
 
 const tiers = [
   { key: "community", label: "Community", price: "$0", period: "forever",         accent: "text-foreground",    bg: "" },
@@ -132,7 +140,7 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
               <div className="px-5 py-3.5 text-sm text-foreground/90 flex items-center">{row.label}</div>
               {tiers.map((t) => (
                 <div key={t.key} className={`px-3 py-3.5 flex items-center justify-center ${t.bg}`}>
-                  <Cell value={row[t.key]} tooltip={t.key === "pro" ? row.proTooltip : undefined} />
+                  <Cell value={row[t.key]} tierKey={t.key} tooltip={t.key === "pro" ? row.proTooltip : undefined} />
                 </div>
               ))}
             </div>
@@ -145,8 +153,7 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
             <Check className="h-4 w-4 text-cyan-400" /> Included
           </span>
           <span className="flex items-center gap-2">
-            {/* TODO: replace href="#" with real conversion/purchase path */}
-            <a href="#" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <a href={STRIPE_LINKS.pro} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
               <Key className="h-4 w-4 text-amber-400/80" /> Requires active license; click to get one
             </a>
           </span>
