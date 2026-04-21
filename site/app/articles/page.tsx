@@ -18,6 +18,7 @@ const jsonLd = {
   url: "https://gauntletci.com/articles",
 };
 
+// Newest articles first — add new entries at the bottom, display is reversed
 const articles = [
   {
     href: "/why-code-review-misses-bugs",
@@ -83,7 +84,7 @@ export default function ArticlesPage() {
           </div>
 
           <div className="space-y-6">
-            {articles.map((article) => (
+            {[...articles].reverse().map((article) => (
               <Link
                 key={article.href}
                 href={article.href}
