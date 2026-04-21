@@ -51,6 +51,14 @@ const articles = [
     tags: [".NET", "Breaking Changes"],
     readTime: "8 min read",
   },
+  {
+    href: "/behavioral-change-risk-formal-framework",
+    title: "Behavioral Change Risk: A Formal Framework",
+    description:
+      "A formal definition of Behavioral Change Risk (BCR) and the Behavioral Change Risk Validation (BCRV) methodology. Formalizes the validation gap that exists whenever a code change expands the behavior space beyond what any test is positioned to see.",
+    tags: ["Research", "BCR", "Methodology"],
+    readTime: "18 min read",
+  },
 ];
 
 export default function ArticlesPage() {
