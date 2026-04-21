@@ -115,12 +115,12 @@ export default function DetectBreakingChangesPage() {
           {/* Why the compiler is not enough */}
           <section className="space-y-5">
             <h2 className="text-2xl font-bold tracking-tight">Why the compiler is not enough</h2>
-            <figure className="float-right ml-6 mb-4 w-[300px] rounded-lg overflow-hidden border border-border">
+            <figure className="my-8 rounded-xl overflow-hidden border border-border">
               <img
                 src="/articles/detect-breaking-changes-before-merge-hero.png"
                 alt="The compiler's blind spot: left box (compiler sees) shows source → compiler → builds clean; right box (compiler cannot see) shows consumer binary → calls removed method → MissingMethodException"
-                width={560}
-                height={240}
+                width={1120}
+                height={480}
                 className="w-full h-auto"
               />
             </figure>
