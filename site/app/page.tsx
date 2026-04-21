@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
 import { Stats } from "@/components/stats";
@@ -17,6 +18,14 @@ import { Faq } from "@/components/faq";
 import { SecurityPrivacy } from "@/components/security-privacy";
 import { DefinitionBlock } from "@/components/definition-block";
 import { Footer } from "@/components/footer";
+
+export const metadata: Metadata = {
+  title: "GauntletCI | Pre-Commit Change-Risk Detection for .NET",
+  description:
+    "GauntletCI detects behavioral regressions, contract breaks, and removed safety checks in your diff -- before they reach code review. 100% local, deterministic, zero noise.",
+  alternates: { canonical: "/" },
+  openGraph: { images: [{ url: '/og/home.png', width: 1200, height: 630 }] },
+};
 
 export default function Home() {
   return (

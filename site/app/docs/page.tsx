@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "Getting Started | GauntletCI Docs",
   description: "Install GauntletCI and run your first diff analysis in under two minutes.",
   alternates: { canonical: "/docs" },
+  openGraph: { images: [{ url: '/og/docs.png', width: 1200, height: 630 }] },
 };
 
 const jsonLd = {

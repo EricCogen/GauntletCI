@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   description:
     "GauntletCI is free forever for local use. Pro adds AI enrichment and MCP integration. Teams adds CI enforcement and GitHub inline comments. No account required to start.",
   alternates: { canonical: "/pricing" },
+  openGraph: { images: [{ url: '/og/pricing.png', width: 1200, height: 630 }] },
 };
 
 const jsonLd = {

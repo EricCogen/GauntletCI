@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   description:
     "GauntletCI detects behavioral risks in only the lines that changed. Semgrep scans files with custom patterns. Compare scope, setup, privacy, and use cases.",
   alternates: { canonical: "/compare/gauntletci-vs-semgrep" },
+  openGraph: { images: [{ url: '/og/compare-semgrep.png', width: 1200, height: 630 }] },
 };
 
 const table = [

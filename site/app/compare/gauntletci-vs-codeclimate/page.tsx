@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   description:
     "Code Climate measures maintainability and technical debt across your whole codebase. GauntletCI detects behavioral regressions in only the lines that changed -- pre-commit, 100% local.",
   alternates: { canonical: "/compare/gauntletci-vs-codeclimate" },
+  openGraph: { images: [{ url: '/og/compare-codeclimate.png', width: 1200, height: 630 }] },
 };
 
 const table = [
