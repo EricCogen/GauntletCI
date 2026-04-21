@@ -181,6 +181,28 @@ public static class AnalyzeCommand
                 if (ctx.ParseResult.FindResultFor(verboseFlag) is null)
                     verbose = config.Output.Verbose;
 
+                // Remote subscription check -- only when a licensed feature is in use.
+                // Fires once per 24h (cached). Fails open if the network is unreachable.
+                bool usingLicensedFeature = withLlm || withExpertCtx || ghPrComments || githubChecks;
+                if (usingLicensedFeature)
+                {
+                    var envVar    = config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE";
+                    var rawToken  = GauntletCI.Core.Licensing.LicenseService.ReadRawToken(envVar);
+                    if (rawToken is not null)
+                    {
+                        var (netValid, netReason) = await GauntletCI.Cli.Licensing.NetworkLicenseValidator
+                            .ValidateAsync(rawToken, ct);
+                        if (!netValid)
+                        {
+                            Console.Error.WriteLine(
+                                $"[GauntletCI] License subscription is no longer active ({netReason ?? "cancelled"}). " +
+                                "Renew at https://gauntletci.com/pricing or run: gauntletci license renew");
+                            ctx.ExitCode = 1;
+                            return;
+                        }
+                    }
+                }
+
                 // Severity: only apply config value if user did not explicitly pass --severity
                 if (ctx.ParseResult.FindResultFor(severityOption) is null)
                     severityStr = config.Output.MinSeverity;

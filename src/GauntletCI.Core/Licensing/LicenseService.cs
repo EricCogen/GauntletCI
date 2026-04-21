@@ -40,6 +40,13 @@ public static class LicenseService
         return token is null ? LicenseInfo.Community : Parse(token);
     }
 
+    /// <summary>
+    /// Returns the raw token string from the env var or key file, without parsing.
+    /// Returns null when no token is present.
+    /// </summary>
+    public static string? ReadRawToken(string envVarName = "GAUNTLETCI_LICENSE") =>
+        ReadToken(envVarName);
+
     private static string? ReadToken(string envVarName)
     {
         var envVal = Environment.GetEnvironmentVariable(envVarName);
