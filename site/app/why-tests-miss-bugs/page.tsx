@@ -134,14 +134,11 @@ export default function WhyTestsMissBugsPage() {
             <figure className="float-right ml-6 mb-4 w-[22%] rounded-lg overflow-hidden border border-border">
               <img
                 src="/articles/why-tests-miss-bugs-hero.png"
-                alt="Passing green test indicators with a hairline fracture beneath and a bug hiding just outside test coverage"
-                width={460}
-                height={460}
+                alt="GenerateInvoiceAsync diff: 2 deleted guard lines in red, contrasting badges showing CI green 23 tests passed and GCI0010 guard removed red finding"
+                width={440}
+                height={205}
                 className="w-full h-auto"
               />
-              <figcaption className="px-2 py-2 text-xs text-muted-foreground text-center bg-muted/30 leading-snug">
-                Green confirms what you expected. It cannot confirm what you removed.
-              </figcaption>
             </figure>
             <p className="text-muted-foreground leading-relaxed">
               Most engineering teams treat a passing CI pipeline as a meaningful safety signal, and it
