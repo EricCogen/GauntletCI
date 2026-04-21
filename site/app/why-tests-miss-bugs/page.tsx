@@ -142,12 +142,12 @@ export default function WhyTestsMissBugsPage() {
           {/* The Green Build Fallacy */}
           <section className="space-y-5">
             <h2 className="text-2xl font-bold tracking-tight">The Green Build Fallacy</h2>
-            <figure className="float-right ml-6 mb-4 w-[22%] rounded-lg overflow-hidden border border-border">
+            <figure className="float-right ml-6 mb-4 w-[28%] rounded-lg overflow-hidden border border-border">
               <img
                 src="/articles/why-tests-miss-bugs-hero.png"
-                alt="GenerateInvoiceAsync diff: 2 deleted guard lines in red, contrasting badges showing CI green 23 tests passed and GCI0010 guard removed red finding"
-                width={440}
-                height={205}
+                alt="The green build fallacy: CI shows build passed, 23 tests, no warnings — but below: guard removed, no test covered it, leading to production NullReferenceException"
+                width={560}
+                height={260}
                 className="w-full h-auto"
               />
             </figure>

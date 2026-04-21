@@ -73,9 +73,9 @@ export default function WhatIsDiffBasedAnalysisPage() {
             <figure className="float-left mr-6 mb-4 w-[28%] rounded-lg overflow-hidden border border-border">
               <img
                 src="/articles/what-is-diff-based-analysis-hero.png"
-                alt="Two-panel diagram: full file scan shows 498 lines and 47 findings; diff-only view shows 6 lines and 1 finding, illustrating how scope narrows signal"
-                width={480}
-                height={280}
+                alt="Scope determines signal: full scan shows 47 findings from 498 lines; diff-only shows 1 finding from 6 changed lines — same codebase, narrower scope eliminates noise"
+                width={560}
+                height={220}
                 className="w-full h-auto"
               />
             </figure>
