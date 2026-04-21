@@ -3,15 +3,28 @@ main = "src/index.ts"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
 
+# KV namespace for subscription status.
+# Create with: wrangler kv:namespace create LICENSE_STORE
+# Then replace the id values below with the output IDs.
+[[kv_namespaces]]
+binding     = "LICENSE_STORE"
+id          = "REPLACE_WITH_KV_NAMESPACE_ID"
+preview_id  = "REPLACE_WITH_PREVIEW_KV_ID"
+
 [vars]
 # Non-secret config -- edit these after creating Payment Links in Stripe dashboard.
 # Find price IDs at: https://dashboard.stripe.com/products
-PRICE_ID_PRO      = "price_REPLACE_ME_PRO"
-PRICE_ID_TEAMS    = "price_REPLACE_ME_TEAMS"
+PRICE_ID_PRO        = "price_REPLACE_ME_PRO"
+PRICE_ID_TEAMS      = "price_REPLACE_ME_TEAMS"
 PRICE_ID_ENTERPRISE = "price_REPLACE_ME_ENTERPRISE"
 
 FROM_EMAIL = "licenses@gauntletci.com"
 REPLY_TO   = "support@gauntletci.com"
+
+# Public key for verifying license JWTs in the /license/status endpoint.
+# Must be SPKI format (-----BEGIN PUBLIC KEY-----).
+# To convert from PKCS#1: openssl rsa -pubin -in gauntletci.pub -pubout
+GAUNTLETCI_PUBLIC_KEY = "REPLACE_WITH_SPKI_PUBLIC_KEY_PEM"
 
 # Secrets -- set via: wrangler secret put <NAME>
 # Required secrets (never commit these):

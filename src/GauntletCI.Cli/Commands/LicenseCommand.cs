@@ -1,24 +1,39 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.CommandLine;
+using GauntletCI.Cli.Licensing;
 using GauntletCI.Core.Licensing;
 using Spectre.Console;
 
 namespace GauntletCI.Cli.Commands;
 
 /// <summary>
-/// Implements <c>gauntletci license status</c> -- inspects the active license.
+/// Implements <c>gauntletci license status</c> and <c>gauntletci license renew</c>.
 /// </summary>
 public static class LicenseCommand
 {
     public static Command Create()
     {
         var cmd = new Command("license", "Inspect the active GauntletCI license");
+        cmd.AddCommand(CreateStatusCommand());
+        cmd.AddCommand(CreateRenewCommand());
+        return cmd;
+    }
 
-        var statusCmd = new Command("status", "Show license tier, validity, and expiry");
-        statusCmd.SetHandler((System.CommandLine.Invocation.InvocationContext ctx) =>
+    private static Command CreateStatusCommand()
+    {
+        var offlineFlag = new Option<bool>("--offline", "Skip remote subscription check (for air-gapped environments)");
+        var statusCmd = new Command("status", "Show license tier, validity, and subscription status");
+        statusCmd.AddOption(offlineFlag);
+
+        statusCmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
         {
+            var offline = ctx.ParseResult.GetValueForOption(offlineFlag);
+            if (offline)
+                Environment.SetEnvironmentVariable("GAUNTLETCI_OFFLINE", "1");
+
             const string EnvVar = "GAUNTLETCI_LICENSE";
-            var license = LicenseService.Load(EnvVar);
+            var license  = LicenseService.Load(EnvVar);
+            var rawToken = LicenseService.ReadRawToken(EnvVar);
 
             AnsiConsole.MarkupLine("[bold cyan]GauntletCI License[/]");
             AnsiConsole.MarkupLine("[dim]---------------------------------------------------[/]");
@@ -47,6 +62,19 @@ public static class LicenseCommand
             if (license.Error is not null)
                 AnsiConsole.MarkupLine($"  [yellow]Notice  : {Markup.Escape(license.Error)}[/]");
 
+            // Remote subscription check for paid tiers.
+            if (license.IsValid && license.Tier > LicenseTier.Community && rawToken is not null)
+            {
+                AnsiConsole.WriteLine();
+                var (netValid, reason) = await NetworkLicenseValidator.ValidateAsync(
+                    rawToken, ctx.GetCancellationToken());
+
+                if (netValid)
+                    AnsiConsole.MarkupLine("  Subscription: [green]Active[/]");
+                else
+                    AnsiConsole.MarkupLine($"  Subscription: [red]Inactive[/] ({Markup.Escape(reason ?? "cancelled")})");
+            }
+
             AnsiConsole.WriteLine();
 
             if (!license.IsValid)
@@ -67,7 +95,38 @@ public static class LicenseCommand
             }
         });
 
-        cmd.AddCommand(statusCmd);
-        return cmd;
+        return statusCmd;
+    }
+
+    private static Command CreateRenewCommand()
+    {
+        var renewCmd = new Command("renew", "Instructions for renewing or replacing your license token");
+
+        renewCmd.SetHandler((System.CommandLine.Invocation.InvocationContext ctx) =>
+        {
+            AnsiConsole.MarkupLine("[bold cyan]GauntletCI License Renewal[/]");
+            AnsiConsole.MarkupLine("[dim]---------------------------------------------------[/]");
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("Your license token is reissued automatically when your Stripe");
+            AnsiConsole.MarkupLine("subscription renews. Check your email for the latest token.");
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("[bold]To replace your token:[/]");
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("  [cyan]Option 1[/] -- update the key file:");
+            AnsiConsole.MarkupLine("    echo '<new-token>' > ~/.gauntletci/gauntletci.key");
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("  [cyan]Option 2[/] -- update the environment variable:");
+            AnsiConsole.MarkupLine("    export GAUNTLETCI_LICENSE='<new-token>'");
+            AnsiConsole.MarkupLine("    (Update your CI/CD secret with the same value.)");
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("  [cyan]Option 3[/] -- purchase a new subscription:");
+            AnsiConsole.MarkupLine("    https://gauntletci.com/pricing");
+            AnsiConsole.WriteLine();
+            AnsiConsole.MarkupLine("[dim]Need help? Email support@gauntletci.com[/]");
+            ctx.ExitCode = 0;
+        });
+
+        return renewCmd;
     }
 }
+
