@@ -80,10 +80,11 @@ const tiers = [
   { key: "enterprise",label: "Enterprise", price: "Custom", period: "",            accent: "text-purple-400",    bg: "bg-purple-500/5" },
 ] as const;
 
-export function Pricing() {
+export function Pricing({ standalone = false }: { standalone?: boolean }) {
   return (
     <section id="pricing" className="py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        {!standalone && (
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-balance">
             Simple, predictable pricing
@@ -93,6 +94,7 @@ export function Pricing() {
             CI integration, or AI enrichment.
           </p>
         </div>
+        )}
 
         <div className="rounded-xl border border-border overflow-hidden">
           {/* Header */}
