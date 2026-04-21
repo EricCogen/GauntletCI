@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   description:
     "Compare GauntletCI and CodeQL. CodeQL finds security vulnerabilities across an entire codebase using semantic queries. GauntletCI catches behavioral regressions and breaking changes in the diff, pre-commit, with no cloud required.",
   alternates: { canonical: "/compare/gauntletci-vs-codeql" },
+  openGraph: { images: [{ url: '/og/compare-codeql.png', width: 1200, height: 630 }] },
 };
 
 const tableRows = [

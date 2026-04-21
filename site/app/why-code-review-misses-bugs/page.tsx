@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   description:
     "Code review catches style and obvious logic errors. It routinely misses behavioral drift, contract changes, and implicit assumptions. Here is why.",
   alternates: { canonical: "/why-code-review-misses-bugs" },
+  openGraph: { images: [{ url: '/og/why-code-review-misses-bugs.png', width: 1200, height: 630 }] },
   authors: [{ name: "Eric Cogen" }],
 };
 

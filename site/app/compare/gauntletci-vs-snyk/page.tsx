@@ -6,6 +6,7 @@ export const metadata: Metadata = {
   description:
     "Snyk scans dependencies and code for known vulnerabilities. GauntletCI detects behavioral regressions in the lines you changed -- pre-commit, 100% local, zero false positives on pre-existing code.",
   alternates: { canonical: "/compare/gauntletci-vs-snyk" },
+  openGraph: { images: [{ url: '/og/compare-snyk.png', width: 1200, height: 630 }] },
 };
 
 const table = [

@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   description:
     "Annotated real-world examples of bugs GauntletCI detects before they reach code review. Removed guards, async anti-patterns, PII leaks, breaking API changes, and more.",
   alternates: { canonical: "/detections" },
+  openGraph: { images: [{ url: '/og/detections.png', width: 1200, height: 630 }] },
 };
 
 const detections = [
