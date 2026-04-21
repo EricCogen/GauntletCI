@@ -82,7 +82,7 @@ function makeDiagram1() {
 
   const lX = PAD, rX = PAD + COL_W + GAP;
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 2}" height="${H * 2}" viewBox="0 0 ${W} ${H}">
   <rect width="${W}" height="${H}" fill="${P.bg}" rx="8"/>
   ${titleBar(W, 'Code Review: What It Catches vs. What It Misses')}
   <line x1="${W / 2}" y1="52" x2="${W / 2}" y2="${H - 12}" stroke="${P.border}" stroke-width="1.5"/>
@@ -99,7 +99,7 @@ function makeDiagram1() {
     text-anchor="middle">Review is optimized for additions. Bugs hide in deletions.</text>
 </svg>`;
 
-  return { svg, W, H };
+  return { svg, W: W * 2, H: H * 2 };
 }
 
 // ---------------------------------------------------------------------------
@@ -115,7 +115,7 @@ function makeDiagram2() {
   <text x="${x + w / 2}" y="${y + 19}" font-family="sans-serif" font-size="14" font-weight="600"
     fill="${fill}" text-anchor="middle">${label}</text>`;
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 2}" height="${H * 2}" viewBox="0 0 ${W} ${H}">
   <rect width="${W}" height="${H}" fill="${P.bg}" rx="8"/>
   ${titleBar(W, 'The Green Build Fallacy')}
 
@@ -147,7 +147,7 @@ function makeDiagram2() {
     fill="#f87171" text-anchor="middle">&#x2717; PRODUCTION  &#x2014;  NullReferenceException</text>
 </svg>`;
 
-  return { svg, W, H };
+  return { svg, W: W * 2, H: H * 2 };
 }
 
 // ---------------------------------------------------------------------------
@@ -159,7 +159,7 @@ function makeDiagram3() {
   const W = 560, H = 220;
   const MID = W / 2;
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 2}" height="${H * 2}" viewBox="0 0 ${W} ${H}">
   <rect width="${W}" height="${H}" fill="${P.bg}" rx="8"/>
   ${titleBar(W, 'Scope Determines Signal')}
 
@@ -195,7 +195,7 @@ function makeDiagram3() {
     text-anchor="middle">Same codebase. Narrower scope eliminates noise.</text>
 </svg>`;
 
-  return { svg, W, H };
+  return { svg, W: W * 2, H: H * 2 };
 }
 
 // ---------------------------------------------------------------------------
@@ -208,7 +208,7 @@ function makeDiagram4() {
   const BOX_W = 248, BOX_H = 148, BOX_Y = 60;
   const lX = 8, rX = W - 8 - BOX_W;
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W * 2}" height="${H * 2}" viewBox="0 0 ${W} ${H}">
   <rect width="${W}" height="${H}" fill="${P.bg}" rx="8"/>
   ${titleBar(W, "The Compiler's Blind Spot")}
 
@@ -254,7 +254,7 @@ function makeDiagram4() {
     text-anchor="middle">Compiler checks what it can see. Runtime checks everything.</text>
 </svg>`;
 
-  return { svg, W, H };
+  return { svg, W: W * 2, H: H * 2 };
 }
 
 // ---------------------------------------------------------------------------
