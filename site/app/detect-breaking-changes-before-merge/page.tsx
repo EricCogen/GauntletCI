@@ -368,8 +368,9 @@ export default function DetectBreakingChangesPage() {
             <p className="text-muted-foreground leading-relaxed">
               The patterns below represent the structural changes that most commonly cause
               runtime failures across .NET applications. Each pattern can be introduced by a
-              well-intentioned commit (a refactor, a cleanup, a schema update) that passes
-              all automated tests because the test suite was written against the post-change
+              well-intentioned commit (a refactor, a cleanup, a schema update) that passes{" "}
+              <Link href="/why-tests-miss-bugs" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">all automated tests</Link>{" "}
+              because the test suite was written against the post-change
               codebase and does not exercise the consumer boundary at the binary level.
             </p>
             {patterns.map((group) => (

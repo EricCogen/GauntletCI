@@ -407,8 +407,9 @@ export default function WhyTestsMissBugsPage() {
               The practical takeaway is not that property-based or fuzz testing is insufficient; they are
               valuable and worth adopting alongside unit tests. The takeaway is that input-space testing and
               change-space analysis are complementary strategies that cover different classes of risk.
-              Input-space testing catches what unusual inputs reveal. Diff-based structural analysis catches
-              what the structure of the change itself reveals. Neither one makes the other redundant.
+              Input-space testing catches what unusual inputs reveal.{" "}
+              <Link href="/what-is-diff-based-analysis" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">Diff-based structural analysis</Link>{" "}
+              catches what the structure of the change itself reveals. Neither one makes the other redundant.
             </p>
           </section>
 
