@@ -31,7 +31,10 @@ export default function WhatIsDiffBasedAnalysisPage() {
 
           {/* Hero */}
           <div className="space-y-5 border-b border-border pb-12">
-            <p className="text-sm font-semibold uppercase tracking-widest text-cyan-400">Concept</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold uppercase tracking-widest text-cyan-400">Concept</p>
+              <Link href="/articles" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">← All articles</Link>
+            </div>
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-balance">
               What is diff-based analysis?
             </h1>
@@ -54,6 +57,14 @@ export default function WhatIsDiffBasedAnalysisPage() {
               <span className="text-muted-foreground/40 text-sm">·</span>
               <time className="text-sm text-muted-foreground" dateTime="2026-04-20">April 20, 2026</time>
             </div>
+            <nav className="flex items-center justify-between pt-2 text-sm border-t border-border/50">
+              <Link href="/why-tests-miss-bugs" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
+                <span aria-hidden="true">‹</span> Why Tests Miss Bugs
+              </Link>
+              <Link href="/detect-breaking-changes-before-merge" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
+                Detect Breaking Changes Before Merge <span aria-hidden="true">›</span>
+              </Link>
+            </nav>
           </div>
 
           {/* How it works */}
