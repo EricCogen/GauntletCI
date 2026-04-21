@@ -50,6 +50,11 @@ export function Footer() {
                 <h3 className="text-sm font-semibold mb-4">Resources</h3>
                 <ul className="space-y-3">
                   <li>
+                    <Link href="/articles" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      Articles
+                    </Link>
+                  </li>
+                  <li>
                     <Link href="https://github.com/ericcogen/gauntletci" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                       GitHub
                     </Link>
