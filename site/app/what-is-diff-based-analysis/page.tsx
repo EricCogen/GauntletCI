@@ -47,6 +47,13 @@ export default function WhatIsDiffBasedAnalysisPage() {
               wolf, and they keep using tools that surface only what matters right now. Diff-based
               analysis is the structural answer to that adoption problem.
             </p>
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-sm font-medium text-foreground">Eric Cogen</span>
+              <span className="text-muted-foreground/40 text-sm">·</span>
+              <span className="text-sm text-muted-foreground">Founder, GauntletCI</span>
+              <span className="text-muted-foreground/40 text-sm">·</span>
+              <time className="text-sm text-muted-foreground" dateTime="2026-04-20">April 20, 2026</time>
+            </div>
           </div>
 
           {/* Hero illustration */}
