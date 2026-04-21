@@ -47,7 +47,7 @@ export function Header() {
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild>
-              <Link href="/#pricing">Pricing</Link>
+              <Link href="/pricing">Pricing</Link>
             </Button>
             <Button size="sm" asChild>
               <Link href="/#quickstart">Get Started</Link>
@@ -85,7 +85,7 @@ export function Header() {
                 </Link>
               </Button>
               <Button variant="outline" size="sm" asChild>
-                <Link href="/#pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
+                <Link href="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
               </Button>
               <Button size="sm" asChild>
                 <Link href="#quickstart">Get Started</Link>
