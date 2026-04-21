@@ -168,6 +168,16 @@ export default function WhyCodeReviewMissesBugsPage() {
               exhaustive analysis of what was removed. Not comprehension of what remains.
             </p>
             <p className="text-muted-foreground leading-relaxed">
+              Confirmation bias compounds this structural limit. A reviewer scanning new code for
+              correctness is primed to verify that the additions achieve their purpose. That mental
+              mode makes it less likely — not more — that the same reviewer will notice what
+              disappeared. &quot;Does this code do what it should?&quot; and &quot;what used to
+              happen on this code path?&quot; are different cognitive tasks. Review concentrates
+              attention on the first. Detecting removed behavior requires a deliberate audit of
+              deletions that most reviewers do not perform systematically, because finding bugs was
+              never what review was designed to do.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
               Behavioral drift, contract changes, and removed safety checks are structural
               properties of a diff. Detecting them requires rule-based analysis of what was
               removed, not the holistic comprehension that humans do well. This is the gap{" "}
@@ -390,6 +400,15 @@ export default function WhyCodeReviewMissesBugsPage() {
             </div>
             <p className="text-muted-foreground leading-relaxed">
               Review does not become less valuable. It becomes better spent.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              Other automated tools address overlapping but distinct surfaces. CodeQL and
+              GitHub&apos;s code scanning target security vulnerabilities. Linters enforce style
+              rules and common anti-patterns. Type checkers verify contract conformance within a
+              single build boundary. These tools are valuable and should run alongside structural
+              diff analysis. None are designed to detect removed guard clauses, changed exception
+              types, or deleted null checks — the behavioral drift patterns that structural
+              pre-commit analysis specifically targets.
             </p>
           </section>
 

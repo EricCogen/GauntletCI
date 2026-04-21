@@ -161,10 +161,11 @@ export default function WhatIsDiffBasedAnalysisPage() {
             <p className="text-muted-foreground leading-relaxed">
               Beller et al. evaluated static analysis adoption in open source projects and found
               that even teams that had integrated static analysis into their CI pipelines frequently
-              disabled or silenced large categories of warnings over time <a href="#cite-3" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[3]</a>. The trajectory is
-              predictable: a team adopts a scanner, the finding count grows, developers start
-              suppressing rules, and eventually the tool runs silently in CI producing output
-              nobody reads. Teams that maintain sustained adoption typically roll out rule sets
+              disabled or silenced large categories of warnings over time <a href="#cite-3" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[3]</a>. The pattern
+              is predictable enough to have a name: the tool abandonment cycle. A team adopts a
+              scanner, the finding count grows, developers start suppressing rules, and eventually
+              the tool runs silently in CI producing output nobody reads. Each step is rational in
+              isolation; the cumulative outcome is a tool that provides negative value.Teams that maintain sustained adoption typically roll out rule sets
               incrementally rather than enabling all checks at once; adoption patterns vary
               significantly by team size and codebase maturity.
             </p>

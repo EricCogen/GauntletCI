@@ -142,7 +142,9 @@ export default function DetectBreakingChangesPage() {
             <p className="text-muted-foreground leading-relaxed">
               These are not rare edge cases. They are the normal state of any system with more
               than one service, any persistence layer, or any public API surface. The compiler
-              success guarantee is narrow. The runtime failure surface is wide.
+              success guarantee is narrow. The runtime failure surface is wide. This gap — the
+              delta between what the compiler checks within the solution boundary and what the
+              runtime encounters across all consumers — is The Compiler&apos;s Blind Spot.
             </p>
           </section>
 
@@ -170,7 +172,14 @@ export default function DetectBreakingChangesPage() {
               no signal until after the commit is merged and the package is published.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              The cost of discovering a breaking change at the consumer is higher than the cost
+              The intent gap matters here. The developer who renamed that method was not
+              negligent — they were doing their job. The build passed, the tests passed, the
+              linter was clean. The breaking change was an unintended side effect of a correct,
+              intentional action. A pre-commit structural check is designed for exactly this
+              case: flagging the unintended consequence before the developer has moved on.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              The cost of discovering a breaking change at the consumeris higher than the cost
               of preventing it at the author. Hora et al. measured how downstream projects
               reacted when their library dependencies introduced breaking changes and found that
               many projects simply stopped updating the dependency, accumulating security and
@@ -242,6 +251,18 @@ export default function DetectBreakingChangesPage() {
               mitigation strategies and that a build server running inside a single solution
               boundary cannot detect.
             </p>
+            <div className="rounded-lg border border-border bg-card/50 p-5 mt-4">
+              <p className="text-sm font-semibold text-cyan-400 mb-2">Terminology: source-incompatible vs binary-incompatible</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                A <em>source-incompatible change</em> prevents existing consumer code from compiling
+                against the new version — the compiler surfaces the error immediately at build time.
+                A <em>binary-incompatible change</em> allows consumer code to compile against the old
+                assembly but fails at runtime when the updated binary is deployed. The consumer&apos;s
+                build passes because it was compiled against the old API surface; the failure appears
+                only when the updated library is loaded and a method or type that no longer exists is
+                called. Most consumer-visible breaking changes in the wild are binary-incompatible.
+              </p>
+            </div>
           </section>
 
           {/* OSS history */}
@@ -525,6 +546,15 @@ export default function DetectBreakingChangesPage() {
                 </p>
               </div>
             </div>
+            <p className="text-muted-foreground leading-relaxed">
+              Post-publish compatibility tools such as Microsoft.DotNet.ApiCompat and binary
+              compatibility analyzers verify API surface after a library is built or released.
+              They are valuable for library maintainers managing a public NuGet surface across
+              versions. GauntletCI is designed for an earlier moment: before the commit is
+              created, before CI runs, and before any consumer is affected — the only point
+              where the cost of the fix is zero and the developer still has full context to
+              address it.
+            </p>
           </section>
 
           {/* References */}
