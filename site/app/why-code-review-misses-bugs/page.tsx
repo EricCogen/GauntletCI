@@ -209,7 +209,7 @@ export default function WhyCodeReviewMissesBugsPage() {
           {/* .NET code example */}
           <section className="space-y-5 border-t border-border pt-12">
             <h2 className="text-2xl font-bold tracking-tight">A concrete .NET example</h2>
-            <figure className="float-right ml-6 mb-4 w-[28%] rounded-lg overflow-hidden border border-border">
+            <figure className="float-right ml-6 mb-4 w-[300px] rounded-lg overflow-hidden border border-border">
               <img
                 src="/articles/why-code-review-misses-bugs-hero.png"
                 alt="Two-column diagram: code review catches naming and logic additions well, but misses removed guard clauses, deleted error handlers, and async anti-patterns"
