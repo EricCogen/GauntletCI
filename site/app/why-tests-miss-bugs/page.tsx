@@ -42,6 +42,11 @@ const categories = [
     body: "A NuGet package is updated and a previously stable API method changes its signature, adds a new required parameter, or alters its return type in a way the compiler does not catch at all internal call sites. A database migration removes a column that application code still references. A serialization attribute controlling JSON field naming is deleted from a DTO property. Tests are pinned to a specific package version or mock the dependency entirely, so they never encounter the changed interface. The real integration only surfaces when the updated code runs against the real external system, typically on the first deploy to a shared environment or to production.",
     example: "A widely-used NuGet package renames a configuration property in a minor version bump. All unit tests mock the package's interface and pass. The package updates without a compile error, and the build pipeline is green. The first request in production that exercises that configuration path throws a MissingMemberException, taking down the affected endpoint until the configuration is corrected and redeployed.",
   },
+  {
+    title: "Flaky tests and the normalcy bias",
+    body: "A test that fails intermittently due to timing dependencies, ordering assumptions, or environmental variability is commonly disabled, skipped, or rationalized away. When teams become accustomed to a suite that sometimes fails for no clear reason, they lose the signal that CI is supposed to provide. Re-running a failure becomes routine. The normalcy bias compounds the problem: a module that has passed CI for eighteen months without a test covering a critical path is assumed to be safe, not merely untested. The absence of a failure is mistaken for the presence of correctness. When a real regression arrives, it is indistinguishable from the noise — and gets merged.",
+    example: "A test that asserts on the order of items returned from a LINQ query fails on roughly one in ten runs because the underlying store does not guarantee sort order. The team adds it to the known-flaky list and re-runs on failure. A refactor later introduces a genuine ordering regression. The team sees the failure, re-runs, it passes on the retry (the new bug is also intermittent under the test data), and the change merges. The regression surfaces in production support tickets three weeks later.",
+  },
 ];
 
 const dotnetCodeExample = `// ORIGINAL -- GenerateInvoiceAsync before the refactor
@@ -171,6 +176,19 @@ export default function WhyTestsMissBugsPage() {
               or care. It is the inherent structural limit of testing as a verification strategy when tests
               are written against a static snapshot of expectations.
             </p>
+            <div className="rounded-lg border border-border bg-card/50 p-5">
+              <p className="text-sm font-semibold text-cyan-400 mb-2">Testing terminology: false negatives and false positives</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                A <em>false negative</em> is when a test passes despite a real defect existing — the suite
+                says "all good" while the production system is broken. This is the core problem this article
+                examines. A <em>false positive</em> (a test that fails when no real defect exists) is also
+                harmful, but its primary damage is wasted developer time and eroded trust in the suite, not
+                escaped bugs. The six categories below are all forms of false negatives: the test suite
+                provides a false "no defects" signal while real behavioral regressions are already present
+                in the codebase.
+              </p>
+            </div>
+
             <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-5">
               <p className="text-sm text-amber-400 font-medium">
                 A 2002 study commissioned by the National Institute of Standards and Technology estimated
@@ -179,8 +197,12 @@ export default function WhyTestsMissBugsPage() {
                 inability to detect defects introduced during development before they reach production,
                 as a primary driver of that cost.{" "}
                 <a href="#cite-1" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[1]</a>
-                {" "}Counter-evidence note: cost estimates vary by methodology and era; subsequent analyses
-                have revised this figure as software complexity has grown.
+                {" "}The Consortium for IT Software Quality (CISQ) updated this estimate in 2022, placing
+                the cost of poor software quality in the U.S. at $2.41 trillion — driven largely by
+                operational failures and the compounding cost of defects not caught during development.{" "}
+                <a href="#cite-6" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[6]</a>
+                {" "}Counter-evidence note: cost estimates vary significantly by methodology, scope, and
+                era; treat both figures as order-of-magnitude indicators rather than precise measurements.
               </p>
             </div>
             <p className="text-muted-foreground leading-relaxed">
@@ -200,7 +222,7 @@ export default function WhyTestsMissBugsPage() {
 
           {/* Categories */}
           <section className="space-y-6">
-            <h2 className="text-2xl font-bold tracking-tight">6 categories of bugs that escape test suites</h2>
+            <h2 className="text-2xl font-bold tracking-tight">7 categories of bugs that escape test suites</h2>
             <p className="text-muted-foreground">
               These are not exotic edge cases. They are the most common root causes behind production
               regressions in .NET codebases, and in every other typed, compiled language ecosystem.
@@ -473,6 +495,32 @@ export default function WhyTestsMissBugsPage() {
             </p>
           </section>
 
+          {/* TDD as Partial Mitigation */}
+          <section className="space-y-5">
+            <h2 className="text-2xl font-bold tracking-tight">Can TDD prevent these failures?</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Test-Driven Development (TDD) — writing the test before the code — is a meaningful partial
+              mitigation for one specific subset of this problem. When a developer writes the failing test
+              first, they are forced to define the expected behavior before implementing it. This reduces
+              the likelihood of missing a test for newly <em>added</em> behavior, because the test is the
+              specification for the addition.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              TDD does not, however, prevent regressions caused by <em>removed</em> behavior. If a guard
+              clause protecting a side effect was added in a prior iteration without a corresponding test,
+              TDD provides no mechanism to detect when that guard is later deleted. The deletion produces
+              no failing test because there was never a test written for that specific guard in the first
+              place. The problem is not the order in which code and tests are written; it is the structural
+              gap between what tests assert and what behavior was silently removed.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              Diff-based structural analysis is therefore a complementary practice even for teams that
+              practice TDD rigorously. TDD closes the "missing test for new additions" gap. Change-space
+              analysis closes the "test never existed for what was removed" gap. Both gaps are real, and
+              each tool is blind to the other's domain.
+            </p>
+          </section>
+
           {/* Bridge */}
           <section className="space-y-5 border-t border-border pt-12">
             <h2 className="text-2xl font-bold tracking-tight">Bridging the gap: diff-based structural analysis</h2>
@@ -545,6 +593,11 @@ export default function WhyTestsMissBugsPage() {
                   id: 5,
                   citation: 'Google Testing Blog. "Code Coverage Best Practices." August 2020.',
                   url: "https://testing.googleblog.com/2020/08/code-coverage-best-practices.html",
+                },
+                {
+                  id: 6,
+                  citation: 'Consortium for IT Software Quality (CISQ). "The Cost of Poor Software Quality in the US: A 2022 Report." CISQ / Synopsys, 2022.',
+                  url: "https://www.it-cisq.org/the-cost-of-poor-software-quality-in-the-us-a-2022-report/",
                 },
               ].map((ref) => (
                 <li key={ref.id} id={`cite-${ref.id}`} className="text-sm text-muted-foreground leading-relaxed pl-1">
