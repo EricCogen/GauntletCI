@@ -62,14 +62,11 @@ export default function WhatIsDiffBasedAnalysisPage() {
             <figure className="float-left mr-6 mb-4 w-[28%] rounded-lg overflow-hidden border border-border">
               <img
                 src="/articles/what-is-diff-based-analysis-hero.png"
-                alt="Focused spotlight on only the changed lines in a diff, everything else dim, contrasting with whole-file scanning"
-                width={560}
-                height={320}
+                alt="Two-panel diagram: full file scan shows 498 lines and 47 findings; diff-only view shows 6 lines and 1 finding, illustrating how scope narrows signal"
+                width={480}
+                height={280}
                 className="w-full h-auto"
               />
-              <figcaption className="px-2 py-2 text-xs text-muted-foreground text-center bg-muted/30 leading-snug">
-                A narrow lens. Every finding traces to a line you changed.
-              </figcaption>
             </figure>
             <p className="text-muted-foreground leading-relaxed">
               When you stage changes with{" "}

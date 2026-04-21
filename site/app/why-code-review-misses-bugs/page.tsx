@@ -169,18 +169,6 @@ export default function WhyCodeReviewMissesBugsPage() {
           {/* Blind spots */}
           <section className="space-y-6">
             <h2 className="text-2xl font-bold tracking-tight">8 categories review consistently misses</h2>
-            <figure className="float-right ml-6 mb-4 w-[26%] rounded-lg overflow-hidden border border-border">
-              <img
-                src="/articles/why-code-review-misses-bugs-hero.png"
-                alt="Code diff where a deleted safety check fades into shadow while reviewer attention follows the green additions"
-                width={540}
-                height={380}
-                className="w-full h-auto"
-              />
-              <figcaption className="px-2 py-2 text-xs text-muted-foreground text-center bg-muted/30 leading-snug">
-                Deletions disappear. Additions get scrutinized.
-              </figcaption>
-            </figure>
             <p className="text-muted-foreground leading-relaxed">
               These are not exotic edge cases. They are the most common root causes of
               production regressions in codebases that have active, well-intentioned code
@@ -211,6 +199,15 @@ export default function WhyCodeReviewMissesBugsPage() {
           {/* .NET code example */}
           <section className="space-y-5 border-t border-border pt-12">
             <h2 className="text-2xl font-bold tracking-tight">A concrete .NET example</h2>
+            <figure className="float-right ml-6 mb-4 w-[26%] rounded-lg overflow-hidden border border-border">
+              <img
+                src="/articles/why-code-review-misses-bugs-hero.png"
+                alt="UserService.cs staged diff: 5 removed guard clauses highlighted in red, 1 green addition, GCI0001 and GCI0014 findings below"
+                width={540}
+                height={273}
+                className="w-full h-auto"
+              />
+            </figure>
             <p className="text-muted-foreground leading-relaxed">
               Consider a common refactor in a .NET service layer. A developer is simplifying
               an async method and removes what looks like redundant guard code. The diff looks

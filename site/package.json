@@ -7,6 +7,7 @@
     "build": "next build",
     "gen-og": "node scripts/gen-og-images.mjs",
     "gen-inline": "node scripts/gen-inline-images.mjs",
+    "gen-diagrams": "node scripts/gen-article-diagrams.mjs",
     "start": "next start",
     "lint": "eslint ."
   },
