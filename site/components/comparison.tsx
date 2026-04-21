@@ -68,9 +68,9 @@ const competitors = [
   { key: "gauntlet",    label: "GauntletCI",   highlight: true,  href: null },
   { key: "sonar",       label: "SonarQube",    highlight: false, href: "/compare/gauntletci-vs-sonarqube" },
   { key: "semgrep",     label: "Semgrep",      highlight: false, href: "/compare/gauntletci-vs-semgrep" },
-  { key: "snyk",        label: "Snyk",         highlight: false, href: null },
+  { key: "snyk",        label: "Snyk",         highlight: false, href: "/compare/gauntletci-vs-snyk" },
   { key: "codeql",      label: "CodeQL",       highlight: false, href: "/compare/gauntletci-vs-codeql" },
-  { key: "codeclimate", label: "Code Climate", highlight: false, href: null },
+  { key: "codeclimate", label: "Code Climate", highlight: false, href: "/compare/gauntletci-vs-codeclimate" },
 ] as const;
 
 function Cell({ value, highlight }: { value: CellValue; highlight: boolean }) {
