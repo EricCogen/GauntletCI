@@ -109,14 +109,11 @@ export default function DetectBreakingChangesPage() {
             <figure className="float-right ml-6 mb-4 w-[19%] rounded-lg overflow-hidden border border-border">
               <img
                 src="/articles/detect-breaking-changes-before-merge-hero.png"
-                alt="A merge arrow stopped by a glowing gate, with a broken chain on the incoming side representing an API contract break"
-                width={440}
-                height={520}
+                alt="Pipeline diagram: change to compiler ok to tests ok to deploy to runtime fail, with brackets showing compiler checks source and runtime checks binaries"
+                width={520}
+                height={210}
                 className="w-full h-auto"
               />
-              <figcaption className="px-2 py-2 text-xs text-muted-foreground text-center bg-muted/30 leading-snug">
-                The gate the compiler cannot see: runtime contract breaks that compile clean.
-              </figcaption>
             </figure>
             <p className="text-muted-foreground leading-relaxed">
               The .NET compiler catches type errors and missing references within a project or
