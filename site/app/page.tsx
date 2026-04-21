@@ -29,12 +29,12 @@ export default function Home() {
       <ProofExample />
       <Features />
       <FeaturesBenefits />
-      <Integrations />
       <Comparison />
       <ProvenReliability />
-      <WhyTeams />
-      <QuickStart />
       <DetectionRules />
+      <WhyTeams />
+      <Integrations />
+      <QuickStart />
       <Faq />
       <SecurityPrivacy />
       <Pricing />
