@@ -40,8 +40,8 @@ export function Footer() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="https://github.com/ericcogen/gauntletci" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      Documentation
+                    <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      Docs
                     </Link>
                   </li>
                 </ul>

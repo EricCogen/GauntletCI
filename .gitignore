@@ -65,6 +65,11 @@ node_modules/
 worker/.wrangler/
 worker/dist/
 
+# Next.js site build artifacts
+site/out/
+site/.next/
+site/tsconfig.tsbuildinfo
+
 # Python bytecode
 **/__pycache__/
 **/*.pyc
