@@ -56,23 +56,21 @@ export default function WhatIsDiffBasedAnalysisPage() {
             </div>
           </div>
 
-          {/* Hero illustration */}
-          <figure className="rounded-xl overflow-hidden border border-border">
-            <img
-              src="/articles/what-is-diff-based-analysis-hero.png"
-              alt="Abstract illustration contrasting whole-file scanning with a focused spotlight on only the changed lines in a diff"
-              width={1792}
-              height={1024}
-              className="w-full h-auto"
-            />
-            <figcaption className="px-4 py-3 text-sm text-muted-foreground bg-muted/30 text-center">
-              Diff-based analysis places a focused lens on exactly the lines that changed -- nothing more.
-            </figcaption>
-          </figure>
-
           {/* How it works */}
           <section className="space-y-5">
             <h2 className="text-2xl font-bold tracking-tight">How diff-based analysis works</h2>
+            <figure className="float-left mr-6 mb-4 w-[28%] rounded-lg overflow-hidden border border-border">
+              <img
+                src="/articles/what-is-diff-based-analysis-hero.png"
+                alt="Focused spotlight on only the changed lines in a diff, everything else dim, contrasting with whole-file scanning"
+                width={560}
+                height={320}
+                className="w-full h-auto"
+              />
+              <figcaption className="px-2 py-2 text-xs text-muted-foreground text-center bg-muted/30 leading-snug">
+                A narrow lens. Every finding traces to a line you changed.
+              </figcaption>
+            </figure>
             <p className="text-muted-foreground leading-relaxed">
               When you stage changes with{" "}
               <code className="text-xs font-mono bg-card border border-border rounded px-1.5 py-0.5">git add</code>,
