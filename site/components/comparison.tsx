@@ -111,7 +111,7 @@ export function Comparison() {
 
         <div className="rounded-xl border border-border overflow-x-auto">
           {/* Header */}
-          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] min-w-[640px] bg-card/80 border-b border-border">
+          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr] min-w-[760px] bg-card/80 border-b border-border">
             <div className="px-5 py-4 text-sm font-semibold text-muted-foreground">Capability</div>
             {competitors.map((c) => (
               <div key={c.key} className={`px-3 py-4 text-center ${c.highlight ? "bg-cyan-500/5" : ""}`}>
@@ -135,7 +135,7 @@ export function Comparison() {
           {rows.map((row, i) => (
             <div
               key={row.label}
-              className={`grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr] min-w-[640px] border-b border-border last:border-0 hover:bg-card/40 transition-colors ${i % 2 === 0 ? "bg-transparent" : "bg-card/20"}`}
+              className={`grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr] min-w-[760px] border-b border-border last:border-0 hover:bg-card/40 transition-colors ${i % 2 === 0 ? "bg-transparent" : "bg-card/20"}`}
             >
               <div className="px-5 py-3.5 flex flex-col justify-center">
                 <span className="text-sm text-foreground/90">{row.label}</span>
