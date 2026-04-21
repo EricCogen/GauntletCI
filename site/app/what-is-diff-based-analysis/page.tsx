@@ -96,7 +96,9 @@ export default function WhatIsDiffBasedAnalysisPage() {
             </p>
             <p className="text-muted-foreground leading-relaxed">
               The example below shows a single-line deletion. A guard clause that validated the
-              method input has been removed. A full-codebase scanner may or may not surface this
+              method input has been removed — a category of change that{" "}
+              <Link href="/why-code-review-misses-bugs" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">code review consistently misses</Link>{" "}
+              for structural reasons. A full-codebase scanner may or may not surface this
               depending on whether it has a rule for missing input validation. A diff-based scanner
               surfaces it immediately because it can see the deletion (the removed line) and
               knows what was there before.
@@ -219,7 +221,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
               receive, the tool becomes part of their normal workflow. They do not develop the
               habit of dismissing findings without reading them. This means that when a genuinely
               critical finding appears (a removed authentication check, a hardcoded secret, a
-              broken serialization contract) it gets the same attention every other finding
+              <Link href="/detect-breaking-changes-before-merge" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">broken serialization contract</Link>) it gets the same attention every other finding
               receives, rather than being lost in a backlog of noise.
             </p>
           </section>
