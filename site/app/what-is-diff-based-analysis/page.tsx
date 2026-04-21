@@ -49,6 +49,20 @@ export default function WhatIsDiffBasedAnalysisPage() {
             </p>
           </div>
 
+          {/* Hero illustration */}
+          <figure className="rounded-xl overflow-hidden border border-border">
+            <img
+              src="/articles/what-is-diff-based-analysis-hero.png"
+              alt="Abstract illustration contrasting whole-file scanning with a focused spotlight on only the changed lines in a diff"
+              width={1792}
+              height={1024}
+              className="w-full h-auto"
+            />
+            <figcaption className="px-4 py-3 text-sm text-muted-foreground bg-muted/30 text-center">
+              Diff-based analysis places a focused lens on exactly the lines that changed -- nothing more.
+            </figcaption>
+          </figure>
+
           {/* How it works */}
           <section className="space-y-5">
             <h2 className="text-2xl font-bold tracking-tight">How diff-based analysis works</h2>

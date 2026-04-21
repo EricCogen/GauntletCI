@@ -91,6 +91,20 @@ export default function WhyCodeReviewMissesBugsPage() {
             </div>
           </div>
 
+          {/* Hero illustration */}
+          <figure className="rounded-xl overflow-hidden border border-border">
+            <img
+              src="/articles/why-code-review-misses-bugs-hero.png"
+              alt="Abstract illustration of a code diff where a deleted safety check fades into shadow while reviewer attention flows to the green additions"
+              width={1792}
+              height={1024}
+              className="w-full h-auto"
+            />
+            <figcaption className="px-4 py-3 text-sm text-muted-foreground bg-muted/30 text-center">
+              A removed guard clause hides in plain sight while reviewer attention follows the green additions.
+            </figcaption>
+          </figure>
+
           {/* What the research says */}
           <section className="space-y-5">
             <h2 className="text-2xl font-bold tracking-tight">What the research says</h2>

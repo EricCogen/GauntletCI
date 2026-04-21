@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "gen-og": "node scripts/gen-og-images.mjs",
+    "gen-inline": "node scripts/gen-inline-images.mjs",
     "start": "next start",
     "lint": "eslint ."
   },
