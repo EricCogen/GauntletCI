@@ -14,7 +14,7 @@ namespace GauntletCI.Cli.Licensing;
 /// </summary>
 public static class NetworkLicenseValidator
 {
-    private const string StatusEndpoint = "https://api.gauntletci.com/license/status";
+    private const string StatusEndpoint = "https://gauntletci-license-worker.patient-water-71dd.workers.dev/license/status";
     private static readonly TimeSpan NetworkTimeout = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan CacheTtl       = TimeSpan.FromHours(24);
 
