@@ -22,7 +22,7 @@ import { Footer } from "@/components/footer";
 export const metadata: Metadata = {
   title: "GauntletCI | Pre-Commit Change-Risk Detection for .NET",
   description:
-    "GauntletCI detects behavioral regressions, contract breaks, and removed safety checks in your diff -- before they reach code review. 100% local, deterministic, zero noise.",
+    "GauntletCI detects behavioral regressions, contract breaks, and removed safety checks in your diff -- before they reach code review.",
   alternates: { canonical: "/" },
   openGraph: { images: [{ url: '/og/home.png', width: 1200, height: 630 }] },
 };
