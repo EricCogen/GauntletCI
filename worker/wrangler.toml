@@ -8,14 +8,14 @@ compatibility_flags = ["nodejs_compat"]
 # Then replace the id values below with the output IDs.
 [[kv_namespaces]]
 binding     = "LICENSE_STORE"
-id          = "REPLACE_WITH_KV_NAMESPACE_ID"
-preview_id  = "REPLACE_WITH_PREVIEW_KV_ID"
+id          = "703a11e352774789acc0e959756f833e"
+preview_id  = "1cb24736c9f84e78ae684abf115c5471"
 
 [vars]
 # Non-secret config -- edit these after creating Payment Links in Stripe dashboard.
 # Find price IDs at: https://dashboard.stripe.com/products
-PRICE_ID_PRO        = "price_REPLACE_ME_PRO"
-PRICE_ID_TEAMS      = "price_REPLACE_ME_TEAMS"
+PRICE_ID_PRO        = "price_1TOnlLKfFIWBg5XOS4RRkIhh"
+PRICE_ID_TEAMS      = "price_1TOnr8KfFIWBg5XOUmSEEsbN"
 PRICE_ID_ENTERPRISE = "price_REPLACE_ME_ENTERPRISE"
 
 FROM_EMAIL = "licenses@gauntletci.com"
@@ -24,7 +24,7 @@ REPLY_TO   = "support@gauntletci.com"
 # Public key for verifying license JWTs in the /license/status endpoint.
 # Must be SPKI format (-----BEGIN PUBLIC KEY-----).
 # To convert from PKCS#1: openssl rsa -pubin -in gauntletci.pub -pubout
-GAUNTLETCI_PUBLIC_KEY = "REPLACE_WITH_SPKI_PUBLIC_KEY_PEM"
+GAUNTLETCI_PUBLIC_KEY = "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvAkuG6jEvl90oArpsRl7\nbf2iaZylvVZtSZKkhhc+E03s1zBBpMlKGpiOGY1nO2gLPMBfdJbX5xf2yJeJdMvn\n/v4fNhJJsW9HFwKsRXKHNbcgAD7Bk6SryfePjPbwY+Ax0YlwMlYFCN3/Z+AI6es9\noWYCTjAdAZqrVGmTsE7kSv9p1lHuRD4SvSwPcO3zFkpHbrWdIYDCDRcSpN92CXkV\ndD/qn1cSe0L1RGqPDQzefXyA/BkBL+aSrhq3JGRCYEjI05bBby2Lx96jFlB4qqib\ny3xXwxWXe7tkAUrW9Htadvl/iAl6z9vJ7ygxKo8oGSSnc2pr9df6HRcoWrSxzzYN\njQIDAQAB\n-----END PUBLIC KEY-----"
 
 # Secrets -- set via: wrangler secret put <NAME>
 # Required secrets (never commit these):
