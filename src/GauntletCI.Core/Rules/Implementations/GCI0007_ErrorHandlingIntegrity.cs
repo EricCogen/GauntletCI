@@ -154,7 +154,10 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
     private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)
     {
         if (staticAnalysis is null) return;
-        foreach (var diag in staticAnalysis.Diagnostics.Where(d => d.Id is "CA1031" or "CA2000" or "CA1001"))
+        // CA2000 (don't dispose objects) and CA1001 (types owning disposable) are owned by GCI0024
+        // (Resource Lifecycle) — see DiagnosticMapper. GCI0007 keeps only CA1031 (catch generic
+        // exception) to avoid producing two findings on the same diagnostic.
+        foreach (var diag in staticAnalysis.Diagnostics.Where(d => d.Id is "CA1031"))
         {
             findings.Add(new Finding
             {
@@ -162,9 +165,9 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
                 RuleName = "Error Handling Integrity",
                 Summary = $"{diag.Id}: {diag.Message}",
                 Evidence = $"{diag.FilePath}:{diag.Line}",
-                WhyItMatters = "Roslyn detected a potential resource or exception handling issue.",
-                SuggestedAction = "Review and address the flagged exception/disposal issue.",
-                Confidence = diag.Id == "CA1031" ? Confidence.High : Confidence.Medium,
+                WhyItMatters = "Roslyn detected a potential exception handling issue.",
+                SuggestedAction = "Catch specific exception types instead of swallowing System.Exception.",
+                Confidence = Confidence.High,
             });
         }
     }

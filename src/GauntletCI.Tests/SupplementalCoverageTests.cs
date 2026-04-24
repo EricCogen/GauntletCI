@@ -373,9 +373,41 @@ public class SupplementalCoverageTests
 
         var findings = await rule.EvaluateAsync(diff, staticAnalysis);
 
-        Assert.Contains(findings, f => f.Summary.Contains("CA1031"));
-        Assert.Contains(findings, f => f.RuleId == "GCI0007" && f.Confidence == GauntletCI.Core.Model.Confidence.High);
-        Assert.Contains(findings, f => f.RuleId == "GCI0007" && f.Confidence == GauntletCI.Core.Model.Confidence.Medium);
+        // GCI0007 owns CA1031 only. CA2000/CA1001 are owned by GCI0024 (Resource Lifecycle)
+        // — see DiagnosticMapper. This prevents the same Roslyn diagnostic from producing
+        // two findings (one in each rule).
+        Assert.Contains(findings, f => f.Summary.Contains("CA1031") && f.RuleId == "GCI0007");
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("CA2000") && f.RuleId == "GCI0007");
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("CA1001") && f.RuleId == "GCI0007");
+    }
+
+    [Fact]
+    public async Task GCI0024_WithStaticAnalysis_CA2000_And_CA1001_ShouldAddFindings()
+    {
+        var rule = new GauntletCI.Core.Rules.Implementations.GCI0024_ResourceLifecycle();
+        var diff = DiffParser.Parse("""
+            diff --git a/src/Foo.cs b/src/Foo.cs
+            index abc..def 100644
+            --- a/src/Foo.cs
+            +++ b/src/Foo.cs
+            @@ -1,1 +1,2 @@
+             // existing
+            +var x = 1;
+            """);
+        var staticAnalysis = new AnalyzerResult
+        {
+            Success = true,
+            Diagnostics =
+            [
+                new() { Id = "CA2000", Message = "Dispose object", FilePath = "src/Foo.cs", Line = 8 },
+                new() { Id = "CA1001", Message = "Types owning disposable", FilePath = "src/Foo.cs", Line = 10 }
+            ]
+        };
+
+        var findings = await rule.EvaluateAsync(diff, staticAnalysis);
+
+        Assert.Contains(findings, f => f.Summary.Contains("CA2000") && f.RuleId == "GCI0024");
+        Assert.Contains(findings, f => f.Summary.Contains("CA1001") && f.RuleId == "GCI0024");
     }
 
     // ── GCI0015 static analysis path ─────────────────────────────────────────
