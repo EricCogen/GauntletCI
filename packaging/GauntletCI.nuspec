@@ -4,7 +4,7 @@
 
     <!-- Identity -->
     <id>GauntletCI</id>
-    <version>2.0.0</version>
+    <version>2.0.1</version>
     <authors>Eric Cogen</authors>
     <owners>Eric Cogen</owners>
 
@@ -116,6 +116,15 @@ See https://gauntletci.com for full documentation.
 
     <!-- Release notes for this version -->
     <releaseNotes>
+v2.0.1
+- New CLI flags: --github-pr-comments (post findings as PR review with inline comments) and --github-checks (post via GitHub Checks API)
+- New CLI flags: --notify-slack and --notify-teams for Block-finding webhooks
+- New CLI flags: --with-coverage (Codecov correlation), --with-ticket-context (Jira/Linear/GitHub Issues), --pr-comment-suggest, --no-baseline, --show-context, --severity, --verbose
+- New config blocks: ci, notifications, output, ticketProvider with CLI flag merge
+- Network license validation with 24h cache and offline RS256 JWT validation
+- Phi-4 Mini migration; consolidated llm.model config
+- Bug fixes: Spectre markup crash on ticket provider name, ADF array guard, HTTP/git resource disposal, output format ordering
+
 v2.0.0
 - 42 built-in behavioral-change rules (GCI0001–GCI0042)
 - Local LLM expert knowledge distillery (seed, distill, adjudicate)
