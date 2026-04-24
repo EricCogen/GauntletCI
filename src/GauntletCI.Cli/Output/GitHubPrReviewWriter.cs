@@ -354,6 +354,8 @@ public static class GitHubPrReviewWriter
         var sb = new StringBuilder();
         sb.AppendLine("**GauntletCI** found the following issues:");
         sb.AppendLine();
+        sb.AppendLine("_These findings reference lines outside the PR diff, so they appear here instead of inline. Expand each entry for full evidence, rationale, and suggested action._");
+        sb.AppendLine();
 
         foreach (var g in summaryGroups)
         {
@@ -364,12 +366,18 @@ public static class GitHubPrReviewWriter
                         ? $" (`{g.FilePath}:{g.PrimaryLine}`)"
                         : $" (`{g.FilePath}`)")
                 : string.Empty;
-            sb.AppendLine($"- **{g.RuleId} — {g.RuleName}**{location}: {g.Summary}");
+
+            sb.AppendLine("<details>");
+            sb.AppendLine($"<summary><strong>{g.RuleId} — {g.RuleName}</strong>{location}: {g.Summary}</summary>");
+            sb.AppendLine();
+            sb.AppendLine(BuildCommentBody(g));
+            sb.AppendLine();
+            sb.AppendLine("</details>");
+            sb.AppendLine();
         }
 
         if (hasInlineComments)
         {
-            sb.AppendLine();
             sb.Append("Additional findings are posted as inline comments on the diff.");
         }
 
