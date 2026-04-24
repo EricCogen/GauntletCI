@@ -16,3 +16,12 @@ GCI0006:src/GauntletCI.Cli/Telemetry/TelemetryHasher.cs
 # detector to avoid false-positive self-flagging.
 GCI0012:src/GauntletCI.Core/Rules/Implementations/GCI0012_SecurityRisk.cs
 GCI0006:src/GauntletCI.Core/Rules/Implementations/GCI0012_SecurityRisk.cs
+
+# GCI0006 cannot model the data-flow guarantee from a LINQ
+# `.Where(x => x.NullableMember.HasValue)` filter, so the immediately
+# following `x.NullableMember!.Value` access (with the null-forgiving
+# operator) is flagged as a possible null dereference. The accesses are
+# provably safe; suppress GCI0006 for the grouped-findings writers.
+GCI0006:src/GauntletCI.Cli/Output/GitHubChecksWriter.cs
+GCI0006:src/GauntletCI.Cli/Output/GitHubPrReviewWriter.cs
+GCI0006:src/GauntletCI.Core/Model/FindingGrouper.cs
