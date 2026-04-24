@@ -3,6 +3,8 @@ using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.StaticAnalysis;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -19,9 +21,9 @@ public class GCI0012_SecurityRisk : RuleBase
     private static readonly string[] WeakHashAlgorithms = ["MD5.Create()", "SHA1.Create()", "new MD5CryptoServiceProvider", "new SHA1Managed"];
     private static readonly string[] WeakCryptoAlgorithms = ["DESCryptoServiceProvider", "RC2CryptoServiceProvider", "TripleDES"];
     private static readonly string[] DangerousApis = ["Assembly.Load(", "Activator.CreateInstance(", "Process.Start("];
-    // Diverges intentionally from WellKnownPatterns.SecretNamePatterns: includes "pwd" and is scoped
-    // to patterns relevant to credential assignment checks in this rule.
-    private static readonly string[] SecretNamePatterns = ["password", "secret", "apikey", "api_key", "pwd"];
+    // Diverges intentionally from WellKnownPatterns.SecretNamePatterns: includes "pwd" and "token"
+    // so GCI0012 is the single owner of hardcoded credential detection (GCI0010 no longer duplicates it).
+    private static readonly string[] SecretNamePatterns = ["password", "secret", "apikey", "api_key", "token", "pwd"];
 
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
@@ -34,13 +36,14 @@ public class GCI0012_SecurityRisk : RuleBase
             if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
             if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
 
+            CheckHardcodedCredentials(file, findings);
+
             foreach (var line in file.AddedLines)
             {
                 CheckSqlInjection(line, findings);
                 CheckWeakHashing(line, findings);
                 CheckWeakCrypto(line, findings);
                 CheckDangerousApis(line, findings);
-                CheckHardcodedCredentials(line, findings);
                 CheckInsecureDeserialization(line, findings);
             }
         }
@@ -118,21 +121,106 @@ public class GCI0012_SecurityRisk : RuleBase
         }
     }
 
-    private void CheckHardcodedCredentials(DiffLine line, List<Finding> findings)
+    private void CheckHardcodedCredentials(DiffFile file, List<Finding> findings)
     {
-        var lower = line.Content.ToLowerInvariant();
-        foreach (var pattern in SecretNamePatterns)
+        foreach (var line in file.AddedLines)
         {
-            if (!lower.Contains(pattern)) continue;
-            if (!line.Content.Contains('=') || !line.Content.Contains('"')) continue;
+            var content = line.Content;
+            if (IsCommentLine(content.Trim())) continue;
 
-            findings.Add(CreateFinding(
-                summary: $"Possible hardcoded credential ('{pattern}').",
-                evidence: $"Line {line.LineNumber}: {line.Content.Trim()}",
-                whyItMatters: "Credentials in source code are exposed via version control and are easily compromised.",
-                suggestedAction: "Use a secrets manager or environment variables. Never hardcode credentials.",
-                confidence: Confidence.High));
-            return;
+            // Require a real assignment (=) not a comparison (==, !=, <=, >=).
+            if (!HasAssignment(content)) continue;
+
+            var literals = ExtractStringLiterals(content);
+            if (literals.Count == 0) continue;
+
+            // Skip lines where every string literal looks like an env var name (ALL_CAPS_UNDERSCORES).
+            // These are references to env var keys, not hardcoded credential values.
+            if (literals.All(IsEnvVarName)) continue;
+
+            // Check secret keyword only in the left-hand side of the assignment (the variable name),
+            // not anywhere in the line — avoids false positives from type names like HtmlTokenType.
+            var eqIndex = FindAssignmentIndex(content);
+            var lhs = content[..eqIndex].ToLowerInvariant();
+
+            foreach (var pattern in SecretNamePatterns)
+            {
+                if (!lhs.Contains(pattern)) continue;
+
+                findings.Add(CreateFinding(
+                    file,
+                    summary: $"Possible hardcoded credential ('{pattern}' assigned a string literal).",
+                    evidence: $"Line {line.LineNumber}: {content.Trim()}",
+                    whyItMatters: "Credentials in source code are exposed via version control and are easily compromised.",
+                    suggestedAction: "Use a secrets manager (Azure Key Vault, AWS Secrets Manager) or environment variables. Never hardcode credentials.",
+                    confidence: Confidence.High,
+                    line: line));
+                break;
+            }
+        }
+    }
+
+    private static bool IsCommentLine(string trimmed) =>
+        trimmed.StartsWith("//", StringComparison.Ordinal) ||
+        trimmed.StartsWith("*", StringComparison.Ordinal) ||
+        trimmed.StartsWith("#", StringComparison.Ordinal);
+
+    // An env var name is ALL_CAPS with digits and underscores (e.g. GITHUB_TOKEN, MY_API_KEY).
+    private static bool IsEnvVarName(string literal) =>
+        literal.Length > 0 && literal.All(c => char.IsUpper(c) || char.IsDigit(c) || c == '_');
+
+    // Returns true only if the line contains a real assignment = (not ==, !=, <=, >=).
+    private static bool HasAssignment(string content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        for (int i = 0; i < content.Length; i++)
+        {
+            if (content[i] != '=') continue;
+            char prev = i > 0 ? content[i - 1] : '\0';
+            char next = i < content.Length - 1 ? content[i + 1] : '\0';
+            if (prev is '!' or '<' or '>' or '=') continue;
+            if (next is '=') continue;
+            if (prev is '>' && next is '>') continue; // => lambda
+            return true;
+        }
+        return false;
+    }
+
+    // Returns the index of the first real assignment = in the line.
+    private static int FindAssignmentIndex(string content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        for (int i = 0; i < content.Length; i++)
+        {
+            if (content[i] != '=') continue;
+            char prev = i > 0 ? content[i - 1] : '\0';
+            char next = i < content.Length - 1 ? content[i + 1] : '\0';
+            if (prev is '!' or '<' or '>' or '=') continue;
+            if (next is '=') continue;
+            return i;
+        }
+        return content.Length;
+    }
+
+    private static List<string> ExtractStringLiterals(string content)
+    {
+        if (string.IsNullOrWhiteSpace(content) || !content.Contains('"', StringComparison.Ordinal))
+            return [];
+
+        try
+        {
+            var wrapped = $"class __G {{ void __M() {{ {content} }} }}";
+            var tree = CSharpSyntaxTree.ParseText(wrapped);
+            var root = tree.GetRoot();
+
+            return root.DescendantTokens()
+                .Where(t => t.IsKind(SyntaxKind.StringLiteralToken))
+                .Select(t => t.ValueText)
+                .ToList();
+        }
+        catch
+        {
+            return [];
         }
     }
 
