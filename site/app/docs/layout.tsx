@@ -1,4 +1,5 @@
 import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 import { DocsSidebar } from "@/components/docs-sidebar";
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
@@ -15,6 +16,7 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
       </div>
+      <Footer />
     </>
   );
 }
