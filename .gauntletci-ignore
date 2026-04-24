@@ -8,3 +8,11 @@
 GCI0003:src/GauntletCI.Cli/Telemetry/TelemetryHasher.cs
 GCI0004:src/GauntletCI.Cli/Telemetry/TelemetryHasher.cs
 GCI0006:src/GauntletCI.Cli/Telemetry/TelemetryHasher.cs
+
+# GCI0012's own implementation contains the literal pattern strings it
+# detects ("password", "secret", "token", etc.) in SecretNamePatterns.
+# When the rule itself is edited, the diff naturally trips GCI0012's
+# own detector. Suppress GCI0012 + GCI0006 for the file that owns the
+# detector to avoid false-positive self-flagging.
+GCI0012:src/GauntletCI.Core/Rules/Implementations/GCI0012_SecurityRisk.cs
+GCI0006:src/GauntletCI.Core/Rules/Implementations/GCI0012_SecurityRisk.cs
