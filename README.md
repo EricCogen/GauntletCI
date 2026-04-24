@@ -37,6 +37,28 @@ No setup required.
 
 ---
 
+## 🎬 See it live
+
+Want to see GauntletCI catch real bugs in real PRs before installing anything?
+
+The **[GauntletCI-Demo](https://github.com/EricCogen/GauntletCI-Demo)** repo
+is a realistic ASP.NET Core OrderService with **6 always-open scenario PRs**.
+Each PR makes a plausible multi-file change with a single risky line buried
+inside. GauntletCI runs on every PR — open one and read the workflow output:
+
+| PR | Scenario | Expected verdict |
+| --- | --- | --- |
+| 01 | Safe typo fix | ✅ clean — no findings |
+| 02 | Silent `catch { }` around payment call | ❌ GCI0007 Error Handling Integrity |
+| 03 | Hardcoded API key in `Program.cs` | ❌ GCI0012 Secret Hygiene |
+| 04 | `CancellationToken` dropped from `IPaymentClient` | ❌ GCI0004 Public API Contract |
+| 05 | Customer email logged in `LogInformation` | ❌ GCI0029 PII Logging Leak |
+| 06 | Static counter mutated without sync | ❌ GCI0016 Concurrency Safety |
+
+**[→ Browse the live demo PRs](https://github.com/EricCogen/GauntletCI-Demo/pulls)**
+
+---
+
 ## 📖 Why This Exists
 
 Even experienced developers miss things in diffs.

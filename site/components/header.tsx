@@ -49,6 +49,11 @@ export function Header() {
             <Button variant="outline" size="sm" asChild>
               <Link href="/pricing">Pricing</Link>
             </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="https://github.com/EricCogen/GauntletCI-Demo/pulls" target="_blank" rel="noopener noreferrer">
+                See Live Demo
+              </Link>
+            </Button>
             <Button size="sm" asChild>
               <Link href="/#quickstart">Get Started</Link>
             </Button>
@@ -86,6 +91,16 @@ export function Header() {
               </Button>
               <Button variant="outline" size="sm" asChild>
                 <Link href="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</Link>
+              </Button>
+              <Button variant="outline" size="sm" asChild>
+                <Link
+                  href="https://github.com/EricCogen/GauntletCI-Demo/pulls"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  See Live Demo
+                </Link>
               </Button>
               <Button size="sm" asChild>
                 <Link href="#quickstart">Get Started</Link>

@@ -55,6 +55,16 @@ export function Footer() {
                     </Link>
                   </li>
                   <li>
+                    <Link
+                      href="https://github.com/EricCogen/GauntletCI-Demo/pulls"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Live Demo
+                    </Link>
+                  </li>
+                  <li>
                     <Link href="https://github.com/ericcogen/gauntletci" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                       GitHub
                     </Link>
