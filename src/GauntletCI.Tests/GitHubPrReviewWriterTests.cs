@@ -183,6 +183,91 @@ public class GitHubPrReviewWriterTests
         Assert.Contains("No test coverage", body);
     }
 
+    // --- BuildReviewBody ---
+
+    private static GroupedFinding MakeGroup(
+        string ruleId           = "GCI0016",
+        string ruleName         = "Concurrency Rule",
+        string summary          = "Static mutable field detected",
+        string filePath         = "src/Foo.cs",
+        int    primaryLine      = 12,
+        string whyItMatters     = "Mutable static fields are shared across threads.",
+        string suggestedAction  = "Use Interlocked or readonly.",
+        string evidence         = "Line 12: private static long _count;") => new()
+    {
+        RuleId          = ruleId,
+        RuleName        = ruleName,
+        Summary         = summary,
+        FilePath        = filePath,
+        PrimaryLine     = primaryLine,
+        Lines           = new[] { primaryLine },
+        Evidence        = new[] { evidence },
+        WhyItMatters    = whyItMatters,
+        SuggestedAction = suggestedAction,
+        Confidence      = Confidence.Medium,
+        Severity        = RuleSeverity.Warn,
+        Count           = 1,
+    };
+
+    [Fact]
+    public void BuildReviewBody_NoSummaryGroups_NoInline_ReturnsEmpty()
+    {
+        var body = GitHubPrReviewWriter.BuildReviewBody(new(), hasInlineComments: false);
+        Assert.Equal(string.Empty, body);
+    }
+
+    [Fact]
+    public void BuildReviewBody_NoSummaryGroups_HasInline_ReturnsPointerNote()
+    {
+        var body = GitHubPrReviewWriter.BuildReviewBody(new(), hasInlineComments: true);
+        Assert.Contains("inline comments", body);
+    }
+
+    [Fact]
+    public void BuildReviewBody_SummaryGroup_EmbedsRichDetailsBlock()
+    {
+        var groups = new List<GroupedFinding> { MakeGroup() };
+        var body   = GitHubPrReviewWriter.BuildReviewBody(groups, hasInlineComments: false);
+
+        // Top-level header preserved
+        Assert.Contains("**GauntletCI** found the following issues:", body);
+        // Details/summary scaffolding present
+        Assert.Contains("<details>", body);
+        Assert.Contains("</details>", body);
+        Assert.Contains("<summary>", body);
+        // Rich body: rule id, evidence, why, action, confidence/severity all present (matches inline format)
+        Assert.Contains("GCI0016", body);
+        Assert.Contains("**Evidence:**", body);
+        Assert.Contains("Why it matters", body);
+        Assert.Contains("Suggested action", body);
+        Assert.Contains("Confidence:", body);
+        Assert.Contains("Severity:", body);
+    }
+
+    [Fact]
+    public void BuildReviewBody_MultipleSummaryGroups_EmitsOneDetailsPerGroup()
+    {
+        var groups = new List<GroupedFinding>
+        {
+            MakeGroup(ruleId: "GCI0010", ruleName: "Hardcoding", summary: "Hardcoded conn string"),
+            MakeGroup(ruleId: "GCI0042", ruleName: "TODO Detection", summary: "TODO in payment flow"),
+        };
+        var body = GitHubPrReviewWriter.BuildReviewBody(groups, hasInlineComments: false);
+
+        var detailsCount = System.Text.RegularExpressions.Regex.Matches(body, "<details>").Count;
+        Assert.Equal(2, detailsCount);
+        Assert.Contains("GCI0010", body);
+        Assert.Contains("GCI0042", body);
+    }
+
+    [Fact]
+    public void BuildReviewBody_HasInlineAndSummary_AppendsInlinePointer()
+    {
+        var groups = new List<GroupedFinding> { MakeGroup() };
+        var body   = GitHubPrReviewWriter.BuildReviewBody(groups, hasInlineComments: true);
+        Assert.Contains("inline comments on the diff", body);
+    }
+
     // --- ResolvePrNumber ---
 
     [Fact]
