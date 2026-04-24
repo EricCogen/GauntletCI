@@ -17,8 +17,10 @@ public static class DiagnosticMapper
             ["CA2153"] = ("GCI0012", "Security Risk", Confidence.High),
             // Exception handling
             ["CA1031"] = ("GCI0007", "Error Handling Integrity", Confidence.High),
-            ["CA2000"] = ("GCI0007", "Error Handling Integrity", Confidence.Medium),
-            ["CA1001"] = ("GCI0007", "Error Handling Integrity", Confidence.Medium),
+            // Resource disposal — owned by GCI0024 (Resource Lifecycle) to avoid duplicate findings
+            // with GCI0007. See also GCI0024.AddRoslynFindings.
+            ["CA2000"] = ("GCI0024", "Resource Lifecycle", Confidence.Medium),
+            ["CA1001"] = ("GCI0024", "Resource Lifecycle", Confidence.Medium),
             // Method complexity
             ["CA1822"] = ("GCI0008", "Complexity Control", Confidence.Low),
             // Argument validation
