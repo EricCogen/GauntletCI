@@ -39,11 +39,11 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>gauntletci</ToolCommandName>
     <PackageId>GauntletCI</PackageId>
-    <Version>2.0.0</Version>
+    <Version>2.0.1</Version>
     <Authors>Eric Cogen</Authors>
     <Description>GauntletCI is a .NET pre-commit and PR integration gate that evaluates diffs against 42 behavioral-change rules — catching unvalidated changes, missing tests, async deadlock risk, security risks, and resource lifecycle violations before code is committed or merged. Optional local LLM enrichment via Ollama. Built-in MCP server for AI assistant integration. Fully offline — no data leaves your machine. Open source CodeRabbit alternative with deterministic, auditable findings.</Description>
     <PackageTags>pre-commit;code-review;llm;static-analysis;behavioral-analysis;diff-analysis;git-hooks;ci;dotnet;csharp;mcp;pr-review;risk-detection;behavioral-testing;security-risk;async-safety;ollama;ai-code-review</PackageTags>
-    <PackageReleaseNotes>v2.0.0: 42 built-in rules, local LLM expert distillery, MCP server, Ollama embedding engine, corpus pipeline, GitHub Actions annotations, full audit log.</PackageReleaseNotes>
+    <PackageReleaseNotes>v2.0.1: New CLI flags (--github-pr-comments, --github-checks, --notify-slack, --notify-teams, --with-coverage, --with-ticket-context, --pr-comment-suggest, --no-baseline, --show-context, --severity, --verbose), config blocks (ci, notifications, output, ticketProvider), network license validation, Phi-4 Mini migration. v2.0.0: 42 built-in rules, local LLM expert distillery, MCP server, Ollama embedding engine, corpus pipeline, GitHub Actions annotations, full audit log.</PackageReleaseNotes>
     <Copyright>Copyright © 2024 Eric Cogen</Copyright>
     <PackageProjectUrl>https://gauntletci.com</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
