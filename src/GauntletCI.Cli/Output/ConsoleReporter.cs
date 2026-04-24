@@ -66,7 +66,8 @@ public static class ConsoleReporter
             return;
         }
 
-        var groups = new[]
+        var groups = FindingGrouper.Group(result.Findings);
+        var sevGroups = new[]
         {
             (RuleSeverity.Block, "POSSIBLE BLOCK", "red"),
             (RuleSeverity.Warn,  "WARN",  "yellow"),
@@ -74,16 +75,16 @@ public static class ConsoleReporter
         };
 
         bool anyVisible = false;
-        foreach (var (severity, label, color) in groups)
+        foreach (var (severity, label, color) in sevGroups)
         {
             if (severity < minSeverity) continue;
-            var findings = result.Findings.Where(f => f.Severity == severity).ToList();
-            if (findings.Count == 0) continue;
+            var section = groups.Where(g => g.Severity == severity).ToList();
+            if (section.Count == 0) continue;
 
             anyVisible = true;
-            AnsiConsole.MarkupLine($"[{color}]{string.Format(sep, label, findings.Count)}[/]");
-            foreach (var finding in findings)
-                PrintFinding(finding, color, diff, showContext);
+            AnsiConsole.MarkupLine($"[{color}]{string.Format(sep, label, section.Count)}[/]");
+            foreach (var g in section)
+                PrintGroup(g, color, diff, showContext);
         }
 
         if (!anyVisible)
@@ -116,6 +117,89 @@ public static class ConsoleReporter
 
         if (suppressedByBaseline > 0)
             AnsiConsole.MarkupLine($"[dim]  ({suppressedByBaseline} finding(s) suppressed by baseline)[/]");
+    }
+
+    /// <summary>
+    /// Renders a grouped finding (one or more underlying findings sharing RuleId+FilePath).
+    /// </summary>
+    private static void PrintGroup(GroupedFinding group, string accentColor, DiffContext? diff = null, int showContext = 0)
+    {
+        var occurrences = group.Count > 1 ? $" [grey]({group.Count} occurrences)[/]" : string.Empty;
+        AnsiConsole.MarkupLine($"[{accentColor}]  [[{group.RuleId}]][/] [white]{Markup.Escape(group.RuleName)}[/]{occurrences}");
+
+        var locLabel = group.FilePath is not null
+            ? (group.Lines.Count > 1
+                ? $"{group.FilePath} (lines {string.Join(", ", group.Lines)})"
+                : group.PrimaryLine.HasValue
+                    ? $"{group.FilePath}:{group.PrimaryLine}"
+                    : group.FilePath)
+            : null;
+        if (locLabel is not null)
+            AnsiConsole.MarkupLine($"[grey]  Location : {Markup.Escape(locLabel)}[/]");
+
+        AnsiConsole.MarkupLine($"  Summary  : {Markup.Escape(group.Summary)}");
+
+        if (group.Evidence.Count > 0)
+        {
+            var sensitive = SensitiveRuleIds.Contains(group.RuleId);
+            if (group.Evidence.Count == 1)
+            {
+                var ev = sensitive ? MaskEvidenceSnippet(group.Evidence[0]) : group.Evidence[0];
+                AnsiConsole.MarkupLine($"[grey]  Evidence : {Markup.Escape(ev)}[/]");
+            }
+            else
+            {
+                AnsiConsole.MarkupLine("[grey]  Evidence :[/]");
+                foreach (var raw in group.Evidence)
+                {
+                    var ev = sensitive ? MaskEvidenceSnippet(raw) : raw;
+                    AnsiConsole.MarkupLine($"[grey]    - {Markup.Escape(ev)}[/]");
+                }
+            }
+        }
+
+        if (showContext > 0 && diff is not null && group.FilePath is not null && group.PrimaryLine.HasValue)
+        {
+            var contextLines = GetDiffContext(diff, group.FilePath, group.PrimaryLine.Value, showContext);
+            if (contextLines.Count > 0)
+            {
+                AnsiConsole.MarkupLine("[grey]  Context  :[/]");
+                foreach (var (prefix, content) in contextLines)
+                {
+                    var color = prefix == "+" ? "green" : prefix == "-" ? "red" : "grey";
+                    AnsiConsole.MarkupLine($"[{color}]    {prefix} {Markup.Escape(content)}[/]");
+                }
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(group.CodeSnippet))
+        {
+            AnsiConsole.MarkupLine("[grey]  Snippet  :[/]");
+            foreach (var line in group.CodeSnippet!.Split('\n'))
+                AnsiConsole.MarkupLine($"[grey]    {Markup.Escape(line)}[/]");
+        }
+
+        AnsiConsole.MarkupLine($"  Why      : {Markup.Escape(group.WhyItMatters)}");
+        AnsiConsole.MarkupLine($"[cyan]  Action   : {Markup.Escape(group.SuggestedAction)}[/]");
+
+        if (!string.IsNullOrEmpty(group.LlmExplanation))
+            AnsiConsole.MarkupLine($"[magenta]  LLM      : {Markup.Escape(group.LlmExplanation)}[/]");
+
+        if (group.ExpertContext is { } expert)
+        {
+            AnsiConsole.MarkupLine($"[blue]  Expert   : {Markup.Escape(expert.Content)}[/]");
+            AnsiConsole.MarkupLine($"[grey]             Score {expert.Score:F2} · {Markup.Escape(expert.Source)}[/]");
+        }
+
+        if (group.TicketContext is { } ticket)
+        {
+            var ticketRef = ticket.Url is not null ? $"{ticket.Id} ({ticket.Url})" : ticket.Id;
+            AnsiConsole.MarkupLine($"[cyan]  Ticket   : [[{Markup.Escape(ticket.Provider)}]] {Markup.Escape(ticketRef)} — {Markup.Escape(ticket.Title)}[/]");
+            if (!string.IsNullOrWhiteSpace(ticket.Description))
+                AnsiConsole.MarkupLine($"[grey]             {Markup.Escape(ticket.Description)}[/]");
+        }
+
+        AnsiConsole.WriteLine();
     }
 
     /// <summary>

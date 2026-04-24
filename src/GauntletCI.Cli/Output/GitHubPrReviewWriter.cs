@@ -51,21 +51,23 @@ public static class GitHubPrReviewWriter
             return;
         }
 
-        var inlineFindings = result.Findings
-            .Where(f => !string.IsNullOrEmpty(f.FilePath) && f.Line.HasValue)
+        var groups = FindingGrouper.Group(result.Findings);
+
+        var inlineGroups = groups
+            .Where(g => !string.IsNullOrEmpty(g.FilePath) && g.PrimaryLine.HasValue)
             .ToList();
 
-        var summaryFindings = result.Findings
-            .Where(f => string.IsNullOrEmpty(f.FilePath) || !f.Line.HasValue)
+        var summaryGroups = groups
+            .Where(g => string.IsNullOrEmpty(g.FilePath) || !g.PrimaryLine.HasValue)
             .ToList();
 
         var url = $"https://api.github.com/repos/{repository}/pulls/{prNumber}/reviews";
 
         // First attempt: inline comments + summary body.
         // If GitHub rejects (422, line not in diff), fall back to summary-only.
-        var retry = await TryPostReviewAsync(githubAuth, url, sha, inlineFindings, summaryFindings, ct);
+        var retry = await TryPostReviewAsync(githubAuth, url, sha, inlineGroups, summaryGroups, ct);
         if (retry)
-            await TryPostReviewAsync(githubAuth, url, sha, [], [.. summaryFindings, .. inlineFindings], ct);
+            await TryPostReviewAsync(githubAuth, url, sha, [], [.. summaryGroups, .. inlineGroups], ct);
     }
 
     /// <summary>
@@ -154,6 +156,78 @@ public static class GitHubPrReviewWriter
     }
 
     /// <summary>
+    /// Builds the markdown body for a grouped inline diff comment. When the same rule fires
+    /// against multiple lines in the same file, all hits are collapsed into one comment with a
+    /// multi-line evidence list. Mirrors the run-log console layout: Summary / Evidence / Why /
+    /// Action (+ optional LLM/Expert/Coverage/Ticket).
+    /// </summary>
+    public static string BuildCommentBody(GroupedFinding group)
+    {
+        var sb = new StringBuilder();
+        var lineLabel = group.Lines.Count > 1
+            ? $" — lines {string.Join(", ", group.Lines)}"
+            : string.Empty;
+        sb.AppendLine($"**{group.RuleId} — {group.RuleName}**{lineLabel}");
+        sb.AppendLine();
+        sb.AppendLine(group.Summary);
+
+        if (group.Evidence.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("**Evidence:**");
+            foreach (var ev in group.Evidence)
+                sb.AppendLine(FormatEvidenceMarkdown(ev));
+        }
+
+        if (!string.IsNullOrWhiteSpace(group.WhyItMatters))
+        {
+            sb.AppendLine();
+            sb.AppendLine($"⚠️ **Why it matters:** {group.WhyItMatters}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(group.SuggestedAction))
+        {
+            sb.AppendLine();
+            sb.AppendLine($"💡 **Suggested action:** {group.SuggestedAction}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(group.LlmExplanation))
+        {
+            sb.AppendLine();
+            sb.AppendLine($"🤖 **LLM insight:** {group.LlmExplanation}");
+        }
+
+        if (group.ExpertContext is { } ctx)
+        {
+            sb.AppendLine();
+            sb.AppendLine($"📚 **Expert context:** {ctx.Content} _(source: {ctx.Source})_");
+        }
+
+        if (!string.IsNullOrWhiteSpace(group.CoverageNote))
+        {
+            sb.AppendLine();
+            sb.AppendLine($"📊 **Coverage:** {group.CoverageNote}");
+        }
+
+        if (group.TicketContext is not null)
+        {
+            var t = group.TicketContext;
+            var link = t.Url is not null ? $"[{t.Id}]({t.Url})" : t.Id;
+            sb.AppendLine();
+            sb.AppendLine($"🎫 **Ticket ({t.Provider}):** {link} — {t.Title}");
+            if (!string.IsNullOrWhiteSpace(t.Description))
+                sb.AppendLine($"> {t.Description}");
+        }
+
+        sb.AppendLine();
+        sb.Append($"<sub>Confidence: {group.Confidence} | Severity: {group.Severity}");
+        if (group.Count > 1) sb.Append($" | {group.Count} occurrences");
+        sb.Append("</sub>");
+
+        return sb.ToString();
+    }
+
+    /// <summary>
     /// Formats an evidence string as GitHub-flavored Markdown.
     /// <list type="bullet">
     ///   <item><c>Was: X | Now: Y</c> → diff code block with a red removed line and a green added line.</item>
@@ -199,23 +273,23 @@ public static class GitHubPrReviewWriter
         string githubAuth,
         string url,
         string sha,
-        List<Finding> inlineFindings,
-        List<Finding> summaryFindings,
+        List<GroupedFinding> inlineGroups,
+        List<GroupedFinding> summaryGroups,
         CancellationToken ct)
     {
-        var bodyText = BuildReviewBody(summaryFindings, hasInlineComments: inlineFindings.Count > 0);
+        var bodyText = BuildReviewBody(summaryGroups, hasInlineComments: inlineGroups.Count > 0);
 
         var payload = new ReviewPayload
         {
             CommitId = sha,
             Body     = bodyText,
             Event    = "COMMENT",
-            Comments = [.. inlineFindings.Select(f => new ReviewComment
+            Comments = [.. inlineGroups.Select(g => new ReviewComment
             {
-                Path = f.FilePath!,
-                Line = f.Line!.Value,
+                Path = g.FilePath!,
+                Line = g.PrimaryLine!.Value,
                 Side = "RIGHT",
-                Body = BuildCommentBody(f),
+                Body = BuildCommentBody(g),
             })],
         };
 
@@ -234,7 +308,12 @@ public static class GitHubPrReviewWriter
             using var response = await _http.SendAsync(request, ct);
 
             if (response.IsSuccessStatusCode)
+            {
+                Console.Error.WriteLine(
+                    $"[GauntletCI] --github-pr-comments: posted review with " +
+                    $"{inlineGroups.Count} inline comment(s) and {summaryGroups.Count} summary entry(ies).");
                 return false;
+            }
 
             var responseBody = await response.Content.ReadAsStringAsync();
 
@@ -246,7 +325,7 @@ public static class GitHubPrReviewWriter
                 return false;
             }
 
-            if (response.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity && inlineFindings.Count > 0)
+            if (response.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity && inlineGroups.Count > 0)
             {
                 Console.Error.WriteLine(
                     "[GauntletCI] --github-pr-comments: one or more finding lines are outside the diff — " +
@@ -265,9 +344,9 @@ public static class GitHubPrReviewWriter
         }
     }
 
-    public static string BuildReviewBody(List<Finding> summaryFindings, bool hasInlineComments)
+    public static string BuildReviewBody(List<GroupedFinding> summaryGroups, bool hasInlineComments)
     {
-        if (summaryFindings.Count == 0)
+        if (summaryGroups.Count == 0)
             return hasInlineComments
                 ? "**GauntletCI** found issues in this PR. See inline comments for details."
                 : string.Empty;
@@ -276,12 +355,16 @@ public static class GitHubPrReviewWriter
         sb.AppendLine("**GauntletCI** found the following issues:");
         sb.AppendLine();
 
-        foreach (var f in summaryFindings)
+        foreach (var g in summaryGroups)
         {
-            var location = !string.IsNullOrEmpty(f.FilePath) && f.Line.HasValue
-                ? $" (`{f.FilePath}:{f.Line}`)"
+            var location = !string.IsNullOrEmpty(g.FilePath)
+                ? (g.Lines.Count > 1
+                    ? $" (`{g.FilePath}` lines {string.Join(", ", g.Lines)})"
+                    : g.PrimaryLine.HasValue
+                        ? $" (`{g.FilePath}:{g.PrimaryLine}`)"
+                        : $" (`{g.FilePath}`)")
                 : string.Empty;
-            sb.AppendLine($"- **{f.RuleId} — {f.RuleName}**{location}: {f.Summary}");
+            sb.AppendLine($"- **{g.RuleId} — {g.RuleName}**{location}: {g.Summary}");
         }
 
         if (hasInlineComments)

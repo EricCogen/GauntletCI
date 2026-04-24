@@ -57,6 +57,10 @@ inside. GauntletCI runs on every PR — open one and read the workflow output:
 
 **[→ Browse the live demo PRs](https://github.com/EricCogen/GauntletCI-Demo/pulls)**
 
+Want to drive it yourself? **[Fork or clone GauntletCI-Demo](https://github.com/EricCogen/GauntletCI-Demo#run-it-yourself-recommended)**
+and run the scenarios on your own copy — the demo repo's README has a one-click
+fork-and-run path plus a local-CLI walkthrough.
+
 ---
 
 ## 📖 Why This Exists

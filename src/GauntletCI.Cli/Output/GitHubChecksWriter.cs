@@ -37,6 +37,11 @@ public static class GitHubChecksWriter
 
         var blockCount = result.Findings.Count(f => f.Severity == RuleSeverity.Block);
         var warnCount  = result.Findings.Count(f => f.Severity == RuleSeverity.Warn);
+        var groupCount = FindingGrouper.Group(result.Findings).Count;
+
+        var titleText = result.Findings.Count == 0
+            ? "No risks detected"
+            : $"{groupCount} grouped finding{(groupCount == 1 ? "" : "s")} ({blockCount} block, {warnCount} warn)";
 
         var payload = new
         {
@@ -46,8 +51,8 @@ public static class GitHubChecksWriter
             conclusion,
             output     = new
             {
-                title       = $"{blockCount} Block findings, {warnCount} Warn findings",
-                summary     = $"GauntletCI found {blockCount} high-risk changes.",
+                title       = titleText,
+                summary     = BuildSummaryMarkdown(result),
                 annotations,
             }
         };
@@ -71,6 +76,11 @@ public static class GitHubChecksWriter
                 var body = await response.Content.ReadAsStringAsync(ct);
                 Console.Error.WriteLine($"[GauntletCI] --github-checks: API error {response.StatusCode} — {body}");
             }
+            else
+            {
+                Console.Error.WriteLine(
+                    $"[GauntletCI] --github-checks: posted check run with {groupCount} finding(s), conclusion={conclusion}.");
+            }
         }
         catch (Exception ex)
         {
@@ -90,26 +100,138 @@ public static class GitHubChecksWriter
 
     /// <summary>
     /// Builds the annotation list for the check run output.
-    /// Block findings are prioritized first, then Warn, Info, Advisory.
-    /// Capped at 50; only findings with both FilePath and Line are included.
+    /// Findings are grouped by (RuleId, FilePath); one annotation is emitted per group.
+    /// Block groups are prioritized first, then Warn, Info, Advisory.
+    /// Capped at 50; only groups with both FilePath and a primary line are included.
     /// </summary>
     internal static List<object> BuildAnnotations(EvaluationResult result)
     {
-        return result.Findings
-            .Where(f => !string.IsNullOrEmpty(f.FilePath) && f.Line.HasValue)
-            .OrderBy(f => SeverityPriority(f.Severity))
+        return FindingGrouper.Group(result.Findings)
+            .Where(g => !string.IsNullOrEmpty(g.FilePath) && g.PrimaryLine.HasValue)
+            .OrderBy(g => SeverityPriority(g.Severity))
             .Take(50)
-            .Select(f => (object)new
+            .Select(g =>
             {
-                path             = f.FilePath!,
-                start_line       = f.Line!.Value,
-                end_line         = f.Line!.Value,
-                annotation_level = ToAnnotationLevel(f.Severity),
-                title            = $"{f.RuleId} — {f.RuleName}",
-                message          = f.Summary,
-                raw_details      = $"{f.WhyItMatters}\n\n{f.SuggestedAction}",
+                var lineLabel = g.Lines.Count > 1
+                    ? $" (lines {string.Join(", ", g.Lines)})"
+                    : string.Empty;
+                var rawDetails = BuildRawDetails(g);
+                return (object)new
+                {
+                    path             = g.FilePath!,
+                    start_line       = g.PrimaryLine!.Value,
+                    end_line         = g.PrimaryLine!.Value,
+                    annotation_level = ToAnnotationLevel(g.Severity),
+                    title            = $"{g.RuleId} — {g.RuleName}{lineLabel}",
+                    message          = g.Summary,
+                    raw_details      = rawDetails,
+                };
             })
             .ToList();
+    }
+
+    /// <summary>
+    /// Builds the multi-section markdown body shown in the check run summary panel.
+    /// Grouped by severity (Block / Warn / Info), each entry mirrors the console run-log layout.
+    /// </summary>
+    internal static string BuildSummaryMarkdown(EvaluationResult result)
+    {
+        if (result.Findings.Count == 0)
+            return "✅ **GauntletCI** — Scan complete. No risk signals detected.";
+
+        var groups = FindingGrouper.Group(result.Findings);
+        var sb = new StringBuilder();
+        sb.AppendLine("### GauntletCI Risk Analysis");
+        sb.AppendLine();
+        sb.AppendLine($"**{groups.Count}** grouped finding(s) across **{result.RulesEvaluated}** rules evaluated.");
+        sb.AppendLine();
+
+        var sections = new[]
+        {
+            (RuleSeverity.Block, "🚫 Possible Block"),
+            (RuleSeverity.Warn,  "⚠️ Warn"),
+            (RuleSeverity.Info,  "ℹ️ Info"),
+            (RuleSeverity.Advisory, "💡 Advisory"),
+        };
+
+        foreach (var (severity, label) in sections)
+        {
+            var section = groups.Where(g => g.Severity == severity).ToList();
+            if (section.Count == 0) continue;
+
+            sb.AppendLine($"#### {label} ({section.Count})");
+            sb.AppendLine();
+            foreach (var g in section)
+            {
+                sb.AppendLine(RenderGroupMarkdown(g));
+                sb.AppendLine();
+            }
+        }
+
+        return sb.ToString().TrimEnd();
+    }
+
+    private static string BuildRawDetails(GroupedFinding g)
+    {
+        var sb = new StringBuilder();
+        if (g.Evidence.Count > 0)
+        {
+            sb.AppendLine("Evidence:");
+            foreach (var ev in g.Evidence)
+                sb.AppendLine($"  - {ev}");
+            sb.AppendLine();
+        }
+        if (!string.IsNullOrWhiteSpace(g.WhyItMatters))
+        {
+            sb.AppendLine($"Why: {g.WhyItMatters}");
+            sb.AppendLine();
+        }
+        if (!string.IsNullOrWhiteSpace(g.SuggestedAction))
+            sb.Append($"Action: {g.SuggestedAction}");
+        return sb.ToString().TrimEnd();
+    }
+
+    private static string RenderGroupMarkdown(GroupedFinding g)
+    {
+        var sb = new StringBuilder();
+        var loc = g.FilePath is not null
+            ? (g.Lines.Count > 1
+                ? $" — `{g.FilePath}` (lines {string.Join(", ", g.Lines)})"
+                : g.PrimaryLine.HasValue
+                    ? $" — `{g.FilePath}:{g.PrimaryLine}`"
+                    : $" — `{g.FilePath}`")
+            : string.Empty;
+
+        sb.AppendLine($"**{g.RuleId} — {g.RuleName}**{loc}");
+        sb.AppendLine();
+        sb.AppendLine($"**Summary:** {g.Summary}");
+
+        if (g.Evidence.Count > 0)
+        {
+            sb.AppendLine();
+            sb.AppendLine("**Evidence:**");
+            foreach (var ev in g.Evidence)
+                sb.AppendLine($"- {ev}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(g.WhyItMatters))
+        {
+            sb.AppendLine();
+            sb.AppendLine($"**Why it matters:** {g.WhyItMatters}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(g.SuggestedAction))
+        {
+            sb.AppendLine();
+            sb.AppendLine($"**Suggested action:** {g.SuggestedAction}");
+        }
+
+        sb.AppendLine();
+        sb.Append($"<sub>Confidence: {g.Confidence} · Severity: {g.Severity}");
+        if (g.Count > 1) sb.Append($" · {g.Count} occurrences");
+        sb.Append("</sub>");
+
+        return sb.ToString();
     }
 
     // Block=0 (highest priority), Warn=1, Info=2, Advisory=3 — enum values cannot be relied on.

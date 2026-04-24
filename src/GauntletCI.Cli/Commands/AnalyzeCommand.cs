@@ -375,22 +375,27 @@ public static class AnalyzeCommand
 
                 if (prCommentSuggest)
                 {
-                    var inlineFindings = result.Findings.Where(f => !string.IsNullOrEmpty(f.FilePath) && f.Line.HasValue).ToList();
-                    var summaryFindings = result.Findings.Where(f => string.IsNullOrEmpty(f.FilePath) || !f.Line.HasValue).ToList();
-                    foreach (var finding in inlineFindings)
+                    var groups = GauntletCI.Core.Model.FindingGrouper.Group(result.Findings);
+                    var inlineGroups = groups
+                        .Where(g => !string.IsNullOrEmpty(g.FilePath) && g.PrimaryLine.HasValue)
+                        .ToList();
+                    var summaryGroups = groups
+                        .Where(g => string.IsNullOrEmpty(g.FilePath) || !g.PrimaryLine.HasValue)
+                        .ToList();
+                    foreach (var g in inlineGroups)
                     {
-                        Console.WriteLine($"### {finding.FilePath}:{finding.Line}");
+                        Console.WriteLine($"### {g.FilePath}:{g.PrimaryLine}");
                         Console.WriteLine();
-                        Console.WriteLine(GitHubPrReviewWriter.BuildCommentBody(finding));
+                        Console.WriteLine(GitHubPrReviewWriter.BuildCommentBody(g));
                         Console.WriteLine();
                         Console.WriteLine("---");
                         Console.WriteLine();
                     }
-                    if (summaryFindings.Count > 0)
+                    if (summaryGroups.Count > 0)
                     {
                         Console.WriteLine("### Summary Comment");
                         Console.WriteLine();
-                        Console.WriteLine(GitHubPrReviewWriter.BuildReviewBody(summaryFindings, hasInlineComments: inlineFindings.Count > 0));
+                        Console.WriteLine(GitHubPrReviewWriter.BuildReviewBody(summaryGroups, hasInlineComments: inlineGroups.Count > 0));
                     }
                 }
 

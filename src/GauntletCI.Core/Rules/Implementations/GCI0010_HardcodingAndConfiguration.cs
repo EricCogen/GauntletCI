@@ -11,7 +11,8 @@ namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
 /// GCI0010 – Hardcoding and Configuration
-/// Detects hardcoded IPs, URLs, connection strings, secrets, and environment names.
+/// Detects hardcoded IPs, URLs, connection strings, ports, and environment names.
+/// (Hardcoded credentials/secrets are detected by GCI0012 Security Risk to avoid duplicate findings.)
 /// </summary>
 public class GCI0010_HardcodingAndConfiguration : RuleBase
 {
@@ -23,11 +24,6 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
 
     private static readonly string[] ConnectionStringMarkers =
         ["Server=", "Data Source=", "mongodb://", "redis://"];
-
-    // Diverges intentionally from WellKnownPatterns.SecretNamePatterns: includes "pwd" (common abbreviation
-    // detected in this context) and omits broader entries specific to other rules.
-    private static readonly string[] SecretNamePatterns =
-        ["password", "secret", "apikey", "api_key", "token", "pwd"];
 
     private static readonly string[] EnvironmentNames =
         ["production", "staging", "prod"];
@@ -46,7 +42,6 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
             CheckIpAddress(file, findings);
             CheckHardcodedUrl(file, findings);
             CheckConnectionString(file, findings);
-            CheckSecrets(file, findings);
             CheckHardcodedPorts(file, findings);
             CheckEnvironmentNames(file, findings);
         }
@@ -129,77 +124,6 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         }
     }
 
-    private void CheckSecrets(DiffFile file, List<Finding> findings)
-    {
-        foreach (var line in file.AddedLines)
-        {
-            var content = line.Content;
-            if (IsCommentLine(content.Trim())) continue;
-
-            // Require a real assignment (=) not a comparison (==, !=, <=, >=).
-            if (!HasAssignment(content)) continue;
-
-            var literals = ExtractStringLiterals(content);
-            if (literals.Count == 0) continue;
-
-            // Skip lines where every string literal looks like an env var name (ALL_CAPS_UNDERSCORES).
-            // These are references to env var keys, not hardcoded secret values.
-            if (literals.All(IsEnvVarName)) continue;
-
-            // Check secret keyword only in the left-hand side of the assignment (the variable name),
-            // not anywhere in the line — avoids false positives from type names like HtmlTokenType.
-            var eqIndex = FindAssignmentIndex(content);
-            var lhs = content[..eqIndex].ToLowerInvariant();
-
-            foreach (var pattern in SecretNamePatterns)
-            {
-                if (!lhs.Contains(pattern)) continue;
-
-                findings.Add(CreateFinding(
-                    file,
-                    summary: $"Possible hardcoded secret ('{pattern}' assigned a string literal).",
-                    evidence: $"Line {line.LineNumber}: {content.Trim()}",
-                    whyItMatters: "Secrets in source code get committed to version control and can leak via logs, diffs, or repo access.",
-                    suggestedAction: "Use a secrets manager (Azure Key Vault, AWS Secrets Manager) or environment variables.",
-                    confidence: Confidence.High));
-                break;
-            }
-        }
-    }
-
-    // Returns true only if the line contains a real assignment = (not ==, !=, <=, >=).
-    private static bool HasAssignment(string content)
-    {
-        ArgumentNullException.ThrowIfNull(content);
-        for (int i = 0; i < content.Length; i++)
-        {
-            if (content[i] != '=') continue;
-            char prev = i > 0 ? content[i - 1] : '\0';
-            char next = i < content.Length - 1 ? content[i + 1] : '\0';
-            if (prev is '!' or '<' or '>' or '=') continue;
-            if (next is '=') continue;
-            if (prev is '>' && next is '>') continue; // => lambda
-            return true;
-        }
-        return false;
-    }
-
-    // Returns the index of the first real assignment = in the line.
-    private static int FindAssignmentIndex(string content)
-    {
-        ArgumentNullException.ThrowIfNull(content);
-        for (int i = 0; i < content.Length; i++)
-        {
-            if (content[i] != '=') continue;
-            char prev = i > 0 ? content[i - 1] : '\0';
-            char next = i < content.Length - 1 ? content[i + 1] : '\0';
-            if (prev is '!' or '<' or '>' or '=') continue;
-            if (next is '=') continue;
-            return i;
-        }
-        return content.Length;
-    }
-
     private void CheckHardcodedPorts(DiffFile file, List<Finding> findings)
     {
         foreach (var line in file.AddedLines)
@@ -255,11 +179,6 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         trimmed.StartsWith("//", StringComparison.Ordinal) ||
         trimmed.StartsWith("*", StringComparison.Ordinal) ||
         trimmed.StartsWith("#", StringComparison.Ordinal);
-
-    // An env var name is ALL_CAPS with digits and underscores (e.g. GITHUB_TOKEN, MY_API_KEY).
-    // Such strings are references to env var keys, not literal secret values.
-    private static bool IsEnvVarName(string literal) =>
-        literal.Length > 0 && literal.All(c => char.IsUpper(c) || char.IsDigit(c) || c == '_');
 
     private static List<string> ExtractStringLiterals(string content)
     {

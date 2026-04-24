@@ -4,7 +4,7 @@
 
     <!-- Identity -->
     <id>GauntletCI</id>
-    <version>2.0.1</version>
+    <version>2.0.2</version>
     <authors>Eric Cogen</authors>
     <owners>Eric Cogen</owners>
 
@@ -116,6 +116,15 @@ See https://gauntletci.com for full documentation.
 
     <!-- Release notes for this version -->
     <releaseNotes>
+v2.0.2
+- Findings sharing (RuleId, FilePath) are now grouped: one console block, one annotation, one inline PR comment, and one check-run annotation per group, with multi-line evidence.
+- GitHub Checks output is now populated: rich title (`N grouped findings (B block, W warn)`) and a markdown summary mirroring the console run-log layout.
+- GitHub annotations now include Lines, Evidence, Why, and Action (multi-line via `%0A`) instead of just the one-line Summary.
+- PR review inline comments now use the run-log layout (RuleId — RuleName, Summary, Evidence list, Why, Action).
+- Diagnostic stderr logging on successful PR review and check-run posts so silent failures are easier to spot.
+- GCI0010 vs GCI0012 hardcoded-credential overlap resolved: GCI0012 (Security Risk) is now the single owner of credential-assignment detection. GCI0010 retains IPs, URLs, connection strings, ports, and environment names. GCI0012's heuristic was upgraded to LHS-only matching with comment + env-var-name skip (no more false positives on type names like `HtmlTokenType`).
+- GCI0007 vs GCI0024 Roslyn diagnostic overlap resolved: CA2000 (don't dispose objects) and CA1001 (types owning disposable) now map exclusively to GCI0024 (Resource Lifecycle). GCI0007 keeps only CA1031 (catch generic exception). Previously every CA2000/CA1001 diagnostic produced two findings.
+
 v2.0.1
 - New CLI flags: --github-pr-comments (post findings as PR review with inline comments) and --github-checks (post via GitHub Checks API)
 - New CLI flags: --notify-slack and --notify-teams for Block-finding webhooks
