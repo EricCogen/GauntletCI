@@ -122,4 +122,15 @@ public class GCI0012Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("hardcoded") || f.Summary.Contains("credential"));
     }
+
+    [Fact]
+    public async Task TokenInLogCall_GCI0029OwnsIt_ShouldNotFlag()
+    {
+        // GCI0029 (PII Logging Leak) is the authoritative reporter for 'token' in log calls.
+        // GCI0012 must not double-report a log call as a hardcoded credential.
+        var diff = MakeDiff("    _logger.LogWarning(\"token = \" + authToken);");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("hardcoded") || f.Summary.Contains("credential"));
+    }
 }

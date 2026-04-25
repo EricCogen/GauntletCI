@@ -215,8 +215,28 @@ public class GCI0024Tests
             """;
 
         var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);        Assert.DoesNotContain(findings, f => f.Summary.Contains("InvocationContext"));
+    }
+
+    [Fact]
+    public async Task NewHttpClientWithoutUsing_GCI0039OwnsIt_ShouldNotFlag()
+    {
+        // GCI0039 (External Service Safety) is the authoritative reporter for new HttpClient().
+        // GCI0024 must not double-report the same instantiation.
+        var raw = """
+            diff --git a/src/ApiService.cs b/src/ApiService.cs
+            index abc..def 100644
+            --- a/src/ApiService.cs
+            +++ b/src/ApiService.cs
+            @@ -1,2 +1,3 @@
+             public class ApiService {
+            +    var client = new HttpClient();
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.DoesNotContain(findings, f => f.Summary.Contains("InvocationContext"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("HttpClient"));
     }
 }

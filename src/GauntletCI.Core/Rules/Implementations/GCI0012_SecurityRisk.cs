@@ -11,6 +11,8 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// <summary>
 /// GCI0012 – Security Risk
 /// Detects SQL injection, weak crypto, dangerous APIs, and credential exposure.
+/// Boundary with GCI0029 (PII Logging Leak): GCI0029 owns PII-in-log-call detection including
+/// the 'token' term. CheckHardcodedCredentials skips log-call lines to avoid double-reporting.
 /// </summary>
 public class GCI0012_SecurityRisk : RuleBase
 {
@@ -24,6 +26,14 @@ public class GCI0012_SecurityRisk : RuleBase
     // Diverges intentionally from WellKnownPatterns.SecretNamePatterns: includes "pwd" and "token"
     // so GCI0012 is the single owner of hardcoded credential detection (GCI0010 no longer duplicates it).
     private static readonly string[] SecretNamePatterns = ["password", "secret", "apikey", "api_key", "token", "pwd"];
+
+    // GCI0029 (PII Logging Leak) owns detection of PII terms including 'token' in log calls.
+    // Used by CheckHardcodedCredentials to avoid double-reporting.
+    private static readonly string[] LogCallPrefixes =
+    [
+        "_logger.", "logger.", "Logger.", "_log.", "log.",
+        "Log.Information", "Log.Warning", "Log.Error", "Log.Debug", "Log.Critical", "Log.Write"
+    ];
 
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
@@ -128,7 +138,10 @@ public class GCI0012_SecurityRisk : RuleBase
             var content = line.Content;
             if (IsCommentLine(content.Trim())) continue;
 
-            // Require a real assignment (=) not a comparison (==, !=, <=, >=).
+            // GCI0029 (PII Logging Leak) owns PII detection in log calls; skip here to avoid
+            // double-reporting when a log call contains a term like 'token'.
+            if (LogCallPrefixes.Any(p => content.Contains(p, StringComparison.Ordinal))) continue;
+
             if (!HasAssignment(content)) continue;
 
             var literals = ExtractStringLiterals(content);

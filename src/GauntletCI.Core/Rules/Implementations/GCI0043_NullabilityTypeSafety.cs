@@ -8,6 +8,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// <summary>
 /// GCI0043 – Nullability and Type Safety
 /// Detects null-forgiving operator overuse, pragma warning disables for nullable, and unchecked as-casts.
+/// Boundary with GCI0006 (Edge Case Handling): GCI0006 owns .Value access detection (nullable .Value
+/// without a null guard). When an as-cast result is accessed via .Value on the same line, GCI0006 is
+/// the authoritative reporter; GCI0043 suppresses its as-cast finding to avoid double-reporting.
 /// </summary>
 public class GCI0043_NullabilityTypeSafety : RuleBase
 {
@@ -121,6 +124,11 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
             // Skip "as" that appears inside a string literal (odd quote count before it)
             var asPos = content.IndexOf(" as ", StringComparison.Ordinal);
             if (IsInsideStringLiteral(content, asPos)) continue;
+
+            // GCI0006 (Edge Case Handling) owns .Value access detection. When the as-cast result
+            // is immediately accessed via .Value on the same line, suppress here to avoid
+            // double-reporting the same null-safety defect.
+            if (content.Contains(".Value", StringComparison.Ordinal)) continue;
 
             // Check the same line and ±2 neighboring added lines for null checks
             int start = Math.Max(0, i - 2);
