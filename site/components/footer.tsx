@@ -4,7 +4,7 @@ import { Github } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-card/50">
+    <footer data-pagefind-ignore="" className="border-t border-border bg-card/50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="py-12">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
@@ -50,6 +50,11 @@ export function Footer() {
                 <h3 className="text-sm font-semibold mb-4">Resources</h3>
                 <ul className="space-y-3">
                   <li>
+                    <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      About
+                    </Link>
+                  </li>
+                  <li>
                     <Link href="/articles" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                       Articles
                     </Link>
@@ -88,7 +93,7 @@ export function Footer() {
         <div className="border-t border-border py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <p className="text-sm text-muted-foreground">
             Elastic License 2.0. Built by{" "}
-            <Link href="https://github.com/ericcogen" className="text-foreground hover:text-cyan-400 transition-colors">
+            <Link href="/about" className="text-foreground hover:text-cyan-400 transition-colors">
               Eric Cogen
             </Link>
           </p>
