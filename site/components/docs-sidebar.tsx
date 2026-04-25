@@ -15,7 +15,7 @@ const navItems = [
 export function DocsSidebar() {
   const pathname = usePathname();
   return (
-    <aside className="hidden md:block w-56 shrink-0">
+    <aside data-pagefind-ignore="" className="hidden md:block w-56 shrink-0">
       <nav className="sticky top-24 space-y-1">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-4">Documentation</p>
         {navItems.map((item) => (
