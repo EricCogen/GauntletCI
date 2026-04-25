@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 
 export const metadata: Metadata = {
   title: "GauntletCI vs Snyk | Behavioral Risk Detection vs Vulnerability Scanning",
@@ -39,6 +41,7 @@ export default function SnykComparePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <Header />
       <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28 space-y-20">
 
@@ -253,6 +256,7 @@ export default function SnykComparePage() {
 
       </div>
     </div>
+    <Footer />
     </>
   );
 }
