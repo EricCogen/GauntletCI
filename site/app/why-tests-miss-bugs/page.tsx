@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { RulesApplied } from "@/components/rules-applied";
 
 export const metadata: Metadata = {
   title: "Why Tests Miss Bugs | The Green Build Fallacy",
@@ -642,6 +643,7 @@ export default function WhyTestsMissBugsPage() {
             </Link>
           </div>
 
+          <RulesApplied ids={["GCI0003", "GCI0006", "GCI0032", "GCI0041"]} />
         </div>
       </main>
       <Footer />

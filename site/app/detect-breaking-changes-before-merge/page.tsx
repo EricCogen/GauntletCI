@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { RulesApplied } from "@/components/rules-applied";
 
 export const metadata: Metadata = {
   title: "Detect Breaking Changes Before Merge | GauntletCI",
@@ -634,6 +635,7 @@ export default function DetectBreakingChangesPage() {
             </Link>
           </div>
 
+          <RulesApplied ids={["GCI0004", "GCI0021", "GCI0047", "GCI0052"]} />
         </div>
       </main>
       <Footer />
