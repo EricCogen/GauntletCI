@@ -9,6 +9,8 @@ import {
   type Rule,
 } from "@/lib/rules";
 import { articlesForRule } from "@/lib/articles";
+import { AuthorBio } from "@/components/author-bio";
+import { softwareApplicationSchema, buildRuleFaqSchema } from "@/lib/schemas";
 
 type Params = { ruleId: string };
 
@@ -106,11 +108,21 @@ export default async function RuleDetailPage({
     ],
   };
 
+  const faqSchema = buildRuleFaqSchema(rule);
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
       <div className="space-y-8">
         <nav className="text-sm text-muted-foreground">
@@ -285,6 +297,8 @@ export default async function RuleDetailPage({
             .
           </p>
         </div>
+
+        <AuthorBio variant="short" />
       </div>
     </>
   );
