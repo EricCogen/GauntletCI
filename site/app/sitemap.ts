@@ -1,10 +1,17 @@
 import { MetadataRoute } from "next";
+import { rules } from "@/lib/rules";
 
 export const dynamic = "force-static";
 
 const BASE_URL = "https://gauntletci.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const ruleEntries: MetadataRoute.Sitemap = rules.map((r) => ({
+    url: `${BASE_URL}/docs/rules/${r.id}`,
+    changeFrequency: "monthly",
+    priority: 0.7,
+  }));
+
   return [
     { url: `${BASE_URL}/`,                                    changeFrequency: "weekly",  priority: 1.0 },
     { url: `${BASE_URL}/articles`,                            changeFrequency: "weekly",  priority: 0.9 },
@@ -26,5 +33,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/compare/gauntletci-vs-semgrep`,       changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/compare/gauntletci-vs-snyk`,          changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/compare/gauntletci-vs-codeclimate`,   changeFrequency: "monthly", priority: 0.8 },
+    ...ruleEntries,
   ];
 }
