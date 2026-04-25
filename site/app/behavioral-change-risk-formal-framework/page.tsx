@@ -209,27 +209,40 @@ export default function BCRFormalFrameworkPage() {
             </p>
             <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-6 space-y-4">
               <p className="text-sm font-semibold text-cyan-400">Formal definition: Behavioral Change Risk (BCR)</p>
+
               <p className="text-sm text-muted-foreground leading-relaxed">
                 BCR is defined as a condition where both of the following hold:
               </p>
+
               <ol className="space-y-2 text-sm text-muted-foreground">
                 <li className="flex gap-3">
                   <span className="shrink-0 font-mono text-cyan-400">1.</span>
                   <span>
-                    <code className="bg-background/60 px-2 py-0.5 rounded font-mono text-xs">B(C + ΔC) ≠ B(C)</code>
-                    {" "}: the modification alters observable behavior; and
+                    <code className="bg-background/60 px-2 py-0.5 rounded font-mono text-xs">
+                      B(C + ΔC) ≠ B(C)
+                    </code>
+                    : the modification alters observable behavior; and
                   </span>
                 </li>
+
                 <li className="flex gap-3">
                   <span className="shrink-0 font-mono text-cyan-400">2.</span>
                   <span>
-                    <code className="bg-background/60 px-2 py-0.5 rounded font-mono text-xs">ΔB ∉ V(T, C + ΔC)</code>
-                    {" "}: the altered behavior is not covered by any assertion in the test suite.
+                    <code className="bg-background/60 px-2 py-0.5 rounded font-mono text-xs">
+                      ΔB ∉ V(T, C + ΔC)
+                    </code>
+                    : the altered behavior is not covered by the test suite.
                   </span>
                 </li>
               </ol>
+
               <p className="text-sm text-muted-foreground/70 italic leading-relaxed border-t border-border pt-3">
-                BCR emerges when the system&apos;s behavior space expands beyond the portion that is validated by tests.
+                BCR arises when the system's behavior space extends beyond what is validated by tests.
+              </p>
+
+              <p className="text-sm text-muted-foreground/70 italic leading-relaxed">
+                <span className="font-semibold">More formally</span>:<br />
+                  For a given system, behavior B is a function of code C. Any non-zero change ΔC introduces behavioral divergence potential such that B(C + ΔC) ≠ B(C).
               </p>
             </div>
             <p className="text-muted-foreground leading-relaxed">
