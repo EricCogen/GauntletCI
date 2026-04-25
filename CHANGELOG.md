@@ -15,6 +15,7 @@ Versions follow [Semantic Versioning](https://semver.org/).
 - GCI0032 vs GCI0042: `throw new NotImplementedException` no longer double-fires; GCI0042 (TODO/Stub Detection) is the sole reporter
 - GCI0012 vs GCI0029: log calls containing `token` (e.g. `_logger.Log("token = " + x)`) no longer trigger GCI0012 hardcoded-credential check; GCI0029 (PII Logging Leak) owns that shape
 - GCI0043 vs GCI0006: `as`-cast on a line that also accesses `.Value` no longer double-fires; GCI0006 (Edge Case Handling) owns the `.Value` path
+- All 5 compare pages (`vs-sonarqube`, `vs-codeql`, `vs-semgrep`, `vs-snyk`, `vs-codeclimate`) were missing Header and Footer; added to all pages
 
 ---
 

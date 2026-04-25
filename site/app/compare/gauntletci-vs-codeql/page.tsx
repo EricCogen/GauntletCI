@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Check, Minus, AlertCircle } from "lucide-react";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
 
 export const metadata: Metadata = {
   title: "GauntletCI vs. CodeQL: Behavioral Regression Detection vs. Security Variant Analysis",
@@ -92,6 +94,7 @@ export default function VsCodeQLPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <Header />
       <div className="min-h-screen bg-background text-foreground">
       {/* Hero */}
       <section className="border-b border-border py-16 sm:py-20">
@@ -297,6 +300,7 @@ export default function VsCodeQLPage() {
 
       </div>
     </div>
+    <Footer />
     </>
   );
 }
