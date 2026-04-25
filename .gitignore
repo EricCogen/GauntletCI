@@ -76,3 +76,4 @@ site/tsconfig.tsbuildinfo
 **/*.pyc
 **/*.pyo
 *.zip
+*.7z
