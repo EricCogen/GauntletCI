@@ -277,4 +277,27 @@ public class GCI0043Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("Null-forgiving"));
     }
+
+    [Fact]
+    public async Task AsCastWithValueAccess_GCI0006OwnsIt_ShouldNotFlag()
+    {
+        // GCI0006 (Edge Case Handling) owns .Value access detection.
+        // When an as-cast result is accessed via .Value on the same line, GCI0043 suppresses
+        // its as-cast finding to avoid double-reporting the same null-safety defect.
+        var raw = """
+            diff --git a/src/Parser.cs b/src/Parser.cs
+            index abc..def 100644
+            --- a/src/Parser.cs
+            +++ b/src/Parser.cs
+            @@ -1,2 +1,3 @@
+             public class Parser {
+            +    var x = (obj as MyType).Value;
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("as-cast"));
+    }
 }

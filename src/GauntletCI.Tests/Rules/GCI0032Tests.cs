@@ -96,4 +96,26 @@ public class GCI0032Tests
 
         Assert.Empty(findings);
     }
+
+    [Fact]
+    public async Task OnlyNotImplementedException_GCI0042OwnsIt_ShouldNotFlag()
+    {
+        // GCI0042 (TODO/Stub Detection) is the authoritative reporter for NotImplementedException.
+        // GCI0032 must not double-report the same throw.
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,3 +1,4 @@
+             public class Service {
+            +    public void DoWork() { throw new NotImplementedException(); }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
 }

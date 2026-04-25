@@ -14,6 +14,8 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// Covers both explicit known types (FileStream, SqlConnection, …) and any type whose name
 /// ends with a disposable suffix (Stream, Reader, Writer, Connection, Client, etc.).
 /// Absorbs GCI0030 detection scope; GCI0030 is now superseded by this rule.
+/// Boundary with GCI0039 (External Service Safety): GCI0039 owns new HttpClient() detection
+/// (it enforces IHttpClientFactory usage). HttpClient is suppressed here to avoid double-reporting.
 /// </summary>
 public class GCI0024_ResourceLifecycle : RuleBase
 {
@@ -43,7 +45,14 @@ public class GCI0024_ResourceLifecycle : RuleBase
         "Certificate", "Scope", "Timer", "Enumerator"
     ];
 
-    // Types that end with a disposable-looking suffix but do NOT implement IDisposable.
+    // Types whose lifecycle detection is owned by another rule. Suppress in GCI0024 to avoid
+    // double-reporting. Note: these types ARE disposable; the suppression is ownership-based,
+    // not because they are non-disposable.
+    // - HttpClient: owned by GCI0039 (External Service Safety), which enforces IHttpClientFactory.
+    private static readonly HashSet<string> GCI0039OwnedTypes = new(StringComparer.Ordinal)
+    {
+        "HttpClient",
+    };
     // The suffix heuristic is skipped for these to avoid false positives.
     private static readonly HashSet<string> KnownNonDisposableTypes = new(StringComparer.Ordinal)
     {
@@ -95,8 +104,8 @@ public class GCI0024_ResourceLifecycle : RuleBase
             var (typeName, isExplicit) = MatchDisposableType(content);
             if (typeName is null) continue;
 
-            if (typeName == "HttpClient" && LooksLikeFactoryProvidedHttpClient(allLines, i))
-                continue;
+            // Defer to the owning rule (GCI0039) rather than double-reporting.
+            if (GCI0039OwnedTypes.Contains(typeName)) continue;
 
             if (content.Contains("using ", StringComparison.Ordinal)) continue;
 
@@ -127,17 +136,6 @@ public class GCI0024_ResourceLifecycle : RuleBase
                 confidence: isExplicit ? Confidence.High : Confidence.Medium,
                 line: line));
         }
-    }
-
-    private static bool LooksLikeFactoryProvidedHttpClient(List<DiffLine> allLines, int idx)
-    {
-        int start = Math.Max(0, idx - 20);
-        int end = Math.Min(allLines.Count, idx + 20);
-
-        return allLines[start..end].Any(l =>
-            l.Content.Contains("CreateClient(", StringComparison.Ordinal) ||
-            l.Content.Contains("_httpClientFactory", StringComparison.Ordinal) ||
-            l.Content.Contains("IHttpClientFactory", StringComparison.Ordinal));
     }
 
     private static (string? TypeName, bool IsExplicit) MatchDisposableType(string content)
