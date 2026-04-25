@@ -9,6 +9,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// <summary>
 /// GCI0006 – Edge Case Handling
 /// Detects potential null dereferences and missing validation in added code.
+/// Boundary with GCI0043 (Nullability and Type Safety): GCI0043 detects as-casts without null checks
+/// but suppresses when the same line also has a .Value access, deferring to GCI0006 as the
+/// authoritative reporter for that combined pattern.
 /// </summary>
 public class GCI0006_EdgeCaseHandling : RuleBase
 {
