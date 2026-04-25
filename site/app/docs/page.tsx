@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { softwareApplicationSchema, buildFaqSchema } from "@/lib/schemas";
 
 export const metadata: Metadata = {
   title: "Getting Started | GauntletCI Docs",
@@ -17,10 +18,35 @@ const jsonLd = {
   "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
 };
 
+const faqSchema = buildFaqSchema([
+  {
+    q: "How do I install GauntletCI?",
+    a: "Install GauntletCI as a .NET global tool: dotnet tool install -g GauntletCI. Requires .NET 8 or later.",
+  },
+  {
+    q: "How do I run my first analysis?",
+    a: "Run gauntletci analyze --staged to analyze staged changes before committing. You can also pipe a diff from stdin with git diff HEAD | gauntletci analyze, or point at a saved diff file with gauntletci analyze --diff changes.diff.",
+  },
+  {
+    q: "How do I install GauntletCI as a pre-commit hook?",
+    a: "Run gauntletci init inside your repository. The hook runs gauntletci analyze --staged automatically before every commit and blocks the commit with exit code 1 if blocking findings are detected.",
+  },
+  {
+    q: "Does GauntletCI require a cloud connection?",
+    a: "No. GauntletCI runs entirely on your local machine. All analysis is local and deterministic. No code or diff content is sent to any external service.",
+  },
+  {
+    q: "What does GauntletCI analyze?",
+    a: "GauntletCI reads the exact lines added and removed in your diff and evaluates them against 30+ deterministic rules. It flags behavior changes without test updates, breaking API changes, new exception paths, removed null guards, and hardcoded secrets.",
+  },
+]);
+
 export default function DocsPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <div className="space-y-10">
       <div>
         <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">Documentation</p>
@@ -109,6 +135,7 @@ export default function DocsPage() {
             { href: "/docs/rules", label: "Rule Library", desc: "All detection rules" },
             { href: "/docs/configuration", label: "Configuration", desc: ".gauntletci.json reference" },
             { href: "/docs/integrations", label: "CI/CD Integrations", desc: "GitHub Actions and more" },
+            { href: "/pricing", label: "Pricing", desc: "Free during beta - see licensing details" },
           ].map((link) => (
             <Link
               key={link.href}

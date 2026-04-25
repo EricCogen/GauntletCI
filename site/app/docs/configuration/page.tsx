@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { softwareApplicationSchema, buildFaqSchema } from "@/lib/schemas";
 
 export const metadata: Metadata = {
   title: "Configuration | GauntletCI Docs",
@@ -15,10 +17,35 @@ const jsonLd = {
   "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
 };
 
+const faqSchema = buildFaqSchema([
+  {
+    q: "Is GauntletCI zero-config?",
+    a: "Yes. GauntletCI works out of the box with no configuration file required. All 30+ rules are enabled by default. Place a .gauntletci.json file at your repository root to customize behavior.",
+  },
+  {
+    q: "How do I disable a specific rule?",
+    a: 'Set the rule to disabled in .gauntletci.json: { "rules": { "GCI0001": { "enabled": false } } }. Replace GCI0001 with the rule ID you want to disable.',
+  },
+  {
+    q: "How do I control which severity level fails the build?",
+    a: 'Set exitOn in .gauntletci.json. "Block" (default) exits with code 1 only on blocking findings. "Warn" exits with code 1 on warnings too.',
+  },
+  {
+    q: "How do I suppress pre-existing findings in a legacy codebase?",
+    a: "Run gauntletci baseline capture --staged to snapshot current findings into .gauntletci-baseline.json. Future runs only report net-new risks introduced after the baseline. Commit the baseline file to share it with your team.",
+  },
+  {
+    q: "Can I change a rule severity without disabling it?",
+    a: 'Yes. Set the severity field in .gauntletci.json per rule: { "rules": { "GCI0014": { "enabled": true, "severity": "Warn" } } }. Valid values are Block and Warn.',
+  },
+]);
+
 export default function ConfigurationPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <div className="space-y-10">
       <div>
         <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">Configuration</p>
@@ -158,6 +185,26 @@ export default function ConfigurationPage() {
           This writes <code className="bg-muted px-1 rounded text-xs">.gauntletci-baseline.json</code> to your repo root.
           Commit it to share the baseline with your team.
         </p>
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-4">Next steps</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            { href: "/docs/cli-reference", label: "CLI Reference", desc: "All commands, flags, and exit codes" },
+            { href: "/docs/rules", label: "Rule Library", desc: "Browse all 30+ detection rules by category" },
+            { href: "/docs/integrations", label: "CI/CD Integrations", desc: "GitHub Actions, Azure Pipelines, and pre-commit hooks" },
+          ].map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="rounded-lg border border-border bg-card p-4 hover:border-cyan-500/50 transition-colors block"
+            >
+              <p className="font-medium text-sm">{link.label}</p>
+              <p className="text-xs text-muted-foreground mt-1">{link.desc}</p>
+            </Link>
+          ))}
+        </div>
       </section>
     </div>
     </>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { softwareApplicationSchema, buildFaqSchema } from "@/lib/schemas";
 
 export const metadata: Metadata = {
   title: "CI/CD Integrations | GauntletCI Docs",
@@ -15,10 +16,35 @@ const jsonLd = {
   "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
 };
 
+const faqSchema = buildFaqSchema([
+  {
+    q: "How do I integrate GauntletCI with GitHub Actions?",
+    a: "Add a workflow that checks out the repo with fetch-depth: 0, installs the .NET 8 tool, then runs: git diff origin/${{ github.base_ref }}...HEAD > pr.diff and gauntletci analyze --diff pr.diff --github-annotations. The step exits with code 1 if blocking findings are detected, failing the check.",
+  },
+  {
+    q: "Does GauntletCI work with Azure Pipelines?",
+    a: "Yes. Add a pipeline step that installs GauntletCI with dotnet tool install -g GauntletCI, then runs git diff to generate a diff file and passes it to gauntletci analyze --diff pr.diff --no-banner.",
+  },
+  {
+    q: "Can GauntletCI run as a pre-commit hook instead of in CI?",
+    a: "Yes, and this is the fastest setup. Run gauntletci init in your repository to install a .git/hooks/pre-commit script. It runs gauntletci analyze --staged before every commit with no CI configuration required.",
+  },
+  {
+    q: "What does GauntletCI exit code 1 mean in a CI pipeline?",
+    a: "Exit code 1 means blocking findings were detected. This fails the CI check and blocks the PR merge. Developers must address the findings or update the baseline before the check passes.",
+  },
+  {
+    q: "Can I use GauntletCI with LLM enrichment in CI?",
+    a: "The built-in ONNX engine is not available in CI because loading a 2 GB model in an ephemeral runner is impractical. Configure a remote OpenAI-compatible endpoint via llm.ciEndpoint in .gauntletci.json to use LLM enrichment in CI.",
+  },
+]);
+
 export default function IntegrationsPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <div className="space-y-10">
       <div>
         <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">CI/CD Integrations</p>

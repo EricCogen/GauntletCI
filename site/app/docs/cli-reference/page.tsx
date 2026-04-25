@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { softwareApplicationSchema, buildFaqSchema } from "@/lib/schemas";
 
 export const metadata: Metadata = {
   title: "CLI Reference | GauntletCI Docs",
@@ -34,10 +36,35 @@ const jsonLd = {
   "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
 };
 
+const faqSchema = buildFaqSchema([
+  {
+    q: "How do I analyze staged changes with GauntletCI?",
+    a: "Run gauntletci analyze --staged to analyze your staged changes. The tool exits with code 1 if blocking findings are detected, which will block the commit if used as a pre-commit hook.",
+  },
+  {
+    q: "What output formats does GauntletCI support?",
+    a: "GauntletCI supports text (default, human-readable terminal output) and json (machine-readable) output formats, controlled with the --output flag. Use --output json to pipe findings to scripts, dashboards, or custom integrations.",
+  },
+  {
+    q: "What exit codes does GauntletCI return?",
+    a: "Exit code 0 means no findings were detected. Exit code 1 means findings were detected or input was invalid. Exit code 2 means an unhandled error occurred.",
+  },
+  {
+    q: "How do I emit inline GitHub Actions annotations?",
+    a: "Pass the --github-annotations flag to gauntletci analyze. This emits GitHub Actions workflow commands that create inline diff comments on the exact lines where findings occur.",
+  },
+  {
+    q: "How do I suppress the GauntletCI banner?",
+    a: "Pass --no-banner to any command, or set the GAUNTLETCI_NO_BANNER environment variable to any non-empty value. The banner is automatically suppressed when CI, GITHUB_ACTIONS, or TF_BUILD environment variables are set.",
+  },
+]);
+
 export default function CliReferencePage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <div className="space-y-10">
       <div>
         <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">CLI Reference</p>
@@ -178,6 +205,27 @@ export default function CliReferencePage() {
               ))}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-4">Next steps</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            { href: "/docs/configuration", label: "Configuration", desc: "Customize rules and severity in .gauntletci.json" },
+            { href: "/docs/integrations", label: "CI/CD Integrations", desc: "Use GauntletCI in GitHub Actions and Azure Pipelines" },
+            { href: "/docs/local-llm", label: "Local LLM Setup", desc: "Enable offline AI-powered finding explanations" },
+            { href: "/docs/rules", label: "Rule Library", desc: "Browse all 30+ detection rules" },
+          ].map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="rounded-lg border border-border bg-card p-4 hover:border-cyan-500/50 transition-colors block"
+            >
+              <p className="font-medium text-sm">{link.label}</p>
+              <p className="text-xs text-muted-foreground mt-1">{link.desc}</p>
+            </Link>
+          ))}
         </div>
       </section>
     </div>
