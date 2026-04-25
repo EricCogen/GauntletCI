@@ -9,6 +9,10 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+---
+
+## [2.0.4] - 2026-04-25
+
 ### Added
 - `/about` page with founder bio and E-E-A-T author attribution
 - Author bio component on all article pages (short variant in byline)
@@ -71,7 +75,8 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
-[Unreleased]: https://github.com/EricCogen/GauntletCI/compare/v2.0.3...HEAD
+[Unreleased]: https://github.com/EricCogen/GauntletCI/compare/v2.0.4...HEAD
+[2.0.4]: https://github.com/EricCogen/GauntletCI/compare/v2.0.3...v2.0.4
 [2.0.3]: https://github.com/EricCogen/GauntletCI/compare/v2.0.2...v2.0.3
 [2.0.2]: https://github.com/EricCogen/GauntletCI/compare/v2.0.1...v2.0.2
 [2.0.1]: https://github.com/EricCogen/GauntletCI/compare/v2.0.0...v2.0.1
