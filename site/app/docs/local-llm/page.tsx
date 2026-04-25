@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { softwareApplicationSchema, buildFaqSchema } from "@/lib/schemas";
 
 export const metadata: Metadata = {
   title: "Local LLM Setup | GauntletCI Docs",
@@ -15,10 +17,35 @@ const jsonLd = {
   "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
 };
 
+const faqSchema = buildFaqSchema([
+  {
+    q: "Does GauntletCI require an internet connection for LLM features?",
+    a: "No. Both the built-in ONNX engine and the Ollama path run entirely on your local machine. No code, diff content, or findings are transmitted to any external service. Both options are safe for air-gapped environments.",
+  },
+  {
+    q: "What model does GauntletCI use for LLM enrichment?",
+    a: "GauntletCI uses Phi-4 Mini INT4 by default, downloaded from HuggingFace and cached locally at ~/.gauntletci/models/phi4-mini/. You can also use any Ollama-hosted model by configuring an Ollama endpoint in .gauntletci.json.",
+  },
+  {
+    q: "Do I need to install Ollama to use LLM features?",
+    a: "No. GauntletCI includes a built-in ONNX inference engine. Run gauntletci model download to download Phi-4 Mini (~2 GB) once, then use --with-llm with no other setup required.",
+  },
+  {
+    q: "Can I use --with-llm in CI/CD?",
+    a: "The built-in ONNX engine is not available in CI because loading a 2 GB model in an ephemeral runner is impractical. To use --with-llm in CI, configure a remote OpenAI-compatible endpoint: set llm.ciEndpoint and llm.ciModel in .gauntletci.json and provide GAUNTLETCI_LLM_API_KEY as a secret.",
+  },
+  {
+    q: "Is LLM enrichment required for GauntletCI to work?",
+    a: "No. LLM enrichment is opt-in. The detection engine is fully deterministic and does not require a model to function. The --with-llm flag only adds plain-English explanations to findings - the rule analysis runs the same either way.",
+  },
+]);
+
 export default function LocalLlmPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <div className="space-y-10">
       <div>
         <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">Local LLM Setup</p>
@@ -200,6 +227,26 @@ export default function LocalLlmPage() {
           are transmitted to any external service. Both options are safe for air-gapped environments and
           codebases with strict data residency requirements.
         </p>
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-4">Next steps</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {[
+            { href: "/docs/integrations", label: "CI/CD Integrations", desc: "Configure a remote LLM endpoint for GitHub Actions" },
+            { href: "/docs/cli-reference", label: "CLI Reference", desc: "All --with-llm flags and options" },
+            { href: "/docs/configuration", label: "Configuration", desc: "Set llm.ciEndpoint and other settings in .gauntletci.json" },
+          ].map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="rounded-lg border border-border bg-card p-4 hover:border-cyan-500/50 transition-colors block"
+            >
+              <p className="font-medium text-sm">{link.label}</p>
+              <p className="text-xs text-muted-foreground mt-1">{link.desc}</p>
+            </Link>
+          ))}
+        </div>
       </section>
     </div>
     </>

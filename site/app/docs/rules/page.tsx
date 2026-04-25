@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { categories, rules, rulesByCategory, type Rule } from "@/lib/rules";
+import { softwareApplicationSchema, buildFaqSchema } from "@/lib/schemas";
 
 export const metadata: Metadata = {
   title: "Rule Library | GauntletCI Docs",
@@ -28,6 +29,29 @@ const jsonLd = {
   })),
 };
 
+const faqSchema = buildFaqSchema([
+  {
+    q: "How many detection rules does GauntletCI have?",
+    a: `GauntletCI includes ${rules.length} deterministic detection rules covering behavioral regressions, breaking API changes, security risks, test coverage gaps, and architecture violations in .NET diffs.`,
+  },
+  {
+    q: "What categories of rules does GauntletCI have?",
+    a: "Rules are organized into categories including Behavioral Changes, Breaking API Changes, Security Risks, Test Coverage, and Architecture. Each rule targets a specific class of risk in your diff.",
+  },
+  {
+    q: "Can I disable specific rules?",
+    a: 'Yes. Add the rule ID to .gauntletci.json to disable it: { "rules": { "GCI0001": { "enabled": false } } }. All rules are enabled by default.',
+  },
+  {
+    q: "What does a Block severity rule mean?",
+    a: "A Block severity rule causes GauntletCI to exit with code 1 when the finding is detected, stopping the commit or failing the CI pipeline step. Warn severity rules are reported but do not block by default.",
+  },
+  {
+    q: "Do rules send my code to a server?",
+    a: "No. All rules run locally and deterministically. No code, diff content, or findings are transmitted to any external service.",
+  },
+]);
+
 function SeverityBadge({ severity }: { severity: Rule["severity"] }) {
   const styles = {
     Block: "bg-red-500/10 text-red-400 ring-red-400/20",
@@ -49,6 +73,14 @@ export default function RulesPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
       <div className="space-y-10">
         <div>
