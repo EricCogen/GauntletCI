@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { RulesApplied } from "@/components/rules-applied";
+import { AuthorBio } from "@/components/author-bio";
 
 export const metadata: Metadata = {
   title: "What Is Diff-Based Analysis? | GauntletCI",
@@ -627,6 +628,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
           </div>
 
           <RulesApplied ids={["GCI0001", "GCI0003", "GCI0004"]} />
+          <AuthorBio variant="short" />
         </div>
       </main>
       <Footer />

@@ -23,6 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/docs/local-llm`,                      changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/detections`,                          changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE_URL}/pricing`,                             changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/about`,                               changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/why-tests-miss-bugs`,                 changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/why-code-review-misses-bugs`,         changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/detect-breaking-changes-before-merge`, changeFrequency: "monthly", priority: 0.8 },
