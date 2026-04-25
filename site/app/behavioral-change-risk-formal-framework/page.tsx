@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { RulesApplied } from "@/components/rules-applied";
 
 export const metadata: Metadata = {
   title: "Behavioral Change Risk: A Formal Framework for Validation Gaps in Evolving Software",
@@ -842,6 +843,7 @@ export default function BCRFormalFrameworkPage() {
             </Link>
           </div>
 
+          <RulesApplied ids={["GCI0003", "GCI0036", "GCI0016", "GCI0007"]} />
         </div>
       </main>
       <Footer />

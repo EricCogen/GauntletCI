@@ -8,6 +8,7 @@ import {
   rules,
   type Rule,
 } from "@/lib/rules";
+import { articlesForRule } from "@/lib/articles";
 
 type Params = { ruleId: string };
 
@@ -79,6 +80,7 @@ export default async function RuleDetailPage({
   const related = (rule.relatedIds ?? [])
     .map((id) => getRule(id))
     .filter((r): r is Rule => Boolean(r));
+  const discussedIn = articlesForRule(rule.id);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -246,6 +248,30 @@ export default async function RuleDetailPage({
                   </Link>
                 );
               })}
+            </div>
+          </section>
+        )}
+
+        {discussedIn.length > 0 && (
+          <section>
+            <h2 className="text-xl font-bold tracking-tight mb-3">
+              Discussed in
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {discussedIn.map((article) => (
+                <Link
+                  key={article.slug}
+                  href={article.href}
+                  className="block rounded-xl border border-border bg-card p-4 hover:border-cyan-500/40 hover:bg-card/80 transition-colors"
+                >
+                  <h3 className="text-sm font-semibold text-foreground mb-1.5">
+                    {article.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {article.description}
+                  </p>
+                </Link>
+              ))}
             </div>
           </section>
         )}
