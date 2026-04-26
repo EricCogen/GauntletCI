@@ -9,6 +9,10 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **SonarCloud external label oracle**: New `corpus sonarcloud enrich` CLI command (`--db`, `--fixtures`, `--tier`). `SonarCloudClient` discovers public SonarCloud projects via conventional `owner_repo` key with org-search fallback, then fetches all open BUG/VULNERABILITY issues (paginated, 1-second courtesy delay). `SonarCloudEnricher` parses `+++ b/` lines from `diff.patch` to extract changed `.cs` files, matches them against SonarCloud issue file paths, and writes results to the new `sonar_matches` table. Provides cross-validated ground truth: when both GauntletCI and SonarCloud flag the same file in the same PR, the finding is externally confirmed.
+- **`sonar_matches` DB table**: New migration in `CorpusDb` adds `sonar_matches (fixture_id, sonar_project_key, changed_file, sonar_rule, sonar_severity, sonar_type, sonar_message, fetched_at_utc)` with `UNIQUE(fixture_id, changed_file, sonar_rule)` to prevent duplicates on re-runs.
+
 ### Changed
 - **Corpus (repo allowlist)**: Added 6 domain-targeted repositories to `build-corpus.ps1` allowlist: MassTransit/MassTransit (saga/idempotency patterns), dotnet/winforms (IDisposable chains), microsoft/semantic-kernel (async/retry/naming churn), abpframework/abp (DDD interfaces, EF migrations), OrchardCMS/OrchardCore (CMS schema migrations), nhibernate/nhibernate-core (ORM state graphs). Added 30 new Silver fixtures (618 total). GCI0039 entered the scorecard for the first time: 75.0% precision, 42.9% recall.
 - **GCI0029 (PII Logging Leak)**:Skip XML doc comment lines (`///`). PII term false positives in documentation comments were causing spurious findings. Corpus precision: 62.5% -> 80.0%.
