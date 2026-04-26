@@ -48,7 +48,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
     /// <param name="fixturesBasePath">Root directory where raw fixture snapshots are stored.</param>
     public static GitHubRestHydrator CreateDefault(string fixturesBasePath = "./data/fixtures")
     {
-        var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+        var token = GitHubTokenResolver.Resolve();
         var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
         http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
         http.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");

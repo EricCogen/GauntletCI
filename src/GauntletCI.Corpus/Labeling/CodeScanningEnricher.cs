@@ -38,7 +38,7 @@ public sealed class CodeScanningEnricher : IDisposable
     {
         if (!_client.IsAuthenticated)
         {
-            progress?.Invoke("[codescanning] WARNING: GITHUB_TOKEN not set. Code scanning API requires auth. Aborting.");
+            progress?.Invoke("[codescanning] WARNING: no GitHub token found. Set GITHUB_TOKEN or run 'gh auth login'. Aborting.");
             return new CodeScanningEnrichmentResult { AuthMissing = true };
         }
 
