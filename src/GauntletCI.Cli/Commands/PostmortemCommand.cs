@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.CommandLine;
+using System.Diagnostics;
 using System.Text.Json;
 using GauntletCI.Cli.Output;
 using GauntletCI.Cli.Presentation;
@@ -49,7 +50,9 @@ public static class PostmortemCommand
                 var config = ConfigLoader.Load(repo.FullName);
                 var ignoreList = IgnoreList.Load(repo.FullName);
                 var orchestrator = RuleOrchestrator.CreateDefault(config);
+                var sw = Stopwatch.StartNew();
                 var result = await orchestrator.RunAsync(diff, ignoreList: ignoreList);
+                sw.Stop();
 
                 if (output.Equals("json", StringComparison.OrdinalIgnoreCase))
                 {
@@ -61,7 +64,7 @@ public static class PostmortemCommand
                     AnsiConsole.MarkupLine($"[dim]  ⏪  Postmortem — commit {Markup.Escape(shortSha)}[/]");
                     AnsiConsole.MarkupLine("[dim]     These findings would have been caught at pre-commit time.[/]");
                     AnsiConsole.WriteLine();
-                    ConsoleReporter.Report(result, ascii);
+                    ConsoleReporter.Report(result, ascii, elapsed: sw.Elapsed);
                 }
 
                 ctx.ExitCode = result.HasFindings ? 1 : 0;
