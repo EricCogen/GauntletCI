@@ -49,6 +49,18 @@ artifacts/
 !docs/features-benefits.md
 !Docker/docker.md
 !worker/README.md
+!SUPPORT.md
+!docs/noise-and-false-positives.md
+!docs/rules/GCI0003-behavioral-change-detection.md
+!docs/rules/GCI0004-breaking-change-risk.md
+!docs/rules/GCI0006-edge-case-handling.md
+!docs/rules/GCI0007-error-handling-integrity.md
+!docs/rules/GCI0010-hardcoding-and-configuration.md
+!docs/risky-diffs/efcore-linq-loop.md
+!docs/risky-diffs/dapper-null-forgiving.md
+!docs/risky-diffs/stackexchange-redis-context-mutation.md
+!docs/risky-diffs/sharpcompress-overflow.md
+!docs/risky-diffs/anglesharp-enum-removal.md
 
 # Internal pipeline and tooling (commercial — not public)
 build-corpus.ps1

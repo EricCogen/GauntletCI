@@ -1,6 +1,77 @@
 # Contributing to GauntletCI
 
-Thank you for contributing. This guide covers the workflow, commit conventions, and a step-by-step rule writing tutorial.
+GauntletCI is a diff-first change-risk detection tool for C# and .NET. It focuses on behavior-changing code diffs, validation gaps, breaking-change risk, edge-case gaps, error-handling changes, and other high-signal risks.
+
+## Ways to contribute
+
+- Report false positives
+- Submit risky diffs
+- Suggest rules
+- Improve documentation
+- Add demo scenarios
+- Improve tests
+- Fix bugs
+
+## Before opening an issue
+
+Please do not include secrets, credentials, private customer data, proprietary code, or anything you do not have permission to share.
+
+When possible, reduce examples to the smallest safe diff that demonstrates the issue.
+
+## Reporting false positives
+
+Use the [Report a false positive](https://github.com/EricCogen/GauntletCI/issues/new?template=false_positive.yml) issue template.
+
+Include:
+
+- GauntletCI version
+- Rule ID
+- Finding output
+- Minimal sanitized diff
+- Why the finding was noisy or incorrect
+
+## Submitting risky diffs
+
+Use the [Submit a risky diff](https://github.com/EricCogen/GauntletCI/issues/new?template=risky_diff.yml) issue template.
+
+Good examples usually include:
+
+- A small code change
+- A behavior change
+- A validation gap
+- A reason the change could pass tests or review
+
+## Suggesting rules
+
+Use the [Rule request](https://github.com/EricCogen/GauntletCI/issues/new?template=rule_request.yml) issue template.
+
+A good rule request explains:
+
+- The risky pattern
+- Why the pattern matters
+- Example diff
+- Potential false positives
+- Suggested category
+
+## Signal quality philosophy
+
+GauntletCI is designed for high-signal findings.
+
+A finding is not a claim that the code is definitely broken. A finding is evidence that a diff introduced behavior worth validating.
+
+Rules should avoid style opinions and broad whole-repo scanning. The focus is change risk.
+
+## License
+
+GauntletCI is licensed under the Elastic License 2.0.
+
+By contributing, you agree that your contribution may be included under the repository license.
+
+---
+
+## Developer guide
+
+The sections below cover the technical workflow, commit conventions, and a step-by-step rule writing tutorial.
 
 ---
 

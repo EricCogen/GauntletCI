@@ -1,0 +1,93 @@
+name: Submit a risky diff
+description: Share a code change that looked safe but changed behavior, missed validation, or almost caused a regression.
+title: "[Risky Diff]: "
+labels: ["risky-diff", "community-example"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing a risky diff.
+
+        Please do not include secrets, credentials, private customer data, proprietary code, or anything you do not have permission to share.
+
+  - type: input
+    id: repo_or_pr
+    attributes:
+      label: Repo or PR link
+      description: Public link if available. Leave blank if not public.
+      placeholder: https://github.com/org/repo/pull/123
+    validations:
+      required: false
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language or framework
+      options:
+        - C# / .NET
+        - ASP.NET Core
+        - Entity Framework
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_changed
+    attributes:
+      label: What changed?
+      description: Describe the diff in plain language.
+      placeholder: A condition changed from user.IsActive to user.IsActive && user.EmailVerified.
+    validations:
+      required: true
+
+  - type: textarea
+    id: why_risky
+    attributes:
+      label: Why was this risky?
+      description: Explain the behavior change, regression, or validation gap.
+      placeholder: Existing active users without verified email would now be blocked, but no tests covered that path.
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_tests_missed
+    attributes:
+      label: What did tests or review miss?
+      description: Optional but useful.
+    validations:
+      required: false
+
+  - type: textarea
+    id: diff_snippet
+    attributes:
+      label: Minimal diff snippet
+      description: Paste only the smallest safe snippet needed to explain the change.
+      render: diff
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: public_use
+    attributes:
+      label: Public use
+      options:
+        - label: This example may be referenced publicly after review.
+          required: false
+        - label: This example has been sanitized and contains no secrets or private data.
+          required: true
+
+  - type: textarea
+    id: expected_behavior
+    attributes:
+      label: Expected GauntletCI behavior
+      description: What should GauntletCI flag, if anything?
+    validations:
+      required: false
+
+  - type: textarea
+    id: actual_behavior
+    attributes:
+      label: Actual GauntletCI behavior
+      description: What did GauntletCI report?
+    validations:
+      required: false
