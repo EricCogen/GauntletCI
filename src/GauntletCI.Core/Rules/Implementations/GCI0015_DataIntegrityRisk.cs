@@ -97,6 +97,14 @@ public class GCI0015_DataIntegrityRisk : RuleBase
     private void CheckMassAssignment(DiffFile file, List<Finding> findings)
     {
         var addedLines = file.AddedLines.ToList();
+
+        // Mass-assignment is only a security concern in HTTP input contexts (OWASP A03 over-posting).
+        // Internal struct initialization or data-model building without an HTTP boundary is safe.
+        bool hasHttpSignal = addedLines.Any(l =>
+            HttpContextSignals.Any(s => l.Content.Contains(s, StringComparison.Ordinal)));
+
+        if (!hasHttpSignal) return;
+
         // Look for 3+ consecutive entity.Field = request.Field patterns
         int assignmentCount = 0;
         int firstLine = 0;
