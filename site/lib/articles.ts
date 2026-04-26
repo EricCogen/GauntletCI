@@ -54,3 +54,71 @@ export function articlesForRule(ruleId: string): Article[] {
     a.ruleIds.some((id) => id.toLowerCase() === ruleId.toLowerCase())
   );
 }
+
+export type CaseStudy = {
+  slug: string;
+  href: string;
+  repo: string;
+  pr: string;
+  title: string;
+  description: string;
+  ruleIds: string[];
+};
+
+export const caseStudies: CaseStudy[] = [
+  {
+    slug: "stackexchange-redis-swallowed-exception",
+    href: "/case-studies/stackexchange-redis-swallowed-exception",
+    repo: "StackExchange/StackExchange.Redis",
+    pr: "PR#2995",
+    title: "Swallowed Exception in StackExchange.Redis",
+    description:
+      "A bare catch {} block silently drops all exceptions in the message dispatch loop.",
+    ruleIds: ["GCI0007"],
+  },
+  {
+    slug: "newtonsoft-json-assignment-in-getter",
+    href: "/case-studies/newtonsoft-json-assignment-in-getter",
+    repo: "JamesNK/Newtonsoft.Json",
+    pr: "PR#1950",
+    title: "Assignment in Getter - Newtonsoft.Json",
+    description:
+      "Mutation inside a property getter breaks the side-effect-free contract.",
+    ruleIds: ["GCI0036", "GCI0004"],
+  },
+  {
+    slug: "efcore-breaking-api-removal",
+    href: "/case-studies/efcore-breaking-api-removal",
+    repo: "dotnet/efcore",
+    pr: "PR#38024",
+    title: "Breaking API Removal in EF Core",
+    description:
+      "Public API removed without Obsolete - breaks all EF Core provider authors.",
+    ruleIds: ["GCI0004", "GCI0003"],
+  },
+  {
+    slug: "nunit-thread-sleep-async",
+    href: "/case-studies/nunit-thread-sleep-async",
+    repo: "nunit/nunit",
+    pr: "PR#5192",
+    title: "Thread.Sleep in Async Context - NUnit",
+    description:
+      "Thread.Sleep in async context in the NUnit test framework source itself.",
+    ruleIds: ["GCI0016"],
+  },
+  {
+    slug: "azuread-hardcoded-authority",
+    href: "/case-studies/azuread-hardcoded-authority",
+    repo: "AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+    pr: "PR#3410",
+    title: "Hardcoded Authority URL - Azure AD",
+    description: "Hardcoded authority URL in production identity model code.",
+    ruleIds: ["GCI0010", "GCI0003"],
+  },
+];
+
+export function caseStudiesForRule(ruleId: string): CaseStudy[] {
+  return caseStudies.filter((cs) =>
+    cs.ruleIds.some((id) => id.toLowerCase() === ruleId.toLowerCase())
+  );
+}
