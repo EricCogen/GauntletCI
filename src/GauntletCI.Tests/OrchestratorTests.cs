@@ -43,11 +43,10 @@ public class OrchestratorTests
     }
 
     [Fact]
-    public async Task PostProcess_WhenMoreThanThreeRulesFire_ShouldAddGci0018Synthesis()
+    public async Task PostProcess_WhenMoreThanThreeRulesFire_ShouldNotAddSyntheticFinding()
     {
-        // Craft a diff with signals for 4+ distinct rules:
-        // GCI0010 (hardcoded secret), GCI0012 (SQL injection + weak crypto),
-        // GCI0033 (async void), GCI0016 (static mutable state)
+        // Craft a diff with signals for 4+ distinct rules.
+        // Compound risk is now shown as a report header note, not a synthetic finding.
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -66,7 +65,7 @@ public class OrchestratorTests
         var diff = DiffParser.Parse(raw);
         var orchestrator = RuleOrchestrator.CreateDefault();
         var result = await orchestrator.RunAsync(diff);
-        Assert.Contains(result.Findings, f => f.RuleId == "GCI_SYN_AGG" && f.Summary.Contains("rules flagged"));
+        Assert.DoesNotContain(result.Findings, f => f.RuleId == "GCI_SYN_AGG");
     }
 
     [Fact]

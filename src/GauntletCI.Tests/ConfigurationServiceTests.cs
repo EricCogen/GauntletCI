@@ -17,7 +17,6 @@ public class ConfigurationServiceTests
     [InlineData("GCI0035", RuleSeverity.Warn)]
     [InlineData("GCI0041", RuleSeverity.Warn)]
     [InlineData("GCI0099", RuleSeverity.Info)]   // unknown → Info
-    [InlineData("GCI_SYN_AGG", RuleSeverity.Info)] // synthetic → Info
     public void GetEffectiveSeverity_NoConfig_ReturnsDefault(string ruleId, RuleSeverity expected)
     {
         var svc = new ConfigurationService(new GauntletConfig());
