@@ -41,9 +41,9 @@ artifacts/
 !docs/rules.md
 !docs/architecture.md
 !docs/cli-reference.md
-!.github/CONTRIBUTING.md
 !.github/CODE_OF_CONDUCT.md
-!.github/SECURITY.md
+!CONTRIBUTING.md
+!SECURITY.md
 !docs/DEVELOPMENT.md
 !docs/TROUBLESHOOTING.md
 !docs/features-benefits.md
