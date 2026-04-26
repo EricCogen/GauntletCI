@@ -49,7 +49,7 @@ public static class ConsoleReporter
         string sep = ascii ? "-- {0} ({1}) --------------------------" : "── {0} ({1}) ──────────────────────────";
         string ok  = ascii
             ? "  Scan complete. 0 detected signals. GauntletCI analyzes the diff only -- review context is still required."
-            : "  ✓ Scan complete. 0 detected signals. GauntletCI analyzes the diff only — review context is still required.";
+            : "  \u2713 Scan complete. 0 detected signals. GauntletCI analyzes the diff only - review context is still required.";
 
         // Apply sensitivity threshold on top of the minSeverity gate.
         var filteredFindings = result.Findings
@@ -62,17 +62,26 @@ public static class ConsoleReporter
         AnsiConsole.MarkupLine("[cyan]  GauntletCI Risk Analysis Report[/]");
         AnsiConsole.MarkupLine($"[cyan]{hr}[/]");
 
-        if (!string.IsNullOrEmpty(result.CommitSha))
-            AnsiConsole.MarkupLine($"  Commit : {result.CommitSha}");
+        var meta = new Table()
+            .Border(TableBorder.None)
+            .HideHeaders()
+            .AddColumn(new TableColumn(""))
+            .AddColumn(new TableColumn(""));
 
-        AnsiConsole.MarkupLine($"  Rules  : {result.RulesEvaluated} evaluated");
-        if (elapsed != default)
-            AnsiConsole.MarkupLine($"  Time   : {FormatElapsed(elapsed)}");
+        meta.AddRow(
+            $"  Rules       : {result.RulesEvaluated} evaluated",
+            $"    Severity    : {minSeverity.ToString().ToLowerInvariant()}");
+        meta.AddRow(
+            $"  Time        : {(elapsed != default ? FormatElapsed(elapsed) : "-")}",
+            $"    Sensitivity : {sensitivity.ToString().ToLowerInvariant()}");
+        meta.AddRow(
+            $"  Findings    : {filteredFindings.Count}",
+            !string.IsNullOrEmpty(result.CommitSha) ? $"    Commit      : {result.CommitSha}" : "");
+
+        AnsiConsole.Write(meta);
 
         if (suppressedBySensitivity > 0)
-            AnsiConsole.MarkupLine($"  Findings: {filteredFindings.Count} [dim]({suppressedBySensitivity} hidden at {sensitivity.ToString().ToLowerInvariant()} sensitivity — use --sensitivity permissive to see all)[/]");
-        else
-            AnsiConsole.MarkupLine($"  Findings: {filteredFindings.Count}");
+            AnsiConsole.MarkupLine($"[dim]  ({suppressedBySensitivity} hidden by {sensitivity.ToString().ToLowerInvariant()} sensitivity - use --sensitivity permissive to see all)[/]");
 
         var distinctRules = filteredFindings
             .Where(f => f.Severity is RuleSeverity.Block or RuleSeverity.Warn)
@@ -80,7 +89,7 @@ public static class ConsoleReporter
             .Distinct()
             .Count();
         if (distinctRules >= 4)
-            AnsiConsole.MarkupLine($"[yellow]  Risk   : {distinctRules} distinct rules triggered (compound risk)[/]");
+            AnsiConsole.MarkupLine($"[yellow]  Risk        : {distinctRules} distinct rules triggered (compound risk)[/]");
 
         AnsiConsole.WriteLine();
 
@@ -134,7 +143,7 @@ public static class ConsoleReporter
             return;
         }
 
-        // Advisory findings (LLM policy) — always shown, never gated by minSeverity
+        // Advisory findings (LLM policy) - always shown, never gated by minSeverity
         var advisoryFindingsFinal = result.Findings.Where(f => f.Severity == RuleSeverity.Advisory).ToList();
         if (advisoryFindingsFinal.Count > 0)
         {
@@ -222,7 +231,7 @@ public static class ConsoleReporter
         if (group.TicketContext is { } ticket)
         {
             var ticketRef = ticket.Url is not null ? $"{ticket.Id} ({ticket.Url})" : ticket.Id;
-            AnsiConsole.MarkupLine($"[cyan]  Ticket   : [[{Markup.Escape(ticket.Provider)}]] {Markup.Escape(ticketRef)} — {Markup.Escape(ticket.Title)}[/]");
+            AnsiConsole.MarkupLine($"[cyan]  Ticket   : [[{Markup.Escape(ticket.Provider)}]] {Markup.Escape(ticketRef)} - {Markup.Escape(ticket.Title)}[/]");
             if (!string.IsNullOrWhiteSpace(ticket.Description))
                 AnsiConsole.MarkupLine($"[grey]             {Markup.Escape(ticket.Description)}[/]");
         }
@@ -281,7 +290,7 @@ public static class ConsoleReporter
         if (finding.TicketContext is { } ticket)
         {
             var ticketRef = ticket.Url is not null ? $"{ticket.Id} ({ticket.Url})" : ticket.Id;
-            AnsiConsole.MarkupLine($"[cyan]  Ticket   : [[{Markup.Escape(ticket.Provider)}]] {Markup.Escape(ticketRef)} — {Markup.Escape(ticket.Title)}[/]");
+            AnsiConsole.MarkupLine($"[cyan]  Ticket   : [[{Markup.Escape(ticket.Provider)}]] {Markup.Escape(ticketRef)} - {Markup.Escape(ticket.Title)}[/]");
             if (!string.IsNullOrWhiteSpace(ticket.Description))
                 AnsiConsole.MarkupLine($"[grey]             {Markup.Escape(ticket.Description)}[/]");
         }
