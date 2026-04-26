@@ -185,6 +185,14 @@ export function Comparison() {
           <span className="flex items-center gap-2"><AlertCircle className="h-4 w-4 text-amber-400/60" /> Partial / paid tier only</span>
           <span className="flex items-center gap-2"><Minus className="h-4 w-4 text-muted-foreground/25" /> No</span>
         </div>
+
+        {/* AI code review link */}
+        <div className="mt-6 text-center text-sm text-muted-foreground">
+          Not seeing your tool?{" "}
+          <Link href="/compare/gauntletci-vs-ai-code-review" className="text-cyan-400 hover:text-cyan-300 transition-colors underline underline-offset-2">
+            Compare vs AI code review tools
+          </Link>
+        </div>
       </div>
     </section>
   );
