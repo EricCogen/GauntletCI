@@ -15,6 +15,8 @@ interface ComparisonRow {
   ndepend: CellValue;
 }
 
+
+
 const rows: ComparisonRow[] = [
   {
     label: "Diff-scoped analysis",
@@ -62,6 +64,16 @@ const rows: ComparisonRow[] = [
     label: "Architecture policy enforcement",
     sublabel: "Configurable forbidden import pairs",
     gauntlet: "yes", sonar: "partial", semgrep: "partial", snyk: "no", codeql: "no", codeclimate: "no", ndepend: "yes",
+  },
+  {
+    label: "MCP server (AI assistant integration)",
+    sublabel: "Copilot, Cursor, and other AI tools call GauntletCI directly",
+    gauntlet: "yes", sonar: "no", semgrep: "no", snyk: "no", codeql: "no", codeclimate: "no", ndepend: "no",
+  },
+  {
+    label: "Custom rules via code",
+    sublabel: "Implement IRule in C# - no YAML, no query language",
+    gauntlet: "yes", sonar: "yes", semgrep: "yes", snyk: "no", codeql: "yes", codeclimate: "partial", ndepend: "yes",
   },
 ];
 

@@ -69,6 +69,8 @@ const featureRows = [
   { label: "Baseline delta mode (suppress existing findings)", gauntlet: "yes" as const, codeql: "no" as const },
   { label: "Local LLM enrichment (no API key)", gauntlet: "yes" as const, codeql: "no" as const },
   { label: "Free for public repos", gauntlet: "yes" as const, codeql: "yes" as const },
+  { label: "MCP server (AI assistant integration)", gauntlet: "yes" as const, codeql: "no" as const },
+  { label: "Custom rules via code (no query language required)", gauntlet: "yes" as const, codeql: "yes" as const },
 ];
 
 type CellVal = "yes" | "no" | "partial";

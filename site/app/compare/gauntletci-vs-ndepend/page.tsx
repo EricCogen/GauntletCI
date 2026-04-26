@@ -68,6 +68,8 @@ const featureRows = [
   { label: "GitHub inline PR comments", gauntlet: "yes" as const, ndepend: "partial" as const },
   { label: "Baseline delta mode (suppress existing findings)", gauntlet: "yes" as const, ndepend: "partial" as const },
   { label: "Local LLM enrichment (no API key)", gauntlet: "yes" as const, ndepend: "no" as const },
+  { label: "MCP server (AI assistant integration)", gauntlet: "yes" as const, ndepend: "no" as const },
+  { label: "Custom rules via code (no GUI or query language required)", gauntlet: "yes" as const, ndepend: "yes" as const },
 ];
 
 type CellVal = "yes" | "no" | "partial";
