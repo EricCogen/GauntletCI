@@ -9,6 +9,15 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- **GCI0047 (Naming/Contract Alignment)**: Added generated-file guard (skips `Src/Generated/` and similar paths); deduplicated CRUD-verb contradiction findings per unique verb-pair per file, eliminating N x M explosion in auto-generated API clients. Corpus findings: 725 -> 5 (-99.3%).
+- **GCI0004 (Breaking Change Risk)**: Added `WellKnownPatterns.IsGeneratedFile` check to both `CheckRemovedPublicApi` and `CheckObsoleteRemoved`, excluding Azure SDK `.net{major}.{minor}.cs` API surface manifest files. Corpus findings: 4368 -> 2452 (-43.9%).
+- **GCI0015 (Data Integrity Risk)**: Gated `CheckUncheckedCasts` behind an HTTP input context signal (Request.Form, [FromBody], etc.). Internal numeric casts no longer trigger the rule; only casts in files that also contain HTTP input bindings are flagged. Corpus findings: 579 -> 241 (-58.3%).
+- **GCI0003 (Behavioral Change Detection)**: Inherits the `WellKnownPatterns.IsGeneratedFile` improvement; `.net{major}.{minor}.cs` API surface files are now excluded. Corpus findings: 2566 -> 1904 (-25.8%).
+- **GCI0032 (Uncaught Exception Path)**: Excludes guard-clause throws (ArgumentNullException, ArgumentException, ArgumentOutOfRangeException, ObjectDisposedException) from the uncovered-throw count. These are defensive precondition checks that do not represent untested business logic. Corpus findings: 86 -> 54 (-37.2%).
+- **WellKnownPatterns.IsGeneratedFile**: Added `.net{major}.{minor}.cs` filename pattern to detect .NET SDK API surface manifest files (e.g. `Azure.Search.Documents.net10.0.cs`).
+- **Overall corpus noise**: 10,262 -> 6,594 findings across 588 real .NET OSS PR diffs (-35.7%).
+
 ### Added
 - `.github/ISSUE_TEMPLATE/risky_diff.yml`: community issue template for submitting risky diffs
 - `.github/ISSUE_TEMPLATE/false_positive.yml`: issue template for reporting false positives

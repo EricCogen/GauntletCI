@@ -22,6 +22,16 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
         "Assert.Throws", ".Should().Throw", "ThrowsAsync", "ThrowsExceptionAsync", "Throws<"
     ];
 
+    // Guard-clause throws are expected defensive programming and do not require test coverage
+    // in the same diff. They protect preconditions, not business logic paths.
+    private static readonly string[] GuardClauseThrows =
+    [
+        "throw new ArgumentNullException",
+        "throw new ArgumentException",
+        "throw new ArgumentOutOfRangeException",
+        "throw new ObjectDisposedException",
+    ];
+
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -33,8 +43,10 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
                         !f.NewPath.Contains("Spec", StringComparison.OrdinalIgnoreCase))
             .SelectMany(f => f.AddedLines)
             // GCI0042 (TODO/Stub Detection) owns NotImplementedException — exclude to avoid double-reporting.
+            // Guard-clause throws (ArgumentNullException etc.) are defensive programming, not untested logic paths.
             .Count(l => l.Content.Contains("throw new", StringComparison.Ordinal) &&
-                        !l.Content.Contains("throw new NotImplementedException", StringComparison.Ordinal));
+                        !l.Content.Contains("throw new NotImplementedException", StringComparison.Ordinal) &&
+                        !GuardClauseThrows.Any(g => l.Content.Contains(g, StringComparison.Ordinal)));
 
         if (throwCount == 0) return Task.FromResult(findings);
 

@@ -11,13 +11,15 @@ public class GCI0015Tests
     [Fact]
     public async Task UncheckedCastInt_ShouldFlag()
     {
+        // Cast must be in a file that also contains HTTP input signals to trigger the rule.
         var raw = """
-            diff --git a/src/Service.cs b/src/Service.cs
+            diff --git a/src/Controller.cs b/src/Controller.cs
             index abc..def 100644
-            --- a/src/Service.cs
-            +++ b/src/Service.cs
-            @@ -1,1 +1,2 @@
-             // service
+            --- a/src/Controller.cs
+            +++ b/src/Controller.cs
+            @@ -1,1 +1,3 @@
+             // controller
+            +var raw = Request.Form["amount"];
             +var x = (int)userInput;
             """;
 
@@ -180,5 +182,25 @@ public class GCI0015Tests
         var findings = await Rule.EvaluateAsync(diff, null);
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("unsafe HTTP input binding"));
+    }
+
+    [Fact]
+    public async Task UncheckedCastWithoutHttpSignal_ShouldNotFlag()
+    {
+        // Internal casts without any HTTP input context are not a data integrity risk.
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,1 +1,2 @@
+             // service
+            +var count = (int)internalCounter;
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Unchecked cast"));
     }
 }

@@ -52,7 +52,7 @@ public class GCI0047Tests
         var findings = await Rule.EvaluateAsync(diff, null);
 
         Assert.Contains(findings, f =>
-            (f.Summary.Contains("GetUser") || f.Summary.Contains("DeleteUser")) &&
+            f.Summary.Contains("Contradictory") &&
             f.Confidence == Confidence.Medium);
     }
 

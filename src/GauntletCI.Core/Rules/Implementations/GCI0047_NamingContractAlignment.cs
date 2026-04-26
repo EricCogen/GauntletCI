@@ -50,6 +50,7 @@ public class GCI0047_NamingContractAlignment : RuleBase
 
         foreach (var file in context.Diff.Files)
         {
+            if (WellKnownPatterns.IsGeneratedFile(file.NewPath ?? file.OldPath ?? "")) continue;
             CheckCrudVerbContradict(file, findings);
             CheckBooleanNamingInversion(file, findings);
         }
@@ -67,6 +68,9 @@ public class GCI0047_NamingContractAlignment : RuleBase
         var addedMethods = ExtractVerbSuffixPairs(file.AddedLines);
         if (addedMethods.Count == 0) return;
 
+        // Accumulate counts per unique (removedVerb, addedVerb) pair to avoid N×M explosion.
+        var pairCounts = new Dictionary<(string RemovedVerb, string AddedVerb), (int Count, string FirstSuffix)>();
+
         foreach (var (removedVerb, suffix) in removedMethods)
         {
             foreach (var (addedVerb, addedSuffix) in addedMethods)
@@ -74,15 +78,25 @@ public class GCI0047_NamingContractAlignment : RuleBase
                 if (!string.Equals(suffix, addedSuffix, StringComparison.Ordinal)) continue;
                 if (!ContradictoryPairs.Contains((removedVerb, addedVerb))) continue;
 
-                findings.Add(CreateFinding(
-                    file,
-                    summary: $"Contradictory method rename: {removedVerb}{suffix} → {addedVerb}{addedSuffix}",
-                    evidence: $"{Path.GetFileName(file.NewPath)}: removed '{removedVerb}{suffix}', added '{addedVerb}{addedSuffix}'",
-                    whyItMatters: "Renaming a method with a semantically opposite CRUD verb (e.g., Get→Delete) changes the implied contract and can cause callers to misuse the API.",
-                    suggestedAction: "Verify the rename is intentional. If the behavior also changed, update all callers. If accidental, revert the method name.",
-                    confidence: Confidence.Medium,
-                    line: null));
+                var key = (removedVerb, addedVerb);
+                if (!pairCounts.TryGetValue(key, out var existing))
+                    pairCounts[key] = (1, suffix);
+                else
+                    pairCounts[key] = (existing.Count + 1, existing.FirstSuffix);
             }
+        }
+
+        foreach (var ((removedVerb, addedVerb), (count, firstSuffix)) in pairCounts)
+        {
+            var countNote = count > 1 ? $" ({count} method(s))" : "";
+            findings.Add(CreateFinding(
+                file,
+                summary: $"Contradictory method rename: {removedVerb} \u2192 {addedVerb}{countNote}",
+                evidence: $"{Path.GetFileName(file.NewPath)}: {count} method(s) renamed from {removedVerb}* to {addedVerb}*; e.g. '{removedVerb}{firstSuffix}' \u2192 '{addedVerb}{firstSuffix}'",
+                whyItMatters: "Renaming a method with a semantically opposite CRUD verb (e.g., Get\u2192Delete) changes the implied contract and can cause callers to misuse the API.",
+                suggestedAction: "Verify the rename is intentional. If the behavior also changed, update all callers. If accidental, revert the method name.",
+                confidence: Confidence.Medium,
+                line: null));
         }
     }
 

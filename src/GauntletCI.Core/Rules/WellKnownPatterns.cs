@@ -82,6 +82,10 @@ internal static class WellKnownPatterns
         if (fileName.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase)) return true;
         // Assembly-level attribute file emitted by SDK
         if (fileName.Equals("AssemblyInfo.cs", StringComparison.OrdinalIgnoreCase)) return true;
+        // API surface manifest files emitted by the .NET SDK (e.g. Azure.Search.Documents.net10.0.cs).
+        // These enumerate every public member and are never hand-authored.
+        if (System.Text.RegularExpressions.Regex.IsMatch(
+                fileName, @"\.net\d+\.\d+\.cs$", System.Text.RegularExpressions.RegexOptions.IgnoreCase)) return true;
 
         return false;
     }
