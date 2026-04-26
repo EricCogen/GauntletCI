@@ -14,16 +14,6 @@ else
     exit 0
 fi
 
-echo ""
-echo "--- Engineering Rules Checklist (docs/core-engineering-rules.md) ---"
-echo "  [ ] Scope     : change is limited to what was requested"
-echo "  [ ] Contracts : no silent breaking changes to public APIs or schemas"
-echo "  [ ] Failures  : no swallowed exceptions or silent failures"
-echo "  [ ] Tests     : public behavior changes have coverage"
-echo "  [ ] Risk      : every behavioral change classified (Critical/High/Medium/Low/Negligible)"
-echo "  [ ] Release   : treat this change as production-bound"
-echo "--------------------------------------------------------------------"
-echo ""
 echo "🔍 GauntletCI: Analyzing staged changes..."
 
 # Determine if jq is available

@@ -14,16 +14,6 @@ if (Get-Command gauntletci -ErrorAction SilentlyContinue) {
     exit 0
 }
 
-Write-Host ""
-Write-Host "--- Engineering Rules Checklist (docs/core-engineering-rules.md) ---" -ForegroundColor DarkCyan
-Write-Host "  [ ] Scope     : change is limited to what was requested" -ForegroundColor DarkCyan
-Write-Host "  [ ] Contracts : no silent breaking changes to public APIs or schemas" -ForegroundColor DarkCyan
-Write-Host "  [ ] Failures  : no swallowed exceptions or silent failures" -ForegroundColor DarkCyan
-Write-Host "  [ ] Tests     : public behavior changes have coverage" -ForegroundColor DarkCyan
-Write-Host "  [ ] Risk      : every behavioral change classified (Critical/High/Medium/Low/Negligible)" -ForegroundColor DarkCyan
-Write-Host "  [ ] Release   : treat this change as production-bound" -ForegroundColor DarkCyan
-Write-Host "--------------------------------------------------------------------" -ForegroundColor DarkCyan
-Write-Host ""
 Write-Host "🔍 GauntletCI: Analyzing staged changes..." -ForegroundColor Cyan
 
 try {
