@@ -14,16 +14,27 @@ GauntletCI currently supports security fixes on the latest `main` branch and the
 
 Please **do not open public issues** for potential security vulnerabilities.
 
-Use one of these private channels:
+Use GitHub Security Advisories to report vulnerabilities privately:
 
-1. Open a private GitHub Security Advisory for this repository.
-2. If advisory tooling is unavailable, contact the maintainer directly via GitHub profile messaging: https://github.com/EricCogen
+https://github.com/EricCogen/GauntletCI/security/advisories/new
+
+If advisory tooling is unavailable, contact the maintainer directly via GitHub profile messaging: https://github.com/EricCogen
 
 Include:
 
 - A clear description of the issue and impacted component
 - Reproduction steps or a proof-of-concept (if available)
 - Potential impact and suggested mitigations
+
+## Sensitive data
+
+Do not include secrets, credentials, customer data, private source code, or proprietary information in public issues, discussions, pull requests, or examples.
+
+## Local-first behavior
+
+GauntletCI is designed to run locally. Source code is not uploaded by default.
+
+Optional integrations should clearly document when data leaves the local machine.
 
 ## Response Expectations
 

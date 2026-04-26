@@ -9,7 +9,33 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- `.github/ISSUE_TEMPLATE/risky_diff.yml`: community issue template for submitting risky diffs
+- `.github/ISSUE_TEMPLATE/false_positive.yml`: issue template for reporting false positives
+- `.github/ISSUE_TEMPLATE/rule_request.yml`: issue template for suggesting new detection rules
+- `SUPPORT.md`: support policy with paths for bugs, false positives, and security reports
+- `docs/noise-and-false-positives.md`: explains what findings mean and recommends advisory mode first
+- `docs/rules/README.md`: rule catalog index with status table
+- `docs/rules/GCI0003-behavioral-change-detection.md`: individual rule page
+- `docs/rules/GCI0004-breaking-change-risk.md`: individual rule page
+- `docs/rules/GCI0006-edge-case-handling.md`: individual rule page
+- `docs/rules/GCI0007-error-handling-integrity.md`: individual rule page
+- `docs/rules/GCI0010-hardcoding-and-configuration.md`: individual rule page
+- `docs/risky-diffs/README.md`: risky diff proof gallery index
+- `docs/risky-diffs/efcore-linq-loop.md`: LINQ in loop example
+- `docs/risky-diffs/dapper-null-forgiving.md`: null-forgiving operator example
+- `docs/risky-diffs/stackexchange-redis-context-mutation.md`: shared context mutation example
+- `docs/risky-diffs/sharpcompress-overflow.md`: integer overflow example
+- `docs/risky-diffs/anglesharp-enum-removal.md`: enum member removal example
+- README: GitHub Actions copy-paste workflow section
+- README: GitHub Action inputs table
+- README: "What to do with a finding" section
+- README: rule ID non-contiguous explanation
+
 ### Changed
+- `.github/CONTRIBUTING.md`: added community-facing contribution sections above the developer guide
+- `.github/SECURITY.md`: added sensitive data and local-first behavior sections
+- README: updated rule count from 28 to 35 to reflect current rule set
 - Behavioral Change Risk Formal Framework article: reformatted BCR definition block for readability; added "More formally" paragraph expanding on behavioral divergence potential
 
 ### Fixed
