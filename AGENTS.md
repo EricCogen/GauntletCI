@@ -27,6 +27,20 @@ All tests must pass before committing.
 - `gauntletci llm distill --input <file.json>` — distills expert facts from GitHub issues via LLM
 - `gauntletci corpus maintainers fetch` — fetches high-signal PRs from top .NET OSS contributors
 
+## Engineering Rules
+
+Before committing any change, apply `docs/core-engineering-rules.md` as a checklist.
+
+Key gates:
+- Scope: change is limited to what was requested
+- Contracts: no silent breaking changes to public APIs or schemas
+- Failure handling: no swallowed exceptions or silent failures
+- Tests: public behavior changes have coverage
+- Risk: every behavioral change is classified (Critical/High/Medium/Low/Negligible)
+- Release readiness: treat every change as production-bound
+
+If a High or Critical risk item exists, document the mitigation before marking the change ready.
+
 ## Key Conventions
 - Do NOT include a Co-authored-by trailer in commit messages
 - No markdown files committed except README.md and files listed in .gitignore exceptions
