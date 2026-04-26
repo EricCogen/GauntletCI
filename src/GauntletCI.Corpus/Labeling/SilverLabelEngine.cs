@@ -36,8 +36,8 @@ public sealed class SilverLabelEngine
     /// </summary>
     public static readonly IReadOnlySet<string> RulesWithHeuristics = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "GCI0003", "GCI0004", "GCI0005", "GCI0006", "GCI0010",
-        "GCI0012", "GCI0016", "GCI0021", "GCI0022", "GCI0023",
+        "GCI0003", "GCI0004", "GCI0006", "GCI0010",
+        "GCI0012", "GCI0016", "GCI0021", "GCI0022",
         "GCI0024", "GCI0029", "GCI0032", "GCI0036", "GCI0038",
         "GCI0039", "GCI0041", "GCI0042", "GCI0043", "GCI0044",
         "GCI0045", "GCI0046", "GCI0047", "GCI0049",
@@ -46,8 +46,8 @@ public sealed class SilverLabelEngine
     // Review comment keyword -> (ruleId, reason, confidence) mapping
     private static readonly (string[] Keywords, string RuleId, string Reason, double Confidence)[] CommentRules =
     [
-        (["needs tests", "add test", "missing test", "no test"],
-            "GCI0005", "Review comment requests tests", 0.7),
+        (["needs tests", "add test", "missing test", "no test", "untested"],
+            "GCI0041", "Review comment requests tests or identifies missing test coverage", 0.65),
         (["null", "can this be null", "null reference", "nullreferenceexception", "nullable"],
             "GCI0006", "Review comment mentions null/nullable concern", 0.6),
         (["breaking change", "backwards compat", "backward compat", "semver", "api break"],
@@ -67,7 +67,7 @@ public sealed class SilverLabelEngine
         (["migration", "schema change", "db migration", "database migration"],
             "GCI0021", "Review comment mentions migration concern", 0.65),
         (["rename", "too many files", "broad change", "sweeping change"],
-            "GCI0023", "Review comment mentions broad/sweeping change", 0.55),
+            "GCI0047", "Review comment mentions broad rename or contradictory naming", 0.50),
 
         // --- Rules added after initial corpus labeling ---
 
@@ -319,11 +319,18 @@ public sealed class SilverLabelEngine
 
     private static void ApplyDiffHeuristics(List<string> addedLines, List<string> removedLines, List<string> pathLines, List<ExpectedFinding> labels)
     {
-        // GCI0016 -- Sync-over-async (.Result / .Wait())
-        if (addedLines.Any(l => l.Contains(".Result", StringComparison.Ordinal)
-                             || l.Contains(".Wait()", StringComparison.Ordinal)))
+        // GCI0016 -- Sync-over-async: .GetAwaiter().GetResult() is unambiguous;
+        // .Result/.Wait() only count when there is a Task/async context on the same line.
+        if (addedLines.Any(l =>
+                l.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal) ||
+                (l.Contains(".Result", StringComparison.Ordinal) &&
+                    (l.Contains("Task", StringComparison.Ordinal) ||
+                     l.Contains("Async", StringComparison.Ordinal))) ||
+                (l.Contains(".Wait(", StringComparison.Ordinal) &&
+                    (l.Contains("Task", StringComparison.Ordinal) ||
+                     l.Contains("CancellationToken", StringComparison.Ordinal)))))
         {
-            labels.Add(MakeLabel("GCI0016", "Diff contains .Result or .Wait() on added lines (sync-over-async)", 0.6));
+            labels.Add(MakeLabel("GCI0016", "Diff contains sync-over-async (.GetAwaiter().GetResult() or Task.Result/.Wait()) on added lines", 0.6));
         }
 
         // GCI0012 -- Secret/credential exposure
@@ -366,32 +373,6 @@ public sealed class SilverLabelEngine
             labels.Add(MakeLabel("GCI0004", "Diff contains [Obsolete] attribute or throws NotImplemented on public API", 0.55));
         }
 
-        // GCI0005 -- Test file DELETED (not merely modified)
-        // Tightened: only trigger when a test file appears exclusively in removed-file lines (--- a/...),
-        // not when tests are simply added or modified (which is good, not risky).
-        {
-            var removedPaths = pathLines
-                .Where(l => l.StartsWith("--- a/") || l.StartsWith("--- ") && !l.StartsWith("--- /dev/null"))
-                .ToList();
-            var addedPaths = pathLines
-                .Where(l => l.StartsWith("+++ b/") || l.StartsWith("+++ ") && !l.StartsWith("+++ /dev/null"))
-                .ToList();
-
-            bool testFileRemoved = removedPaths.Any(l =>
-                l.Contains("Test",  StringComparison.OrdinalIgnoreCase) ||
-                l.Contains("Spec.", StringComparison.OrdinalIgnoreCase) ||
-                l.Contains(".test.", StringComparison.OrdinalIgnoreCase));
-
-            bool testFileAdded = addedPaths.Any(l =>
-                l.Contains("Test",  StringComparison.OrdinalIgnoreCase) ||
-                l.Contains("Spec.", StringComparison.OrdinalIgnoreCase) ||
-                l.Contains(".test.", StringComparison.OrdinalIgnoreCase));
-
-            // Only flag if test files are being removed and no test files are being added in exchange
-            if (testFileRemoved && !testFileAdded)
-                labels.Add(MakeLabel("GCI0005", "Diff removes a test file with no corresponding new test file (coverage reduction)", 0.65));
-        }
-
         // GCI0006 -- Possible null dereference
         // Tightened: require meaningful null assignment pattern — property/variable set to null, or
         // null-forgiving operator used in a non-trivial position. Skip bare declarations and
@@ -402,12 +383,16 @@ public sealed class SilverLabelEngine
         }
 
         // GCI0010 -- Hardcoded configuration value
+        // Require localhost/IP URLs, connection strings, or port/host assignments to literals.
+        // Broad public HTTPS URLs (documentation, CDN) are excluded to reduce noise.
         if (addedLines.Any(l =>
-                Regex.IsMatch(l, @"""https?://[^""]{10,}""") ||
-                Regex.IsMatch(l, @"(port|host|url|endpoint)\s*=\s*""", RegexOptions.IgnoreCase) ||
-                Regex.IsMatch(l, @"(port|host|url|endpoint)\s*=\s*\d{2,}", RegexOptions.IgnoreCase)))
+                !l.TrimStart().StartsWith("//") &&
+                (Regex.IsMatch(l, @"""https?://(?:localhost|127\.0\.0\.1|\d+\.\d+\.\d+\.\d+)[:/]") ||
+                 Regex.IsMatch(l, @"(connectionString|connStr|ConnectionString|DbConnection)\s*=\s*""", RegexOptions.IgnoreCase) ||
+                 Regex.IsMatch(l, @"(port|host|endpoint)\s*=\s*\d{3,}", RegexOptions.IgnoreCase) ||
+                 Regex.IsMatch(l, @"(port|host|endpoint)\s*=\s*""[^""]{4,}""", RegexOptions.IgnoreCase))))
         {
-            labels.Add(MakeLabel("GCI0010", "Diff contains hardcoded URL/host/port on added lines", 0.55));
+            labels.Add(MakeLabel("GCI0010", "Diff contains hardcoded localhost URL, connection string, or host/port literal", 0.6));
         }
 
         // GCI0022 -- Large binary or generated file
@@ -421,18 +406,6 @@ public sealed class SilverLabelEngine
         {
             labels.Add(MakeLabel("GCI0022", "Diff touches a binary or generated file", 0.65));
         }
-
-        // GCI0023 -- Broad/sweeping rename (many files changed)
-        // Heuristic: if the diff touches 10+ distinct path segments at the same level it may be a bulk rename
-        var distinctDirs = pathLines
-            .Where(l => l.StartsWith("+++ ") || l.StartsWith("--- "))
-            .Select(l => Path.GetDirectoryName(l.Split(' ').Last())?.Replace('\\', '/') ?? "")
-            .Where(d => !string.IsNullOrEmpty(d))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .Count();
-
-        if (distinctDirs >= 8)
-            labels.Add(MakeLabel("GCI0023", $"Diff touches {distinctDirs} distinct directories — possible broad sweeping change", 0.5));
 
         // --- Rules added after initial corpus labeling ---
 
@@ -570,14 +543,27 @@ public sealed class SilverLabelEngine
             }
         }
 
-        // GCI0047 -- Contradictory CRUD verb rename (e.g. GetFoo renamed to DeleteFoo)
-        // Uses actual removed lines from the diff to detect CRUD verbs in both old and new code.
+        // GCI0047 -- Contradictory CRUD verb rename: requires the SAME base name to appear in
+        // both removed and added lines with DIFFERENT verb prefixes (e.g. GetUser removed, DeleteUser added).
+        // This prevents firing on diffs that merely touch any method with a CRUD verb on each side.
         {
-            var crudPattern = @"\b(Get|Set|Add|Remove|Delete|Create|Update|Find|Fetch|Load|Save|Insert)\w*\s*\(";
-            var hasCrudAdded   = addedLines.Any(l => Regex.IsMatch(l, crudPattern));
-            var hasCrudRemoved = removedLines.Any(l => Regex.IsMatch(l, crudPattern));
-            if (hasCrudAdded && hasCrudRemoved)
-                labels.Add(MakeLabel("GCI0047", "Diff renames CRUD-verb methods — potential naming contract contradiction", 0.45));
+            var crudPattern = @"\b(Get|Set|Add|Remove|Delete|Create|Update|Find|Fetch|Load|Save|Insert)([A-Z]\w{2,})\s*\(";
+            var removedBases = removedLines
+                .Select(l => Regex.Match(l, crudPattern))
+                .Where(m => m.Success)
+                .Select(m => (Verb: m.Groups[1].Value, Base: m.Groups[2].Value))
+                .ToList();
+            var addedBases = addedLines
+                .Select(l => Regex.Match(l, crudPattern))
+                .Where(m => m.Success)
+                .Select(m => (Verb: m.Groups[1].Value, Base: m.Groups[2].Value))
+                .ToList();
+            bool hasContradiction = removedBases.Any(r =>
+                addedBases.Any(a =>
+                    !string.Equals(r.Verb, a.Verb, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(r.Base, a.Base, StringComparison.OrdinalIgnoreCase)));
+            if (hasContradiction)
+                labels.Add(MakeLabel("GCI0047", "Diff renames a CRUD-verb method to an opposing verb on the same base name", 0.55));
         }
 
         // GCI0049 -- Float/double equality comparison

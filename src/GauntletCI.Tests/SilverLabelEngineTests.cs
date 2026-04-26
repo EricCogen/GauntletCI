@@ -45,7 +45,7 @@ public sealed class SilverLabelEngineTests
     // -------------------------------------------------------------------------
 
     [Fact]
-    public async Task InferLabelsFromComments_CommentMentioningNeedsTests_EmitsGCI0005Label()
+    public async Task InferLabelsFromComments_CommentMentioningNeedsTests_EmitsGCI0041Label()
     {
         // Arrange
         var json = CommentsJson("This PR needs tests for the new logic");
@@ -54,7 +54,7 @@ public sealed class SilverLabelEngineTests
         var labels = await _engine.InferLabelsFromCommentsAsync(json);
 
         // Assert
-        var label = Assert.Single(labels, l => l.RuleId == "GCI0005");
+        var label = Assert.Single(labels, l => l.RuleId == "GCI0041");
         Assert.True(label.ShouldTrigger);
         Assert.Equal(LabelSource.Heuristic, label.LabelSource);
     }
@@ -125,14 +125,14 @@ public sealed class SilverLabelEngineTests
     [Fact]
     public async Task InferLabelsFromComments_MultipleMatchingComments_DeduplicatesLabels()
     {
-        // Arrange — two comments both match "needs tests" → only one GCI0005 label emitted
+        // Arrange — two comments both match "needs tests" → only one GCI0041 label emitted
         var json = CommentsJson("You need to add test coverage here", "Also needs tests for the edge case");
 
         // Act
         var labels = await _engine.InferLabelsFromCommentsAsync(json);
 
         // Assert
-        Assert.Single(labels, l => l.RuleId == "GCI0005");
+        Assert.Single(labels, l => l.RuleId == "GCI0041");
     }
 
     // -------------------------------------------------------------------------
@@ -174,7 +174,7 @@ public sealed class SilverLabelEngineTests
         var expected = new[]
         {
             "GCI0003", "GCI0004", "GCI0006", "GCI0010",
-            "GCI0012", "GCI0016", "GCI0021", "GCI0022", "GCI0023",
+            "GCI0012", "GCI0016", "GCI0021", "GCI0022",
             "GCI0024", "GCI0029", "GCI0036", "GCI0047",
         };
 
@@ -182,7 +182,7 @@ public sealed class SilverLabelEngineTests
         foreach (var ruleId in expected)
             Assert.Contains(ruleId, SilverLabelEngine.RulesWithHeuristics);
 
-        Assert.Equal(24, SilverLabelEngine.RulesWithHeuristics.Count);
+        Assert.Equal(22, SilverLabelEngine.RulesWithHeuristics.Count);
     }
 
     [Fact]
