@@ -214,6 +214,10 @@ public static class AnalyzeCommand
                 if (ctx.ParseResult.FindResultFor(severityOption) is null)
                     severityStr = config.Output.MinSeverity;
 
+                // Sensitivity: only apply config value if user did not explicitly pass --sensitivity
+                if (ctx.ParseResult.FindResultFor(sensitivityOption) is null && !string.IsNullOrEmpty(config.Output.Sensitivity))
+                    sensitivityStr = config.Output.Sensitivity;
+
                 // Output format: resolved before banner so the correct writer is selected
                 if (ctx.ParseResult.FindResultFor(outputOption) is null && config.Output.Format != "text")
                     output = config.Output.Format;

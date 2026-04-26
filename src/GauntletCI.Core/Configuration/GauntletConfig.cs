@@ -262,6 +262,12 @@ public class OutputConfig
     /// <summary>Enable verbose output (show Info-severity findings). Equivalent to --verbose.</summary>
     public bool Verbose { get; set; } = false;
 
+    /// <summary>
+    /// Confidence-based noise filter: strict, balanced (default), or permissive.
+    /// Equivalent to --sensitivity. CLI flag overrides this value.
+    /// </summary>
+    public string Sensitivity { get; set; } = "balanced";
+
     /// <summary>Output format: text, json, or sarif. Defaults to text. Equivalent to --output.</summary>
     public string Format { get; set; } = "text";
 }
