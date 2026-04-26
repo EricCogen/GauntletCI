@@ -39,7 +39,8 @@ public static class ConsoleReporter
     /// <param name="result">The evaluation result containing findings to display.</param>
     /// <param name="ascii">Use ASCII box characters instead of Unicode for limited terminals.</param>
     /// <param name="minSeverity">Minimum severity to display. Defaults to <see cref="RuleSeverity.Warn"/>.</param>
-    public static void Report(EvaluationResult result, bool ascii = false, RuleSeverity minSeverity = RuleSeverity.Warn, int suppressedByBaseline = 0, DiffContext? diff = null, int showContext = 0)
+    /// <param name="elapsed">Total wall-clock time for the analysis run. Displayed in the summary header when non-zero.</param>
+    public static void Report(EvaluationResult result, bool ascii = false, RuleSeverity minSeverity = RuleSeverity.Warn, int suppressedByBaseline = 0, DiffContext? diff = null, int showContext = 0, TimeSpan elapsed = default)
     {
         string hr  = ascii ? "=======================================================" : "═══════════════════════════════════════════════════════";
         string sep = ascii ? "-- {0} ({1}) --------------------------" : "── {0} ({1}) ──────────────────────────";
@@ -55,6 +56,8 @@ public static class ConsoleReporter
             AnsiConsole.MarkupLine($"  Commit : {result.CommitSha}");
 
         AnsiConsole.MarkupLine($"  Rules  : {result.RulesEvaluated} evaluated");
+        if (elapsed != default)
+            AnsiConsole.MarkupLine($"  Time   : {FormatElapsed(elapsed)}");
         AnsiConsole.MarkupLine($"  Findings: {result.Findings.Count}");
         AnsiConsole.WriteLine();
 
@@ -324,4 +327,9 @@ public static class ConsoleReporter
 
         AnsiConsole.WriteLine();
     }
+
+    private static string FormatElapsed(TimeSpan elapsed) =>
+        elapsed.TotalMilliseconds < 1000
+            ? $"{(int)elapsed.TotalMilliseconds}ms"
+            : $"{elapsed.TotalSeconds:F1}s";
 }
