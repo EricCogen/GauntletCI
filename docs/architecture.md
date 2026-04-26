@@ -48,10 +48,11 @@ gauntletci analyze [options]
         │
         ▼
 5. Post-processing          RuleOrchestrator.PostProcess()
-        │                  GCI0018: aggregate finding when >3 distinct rules fire.
         │                  GCI0019: large-diff warning based on total line count.
         │                  Severity overrides from config applied to all findings.
         │                  IgnoreList suppressions applied.
+        │                  When 4+ distinct rules fire, ConsoleReporter emits a
+        │                  compound-risk header note (not a separate finding).
         │
         ▼
 6. LLM enrichment           LlmEngineSelector.ResolveAsync()  [opt-in: --with-llm]
