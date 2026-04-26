@@ -49,6 +49,9 @@ public class GCI0029_PiiLoggingLeak : RuleBase
             {
                 var content = line.Content;
 
+                // XML documentation comments are never runtime log calls
+                if (content.TrimStart().StartsWith("///")) continue;
+
                 bool hasLogPrefix = false;
                 foreach (var prefix in LogPrefixes)
                 {

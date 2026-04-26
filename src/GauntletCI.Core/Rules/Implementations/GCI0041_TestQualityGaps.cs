@@ -34,7 +34,20 @@ public class GCI0041_TestQualityGaps : RuleBase
         new(@"\b(?:public|private|protected|internal)\s+(?:async\s+)?(?:Task|void|[\w<>]+)\s+(\w+)\s*\(", RegexOptions.Compiled);
 
     private static readonly string[] AssertionKeywords =
-        ["Assert.", "Should", ".Verify(", "FluentAssertions", "expect("];
+    [
+        // xUnit / NUnit / MSTest
+        "Assert.", "Xunit.Assert", "NUnit.Framework.Assert",
+        // FluentAssertions / Shouldly
+        "Should", ".ShouldBe", ".ShouldNotBe", ".ShouldBeNull", ".ShouldNotBeNull",
+        // NSubstitute
+        "Received(", "DidNotReceive(",
+        // Moq / FakeItEasy
+        ".Verify(", ".VerifyAll(", "MustHaveHappened", "MustNotHaveHappened",
+        // Common assertion patterns
+        "Throws<", "DoesNotThrow", "ThrowsAsync", "expect(", "Expect(",
+        "IsTrue(", "IsFalse(", "IsNull(", "IsNotNull(", "AreEqual(", "AreNotEqual(",
+        "Contains(", "IsInstanceOf",
+    ];
 
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
@@ -131,8 +144,15 @@ public class GCI0041_TestQualityGaps : RuleBase
 
         if (!hasTestAttribute) return;
 
-        bool hasAssertion = addedLines.Any(l =>
-            AssertionKeywords.Any(k => l.Content.Contains(k, StringComparison.OrdinalIgnoreCase)));
+        // Check both added lines and context lines — assertions may live in helper calls
+        // or in lines that weren't changed in this diff.
+        var allVisibleLines = file.Hunks.SelectMany(h => h.Lines)
+            .Where(l => l.Kind != DiffLineKind.Removed)
+            .Select(l => l.Content)
+            .ToList();
+
+        bool hasAssertion = allVisibleLines.Any(l =>
+            AssertionKeywords.Any(k => l.Contains(k, StringComparison.OrdinalIgnoreCase)));
 
         if (hasAssertion) return;
 

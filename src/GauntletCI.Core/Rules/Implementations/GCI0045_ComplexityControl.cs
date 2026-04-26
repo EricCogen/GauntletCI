@@ -43,11 +43,12 @@ public class GCI0045_ComplexityControl : RuleBase
 
     private void CheckSingleUseInterface(DiffContext diff, List<Finding> findings)
     {
-        // Collect all interface names added across all files
+        // Collect all interface names added across non-test files
         var interfaceDefinitions = new Dictionary<string, string>(StringComparer.Ordinal);
 
         foreach (var file in diff.Files)
         {
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
             foreach (var line in file.AddedLines)
             {
                 var match = InterfaceDefRegex.Match(line.Content);
@@ -95,7 +96,20 @@ public class GCI0045_ComplexityControl : RuleBase
             bool hasAbstractClass = addedLines.Any(l => AbstractClassRegex.IsMatch(l.Content));
             if (!hasAbstractClass) continue;
 
-            bool hasAbstractMember = addedLines.Any(l =>
+            // Skip when the abstract class declaration includes a base type or interface (`: SomeBase`).
+            // In those cases the contract is defined by the ancestor, not by abstract members here.
+            bool classHasBaseType = addedLines.Any(l =>
+                AbstractClassRegex.IsMatch(l.Content) &&
+                l.Content.Contains(':'));
+
+            if (classHasBaseType) continue;
+
+            // Check all visible hunk lines (not just added) — abstract members may be in context.
+            var allVisible = file.Hunks.SelectMany(h => h.Lines)
+                .Where(l => l.Kind != DiffLineKind.Removed)
+                .ToList();
+
+            bool hasAbstractMember = allVisible.Any(l =>
                 AbstractMemberRegex.IsMatch(l.Content) &&
                 !AbstractClassRegex.IsMatch(l.Content));
 

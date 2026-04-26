@@ -50,6 +50,16 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
         return quotes % 2 == 1;
     }
 
+    private static readonly HashSet<string> FrameworkExemptPairs = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // Standard BCL async interface pairs — adding both sync+async is required by .NET design
+        "Dispose", "Flush", "Open", "Close", "Connect", "Disconnect",
+        "Read", "Write", "Serialize", "Deserialize", "Initialize",
+        "Shutdown", "Start", "Stop", "Subscribe", "Unsubscribe",
+        "Publish", "Send", "Receive", "Execute", "Invoke", "Run",
+        "GetUniverseDomain", "GetAccessToken",
+    };
+
     private HashSet<string> _allowedSyncAsyncPairs = new(StringComparer.Ordinal);
 
     public void Configure(GauntletConfig config)
@@ -114,6 +124,9 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
         foreach (var baseName in asyncMethodBases)
         {
             if (!addedMethodNames.Contains(baseName)) continue;
+
+            // Skip pairs in the framework-exempt list (standard .NET async interface pairs)
+            if (FrameworkExemptPairs.Contains(baseName)) continue;
 
             // Skip pairs that are intentionally sync+async (configured allowlist)
             if (_allowedSyncAsyncPairs.Contains(baseName)) continue;
