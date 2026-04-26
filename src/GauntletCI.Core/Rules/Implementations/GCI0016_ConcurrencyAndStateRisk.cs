@@ -20,14 +20,23 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
         var diff = context.Diff;
         var findings = new List<Finding>();
 
-        foreach (var line in diff.AllAddedLines)
+        foreach (var file in diff.Files)
         {
-            if (line.Content.TrimStart().StartsWith("//")) continue;
-            CheckAsyncVoid(line, findings);
-            CheckBlockingAsyncCall(line, findings);
-            CheckLockThis(line, findings);
-            CheckThreadSleepInAsync(line, findings);
-            CheckStaticMutableField(line, findings);
+            // Auto-generated files are never hand-authored; concurrency patterns in them are noise.
+            if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+
+            bool isTest = WellKnownPatterns.IsTestFile(file.NewPath);
+
+            foreach (var line in file.AddedLines)
+            {
+                if (line.Content.TrimStart().StartsWith("//")) continue;
+                CheckAsyncVoid(line, findings);
+                CheckBlockingAsyncCall(line, findings);
+                CheckLockThis(line, findings);
+                // Thread.Sleep in test code is legitimate timing control, not a thread-pool concern.
+                if (!isTest) CheckThreadSleepInAsync(line, findings);
+                CheckStaticMutableField(line, findings);
+            }
         }
 
         return Task.FromResult(findings);
