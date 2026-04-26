@@ -21,6 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/docs/configuration`,                  changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/docs/integrations`,                   changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/docs/local-llm`,                      changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE_URL}/docs/custom-rules`,                    changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/detections`,                          changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE_URL}/pricing`,                             changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/about`,                               changeFrequency: "monthly", priority: 0.7 },

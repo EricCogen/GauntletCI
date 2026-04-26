@@ -10,6 +10,7 @@ const navItems = [
   { href: "/docs/configuration", label: "Configuration" },
   { href: "/docs/integrations", label: "CI/CD Integrations" },
   { href: "/docs/local-llm", label: "Local LLM Setup" },
+  { href: "/docs/custom-rules", label: "Custom Rules" },
 ];
 
 export function DocsSidebar() {

@@ -1,5 +1,22 @@
 const commonQA = [
   {
+    question: "Can I add custom detection rules?",
+    answer: (
+      <>
+        Yes. GauntletCI is open source and built for extension. Implement{" "}
+        <code>IRule</code> (or extend <code>RuleBase</code>), place the file in{" "}
+        <code>src/GauntletCI.Core/Rules/Implementations/</code>, and write a test.
+        The orchestrator discovers all rules via reflection at startup - no registration step needed.
+        For team-specific rules without code, the{" "}
+        <code>experimental.engineeringPolicy</code> config lets you define rules in plain markdown,
+        evaluated locally by the LLM.{" "}
+        <a href="/docs/custom-rules" className="text-cyan-400 hover:underline">
+          Read the custom rules guide.
+        </a>
+      </>
+    ),
+  },
+  {
     question: "What is diff-based code analysis?",
     answer: (
       <>
