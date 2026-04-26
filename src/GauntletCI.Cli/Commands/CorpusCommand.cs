@@ -59,6 +59,10 @@ public static class CorpusCommand
         maintainers.AddCommand(CreateMaintainersFetch());
         corpus.AddCommand(maintainers);
 
+        var sonarcloud = new Command("sonarcloud", "SonarCloud external validation operations");
+        sonarcloud.AddCommand(CreateSonarCloudEnrich());
+        corpus.AddCommand(sonarcloud);
+
         return corpus;
     }
 
@@ -2086,6 +2090,76 @@ public static class CorpusCommand
                 }
                 if (!any)
                     Console.WriteLine("  (no errors recorded)");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus sonarcloud enrich ──────────────────────────────────
+
+    private static Command CreateSonarCloudEnrich()
+    {
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root folder");
+        var tierOpt     = new Option<string>("--tier",     () => "silver",                      "Fixture tier to enrich (silver)");
+
+        var cmd = new Command("enrich", "Cross-reference corpus fixtures against SonarCloud open issues");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+        cmd.AddOption(tierOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var ct           = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                // Load all fixtures for the requested tier from the DB
+                using var selectCmd = db.Connection.CreateCommand();
+                selectCmd.CommandText = """
+                    SELECT fixture_id, repo, tier, pr_url, pr_number
+                    FROM fixtures
+                    WHERE LOWER(tier) = LOWER($tier)
+                    ORDER BY repo, fixture_id
+                    """;
+                selectCmd.Parameters.AddWithValue("$tier", tier);
+
+                var fixtures = new List<FixtureMetadata>();
+                using var reader = await selectCmd.ExecuteReaderAsync(ct);
+                while (await reader.ReadAsync(ct))
+                {
+                    var tierParsed = Enum.TryParse<FixtureTier>(reader.GetString(2), ignoreCase: true, out var t)
+                        ? t : FixtureTier.Silver;
+                    fixtures.Add(new FixtureMetadata
+                    {
+                        FixtureId = reader.GetString(0),
+                        Repo      = reader.GetString(1),
+                        Tier      = tierParsed,
+                    });
+                }
+
+                Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures via SonarCloud...");
+                Console.WriteLine();
+
+                using var enricher = new SonarCloudEnricher();
+                var result = await enricher.EnrichAsync(
+                    fixtures,
+                    fixturesPath,
+                    db,
+                    progress: msg => Console.WriteLine(msg),
+                    ct: ct);
+
+                Console.WriteLine();
+                Console.WriteLine("-- SonarCloud Enrichment Summary --");
+                Console.WriteLine($"  Fixtures processed   : {result.FixturesProcessed}");
+                Console.WriteLine($"  Fixtures with matches: {result.FixturesWithMatches}");
+                Console.WriteLine($"  Total sonar_matches  : {result.TotalMatches}");
             }
         });
 

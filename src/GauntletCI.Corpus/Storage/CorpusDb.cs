@@ -239,5 +239,19 @@ internal static class SchemaInitializer
     internal static readonly string[] Migrations =
     [
         "ALTER TABLE actual_findings ADD COLUMN file_path TEXT",
+        """
+        CREATE TABLE IF NOT EXISTS sonar_matches (
+            id                INTEGER PRIMARY KEY AUTOINCREMENT,
+            fixture_id        TEXT NOT NULL REFERENCES fixtures(fixture_id),
+            sonar_project_key TEXT NOT NULL,
+            changed_file      TEXT NOT NULL,
+            sonar_rule        TEXT NOT NULL DEFAULT '',
+            sonar_severity    TEXT NOT NULL DEFAULT '',
+            sonar_type        TEXT NOT NULL DEFAULT '',
+            sonar_message     TEXT DEFAULT '',
+            fetched_at_utc    TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(fixture_id, changed_file, sonar_rule)
+        )
+        """,
     ];
 }
