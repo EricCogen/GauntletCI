@@ -62,7 +62,7 @@ jobs:
             analyze --no-banner --ascii < main.diff 2>&1)
           EXIT_CODE=$?
           set -e
-          FINDINGS=$(echo "$OUTPUT" | grep -oP 'Findings: \K\d+' || echo "0")
+          FINDINGS=$(echo "$OUTPUT" | grep -oP 'Findings\s+:\s+\K\d+' || echo "0")
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
           echo "findings=$FINDINGS" >> $GITHUB_OUTPUT
 
@@ -130,4 +130,4 @@ jobs:
           GAUNTLETCI_COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
         run: >
           dotnet run --project src/GauntletCI.Cli --no-build --configuration Release --
-          analyze --no-banner --ascii --github-annotations --github-pr-comments --severity warn --no-baseline < pr.diff
+          analyze --no-banner --ascii --github-annotations --github-pr-comments --severity warn --sensitivity balanced --no-baseline < pr.diff
