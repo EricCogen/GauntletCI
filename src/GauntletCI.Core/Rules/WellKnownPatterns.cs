@@ -89,4 +89,29 @@ internal static class WellKnownPatterns
 
         return false;
     }
+
+    /// <summary>
+    /// Returns <c>true</c> when <paramref name="addedSig"/> is a backward-compatible extension of
+    /// <paramref name="removedSig"/> (i.e. the added overload appends only optional parameters).
+    /// Used by GCI0003 and GCI0004.
+    /// </summary>
+    public static bool IsBackwardCompatibleExtension(string removedSig, string addedSig)
+    {
+        var removedParams = ExtractParenContent(removedSig)?.Trim() ?? "";
+        var addedParams   = ExtractParenContent(addedSig)?.Trim()   ?? "";
+
+        if (addedParams.Length <= removedParams.Length) return false;
+        if (!addedParams.StartsWith(removedParams, StringComparison.Ordinal)) return false;
+
+        var extra = addedParams[removedParams.Length..].TrimStart(',').TrimStart();
+        return !string.IsNullOrWhiteSpace(extra) && extra.Contains('=', StringComparison.Ordinal);
+    }
+
+    /// <summary>Extracts the parameter list content between the outermost parentheses of a method signature.</summary>
+    public static string? ExtractParenContent(string sig)
+    {
+        var open  = sig.IndexOf('(');
+        var close = sig.LastIndexOf(')');
+        return open >= 0 && close > open ? sig[(open + 1)..close] : null;
+    }
 }

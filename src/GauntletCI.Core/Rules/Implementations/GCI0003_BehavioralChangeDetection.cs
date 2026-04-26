@@ -92,7 +92,7 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
                 var matchingAdded = addedSigs.FirstOrDefault(a => ExtractMethodName(a.Content) == removedName);
                 if (matchingAdded is not null && NormalizeSignature(removed.Content) != NormalizeSignature(matchingAdded.Content))
                 {
-                    if (IsBackwardCompatibleExtension(removed.Content, matchingAdded.Content))
+                    if (WellKnownPatterns.IsBackwardCompatibleExtension(removed.Content, matchingAdded.Content))
                         compatible.Add((removedName, removed, matchingAdded));
                     else
                         incompatible.Add((removedName, removed, matchingAdded));
@@ -173,29 +173,6 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
         var preview = string.Join(", ", list.Take(3)
                         .Select(x => $"{Path.GetFileName(x.File.NewPath ?? x.File.OldPath)} ({x.Count})"));
         return preview + (list.Count > 3 ? $" (+{list.Count - 3} more files)" : "");
-    }
-
-    /// <summary>
-    /// Returns true when the only change is adding new parameters that all carry default values.
-    /// Such additions are backward-compatible: existing call sites compile without modification.
-    /// </summary>
-    private static bool IsBackwardCompatibleExtension(string removedSig, string addedSig)
-    {
-        var removedParams = ExtractParenContent(removedSig)?.Trim() ?? "";
-        var addedParams   = ExtractParenContent(addedSig)?.Trim()   ?? "";
-
-        if (addedParams.Length <= removedParams.Length) return false;
-        if (!addedParams.StartsWith(removedParams, StringComparison.Ordinal)) return false;
-
-        var extra = addedParams[removedParams.Length..].TrimStart(',').TrimStart();
-        return !string.IsNullOrWhiteSpace(extra) && extra.Contains('=', StringComparison.Ordinal);
-    }
-
-    private static string? ExtractParenContent(string sig)
-    {
-        var open  = sig.IndexOf('(');
-        var close = sig.LastIndexOf(')');
-        return open >= 0 && close > open ? sig[(open + 1)..close] : null;
     }
 
     private static string? ExtractMethodName(string line)

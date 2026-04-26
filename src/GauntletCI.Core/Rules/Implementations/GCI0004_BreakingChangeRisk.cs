@@ -70,7 +70,7 @@ public class GCI0004_BreakingChangeRisk : RuleBase
                     var addedLine = addedPublicLines
                         .FirstOrDefault(l => ExtractMemberName(l.Content) == name
                                           && l.Content.Trim() != removed.Content.Trim());
-                    if (addedLine != null && !IsBackwardCompatibleExtension(removed.Content, addedLine.Content))
+                    if (addedLine != null && !WellKnownPatterns.IsBackwardCompatibleExtension(removed.Content, addedLine.Content))
                         sigChanges.Add((name, removed, addedLine));
                 }
             }
@@ -235,26 +235,4 @@ public class GCI0004_BreakingChangeRisk : RuleBase
         return before[(lastSpace + 1)..].Trim('(');
     }
 
-    /// <summary>
-    /// Returns true when the only change is adding new parameters that all carry default values,
-    /// making the extension backward-compatible (existing call sites need no updates).
-    /// </summary>
-    private static bool IsBackwardCompatibleExtension(string removedSig, string addedSig)
-    {
-        var removedParams = ExtractParenContent(removedSig)?.Trim() ?? "";
-        var addedParams   = ExtractParenContent(addedSig)?.Trim()   ?? "";
-
-        if (addedParams.Length <= removedParams.Length) return false;
-        if (!addedParams.StartsWith(removedParams, StringComparison.Ordinal)) return false;
-
-        var extra = addedParams[removedParams.Length..].TrimStart(',').TrimStart();
-        return !string.IsNullOrWhiteSpace(extra) && extra.Contains('=', StringComparison.Ordinal);
-    }
-
-    private static string? ExtractParenContent(string sig)
-    {
-        var open  = sig.IndexOf('(');
-        var close = sig.LastIndexOf(')');
-        return open >= 0 && close > open ? sig[(open + 1)..close] : null;
-    }
 }
