@@ -835,6 +835,47 @@ export default function BCRFormalFrameworkPage() {
             </ol>
           </section>
 
+          {/* Real-world examples */}
+          <section className="space-y-4 border-t border-border pt-12">
+            <h2 className="text-xl font-bold tracking-tight">Real-world examples from .NET OSS</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              The BCR categories above are not theoretical. These case studies show GauntletCI
+              detecting the exact patterns in real pull requests to widely-used .NET libraries.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Link
+                href="/case-studies/stackexchange-redis-swallowed-exception"
+                className="block rounded-xl border border-border bg-card p-4 hover:border-cyan-500/40 hover:bg-card/80 transition-colors"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-mono text-xs text-muted-foreground/60">StackExchange/StackExchange.Redis</span>
+                  <span className="font-mono text-xs text-muted-foreground/40">PR#2995</span>
+                </div>
+                <h3 className="text-sm font-semibold text-foreground mb-1">
+                  Swallowed Exception in StackExchange.Redis
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  GCI0007 catches a bare catch {} block that silently drops all exceptions in the message dispatch loop.
+                </p>
+              </Link>
+              <Link
+                href="/case-studies/nunit-thread-sleep-async"
+                className="block rounded-xl border border-border bg-card p-4 hover:border-cyan-500/40 hover:bg-card/80 transition-colors"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-mono text-xs text-muted-foreground/60">nunit/nunit</span>
+                  <span className="font-mono text-xs text-muted-foreground/40">PR#5192</span>
+                </div>
+                <h3 className="text-sm font-semibold text-foreground mb-1">
+                  Thread.Sleep in Async Context - NUnit
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  GCI0016 catches Thread.Sleep blocking the thread pool in an async context inside the NUnit test framework itself.
+                </p>
+              </Link>
+            </div>
+          </section>
+
           {/* CTAs */}
           <div className="border-t border-border pt-10 flex flex-col sm:flex-row gap-4">
             <Link

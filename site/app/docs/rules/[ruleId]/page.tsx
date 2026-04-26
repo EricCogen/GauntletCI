@@ -8,7 +8,7 @@ import {
   rules,
   type Rule,
 } from "@/lib/rules";
-import { articlesForRule } from "@/lib/articles";
+import { articlesForRule, caseStudiesForRule } from "@/lib/articles";
 import { AuthorBio } from "@/components/author-bio";
 import { softwareApplicationSchema, buildRuleFaqSchema } from "@/lib/schemas";
 
@@ -83,6 +83,7 @@ export default async function RuleDetailPage({
     .map((id) => getRule(id))
     .filter((r): r is Rule => Boolean(r));
   const discussedIn = articlesForRule(rule.id);
+  const evidenceFor = caseStudiesForRule(rule.id);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -281,6 +282,38 @@ export default async function RuleDetailPage({
                   </h3>
                   <p className="text-xs text-muted-foreground leading-relaxed">
                     {article.description}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {evidenceFor.length > 0 && (
+          <section>
+            <h2 className="text-xl font-bold tracking-tight mb-3">
+              Real-world evidence
+            </h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {evidenceFor.map((cs) => (
+                <Link
+                  key={cs.slug}
+                  href={cs.href}
+                  className="block rounded-xl border border-border bg-card p-4 hover:border-cyan-500/40 hover:bg-card/80 transition-colors"
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="font-mono text-xs text-muted-foreground/60">
+                      {cs.repo}
+                    </span>
+                    <span className="font-mono text-xs text-muted-foreground/40">
+                      {cs.pr}
+                    </span>
+                  </div>
+                  <h3 className="text-sm font-semibold text-foreground mb-1.5">
+                    {cs.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    {cs.description}
                   </p>
                 </Link>
               ))}

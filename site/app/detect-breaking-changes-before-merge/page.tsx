@@ -620,6 +620,47 @@ export default function DetectBreakingChangesPage() {
             </ol>
           </section>
 
+          {/* Real-world examples */}
+          <section className="space-y-4 border-t border-border pt-12">
+            <h2 className="text-xl font-bold tracking-tight">Real-world examples from .NET OSS</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              These case studies show GauntletCI catching the exact patterns described above in
+              real pull requests to widely-used .NET libraries.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Link
+                href="/case-studies/efcore-breaking-api-removal"
+                className="block rounded-xl border border-border bg-card p-4 hover:border-cyan-500/40 hover:bg-card/80 transition-colors"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-mono text-xs text-muted-foreground/60">dotnet/efcore</span>
+                  <span className="font-mono text-xs text-muted-foreground/40">PR#38024</span>
+                </div>
+                <h3 className="text-sm font-semibold text-foreground mb-1">
+                  Breaking API Removal in EF Core
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  GCI0004 catches public method removal without [Obsolete] - breaks all third-party EF Core database providers.
+                </p>
+              </Link>
+              <Link
+                href="/case-studies/newtonsoft-json-assignment-in-getter"
+                className="block rounded-xl border border-border bg-card p-4 hover:border-cyan-500/40 hover:bg-card/80 transition-colors"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="font-mono text-xs text-muted-foreground/60">JamesNK/Newtonsoft.Json</span>
+                  <span className="font-mono text-xs text-muted-foreground/40">PR#1950</span>
+                </div>
+                <h3 className="text-sm font-semibold text-foreground mb-1">
+                  Assignment in Getter - Newtonsoft.Json
+                </h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  GCI0004 and GCI0036 catch a property getter that mutates state, breaking the side-effect-free contract.
+                </p>
+              </Link>
+            </div>
+          </section>
+
           {/* CTAs */}
           <div className="border-t border-border pt-10 flex flex-col sm:flex-row gap-4">
             <Link
