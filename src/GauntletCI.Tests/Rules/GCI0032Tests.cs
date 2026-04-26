@@ -18,8 +18,8 @@ public class GCI0032Tests
             +++ b/src/Service.cs
             @@ -1,3 +1,5 @@
              public class Service {
-            +    if (id == null) throw new ArgumentNullException(nameof(id));
-            +    if (id < 0) throw new ArgumentOutOfRangeException(nameof(id));
+            +    if (!state.IsReady) throw new InvalidOperationException("Service not ready");
+            +    if (quota.Exceeded) throw new QuotaExceededException("Rate limit hit");
              }
             """;
 
@@ -110,6 +110,32 @@ public class GCI0032Tests
             @@ -1,3 +1,4 @@
              public class Service {
             +    public void DoWork() { throw new NotImplementedException(); }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public async Task GuardClauseThrows_ShouldNotFlag()
+    {
+        // ArgumentNullException, ArgumentException, ArgumentOutOfRangeException, and
+        // ObjectDisposedException are defensive guard clauses — they do not represent
+        // untested business logic paths and must not trigger this rule.
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,3 +1,6 @@
+             public class Service {
+            +    if (id == null) throw new ArgumentNullException(nameof(id));
+            +    if (id < 0) throw new ArgumentOutOfRangeException(nameof(id));
+            +    if (!valid) throw new ArgumentException("Must be valid", nameof(id));
+            +    if (_disposed) throw new ObjectDisposedException(nameof(Service));
              }
             """;
 

@@ -41,9 +41,9 @@ public class GCI0015_DataIntegrityRisk : RuleBase
         {
             if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
             if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+            CheckUncheckedCastsInFile(file, findings);
             foreach (var line in file.AddedLines)
             {
-                CheckUncheckedCasts(line, findings);
                 CheckSqlIgnore(line, findings);
             }
         }
@@ -137,19 +137,29 @@ public class GCI0015_DataIntegrityRisk : RuleBase
         }
     }
 
-    private void CheckUncheckedCasts(DiffLine line, List<Finding> findings)
+    private void CheckUncheckedCastsInFile(DiffFile file, List<Finding> findings)
     {
-        foreach (var cast in UncheckedCastPatterns)
-        {
-            if (!line.Content.Contains(cast, StringComparison.Ordinal)) continue;
+        // Only flag unchecked numeric casts when HTTP input signals are present in the file.
+        // A cast like (int)Request.Form["id"] is dangerous; (int)someInternalCounter is not.
+        bool hasHttpSignal = file.AddedLines.Any(l =>
+            HttpContextSignals.Any(s => l.Content.Contains(s, StringComparison.Ordinal)));
 
-            findings.Add(CreateFinding(
-                summary: $"Unchecked cast {cast} on potentially user-supplied value.",
-                evidence: $"Line {line.LineNumber}: {line.Content.Trim()}",
-                whyItMatters: "Hard casts without overflow checking can cause silent data truncation or OverflowException.",
-                suggestedAction: "Use checked{} blocks, Convert.ToInt32(), or int.TryParse() with validation.",
-                confidence: Confidence.Low));
-            return;
+        if (!hasHttpSignal) return;
+
+        foreach (var line in file.AddedLines)
+        {
+            foreach (var cast in UncheckedCastPatterns)
+            {
+                if (!line.Content.Contains(cast, StringComparison.Ordinal)) continue;
+
+                findings.Add(CreateFinding(
+                    summary: $"Unchecked cast {cast} on potentially user-supplied value.",
+                    evidence: $"Line {line.LineNumber}: {line.Content.Trim()}",
+                    whyItMatters: "Hard casts without overflow checking can cause silent data truncation or OverflowException.",
+                    suggestedAction: "Use checked{} blocks, Convert.ToInt32(), or int.TryParse() with validation.",
+                    confidence: Confidence.Low));
+                break;
+            }
         }
     }
 
