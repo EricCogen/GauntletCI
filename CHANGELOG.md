@@ -36,6 +36,7 @@ Versions follow [Semantic Versioning](https://semver.org/).
 - `--sensitivity` CLI flag: `strict | balanced | permissive` (default: `balanced`) filters findings by a Severity x Confidence 2D priority grid; `balanced` shows all Block plus Warn+Medium/High, `strict` shows Block+Medium/High only, `permissive` restores legacy all-Warn behavior
 - `SensitivityThreshold` enum and `SensitivityFilter` static class in `GauntletCI.Core.Model`; filter logic is testable and independent of the CLI
 - Compound risk summary line in report header when 4+ distinct rules trigger (replaces the removed synthetic `GCI_SYN_AGG` finding)
+- `output.sensitivity` config key in `.gauntletci.json`; accepts `strict`, `balanced`, or `permissive`; CLI flag overrides it when explicitly passed
 
 ### Changed
 - Move `CONTRIBUTING.md` and `SECURITY.md` from `.github/` to repo root for discoverability

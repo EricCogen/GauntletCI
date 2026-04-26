@@ -269,6 +269,12 @@
           "description": "Show Info-severity findings. Equivalent to --verbose.",
           "default": false
         },
+        "sensitivity": {
+          "type": "string",
+          "description": "Confidence-based noise filter. Equivalent to --sensitivity. CLI flag overrides this. strict: Block+High/Medium only. balanced (default): Block-all + Warn+High/Medium. permissive: all Block+Warn.",
+          "enum": ["strict", "balanced", "permissive"],
+          "default": "balanced"
+        },
         "format": {
           "type": "string",
           "description": "Output format. Equivalent to --output. CLI flag overrides this.",
