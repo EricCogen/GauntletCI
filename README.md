@@ -112,6 +112,7 @@ gauntletci analyze --staged
 ![GauntletCI terminal demo](docs/assets/gauntletci-terminal-demo.gif)
 
 > Running against [StackExchange.Redis PR#2995](https://github.com/StackExchange/StackExchange.Redis/pull/2995) - GauntletCI flags a swallowed exception in production connection handling.
+> GIF recorded with [ScreenToGif](https://github.com/NickeManarin/ScreenToGif) (open source)
 
 Typical output includes **0-3 high-signal findings**.
 
