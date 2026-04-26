@@ -109,21 +109,11 @@ gauntletci analyze --staged
 
 ## 🧪 What you see on first run
 
-```text
-GauntletCI vX.X.X
-Analyzing staged changes...
+![GauntletCI terminal demo](docs/assets/gauntletci-terminal-demo.gif)
 
-Findings
---------
-[BLOCK] Removed logic without tests
-[WARN] Missing input validation
+> Running against [StackExchange.Redis PR#2995](https://github.com/StackExchange/StackExchange.Redis/pull/2995) - GauntletCI flags a swallowed exception in production connection handling.
 
-Result
-------
-Exit code: 1
-```
-
-Typical output includes **0–3 high-signal findings**.
+Typical output includes **0-3 high-signal findings**.
 
 ---
 
