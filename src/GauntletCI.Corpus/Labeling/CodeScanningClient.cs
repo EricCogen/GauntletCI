@@ -17,7 +17,7 @@ public sealed class CodeScanningClient : IDisposable
 
     public CodeScanningClient()
     {
-        var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+        var token = GitHubTokenResolver.Resolve();
 
         _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
         _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Corpus/1.0");

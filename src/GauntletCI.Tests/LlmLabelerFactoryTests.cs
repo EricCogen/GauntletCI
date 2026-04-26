@@ -50,14 +50,20 @@ public class LlmLabelerFactoryTests
     }
 
     [Fact]
-    public void Create_GitHubModelsWithoutToken_ReturnsNullLabeler()
+    public void Create_GitHubModelsWithoutToken_ReturnsLabelerBasedOnAvailability()
     {
+        // With GitHubTokenResolver, clearing GITHUB_TOKEN still allows gh CLI fallback.
+        // Assert the correct labeler type based on what the resolver can actually find.
         var savedToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
         try
         {
             Environment.SetEnvironmentVariable("GITHUB_TOKEN", null);
-            var labeler = LlmLabelerFactory.Create("github-models");
-            Assert.IsType<NullLlmLabeler>(labeler);
+            var hasToken = GauntletCI.Corpus.GitHubTokenResolver.IsAvailable;
+            var labeler  = LlmLabelerFactory.Create("github-models");
+            if (hasToken)
+                Assert.IsType<GitHubModelsLlmLabeler>(labeler);
+            else
+                Assert.IsType<NullLlmLabeler>(labeler);
         }
         finally
         {

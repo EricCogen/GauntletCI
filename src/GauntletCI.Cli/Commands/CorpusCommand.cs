@@ -3,6 +3,7 @@ using System.CommandLine;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using GauntletCI.Corpus;
 using GauntletCI.Corpus.Discovery;
 using GauntletCI.Corpus.Hydration;
 using GauntletCI.Corpus.Interfaces;
@@ -593,10 +594,10 @@ public static class CorpusCommand
 
             if (providerName.Equals("gh-search", StringComparison.OrdinalIgnoreCase))
             {
-                var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+                var token = GitHubTokenResolver.Resolve();
                 if (string.IsNullOrEmpty(token))
                 {
-                    Console.Error.WriteLine("[corpus] Error: GITHUB_TOKEN environment variable is required for gh-search provider.");
+                    Console.Error.WriteLine("[corpus] Error: no GitHub token found. Set GITHUB_TOKEN or run 'gh auth login'.");
                     ctx.ExitCode = 1;
                     return;
                 }
@@ -753,10 +754,10 @@ public static class CorpusCommand
                 return;
             }
 
-            var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+            var token = GitHubTokenResolver.Resolve();
             if (string.IsNullOrEmpty(token))
             {
-                Console.Error.WriteLine("[corpus] Error: GITHUB_TOKEN environment variable is not set.");
+                Console.Error.WriteLine("[corpus] Error: no GitHub token found. Set GITHUB_TOKEN or run 'gh auth login'.");
                 ctx.ExitCode = 1;
                 return;
             }
@@ -1635,10 +1636,10 @@ public static class CorpusCommand
             var dbPath   = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var ct       = ctx.GetCancellationToken();
 
-            var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+            var token = GitHubTokenResolver.Resolve();
             if (string.IsNullOrEmpty(token))
             {
-                Console.Error.WriteLine("[corpus] Error: GITHUB_TOKEN environment variable is required for issue search.");
+                Console.Error.WriteLine("[corpus] Error: no GitHub token found. Set GITHUB_TOKEN or run 'gh auth login'.");
                 ctx.ExitCode = 1;
                 return;
             }
@@ -1727,7 +1728,7 @@ public static class CorpusCommand
         {
             var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var token  = ctx.ParseResult.GetValueForOption(tokenOpt)
-                         ?? Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+                         ?? GitHubTokenResolver.Resolve();
             var ct     = ctx.GetCancellationToken();
 
             if (string.IsNullOrEmpty(token))

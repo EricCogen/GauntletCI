@@ -53,7 +53,7 @@ public static class LlmLabelerFactory
 
     private static ILlmLabeler CreateGitHubModels(string? model)
     {
-        var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+        var token = GitHubTokenResolver.Resolve();
         if (string.IsNullOrEmpty(token)) return new NullLlmLabeler();
         var m = model ?? "gpt-4o-mini";
         return new GitHubModelsLlmLabeler(token, m);
