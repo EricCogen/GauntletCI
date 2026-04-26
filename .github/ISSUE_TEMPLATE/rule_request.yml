@@ -1,0 +1,52 @@
+name: Rule request
+description: Suggest a new GauntletCI detection rule.
+title: "[Rule Request]: "
+labels: ["rule-request"]
+body:
+  - type: input
+    id: rule_name
+    attributes:
+      label: Proposed rule name
+      placeholder: "Example: Unsafe default behavior change"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What risky change should this detect?
+      description: Describe the pattern and why it matters.
+    validations:
+      required: true
+
+  - type: textarea
+    id: example_diff
+    attributes:
+      label: Example diff
+      render: diff
+    validations:
+      required: false
+
+  - type: textarea
+    id: false_positive_risk
+    attributes:
+      label: What could make this noisy?
+      description: Describe cases where the rule should not fire.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Behavior and Contracts
+        - Security and Privacy
+        - Data Integrity
+        - Async and Concurrency
+        - Observability and Failure Handling
+        - Architecture
+        - Test Quality
+        - Other
+    validations:
+      required: true

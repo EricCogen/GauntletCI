@@ -1,0 +1,69 @@
+name: Report a false positive
+description: Report a GauntletCI finding that appears incorrect, noisy, or unactionable.
+title: "[False Positive]: "
+labels: ["false-positive", "rule-quality"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve GauntletCI signal quality.
+
+        A GauntletCI finding is evidence of possible change risk, not a guarantee that the change is a bug. This template helps us understand where the signal is too noisy or misleading.
+
+  - type: input
+    id: version
+    attributes:
+      label: GauntletCI version
+      placeholder: gauntletci --version
+    validations:
+      required: true
+
+  - type: input
+    id: rule_id
+    attributes:
+      label: Rule ID
+      placeholder: GCI0007
+    validations:
+      required: true
+
+  - type: textarea
+    id: finding
+    attributes:
+      label: Finding output
+      description: Paste the relevant GauntletCI finding.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: diff
+    attributes:
+      label: Minimal sanitized diff
+      description: Paste the smallest safe diff that reproduces the issue.
+      render: diff
+    validations:
+      required: false
+
+  - type: textarea
+    id: why_false_positive
+    attributes:
+      label: Why do you think this is a false positive?
+      description: Explain why the finding was not useful or not correct.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should GauntletCI have done instead?
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed secrets, credentials, private customer data, and proprietary details.
+          required: true

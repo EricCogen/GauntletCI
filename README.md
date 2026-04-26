@@ -183,7 +183,7 @@ Only **new risks introduced by the current change** are shown.
 
 ## 📏 Detection Coverage
 
-GauntletCI includes **28 built-in detection rules** across:
+GauntletCI includes **35 built-in detection rules** across:
 
 * Behavior & Contracts
 * Security
@@ -193,7 +193,53 @@ GauntletCI includes **28 built-in detection rules** across:
 * Architecture
 * Test Quality
 
-Rule IDs range from GCI0001–GCI0050.
+Rule IDs range from GCI0001-GCI0050. Rule IDs are intentionally non-contiguous so rules can be grouped and expanded without renumbering existing findings.
+
+---
+
+## Add GauntletCI to GitHub Actions
+
+Start in advisory mode first so your team can review findings before blocking merges.
+
+Create `.github/workflows/gauntletci.yml`:
+
+```yaml
+name: GauntletCI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  risk-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: EricCogen/GauntletCI@main
+        with:
+          fail-on-findings: "false"
+          inline-comments: "true"
+```
+
+Once the signal quality is tuned for your repo, change `fail-on-findings` to `"true"` to block risky changes.
+
+## GitHub Action inputs
+
+| Input | Default | Description |
+| --- | --- | --- |
+| `commit` | PR head commit | Commit SHA to analyze |
+| `no-llm` | `true` | Run deterministic rules only |
+| `fail-on-findings` | `true` | Fail the check when findings are produced |
+| `inline-comments` | `false` | Post findings as inline PR comments |
+| `ascii` | `true` | Use ASCII-only output |
+| `dotnet-version` | `8.0.x` | .NET SDK version |
+| `gauntletci-version` | `2.0.0` | NuGet tool version to install |
 
 ---
 
@@ -222,6 +268,19 @@ GauntletCI focuses only on **change-risk**, not general code quality.
 * No change-risk signals were identified
 * This does not guarantee correctness
 * It indicates no high-confidence risks were found
+
+---
+
+## What to do with a finding
+
+A GauntletCI finding is not a claim that the code is definitely broken.
+
+Treat it as a review prompt:
+
+1. Confirm whether the behavior changed.
+2. Check whether tests or validation cover the changed path.
+3. Add validation, update tests, or document why the change is intentional.
+4. Suppress only when the risk is understood and accepted.
 
 ---
 
