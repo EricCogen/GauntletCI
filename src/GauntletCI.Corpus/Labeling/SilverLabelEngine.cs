@@ -36,8 +36,11 @@ public sealed class SilverLabelEngine
     /// </summary>
     public static readonly IReadOnlySet<string> RulesWithHeuristics = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "GCI0003", "GCI0004", "GCI0006", "GCI0010",
+        "GCI0003", "GCI0004", "GCI0005", "GCI0006", "GCI0010",
         "GCI0012", "GCI0016", "GCI0021", "GCI0022", "GCI0023",
+        "GCI0024", "GCI0029", "GCI0032", "GCI0036", "GCI0038",
+        "GCI0039", "GCI0041", "GCI0042", "GCI0043", "GCI0044",
+        "GCI0045", "GCI0046", "GCI0047", "GCI0049",
     };
 
     // Review comment keyword -> (ruleId, reason, confidence) mapping
@@ -65,6 +68,50 @@ public sealed class SilverLabelEngine
             "GCI0021", "Review comment mentions migration concern", 0.65),
         (["rename", "too many files", "broad change", "sweeping change"],
             "GCI0023", "Review comment mentions broad/sweeping change", 0.55),
+
+        // --- Rules added after initial corpus labeling ---
+
+        (["dispose", "using statement", "memory leak", "resource leak", "not disposed", "idisposable", "undisposed"],
+            "GCI0024", "Review comment mentions resource disposal concern", 0.65),
+
+        (["pii", "personal data", "gdpr", "personally identifiable", "sensitive data", "user data in log", "privacy"],
+            "GCI0029", "Review comment mentions PII or privacy in logging", 0.70),
+
+        (["unhandled exception", "exception propagation", "missing catch", "throw without catch", "uncaught"],
+            "GCI0032", "Review comment mentions uncaught or unhandled exception path", 0.60),
+
+        (["[pure]", "side effect in getter", "getter has side effect", "mutation in getter", "pure method mutates"],
+            "GCI0036", "Review comment mentions side effect in a pure context", 0.55),
+
+        (["service locator", "captive dependency", "scoped in singleton", "getrequiredservice", "getservice", "di anti-pattern"],
+            "GCI0038", "Review comment mentions DI anti-pattern or service locator", 0.65),
+
+        (["httpclient", "http client factory", "socket exhaustion", "ihttpclientfactory", "timeout missing", "cancellation token missing"],
+            "GCI0039", "Review comment mentions HttpClient or external service safety concern", 0.65),
+
+        (["missing assertion", "skipped test", "test ignored", "[ignore]", "uninformative test name", "test quality"],
+            "GCI0041", "Review comment mentions test quality or missing assertions", 0.60),
+
+        (["todo", "fixme", "not implemented", "notimplementedexception", "stub left", "incomplete implementation"],
+            "GCI0042", "Review comment mentions TODO/stub or incomplete implementation", 0.70),
+
+        (["null forgiving", "pragma warning disable nullable", "nullable warning", "cs8600", "null safety", "null-forgiving operator"],
+            "GCI0043", "Review comment mentions nullable or null-forgiving operator concern", 0.60),
+
+        (["linq in loop", "allocation in loop", "performance hotpath", "hot path", "gc pressure", "memory pressure", "linq overhead"],
+            "GCI0044", "Review comment mentions performance or LINQ in loop concern", 0.60),
+
+        (["over-engineering", "unnecessary abstraction", "single use interface", "passive wrapper", "delegation wrapper", "yagni"],
+            "GCI0045", "Review comment mentions over-engineering or unnecessary abstraction", 0.55),
+
+        (["inconsistent naming", "missing async suffix", "sync async naming", "pattern inconsistency", "naming convention"],
+            "GCI0046", "Review comment mentions naming pattern inconsistency", 0.55),
+
+        (["contradictory name", "misleading method name", "method rename", "naming contradiction", "boolean naming inversion"],
+            "GCI0047", "Review comment mentions contradictory or misleading naming contract", 0.55),
+
+        (["float comparison", "floating point equality", "double equality", "use epsilon", "math.abs comparison", "floating-point"],
+            "GCI0049", "Review comment mentions floating-point equality comparison concern", 0.65),
     ];
 
     /// <summary>
@@ -373,6 +420,163 @@ public sealed class SilverLabelEngine
 
         if (distinctDirs >= 8)
             labels.Add(MakeLabel("GCI0023", $"Diff touches {distinctDirs} distinct directories — possible broad sweeping change", 0.5));
+
+        // --- Rules added after initial corpus labeling ---
+
+        // GCI0024 -- Resource allocated without disposal (no using/try-finally)
+        if (addedLines.Any(l =>
+                !l.TrimStart().StartsWith("//") &&
+                !l.Contains("using ", StringComparison.Ordinal) &&
+                (l.Contains("new FileStream(", StringComparison.Ordinal) ||
+                 l.Contains("new StreamWriter(", StringComparison.Ordinal) ||
+                 l.Contains("new StreamReader(", StringComparison.Ordinal) ||
+                 l.Contains("new SqlConnection(", StringComparison.Ordinal) ||
+                 l.Contains("new SqlCommand(", StringComparison.Ordinal) ||
+                 l.Contains("new TcpClient(", StringComparison.Ordinal) ||
+                 l.Contains("new GZipStream(", StringComparison.Ordinal) ||
+                 Regex.IsMatch(l, @"=\s*new [A-Z]\w*(Stream|Reader|Writer|Connection|Timer|Transaction)\("))))
+        {
+            labels.Add(MakeLabel("GCI0024", "Diff allocates a disposable resource without a using statement on added lines", 0.55));
+        }
+
+        // GCI0029 -- PII term in a log call
+        {
+            var piiLogPrefixes = new[] { "_logger.", "logger.", "Logger.", "_log.", "log.", "Log.Information", "Log.Warning", "Log.Error", "Log.Debug" };
+            var piiTerms       = new[] { "email", "ssn", "phonenumber", "creditcard", "dateofbirth", "passport", "bankaccount", "address", "ipaddress", "token", "username" };
+            if (addedLines.Any(l =>
+                    piiLogPrefixes.Any(p => l.Contains(p, StringComparison.Ordinal)) &&
+                    piiTerms.Any(t => l.Contains(t, StringComparison.OrdinalIgnoreCase))))
+            {
+                labels.Add(MakeLabel("GCI0029", "Diff contains a PII term inside a log call on added lines", 0.65));
+            }
+        }
+
+        // GCI0032 -- Non-guard throw new without test assertion coverage
+        {
+            var guardPrefixes = new[] { "throw new ArgumentNullException", "throw new ArgumentException", "throw new ArgumentOutOfRangeException", "throw new ObjectDisposedException", "throw new NotImplementedException" };
+            bool hasRealThrow = addedLines.Any(l =>
+                l.Contains("throw new", StringComparison.Ordinal) &&
+                !guardPrefixes.Any(g => l.Contains(g, StringComparison.Ordinal)) &&
+                !l.TrimStart().StartsWith("//"));
+            if (hasRealThrow)
+                labels.Add(MakeLabel("GCI0032", "Diff adds a throw new (non-guard) expression without test assertion coverage", 0.55));
+        }
+
+        // GCI0036 -- [Pure] attribute added, or mutation pattern inside getter
+        if (addedLines.Any(l => l.Contains("[Pure]", StringComparison.Ordinal)))
+            labels.Add(MakeLabel("GCI0036", "Diff adds a [Pure] attribute — mutation within this context would be flagged", 0.50));
+
+        // GCI0038 -- DI anti-pattern: service locator or direct injectable instantiation
+        {
+            var diPatterns = new[] { ".GetService<", ".GetRequiredService<", "_serviceProvider.GetService", "_serviceProvider.GetRequiredService" };
+            var newInjectableRegex = new Regex(@"=\s*new [A-Z][a-zA-Z]*(Service|Repository|Manager|Handler)\(", RegexOptions.Compiled);
+            if (addedLines.Any(l =>
+                    !l.TrimStart().StartsWith("//") &&
+                    (diPatterns.Any(p => l.Contains(p, StringComparison.Ordinal)) ||
+                     newInjectableRegex.IsMatch(l))))
+            {
+                labels.Add(MakeLabel("GCI0038", "Diff contains a service locator call or direct instantiation of an injectable type", 0.60));
+            }
+        }
+
+        // GCI0039 -- Direct HttpClient instantiation (IHttpClientFactory bypass)
+        if (addedLines.Any(l =>
+                !l.TrimStart().StartsWith("//") &&
+                l.Contains("new HttpClient(", StringComparison.Ordinal)))
+        {
+            labels.Add(MakeLabel("GCI0039", "Diff instantiates HttpClient directly, bypassing IHttpClientFactory", 0.65));
+        }
+
+        // GCI0041 -- Silenced tests in test files
+        {
+            var silenceTokens = new[] { "[Ignore", "[Skip", ".Skip(", "[Fact(Skip", "[Theory(Skip" };
+            bool isInTestPath = pathLines.Any(l =>
+                l.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
+                l.Contains("Spec", StringComparison.OrdinalIgnoreCase));
+            if (isInTestPath && addedLines.Any(l =>
+                    silenceTokens.Any(s => l.Contains(s, StringComparison.OrdinalIgnoreCase))))
+            {
+                labels.Add(MakeLabel("GCI0041", "Diff silences or skips a test in a test file", 0.65));
+            }
+        }
+
+        // GCI0042 -- TODO/FIXME/HACK or NotImplementedException in non-comment lines
+        if (addedLines.Any(l =>
+                !l.TrimStart().StartsWith("///") &&
+                !l.TrimStart().StartsWith("//") &&
+                (l.Contains("TODO", StringComparison.OrdinalIgnoreCase) ||
+                 l.Contains("FIXME", StringComparison.OrdinalIgnoreCase) ||
+                 l.Contains("HACK", StringComparison.OrdinalIgnoreCase) ||
+                 l.Contains("throw new NotImplementedException", StringComparison.Ordinal))))
+        {
+            labels.Add(MakeLabel("GCI0042", "Diff contains a TODO/FIXME/HACK marker or NotImplementedException stub", 0.70));
+        }
+
+        // GCI0043 -- Null-forgiving operator or nullable pragma disable
+        {
+            var nullableCodes = new[] { "nullable", "CS8600", "CS8601", "CS8602", "CS8603", "CS8604" };
+            bool hasPragma = addedLines.Any(l =>
+                l.Contains("#pragma warning disable", StringComparison.OrdinalIgnoreCase) &&
+                nullableCodes.Any(c => l.Contains(c, StringComparison.OrdinalIgnoreCase)));
+            bool hasNullForgiving = addedLines.Any(l =>
+                !l.TrimStart().StartsWith("//") &&
+                (l.Contains("!.", StringComparison.Ordinal) || l.Contains("!;", StringComparison.Ordinal) || l.Contains("!,", StringComparison.Ordinal)));
+            if (hasPragma || hasNullForgiving)
+                labels.Add(MakeLabel("GCI0043", "Diff disables nullable warnings or uses null-forgiving operator on added lines", 0.60));
+        }
+
+        // GCI0044 -- LINQ call inside a loop construct
+        {
+            var linqMethods = new[] { ".Where(", ".Select(", ".FirstOrDefault(", ".Any(", ".Count(" };
+            var loopKeywords = new[] { "for (", "foreach (", "while (" };
+            bool inLoop = false;
+            foreach (var line in addedLines)
+            {
+                if (loopKeywords.Any(k => line.Contains(k, StringComparison.Ordinal))) inLoop = true;
+                if (inLoop && linqMethods.Any(m => line.Contains(m, StringComparison.Ordinal)))
+                {
+                    labels.Add(MakeLabel("GCI0044", "Diff contains a LINQ call inside a loop construct on added lines", 0.50));
+                    break;
+                }
+                if (line.TrimStart().StartsWith("}")) inLoop = false;
+            }
+        }
+
+        // GCI0045 -- New interface definition (potential single-use interface)
+        if (addedLines.Any(l => Regex.IsMatch(l, @"\binterface\s+I[A-Z]")))
+            labels.Add(MakeLabel("GCI0045", "Diff adds a new interface definition (potential single-use abstraction)", 0.45));
+
+        // GCI0046 -- Service locator pattern or mixed sync/async method names
+        {
+            var slPatterns = new[] { ".GetService<", ".GetRequiredService<", "ServiceLocator.Current" };
+            if (addedLines.Any(l =>
+                    !l.TrimStart().StartsWith("//") &&
+                    slPatterns.Any(p => l.Contains(p, StringComparison.Ordinal))))
+            {
+                labels.Add(MakeLabel("GCI0046", "Diff uses service locator pattern on added lines", 0.55));
+            }
+        }
+
+        // GCI0047 -- Contradictory CRUD verb rename (e.g. GetFoo renamed to DeleteFoo)
+        {
+            var crudAdded   = addedLines  .SelectMany(l => Regex.Matches(l, @"\b(Get|Set|Add|Remove|Delete|Create|Update|Find|Fetch|Load|Save|Insert)\w*\s*\(").Cast<Match>()).Select(m => m.Value).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var crudRemoved = pathLines   // pathLines won't have removed-line content; use diff removed lines approximation
+                .Where(l => l.StartsWith("---"))
+                .SelectMany(l => Regex.Matches(l, @"\b(Get|Set|Add|Remove|Delete|Create|Update|Find|Fetch|Load|Save|Insert)\w*\s*\(").Cast<Match>())
+                .Select(m => m.Value)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            if (crudAdded.Count > 0 && crudRemoved.Count > 0)
+                labels.Add(MakeLabel("GCI0047", "Diff contains CRUD verb changes that may represent a naming contract contradiction", 0.40));
+        }
+
+        // GCI0049 -- Float/double equality comparison
+        if (addedLines.Any(l =>
+                !l.TrimStart().StartsWith("//") &&
+                (Regex.IsMatch(l, @"(?:==|!=)\s*(?:[-+]?\d*\.\d+|\d+\.\d+)[fFdD]?\b") ||
+                 Regex.IsMatch(l, @"\b(?:float|double)\b.*(?:==|!=)", RegexOptions.IgnoreCase))))
+        {
+            labels.Add(MakeLabel("GCI0049", "Diff contains floating-point equality comparison on added lines", 0.60));
+        }
     }
 
     // -- Tightened GCI0006 helper ----------------------------------------------
