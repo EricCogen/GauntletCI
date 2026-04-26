@@ -35,6 +35,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/compare/gauntletci-vs-semgrep`,       changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/compare/gauntletci-vs-snyk`,          changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/compare/gauntletci-vs-codeclimate`,   changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/compare/gauntletci-vs-ndepend`,       changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/case-studies`,                                                     changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE_URL}/case-studies/stackexchange-redis-swallowed-exception`,             changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/case-studies/newtonsoft-json-assignment-in-getter`,                changeFrequency: "monthly", priority: 0.8 },
