@@ -3,6 +3,7 @@ using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
 using Spectre.Console;
+using System.Linq;
 
 namespace GauntletCI.Cli.Output;
 
@@ -11,6 +12,7 @@ namespace GauntletCI.Cli.Output;
 /// Block findings (red) and Warn findings (yellow) are shown by default.
 /// Info findings (grey) are shown only when <paramref name="minSeverity"/> is <see cref="RuleSeverity.Info"/>
 /// (i.e., when the caller passes <c>--verbose</c>).
+/// The <paramref name="sensitivity"/> threshold applies an additional Confidence filter within each severity tier.
 /// </summary>
 public static class ConsoleReporter
 {
@@ -40,13 +42,21 @@ public static class ConsoleReporter
     /// <param name="ascii">Use ASCII box characters instead of Unicode for limited terminals.</param>
     /// <param name="minSeverity">Minimum severity to display. Defaults to <see cref="RuleSeverity.Warn"/>.</param>
     /// <param name="elapsed">Total wall-clock time for the analysis run. Displayed in the summary header when non-zero.</param>
-    public static void Report(EvaluationResult result, bool ascii = false, RuleSeverity minSeverity = RuleSeverity.Warn, int suppressedByBaseline = 0, DiffContext? diff = null, int showContext = 0, TimeSpan elapsed = default)
+    /// <param name="sensitivity">Confidence-based filter threshold: strict, balanced (default), or permissive.</param>
+    public static void Report(EvaluationResult result, bool ascii = false, RuleSeverity minSeverity = RuleSeverity.Warn, int suppressedByBaseline = 0, DiffContext? diff = null, int showContext = 0, TimeSpan elapsed = default, SensitivityThreshold sensitivity = SensitivityThreshold.Balanced)
     {
         string hr  = ascii ? "=======================================================" : "═══════════════════════════════════════════════════════";
         string sep = ascii ? "-- {0} ({1}) --------------------------" : "── {0} ({1}) ──────────────────────────";
         string ok  = ascii
             ? "  Scan complete. 0 detected signals. GauntletCI analyzes the diff only -- review context is still required."
             : "  ✓ Scan complete. 0 detected signals. GauntletCI analyzes the diff only — review context is still required.";
+
+        // Apply sensitivity threshold on top of the minSeverity gate.
+        var filteredFindings = result.Findings
+            .Where(f => f.Severity >= minSeverity && SensitivityFilter.Passes(f.Severity, f.Confidence, sensitivity))
+            .ToList();
+        var suppressedBySensitivity = result.Findings
+            .Count(f => f.Severity >= minSeverity && !SensitivityFilter.Passes(f.Severity, f.Confidence, sensitivity));
 
         AnsiConsole.MarkupLine($"[cyan]{hr}[/]");
         AnsiConsole.MarkupLine("[cyan]  GauntletCI Risk Analysis Report[/]");
@@ -58,18 +68,33 @@ public static class ConsoleReporter
         AnsiConsole.MarkupLine($"  Rules  : {result.RulesEvaluated} evaluated");
         if (elapsed != default)
             AnsiConsole.MarkupLine($"  Time   : {FormatElapsed(elapsed)}");
-        AnsiConsole.MarkupLine($"  Findings: {result.Findings.Count}");
+
+        if (suppressedBySensitivity > 0)
+            AnsiConsole.MarkupLine($"  Findings: {filteredFindings.Count} [dim]({suppressedBySensitivity} hidden at {sensitivity.ToString().ToLowerInvariant()} sensitivity — use --sensitivity permissive to see all)[/]");
+        else
+            AnsiConsole.MarkupLine($"  Findings: {filteredFindings.Count}");
+
+        var distinctRules = filteredFindings
+            .Where(f => f.Severity is RuleSeverity.Block or RuleSeverity.Warn)
+            .Select(f => f.RuleId)
+            .Distinct()
+            .Count();
+        if (distinctRules >= 4)
+            AnsiConsole.MarkupLine($"[yellow]  Risk   : {distinctRules} distinct rules triggered (compound risk)[/]");
+
         AnsiConsole.WriteLine();
 
-        if (!result.HasFindings)
+        if (filteredFindings.Count == 0 && !result.Findings.Any(f => f.Severity == RuleSeverity.Advisory))
         {
             AnsiConsole.MarkupLine($"[green]{ok}[/]");
             if (suppressedByBaseline > 0)
                 AnsiConsole.MarkupLine($"[dim]  ({suppressedByBaseline} finding(s) suppressed by baseline)[/]");
+            if (suppressedBySensitivity > 0)
+                AnsiConsole.MarkupLine($"[dim]  ({suppressedBySensitivity} finding(s) hidden by {sensitivity.ToString().ToLowerInvariant()} sensitivity threshold)[/]");
             return;
         }
 
-        var groups = FindingGrouper.Group(result.Findings);
+        var groups = FindingGrouper.Group(filteredFindings);
         var sevGroups = new[]
         {
             (RuleSeverity.Block, "POSSIBLE BLOCK", "red"),
