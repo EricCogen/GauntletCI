@@ -23,6 +23,10 @@ inputs:
     description: "Post findings as inline GitHub PR review comments. Requires pull-requests: write in the calling workflow."
     required: false
     default: "false"
+  sensitivity:
+    description: "Confidence-based noise filter: strict (Block+High/Medium only), balanced (default), or permissive (all Block+Warn)."
+    required: false
+    default: "balanced"
   ascii:
     description: "Use ASCII-only output (recommended for CI logs)."
     required: false
@@ -66,6 +70,7 @@ runs:
         [ "${{ inputs.no-llm }}" = "true" ] && args="$args --no-llm"
         [ "${{ inputs.ascii }}" = "true" ]  && args="$args --ascii"
         [ "${{ inputs.inline-comments }}" = "true" ] && args="$args --github-pr-comments"
+        [ -n "${{ inputs.sensitivity }}" ] && args="$args --sensitivity ${{ inputs.sensitivity }}"
         TMPFILE=$(mktemp)
         set -o pipefail
         gauntletci $args 2>&1 | tee "$TMPFILE"

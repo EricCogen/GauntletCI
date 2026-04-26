@@ -63,12 +63,16 @@ Exactly one diff source should be specified. If none is provided, diff content i
 | `--all-changes` | `bool` | `false` | Analyse all local changes: staged + unstaged (`git diff HEAD`) |
 | `--repo <path>` | `directory` | CWD | Repository root (used for config loading and git operations) |
 | `--output <format>` | `string` | `text` | Output format: `text` or `json` |
+| `--sensitivity <level>` | `string` | `balanced` | Confidence-based filter: `strict` (Block+High/Medium only), `balanced` (Block-all + Warn+High/Medium), `permissive` (all Block + all Warn) |
+| `--severity <level>` | `string` | `warn` | Minimum severity gate: `info`, `warn`, `block`. Applied before `--sensitivity`. |
+| `--verbose` | `bool` | `false` | Show Info-severity findings. Equivalent to `--severity info`. |
 | `--with-llm` | `bool` | `false` | Enable LLM enrichment of High-confidence findings (requires `gauntletci model download`; adds latency) |
 | `--github-annotations` | `bool` | `false` | Emit GitHub Actions workflow commands for inline PR annotations |
+| `--github-pr-comments` | `bool` | `false` | Post findings as GitHub PR review comments (requires `pull-requests: write`) |
+| `--no-baseline` | `bool` | `false` | Ignore the baseline file and show all findings |
+| `--show-context <n>` | `int` | `0` | Include N surrounding diff lines around each finding |
 | `--ascii` | `bool` | `false` | Use ASCII-only output (for terminals without Unicode support) |
 | `--no-banner` | `bool` | `false` | Disable ASCII banner |
-
-> **Note:** `--no-llm` is a hidden deprecated flag. LLM is opt-in via `--with-llm`.
 
 ### Examples
 
@@ -102,6 +106,12 @@ gauntletci analyze --staged --no-banner --output json
 
 # Analyse a specific repo from a different working directory
 gauntletci analyze --staged --repo /path/to/my-repo
+
+# Only surface the most critical findings (Block severity + High/Medium confidence)
+gauntletci analyze --staged --sensitivity strict
+
+# Show everything including low-confidence warnings
+gauntletci analyze --staged --sensitivity permissive
 ```
 
 ### Pre-commit hook
