@@ -17,10 +17,12 @@ public class GCI0003Tests
             index abc..def 100644
             --- a/src/Service.cs
             +++ b/src/Service.cs
-            @@ -1,7 +1,3 @@
+            @@ -1,9 +1,3 @@
              public int Compute(int x) {
             -    if (x < 0) throw new ArgumentException("negative");
             -    if (x == 0) return 0;
+            -    if (x > 1000) throw new OverflowException("too large");
+            -    if (x % 2 == 0) return x / 2;
             -    return x * 2;
              }
             """;

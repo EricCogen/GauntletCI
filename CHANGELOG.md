@@ -10,7 +10,11 @@ Versions follow [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
-- **GCI0016 (Concurrency and State Risk)**: `CheckStaticMutableField` now excludes expression-bodied members (`=>`) and property declarations (`{`) from the "static mutable field" check. These are read-only or accessor-only patterns that the rule was incorrectly flagging. Corpus: 41 auto-property/expression-body FPs eliminated.
+- **GCI0003 (Behavioral Change Detection)**: Raised logic-removal threshold from 3 to 5 removed lines before flagging. Reduces FPs on small incidental removals. Corpus precision: 59.7% -> 60.7%.
+- **GCI0004 (Breaking Change Risk)**: Replaced local `IsTestFile` with `WellKnownPatterns.IsTestFile` (covers benchmark/example/sample/Mock/Fake paths missed by the old check). Added `StripPropertyInitializer` to skip property default-value-only changes. Corpus precision: 59.9% -> 63.8%.
+- **WellKnownPatterns.IsTestFile**: Added detection for benchmark/example/sample directory segments, `Mock`/`Fake` segments, and `Benchmark`/`Benchmarks` file suffixes.
+- **WellKnownPatterns.IsBackwardCompatibleExtension**: Now normalizes modifier keywords (`virtual`, `override`, `sealed`, `abstract`, `new`) before comparing signatures so modifier-only additions are treated as backward-compatible rather than breaking changes.
+- **GCI0016 (Concurrency and State Risk)**:`CheckStaticMutableField` now excludes expression-bodied members (`=>`) and property declarations (`{`) from the "static mutable field" check. These are read-only or accessor-only patterns that the rule was incorrectly flagging. Corpus: 41 auto-property/expression-body FPs eliminated.
 - **GCI0021 (Data and Schema Compatibility)**: Added `WellKnownPatterns.IsGeneratedFile` guard to both `CheckRemovedSerializationAttributes` and `CheckRemovedEnumMembers`. Generated API clients (e.g. Google API dotnet client, protobuf stubs) no longer trigger the rule for mechanical enum-member removals.
 - **GCI0012 (Security Risk)**: Fixed `HasAssignment` and `FindAssignmentIndex` to skip `=` signs inside string literals (eliminates false positives from format strings like `"[Token: Id={0}]"`). Fixed both helpers to treat `=>` (expression-body / lambda) as non-assignment. Added `Activator.CreateInstance` exclusion for controlled-type-safe call patterns: calls where the type argument is a `typeof()` literal or where the result is immediately cast to a known type (e.g. `(IList)Activator.CreateInstance(...)`) are no longer flagged as dangerous.
 
