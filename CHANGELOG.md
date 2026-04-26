@@ -31,6 +31,8 @@ Versions follow [Semantic Versioning](https://semver.org/).
 - README: GitHub Action inputs table
 - README: "What to do with a finding" section
 - README: rule ID non-contiguous explanation
+- `docs/assets/`: assets folder for terminal demo GIF and future media
+- README: "What you see on first run" section updated to reference terminal demo GIF (StackExchange.Redis PR#2995, GCI0007 swallowed exception)
 
 ### Changed
 - Move `CONTRIBUTING.md` and `SECURITY.md` from `.github/` to repo root for discoverability
