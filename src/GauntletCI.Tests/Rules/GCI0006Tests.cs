@@ -280,4 +280,165 @@ public class GCI0006Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
     }
+
+    [Fact]
+    public async Task OverrideMethodWithNullableParam_ShouldNotFlag()
+    {
+        // Override methods cannot change the parameter contract declared by base/interface
+        var raw = """
+            diff --git a/src/Converter.cs b/src/Converter.cs
+            index abc..def 100644
+            --- a/src/Converter.cs
+            +++ b/src/Converter.cs
+            @@ -1,1 +1,3 @@
+             // existing
+            +public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer)
+            +{
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
+
+    [Fact]
+    public async Task AbstractMethodWithNullableParam_ShouldNotFlag()
+    {
+        // Abstract methods have no body -- null validation cannot be added
+        var raw = """
+            diff --git a/src/Binder.cs b/src/Binder.cs
+            index abc..def 100644
+            --- a/src/Binder.cs
+            +++ b/src/Binder.cs
+            @@ -1,1 +1,2 @@
+             // existing
+            +public abstract Type BindToType(string? assemblyName, string typeName);
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
+
+    [Fact]
+    public async Task DelegateDeclarationWithNullableParam_ShouldNotFlag()
+    {
+        // Delegate declarations have no body -- null validation cannot be added
+        var raw = """
+            diff --git a/src/Delegates.cs b/src/Delegates.cs
+            index abc..def 100644
+            --- a/src/Delegates.cs
+            +++ b/src/Delegates.cs
+            @@ -1,1 +1,2 @@
+             // existing
+            +public delegate void ExtensionDataSetter(object o, string key, object? value);
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
+
+    [Fact]
+    public async Task ExpressionBodyPropertyOverride_ShouldNotFlagNullDereference()
+    {
+        // Expression-bodied property override is a declaration -- .Value IS the body
+        var raw = """
+            diff --git a/src/Reader.cs b/src/Reader.cs
+            index abc..def 100644
+            --- a/src/Reader.cs
+            +++ b/src/Reader.cs
+            @@ -1,1 +1,2 @@
+             // existing
+            +public override object? Value => _innerReader.Value;
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("null dereference"));
+    }
+
+    [Fact]
+    public async Task NullForgivingValueAccess_ShouldNotFlag()
+    {
+        // .Value! -- developer has already asserted non-null with the null-forgiving operator
+        var raw = """
+            diff --git a/src/Converter.cs b/src/Converter.cs
+            index abc..def 100644
+            --- a/src/Converter.cs
+            +++ b/src/Converter.cs
+            @@ -1,1 +1,2 @@
+             // existing
+            +var s = (string)reader.Value!;
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("null dereference"));
+    }
+
+    [Fact]
+    public async Task NullConditionalAfterValueAccess_ShouldNotFlag()
+    {
+        // .Value?.ToString() -- null-conditional after means developer is handling null safely
+        var raw = """
+            diff --git a/src/Converter.cs b/src/Converter.cs
+            index abc..def 100644
+            --- a/src/Converter.cs
+            +++ b/src/Converter.cs
+            @@ -1,1 +1,2 @@
+             // existing
+            +var s = reader.Value?.ToString();
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("null dereference"));
+    }
+
+    [Fact]
+    public async Task NullConditionalBeforeValueAccess_ShouldNotFlag()
+    {
+        // ?.Value -- null-conditional before .Value guards the whole access
+        var raw = """
+            diff --git a/src/Converter.cs b/src/Converter.cs
+            index abc..def 100644
+            --- a/src/Converter.cs
+            +++ b/src/Converter.cs
+            @@ -1,1 +1,2 @@
+             // existing
+            +var s = reader?.Value;
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("null dereference"));
+    }
+
+    [Fact]
+    public async Task ValuesPropertyAccess_ShouldNotFlag()
+    {
+        // .Values is a different property (e.g. Dictionary.Values) -- not a Nullable<T>.Value accessor
+        var raw = """
+            diff --git a/src/Store.cs b/src/Store.cs
+            index abc..def 100644
+            --- a/src/Store.cs
+            +++ b/src/Store.cs
+            @@ -1,1 +1,2 @@
+             // existing
+            +return _dictionary!.Values;
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("null dereference"));
+    }
 }

@@ -41,10 +41,17 @@ public class GCI0006_EdgeCaseHandling : RuleBase
             for (int i = 0; i < addedLines.Count; i++)
             {
                 var content = addedLines[i].Content;
-                if (!content.Contains(".Value", StringComparison.Ordinal)) continue;
+                if (!HasUnsafeValueAccess(content)) continue;
 
                 // Skip comment lines — .Value in a comment is not executable code
                 if (content.TrimStart().StartsWith("//")) continue;
+
+                // Skip expression-bodied property/method declarations — the .Value access IS
+                // the declaration body (e.g. public override object? Value => _inner.Value;)
+                var trimmed = content.TrimStart();
+                if ((trimmed.StartsWith("public ", StringComparison.Ordinal) ||
+                     trimmed.StartsWith("protected ", StringComparison.Ordinal)) &&
+                    content.Contains("=>", StringComparison.Ordinal)) continue;
 
                 // Check preceding lines for null guard
                 int start = Math.Max(0, i - 5);
@@ -84,6 +91,14 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 var content = addedLines[i].Content;
                 // Only flag public or protected methods — private/internal callers are controlled
                 if (!IsPublicOrProtectedSignature(content)) continue;
+
+                // Override methods cannot change the parameter contract declared by the base
+                // class or interface — enforcing null validation here is incorrect
+                if (content.Contains(" override ", StringComparison.Ordinal)) continue;
+
+                // Abstract methods and delegate declarations have no method body — validation is impossible
+                if (content.Contains(" abstract ", StringComparison.Ordinal) ||
+                    content.Contains(" delegate ", StringComparison.Ordinal)) continue;
 
                 // Check "string" or "object" in the parameter section, not just the return type
                 var parenIdx = content.IndexOf('(');
@@ -167,6 +182,55 @@ public class GCI0006_EdgeCaseHandling : RuleBase
         root = new string(root.Where(c => char.IsLetterOrDigit(c) || c == '_').ToArray());
 
         return root.Length > 0 && guardLine.Contains(root + ".Success", StringComparison.Ordinal);
+    }
+
+    // Returns true when the line contains a .Value access that is NOT already made safe by:
+    //   .Value!   -- null-forgiving operator (developer asserted non-null)
+    //   ?.Value   -- null-conditional access preceding .Value
+    //   .Value?.  -- null-conditional after .Value (developer handles null result)
+    //   .Values   -- a different property; word-boundary check excludes .Values, .ValueOrDefault, etc.
+    private static bool HasUnsafeValueAccess(string content)
+    {
+        int pos = 0;
+        while (pos < content.Length)
+        {
+            int idx = content.IndexOf(".Value", pos, StringComparison.Ordinal);
+            if (idx < 0) return false;
+
+            int afterIdx = idx + 6;
+
+            // Word-boundary: exclude .Values, .ValueOrDefault, etc.
+            if (afterIdx < content.Length &&
+                (char.IsLetterOrDigit(content[afterIdx]) || content[afterIdx] == '_'))
+            {
+                pos = afterIdx;
+                continue;
+            }
+
+            // .Value! -- developer has asserted non-null with the null-forgiving operator
+            if (afterIdx < content.Length && content[afterIdx] == '!')
+            {
+                pos = afterIdx;
+                continue;
+            }
+
+            // .Value? -- null-conditional after (e.g. reader.Value?.ToString())
+            if (afterIdx < content.Length && content[afterIdx] == '?')
+            {
+                pos = afterIdx;
+                continue;
+            }
+
+            // ?.Value -- null-conditional before (e.g. reader?.Value)
+            if (idx > 0 && content[idx - 1] == '?')
+            {
+                pos = afterIdx;
+                continue;
+            }
+
+            return true;
+        }
+        return false;
     }
 
     private static bool IsPublicOrProtectedSignature(string line)
