@@ -86,7 +86,7 @@ public class GCI0003Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        var f = Assert.Single(findings, f => f.Summary.Contains("signature changed"));
+        var f = Assert.Single(findings, f => f.Summary.Contains("Backward-compatible", StringComparison.Ordinal));
         Assert.Equal(Confidence.Low, f.Confidence);
     }
 

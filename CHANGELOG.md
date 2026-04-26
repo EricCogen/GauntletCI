@@ -16,7 +16,10 @@ Versions follow [Semantic Versioning](https://semver.org/).
 - **GCI0003 (Behavioral Change Detection)**: Inherits the `WellKnownPatterns.IsGeneratedFile` improvement; `.net{major}.{minor}.cs` API surface files are now excluded. Corpus findings: 2566 -> 1904 (-25.8%).
 - **GCI0032 (Uncaught Exception Path)**: Excludes guard-clause throws (ArgumentNullException, ArgumentException, ArgumentOutOfRangeException, ObjectDisposedException) from the uncovered-throw count. These are defensive precondition checks that do not represent untested business logic. Corpus findings: 86 -> 54 (-37.2%).
 - **WellKnownPatterns.IsGeneratedFile**: Added `.net{major}.{minor}.cs` filename pattern to detect .NET SDK API surface manifest files (e.g. `Azure.Search.Documents.net10.0.cs`).
-- **Overall corpus noise**: 10,262 -> 6,594 findings across 588 real .NET OSS PR diffs (-35.7%).
+- **GCI0003 (Behavioral Change Detection)**: Rewrote `CheckMethodSignatureChanges` to emit at most 2 findings per file (one for incompatible, one for compatible changes) instead of N findings per changed method. Corpus findings: 1904 -> 548 (-71.2%).
+- **GCI0004 (Breaking Change Risk)**: Rewrote `CheckRemovedPublicApi` to emit at most 2 findings per file (one for removals, one for sig changes) instead of N findings per removed member. Corpus findings: 2452 -> 686 (-72.0%).
+- **DiffParser**: All public async methods now accept a `contextLines` parameter (default 10, up from git default of 3); wired through `GauntletConfig.DiffContextLines` so it is configurable per repo.
+- **Overall corpus noise**: 10,262 -> 3,472 findings across 588 real .NET OSS PR diffs (-66.2%).
 
 ### Added
 - `.github/ISSUE_TEMPLATE/risky_diff.yml`: community issue template for submitting risky diffs

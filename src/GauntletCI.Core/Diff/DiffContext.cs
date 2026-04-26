@@ -51,6 +51,10 @@ public class DiffFile
     /// <summary>All lines removed from this file across every hunk.</summary>
     public IEnumerable<DiffLine> RemovedLines =>
         Hunks.SelectMany(h => h.Lines).Where(l => l.Kind == DiffLineKind.Removed);
+
+    /// <summary>All unchanged context lines in this file across every hunk.</summary>
+    public IEnumerable<DiffLine> ContextLines =>
+        Hunks.SelectMany(h => h.Lines).Where(l => l.Kind == DiffLineKind.Context);
 }
 
 /// <summary>The full parsed diff — all changed files and their hunks.</summary>

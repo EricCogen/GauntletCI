@@ -154,23 +154,23 @@ public static class AnalyzeCommand
 
             try
             {
-                var diff = diffFile is not null
-                    ? DiffParser.FromFile(diffFile.FullName)
-                    : commit is not null
-                        ? await DiffParser.FromGitAsync(repo.FullName, commit, ct)
-                        : staged
-                            ? await DiffParser.FromStagedAsync(repo.FullName, ct)
-                            : unstaged
-                                ? await DiffParser.FromUnstagedAsync(repo.FullName, ct)
-                                : allChanges
-                                    ? await DiffParser.FromAllChangesAsync(repo.FullName, ct)
-                                    : DiffParser.Parse(await Console.In.ReadToEndAsync(ct));
-
                 var config = ConfigLoader.Load(repo.FullName);
                 config.Ci            ??= new();
                 config.Output        ??= new();
                 config.Notifications ??= new();
                 config.TicketProvider ??= new();
+
+                var diff = diffFile is not null
+                    ? DiffParser.FromFile(diffFile.FullName)
+                    : commit is not null
+                        ? await DiffParser.FromGitAsync(repo.FullName, commit, config.DiffContextLines, ct)
+                        : staged
+                            ? await DiffParser.FromStagedAsync(repo.FullName, config.DiffContextLines, ct)
+                            : unstaged
+                                ? await DiffParser.FromUnstagedAsync(repo.FullName, config.DiffContextLines, ct)
+                                : allChanges
+                                    ? await DiffParser.FromAllChangesAsync(repo.FullName, config.DiffContextLines, ct)
+                                    : DiffParser.Parse(await Console.In.ReadToEndAsync(ct));
 
                 // Merge config defaults — CLI value wins when explicitly passed; config fills in the rest.
                 withLlm       = withLlm       || (config.Llm?.Enabled      == true);

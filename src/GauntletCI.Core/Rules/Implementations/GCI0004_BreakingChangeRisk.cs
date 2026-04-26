@@ -43,7 +43,6 @@ public class GCI0004_BreakingChangeRisk : RuleBase
                 .Where(l => IsPublicSignature(l.Content))
                 .ToList();
 
-            // Exact trimmed content still present → member is unchanged (overload scenario)
             var addedSigContent = addedPublicLines
                 .Select(l => l.Content.Trim())
                 .ToHashSet();
@@ -53,42 +52,79 @@ public class GCI0004_BreakingChangeRisk : RuleBase
                 .Where(n => n != null)
                 .ToHashSet();
 
+            var removals   = new List<(string Name, DiffLine Line)>();
+            var sigChanges = new List<(string Name, DiffLine RemovedLine, DiffLine AddedLine)>();
+
             foreach (var removed in removedPublic)
             {
                 var name = ExtractMemberName(removed.Content);
                 if (name is null) continue;
 
-                // Exact signature is still present in added lines — unchanged overload, skip.
                 if (addedSigContent.Contains(removed.Content.Trim())) continue;
 
                 if (!addedSigNames.Contains(name))
                 {
-                    findings.Add(CreateFinding(
-                        file,
-                        summary: $"Public API removed: '{name}' in {file.NewPath}",
-                        evidence: $"Removed: {removed.Content.Trim()}",
-                        whyItMatters: "Removing public members is a breaking change for any consumers of this API.",
-                        suggestedAction: "Mark as [Obsolete] first and schedule removal in a future major version.",
-                        confidence: Confidence.High));
+                    removals.Add((name, removed));
                 }
                 else
                 {
-                    // Signature changed — find a genuinely different added overload with the same name.
                     var addedLine = addedPublicLines
                         .FirstOrDefault(l => ExtractMemberName(l.Content) == name
                                           && l.Content.Trim() != removed.Content.Trim());
                     if (addedLine != null && !IsBackwardCompatibleExtension(removed.Content, addedLine.Content))
-                    {
-                        findings.Add(CreateFinding(
-                            file,
-                            summary: $"Public API signature changed: '{name}' in {file.NewPath}",
-                            evidence: $"Was: {removed.Content.Trim()} | Now: {addedLine.Content.Trim()}",
-                            whyItMatters: "Changing a public method signature is a breaking change for callers not in this diff.",
-                            suggestedAction: "Provide a backward-compatible overload or bump the major version.",
-                            confidence: Confidence.Medium,
-                            line: addedLine));
-                    }
+                        sigChanges.Add((name, removed, addedLine));
                 }
+            }
+
+            if (removals.Count == 1)
+            {
+                var (name, line) = removals[0];
+                findings.Add(CreateFinding(
+                    file,
+                    summary: $"Public API removed: '{name}' in {file.NewPath}",
+                    evidence: $"Removed: {line.Content.Trim()}",
+                    whyItMatters: "Removing public members is a breaking change for any consumers of this API.",
+                    suggestedAction: "Mark as [Obsolete] first and schedule removal in a future major version.",
+                    confidence: Confidence.High));
+            }
+            else if (removals.Count > 1)
+            {
+                var names = string.Join(", ", removals.Take(3).Select(r => $"'{r.Name}'"))
+                    + (removals.Count > 3 ? $" (+{removals.Count - 3} more)" : "");
+                findings.Add(CreateFinding(
+                    file,
+                    summary: $"Public API removed: {removals.Count} members in {file.NewPath}",
+                    evidence: $"Removed: {names} | e.g. {removals[0].Line.Content.Trim()}",
+                    whyItMatters: "Removing public members is a breaking change for any consumers of this API.",
+                    suggestedAction: "Mark members as [Obsolete] first and schedule removal in a future major version.",
+                    confidence: Confidence.High));
+            }
+
+            if (sigChanges.Count == 1)
+            {
+                var (name, removed, added) = sigChanges[0];
+                findings.Add(CreateFinding(
+                    file,
+                    summary: $"Public API signature changed: '{name}' in {file.NewPath}",
+                    evidence: $"Was: {removed.Content.Trim()} | Now: {added.Content.Trim()}",
+                    whyItMatters: "Changing a public method signature is a breaking change for callers not in this diff.",
+                    suggestedAction: "Provide a backward-compatible overload or bump the major version.",
+                    confidence: Confidence.Medium,
+                    line: added));
+            }
+            else if (sigChanges.Count > 1)
+            {
+                var names = string.Join(", ", sigChanges.Take(3).Select(c => $"'{c.Name}'"))
+                    + (sigChanges.Count > 3 ? $" (+{sigChanges.Count - 3} more)" : "");
+                var (_, firstRemoved, firstAdded) = sigChanges[0];
+                findings.Add(CreateFinding(
+                    file,
+                    summary: $"Public API signature changed: {sigChanges.Count} members in {file.NewPath}",
+                    evidence: $"Changed: {names} | e.g. Was: {firstRemoved.Content.Trim()} | Now: {firstAdded.Content.Trim()}",
+                    whyItMatters: "Changing public method signatures is a breaking change for callers not in this diff.",
+                    suggestedAction: "Provide backward-compatible overloads or bump the major version.",
+                    confidence: Confidence.Medium,
+                    line: firstAdded));
             }
         }
     }

@@ -74,9 +74,11 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
                 .Where(l => { var t = l.Content.TrimStart(); return HasAccessModifier(t) && l.Content.Contains('('); })
                 .ToList();
 
+            var incompatible = new List<(string Name, DiffLine RemovedLine, DiffLine AddedLine)>();
+            var compatible   = new List<(string Name, DiffLine RemovedLine, DiffLine AddedLine)>();
+
             foreach (var removed in removedSigs)
             {
-                // Private methods cannot break external callers — skip entirely.
                 if (removed.Content.TrimStart().StartsWith("private ", StringComparison.Ordinal)) continue;
 
                 var removedName = ExtractMethodName(removed.Content);
@@ -85,20 +87,65 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
                 var matchingAdded = addedSigs.FirstOrDefault(a => ExtractMethodName(a.Content) == removedName);
                 if (matchingAdded is not null && NormalizeSignature(removed.Content) != NormalizeSignature(matchingAdded.Content))
                 {
-                    bool isCompatible = IsBackwardCompatibleExtension(removed.Content, matchingAdded.Content);
-                    findings.Add(CreateFinding(
-                        file,
-                        summary: $"Method signature changed: '{removedName}' in {file.NewPath}",
-                        evidence: $"Was: {removed.Content.Trim()} | Now: {matchingAdded.Content.Trim()}",
-                        whyItMatters: isCompatible
-                            ? "New parameters have default values (backward-compatible), but callers using positional arguments may need review."
-                            : "Signature changes can break callers that haven't been updated.",
-                        suggestedAction: isCompatible
-                            ? "Confirm all existing callers still compile and behave correctly with the new defaults."
-                            : "Verify all callers are updated and consider adding an overload for backward compatibility.",
-                        confidence: isCompatible ? Confidence.Low : Confidence.Medium,
-                        line: matchingAdded));
+                    if (IsBackwardCompatibleExtension(removed.Content, matchingAdded.Content))
+                        compatible.Add((removedName, removed, matchingAdded));
+                    else
+                        incompatible.Add((removedName, removed, matchingAdded));
                 }
+            }
+
+            if (incompatible.Count == 1)
+            {
+                var (name, removed, added) = incompatible[0];
+                findings.Add(CreateFinding(
+                    file,
+                    summary: $"Method signature changed: '{name}' in {file.NewPath}",
+                    evidence: $"Was: {removed.Content.Trim()} | Now: {added.Content.Trim()}",
+                    whyItMatters: "Signature changes can break callers that haven't been updated.",
+                    suggestedAction: "Verify all callers are updated and consider adding an overload for backward compatibility.",
+                    confidence: Confidence.Medium,
+                    line: added));
+            }
+            else if (incompatible.Count > 1)
+            {
+                var names = string.Join(", ", incompatible.Take(3).Select(c => $"'{c.Name}'"))
+                    + (incompatible.Count > 3 ? $" (+{incompatible.Count - 3} more)" : "");
+                var (_, firstRemoved, firstAdded) = incompatible[0];
+                findings.Add(CreateFinding(
+                    file,
+                    summary: $"{incompatible.Count} method signatures changed (incompatible) in {file.NewPath}",
+                    evidence: $"Changed: {names} | e.g. Was: {firstRemoved.Content.Trim()} | Now: {firstAdded.Content.Trim()}",
+                    whyItMatters: "Signature changes can break callers that haven't been updated.",
+                    suggestedAction: "Verify all callers are updated and consider adding overloads for backward compatibility.",
+                    confidence: Confidence.Medium,
+                    line: firstAdded));
+            }
+
+            if (compatible.Count == 1)
+            {
+                var (name, removed, added) = compatible[0];
+                findings.Add(CreateFinding(
+                    file,
+                    summary: $"Backward-compatible signature extension: '{name}' in {file.NewPath}",
+                    evidence: $"Was: {removed.Content.Trim()} | Now: {added.Content.Trim()}",
+                    whyItMatters: "New parameters have default values (backward-compatible), but callers using positional arguments may need review.",
+                    suggestedAction: "Confirm all existing callers still compile and behave correctly with the new defaults.",
+                    confidence: Confidence.Low,
+                    line: added));
+            }
+            else if (compatible.Count > 1)
+            {
+                var names = string.Join(", ", compatible.Take(3).Select(c => $"'{c.Name}'"))
+                    + (compatible.Count > 3 ? $" (+{compatible.Count - 3} more)" : "");
+                var (_, firstRemoved, firstAdded) = compatible[0];
+                findings.Add(CreateFinding(
+                    file,
+                    summary: $"{compatible.Count} backward-compatible signature extensions in {file.NewPath}",
+                    evidence: $"Extended: {names} | e.g. Was: {firstRemoved.Content.Trim()} | Now: {firstAdded.Content.Trim()}",
+                    whyItMatters: "New parameters have default values (backward-compatible), but callers using positional arguments may need review.",
+                    suggestedAction: "Confirm all existing callers still compile and behave correctly with the new defaults.",
+                    confidence: Confidence.Low,
+                    line: firstAdded));
             }
         }
     }
