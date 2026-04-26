@@ -54,6 +54,13 @@ Versions follow [Semantic Versioning](https://semver.org/).
 - `SensitivityThreshold` enum and `SensitivityFilter` static class in `GauntletCI.Core.Model`; filter logic is testable and independent of the CLI
 - Compound risk summary line in report header when 4+ distinct rules trigger (replaces the removed synthetic `GCI_SYN_AGG` finding)
 - `output.sensitivity` config key in `.gauntletci.json`; accepts `strict`, `balanced`, or `permissive`; CLI flag overrides it when explicitly passed
+- Site: "GauntletCI vs AI code review tools" compare page at `/compare/gauntletci-vs-ai-code-review`
+- Site: "What it checks / What it misses" orientation table added to the top of all 6 existing compare pages
+- Site: "Compare vs AI code review tools" link added to homepage comparison section
+- Site: README now includes "The Change That Looked Safe" concrete diff example as a Behavioral Change Risk anchor
+- README: Killer PR example section with diff, consequence, and GauntletCI output
+- README: Punchy intro block with BCR framing; "The Missing Layer: Change Validation" section; h1 simplified to "GauntletCI"
+- GitHub: Repo description updated to lead with "Behavioral Change Risk detection"; topics updated -- removed `sast`, `static-analysis`, `roslyn-analyzer`, `behavior-change-risk`; added `behavioral-change-risk`, `change-safety`, `diff-validation`
 
 ### Changed
 - Move `CONTRIBUTING.md` and `SECURITY.md` from `.github/` to repo root for discoverability

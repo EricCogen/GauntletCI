@@ -116,6 +116,39 @@ It focuses only on the delta between versions and asks:
 
 ---
 
+## The Change That Looked Safe
+
+A single line was removed from a production service:
+
+```diff
+ public async Task<Order> CreateOrderAsync(CreateOrderRequest request)
+ {
+-    if (request is null) throw new ArgumentNullException(nameof(request));
+     var order = new Order(request.CustomerId, request.Items);
+     return await _repo.SaveAsync(order);
+ }
+```
+
+- 1 line removed
+- Tests passed
+- PR approved ("cleaned up redundant null check")
+
+Callers relying on the early `ArgumentNullException` now receive a `NullReferenceException`
+deeper in the call stack, with no context. The change shipped.
+
+GauntletCI flagged it before the commit was created:
+
+```
+[High] GCI0003: Guard clause removed at line 3. ArgumentNullException no
+longer thrown on null input. Callers relying on this contract will see
+NullReferenceException deeper in the call stack.
+```
+
+This is Behavioral Change Risk: a change that compiles, passes tests, and passes review --
+but alters runtime behavior in a way none of those checks can see.
+
+---
+
 ## 🏆 Proven Reliability
 
 GauntletCI rules have been validated against real-world pull requests:
