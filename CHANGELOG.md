@@ -10,6 +10,7 @@ Versions follow [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
+- **GCI0006 (Edge Case Handling)**: Reduced false positives in CheckNullDereferences and CheckMissingParameterValidation. CheckNullDereferences now skips `.Value!` (null-forgiving operator), `.Value?.` (null-conditional after), `?.Value` (null-conditional before), `.Values` (different property), and expression-bodied declarations. CheckMissingParameterValidation now skips `override`, `abstract`, and `delegate` declarations where a method body is absent or the parameter contract is fixed by the base type. Newtonsoft PR#1950: 57 -> 32 GCI0006 findings (-44%).
 - **GCI0047 (Naming/Contract Alignment)**: Added generated-file guard (skips `Src/Generated/` and similar paths); deduplicated CRUD-verb contradiction findings per unique verb-pair per file, eliminating N x M explosion in auto-generated API clients. Corpus findings: 725 -> 5 (-99.3%).
 - **GCI0004 (Breaking Change Risk)**: Added `WellKnownPatterns.IsGeneratedFile` check to both `CheckRemovedPublicApi` and `CheckObsoleteRemoved`, excluding Azure SDK `.net{major}.{minor}.cs` API surface manifest files. Corpus findings: 4368 -> 2452 (-43.9%).
 - **GCI0015 (Data Integrity Risk)**: Gated `CheckUncheckedCasts` behind an HTTP input context signal (Request.Form, [FromBody], etc.). Internal numeric casts no longer trigger the rule; only casts in files that also contain HTTP input bindings are flagged. Corpus findings: 579 -> 241 (-58.3%).
