@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { ArticleList } from "./ArticleList";
@@ -59,6 +59,14 @@ const articles = [
       "A formal definition of Behavioral Change Risk (BCR) and the Behavioral Change Risk Validation (BCRV) methodology. Formalizes the validation gap that exists whenever a code change expands the behavior space beyond what any test is positioned to see.",
     tags: ["Research", "BCR", "Methodology"],
     readTime: "18 min read",
+  },
+  {
+    href: "/case-studies",
+    title: "OSS Case Studies",
+    description:
+      "Five real .NET open-source pull requests where GauntletCI flags swallowed exceptions, broken APIs, concurrency bugs, and hardcoded configuration before they reach production.",
+    tags: ["Case Studies", "Real Bugs"],
+    readTime: "5 min read",
   },
 ];
 

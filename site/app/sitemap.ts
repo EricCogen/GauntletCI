@@ -1,4 +1,4 @@
-import { MetadataRoute } from "next";
+﻿import { MetadataRoute } from "next";
 import { rules } from "@/lib/rules";
 
 export const dynamic = "force-static";
@@ -34,6 +34,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/compare/gauntletci-vs-semgrep`,       changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/compare/gauntletci-vs-snyk`,          changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/compare/gauntletci-vs-codeclimate`,   changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/case-studies`,                                                     changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE_URL}/case-studies/stackexchange-redis-swallowed-exception`,             changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/case-studies/newtonsoft-json-assignment-in-getter`,                changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/case-studies/efcore-breaking-api-removal`,                        changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/case-studies/nunit-thread-sleep-async`,                           changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/case-studies/azuread-hardcoded-authority`,                        changeFrequency: "monthly", priority: 0.8 },
     ...ruleEntries,
   ];
 }

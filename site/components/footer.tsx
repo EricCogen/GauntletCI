@@ -60,6 +60,11 @@ export function Footer() {
                     </Link>
                   </li>
                   <li>
+                    <Link href="/case-studies" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      Case Studies
+                    </Link>
+                  </li>
+                  <li>
                     <Link
                       href="https://github.com/EricCogen/GauntletCI-Demo/pulls"
                       target="_blank"

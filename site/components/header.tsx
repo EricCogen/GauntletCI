@@ -69,6 +69,13 @@ export function Header() {
                     >
                       Quick Start
                     </Link>
+                    <Link
+                      href="/case-studies"
+                      className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setProductOpen(false)}
+                    >
+                      Case Studies
+                    </Link>
                   </div>
                 )}
               </div>
@@ -121,6 +128,9 @@ export function Header() {
             </Link>
             <Link href="/#quickstart" className="text-sm text-muted-foreground hover:text-foreground pl-2" onClick={() => setMobileMenuOpen(false)}>
               Quick Start
+            </Link>
+            <Link href="/case-studies" className="text-sm text-muted-foreground hover:text-foreground pl-2" onClick={() => setMobileMenuOpen(false)}>
+              Case Studies
             </Link>
             <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
               Docs

@@ -1,0 +1,238 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+
+export const metadata: Metadata = {
+  title: "Case Study: Assignment in Getter in Newtonsoft.Json | GauntletCI",
+  description:
+    "GauntletCI catches a property getter mutation in Newtonsoft.Json PR#1950. Rule GCI0036 - mutations in getters break the side-effect-free contract assumed by reflection and serialization frameworks.",
+  alternates: { canonical: "/case-studies/newtonsoft-json-assignment-in-getter" },
+  openGraph: { images: [{ url: "/og/case-studies.png", width: 1200, height: 630 }] },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  headline: "Case Study: Assignment in Getter in Newtonsoft.Json",
+  description:
+    "GauntletCI catches a property getter mutation in Newtonsoft.Json PR#1950. Rule GCI0036 - mutations in getters break the side-effect-free contract assumed by reflection and serialization frameworks.",
+  url: "https://gauntletci.com/case-studies/newtonsoft-json-assignment-in-getter",
+  publisher: { "@type": "Organization", name: "GauntletCI", url: "https://gauntletci.com" },
+};
+
+const lineColor: Record<string, string> = {
+  added: "bg-green-500/10 text-green-300",
+  removed: "bg-red-500/10 text-red-300",
+  context: "text-muted-foreground/60",
+};
+
+const linePrefix: Record<string, string> = {
+  added: "+",
+  removed: "-",
+  context: " ",
+};
+
+const diff: { type: string; line: string }[] = [
+  { type: "context", line: "// Added in XmlNodeConverter.cs" },
+  { type: "added", line: "public string NodeType" },
+  { type: "added", line: "{" },
+  { type: "added", line: "    get" },
+  { type: "added", line: "    {" },
+  { type: "added", line: "        _nodeType = GetCurrentNodeType();  // GCI0036: mutation in getter" },
+  { type: "added", line: "        return _nodeType;" },
+  { type: "added", line: "    }" },
+  { type: "added", line: "}" },
+];
+
+const finding = [
+  "[GCI0036] Pure Context Mutation",
+  "Location : src/Newtonsoft.Json/Converters/XmlNodeConverter.cs",
+  "Summary  : Assignment in getter - mutation in a pure context.",
+  "Evidence : _nodeType = GetCurrentNodeType();",
+  "Why      : Property getters are expected to be side-effect free. Mutations break",
+  "           this contract and can cause subtle bugs with lazy initialization,",
+  "           caching, or framework reflection.",
+  "Action   : Move state mutations to setter, constructor, or a dedicated method.",
+].join("\n");
+
+export default function NewtonsoftJsonAssignmentInGetterPage() {
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <Header />
+      <main className="min-h-screen bg-background pt-24">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 space-y-16">
+
+          {/* Hero */}
+          <div className="space-y-5 border-b border-border pb-12">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold uppercase tracking-widest text-cyan-400">
+                Case Study
+              </p>
+              <Link
+                href="/case-studies"
+                className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors"
+              >
+                &larr; All case studies
+              </Link>
+            </div>
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-balance">
+              Assignment in Getter in Newtonsoft.Json
+            </h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="font-mono text-sm text-muted-foreground">
+                JamesNK/Newtonsoft.Json
+              </span>
+              <a
+                href="https://github.com/JamesNK/Newtonsoft.Json/pull/1950"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-mono text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+              >
+                PR#1950 &nearr;
+              </a>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/docs/rules/GCI0036"
+                className="font-mono text-xs font-medium px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors"
+              >
+                GCI0036
+              </Link>
+              <Link
+                href="/docs/rules/GCI0004"
+                className="font-mono text-xs font-medium px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-colors"
+              >
+                GCI0004
+              </Link>
+              <span className="text-xs font-semibold text-red-400 bg-red-500/10 border border-red-500/20 px-2 py-0.5 rounded-full">
+                BLOCK
+              </span>
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
+                API Contracts
+              </span>
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">
+                Behavioral Correctness
+              </span>
+            </div>
+          </div>
+
+          {/* Context */}
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold tracking-tight">Context</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Newtonsoft.Json PR#1950 modified{" "}
+              <code className="font-mono text-sm text-foreground/80 bg-muted px-1 py-0.5 rounded">
+                XmlNodeConverter.cs
+              </code>
+              . It introduced a property getter that also performs a write -
+              assigning a value inside what should be a pure read operation.
+              Property getters are expected to be side-effect-free. When a getter
+              mutates state, callers using reflection, lazy initialization, caching
+              layers, or serialization frameworks may observe inconsistent behavior
+              because they assume reads are safe to repeat without side effects.
+            </p>
+          </section>
+
+          {/* Diff */}
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold tracking-tight">Diff evidence</h2>
+            <div className="rounded-xl border border-border overflow-hidden">
+              <div className="border-b border-border bg-card/60 px-4 py-2 flex items-center gap-2">
+                <div className="flex gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500/40" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-amber-500/40" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-green-500/40" />
+                </div>
+                <span className="text-xs font-mono text-muted-foreground/40 ml-1">
+                  src/Newtonsoft.Json/Converters/XmlNodeConverter.cs
+                </span>
+              </div>
+              <div className="p-4 font-mono text-xs leading-relaxed space-y-0.5 bg-background/50">
+                {diff.map((line, i) => (
+                  <div
+                    key={i}
+                    className={`flex gap-2 px-2 py-0.5 rounded ${lineColor[line.type]}`}
+                  >
+                    <span className="shrink-0 w-3 select-none">
+                      {linePrefix[line.type]}
+                    </span>
+                    <span className="whitespace-pre">{line.line}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="border-t border-border bg-red-500/5 px-4 py-3">
+                <pre className="text-xs font-mono text-red-400 leading-relaxed whitespace-pre-wrap">
+                  {finding}
+                </pre>
+              </div>
+            </div>
+          </section>
+
+          {/* Why it matters */}
+          <section className="space-y-4">
+            <h2 className="text-2xl font-bold tracking-tight">Why it matters</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Newtonsoft.Json is the most downloaded NuGet package ever, with well
+              over 3 billion downloads. Any serialization framework, ORM, or
+              reflection-based tool that reads this property twice may see different
+              values if the underlying state changes between reads. JSON.NET itself
+              reads node properties repeatedly during traversal. A getter that
+              writes state creates a timing dependency between reads - a class of
+              bug that is nearly impossible to reproduce in unit tests (which call
+              the getter once in a controlled sequence) but surfaces intermittently
+              in production under concurrent serialization workloads.
+            </p>
+          </section>
+
+          {/* Rule links */}
+          <section className="border-t border-border pt-10 space-y-4">
+            <h2 className="text-lg font-semibold">Detection rules</h2>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>
+                <Link
+                  href="/docs/rules/GCI0036"
+                  className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                >
+                  GCI0036 - Pure Context Mutation
+                </Link>{" "}
+                - flags assignments inside property getters.
+              </li>
+              <li>
+                <Link
+                  href="/docs/rules/GCI0004"
+                  className="text-cyan-400 hover:text-cyan-300 transition-colors"
+                >
+                  GCI0004 - Breaking Change Risk
+                </Link>{" "}
+                - flags public API changes that break callers.
+              </li>
+            </ul>
+          </section>
+
+          {/* Navigation */}
+          <div className="border-t border-border pt-10 flex flex-col sm:flex-row gap-4">
+            <Link
+              href="/case-studies"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-card/80 transition-colors"
+            >
+              &larr; All case studies
+            </Link>
+            <Link
+              href="/docs"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-cyan-500 px-6 py-3 text-sm font-semibold text-background hover:bg-cyan-400 transition-colors"
+            >
+              Get started free
+            </Link>
+          </div>
+
+        </div>
+      </main>
+      <Footer />
+    </>
+  );
+}
