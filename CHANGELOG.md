@@ -33,8 +33,8 @@ Versions follow [Semantic Versioning](https://semver.org/).
 - README: rule ID non-contiguous explanation
 
 ### Changed
-- `.github/CONTRIBUTING.md`: added community-facing contribution sections above the developer guide
-- `.github/SECURITY.md`: added sensitive data and local-first behavior sections
+- Move `CONTRIBUTING.md` and `SECURITY.md` from `.github/` to repo root for discoverability
+- Add community-facing contribution sections above the developer guide in `CONTRIBUTING.md`
 - README: updated rule count from 28 to 35 to reflect current rule set
 - Behavioral Change Risk Formal Framework article: reformatted BCR definition block for readability; added "More formally" paragraph expanding on behavioral divergence potential
 
