@@ -253,5 +253,22 @@ internal static class SchemaInitializer
             UNIQUE(fixture_id, changed_file, sonar_rule)
         )
         """,
+        """
+        CREATE TABLE IF NOT EXISTS code_scanning_matches (
+            id               INTEGER PRIMARY KEY AUTOINCREMENT,
+            fixture_id       TEXT NOT NULL REFERENCES fixtures(fixture_id),
+            repo             TEXT NOT NULL,
+            changed_file     TEXT NOT NULL,
+            codeql_rule      TEXT NOT NULL DEFAULT '',
+            codeql_rule_name TEXT NOT NULL DEFAULT '',
+            alert_state      TEXT NOT NULL DEFAULT '',
+            tool_name        TEXT NOT NULL DEFAULT '',
+            severity         TEXT NOT NULL DEFAULT '',
+            start_line       INTEGER NOT NULL DEFAULT 0,
+            message          TEXT DEFAULT '',
+            fetched_at_utc   TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(fixture_id, changed_file, codeql_rule)
+        )
+        """,
     ];
 }

@@ -63,6 +63,10 @@ public static class CorpusCommand
         sonarcloud.AddCommand(CreateSonarCloudEnrich());
         corpus.AddCommand(sonarcloud);
 
+        var codescanning = new Command("codescanning", "GitHub Code Scanning (CodeQL) external validation operations");
+        codescanning.AddCommand(CreateCodeScanningEnrich());
+        corpus.AddCommand(codescanning);
+
         return corpus;
     }
 
@@ -2160,6 +2164,83 @@ public static class CorpusCommand
                 Console.WriteLine($"  Fixtures processed   : {result.FixturesProcessed}");
                 Console.WriteLine($"  Fixtures with matches: {result.FixturesWithMatches}");
                 Console.WriteLine($"  Total sonar_matches  : {result.TotalMatches}");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus codescanning enrich ─────────────────────────────────
+
+    private static Command CreateCodeScanningEnrich()
+    {
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root folder");
+        var tierOpt     = new Option<string>("--tier",     () => "silver",                      "Fixture tier to enrich (silver)");
+
+        var cmd = new Command("enrich", "Cross-reference corpus fixtures against GitHub CodeQL open alerts (requires GITHUB_TOKEN)");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+        cmd.AddOption(tierOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var ct           = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                using var selectCmd = db.Connection.CreateCommand();
+                selectCmd.CommandText = """
+                    SELECT fixture_id, repo, tier
+                    FROM fixtures
+                    WHERE LOWER(tier) = LOWER($tier)
+                    ORDER BY repo, fixture_id
+                    """;
+                selectCmd.Parameters.AddWithValue("$tier", tier);
+
+                var fixtures = new List<FixtureMetadata>();
+                using var reader = await selectCmd.ExecuteReaderAsync(ct);
+                while (await reader.ReadAsync(ct))
+                {
+                    var tierParsed = Enum.TryParse<FixtureTier>(reader.GetString(2), ignoreCase: true, out var t)
+                        ? t : FixtureTier.Silver;
+                    fixtures.Add(new FixtureMetadata
+                    {
+                        FixtureId = reader.GetString(0),
+                        Repo      = reader.GetString(1),
+                        Tier      = tierParsed,
+                    });
+                }
+
+                Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures via GitHub Code Scanning (CodeQL)...");
+                Console.WriteLine();
+
+                using var enricher = new CodeScanningEnricher();
+                var result = await enricher.EnrichAsync(
+                    fixtures,
+                    fixturesPath,
+                    db,
+                    progress: msg => Console.WriteLine(msg),
+                    ct: ct);
+
+                if (result.AuthMissing)
+                {
+                    ctx.ExitCode = 1;
+                    return;
+                }
+
+                Console.WriteLine();
+                Console.WriteLine("-- Code Scanning Enrichment Summary --");
+                Console.WriteLine($"  Repos with scanning    : {result.ReposWithScanning}");
+                Console.WriteLine($"  Repos without scanning : {result.ReposWithoutScanning}");
+                Console.WriteLine($"  Fixtures processed     : {result.FixturesProcessed}");
+                Console.WriteLine($"  Fixtures with matches  : {result.FixturesWithMatches}");
+                Console.WriteLine($"  Total matches written  : {result.TotalMatches}");
             }
         });
 
