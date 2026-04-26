@@ -1,10 +1,23 @@
-# GauntletCI — Pre-commit change-risk detection for pull request diffs
+# GauntletCI
 <div><img src="GauntletCI.png" alt="GauntletCI Logo" width="200" align="right"/></div>
 
 ![GauntletCI](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/EricCogen/db3979f1a5d69ce37d425b73bdcf4ada/raw/gauntletci-badge.json)
 [![GitHub last commit](https://img.shields.io/github/last-commit/EricCogen/GauntletCI)](https://github.com/EricCogen/GauntletCI/commits/main)
 [![GitHub stars](https://img.shields.io/github/stars/EricCogen/GauntletCI?style=social)](https://github.com/EricCogen/GauntletCI/stargazers)
 [![License](https://img.shields.io/badge/License-Elastic_2.0-blue.svg)](LICENSE)
+
+---
+
+**Your tests passed. Your PR was approved.
+Your change still broke production.**
+
+Tests confirm existing behavior.
+Code review confirms intent.
+
+**Neither validates what your change actually does.**
+
+GauntletCI detects **Behavioral Change Risk** in pull request diffs, identifying logic shifts,
+missing validations, and hidden regressions that pass tests and code review.
 
 ---
 
@@ -23,7 +36,7 @@ It answers one question:
 
 > Did this change introduce behavior that is not properly validated?
 
-GauntletCI detects **unverified behavior introduced by a diff.**
+GauntletCI detects **Behavioral Change Risk**: unverified behavior changes introduced by a diff.
 
 ---
 
@@ -65,6 +78,8 @@ fork-and-run path plus a local-CLI walkthrough.
 
 ## 📖 Why This Exists
 
+Tests and code review do not reliably validate behavioral changes.
+
 Even experienced developers miss things in diffs.
 
 Not because they lack skill — but because diffs are deceptive.
@@ -79,6 +94,25 @@ A small change can silently alter behavior:
 
 These are not syntax errors.
 They are **behavior changes** — and they regularly slip through code review.
+
+---
+
+## The Missing Layer: Change Validation
+
+Modern development pipelines have strong tooling, but each layer answers a different question:
+
+- Static analysis checks code quality
+- Security tools check vulnerabilities
+- Tests verify expected behavior
+- Code review checks intent
+
+**None of them validate the behavioral impact of a change.**
+
+GauntletCI introduces a new layer: **Behavioral Change Risk detection**
+
+It focuses only on the delta between versions and asks:
+
+> Is this change safe?
 
 ---
 
