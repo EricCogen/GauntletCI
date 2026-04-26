@@ -97,6 +97,7 @@ GauntletCI analyzes the exact lines added or removed in a pull request and flags
 | `--commit <sha>` | Any commit SHA |
 | `--output json` | Machine-readable JSON output |
 | `--severity info\|warn\|block` | Minimum severity to display |
+| `--sensitivity strict\|balanced\|permissive` | Confidence-based noise filter: `strict` shows Block + High/Medium confidence only; `balanced` (default) shows all Block + Warn High/Medium; `permissive` shows everything |
 | `--no-baseline` | Ignore baseline; show all findings |
 | `--show-context N` | Include N surrounding diff lines around evidence |
 | `--github-annotations` | Emit `::error::` / `::warning::` workflow commands |

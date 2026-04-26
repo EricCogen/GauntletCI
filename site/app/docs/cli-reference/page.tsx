@@ -16,8 +16,13 @@ const analyzeFlags = [
   { flag: "--all-changes", type: "bool", desc: "Analyze all local changes: staged and unstaged" },
   { flag: "--repo <path>", type: "directory", desc: "Repository root for config loading and git operations. Defaults to CWD." },
   { flag: "--output <format>", type: "string", desc: "Output format: text (default) or json" },
+  { flag: "--sensitivity <level>", type: "string", desc: "Confidence-based noise filter: strict (Block+High/Medium only), balanced (default: Block-all + Warn+High/Medium), permissive (all Block + all Warn)" },
+  { flag: "--severity <level>", type: "string", desc: "Minimum severity gate: info, warn (default), block. Applied before --sensitivity." },
+  { flag: "--verbose", type: "bool", desc: "Show Info-severity findings. Equivalent to --severity info." },
   { flag: "--with-llm", type: "bool", desc: "Enable local LLM enrichment for High-confidence findings" },
   { flag: "--github-annotations", type: "bool", desc: "Emit GitHub Actions workflow commands for inline PR annotations" },
+  { flag: "--no-baseline", type: "bool", desc: "Ignore the baseline file and show all findings" },
+  { flag: "--show-context <n>", type: "int", desc: "Include N surrounding diff lines around each finding" },
   { flag: "--no-banner", type: "bool", desc: "Suppress the ASCII banner" },
 ];
 
@@ -37,6 +42,10 @@ const jsonLd = {
 };
 
 const faqSchema = buildFaqSchema([
+  {
+    q: "How do I reduce noise from low-confidence warnings?",
+    a: "Use the --sensitivity flag to filter findings by confidence. The default (balanced) shows all Block findings plus Warn findings with Medium or High confidence. Use --sensitivity strict to show only Block findings with Medium+ confidence. Use --sensitivity permissive to see everything including low-confidence warnings.",
+  },
   {
     q: "How do I analyze staged changes with GauntletCI?",
     a: "Run gauntletci analyze --staged to analyze your staged changes. The tool exits with code 1 if blocking findings are detected, which will block the commit if used as a pre-commit hook.",
@@ -134,6 +143,8 @@ export default function CliReferencePage() {
             ["# Output JSON for downstream tooling", "gauntletci analyze --staged --output json"],
             ["# Enable local LLM enrichment", "gauntletci analyze --staged --with-llm"],
             ["# Emit GitHub Actions inline annotations", "gauntletci analyze --staged --github-annotations"],
+            ["# Strict CI gate: Block severity + High/Medium confidence only", "gauntletci analyze --staged --sensitivity strict"],
+            ["# Show everything including low-confidence warnings", "gauntletci analyze --staged --sensitivity permissive"],
           ].map(([comment, cmd]) => (
             <div key={cmd}>
               <p className="text-muted-foreground">{comment}</p>
