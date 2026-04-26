@@ -57,6 +57,31 @@ export default function SemgrepComparePage() {
           </p>
         </div>
 
+        {/* At a glance */}
+        <div className="overflow-x-auto rounded-xl border border-border">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-card/80">
+                <th className="text-left px-5 py-3 font-semibold text-muted-foreground w-1/4">Tool</th>
+                <th className="text-left px-5 py-3 font-semibold text-muted-foreground">What it checks</th>
+                <th className="text-left px-5 py-3 font-semibold text-muted-foreground">What it misses</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className="border-b border-border bg-card/20">
+                <td className="px-5 py-3 text-foreground/80 font-semibold">Semgrep</td>
+                <td className="px-5 py-3 text-muted-foreground">Security and code patterns via YAML rules, policy enforcement</td>
+                <td className="px-5 py-3 text-amber-400/80">Behavioral change risk, logic drift introduced by the change</td>
+              </tr>
+              <tr className="bg-cyan-500/5">
+                <td className="px-5 py-3 text-cyan-400 font-semibold">GauntletCI</td>
+                <td className="px-5 py-3 text-muted-foreground">Change safety, Behavioral Change Risk in the diff</td>
+                <td className="px-5 py-3 text-muted-foreground/40">--</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
         {/* Key difference */}
         <div className="grid sm:grid-cols-2 gap-6">
           <div className="rounded-xl border border-border bg-card p-7 space-y-3">
