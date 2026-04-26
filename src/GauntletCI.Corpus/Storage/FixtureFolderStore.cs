@@ -101,7 +101,10 @@ public sealed class FixtureFolderStore : IFixtureStore
         var paths = new List<string>();
         using var reader = await cmd.ExecuteReaderAsync(ct);
         while (await reader.ReadAsync(ct))
-            paths.Add(reader.GetString(0));
+        {
+            if (!reader.IsDBNull(0))
+                paths.Add(reader.GetString(0));
+        }
 
         var results = new List<FixtureMetadata>();
         foreach (var path in paths)

@@ -139,7 +139,10 @@ public sealed class ScoreAggregator : IScoreAggregator
         cmd.CommandText = "SELECT fixture_id, path FROM fixtures";
         using var reader = await cmd.ExecuteReaderAsync(ct);
         while (await reader.ReadAsync(ct))
-            result[reader.GetString(0)] = reader.GetString(1);
+        {
+            if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
+                result[reader.GetString(0)] = reader.GetString(1);
+        }
         return result;
     }
 
