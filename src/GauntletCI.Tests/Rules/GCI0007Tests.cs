@@ -167,4 +167,47 @@ public class GCI0007Tests
             f.Summary.Contains("Swallowed exception") &&
             f.Confidence == Confidence.High);
     }
+
+    [Fact]
+    public async Task SpecificTypedCatchWithBreakOneLiner_ShouldNotFlag()
+    {
+        // catch (ChannelClosedException) { break; } on one line — explicit typed handling
+        var raw = """
+            diff --git a/src/Queue.cs b/src/Queue.cs
+            index abc..def 100644
+            --- a/src/Queue.cs
+            +++ b/src/Queue.cs
+            @@ -1,1 +1,2 @@
+             // existing
+            +catch (ChannelClosedException) { break; } // expected
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Swallowed exception"));
+    }
+
+    [Fact]
+    public async Task SpecificTypedCatchMultiLine_ShouldNotFlag()
+    {
+        // Multi-line typed catch with explicit handling — should not flag
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,1 +1,5 @@
+             // service
+            +catch (IOException)
+            +{
+            +    return false;
+            +}
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Swallowed exception"));
+    }
 }

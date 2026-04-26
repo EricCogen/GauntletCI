@@ -62,6 +62,11 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
                         content.Contains("OperationCanceledException", StringComparison.Ordinal))
                         continue;
 
+                    // Only flag bare catch{} or catch(Exception) — specific typed catches
+                    // (e.g. catch (ChannelClosedException) { break; }) represent explicit
+                    // handling intent and must not be flagged as swallowed.
+                    if (!IsBareOrBaseCatch(content)) continue;
+
                     bool isSwallowed = IsCatchSwallowed(hunkLines, i, out string evidence);
                     if (isSwallowed)
                     {
@@ -151,8 +156,30 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
         }
     }
 
-    private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)
+    /// <summary>
+    /// Returns true when the catch clause should be evaluated for swallowing:
+    /// bare <c>catch</c> with no type, or <c>catch (Exception)</c> / <c>catch (Exception e)</c>.
+    /// Specific typed catches (e.g. <c>catch (ChannelClosedException)</c>) represent explicit
+    /// intent and are excluded from swallow detection.
+    /// </summary>
+    private static bool IsBareOrBaseCatch(string catchLine)
     {
+        // "catch {" or "catch{" — no type at all
+        if (!catchLine.Contains('(')) return true;
+
+        var open  = catchLine.IndexOf('(');
+        var close = catchLine.IndexOf(')', open + 1);
+        if (open < 0 || close <= open) return true; // malformed — treat conservatively
+
+        var typePart = catchLine[(open + 1)..close].Trim();
+        // Strip variable name: "Exception e" → "Exception"
+        var space    = typePart.IndexOf(' ');
+        var typeName = space > 0 ? typePart[..space] : typePart;
+
+        return typeName is "Exception" or "System.Exception";
+    }
+
+    private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)    {
         if (staticAnalysis is null) return;
         // CA2000 (don't dispose objects) and CA1001 (types owning disposable) are owned by GCI0024
         // (Resource Lifecycle) — see DiagnosticMapper. GCI0007 keeps only CA1031 (catch generic
