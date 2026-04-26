@@ -51,14 +51,16 @@ public class GCI0015Tests
     [Fact]
     public async Task MassAssignmentWithoutNullCheck_ShouldFlag()
     {
-        // 3+ consecutive entity.Field = request.Field; assignments
+        // 3+ consecutive entity.Field = request.Field; assignments in an HTTP-context file
         var raw = """
             diff --git a/src/UserService.cs b/src/UserService.cs
             index abc..def 100644
             --- a/src/UserService.cs
             +++ b/src/UserService.cs
-            @@ -1,1 +1,6 @@
+            @@ -1,1 +1,7 @@
              // service
+            +public IActionResult Create([FromBody] UserInput request)
+            +{
             +entity.Name = request.Name;
             +entity.Email = request.Email;
             +entity.Phone = request.Phone;
@@ -69,6 +71,29 @@ public class GCI0015Tests
         var findings = await Rule.EvaluateAsync(diff, null);
 
         Assert.Contains(findings, f => f.Summary.Contains("Mass field assignment"));
+    }
+
+    [Fact]
+    public async Task MassAssignmentInNonHttpFile_ShouldNotFlag()
+    {
+        // Image/data-format parsers set many fields in sequence -- no HTTP context, no security risk
+        var raw = """
+            diff --git a/src/ExrAttribute.cs b/src/ExrAttribute.cs
+            index abc..def 100644
+            --- a/src/ExrAttribute.cs
+            +++ b/src/ExrAttribute.cs
+            @@ -1,1 +1,6 @@
+             // data model
+            +this.Width = reader.ReadInt32();
+            +this.Height = reader.ReadInt32();
+            +this.Depth = reader.ReadInt32();
+            +// end
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Mass field assignment"));
     }
 
     [Fact]
