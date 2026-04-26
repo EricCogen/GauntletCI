@@ -104,6 +104,8 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
                               !content.Contains("readonly", StringComparison.Ordinal) &&
                               !content.Contains("const ", StringComparison.Ordinal) &&
                               !content.Contains("(") && // not a method
+                              !content.Contains("{") && // not a property declaration
+                              !content.Contains("=>") && // not an expression-bodied member
                               content.EndsWith(';') &&
                               (content.StartsWith("private ", StringComparison.Ordinal) ||
                                content.StartsWith("public ", StringComparison.Ordinal) ||

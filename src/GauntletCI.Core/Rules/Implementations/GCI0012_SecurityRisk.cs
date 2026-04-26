@@ -121,6 +121,13 @@ public class GCI0012_SecurityRisk : RuleBase
         {
             if (!line.Content.Contains(api, StringComparison.Ordinal)) continue;
 
+            // Activator.CreateInstance is safe when called with a typeof() literal (compile-time type)
+            // or when the result is immediately cast to a known type (cast pattern: (Type)Activator.CreateInstance).
+            // These patterns represent controlled factory usage, not user-input-driven code injection.
+            if (api == "Activator.CreateInstance(" &&
+                (line.Content.Contains("typeof(", StringComparison.Ordinal) ||
+                 line.Content.Contains(")Activator.CreateInstance(", StringComparison.Ordinal))) continue;
+
             findings.Add(CreateFinding(
                 summary: $"Dangerous API call detected: {api}",
                 evidence: $"Line {line.LineNumber}: {line.Content.Trim()}",
@@ -182,34 +189,40 @@ public class GCI0012_SecurityRisk : RuleBase
     private static bool IsEnvVarName(string literal) =>
         literal.Length > 0 && literal.All(c => char.IsUpper(c) || char.IsDigit(c) || c == '_');
 
-    // Returns true only if the line contains a real assignment = (not ==, !=, <=, >=).
+    // Returns true only if the line contains a real assignment = (not ==, !=, <=, >=, =>).
+    // Skips = signs inside string literals to avoid false positives from format strings.
     private static bool HasAssignment(string content)
     {
         ArgumentNullException.ThrowIfNull(content);
+        bool inString = false;
         for (int i = 0; i < content.Length; i++)
         {
-            if (content[i] != '=') continue;
+            if (content[i] == '"' && (i == 0 || content[i - 1] != '\\'))
+                inString = !inString;
+            if (inString || content[i] != '=') continue;
             char prev = i > 0 ? content[i - 1] : '\0';
             char next = i < content.Length - 1 ? content[i + 1] : '\0';
             if (prev is '!' or '<' or '>' or '=') continue;
-            if (next is '=') continue;
-            if (prev is '>' && next is '>') continue; // => lambda
+            if (next is '=' or '>') continue; // == and => (expression body / lambda)
             return true;
         }
         return false;
     }
 
-    // Returns the index of the first real assignment = in the line.
+    // Returns the index of the first real assignment = in the line, skipping string literals.
     private static int FindAssignmentIndex(string content)
     {
         ArgumentNullException.ThrowIfNull(content);
+        bool inString = false;
         for (int i = 0; i < content.Length; i++)
         {
-            if (content[i] != '=') continue;
+            if (content[i] == '"' && (i == 0 || content[i - 1] != '\\'))
+                inString = !inString;
+            if (inString || content[i] != '=') continue;
             char prev = i > 0 ? content[i - 1] : '\0';
             char next = i < content.Length - 1 ? content[i + 1] : '\0';
             if (prev is '!' or '<' or '>' or '=') continue;
-            if (next is '=') continue;
+            if (next is '=' or '>') continue; // == and =>
             return i;
         }
         return content.Length;
