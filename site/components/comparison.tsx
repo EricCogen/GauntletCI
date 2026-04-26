@@ -123,6 +123,19 @@ export function Comparison() {
           </p>
         </div>
 
+        <div className="mx-auto max-w-3xl text-center mb-10 space-y-3 text-muted-foreground leading-relaxed">
+          <p>GauntletCI is designed to complement the tools your team already uses.</p>
+          <p>
+            SonarQube, Semgrep, Snyk, CodeQL, and similar tools are valuable, but they primarily
+            answer different questions: Is this code maintainable? Is it vulnerable? Does it match
+            known patterns?
+          </p>
+          <p>
+            GauntletCI answers a narrower question at a more urgent moment: Did this diff introduce
+            Behavioral Change Risk that should block or change the review?
+          </p>
+        </div>
+
         <div className="rounded-xl border border-border overflow-x-auto">
           {/* Header */}
           <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] min-w-[880px] bg-card/80 border-b border-border">

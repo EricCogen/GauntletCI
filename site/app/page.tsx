@@ -3,6 +3,7 @@ import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
 import { Stats } from "@/components/stats";
 import { VisibilityGap } from "@/components/visibility-gap";
+import { BehavioralChangeRisk } from "@/components/behavioral-change-risk";
 import { TerminalBlock } from "@/components/terminal-block";
 import { ProofExample } from "@/components/proof-example";
 import { Features } from "@/components/features";
@@ -20,9 +21,9 @@ import { DefinitionBlock } from "@/components/definition-block";
 import { Footer } from "@/components/footer";
 
 export const metadata: Metadata = {
-  title: "GauntletCI | Pre-Commit Change-Risk Detection for .NET",
+  title: "GauntletCI | Pre-Commit Behavioral Change Risk Detection for .NET",
   description:
-    "GauntletCI detects behavioral regressions, contract breaks, and removed safety checks in your diff -- before they reach code review.",
+    "GauntletCI is a local-first Behavioral Change Risk engine for C# and .NET teams. Detect behavioral regressions, contract breaks, and logic shifts in your diff -- before they reach code review.",
   alternates: { canonical: "/" },
   openGraph: { images: [{ url: '/og/home.png', width: 1200, height: 630 }] },
 };
@@ -34,6 +35,7 @@ export default function Home() {
       <Hero />
       <Stats />
       <VisibilityGap />
+      <BehavioralChangeRisk />
       <TerminalBlock />
       <ProofExample />
       <Features />

@@ -1,5 +1,47 @@
 const commonQA = [
   {
+    question: "What is Behavioral Change Risk?",
+    answer: (
+      <>
+        Behavioral Change Risk is the risk that a code change alters runtime behavior in a way that
+        is not clearly intentional, reviewed, or validated. Examples include removed guard clauses,
+        changed branching logic, new exception paths, serialization contract changes, unsafe async
+        changes, and hidden side effects.
+      </>
+    ),
+  },
+  {
+    question: "How is Behavioral Change Risk different from a bug?",
+    answer: (
+      <>
+        A bug is a confirmed defect. Behavioral Change Risk is a pre-merge signal that a diff changed
+        behavior in a way that deserves validation before it becomes a defect. GauntletCI flags the
+        risk while the change is still cheap to fix.
+      </>
+    ),
+  },
+  {
+    question: "Why do tests and code review miss Behavioral Change Risk?",
+    answer: (
+      <>
+        Tests usually verify expected paths. Code review usually checks whether the change looks
+        reasonable. Behavioral Change Risk often appears in the gap between those two signals: a small
+        change that looks safe but alters an untested contract, branch, exception path, or runtime
+        assumption.
+      </>
+    ),
+  },
+  {
+    question: "Is GauntletCI trying to replace SonarQube, Snyk, CodeQL, or tests?",
+    answer: (
+      <>
+        No. GauntletCI complements those tools. Static analysis, SAST, dependency scanning, and tests
+        remain valuable. GauntletCI focuses on the diff itself and asks whether the specific change
+        introduced unvalidated runtime risk.
+      </>
+    ),
+  },
+  {
     question: "Can I add custom detection rules?",
     answer: (
       <>
