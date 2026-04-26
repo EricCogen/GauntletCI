@@ -118,4 +118,49 @@ public class GCI0016Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("async void"));
     }
+
+    [Fact]
+    public async Task StaticMutableField_ShouldFlag()
+    {
+        var diff = MakeDiff("    private static Dictionary<string, string> _cache;");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("Static mutable"));
+    }
+
+    [Fact]
+    public async Task StaticReadonlyField_ShouldNotFlag()
+    {
+        var diff = MakeDiff("    private static readonly string _name = \"test\";");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Static mutable"));
+    }
+
+    [Fact]
+    public async Task StaticAutoProperty_ShouldNotFlag()
+    {
+        var diff = MakeDiff("    public static int BufferSize { get; set; } = 4096;");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Static mutable"));
+    }
+
+    [Fact]
+    public async Task StaticExpressionBodiedProperty_ShouldNotFlag()
+    {
+        var diff = MakeDiff("    public static int CurrentThreadId => Environment.CurrentManagedThreadId;");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Static mutable"));
+    }
+
+    [Fact]
+    public async Task StaticMethod_ShouldNotFlagAsField()
+    {
+        var diff = MakeDiff("    public static int Compute(int x) => x * 2;");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Static mutable"));
+    }
 }

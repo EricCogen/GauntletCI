@@ -133,4 +133,54 @@ public class GCI0012Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("hardcoded") || f.Summary.Contains("credential"));
     }
+
+    [Fact]
+    public async Task JTokenExpressionBody_ShouldNotFlagCredential()
+    {
+        // JToken contains "token" but this is an expression-bodied property stub, not a credential assignment.
+        var diff = MakeDiff("    public virtual JToken? First => throw new InvalidOperationException(\"Cannot access\");");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("hardcoded") || f.Summary.Contains("credential"));
+    }
+
+    [Fact]
+    public async Task FormatStringWithTokenInside_ShouldNotFlagCredential()
+    {
+        // = inside a format string should not be treated as an assignment.
+        var diff = MakeDiff("    \"[RedisStreamSequenceToken: EntryId={0}, SeqNum={1}]\",");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("hardcoded") || f.Summary.Contains("credential"));
+    }
+
+    [Fact]
+    public async Task ActivatorCreateInstanceWithTypeof_ShouldNotFlagDangerous()
+    {
+        // Controlled type instantiation - typeof() makes the type a compile-time literal.
+        var diff = MakeDiff("    var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(t));");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Dangerous") && f.Summary.Contains("Activator"));
+    }
+
+    [Fact]
+    public async Task ActivatorCreateInstanceWithCastPattern_ShouldNotFlagDangerous()
+    {
+        // Cast-pattern Activator.CreateInstance: (KnownType)Activator.CreateInstance(...)
+        var diff = MakeDiff("    converter = (ValueConverter)Activator.CreateInstance(converterType);");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Dangerous") && f.Summary.Contains("Activator"));
+    }
+
+    [Fact]
+    public async Task ActivatorCreateInstanceWithVariableType_ShouldFlagDangerous()
+    {
+        // Variable type with no cast - cannot determine safety statically, should still flag.
+        var diff = MakeDiff("    return Activator.CreateInstance(externalType, userInput);");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("Dangerous"));
+    }
 }

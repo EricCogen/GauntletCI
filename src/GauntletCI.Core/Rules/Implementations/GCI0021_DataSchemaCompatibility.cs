@@ -38,6 +38,8 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
 
     private void CheckRemovedSerializationAttributes(DiffFile file, List<Finding> findings)
     {
+        if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) return;
+
         foreach (var line in file.RemovedLines)
         {
             var content = line.Content.Trim();
@@ -61,6 +63,8 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
 
     private void CheckRemovedEnumMembers(DiffFile file, List<Finding> findings)
     {
+        if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) return;
+
         var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
 
         bool inEnumBody = false;
