@@ -46,8 +46,8 @@ public static class PostmortemCommand
 
             try
             {
-                var diff = await DiffParser.FromGitAsync(repo.FullName, commit);
                 var config = ConfigLoader.Load(repo.FullName);
+                var diff = await DiffParser.FromGitAsync(repo.FullName, commit, config.DiffContextLines);
                 var ignoreList = IgnoreList.Load(repo.FullName);
                 var orchestrator = RuleOrchestrator.CreateDefault(config);
                 var sw = Stopwatch.StartNew();

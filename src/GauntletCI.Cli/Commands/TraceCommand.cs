@@ -119,10 +119,10 @@ public static class TraceCommand
 
                 // Step 1: get diff from base ref to HEAD using three-dot range
                 var rangeRef = $"{baseRef}...HEAD";
-                var diff     = await DiffParser.FromGitAsync(repo.FullName, rangeRef, ct);
+                var config      = ConfigLoader.Load(repo.FullName);
+                var diff     = await DiffParser.FromGitAsync(repo.FullName, rangeRef, config.DiffContextLines, ct);
 
                 // Step 2: run rule orchestrator
-                var config      = ConfigLoader.Load(repo.FullName);
                 var ignoreList  = IgnoreList.Load(repo.FullName);
                 var orchestrator = RuleOrchestrator.CreateDefault(config, repoPath: repo.FullName);
                 var result       = await orchestrator.RunAsync(diff, ignoreList: ignoreList);
