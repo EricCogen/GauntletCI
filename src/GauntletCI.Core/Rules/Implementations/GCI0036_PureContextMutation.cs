@@ -97,7 +97,8 @@ public class GCI0036_PureContextMutation : RuleBase
                 inGetter = false;
 
             // Check for mutations in pure context (added lines only)
-            if (line.Kind == DiffLineKind.Added && inPureContext && IsFieldOrPropertyAssignment(trimmed))
+            if (line.Kind == DiffLineKind.Added && inPureContext && IsFieldOrPropertyAssignment(trimmed)
+                && !IsNullGuardedAssignment(allLines, i, trimmed))
             {
                 findings.Add(CreateFinding(
                     file,
@@ -111,8 +112,44 @@ public class GCI0036_PureContextMutation : RuleBase
         }
     }
 
-    private static bool IsFieldOrPropertyAssignment(string trimmed)
+    /// <summary>
+    /// Returns true when the assignment on this line is preceded within 10 lines by a null check
+    /// on the same field — the lazy-initialization pattern (check-then-assign) is intentional.
+    /// </summary>
+    private static bool IsNullGuardedAssignment(List<DiffLine> allLines, int idx, string trimmed)
     {
+        int eqIdx = FindAssignmentIndex(trimmed);
+        if (eqIdx < 0) return false;
+
+        var rawLhs = trimmed[..eqIdx].TrimEnd('+', '-', '*', '/', '%', '|', '&', '^', ' ').Trim();
+        if (string.IsNullOrEmpty(rawLhs)) return false;
+
+        // Use just the simple name (strip `this.` prefix) for the null-check search
+        var lhsName = rawLhs.Contains('.')
+            ? rawLhs[(rawLhs.LastIndexOf('.') + 1)..]
+            : rawLhs;
+        if (string.IsNullOrEmpty(lhsName) || lhsName.Contains(' ')) return false;
+
+        int scanned = 0;
+        for (int j = idx - 1; j >= 0 && scanned < 10; j--)
+        {
+            var prev = allLines[j].Content.Trim();
+            if (string.IsNullOrEmpty(prev)) continue;
+            scanned++;
+
+            if (prev.Contains(lhsName, StringComparison.Ordinal) &&
+                (prev.Contains("== null",   StringComparison.Ordinal) ||
+                 prev.Contains("is null",   StringComparison.Ordinal) ||
+                 prev.Contains("!= null",   StringComparison.Ordinal) ||
+                 prev.Contains("is not null", StringComparison.Ordinal)))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool IsFieldOrPropertyAssignment(string trimmed)    {
         ArgumentNullException.ThrowIfNull(trimmed);
         // Skip local variable declarations and loop variables
         if (trimmed.StartsWith("var ", StringComparison.Ordinal)) return false;
