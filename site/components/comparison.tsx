@@ -12,55 +12,56 @@ interface ComparisonRow {
   snyk: CellValue;
   codeql: CellValue;
   codeclimate: CellValue;
+  ndepend: CellValue;
 }
 
 const rows: ComparisonRow[] = [
   {
     label: "Diff-scoped analysis",
     sublabel: "Only analyzes lines that actually changed",
-    gauntlet: "yes", sonar: "no", semgrep: "partial", snyk: "no", codeql: "no", codeclimate: "no",
+    gauntlet: "yes", sonar: "no", semgrep: "partial", snyk: "no", codeql: "no", codeclimate: "no", ndepend: "no",
   },
   {
     label: "Sub-second pre-commit feedback",
     sublabel: "Results before the commit is created",
-    gauntlet: "yes", sonar: "no", semgrep: "partial", snyk: "no", codeql: "no", codeclimate: "no",
+    gauntlet: "yes", sonar: "no", semgrep: "partial", snyk: "no", codeql: "no", codeclimate: "no", ndepend: "no",
   },
   {
     label: "100% local - no code leaves the machine",
     sublabel: "No cloud upload, no SaaS account required",
-    gauntlet: "yes", sonar: "partial", semgrep: "partial", snyk: "no", codeql: "partial", codeclimate: "no",
+    gauntlet: "yes", sonar: "partial", semgrep: "partial", snyk: "no", codeql: "partial", codeclimate: "no", ndepend: "yes",
   },
   {
     label: "Air-gap / data residency friendly",
-    gauntlet: "yes", sonar: "partial", semgrep: "partial", snyk: "no", codeql: "partial", codeclimate: "no",
+    gauntlet: "yes", sonar: "partial", semgrep: "partial", snyk: "no", codeql: "partial", codeclimate: "no", ndepend: "yes",
   },
   {
     label: "Free tier with full rule set",
-    gauntlet: "yes", sonar: "partial", semgrep: "partial", snyk: "partial", codeql: "partial", codeclimate: "partial",
+    gauntlet: "yes", sonar: "partial", semgrep: "partial", snyk: "partial", codeql: "partial", codeclimate: "partial", ndepend: "no",
   },
   {
     label: "GitHub inline PR comments",
-    gauntlet: "yes", sonar: "yes", semgrep: "yes", snyk: "yes", codeql: "yes", codeclimate: "yes",
+    gauntlet: "yes", sonar: "yes", semgrep: "yes", snyk: "yes", codeql: "yes", codeclimate: "yes", ndepend: "partial",
   },
   {
     label: "Baseline delta mode",
     sublabel: "Suppress existing findings, show only net-new",
-    gauntlet: "yes", sonar: "partial", semgrep: "no", snyk: "no", codeql: "no", codeclimate: "partial",
+    gauntlet: "yes", sonar: "partial", semgrep: "no", snyk: "no", codeql: "no", codeclimate: "partial", ndepend: "partial",
   },
   {
     label: "Local LLM enrichment (offline)",
     sublabel: "AI explanations with no API key or network call",
-    gauntlet: "yes", sonar: "no", semgrep: "no", snyk: "no", codeql: "no", codeclimate: "no",
+    gauntlet: "yes", sonar: "no", semgrep: "no", snyk: "no", codeql: "no", codeclimate: "no", ndepend: "no",
   },
   {
     label: "Incident correlation",
     sublabel: "Connects deploy diffs to live PagerDuty/Opsgenie alerts",
-    gauntlet: "yes", sonar: "no", semgrep: "no", snyk: "no", codeql: "no", codeclimate: "no",
+    gauntlet: "yes", sonar: "no", semgrep: "no", snyk: "no", codeql: "no", codeclimate: "no", ndepend: "no",
   },
   {
     label: "Architecture policy enforcement",
     sublabel: "Configurable forbidden import pairs",
-    gauntlet: "yes", sonar: "partial", semgrep: "partial", snyk: "no", codeql: "no", codeclimate: "no",
+    gauntlet: "yes", sonar: "partial", semgrep: "partial", snyk: "no", codeql: "no", codeclimate: "no", ndepend: "yes",
   },
 ];
 
@@ -71,6 +72,7 @@ const competitors = [
   { key: "snyk",        label: "Snyk",         highlight: false, href: "/compare/gauntletci-vs-snyk" },
   { key: "codeql",      label: "CodeQL",       highlight: false, href: "/compare/gauntletci-vs-codeql" },
   { key: "codeclimate", label: "Code Climate", highlight: false, href: "/compare/gauntletci-vs-codeclimate" },
+  { key: "ndepend",     label: "NDepend",      highlight: false, href: "/compare/gauntletci-vs-ndepend" },
 ] as const;
 
 function Cell({ value, highlight }: { value: CellValue; highlight: boolean }) {
@@ -111,7 +113,7 @@ export function Comparison() {
 
         <div className="rounded-xl border border-border overflow-x-auto">
           {/* Header */}
-          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr] min-w-[760px] bg-card/80 border-b border-border">
+          <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] min-w-[880px] bg-card/80 border-b border-border">
             <div className="px-5 py-4 text-sm font-semibold text-muted-foreground">Capability</div>
             {competitors.map((c) => (
               <div key={c.key} className={`px-3 py-4 text-center ${c.highlight ? "bg-cyan-500/5" : ""}`}>
@@ -135,7 +137,7 @@ export function Comparison() {
           {rows.map((row, i) => (
             <div
               key={row.label}
-              className={`grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr] min-w-[760px] border-b border-border last:border-0 hover:bg-card/40 transition-colors ${i % 2 === 0 ? "bg-transparent" : "bg-card/20"}`}
+              className={`grid grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr] min-w-[880px] border-b border-border last:border-0 hover:bg-card/40 transition-colors ${i % 2 === 0 ? "bg-transparent" : "bg-card/20"}`}
             >
               <div className="px-5 py-3.5 flex flex-col justify-center">
                 <span className="text-sm text-foreground/90">{row.label}</span>
