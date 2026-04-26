@@ -87,7 +87,8 @@ public class GCI0006_EdgeCaseHandling : RuleBase
 
                 // Check "string" or "object" in the parameter section, not just the return type
                 var parenIdx = content.IndexOf('(');
-                var paramSection = parenIdx >= 0 ? content[parenIdx..] : "";
+                var closeIdx = parenIdx >= 0 ? content.IndexOf(')', parenIdx) : -1;
+                var paramSection = (parenIdx >= 0 && closeIdx > parenIdx) ? content[parenIdx..(closeIdx + 1)] : "";
                 if (!HasNullableReferenceParam(paramSection)) continue;
 
                 // Check next 5 lines for null/range validation

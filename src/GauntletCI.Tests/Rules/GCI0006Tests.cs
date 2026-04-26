@@ -259,4 +259,25 @@ public class GCI0006Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
     }
+
+    [Fact]
+    public async Task ExpressionBodyMethodNullableReturnNoParams_ShouldNotFlag()
+    {
+        // public override string? ToString() => (string?)Channel;
+        // string? in return type and cast in body must not trigger parameter validation
+        var raw = """
+            diff --git a/src/Queue.cs b/src/Queue.cs
+            index abc..def 100644
+            --- a/src/Queue.cs
+            +++ b/src/Queue.cs
+            @@ -1,1 +1,2 @@
+             // existing
+            +public override string? ToString() => (string?)Channel;
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
 }
