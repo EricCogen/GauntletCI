@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Terminal } from "lucide-react";
 
 interface OutputLine {
@@ -61,11 +62,62 @@ export function TerminalBlock() {
           </p>
         </div>
 
+        {/* Live recording GIF */}
+        <div className="mx-auto max-w-3xl mb-14">
+          <div className="rounded-xl overflow-hidden border border-border/60 shadow-2xl shadow-black/40">
+            <div className="flex items-center gap-2 bg-zinc-900 border-b border-border/40 px-4 py-3">
+              <span className="h-3 w-3 rounded-full bg-red-500/80" />
+              <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
+              <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
+              <div className="flex-1 flex items-center justify-center gap-1.5 text-xs text-gray-500">
+                <Terminal className="h-3 w-3" />
+                <span>Live recording</span>
+              </div>
+            </div>
+            <div className="bg-zinc-950">
+              <Image
+                src="/gauntletci-terminal-demo.gif"
+                alt="GauntletCI terminal demo - live recording showing findings output"
+                width={900}
+                height={540}
+                unoptimized
+                className="w-full h-auto"
+                priority
+              />
+            </div>
+          </div>
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            Running against{" "}
+            <a
+              href="https://github.com/StackExchange/StackExchange.Redis/pull/2995"
+              className="text-cyan-400 hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              StackExchange.Redis PR #2995
+            </a>
+            {" - "}GIF recorded with{" "}
+            <a
+              href="https://github.com/NickeManarin/ScreenToGif"
+              className="text-cyan-400 hover:underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              ScreenToGif
+            </a>
+          </p>
+        </div>
+
+        {/* Annotated breakdown */}
+        <div className="text-center mb-8">
+          <p className="text-sm font-semibold text-muted-foreground uppercase tracking-widest">Breakdown</p>
+          <h3 className="text-xl font-semibold mt-1">What each finding tells you</h3>
+        </div>
+
         <div className="mx-auto max-w-5xl flex flex-col lg:flex-row gap-6 items-start">
           {/* Terminal window */}
           <div className="flex-1 min-w-0">
             <div className="rounded-xl overflow-hidden border border-border/60 shadow-2xl shadow-black/40">
-              {/* Title bar */}
               <div className="flex items-center gap-2 bg-zinc-900 border-b border-border/40 px-4 py-3">
                 <span className="h-3 w-3 rounded-full bg-red-500/80" />
                 <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
@@ -75,8 +127,6 @@ export function TerminalBlock() {
                   <span>bash: ~/repos/my-service</span>
                 </div>
               </div>
-
-              {/* Output body */}
               <div className="bg-zinc-950 px-5 py-5 font-mono text-[13px] leading-relaxed">
                 {lines.map((line, i) =>
                   line.type === "blank" ? (
