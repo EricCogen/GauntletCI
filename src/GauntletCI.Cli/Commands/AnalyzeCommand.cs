@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.CommandLine;
+using System.Diagnostics;
 using System.Text.Json;
 using GauntletCI.Cli.Analysis;
 using GauntletCI.Cli.Audit;
@@ -226,6 +227,7 @@ public static class AnalyzeCommand
 
                 // Run static analysis on changed C# files (null when no repo path or no .cs changes)
                 var repoPath = diffFile is null ? repo.FullName : null;
+                var sw = Stopwatch.StartNew();
                 var staticAnalysis = await StaticAnalysisRunner.RunAsync(diff, repoPath, ct);
 
                 var result = await orchestrator.RunAsync(diff, staticAnalysis, ignoreList: ignoreList);
@@ -338,6 +340,8 @@ public static class AnalyzeCommand
                 if (withCoverage)
                     await CoverageCorrelator.AnnotateAsync(result, ct);
 
+                sw.Stop();
+
                 if (isSarifOutput)
                 {
                     SarifWriter.Write(result);
@@ -370,7 +374,7 @@ public static class AnalyzeCommand
                     var minSeverity = verbose
                         ? GauntletCI.Core.Model.RuleSeverity.Info
                         : ParseMinSeverity(severityStr);
-                    ConsoleReporter.Report(result, ascii, minSeverity, suppressedByBaseline, diff, showContext);
+                    ConsoleReporter.Report(result, ascii, minSeverity, suppressedByBaseline, diff, showContext, sw.Elapsed);
                 }
 
                 if (prCommentSuggest)
