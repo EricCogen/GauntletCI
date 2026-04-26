@@ -183,7 +183,7 @@ GauntletCI includes **35 built-in detection rules** across:
 * Architecture
 * Test Quality
 
-Rule IDs range from GCI0001-GCI0050. Rule IDs are intentionally non-contiguous so rules can be grouped and expanded without renumbering existing findings.
+Rule IDs range from GCI0001-GCI0050. Rule IDs are non-contiguous because the rule set evolved over time: some early rules were retired, merged, or replaced as the engine matured. The gaps reflect that history. Existing rule IDs are never renumbered so that baseline fingerprints and suppression annotations remain stable across upgrades.
 
 ---
 
