@@ -32,6 +32,29 @@ public class GCI0003Tests
     }
 
     [Fact]
+    public async Task ManyFilesWithSigChanges_ShouldCollapseToSingleFinding()
+    {
+        // 4 files each changing the same public method sig - should collapse to one summary.
+        static string FileBlock(string name) => $"""
+            diff --git a/src/{name}.cs b/src/{name}.cs
+            index abc..def 100644
+            --- a/src/{name}.cs
+            +++ b/src/{name}.cs
+            @@ -1,3 +1,3 @@
+             // class
+            -public void DoWork(int x)
+            +public void DoWork(int x, string label)
+             // end
+            """;
+
+        var raw = string.Join("\n", new[] { "Alpha", "Beta", "Gamma", "Delta" }.Select(FileBlock));
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        var f = Assert.Single(findings, x => x.Summary.Contains("signatures changed"));
+        Assert.Contains("4 files", f.Summary);
+    }
+    [Fact]
     public async Task ChangedMethodSignature_ShouldFlag()
     {
         var raw = """

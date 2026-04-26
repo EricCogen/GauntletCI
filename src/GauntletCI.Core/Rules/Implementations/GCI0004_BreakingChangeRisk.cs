@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using System.IO;
 using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
@@ -28,6 +29,10 @@ public class GCI0004_BreakingChangeRisk : RuleBase
 
     private void CheckRemovedPublicApi(DiffContext diff, List<Finding> findings)
     {
+        // Accumulate per-file results; cross-file dedup prevents explosion on wide diffs.
+        var fileRemovals  = new List<(DiffFile File, List<(string Name, DiffLine Line)> Items)>();
+        var fileSigChanges = new List<(DiffFile File, List<(string Name, DiffLine Removed, DiffLine Added)> Items)>();
+
         foreach (var file in diff.Files)
         {
             if (IsTestFile(file.NewPath ?? file.OldPath)) continue;
@@ -43,14 +48,9 @@ public class GCI0004_BreakingChangeRisk : RuleBase
                 .Where(l => IsPublicSignature(l.Content))
                 .ToList();
 
-            var addedSigContent = addedPublicLines
-                .Select(l => l.Content.Trim())
-                .ToHashSet();
-
-            var addedSigNames = addedPublicLines
-                .Select(l => ExtractMemberName(l.Content))
-                .Where(n => n != null)
-                .ToHashSet();
+            var addedSigContent = addedPublicLines.Select(l => l.Content.Trim()).ToHashSet();
+            var addedSigNames   = addedPublicLines.Select(l => ExtractMemberName(l.Content))
+                                                  .Where(n => n != null).ToHashSet();
 
             var removals   = new List<(string Name, DiffLine Line)>();
             var sigChanges = new List<(string Name, DiffLine RemovedLine, DiffLine AddedLine)>();
@@ -59,7 +59,6 @@ public class GCI0004_BreakingChangeRisk : RuleBase
             {
                 var name = ExtractMemberName(removed.Content);
                 if (name is null) continue;
-
                 if (addedSigContent.Contains(removed.Content.Trim())) continue;
 
                 if (!addedSigNames.Contains(name))
@@ -76,57 +75,103 @@ public class GCI0004_BreakingChangeRisk : RuleBase
                 }
             }
 
-            if (removals.Count == 1)
+            if (removals.Count > 0)   fileRemovals.Add((file, removals));
+            if (sigChanges.Count > 0) fileSigChanges.Add((file, sigChanges));
+        }
+
+        EmitRemovals(findings, fileRemovals);
+        EmitSigChanges(findings, fileSigChanges);
+    }
+
+    private void EmitRemovals(
+        List<Finding> findings,
+        List<(DiffFile File, List<(string Name, DiffLine Line)> Items)> fileRemovals)
+    {
+        if (fileRemovals.Count == 0) return;
+
+        if (fileRemovals.Count <= 3)
+        {
+            foreach (var (file, removals) in fileRemovals)
             {
-                var (name, line) = removals[0];
+                var names = FormatNames(removals.Select(r => r.Name));
                 findings.Add(CreateFinding(
                     file,
-                    summary: $"Public API removed: '{name}' in {file.NewPath}",
-                    evidence: $"Removed: {line.Content.Trim()}",
+                    summary: removals.Count == 1
+                        ? $"Public API removed: {names} in {file.NewPath}"
+                        : $"Public API removed: {removals.Count} members in {file.NewPath}",
+                    evidence: removals.Count == 1
+                        ? $"Removed: {removals[0].Line.Content.Trim()}"
+                        : $"Removed: {names} | e.g. {removals[0].Line.Content.Trim()}",
                     whyItMatters: "Removing public members is a breaking change for any consumers of this API.",
                     suggestedAction: "Mark as [Obsolete] first and schedule removal in a future major version.",
                     confidence: Confidence.High));
             }
-            else if (removals.Count > 1)
-            {
-                var names = string.Join(", ", removals.Take(3).Select(r => $"'{r.Name}'"))
-                    + (removals.Count > 3 ? $" (+{removals.Count - 3} more)" : "");
-                findings.Add(CreateFinding(
-                    file,
-                    summary: $"Public API removed: {removals.Count} members in {file.NewPath}",
-                    evidence: $"Removed: {names} | e.g. {removals[0].Line.Content.Trim()}",
-                    whyItMatters: "Removing public members is a breaking change for any consumers of this API.",
-                    suggestedAction: "Mark members as [Obsolete] first and schedule removal in a future major version.",
-                    confidence: Confidence.High));
-            }
+        }
+        else
+        {
+            int total = fileRemovals.Sum(x => x.Items.Count);
+            var fileList = FormatFileList(fileRemovals.Select(x => (x.File, x.Items.Count)));
+            findings.Add(CreateFinding(
+                summary: $"Public API removed: {total} members across {fileRemovals.Count} files",
+                evidence: $"Files: {fileList}",
+                whyItMatters: "Removing public members is a breaking change for any consumers of this API.",
+                suggestedAction: "Mark members as [Obsolete] first and schedule removal in a future major version.",
+                confidence: Confidence.High));
+        }
+    }
 
-            if (sigChanges.Count == 1)
+    private void EmitSigChanges(
+        List<Finding> findings,
+        List<(DiffFile File, List<(string Name, DiffLine Removed, DiffLine Added)> Items)> fileSigChanges)
+    {
+        if (fileSigChanges.Count == 0) return;
+
+        if (fileSigChanges.Count <= 3)
+        {
+            foreach (var (file, sigChanges) in fileSigChanges)
             {
-                var (name, removed, added) = sigChanges[0];
-                findings.Add(CreateFinding(
-                    file,
-                    summary: $"Public API signature changed: '{name}' in {file.NewPath}",
-                    evidence: $"Was: {removed.Content.Trim()} | Now: {added.Content.Trim()}",
-                    whyItMatters: "Changing a public method signature is a breaking change for callers not in this diff.",
-                    suggestedAction: "Provide a backward-compatible overload or bump the major version.",
-                    confidence: Confidence.Medium,
-                    line: added));
-            }
-            else if (sigChanges.Count > 1)
-            {
-                var names = string.Join(", ", sigChanges.Take(3).Select(c => $"'{c.Name}'"))
-                    + (sigChanges.Count > 3 ? $" (+{sigChanges.Count - 3} more)" : "");
+                var names = FormatNames(sigChanges.Select(c => c.Name));
                 var (_, firstRemoved, firstAdded) = sigChanges[0];
                 findings.Add(CreateFinding(
                     file,
-                    summary: $"Public API signature changed: {sigChanges.Count} members in {file.NewPath}",
-                    evidence: $"Changed: {names} | e.g. Was: {firstRemoved.Content.Trim()} | Now: {firstAdded.Content.Trim()}",
-                    whyItMatters: "Changing public method signatures is a breaking change for callers not in this diff.",
-                    suggestedAction: "Provide backward-compatible overloads or bump the major version.",
+                    summary: sigChanges.Count == 1
+                        ? $"Public API signature changed: {names} in {file.NewPath}"
+                        : $"Public API signature changed: {sigChanges.Count} members in {file.NewPath}",
+                    evidence: sigChanges.Count == 1
+                        ? $"Was: {firstRemoved.Content.Trim()} | Now: {firstAdded.Content.Trim()}"
+                        : $"Changed: {names} | e.g. Was: {firstRemoved.Content.Trim()} | Now: {firstAdded.Content.Trim()}",
+                    whyItMatters: "Changing a public method signature is a breaking change for callers not in this diff.",
+                    suggestedAction: "Provide a backward-compatible overload or bump the major version.",
                     confidence: Confidence.Medium,
                     line: firstAdded));
             }
         }
+        else
+        {
+            int total = fileSigChanges.Sum(x => x.Items.Count);
+            var fileList = FormatFileList(fileSigChanges.Select(x => (x.File, x.Items.Count)));
+            findings.Add(CreateFinding(
+                summary: $"Public API signature changed: {total} members across {fileSigChanges.Count} files",
+                evidence: $"Files: {fileList}",
+                whyItMatters: "Changing public method signatures is a breaking change for callers not in this diff.",
+                suggestedAction: "Provide backward-compatible overloads or bump the major version.",
+                confidence: Confidence.Medium));
+        }
+    }
+
+    private static string FormatNames(IEnumerable<string> names)
+    {
+        var list = names.ToList();
+        var preview = string.Join(", ", list.Take(3).Select(n => $"'{n}'"));
+        return preview + (list.Count > 3 ? $" (+{list.Count - 3} more)" : "");
+    }
+
+    private static string FormatFileList(IEnumerable<(DiffFile File, int Count)> files)
+    {
+        var list = files.ToList();
+        var preview = string.Join(", ", list.Take(3)
+                        .Select(x => $"{Path.GetFileName(x.File.NewPath ?? x.File.OldPath)} ({x.Count})"));
+        return preview + (list.Count > 3 ? $" (+{list.Count - 3} more files)" : "");
     }
 
     private void CheckObsoleteRemoved(DiffContext diff, List<Finding> findings)

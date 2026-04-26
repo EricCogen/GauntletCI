@@ -18,6 +18,8 @@ Versions follow [Semantic Versioning](https://semver.org/).
 - **WellKnownPatterns.IsGeneratedFile**: Added `.net{major}.{minor}.cs` filename pattern to detect .NET SDK API surface manifest files (e.g. `Azure.Search.Documents.net10.0.cs`).
 - **GCI0003 (Behavioral Change Detection)**: Rewrote `CheckMethodSignatureChanges` to emit at most 2 findings per file (one for incompatible, one for compatible changes) instead of N findings per changed method. Corpus findings: 1904 -> 548 (-71.2%).
 - **GCI0004 (Breaking Change Risk)**: Rewrote `CheckRemovedPublicApi` to emit at most 2 findings per file (one for removals, one for sig changes) instead of N findings per removed member. Corpus findings: 2452 -> 686 (-72.0%).
+- **GCI0003 (Behavioral Change Detection)**: Added cross-diff deduplication - when more than 3 files are affected, collapses per-file findings into a single cross-diff summary ("N method signatures changed across M files"). Azure SDK PR57223: 3 GCI0003 findings (was proportional to file count).
+- **GCI0004 (Breaking Change Risk)**: Added cross-diff deduplication - same >3 files threshold collapses removals and sig-change findings to single summary findings. Azure SDK PR57223: 688 findings -> 20 across all rules (-97.1%).
 - **DiffParser**: All public async methods now accept a `contextLines` parameter (default 10, up from git default of 3); wired through `GauntletConfig.DiffContextLines` so it is configurable per repo.
 - **Overall corpus noise**: 10,262 -> 3,472 findings across 588 real .NET OSS PR diffs (-66.2%).
 

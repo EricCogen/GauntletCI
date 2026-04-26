@@ -10,9 +10,56 @@ public class GCI0004Tests
     private static readonly GCI0004_BreakingChangeRisk Rule = new();
 
     [Fact]
+    public async Task ManyFilesWithRemovals_ShouldCollapseToSingleFinding()
+    {
+        // 4 files each removing a public method - should collapse to one cross-file summary.
+        static string FileBlock(string name) => $"""
+            diff --git a/src/{name}.cs b/src/{name}.cs
+            index abc..def 100644
+            --- a/src/{name}.cs
+            +++ b/src/{name}.cs
+            @@ -1,3 +1,2 @@
+             // class
+            -public void Execute()
+             // end
+            """;
+
+        var raw = string.Join("\n", new[] { "Alpha", "Beta", "Gamma", "Delta" }.Select(FileBlock));
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        var f = Assert.Single(findings, x => x.Summary.Contains("Public API removed"));
+        Assert.Contains("4 files", f.Summary);
+        Assert.Contains("Files:", f.Evidence);
+    }
+
+    [Fact]
+    public async Task ManyFilesWithSigChanges_ShouldCollapseToSingleFinding()
+    {
+        // 4 files each changing the same public method sig - should collapse to one summary.
+        static string FileBlock(string name) => $"""
+            diff --git a/src/{name}.cs b/src/{name}.cs
+            index abc..def 100644
+            --- a/src/{name}.cs
+            +++ b/src/{name}.cs
+            @@ -1,3 +1,3 @@
+             // class
+            -public void Process(string s)
+            +public void Process(string s, int timeout)
+             // end
+            """;
+
+        var raw = string.Join("\n", new[] { "Alpha", "Beta", "Gamma", "Delta" }.Select(FileBlock));
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        var f = Assert.Single(findings, x => x.Summary.Contains("signature changed"));
+        Assert.Contains("4 files", f.Summary);
+    }
+    [Fact]
     public async Task RemovedPublicMethod_ShouldFlagHighConfidence()
     {
-        // Remove public method with no matching add
+
         var raw = """
             diff --git a/src/Calculator.cs b/src/Calculator.cs
             index abc..def 100644

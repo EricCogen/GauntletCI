@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using System.IO;
 using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
@@ -62,6 +63,10 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
 
     private void CheckMethodSignatureChanges(DiffContext diff, List<Finding> findings)
     {
+        // Accumulate per-file results; cross-file dedup prevents explosion on wide diffs.
+        var fileIncompatible = new List<(DiffFile File, List<(string Name, DiffLine Removed, DiffLine Added)> Items)>();
+        var fileCompatible   = new List<(DiffFile File, List<(string Name, DiffLine Removed, DiffLine Added)> Items)>();
+
         foreach (var file in diff.Files)
         {
             if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
@@ -94,60 +99,80 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
                 }
             }
 
-            if (incompatible.Count == 1)
-            {
-                var (name, removed, added) = incompatible[0];
-                findings.Add(CreateFinding(
-                    file,
-                    summary: $"Method signature changed: '{name}' in {file.NewPath}",
-                    evidence: $"Was: {removed.Content.Trim()} | Now: {added.Content.Trim()}",
-                    whyItMatters: "Signature changes can break callers that haven't been updated.",
-                    suggestedAction: "Verify all callers are updated and consider adding an overload for backward compatibility.",
-                    confidence: Confidence.Medium,
-                    line: added));
-            }
-            else if (incompatible.Count > 1)
-            {
-                var names = string.Join(", ", incompatible.Take(3).Select(c => $"'{c.Name}'"))
-                    + (incompatible.Count > 3 ? $" (+{incompatible.Count - 3} more)" : "");
-                var (_, firstRemoved, firstAdded) = incompatible[0];
-                findings.Add(CreateFinding(
-                    file,
-                    summary: $"{incompatible.Count} method signatures changed (incompatible) in {file.NewPath}",
-                    evidence: $"Changed: {names} | e.g. Was: {firstRemoved.Content.Trim()} | Now: {firstAdded.Content.Trim()}",
-                    whyItMatters: "Signature changes can break callers that haven't been updated.",
-                    suggestedAction: "Verify all callers are updated and consider adding overloads for backward compatibility.",
-                    confidence: Confidence.Medium,
-                    line: firstAdded));
-            }
+            if (incompatible.Count > 0) fileIncompatible.Add((file, incompatible));
+            if (compatible.Count > 0)   fileCompatible.Add((file, compatible));
+        }
 
-            if (compatible.Count == 1)
+        EmitSigFindings(findings, fileIncompatible,
+            single1Summary:  (name, file) => $"Method signature changed: '{name}' in {file.NewPath}",
+            singleNSummary:  (count, file) => $"{count} method signatures changed (incompatible) in {file.NewPath}",
+            crossSummary:    (total, fcount) => $"{total} method signatures changed (incompatible) across {fcount} files",
+            whyItMatters:    "Signature changes can break callers that haven't been updated.",
+            suggestedAction: "Verify all callers are updated and consider adding an overload for backward compatibility.",
+            confidence:      Confidence.Medium);
+
+        EmitSigFindings(findings, fileCompatible,
+            single1Summary:  (name, file) => $"Backward-compatible signature extension: '{name}' in {file.NewPath}",
+            singleNSummary:  (count, file) => $"{count} backward-compatible signature extensions in {file.NewPath}",
+            crossSummary:    (total, fcount) => $"{total} backward-compatible signature extensions across {fcount} files",
+            whyItMatters:    "New parameters have default values (backward-compatible), but callers using positional arguments may need review.",
+            suggestedAction: "Confirm all existing callers still compile and behave correctly with the new defaults.",
+            confidence:      Confidence.Low);
+    }
+
+    private void EmitSigFindings(
+        List<Finding> findings,
+        List<(DiffFile File, List<(string Name, DiffLine Removed, DiffLine Added)> Items)> perFile,
+        Func<string, DiffFile, string> single1Summary,
+        Func<int, DiffFile, string>    singleNSummary,
+        Func<int, int, string>         crossSummary,
+        string whyItMatters,
+        string suggestedAction,
+        Confidence confidence)
+    {
+        if (perFile.Count == 0) return;
+
+        if (perFile.Count <= 3)
+        {
+            foreach (var (file, items) in perFile)
             {
-                var (name, removed, added) = compatible[0];
-                findings.Add(CreateFinding(
-                    file,
-                    summary: $"Backward-compatible signature extension: '{name}' in {file.NewPath}",
-                    evidence: $"Was: {removed.Content.Trim()} | Now: {added.Content.Trim()}",
-                    whyItMatters: "New parameters have default values (backward-compatible), but callers using positional arguments may need review.",
-                    suggestedAction: "Confirm all existing callers still compile and behave correctly with the new defaults.",
-                    confidence: Confidence.Low,
-                    line: added));
-            }
-            else if (compatible.Count > 1)
-            {
-                var names = string.Join(", ", compatible.Take(3).Select(c => $"'{c.Name}'"))
-                    + (compatible.Count > 3 ? $" (+{compatible.Count - 3} more)" : "");
-                var (_, firstRemoved, firstAdded) = compatible[0];
-                findings.Add(CreateFinding(
-                    file,
-                    summary: $"{compatible.Count} backward-compatible signature extensions in {file.NewPath}",
-                    evidence: $"Extended: {names} | e.g. Was: {firstRemoved.Content.Trim()} | Now: {firstAdded.Content.Trim()}",
-                    whyItMatters: "New parameters have default values (backward-compatible), but callers using positional arguments may need review.",
-                    suggestedAction: "Confirm all existing callers still compile and behave correctly with the new defaults.",
-                    confidence: Confidence.Low,
-                    line: firstAdded));
+                var names = FormatNames(items.Select(c => c.Name));
+                var (_, firstRemoved, firstAdded) = items[0];
+                var summary = items.Count == 1
+                    ? single1Summary(items[0].Name, file)
+                    : singleNSummary(items.Count, file);
+                var evidence = items.Count == 1
+                    ? $"Was: {firstRemoved.Content.Trim()} | Now: {firstAdded.Content.Trim()}"
+                    : $"Changed: {names} | e.g. Was: {firstRemoved.Content.Trim()} | Now: {firstAdded.Content.Trim()}";
+                findings.Add(CreateFinding(file, summary, evidence, whyItMatters, suggestedAction, confidence, firstAdded));
             }
         }
+        else
+        {
+            int total = perFile.Sum(x => x.Items.Count);
+            var fileList = FormatFileList(perFile.Select(x => (x.File, x.Items.Count)));
+            findings.Add(CreateFinding(
+                summary:         crossSummary(total, perFile.Count),
+                evidence:        $"Files: {fileList}",
+                whyItMatters:    whyItMatters,
+                suggestedAction: suggestedAction,
+                confidence:      confidence));
+        }
+    }
+
+    private static string FormatNames(IEnumerable<string> names)
+    {
+        var list = names.ToList();
+        var preview = string.Join(", ", list.Take(3).Select(n => $"'{n}'"));
+        return preview + (list.Count > 3 ? $" (+{list.Count - 3} more)" : "");
+    }
+
+    private static string FormatFileList(IEnumerable<(DiffFile File, int Count)> files)
+    {
+        var list = files.ToList();
+        var preview = string.Join(", ", list.Take(3)
+                        .Select(x => $"{Path.GetFileName(x.File.NewPath ?? x.File.OldPath)} ({x.Count})"));
+        return preview + (list.Count > 3 ? $" (+{list.Count - 3} more files)" : "");
     }
 
     /// <summary>
