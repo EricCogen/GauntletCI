@@ -77,19 +77,19 @@ public static class BaselineCommand
 
             try
             {
+                var config       = ConfigLoader.Load(repo.FullName);
                 var diff = diffFile is not null
                     ? DiffParser.FromFile(diffFile.FullName)
                     : commit is not null
-                        ? await DiffParser.FromGitAsync(repo.FullName, commit, ct)
+                        ? await DiffParser.FromGitAsync(repo.FullName, commit, config.DiffContextLines, ct)
                         : staged
-                            ? await DiffParser.FromStagedAsync(repo.FullName, ct)
+                            ? await DiffParser.FromStagedAsync(repo.FullName, config.DiffContextLines, ct)
                             : unstaged
-                                ? await DiffParser.FromUnstagedAsync(repo.FullName, ct)
+                                ? await DiffParser.FromUnstagedAsync(repo.FullName, config.DiffContextLines, ct)
                                 : allChanges
-                                    ? await DiffParser.FromAllChangesAsync(repo.FullName, ct)
+                                    ? await DiffParser.FromAllChangesAsync(repo.FullName, config.DiffContextLines, ct)
                                     : DiffParser.Parse(await Console.In.ReadToEndAsync(ct));
 
-                var config       = ConfigLoader.Load(repo.FullName);
                 var ignoreList   = IgnoreList.Load(repo.FullName);
                 var orchestrator = RuleOrchestrator.CreateDefault(config, repoPath: repo.FullName);
                 var staticAnalysis = await StaticAnalysisRunner.RunAsync(diff, repo.FullName, ct);

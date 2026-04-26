@@ -48,6 +48,13 @@ public class GauntletConfig
 
     /// <summary>Ticket provider integration settings (Jira, Linear, GitHub Issues).</summary>
     public TicketProviderConfig TicketProvider { get; set; } = new();
+
+    /// <summary>
+    /// Number of context lines passed to git diff (-U flag).
+    /// More context lets rules inspect surrounding code for better accuracy.
+    /// Default: 10. Git default is 3.
+    /// </summary>
+    public int DiffContextLines { get; set; } = 10;
 }
 
 /// <summary>Per-rule configuration overrides.</summary>

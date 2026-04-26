@@ -160,33 +160,33 @@ public static class DiffParser
     /// Shells out to git to get the diff for a commit or range.
     /// </summary>
     public static async Task<DiffContext> FromGitAsync(
-        string repoPath, string commitRef, CancellationToken ct = default)
+        string repoPath, string commitRef, int contextLines = 10, CancellationToken ct = default)
     {
-        var (diff, message) = await RunGitAsync(repoPath, commitRef, ct);
+        var (diff, message) = await RunGitAsync(repoPath, commitRef, contextLines, ct);
         return Parse(diff, commitRef, message);
     }
 
     /// <summary>Analyzes only staged changes (git diff --cached).</summary>
     public static async Task<DiffContext> FromStagedAsync(
-        string repoPath, CancellationToken ct = default)
+        string repoPath, int contextLines = 10, CancellationToken ct = default)
     {
-        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff --cached", ct);
+        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff --cached -U{contextLines}", ct);
         return Parse(diff, commitSha: "staged");
     }
 
     /// <summary>Analyzes only unstaged changes (git diff).</summary>
     public static async Task<DiffContext> FromUnstagedAsync(
-        string repoPath, CancellationToken ct = default)
+        string repoPath, int contextLines = 10, CancellationToken ct = default)
     {
-        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff", ct);
+        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff -U{contextLines}", ct);
         return Parse(diff, commitSha: "unstaged");
     }
 
     /// <summary>Analyzes all local changes: staged + unstaged combined (git diff HEAD).</summary>
     public static async Task<DiffContext> FromAllChangesAsync(
-        string repoPath, CancellationToken ct = default)
+        string repoPath, int contextLines = 10, CancellationToken ct = default)
     {
-        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff HEAD", ct);
+        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff HEAD -U{contextLines}", ct);
         return Parse(diff, commitSha: "all-changes");
     }
 
@@ -208,7 +208,7 @@ public static class DiffParser
         };
 
     private static async Task<(string diff, string? message)> RunGitAsync(
-        string repoPath, string commitRef, CancellationToken ct)
+        string repoPath, string commitRef, int contextLines, CancellationToken ct)
     {
         // Get commit message
         string? message = null;
@@ -221,7 +221,7 @@ public static class DiffParser
 
         // Get diff — for a single commit use commit^..commit; for a range pass as-is
         var diffArg = commitRef.Contains("..") ? commitRef : $"{commitRef}^..{commitRef}";
-        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff {diffArg}", ct);
+        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff -U{contextLines} {diffArg}", ct);
         return (diff, message);
     }
 
