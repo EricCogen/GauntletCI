@@ -10,7 +10,8 @@ Versions follow [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Changed
-- **GCI0003 (Behavioral Change Detection)**: Raised logic-removal threshold from 3 to 5 removed lines before flagging. Reduces FPs on small incidental removals. Corpus precision: 59.7% -> 60.7%.
+- **GCI0016 (Concurrency and State Risk)**: Refactored from `AllAddedLines` iteration to per-file iteration with path context. Auto-generated files (`/Generated/`, `.g.cs`, `.Designer.cs`, etc.) are now skipped entirely - noise from generated API clients eliminated. `Thread.Sleep` check now skips test files (timing control in tests is legitimate). Corpus precision: 57.4% -> 66.1%.
+- **GCI0003 (Behavioral Change Detection)**:Raised logic-removal threshold from 3 to 5 removed lines before flagging. Reduces FPs on small incidental removals. Corpus precision: 59.7% -> 60.7%.
 - **GCI0004 (Breaking Change Risk)**: Replaced local `IsTestFile` with `WellKnownPatterns.IsTestFile` (covers benchmark/example/sample/Mock/Fake paths missed by the old check). Added `StripPropertyInitializer` to skip property default-value-only changes. Corpus precision: 59.9% -> 63.8%.
 - **WellKnownPatterns.IsTestFile**: Added detection for benchmark/example/sample directory segments, `Mock`/`Fake` segments, and `Benchmark`/`Benchmarks` file suffixes.
 - **WellKnownPatterns.IsBackwardCompatibleExtension**: Now normalizes modifier keywords (`virtual`, `override`, `sealed`, `abstract`, `new`) before comparing signatures so modifier-only additions are treated as backward-compatible rather than breaking changes.
