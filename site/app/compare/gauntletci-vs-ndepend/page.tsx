@@ -118,6 +118,31 @@ export default function VsNDependPage() {
 
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16 space-y-20">
 
+          {/* At a glance */}
+          <div className="overflow-x-auto rounded-xl border border-border">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-card/80">
+                  <th className="text-left px-5 py-3 font-semibold text-muted-foreground w-1/4">Tool</th>
+                  <th className="text-left px-5 py-3 font-semibold text-muted-foreground">What it checks</th>
+                  <th className="text-left px-5 py-3 font-semibold text-muted-foreground">What it misses</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-border bg-card/20">
+                  <td className="px-5 py-3 text-foreground/80 font-semibold">NDepend</td>
+                  <td className="px-5 py-3 text-muted-foreground">Architecture rules, code quality metrics, technical debt tracking</td>
+                  <td className="px-5 py-3 text-amber-400/80">Behavioral change risk, diff-scoped pre-commit detection</td>
+                </tr>
+                <tr className="bg-cyan-500/5">
+                  <td className="px-5 py-3 text-cyan-400 font-semibold">GauntletCI</td>
+                  <td className="px-5 py-3 text-muted-foreground">Change safety, Behavioral Change Risk in the diff</td>
+                  <td className="px-5 py-3 text-muted-foreground/40">--</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
           {/* What NDepend does best */}
           <section>
             <h2 className="text-2xl font-semibold mb-4">What NDepend does best</h2>
