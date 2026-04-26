@@ -35,7 +35,7 @@ public class GCI0004_BreakingChangeRisk : RuleBase
 
         foreach (var file in diff.Files)
         {
-            if (IsTestFile(file.NewPath ?? file.OldPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath ?? file.OldPath ?? "")) continue;
             if (WellKnownPatterns.IsGeneratedFile(file.NewPath ?? file.OldPath ?? "")) continue;
 
             var removedPublic = file.RemovedLines
@@ -70,7 +70,9 @@ public class GCI0004_BreakingChangeRisk : RuleBase
                     var addedLine = addedPublicLines
                         .FirstOrDefault(l => ExtractMemberName(l.Content) == name
                                           && l.Content.Trim() != removed.Content.Trim());
-                    if (addedLine != null && !WellKnownPatterns.IsBackwardCompatibleExtension(removed.Content, addedLine.Content))
+                    if (addedLine != null
+                        && StripPropertyInitializer(removed.Content) != StripPropertyInitializer(addedLine.Content)
+                        && !WellKnownPatterns.IsBackwardCompatibleExtension(removed.Content, addedLine.Content))
                         sigChanges.Add((name, removed, addedLine));
                 }
             }
@@ -178,7 +180,7 @@ public class GCI0004_BreakingChangeRisk : RuleBase
     {
         foreach (var file in diff.Files)
         {
-            if (IsTestFile(file.NewPath ?? file.OldPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath ?? file.OldPath ?? "")) continue;
             if (WellKnownPatterns.IsGeneratedFile(file.NewPath ?? file.OldPath ?? "")) continue;
 
             var removedObsolete = file.RemovedLines
@@ -198,20 +200,22 @@ public class GCI0004_BreakingChangeRisk : RuleBase
         }
     }
 
-    private static bool IsTestFile(string? path)
+    /// <summary>
+    /// Strips a property initializer (e.g. <c>= 81920</c>) from an auto-property declaration
+    /// so that a default-value-only change does not appear as a signature change.
+    /// </summary>
+    private static string StripPropertyInitializer(string sig)
     {
-        if (path is null) return false;
-        var p = path.Replace('\\', '/');
-        return p.Contains("/test/", StringComparison.OrdinalIgnoreCase)
-            || p.Contains("/tests/", StringComparison.OrdinalIgnoreCase)
-            || p.Contains(".Tests/", StringComparison.OrdinalIgnoreCase)
-            || p.Contains(".Test/", StringComparison.OrdinalIgnoreCase)
-            || p.Contains("/Mock", StringComparison.OrdinalIgnoreCase)
-            || p.Contains("/Fake", StringComparison.OrdinalIgnoreCase)
-            || p.EndsWith("Tests.cs", StringComparison.OrdinalIgnoreCase)
-            || p.EndsWith("Test.cs", StringComparison.OrdinalIgnoreCase)
-            || p.EndsWith("Spec.cs", StringComparison.OrdinalIgnoreCase)
-            || p.EndsWith("Specs.cs", StringComparison.OrdinalIgnoreCase);
+        var t = sig.Trim().TrimEnd(';');
+        // Look for the closing brace of the property accessors, then strip any trailing "= ..."
+        var closeBrace = t.LastIndexOf('}');
+        if (closeBrace >= 0)
+        {
+            var rest = t[(closeBrace + 1)..].Trim();
+            if (rest.StartsWith('='))
+                return t[..(closeBrace + 1)].TrimEnd();
+        }
+        return t;
     }
 
     private static bool IsPublicSignature(string line)

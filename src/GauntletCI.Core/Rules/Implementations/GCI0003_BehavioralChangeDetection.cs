@@ -40,7 +40,7 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
                      && LogicKeywords.Any(k => l.Content.Contains(k, StringComparison.Ordinal)))
             .ToList();
 
-        if (removedLogicLines.Count < 3) return;
+        if (removedLogicLines.Count < 5) return;
 
         bool hasTestChanges = diff.Files.Any(f =>
             f.NewPath.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
