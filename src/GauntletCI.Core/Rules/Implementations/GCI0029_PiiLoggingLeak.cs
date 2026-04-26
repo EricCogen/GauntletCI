@@ -43,6 +43,8 @@ public class GCI0029_PiiLoggingLeak : RuleBase
 
         foreach (var file in diff.Files)
         {
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+
             foreach (var line in file.AddedLines)
             {
                 var content = line.Content;

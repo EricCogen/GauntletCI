@@ -120,6 +120,14 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
             if (!content.Contains("Event") && !content.Contains("Handler") &&
                 !content.Contains("Listener") && !content.Contains("Callback")) continue;
 
+            // Generic typed event channels (e.g. MessageBus<T>.Subscribers +=) are intentional
+            // single-registration patterns at startup — deduplication concern does not apply.
+            {
+                int plusEq = content.IndexOf(" += ", StringComparison.Ordinal);
+                int gtIdx  = content.IndexOf('>', StringComparison.Ordinal);
+                if (gtIdx > 0 && gtIdx < plusEq) continue;
+            }
+
             // Exempt += inside a static constructor (runs exactly once — inherently idempotent)
             if (IsInsideStaticConstructor(allLines, i)) continue;
 

@@ -997,12 +997,18 @@ public static class CorpusCommand
                         return;
                     }
 
-                    var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, metadata.Tier, fixtureId);
-                    var diffPath    = Path.Combine(fixturePath, "diff.patch");
-
-                    if (!File.Exists(diffPath))
+                    string? fixturePath = null;
+                    foreach (var t in new[] { FixtureTier.Gold, FixtureTier.Silver, FixtureTier.Discovery })
                     {
-                        Console.Error.WriteLine($"[corpus] diff.patch not found at {diffPath}");
+                        var candidate = FixtureIdHelper.GetFixturePath(fixtures, t, fixtureId);
+                        if (Directory.Exists(candidate)) { fixturePath = candidate; break; }
+                    }
+
+                    var diffPath = fixturePath is not null ? Path.Combine(fixturePath, "diff.patch") : null;
+
+                    if (fixturePath is null || !File.Exists(diffPath!))
+                    {
+                        Console.Error.WriteLine($"[corpus] diff.patch not found for fixture '{fixtureId}'");
                         ctx.ExitCode = 1;
                         return;
                     }
@@ -1086,10 +1092,19 @@ public static class CorpusCommand
 
                 foreach (var metadata in allFixtures)
                 {
-                    var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, metadata.Tier, metadata.FixtureId);
-                    var diffPath    = Path.Combine(fixturePath, "diff.patch");
+                    // Fixtures may reside in a different tier folder than their logical tier
+                    // (e.g., promoted from discovery to silver but not physically moved).
+                    // Search all tier folders so the physical location is always found.
+                    string? fixturePath = null;
+                    foreach (var t in new[] { FixtureTier.Gold, FixtureTier.Silver, FixtureTier.Discovery })
+                    {
+                        var candidate = FixtureIdHelper.GetFixturePath(fixtures, t, metadata.FixtureId);
+                        if (Directory.Exists(candidate)) { fixturePath = candidate; break; }
+                    }
 
-                    if (!File.Exists(diffPath))
+                    var diffPath = fixturePath is not null ? Path.Combine(fixturePath, "diff.patch") : null;
+
+                    if (fixturePath is null || !File.Exists(diffPath!))
                     {
                         Console.WriteLine($"[corpus] SKIP {metadata.FixtureId} — diff.patch not found");
                         failed++;
@@ -1273,16 +1288,22 @@ public static class CorpusCommand
                         return;
                     }
 
-                    var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, metadata.Tier, fixtureId);
-                    var diffPath    = Path.Combine(fixturePath, "diff.patch");
-                    if (!File.Exists(diffPath))
+                    string? fixturePath = null;
+                    foreach (var t in new[] { FixtureTier.Gold, FixtureTier.Silver, FixtureTier.Discovery })
                     {
-                        Console.Error.WriteLine($"[corpus] diff.patch not found at {diffPath}");
+                        var candidate = FixtureIdHelper.GetFixturePath(fixtures, t, fixtureId);
+                        if (Directory.Exists(candidate)) { fixturePath = candidate; break; }
+                    }
+
+                    var diffPath = fixturePath is not null ? Path.Combine(fixturePath, "diff.patch") : null;
+                    if (fixturePath is null || !File.Exists(diffPath!))
+                    {
+                        Console.Error.WriteLine($"[corpus] diff.patch not found for fixture '{fixtureId}'");
                         ctx.ExitCode = 1;
                         return;
                     }
 
-                    var diffText = await File.ReadAllTextAsync(diffPath, ct);
+                    var diffText = await File.ReadAllTextAsync(diffPath!, ct);
                     var engine   = new SilverLabelEngine(store);
 
                     var labelsWritten = await engine.ApplyToFixtureAsync(fixtureId, diffText, overwrite, ct);
@@ -1428,11 +1449,17 @@ public static class CorpusCommand
 
                 async ValueTask ProcessFixtureAsync(FixtureMetadata metadata, CancellationToken token)
                 {
-                    var fixturePath = FixtureIdHelper.GetFixturePath(fixtures, metadata.Tier, metadata.FixtureId);
-                    var diffPath    = Path.Combine(fixturePath, "diff.patch");
-                    var output      = new List<(bool IsError, string Line)>();
+                    string? fixturePath = null;
+                    foreach (var t in new[] { FixtureTier.Gold, FixtureTier.Silver, FixtureTier.Discovery })
+                    {
+                        var candidate = FixtureIdHelper.GetFixturePath(fixtures, t, metadata.FixtureId);
+                        if (Directory.Exists(candidate)) { fixturePath = candidate; break; }
+                    }
 
-                    if (!File.Exists(diffPath))
+                    var diffPath = fixturePath is not null ? Path.Combine(fixturePath, "diff.patch") : null;
+                    var output   = new List<(bool IsError, string Line)>();
+
+                    if (fixturePath is null || !File.Exists(diffPath!))
                     {
                         Interlocked.Increment(ref skipped);
                         output.Add((false, $"[corpus] SKIP {metadata.FixtureId,-40} — diff.patch not found"));
@@ -1442,7 +1469,7 @@ public static class CorpusCommand
 
                     try
                     {
-                        var diffText      = await File.ReadAllTextAsync(diffPath, token);
+                        var diffText      = await File.ReadAllTextAsync(diffPath!, token);
                         var labelsWritten = await engine.ApplyToFixtureAsync(metadata.FixtureId, diffText, overwrite, token, line => output.Add((false, line)));
 
                         Interlocked.Add(ref totalLabels, labelsWritten);

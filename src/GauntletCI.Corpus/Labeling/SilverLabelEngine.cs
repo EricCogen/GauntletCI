@@ -132,11 +132,12 @@ public sealed class SilverLabelEngine
     public Task<IReadOnlyList<ExpectedFinding>> InferLabelsAsync(
         string fixtureId, string diffText, CancellationToken ct = default)
     {
-        var addedLines = ExtractAddedLines(diffText);
-        var pathLines  = ExtractPathLines(diffText);
-        var labels     = new List<ExpectedFinding>();
+        var addedLines   = ExtractAddedLines(diffText);
+        var removedLines = ExtractRemovedLines(diffText);
+        var pathLines    = ExtractPathLines(diffText);
+        var labels       = new List<ExpectedFinding>();
 
-        ApplyDiffHeuristics(addedLines, pathLines, labels);
+        ApplyDiffHeuristics(addedLines, removedLines, pathLines, labels);
 
         return Task.FromResult<IReadOnlyList<ExpectedFinding>>(labels);
     }
@@ -316,7 +317,7 @@ public sealed class SilverLabelEngine
 
     // -- Heuristic application -------------------------------------------------
 
-    private static void ApplyDiffHeuristics(List<string> addedLines, List<string> pathLines, List<ExpectedFinding> labels)
+    private static void ApplyDiffHeuristics(List<string> addedLines, List<string> removedLines, List<string> pathLines, List<ExpectedFinding> labels)
     {
         // GCI0016 -- Sync-over-async (.Result / .Wait())
         if (addedLines.Any(l => l.Contains(".Result", StringComparison.Ordinal)
@@ -337,12 +338,24 @@ public sealed class SilverLabelEngine
         if (HasEmptyCatch(addedLines))
             labels.Add(MakeLabel("GCI0003", "Diff contains empty or comment-only catch block on added lines", 0.65));
 
-        // GCI0021 -- Migration file touched
+        // GCI0021 -- Migration file touched OR serialization attribute/enum member removed
         if (pathLines.Any(l =>
                 l.Contains("Migration",  StringComparison.OrdinalIgnoreCase) ||
-                l.Contains("_migration", StringComparison.OrdinalIgnoreCase)))
+                l.Contains("_migration", StringComparison.OrdinalIgnoreCase)) ||
+            removedLines.Any(l =>
+            {
+                var t = l.TrimStart();
+                return t.StartsWith("[JsonProperty",   StringComparison.OrdinalIgnoreCase) ||
+                       t.StartsWith("[JsonPropertyName", StringComparison.OrdinalIgnoreCase) ||
+                       t.StartsWith("[DataMember",     StringComparison.OrdinalIgnoreCase) ||
+                       t.StartsWith("[Column(",        StringComparison.OrdinalIgnoreCase) ||
+                       t.StartsWith("[BsonElement",    StringComparison.OrdinalIgnoreCase) ||
+                       t.StartsWith("[Key]",           StringComparison.OrdinalIgnoreCase) ||
+                       t.StartsWith("[ForeignKey",     StringComparison.OrdinalIgnoreCase) ||
+                       t.StartsWith("[Required]",      StringComparison.OrdinalIgnoreCase);
+            }))
         {
-            labels.Add(MakeLabel("GCI0021", "Diff touches a migration file (path contains 'Migration' or '_migration')", 0.6));
+            labels.Add(MakeLabel("GCI0021", "Diff removes a serialization attribute or touches a migration file", 0.55));
         }
 
         // GCI0004 -- Breaking change signals (public API removed/renamed)
@@ -558,15 +571,13 @@ public sealed class SilverLabelEngine
         }
 
         // GCI0047 -- Contradictory CRUD verb rename (e.g. GetFoo renamed to DeleteFoo)
+        // Uses actual removed lines from the diff to detect CRUD verbs in both old and new code.
         {
-            var crudAdded   = addedLines  .SelectMany(l => Regex.Matches(l, @"\b(Get|Set|Add|Remove|Delete|Create|Update|Find|Fetch|Load|Save|Insert)\w*\s*\(").Cast<Match>()).Select(m => m.Value).ToHashSet(StringComparer.OrdinalIgnoreCase);
-            var crudRemoved = pathLines   // pathLines won't have removed-line content; use diff removed lines approximation
-                .Where(l => l.StartsWith("---"))
-                .SelectMany(l => Regex.Matches(l, @"\b(Get|Set|Add|Remove|Delete|Create|Update|Find|Fetch|Load|Save|Insert)\w*\s*\(").Cast<Match>())
-                .Select(m => m.Value)
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
-            if (crudAdded.Count > 0 && crudRemoved.Count > 0)
-                labels.Add(MakeLabel("GCI0047", "Diff contains CRUD verb changes that may represent a naming contract contradiction", 0.40));
+            var crudPattern = @"\b(Get|Set|Add|Remove|Delete|Create|Update|Find|Fetch|Load|Save|Insert)\w*\s*\(";
+            var hasCrudAdded   = addedLines.Any(l => Regex.IsMatch(l, crudPattern));
+            var hasCrudRemoved = removedLines.Any(l => Regex.IsMatch(l, crudPattern));
+            if (hasCrudAdded && hasCrudRemoved)
+                labels.Add(MakeLabel("GCI0047", "Diff renames CRUD-verb methods — potential naming contract contradiction", 0.45));
         }
 
         // GCI0049 -- Float/double equality comparison
@@ -684,6 +695,14 @@ public sealed class SilverLabelEngine
     {
         return diffText.Split('\n')
             .Where(l => l.StartsWith('+') && !l.StartsWith("+++"))
+            .Select(l => l[1..])
+            .ToList();
+    }
+
+    private static List<string> ExtractRemovedLines(string diffText)
+    {
+        return diffText.Split('\n')
+            .Where(l => l.StartsWith('-') && !l.StartsWith("---"))
             .Select(l => l[1..])
             .ToList();
     }

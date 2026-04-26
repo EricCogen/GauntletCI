@@ -1,0 +1,650 @@
+diff --git a/src/StackExchange.Redis/ChannelMessageQueue.cs b/src/StackExchange.Redis/ChannelMessageQueue.cs
+index e58fb393b..9f962e52a 100644
+--- a/src/StackExchange.Redis/ChannelMessageQueue.cs
++++ b/src/StackExchange.Redis/ChannelMessageQueue.cs
+@@ -1,385 +1,353 @@
+ ∩╗┐using System;
++using System.Buffers.Text;
+ using System.Collections.Generic;
+ using System.Threading;
+ using System.Threading.Channels;
+ using System.Threading.Tasks;
+ #if NETCOREAPP3_1
++using System.Diagnostics;
+ using System.Reflection;
+ #endif
+ 
+-namespace StackExchange.Redis
++namespace StackExchange.Redis;
++
++/// <summary>
++/// Represents a message queue of ordered pub/sub notifications.
++/// </summary>
++/// <remarks>
++/// To create a ChannelMessageQueue, use <see cref="ISubscriber.Subscribe(RedisChannel, CommandFlags)"/>
++/// or <see cref="ISubscriber.SubscribeAsync(RedisChannel, CommandFlags)"/>.
++/// </remarks>
++public sealed class ChannelMessageQueue : IAsyncEnumerable<ChannelMessage>
+ {
++    private readonly Channel<ChannelMessage> _queue;
++
+     /// <summary>
+-    /// Represents a message that is broadcast via publish/subscribe.
++    /// The Channel that was subscribed for this queue.
+     /// </summary>
+-    public readonly struct ChannelMessage
+-    {
+-        // this is *smaller* than storing a RedisChannel for the subscribed channel
+-        private readonly ChannelMessageQueue _queue;
++    public RedisChannel Channel { get; }
+ 
+-        /// <summary>
+-        /// The Channel:Message string representation.
+-        /// </summary>
+-        public override string ToString() => ((string?)Channel) + ":" + ((string?)Message);
++    private RedisSubscriber? _parent;
+ 
+-        /// <inheritdoc/>
+-        public override int GetHashCode() => Channel.GetHashCode() ^ Message.GetHashCode();
+-
+-        /// <inheritdoc/>
+-        public override bool Equals(object? obj) => obj is ChannelMessage cm
+-            && cm.Channel == Channel && cm.Message == Message;
++    /// <summary>
++    /// The string representation of this channel.
++    /// </summary>
++    public override string? ToString() => (string?)Channel;
+ 
+-        internal ChannelMessage(ChannelMessageQueue queue, in RedisChannel channel, in RedisValue value)
+-        {
+-            _queue = queue;
+-            Channel = channel;
+-            Message = value;
+-        }
++    /// <summary>
++    /// An awaitable task the indicates completion of the queue (including drain of data).
++    /// </summary>
++    public Task Completion => _queue.Reader.Completion;
+ 
+-        /// <summary>
+-        /// The channel that the subscription was created from.
+-        /// </summary>
+-        public RedisChannel SubscriptionChannel => _queue.Channel;
+-
+-        /// <summary>
+-        /// The channel that the message was broadcast to.
+-        /// </summary>
+-        public RedisChannel Channel { get; }
+-
+-        /// <summary>
+-        /// The value that was broadcast.
+-        /// </summary>
+-        public RedisValue Message { get; }
+-
+-        /// <summary>
+-        /// Checks if 2 messages are .Equal().
+-        /// </summary>
+-        public static bool operator ==(ChannelMessage left, ChannelMessage right) => left.Equals(right);
+-
+-        /// <summary>
+-        /// Checks if 2 messages are not .Equal().
+-        /// </summary>
+-        public static bool operator !=(ChannelMessage left, ChannelMessage right) => !left.Equals(right);
++    internal ChannelMessageQueue(in RedisChannel redisChannel, RedisSubscriber parent)
++    {
++        Channel = redisChannel;
++        _parent = parent;
++        _queue = System.Threading.Channels.Channel.CreateUnbounded<ChannelMessage>(s_ChannelOptions);
+     }
+ 
+-    /// <summary>
+-    /// Represents a message queue of ordered pub/sub notifications.
+-    /// </summary>
+-    /// <remarks>
+-    /// To create a ChannelMessageQueue, use <see cref="ISubscriber.Subscribe(RedisChannel, CommandFlags)"/>
+-    /// or <see cref="ISubscriber.SubscribeAsync(RedisChannel, CommandFlags)"/>.
+-    /// </remarks>
+-    public sealed class ChannelMessageQueue : IAsyncEnumerable<ChannelMessage>
++    private static readonly UnboundedChannelOptions s_ChannelOptions = new UnboundedChannelOptions
+     {
+-        private readonly Channel<ChannelMessage> _queue;
++        SingleWriter = true, SingleReader = false, AllowSynchronousContinuations = false,
++    };
+ 
+-        /// <summary>
+-        /// The Channel that was subscribed for this queue.
+-        /// </summary>
+-        public RedisChannel Channel { get; }
+-        private RedisSubscriber? _parent;
++    private void Write(in RedisChannel channel, in RedisValue value)
++    {
++        var writer = _queue.Writer;
++        writer.TryWrite(new ChannelMessage(this, channel, value));
++    }
+ 
+-        /// <summary>
+-        /// The string representation of this channel.
+-        /// </summary>
+-        public override string? ToString() => (string?)Channel;
++    /// <summary>
++    /// Consume a message from the channel.
++    /// </summary>
++    /// <param name="cancellationToken">The <see cref="CancellationToken"/> to use.</param>
++    public ValueTask<ChannelMessage> ReadAsync(CancellationToken cancellationToken = default)
++        => _queue.Reader.ReadAsync(cancellationToken);
+ 
+-        /// <summary>
+-        /// An awaitable task the indicates completion of the queue (including drain of data).
+-        /// </summary>
+-        public Task Completion => _queue.Reader.Completion;
++    /// <summary>
++    /// Attempt to synchronously consume a message from the channel.
++    /// </summary>
++    /// <param name="item">The <see cref="ChannelMessage"/> read from the Channel.</param>
++    public bool TryRead(out ChannelMessage item) => _queue.Reader.TryRead(out item);
+ 
+-        internal ChannelMessageQueue(in RedisChannel redisChannel, RedisSubscriber parent)
++    /// <summary>
++    /// Attempt to query the backlog length of the queue.
++    /// </summary>
++    /// <param name="count">The (approximate) count of items in the Channel.</param>
++    public bool TryGetCount(out int count)
++    {
++        // This is specific to netcoreapp3.1, because full framework was out of band and the new prop is present
++#if NETCOREAPP3_1
++        // get this using the reflection
++        try
+         {
+-            Channel = redisChannel;
+-            _parent = parent;
+-            _queue = System.Threading.Channels.Channel.CreateUnbounded<ChannelMessage>(s_ChannelOptions);
++            var prop =
++                _queue.GetType().GetProperty("ItemsCountForDebugger", BindingFlags.Instance | BindingFlags.NonPublic);
++            if (prop is not null)
++            {
++                count = (int)prop.GetValue(_queue)!;
++                return true;
++            }
+         }
+-
+-        private static readonly UnboundedChannelOptions s_ChannelOptions = new UnboundedChannelOptions
++        catch (Exception ex)
+         {
+-            SingleWriter = true,
+-            SingleReader = false,
+-            AllowSynchronousContinuations = false,
+-        };
+-
+-        private void Write(in RedisChannel channel, in RedisValue value)
++            Debug.WriteLine(ex.Message); // but ignore
++        }
++#else
++        var reader = _queue.Reader;
++        if (reader.CanCount)
+         {
+-            var writer = _queue.Writer;
+-            writer.TryWrite(new ChannelMessage(this, channel, value));
++            count = reader.Count;
++            return true;
+         }
++#endif
+ 
+-        /// <summary>
+-        /// Consume a message from the channel.
+-        /// </summary>
+-        /// <param name="cancellationToken">The <see cref="CancellationToken"/> to use.</param>
+-        public ValueTask<ChannelMessage> ReadAsync(CancellationToken cancellationToken = default)
+-            => _queue.Reader.ReadAsync(cancellationToken);
+-
+-        /// <summary>
+-        /// Attempt to synchronously consume a message from the channel.
+-        /// </summary>
+-        /// <param name="item">The <see cref="ChannelMessage"/> read from the Channel.</param>
+-        public bool TryRead(out ChannelMessage item) => _queue.Reader.TryRead(out item);
+-
+-        /// <summary>
+-        /// Attempt to query the backlog length of the queue.
+-        /// </summary>
+-        /// <param name="count">The (approximate) count of items in the Channel.</param>
+-        public bool TryGetCount(out int count)
++        count = 0;
++        return false;
++    }
++
++    private Delegate? _onMessageHandler;
++
++    private void AssertOnMessage(Delegate handler)
++    {
++        if (handler == null) throw new ArgumentNullException(nameof(handler));
++        if (Interlocked.CompareExchange(ref _onMessageHandler, handler, null) != null)
++            throw new InvalidOperationException("Only a single " + nameof(OnMessage) + " is allowed");
++    }
++
++    /// <summary>
++    /// Create a message loop that processes messages sequentially.
++    /// </summary>
++    /// <param name="handler">The handler to run when receiving a message.</param>
++    public void OnMessage(Action<ChannelMessage> handler)
++    {
++        AssertOnMessage(handler);
++
++        ThreadPool.QueueUserWorkItem(
++            state => ((ChannelMessageQueue)state!).OnMessageSyncImpl().RedisFireAndForget(), this);
++    }
++
++    private async Task OnMessageSyncImpl()
++    {
++        var handler = (Action<ChannelMessage>?)_onMessageHandler;
++        while (!Completion.IsCompleted)
+         {
+-            // This is specific to netcoreapp3.1, because full framework was out of band and the new prop is present
+-#if NETCOREAPP3_1
+-            // get this using the reflection
++            ChannelMessage next;
+             try
+             {
+-                var prop = _queue.GetType().GetProperty("ItemsCountForDebugger", BindingFlags.Instance | BindingFlags.NonPublic);
+-                if (prop is not null)
+-                {
+-                    count = (int)prop.GetValue(_queue)!;
+-                    return true;
+-                }
++                if (!TryRead(out next)) next = await ReadAsync().ForAwait();
+             }
+-            catch { }
+-#else
+-            var reader = _queue.Reader;
+-            if (reader.CanCount)
++            catch (ChannelClosedException) { break; } // expected
++            catch (Exception ex)
+             {
+-                count = reader.Count;
+-                return true;
++                _parent?.multiplexer?.OnInternalError(ex);
++                break;
+             }
+-#endif
+ 
+-            count = default;
+-            return false;
++            try { handler?.Invoke(next); }
++            catch { } // matches MessageCompletable
+         }
++    }
+ 
+-        private Delegate? _onMessageHandler;
+-        private void AssertOnMessage(Delegate handler)
++    internal static void Combine(ref ChannelMessageQueue? head, ChannelMessageQueue queue)
++    {
++        if (queue != null)
+         {
+-            if (handler == null) throw new ArgumentNullException(nameof(handler));
+-            if (Interlocked.CompareExchange(ref _onMessageHandler, handler, null) != null)
+-                throw new InvalidOperationException("Only a single " + nameof(OnMessage) + " is allowed");
++            // insert at the start of the linked-list
++            ChannelMessageQueue? old;
++            do
++            {
++                old = Volatile.Read(ref head);
++                queue._next = old;
++            }
++            // format and validator disagree on newline...
++            while (Interlocked.CompareExchange(ref head, queue, old) != old);
+         }
++    }
+ 
+-        /// <summary>
+-        /// Create a message loop that processes messages sequentially.
+-        /// </summary>
+-        /// <param name="handler">The handler to run when receiving a message.</param>
+-        public void OnMessage(Action<ChannelMessage> handler)
+-        {
+-            AssertOnMessage(handler);
++    /// <summary>
++    /// Create a message loop that processes messages sequentially.
++    /// </summary>
++    /// <param name="handler">The handler to execute when receiving a message.</param>
++    public void OnMessage(Func<ChannelMessage, Task> handler)
++    {
++        AssertOnMessage(handler);
+ 
+-            ThreadPool.QueueUserWorkItem(
+-                state => ((ChannelMessageQueue)state!).OnMessageSyncImpl().RedisFireAndForget(), this);
+-        }
++        ThreadPool.QueueUserWorkItem(
++            state => ((ChannelMessageQueue)state!).OnMessageAsyncImpl().RedisFireAndForget(), this);
++    }
+ 
+-        private async Task OnMessageSyncImpl()
++    internal static void Remove(ref ChannelMessageQueue? head, ChannelMessageQueue queue)
++    {
++        if (queue is null)
+         {
+-            var handler = (Action<ChannelMessage>?)_onMessageHandler;
+-            while (!Completion.IsCompleted)
+-            {
+-                ChannelMessage next;
+-                try { if (!TryRead(out next)) next = await ReadAsync().ForAwait(); }
+-                catch (ChannelClosedException) { break; } // expected
+-                catch (Exception ex)
+-                {
+-                    _parent?.multiplexer?.OnInternalError(ex);
+-                    break;
+-                }
+-
+-                try { handler?.Invoke(next); }
+-                catch { } // matches MessageCompletable
+-            }
++            return;
+         }
+ 
+-        internal static void Combine(ref ChannelMessageQueue? head, ChannelMessageQueue queue)
++        bool found;
++        // if we fail due to a conflict, re-do from start
++        do
+         {
+-            if (queue != null)
++            var current = Volatile.Read(ref head);
++            if (current == null) return; // no queue? nothing to do
++            if (current == queue)
+             {
+-                // insert at the start of the linked-list
+-                ChannelMessageQueue? old;
+-                do
++                found = true;
++                // found at the head - then we need to change the head
++                if (Interlocked.CompareExchange(ref head, Volatile.Read(ref current._next), current) == current)
+                 {
+-                    old = Volatile.Read(ref head);
+-                    queue._next = old;
++                    return; // success
+                 }
+-                while (Interlocked.CompareExchange(ref head, queue, old) != old);
+             }
+-        }
+-
+-        /// <summary>
+-        /// Create a message loop that processes messages sequentially.
+-        /// </summary>
+-        /// <param name="handler">The handler to execute when receiving a message.</param>
+-        public void OnMessage(Func<ChannelMessage, Task> handler)
+-        {
+-            AssertOnMessage(handler);
+-
+-            ThreadPool.QueueUserWorkItem(
+-                state => ((ChannelMessageQueue)state!).OnMessageAsyncImpl().RedisFireAndForget(), this);
+-        }
+-
+-        internal static void Remove(ref ChannelMessageQueue? head, ChannelMessageQueue queue)
+-        {
+-            if (queue is null)
++            else
+             {
+-                return;
+-            }
+-
+-            bool found;
+-            // if we fail due to a conflict, re-do from start
+-            do
+-            {
+-                var current = Volatile.Read(ref head);
+-                if (current == null) return; // no queue? nothing to do
+-                if (current == queue)
+-                {
+-                    found = true;
+-                    // found at the head - then we need to change the head
+-                    if (Interlocked.CompareExchange(ref head, Volatile.Read(ref current._next), current) == current)
+-                    {
+-                        return; // success
+-                    }
+-                }
+-                else
++                ChannelMessageQueue? previous = current;
++                current = Volatile.Read(ref previous._next);
++                found = false;
++                do
+                 {
+-                    ChannelMessageQueue? previous = current;
+-                    current = Volatile.Read(ref previous._next);
+-                    found = false;
+-                    do
++                    if (current == queue)
+                     {
+-                        if (current == queue)
++                        found = true;
++                        // found it, not at the head; remove the node
++                        if (Interlocked.CompareExchange(
++                            ref previous._next,
++                            Volatile.Read(ref current._next),
++                            current) == current)
+                         {
+-                            found = true;
+-                            // found it, not at the head; remove the node
+-                            if (Interlocked.CompareExchange(ref previous._next, Volatile.Read(ref current._next), current) == current)
+-                            {
+-                                return; // success
+-                            }
+-                            else
+-                            {
+-                                break; // exit the inner loop, and repeat the outer loop
+-                            }
++                            return; // success
++                        }
++                        else
++                        {
++                            break; // exit the inner loop, and repeat the outer loop
+                         }
+-                        previous = current;
+-                        current = Volatile.Read(ref previous!._next);
+                     }
+-                    while (current != null);
++
++                    previous = current;
++                    current = Volatile.Read(ref previous!._next);
+                 }
++                // format and validator disagree on newline...
++                while (current != null);
+             }
+-            while (found);
+         }
++        // format and validator disagree on newline...
++        while (found);
++    }
+ 
+-        internal static int Count(ref ChannelMessageQueue? head)
++    internal static int Count(ref ChannelMessageQueue? head)
++    {
++        var current = Volatile.Read(ref head);
++        int count = 0;
++        while (current != null)
+         {
+-            var current = Volatile.Read(ref head);
+-            int count = 0;
+-            while (current != null)
+-            {
+-                count++;
+-                current = Volatile.Read(ref current._next);
+-            }
+-            return count;
++            count++;
++            current = Volatile.Read(ref current._next);
+         }
+ 
+-        internal static void WriteAll(ref ChannelMessageQueue head, in RedisChannel channel, in RedisValue message)
++        return count;
++    }
++
++    internal static void WriteAll(ref ChannelMessageQueue head, in RedisChannel channel, in RedisValue message)
++    {
++        var current = Volatile.Read(ref head);
++        while (current != null)
+         {
+-            var current = Volatile.Read(ref head);
+-            while (current != null)
+-            {
+-                current.Write(channel, message);
+-                current = Volatile.Read(ref current._next);
+-            }
++            current.Write(channel, message);
++            current = Volatile.Read(ref current._next);
+         }
++    }
+ 
+-        private ChannelMessageQueue? _next;
++    private ChannelMessageQueue? _next;
+ 
+-        private async Task OnMessageAsyncImpl()
++    private async Task OnMessageAsyncImpl()
++    {
++        var handler = (Func<ChannelMessage, Task>?)_onMessageHandler;
++        while (!Completion.IsCompleted)
+         {
+-            var handler = (Func<ChannelMessage, Task>?)_onMessageHandler;
+-            while (!Completion.IsCompleted)
++            ChannelMessage next;
++            try
+             {
+-                ChannelMessage next;
+-                try { if (!TryRead(out next)) next = await ReadAsync().ForAwait(); }
+-                catch (ChannelClosedException) { break; } // expected
+-                catch (Exception ex)
+-                {
+-                    _parent?.multiplexer?.OnInternalError(ex);
+-                    break;
+-                }
+-
+-                try
+-                {
+-                    var task = handler?.Invoke(next);
+-                    if (task != null && task.Status != TaskStatus.RanToCompletion) await task.ForAwait();
+-                }
+-                catch { } // matches MessageCompletable
++                if (!TryRead(out next)) next = await ReadAsync().ForAwait();
++            }
++            catch (ChannelClosedException) { break; } // expected
++            catch (Exception ex)
++            {
++                _parent?.multiplexer?.OnInternalError(ex);
++                break;
+             }
+-        }
+ 
+-        internal static void MarkAllCompleted(ref ChannelMessageQueue? head)
+-        {
+-            var current = Interlocked.Exchange(ref head, null);
+-            while (current != null)
++            try
+             {
+-                current.MarkCompleted();
+-                current = Volatile.Read(ref current._next);
++                var task = handler?.Invoke(next);
++                if (task != null && task.Status != TaskStatus.RanToCompletion) await task.ForAwait();
+             }
++            catch { } // matches MessageCompletable
+         }
++    }
+ 
+-        private void MarkCompleted(Exception? error = null)
++    internal static void MarkAllCompleted(ref ChannelMessageQueue? head)
++    {
++        var current = Interlocked.Exchange(ref head, null);
++        while (current != null)
+         {
+-            _parent = null;
+-            _queue.Writer.TryComplete(error);
++            current.MarkCompleted();
++            current = Volatile.Read(ref current._next);
+         }
++    }
+ 
+-        internal void UnsubscribeImpl(Exception? error = null, CommandFlags flags = CommandFlags.None)
+-        {
+-            var parent = _parent;
+-            _parent = null;
+-            parent?.UnsubscribeAsync(Channel, null, this, flags);
+-            _queue.Writer.TryComplete(error);
+-        }
++    private void MarkCompleted(Exception? error = null)
++    {
++        _parent = null;
++        _queue.Writer.TryComplete(error);
++    }
+ 
+-        internal async Task UnsubscribeAsyncImpl(Exception? error = null, CommandFlags flags = CommandFlags.None)
++    internal void UnsubscribeImpl(Exception? error = null, CommandFlags flags = CommandFlags.None)
++    {
++        var parent = _parent;
++        _parent = null;
++        parent?.UnsubscribeAsync(Channel, null, this, flags);
++        _queue.Writer.TryComplete(error);
++    }
++
++    internal async Task UnsubscribeAsyncImpl(Exception? error = null, CommandFlags flags = CommandFlags.None)
++    {
++        var parent = _parent;
++        _parent = null;
++        if (parent != null)
+         {
+-            var parent = _parent;
+-            _parent = null;
+-            if (parent != null)
+-            {
+-                await parent.UnsubscribeAsync(Channel, null, this, flags).ForAwait();
+-            }
+-            _queue.Writer.TryComplete(error);
++            await parent.UnsubscribeAsync(Channel, null, this, flags).ForAwait();
+         }
+ 
+-        /// <summary>
+-        /// Stop receiving messages on this channel.
+-        /// </summary>
+-        /// <param name="flags">The flags to use when unsubscribing.</param>
+-        public void Unsubscribe(CommandFlags flags = CommandFlags.None) => UnsubscribeImpl(null, flags);
++        _queue.Writer.TryComplete(error);
++    }
+ 
+-        /// <summary>
+-        /// Stop receiving messages on this channel.
+-        /// </summary>
+-        /// <param name="flags">The flags to use when unsubscribing.</param>
+-        public Task UnsubscribeAsync(CommandFlags flags = CommandFlags.None) => UnsubscribeAsyncImpl(null, flags);
++    /// <summary>
++    /// Stop receiving messages on this channel.
++    /// </summary>
++    /// <param name="flags">The flags to use when unsubscribing.</param>
++    public void Unsubscribe(CommandFlags flags = CommandFlags.None) => UnsubscribeImpl(null, flags);
+ 
+-        /// <inheritdoc cref="IAsyncEnumerable{ChannelMessage}.GetAsyncEnumerator(CancellationToken)"/>
++    /// <summary>
++    /// Stop receiving messages on this channel.
++    /// </summary>
++    /// <param name="flags">The flags to use when unsubscribing.</param>
++    public Task UnsubscribeAsync(CommandFlags flags = CommandFlags.None) => UnsubscribeAsyncImpl(null, flags);
++
++    /// <inheritdoc cref="IAsyncEnumerable{ChannelMessage}.GetAsyncEnumerator(CancellationToken)"/>
+ #if NETCOREAPP3_0_OR_GREATER
+-        public IAsyncEnumerator<ChannelMessage> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+-            => _queue.Reader.ReadAllAsync().GetAsyncEnumerator(cancellationToken);
++    public IAsyncEnumerator<ChannelMessage> GetAsyncEnumerator(CancellationToken cancellationToken = default)
++        // ReSharper disable once MethodSupportsCancellation - provided in GetAsyncEnumerator
++        => _queue.Reader.ReadAllAsync().GetAsyncEnumerator(cancellationToken);
+ #else
+-        public async IAsyncEnumerator<ChannelMessage> GetAsyncEnumerator(CancellationToken cancellationToken = default)
++    public async IAsyncEnumerator<ChannelMessage> GetAsyncEnumerator(CancellationToken cancellationToken = default)
++    {
++        while (await _queue.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false))
+         {
+-            while (await _queue.Reader.WaitToReadAsync(cancellationToken).ConfigureAwait(false))
++            while (_queue.Reader.TryRead(out var item))
+             {
+-                while (_queue.Reader.TryRead(out var item))
+-                {
+-                    yield return item;
+-                }
++                yield return item;
+             }
+         }
+-#endif
+     }
++#endif
+ }
