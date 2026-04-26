@@ -33,12 +33,18 @@ Versions follow [Semantic Versioning](https://semver.org/).
 - README: rule ID non-contiguous explanation
 - `docs/assets/`: assets folder for terminal demo GIF and future media
 - README: "What you see on first run" section updated to reference terminal demo GIF (StackExchange.Redis PR#2995, GCI0007 swallowed exception)
+- `--sensitivity` CLI flag: `strict | balanced | permissive` (default: `balanced`) filters findings by a Severity x Confidence 2D priority grid; `balanced` shows all Block plus Warn+Medium/High, `strict` shows Block+Medium/High only, `permissive` restores legacy all-Warn behavior
+- `SensitivityThreshold` enum and `SensitivityFilter` static class in `GauntletCI.Core.Model`; filter logic is testable and independent of the CLI
+- Compound risk summary line in report header when 4+ distinct rules trigger (replaces the removed synthetic `GCI_SYN_AGG` finding)
 
 ### Changed
 - Move `CONTRIBUTING.md` and `SECURITY.md` from `.github/` to repo root for discoverability
 - Add community-facing contribution sections above the developer guide in `CONTRIBUTING.md`
 - `bug_report.yml`: replaced freetext environment with OS dropdown, added separate bash-rendered command field
 - Behavioral Change Risk Formal Framework article: reformatted BCR definition block for readability; added "More formally" paragraph expanding on behavioral divergence potential
+- `GCI_SYN_AGG` synthetic finding removed from `RuleOrchestrator.PostProcess`; compound risk (4+ rules) is now a summary line in the report header rather than a fake finding in the findings list
+- `ConsoleReporter.Report`: findings count in the header now shows the sensitivity-filtered count; suppressed findings display a dim inline note with a tip to use `--sensitivity permissive`
+- Exit code now respects the sensitivity threshold: findings hidden by `--sensitivity strict` do not cause a non-zero exit
 
 ### Fixed
 - Site search not working on live site: CI was running `pnpm next build` directly, bypassing the `build` script in package.json that runs pagefind indexing after the Next.js build. Changed to `pnpm run build` so the pagefind index is generated and included in the deployed artifact.
@@ -47,6 +53,8 @@ Versions follow [Semantic Versioning](https://semver.org/).
 - GCI0012 vs GCI0029: log calls containing `token` (e.g. `_logger.Log("token = " + x)`) no longer trigger GCI0012 hardcoded-credential check; GCI0029 (PII Logging Leak) owns that shape
 - GCI0043 vs GCI0006: `as`-cast on a line that also accesses `.Value` no longer double-fires; GCI0006 (Edge Case Handling) owns the `.Value` path
 - All 5 compare pages (`vs-sonarqube`, `vs-codeql`, `vs-semgrep`, `vs-snyk`, `vs-codeclimate`) were missing Header and Footer; added to all pages
+- GCI0006 false positive: expression-body methods with a nullable return type (e.g. `string? ToString() => (string?)Channel`) were incorrectly flagging the cast as a missing null parameter check; fixed by scoping `paramSection` to the actual parameter list only
+- GCI0007 false positive: typed exception catches with a one-liner body (e.g. `catch (ChannelClosedException) { break; }`) were incorrectly classified as swallowed; rule now skips all specific typed exception catches
 
 ---
 

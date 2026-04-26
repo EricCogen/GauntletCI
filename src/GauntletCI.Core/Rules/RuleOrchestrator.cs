@@ -226,28 +226,14 @@ public class RuleOrchestrator
 
     /// <summary>
     /// Runs synthesis checks after all rules have completed.
-    /// Adds GCI0018 aggregate finding and runs any <see cref="IPostProcessor"/> rules.
+    /// Runs any <see cref="IPostProcessor"/> rules.
+    /// Compound risk (4+ distinct rules fired) is reported as a summary note in the report header,
+    /// not as a synthetic finding.
     /// </summary>
     private void PostProcess(DiffContext diff, List<Finding> allFindings)
     {
         try
         {
-            int distinctRulesFired = allFindings.Select(f => f.RuleId).Distinct().Count();
-            if (distinctRulesFired > 3)
-            {
-                allFindings.Add(new Finding
-                {
-                    RuleId          = "GCI_SYN_AGG",
-                    RuleName        = "Aggregate Risk Signal",
-                    Summary         = $"{distinctRulesFired} rules flagged issues — this diff has multiple risk dimensions.",
-                    Evidence        = $"Rules fired: {string.Join(", ", allFindings.Select(f => f.RuleId).Distinct().OrderBy(id => id))}",
-                    WhyItMatters    = "Multiple concurrent risks compound each other and increase the chance of production incidents.",
-                    SuggestedAction = "Address High-confidence findings first, then revisit Medium/Low before merging.",
-                    Confidence      = Confidence.Medium,
-                    Severity        = RuleSeverity.Warn,
-                });
-            }
-
             foreach (var processor in _rules.OfType<IPostProcessor>())
             {
                 var finding = processor.PostProcess(diff);

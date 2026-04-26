@@ -52,6 +52,10 @@ public static class AnalyzeCommand
             "--severity",
             () => "warn",
             "Minimum severity to display: info, warn, block");
+        var sensitivityOption = new Option<string>(
+            "--sensitivity",
+            () => "balanced",
+            "Confidence-based filter threshold: strict (Block+High/Medium only), balanced (default: Block-all + Warn+High/Medium), permissive (all Block and Warn)");
         var noBaselineFlag = new Option<bool>("--no-baseline", "Ignore the baseline file and show all findings");
         var showContextOption = new Option<int>("--show-context", () => 0, "Include N surrounding diff lines around each finding evidence");
         var prCommentSuggestFlag = new Option<bool>("--pr-comment-suggest", "Print PR review comment body to stdout; when used without --github-pr-comments this avoids posting to the GitHub API");
@@ -80,6 +84,7 @@ public static class AnalyzeCommand
             withExpertCtxFlag,
             verboseFlag,
             severityOption,
+            sensitivityOption,
             noBaselineFlag,
             showContextOption,
             prCommentSuggestFlag,
@@ -108,6 +113,7 @@ public static class AnalyzeCommand
             var withExpertCtx = ctx.ParseResult.GetValueForOption(withExpertCtxFlag);
             var verbose    = ctx.ParseResult.GetValueForOption(verboseFlag);
             var severityStr = ctx.ParseResult.GetValueForOption(severityOption)!;
+            var sensitivityStr = ctx.ParseResult.GetValueForOption(sensitivityOption)!;
             var noBaseline = ctx.ParseResult.GetValueForOption(noBaselineFlag);
             var showContext = ctx.ParseResult.GetValueForOption(showContextOption);
             var prCommentSuggest = ctx.ParseResult.GetValueForOption(prCommentSuggestFlag);
@@ -374,7 +380,8 @@ public static class AnalyzeCommand
                     var minSeverity = verbose
                         ? GauntletCI.Core.Model.RuleSeverity.Info
                         : ParseMinSeverity(severityStr);
-                    ConsoleReporter.Report(result, ascii, minSeverity, suppressedByBaseline, diff, showContext, sw.Elapsed);
+                    var sensitivity = ParseSensitivity(sensitivityStr);
+                    ConsoleReporter.Report(result, ascii, minSeverity, suppressedByBaseline, diff, showContext, sw.Elapsed, sensitivity);
                 }
 
                 if (prCommentSuggest)
@@ -448,7 +455,7 @@ public static class AnalyzeCommand
                     })],
                 }, ct);
 
-                ctx.ExitCode = result.ShouldBlock(config.ExitOn) ? 1 : 0;
+                ctx.ExitCode = ShouldBlockWithSensitivity(result, config.ExitOn, ParseSensitivity(sensitivityStr)) ? 1 : 0;
             }
             catch (Exception ex)
             {
@@ -467,6 +474,23 @@ public static class AnalyzeCommand
             "info"  => GauntletCI.Core.Model.RuleSeverity.Info,
             _       => GauntletCI.Core.Model.RuleSeverity.Warn,
         };
+
+    private static GauntletCI.Core.Model.SensitivityThreshold ParseSensitivity(string s) =>
+        s.ToLowerInvariant() switch
+        {
+            "strict"     => GauntletCI.Core.Model.SensitivityThreshold.Strict,
+            "permissive" => GauntletCI.Core.Model.SensitivityThreshold.Permissive,
+            _            => GauntletCI.Core.Model.SensitivityThreshold.Balanced,
+        };
+
+    private static bool ShouldBlockWithSensitivity(EvaluationResult result, string? exitOn, GauntletCI.Core.Model.SensitivityThreshold sensitivity)
+    {
+        var blockable = result.Findings.Where(f =>
+            GauntletCI.Core.Model.SensitivityFilter.Passes(f.Severity, f.Confidence, sensitivity));
+        return exitOn?.Equals("Warn", StringComparison.OrdinalIgnoreCase) == true
+            ? blockable.Any(f => f.Severity is GauntletCI.Core.Model.RuleSeverity.Warn or GauntletCI.Core.Model.RuleSeverity.Block)
+            : blockable.Any(f => f.Severity == GauntletCI.Core.Model.RuleSeverity.Block);
+    }
 
     private static async Task<string?> EnrichWithTicketContextAsync(ILlmEngine llm, Finding finding, CancellationToken ct)
     {
