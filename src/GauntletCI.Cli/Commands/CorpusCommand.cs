@@ -100,6 +100,10 @@ public static class CorpusCommand
         fileChurn.AddCommand(CreateFileChurnEnrich());
         corpus.AddCommand(fileChurn);
 
+        var reviewNlp = new Command("review-nlp", "Review comment NLP taxonomy enrichment");
+        reviewNlp.AddCommand(CreateReviewNlpEnrich());
+        corpus.AddCommand(reviewNlp);
+
         return corpus;
     }
 
@@ -3007,6 +3011,58 @@ public static class CorpusCommand
                 Console.WriteLine("-- Structural Enrichment Summary --");
                 Console.WriteLine($"  Fixtures processed      : {result.FixturesProcessed}");
                 Console.WriteLine($"  Sensitive-path fixtures : {result.SensitivePathFixtures}");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus review-nlp enrich ───────────────────────────────────
+
+    private static Command CreateReviewNlpEnrich()
+    {
+        var dbOpt    = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var tierOpt  = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
+        var delayOpt = new Option<int>   ("--delay-ms", () => 200,                           "Delay between GitHub API calls (ms)");
+
+        var cmd = new Command("enrich", "Fetch PR review comments and apply keyword taxonomy to extract rule intent signals");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(tierOpt);
+        cmd.AddOption(limitOpt);
+        cmd.AddOption(delayOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath  = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var tier    = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit   = ctx.ParseResult.GetValueForOption(limitOpt);
+            var delayMs = ctx.ParseResult.GetValueForOption(delayOpt);
+            var ct      = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                var fixtures = await LoadFixturesWithPrAsync(db, tier, ct);
+                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+
+                Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with review NLP data...");
+                Console.WriteLine();
+
+                using var enricher = new ReviewCommentNlpEnricher();
+                var result = await enricher.EnrichAsync(
+                    fixtures, db, delayMs,
+                    progress: msg => Console.WriteLine(msg),
+                    ct: ct);
+
+                if (result.AuthMissing) { ctx.ExitCode = 1; return; }
+
+                Console.WriteLine();
+                Console.WriteLine("-- Review NLP Enrichment Summary --");
+                Console.WriteLine($"  Fixtures processed      : {result.FixturesProcessed}");
+                Console.WriteLine($"  Fixtures with matches   : {result.FixturesWithMatches}");
+                Console.WriteLine($"  Total taxonomy matches  : {result.TotalMatches}");
             }
         });
 
