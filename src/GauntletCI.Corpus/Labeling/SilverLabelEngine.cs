@@ -141,7 +141,7 @@ public sealed class SilverLabelEngine
         var prodCsRemovedLines  = ExtractRemovedLinesFromProductionCsFiles(diffText);
         var labels       = new List<ExpectedFinding>();
 
-        ApplyDiffHeuristics(addedLines, removedLines, pathLines, prodCsLines, prodCsRemovedLines, labels);
+        ApplyDiffHeuristics(addedLines, removedLines, pathLines, prodCsLines, prodCsRemovedLines, labels, diffText);
 
         return Task.FromResult<IReadOnlyList<ExpectedFinding>>(labels);
     }
@@ -321,7 +321,7 @@ public sealed class SilverLabelEngine
 
     // -- Heuristic application -------------------------------------------------
 
-    private static void ApplyDiffHeuristics(List<string> addedLines, List<string> removedLines, List<string> pathLines, List<string> prodCsLines, List<string> prodCsRemovedLines, List<ExpectedFinding> labels)
+    private static void ApplyDiffHeuristics(List<string> addedLines, List<string> removedLines, List<string> pathLines, List<string> prodCsLines, List<string> prodCsRemovedLines, List<ExpectedFinding> labels, string rawDiff = "")
     {
         // GCI0016 -- Async execution model violations. Mirrors the four checks in the rule exactly.
         // .GetAwaiter().GetResult() is unambiguous; .Result only counts with Task/Async context;
@@ -544,9 +544,17 @@ public sealed class SilverLabelEngine
                 labels.Add(MakeLabel("GCI0032", "Diff adds a throw new (non-guard) expression without test assertion coverage", 0.55));
         }
 
-        // GCI0036 -- [Pure] attribute added, or mutation pattern inside getter
-        if (addedLines.Any(l => l.Contains("[Pure]", StringComparison.Ordinal)))
-            labels.Add(MakeLabel("GCI0036", "Diff adds a [Pure] attribute — mutation within this context would be flagged", 0.50));
+        // GCI0036 -- [Pure] attribute added OR mutation in a visible getter block
+        {
+            bool hasPureAdded = addedLines.Any(l => l.Contains("[Pure]", StringComparison.Ordinal));
+            bool hasGetterMutation = !hasPureAdded && HasGetterMutationInDiff(rawDiff, pathLines);
+            if (hasPureAdded || hasGetterMutation)
+                labels.Add(MakeLabel("GCI0036",
+                    hasPureAdded
+                        ? "Diff adds a [Pure] attribute -- mutation within this context would be flagged"
+                        : "Diff adds a field assignment inside a property getter block",
+                    0.60));
+        }
 
         // GCI0038 -- DI anti-pattern: service locator or direct injectable instantiation
         {
@@ -742,12 +750,114 @@ public sealed class SilverLabelEngine
         @"=\s*""(?=[A-Za-z0-9+/]*[0-9])[A-Za-z0-9+/]{20,}={0,2}""",
         RegexOptions.Compiled);
 
+    /// <summary>
+    /// Mirrors the getter-mutation scan in GCI0036 by walking all diff lines (context + added)
+    /// and checking whether a `+` line contains a field/property assignment inside a getter block.
+    /// Resets state only at file headers, not at hunk boundaries, to match rule behavior.
+    /// </summary>
+    private static bool HasGetterMutationInDiff(string rawDiff, List<string> pathLines)
+    {
+        if (string.IsNullOrEmpty(rawDiff)) return false;
+
+        // Skip test/spec files
+        if (pathLines.Any(l =>
+            l.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
+            l.Contains("Spec", StringComparison.OrdinalIgnoreCase)))
+            return false;
+
+        int braceDepth = 0;
+        bool inGetter = false;
+        int getterExitDepth = -1;
+        bool expectGetterBrace = false;
+
+        foreach (var rawLine in rawDiff.Split('\n'))
+        {
+            // File headers reset state
+            if (rawLine.StartsWith("diff ", StringComparison.Ordinal) ||
+                rawLine.StartsWith("index ", StringComparison.Ordinal) ||
+                rawLine.StartsWith("--- ", StringComparison.Ordinal) ||
+                rawLine.StartsWith("+++ ", StringComparison.Ordinal))
+            {
+                braceDepth = 0; inGetter = false; getterExitDepth = -1; expectGetterBrace = false;
+                continue;
+            }
+            if (rawLine.StartsWith("@@")) continue; // hunk header -- no state reset (mirrors rule)
+
+            bool isAdded = rawLine.Length > 0 && rawLine[0] == '+';
+            bool isRemoved = rawLine.Length > 0 && rawLine[0] == '-';
+            if (isRemoved) continue;
+
+            var content = rawLine.Length > 0 ? rawLine[1..] : "";
+            var trimmed = content.TrimStart();
+
+            // Getter start -- inline brace
+            if (trimmed.StartsWith("get {", StringComparison.Ordinal) ||
+                trimmed.Contains(" get {", StringComparison.Ordinal))
+            {
+                getterExitDepth = braceDepth;
+                inGetter = true;
+                expectGetterBrace = false;
+            }
+            // Getter on its own line
+            else if (trimmed == "get" ||
+                (trimmed.Length > 4 && trimmed.EndsWith(" get", StringComparison.Ordinal) && !trimmed.Contains('{')))
+            {
+                expectGetterBrace = true;
+            }
+            // Deferred opening brace
+            else if (expectGetterBrace && (trimmed == "{" || trimmed.StartsWith("{ ", StringComparison.Ordinal)))
+            {
+                getterExitDepth = braceDepth;
+                inGetter = true;
+                expectGetterBrace = false;
+            }
+            else
+            {
+                expectGetterBrace = false;
+            }
+
+            bool inPureContext = inGetter;
+
+            foreach (char c in content)
+            {
+                if (c == '{') braceDepth++;
+                else if (c == '}') braceDepth--;
+            }
+
+            if (inGetter && braceDepth <= getterExitDepth)
+                inGetter = false;
+
+            // Check for field/property assignment on an added line inside a getter
+            if (isAdded && inPureContext && !trimmed.StartsWith("//", StringComparison.Ordinal))
+            {
+                if (!trimmed.StartsWith("var ", StringComparison.Ordinal) &&
+                    !trimmed.StartsWith("for ", StringComparison.Ordinal) &&
+                    !trimmed.StartsWith("for(", StringComparison.Ordinal))
+                {
+                    for (int k = 0; k < trimmed.Length; k++)
+                    {
+                        if (trimmed[k] != '=') continue;
+                        char prev = k > 0 ? trimmed[k - 1] : '\0';
+                        char next = k + 1 < trimmed.Length ? trimmed[k + 1] : '\0';
+                        if (prev is '=' or '!' or '<' or '>') continue;
+                        if (next is '=' or '>') continue;
+                        var lhs = trimmed[..k].TrimEnd('+', '-', '*', '/', '%', '|', '&', '^', ' ');
+                        if (!lhs.Contains(' '))
+                            return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     private static bool IsCredentialAssignment(string line)
     {
         // Skip test/mock values and comments
         var trimmed = line.TrimStart();
         if (trimmed.StartsWith("//") || trimmed.StartsWith("*"))
             return false;
+
         // Skip obvious test placeholder strings
         if (line.Contains("fake", StringComparison.OrdinalIgnoreCase) ||
             line.Contains("mock", StringComparison.OrdinalIgnoreCase) ||
