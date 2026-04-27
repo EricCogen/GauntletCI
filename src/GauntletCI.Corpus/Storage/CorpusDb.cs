@@ -240,6 +240,45 @@ internal static class SchemaInitializer
     [
         "ALTER TABLE actual_findings ADD COLUMN file_path TEXT",
         """
+        CREATE TABLE IF NOT EXISTS dependabot_matches (
+            id            INTEGER PRIMARY KEY AUTOINCREMENT,
+            fixture_id    TEXT    NOT NULL REFERENCES fixtures(fixture_id),
+            repo          TEXT    NOT NULL,
+            pr_number     INTEGER NOT NULL,
+            is_dependabot INTEGER NOT NULL DEFAULT 0,
+            pr_title      TEXT    NOT NULL DEFAULT '',
+            author_login  TEXT    NOT NULL DEFAULT '',
+            fetched_at_utc TEXT   NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(fixture_id)
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS social_signal_enrichments (
+            id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+            fixture_id           TEXT    NOT NULL REFERENCES fixtures(fixture_id),
+            repo                 TEXT    NOT NULL,
+            pr_number            INTEGER NOT NULL,
+            review_time_minutes  REAL    NOT NULL DEFAULT -1,
+            reviewer_count       INTEGER NOT NULL DEFAULT 0,
+            review_comment_count INTEGER NOT NULL DEFAULT 0,
+            is_bot_merged        INTEGER NOT NULL DEFAULT 0,
+            social_signal_score  REAL    NOT NULL DEFAULT 0.0,
+            fetched_at_utc       TEXT    NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(fixture_id)
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS composite_labels (
+            id                INTEGER PRIMARY KEY AUTOINCREMENT,
+            fixture_id        TEXT    NOT NULL REFERENCES fixtures(fixture_id),
+            composite_label   TEXT    NOT NULL,
+            label_confidence  REAL    NOT NULL DEFAULT 0.0,
+            signals_json      TEXT    NOT NULL DEFAULT '{}',
+            applied_at_utc    TEXT    NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(fixture_id)
+        )
+        """,
+        """
         CREATE TABLE IF NOT EXISTS sonar_matches (
             id                INTEGER PRIMARY KEY AUTOINCREMENT,
             fixture_id        TEXT NOT NULL REFERENCES fixtures(fixture_id),
