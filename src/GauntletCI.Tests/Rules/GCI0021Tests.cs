@@ -31,8 +31,35 @@ public class GCI0021Tests
     }
 
     [Fact]
-    public async Task RemovedEnumMember_InEnumFile_ShouldFlag()
+    public async Task RemovedEnumMember_WithSerializationAttr_ShouldFlag()
     {
+        // Enum member removed WITH a preceding [JsonProperty] attribute — should flag.
+        var raw = """
+            diff --git a/src/Status.cs b/src/Status.cs
+            index abc..def 100644
+            --- a/src/Status.cs
+            +++ b/src/Status.cs
+            @@ -1,6 +1,4 @@
+             public enum Status {
+                 Active,
+            -    [JsonProperty("suspended")]
+            -    Suspended,
+                 Deleted,
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f =>
+            f.Summary.Contains("Enum member removed") &&
+            f.Summary.Contains("Suspended"));
+    }
+
+    [Fact]
+    public async Task RemovedEnumMember_WithoutSerializationAttr_ShouldNotFlag()
+    {
+        // Enum member removed WITHOUT a serialization attribute — not a schema compat concern.
         var raw = """
             diff --git a/src/Status.cs b/src/Status.cs
             index abc..def 100644
@@ -49,9 +76,7 @@ public class GCI0021Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f =>
-            f.Summary.Contains("Enum member removed") &&
-            f.Summary.Contains("Suspended"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Enum member removed"));
     }
 
     [Fact]

@@ -261,15 +261,18 @@ public sealed class SilverLabelEngineTests
     }
 
     [Fact]
-    public async Task InferLabels_DiffWithMigrationFilePath_EmitsGCI0021Label()
+    public async Task InferLabels_DiffWithMigrationFileAndDropColumn_EmitsGCI0021Label()
     {
-        // Arrange — diff header includes a Migrations/ path
+        // Arrange — migration file modified with a removed migrationBuilder.DropColumn call
         var diff = """
-            diff --git a/Migrations/20240101_AddUsersTable.cs b/Migrations/20240101_AddUsersTable.cs
-            --- a/Migrations/20240101_AddUsersTable.cs
-            +++ b/Migrations/20240101_AddUsersTable.cs
-            @@ -0,0 +1,3 @@
-            +public class AddUsersTable { }
+            diff --git a/src/Migrations/20240101_AddUsersTable.cs b/src/Migrations/20240101_AddUsersTable.cs
+            --- a/src/Migrations/20240101_AddUsersTable.cs
+            +++ b/src/Migrations/20240101_AddUsersTable.cs
+            @@ -5,4 +5,3 @@
+             protected override void Down(MigrationBuilder migrationBuilder)
+             {
+            -    migrationBuilder.DropColumn(name: "LegacyField", table: "Users");
+             }
             """;
 
         // Act
@@ -277,6 +280,25 @@ public sealed class SilverLabelEngineTests
 
         // Assert
         Assert.Contains(labels, l => l.RuleId == "GCI0021" && l.ShouldTrigger);
+    }
+
+    [Fact]
+    public async Task InferLabels_DiffWithMigrationFileNoSchemaOp_ShouldNotEmitGCI0021Label()
+    {
+        // Arrange — migration file modified but removed lines have no schema operations (scaffolding logic only)
+        var diff = """
+            diff --git a/src/Migrations/Internal/SnapshotProcessor.cs b/src/Migrations/Internal/SnapshotProcessor.cs
+            --- a/src/Migrations/Internal/SnapshotProcessor.cs
+            +++ b/src/Migrations/Internal/SnapshotProcessor.cs
+            @@ -10,3 +10,2 @@
+            -    if (version.StartsWith("8.", StringComparison.Ordinal)) return true;
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("fix-001", diff);
+
+        // Assert — no GCI0021 trigger: modified migration-dir file but no schema op in removed lines
+        Assert.DoesNotContain(labels, l => l.RuleId == "GCI0021" && l.ShouldTrigger);
     }
 
     [Fact]

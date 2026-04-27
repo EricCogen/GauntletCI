@@ -137,10 +137,11 @@ public sealed class SilverLabelEngine
         var addedLines   = ExtractAddedLines(diffText);
         var removedLines = ExtractRemovedLines(diffText);
         var pathLines    = ExtractPathLines(diffText);
-        var prodCsLines  = ExtractAddedLinesFromProductionCsFiles(diffText);
+        var prodCsLines         = ExtractAddedLinesFromProductionCsFiles(diffText);
+        var prodCsRemovedLines  = ExtractRemovedLinesFromProductionCsFiles(diffText);
         var labels       = new List<ExpectedFinding>();
 
-        ApplyDiffHeuristics(addedLines, removedLines, pathLines, prodCsLines, labels);
+        ApplyDiffHeuristics(addedLines, removedLines, pathLines, prodCsLines, prodCsRemovedLines, labels);
 
         return Task.FromResult<IReadOnlyList<ExpectedFinding>>(labels);
     }
@@ -320,7 +321,7 @@ public sealed class SilverLabelEngine
 
     // -- Heuristic application -------------------------------------------------
 
-    private static void ApplyDiffHeuristics(List<string> addedLines, List<string> removedLines, List<string> pathLines, List<string> prodCsLines, List<ExpectedFinding> labels)
+    private static void ApplyDiffHeuristics(List<string> addedLines, List<string> removedLines, List<string> pathLines, List<string> prodCsLines, List<string> prodCsRemovedLines, List<ExpectedFinding> labels)
     {
         // GCI0016 -- Async execution model violations. Mirrors the four checks in the rule exactly.
         // .GetAwaiter().GetResult() is unambiguous; .Result only counts with Task/Async context;
@@ -395,24 +396,37 @@ public sealed class SilverLabelEngine
         if (HasEmptyCatch(addedLines))
             labels.Add(MakeLabel("GCI0003", "Diff contains empty or comment-only catch block on added lines", 0.65));
 
-        // GCI0021 -- Migration file touched OR serialization attribute/enum member removed
-        if (pathLines.Any(l =>
-                l.Contains("Migration",  StringComparison.OrdinalIgnoreCase) ||
-                l.Contains("_migration", StringComparison.OrdinalIgnoreCase)) ||
-            removedLines.Any(l =>
-            {
-                var t = l.TrimStart();
-                return t.StartsWith("[JsonProperty",   StringComparison.OrdinalIgnoreCase) ||
-                       t.StartsWith("[JsonPropertyName", StringComparison.OrdinalIgnoreCase) ||
-                       t.StartsWith("[DataMember",     StringComparison.OrdinalIgnoreCase) ||
-                       t.StartsWith("[Column(",        StringComparison.OrdinalIgnoreCase) ||
-                       t.StartsWith("[BsonElement",    StringComparison.OrdinalIgnoreCase) ||
-                       t.StartsWith("[Key]",           StringComparison.OrdinalIgnoreCase) ||
-                       t.StartsWith("[ForeignKey",     StringComparison.OrdinalIgnoreCase) ||
-                       t.StartsWith("[Required]",      StringComparison.OrdinalIgnoreCase);
-            }))
+        // GCI0021 -- Serialization attribute removed from production CS, or EF migration schema operation removed
+        // Migration detection: check if removed lines from a non-test EF migration .cs file contain actual
+        // schema operations (migrationBuilder.Drop*, AlterColumn, etc.) — not just any modification to files
+        // in a migrations directory (that would match scaffolding/processor changes which are not schema risks).
+        bool hasMigrationModified = false;
+        if (pathLines.Any(l => l.StartsWith("--- a/", StringComparison.Ordinal) &&
+                                IsEfMigrationCsFile(l[6..].TrimEnd('\r'))))
         {
-            labels.Add(MakeLabel("GCI0021", "Diff removes a serialization attribute or touches a migration file", 0.55));
+            // Require that removed lines from migration files contain actual EF schema operations
+            var migrationRemovedLines = prodCsRemovedLines;
+            hasMigrationModified = migrationRemovedLines.Any(l =>
+                l.Contains("migrationBuilder.Drop",  StringComparison.OrdinalIgnoreCase) ||
+                l.Contains("migrationBuilder.Alter", StringComparison.OrdinalIgnoreCase) ||
+                l.Contains("migrationBuilder.Rename", StringComparison.OrdinalIgnoreCase) ||
+                l.Contains("migrationBuilder.Create", StringComparison.OrdinalIgnoreCase));
+        }
+
+        bool hasRemovedSerializationAttr = prodCsRemovedLines.Any(l =>
+        {
+            var t = l.TrimStart();
+            return t.StartsWith("[JsonProperty",    StringComparison.OrdinalIgnoreCase) ||
+                   t.StartsWith("[JsonPropertyName", StringComparison.OrdinalIgnoreCase) ||
+                   t.StartsWith("[DataMember",      StringComparison.OrdinalIgnoreCase) ||
+                   t.StartsWith("[Column(",         StringComparison.OrdinalIgnoreCase) ||
+                   t.StartsWith("[BsonElement",     StringComparison.OrdinalIgnoreCase) ||
+                   t.StartsWith("[ForeignKey",      StringComparison.OrdinalIgnoreCase);
+        });
+
+        if (hasRemovedSerializationAttr || hasMigrationModified)
+        {
+            labels.Add(MakeLabel("GCI0021", "Diff removes a serialization attribute from production C# or modifies an EF migration file", 0.60));
         }
 
         // GCI0004 -- Breaking change signals (public API removed/renamed)
@@ -785,6 +799,63 @@ public sealed class SilverLabelEngine
                 result.Add(line[1..]);
         }
         return result;
+    }
+
+    /// <summary>
+    /// Extracts removed lines only from production <c>.cs</c> files, skipping test, generated,
+    /// and non-production (benchmark/sample/example) files. Used for GCI0021 checks.
+    /// </summary>
+    private static List<string> ExtractRemovedLinesFromProductionCsFiles(string diffText)
+    {
+        var result = new List<string>();
+        var inProductionCs = false;
+        string pendingOldFile = string.Empty;
+
+        foreach (var line in diffText.Split('\n'))
+        {
+            // Buffer old-file path; don't commit until we see +++ to know if file is deleted.
+            if (line.StartsWith("--- a/", StringComparison.Ordinal))
+            {
+                pendingOldFile = line[6..].TrimEnd('\r');
+                inProductionCs = false;
+                continue;
+            }
+
+            // Commit decision: file is modified/added (not deleted).
+            if (line.StartsWith("+++ b/", StringComparison.Ordinal))
+            {
+                inProductionCs = pendingOldFile.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) &&
+                                 !TestFileClassifier.IsTestFile(pendingOldFile) &&
+                                 !IsGeneratedCsFile(pendingOldFile) &&
+                                 !IsBenchmarkOrSampleFile(pendingOldFile);
+                pendingOldFile = string.Empty;
+                continue;
+            }
+
+            // File was deleted entirely — the rule never processes deleted files, so skip.
+            if (line.StartsWith("+++ /dev/null", StringComparison.Ordinal))
+            {
+                inProductionCs = false;
+                pendingOldFile = string.Empty;
+                continue;
+            }
+
+            if (inProductionCs && line.StartsWith('-') && !line.StartsWith("---"))
+                result.Add(line[1..]);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Returns true if <paramref name="path"/> is an EF Core migration CS file:
+    /// a <c>.cs</c> file with a directory segment exactly named <c>migrations</c>.
+    /// </summary>
+    private static bool IsEfMigrationCsFile(string path)
+    {
+        if (!path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)) return false;
+        if (TestFileClassifier.IsTestFile(path)) return false;
+        var segments = path.ToLowerInvariant().Split(['/', '\\']);
+        return segments.Take(segments.Length - 1).Any(seg => seg == "migrations");
     }
 
     private static bool IsGeneratedCsFile(string path)
