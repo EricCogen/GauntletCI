@@ -707,17 +707,55 @@ public sealed class SilverLabelEngine
             labels.Add(MakeLabel("GCI0042", "Diff contains a TODO/FIXME/HACK marker or NotImplementedException stub", 0.70));
         }
 
-        // GCI0043 -- Null-forgiving operator or nullable pragma disable
+        // GCI0043 -- Null-forgiving / nullable pragma disable / unchecked as-cast
+        // Mirror all three rule checks with the same skip guards and thresholds.
         {
-            var nullableCodes = new[] { "nullable", "CS8600", "CS8601", "CS8602", "CS8603", "CS8604" };
-            bool hasPragma = addedLines.Any(l =>
+            var nullableCodes43 = new[] { "nullable", "CS8600", "CS8601", "CS8602", "CS8603", "CS8604" };
+            var nullCheckPatterns43 = new[] { "is null", "== null", "!= null", "?? ", "is not null" };
+
+            // Check 1: Pragma disable for nullable — mirrors CheckPragmaDisable (per-line, no threshold)
+            bool hasPragma43 = prodCsLines.Any(l =>
                 l.Contains("#pragma warning disable", StringComparison.OrdinalIgnoreCase) &&
-                nullableCodes.Any(c => l.Contains(c, StringComparison.OrdinalIgnoreCase)));
-            bool hasNullForgiving = addedLines.Any(l =>
+                nullableCodes43.Any(c => l.Contains(c, StringComparison.OrdinalIgnoreCase)));
+
+            // Check 2: Null-forgiving — mirrors CheckNullForgiving's >1 threshold (matchingLines.Count <= 1 returns early)
+            int nullForgivingCount = prodCsLines.Count(l =>
                 !l.TrimStart().StartsWith("//") &&
-                (l.Contains("!.", StringComparison.Ordinal) || l.Contains("!;", StringComparison.Ordinal) || l.Contains("!,", StringComparison.Ordinal)));
-            if (hasPragma || hasNullForgiving)
-                labels.Add(MakeLabel("GCI0043", "Diff disables nullable warnings or uses null-forgiving operator on added lines", 0.60));
+                !l.Contains("GetValueForOption(", StringComparison.Ordinal) &&
+                (l.Contains("!.", StringComparison.Ordinal) ||
+                 l.Contains("!;", StringComparison.Ordinal) ||
+                 l.Contains("!,", StringComparison.Ordinal)));
+            bool hasNullForgiving43 = nullForgivingCount > 1;
+
+            // Check 3: Unchecked as-cast — mirrors CheckUncheckedAsCast with same skip guards
+            bool hasUncheckedAsCast43 = false;
+            var asCastLines = prodCsLines.ToList();
+            for (int i = 0; i < asCastLines.Count && !hasUncheckedAsCast43; i++)
+            {
+                var l = asCastLines[i];
+                if (!l.Contains(" as ", StringComparison.Ordinal)) continue;
+                var t = l.TrimStart();
+                if (t.StartsWith("//") || t.StartsWith("///") || t.StartsWith("*")) continue;
+                var ap = l.IndexOf(" as ", StringComparison.Ordinal);
+                var afterAs43 = l[(ap + 4)..].TrimStart();
+                // as object — always safe
+                if (afterAs43.StartsWith("object", StringComparison.Ordinal) &&
+                    (afterAs43.Length == 6 || (!char.IsLetterOrDigit(afterAs43[6]) && afterAs43[6] != '_'))) continue;
+                // (x as T)?. — null-conditional, safe
+                if (l[(ap + 4)..].Contains(")?.", StringComparison.Ordinal)) continue;
+                // .Value boundary — owned by GCI0006
+                if (l.Contains(".Value", StringComparison.Ordinal)) continue;
+                // ±2 null-check window
+                int s43 = Math.Max(0, i - 2), e43 = Math.Min(asCastLines.Count - 1, i + 2);
+                bool hasNullCheck43 = false;
+                for (int j = s43; j <= e43; j++)
+                    if (nullCheckPatterns43.Any(p => asCastLines[j].Contains(p, StringComparison.Ordinal)))
+                    { hasNullCheck43 = true; break; }
+                if (!hasNullCheck43) hasUncheckedAsCast43 = true;
+            }
+
+            if (hasPragma43 || hasNullForgiving43 || hasUncheckedAsCast43)
+                labels.Add(MakeLabel("GCI0043", "Diff disables nullable warnings, uses multiple null-forgiving operators, or has unchecked as-cast on added lines", 0.60));
         }
 
         // GCI0044 -- Performance hotpath risk: Thread.Sleep / LINQ in loop / unbounded .Add in loop

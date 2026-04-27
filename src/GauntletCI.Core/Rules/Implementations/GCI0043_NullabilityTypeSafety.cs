@@ -118,12 +118,22 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
             // Skip XML doc comment lines — they contain "as" in natural prose
             if (content.TrimStart().StartsWith("///")) continue;
 
-            // Skip regular comment lines
+            // Skip regular comment lines (// and /* ... */ block-comment body lines starting with *)
             if (content.TrimStart().StartsWith("//")) continue;
+            if (content.TrimStart().StartsWith("*")) continue;
 
             // Skip "as" that appears inside a string literal (odd quote count before it)
             var asPos = content.IndexOf(" as ", StringComparison.Ordinal);
             if (IsInsideStringLiteral(content, asPos)) continue;
+
+            // `as object` always succeeds for any non-null reference — safe, never returns null.
+            var afterAs = content[(asPos + 4)..].TrimStart();
+            if (afterAs.StartsWith("object", StringComparison.Ordinal) &&
+                (afterAs.Length == 6 || (!char.IsLetterOrDigit(afterAs[6]) && afterAs[6] != '_')))
+                continue;
+
+            // (x as T)?. — null-conditional usage; NullReferenceException is impossible here.
+            if (content[(asPos + 4)..].Contains(")?.", StringComparison.Ordinal)) continue;
 
             // GCI0006 (Edge Case Handling) owns .Value access detection. When the as-cast result
             // is immediately accessed via .Value on the same line, suppress here to avoid
