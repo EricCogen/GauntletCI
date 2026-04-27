@@ -97,6 +97,10 @@ public sealed class CompositeLabeler
 
             if (updateExpectedFindings && label != LabelInsufficientData)
                 await UpdateExpectedFindingsAsync(db, fixture.FixtureId, label, confidence, ct);
+
+            // EF migration always warrants a GCI0021 expected finding regardless of composite label
+            if (updateExpectedFindings && signals.HasEfMigrationData && signals.MigrationDetected)
+                await WriteEfMigrationFindingAsync(db, fixture.FixtureId, signals.MigrationConfidence, ct);
         }
 
         return result;
@@ -110,11 +114,16 @@ public sealed class CompositeLabeler
         if (!s.HasDependabotData && !s.HasSocialSignalData &&
             s.SonarMatchCount == 0 && s.CodeQlMatchCount == 0 &&
             !s.HasSemgrepData && !s.HasStructuralData &&
-            !s.HasNuGetAdvisoryData && !s.HasChurnData && !s.HasNlpData)
+            !s.HasNuGetAdvisoryData && !s.HasChurnData && !s.HasNlpData &&
+            !s.HasTestCoverageData && !s.HasEntropyData && !s.HasEfMigrationData)
             return LabelInsufficientData;
 
         // Tier 1 Dependabot - highest confidence
         if (s.IsDependabot) return LabelDependabotFix;
+
+        // EF migration detected -> HIGH_RISK_GHOST (schema changes are high-confidence)
+        if (s.HasEfMigrationData && s.MigrationDetected)
+            return LabelHighRiskGhost;
 
         // NuGet vulnerability in diff = high risk
         if (s.HasNuGetAdvisoryData && s.NuGetAdvisoryCount > 0 && !s.IsDependabot)
@@ -145,12 +154,23 @@ public sealed class CompositeLabeler
             s.HasSocialSignalData && s.SocialSignalScore < 0.5)
             return LabelHotPathUnreviewed;
 
+        // Diff entropy: highly scattered change + very low social validation -> HOT_PATH_UNREVIEWED
+        if (s.HasEntropyData && s.NormalizedEntropy >= 0.8 &&
+            s.HasSocialSignalData && s.SocialScore < 0.4 && !hasScannerMatch)
+            return LabelHotPathUnreviewed;
+
         // Guide: Snyk(Clean) + LibGit2Sharp(Logic Diff > 0) -> SILENT_LOGIC_CHANGE
         // Proxy: social signal exists (diff is real), no scanner, low-medium validation, sparse review
+        // High entropy amplifies scatter signal for SILENT_LOGIC_CHANGE classification
         if (!hasScannerMatch && s.HasSocialSignalData &&
             s.SocialSignalScore < HighValidationThreshold &&
             s.ReviewerCount <= 1)
             return LabelSilentLogicChange;
+
+        // Test coverage gap with moderate social signal -> UNVALIDATED_BEHAVIORAL_RISK
+        if (s.HasTestCoverageData && s.TestCoverageGap && !hasScannerMatch &&
+            s.HasSocialSignalData && s.SocialScore < 0.5)
+            return LabelUnvalidatedBehavioralRisk;
 
         // Very low validation, no scanner hit -> UNVALIDATED_BEHAVIORAL_RISK
         if (hasLowValidation && !hasScannerMatch)
@@ -311,6 +331,57 @@ public sealed class CompositeLabeler
             }
         }
 
+        using (var cmd = db.Connection.CreateCommand())
+        {
+            cmd.CommandText = """
+                SELECT test_coverage_gap, test_to_prod_ratio
+                FROM   test_coverage_enrichments
+                WHERE  fixture_id = $id
+                """;
+            cmd.Parameters.AddWithValue("$id", fixtureId);
+            using var reader = await cmd.ExecuteReaderAsync(ct);
+            if (await reader.ReadAsync(ct))
+            {
+                s.HasTestCoverageData = true;
+                s.TestCoverageGap     = reader.GetInt32(0) == 1;
+                s.TestToProdRatio     = reader.GetDouble(1);
+            }
+        }
+
+        using (var cmd = db.Connection.CreateCommand())
+        {
+            cmd.CommandText = """
+                SELECT normalized_entropy, file_count
+                FROM   diff_entropy_enrichments
+                WHERE  fixture_id = $id
+                """;
+            cmd.Parameters.AddWithValue("$id", fixtureId);
+            using var reader = await cmd.ExecuteReaderAsync(ct);
+            if (await reader.ReadAsync(ct))
+            {
+                s.HasEntropyData    = true;
+                s.NormalizedEntropy = reader.GetDouble(0);
+                s.ChangeFileCount   = reader.GetInt32(1);
+            }
+        }
+
+        using (var cmd = db.Connection.CreateCommand())
+        {
+            cmd.CommandText = """
+                SELECT migration_detected, migration_confidence
+                FROM   ef_migration_enrichments
+                WHERE  fixture_id = $id
+                """;
+            cmd.Parameters.AddWithValue("$id", fixtureId);
+            using var reader = await cmd.ExecuteReaderAsync(ct);
+            if (await reader.ReadAsync(ct))
+            {
+                s.HasEfMigrationData  = true;
+                s.MigrationDetected   = reader.GetInt32(0) == 1;
+                s.MigrationConfidence = reader.GetDouble(1);
+            }
+        }
+
         return s;
     }
 
@@ -334,6 +405,9 @@ public sealed class CompositeLabeler
             nuget_advisories       = signals.HasNuGetAdvisoryData ? signals.NuGetAdvisoryCount : (int?)null,
             max_hotspot_score      = signals.HasChurnData ? signals.MaxHotspotScore : (double?)null,
             nlp_matched_rules      = signals.HasNlpData ? signals.NlpMatchedRuleIds.Count : (int?)null,
+            test_coverage_gap      = signals.HasTestCoverageData ? (bool?)signals.TestCoverageGap : null,
+            normalized_entropy     = signals.HasEntropyData ? (double?)signals.NormalizedEntropy : null,
+            migration_detected     = signals.HasEfMigrationData ? (bool?)signals.MigrationDetected : null,
         });
 
         using var cmd = db.Connection.CreateCommand();
@@ -375,6 +449,26 @@ public sealed class CompositeLabeler
         }
     }
 
+    private static async Task WriteEfMigrationFindingAsync(
+        CorpusDb db, string fixtureId, double confidence, CancellationToken ct)
+    {
+        var id     = $"{fixtureId}_GCI0021_ef-migration";
+        var reason = "EF Core migration or SQL DDL change detected in diff - schema change risk";
+
+        using var cmd = db.Connection.CreateCommand();
+        cmd.CommandText = """
+            INSERT OR IGNORE INTO expected_findings
+                (id, fixture_id, rule_id, should_trigger, expected_confidence, reason, label_source)
+            VALUES
+                ($id, $fixtureId, 'GCI0021', 1, $conf, $reason, 'ef-migration-enricher')
+            """;
+        cmd.Parameters.AddWithValue("$id",        id);
+        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
+        cmd.Parameters.AddWithValue("$conf",      confidence);
+        cmd.Parameters.AddWithValue("$reason",    reason);
+        await cmd.ExecuteNonQueryAsync(ct);
+    }
+
     // ── internal signal bag ───────────────────────────────────────────────────
 
     private sealed class FixtureSignals
@@ -398,6 +492,21 @@ public sealed class CompositeLabeler
         public double MaxHotspotScore     { get; set; }
         public HashSet<string> NlpMatchedRuleIds { get; set; } = new(StringComparer.Ordinal);
         public bool   HasNlpData          { get; set; }
+
+        // Test coverage enrichment signals
+        public bool   HasTestCoverageData { get; set; }
+        public bool   TestCoverageGap     { get; set; }
+        public double TestToProdRatio     { get; set; }
+
+        // Diff entropy enrichment signals
+        public bool   HasEntropyData      { get; set; }
+        public double NormalizedEntropy   { get; set; }
+        public int    ChangeFileCount     { get; set; }
+
+        // EF migration enrichment signals
+        public bool   HasEfMigrationData  { get; set; }
+        public bool   MigrationDetected   { get; set; }
+        public double MigrationConfidence { get; set; }
 
         // Alias used in ClassifyLabel for readability
         public double SocialScore => SocialSignalScore;

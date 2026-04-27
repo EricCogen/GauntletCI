@@ -104,6 +104,18 @@ public static class CorpusCommand
         reviewNlp.AddCommand(CreateReviewNlpEnrich());
         corpus.AddCommand(reviewNlp);
 
+        var testCoverage = new Command("test-coverage", "Pure-diff test coverage gap enrichment");
+        testCoverage.AddCommand(CreateTestCoverageEnrich());
+        corpus.AddCommand(testCoverage);
+
+        var diffEntropy = new Command("diff-entropy", "Pure-diff Kamei entropy signal enrichment");
+        diffEntropy.AddCommand(CreateDiffEntropyEnrich());
+        corpus.AddCommand(diffEntropy);
+
+        var efMigration = new Command("ef-migration", "Pure-diff EF Core migration and SQL DDL detection");
+        efMigration.AddCommand(CreateEfMigrationEnrich());
+        corpus.AddCommand(efMigration);
+
         return corpus;
     }
 
@@ -3126,8 +3138,151 @@ public static class CorpusCommand
 
     // ── gauntletci corpus nuget-advisory enrich ────────────────────────────────
 
-    private static Command CreateNuGetAdvisoryEnrich()
+    private static Command CreateTestCoverageEnrich()
     {
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
+        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
+
+        var cmd = new Command("enrich", "Classify changed .cs files as production vs test and detect test coverage gaps");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+        cmd.AddOption(tierOpt);
+        cmd.AddOption(limitOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
+            var ct           = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                var fixtures = await LoadFixturesAsync(db, tier, ct);
+                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+
+                Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with test coverage data...");
+                Console.WriteLine();
+
+                var result = await TestCoverageEnricher.EnrichAsync(
+                    fixtures, db, fixturesPath,
+                    progress: msg => Console.WriteLine(msg),
+                    ct: ct);
+
+                Console.WriteLine();
+                Console.WriteLine("-- Test Coverage Enrichment Summary --");
+                Console.WriteLine($"  Fixtures processed  : {result.FixturesProcessed}");
+                Console.WriteLine($"  Gap fixtures        : {result.GapFixtures}");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus diff-entropy enrich ──────────────────────────────────
+
+    private static Command CreateDiffEntropyEnrich()
+    {
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
+        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
+
+        var cmd = new Command("enrich", "Compute Kamei et al. JIT defect prediction entropy features from diffs");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+        cmd.AddOption(tierOpt);
+        cmd.AddOption(limitOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
+            var ct           = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                var fixtures = await LoadFixturesAsync(db, tier, ct);
+                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+
+                Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with diff entropy data...");
+                Console.WriteLine();
+
+                var result = await DiffEntropyEnricher.EnrichAsync(
+                    fixtures, db, fixturesPath,
+                    progress: msg => Console.WriteLine(msg),
+                    ct: ct);
+
+                Console.WriteLine();
+                Console.WriteLine("-- Diff Entropy Enrichment Summary --");
+                Console.WriteLine($"  Fixtures processed       : {result.FixturesProcessed}");
+                Console.WriteLine($"  High-entropy fixtures    : {result.HighEntropyFixtures}");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus ef-migration enrich ──────────────────────────────────
+
+    private static Command CreateEfMigrationEnrich()
+    {
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
+        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
+
+        var cmd = new Command("enrich", "Detect EF Core migration files and SQL DDL changes in diffs");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+        cmd.AddOption(tierOpt);
+        cmd.AddOption(limitOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
+            var ct           = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                var fixtures = await LoadFixturesAsync(db, tier, ct);
+                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+
+                Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with EF migration data...");
+                Console.WriteLine();
+
+                var result = await EFMigrationEnricher.EnrichAsync(
+                    fixtures, db, fixturesPath,
+                    progress: msg => Console.WriteLine(msg),
+                    ct: ct);
+
+                Console.WriteLine();
+                Console.WriteLine("-- EF Migration Enrichment Summary --");
+                Console.WriteLine($"  Fixtures processed   : {result.FixturesProcessed}");
+                Console.WriteLine($"  Migration fixtures   : {result.MigrationFixtures}");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus nuget-advisory enrich ────────────────────────────────
+
+    private static Command CreateNuGetAdvisoryEnrich(){
         var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
         var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
