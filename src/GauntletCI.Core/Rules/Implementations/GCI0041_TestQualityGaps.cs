@@ -39,6 +39,7 @@ public class GCI0041_TestQualityGaps : RuleBase
         "Assert.", "Xunit.Assert", "NUnit.Framework.Assert",
         // FluentAssertions / Shouldly
         "Should", ".ShouldBe", ".ShouldNotBe", ".ShouldBeNull", ".ShouldNotBeNull",
+        ".Must(",
         // NSubstitute
         "Received(", "DidNotReceive(",
         // Moq / FakeItEasy
@@ -48,6 +49,12 @@ public class GCI0041_TestQualityGaps : RuleBase
         "IsTrue(", "IsFalse(", "IsNull(", "IsNotNull(", "AreEqual(", "AreNotEqual(",
         "Contains(", "IsInstanceOf",
     ];
+
+    // Matches custom assertion helpers: AssertValid(...), VerifyResult(...), CheckState(...)
+    // and methods ending in those words: ResultAssert(...), SomeVerify(...)
+    private static readonly Regex AssertionHelperRegex =
+        new(@"\b(?:Assert|Verify|Check)\w+\s*\(|\b\w+(?:Assert|Verify|Check)\s*\(",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
@@ -152,7 +159,8 @@ public class GCI0041_TestQualityGaps : RuleBase
             .ToList();
 
         bool hasAssertion = allVisibleLines.Any(l =>
-            AssertionKeywords.Any(k => l.Contains(k, StringComparison.OrdinalIgnoreCase)));
+            AssertionKeywords.Any(k => l.Contains(k, StringComparison.OrdinalIgnoreCase)) ||
+            AssertionHelperRegex.IsMatch(l));
 
         if (hasAssertion) return;
 

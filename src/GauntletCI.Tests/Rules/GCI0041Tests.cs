@@ -185,6 +185,56 @@ public class GCI0041Tests
     }
 
     [Fact]
+    public async Task TestWithCustomAssertHelper_ShouldNotFlagEmptyAssertions()
+    {
+        var raw = """
+            diff --git a/src/OrderTests.cs b/src/OrderTests.cs
+            index abc..def 100644
+            --- a/src/OrderTests.cs
+            +++ b/src/OrderTests.cs
+            @@ -1,3 +1,9 @@
+             public class OrderTests {
+            +    [Fact]
+            +    public async Task PlaceOrder_ShouldSucceed()
+            +    {
+            +        var result = await _svc.PlaceOrderAsync(new Order());
+            +        AssertValidOrder(result);
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("assertions"));
+    }
+
+    [Fact]
+    public async Task TestWithFluentMust_ShouldNotFlagEmptyAssertions()
+    {
+        var raw = """
+            diff --git a/src/PaymentTests.cs b/src/PaymentTests.cs
+            index abc..def 100644
+            --- a/src/PaymentTests.cs
+            +++ b/src/PaymentTests.cs
+            @@ -1,3 +1,9 @@
+             public class PaymentTests {
+            +    [Fact]
+            +    public async Task Charge_ShouldSucceed()
+            +    {
+            +        var result = await _svc.ChargeAsync(100m);
+            +        result.Success.Must(BeTrue, "payment must succeed");
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("assertions"));
+    }
+
+    [Fact]
     public async Task CleanTestFile_ShouldNotFlag()
     {
         var raw = """
