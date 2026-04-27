@@ -53,6 +53,21 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                      trimmed.StartsWith("protected ", StringComparison.Ordinal)) &&
                     content.Contains("=>", StringComparison.Ordinal)) continue;
 
+                // Skip KeyValuePair / Dictionary iteration: .Key (not .Keys) and .Value on the same line
+                // means this is safe dict-entry access, not a Nullable<T>.Value dereference
+                if (HasDotKeyAccess(content)) continue;
+
+                // Skip when .Value itself is null-checked inline (e.g. `x.Value == null`,
+                // `x.Value is not null`) or when HasValue guards the same access.
+                // Avoid broad Contains("== null") which suppresses `_other != null` on the same line.
+                if (System.Text.RegularExpressions.Regex.IsMatch(
+                        content, @"\.Value\s*(is not null|is null|==\s*null|!=\s*null)") ||
+                    content.Contains("HasValue", StringComparison.Ordinal)) continue;
+
+                // Skip IOptions<T>.Value / IOptionsSnapshot<T>.Value / IOptionsMonitor<T>.Value
+                // These are DI-injected configuration wrappers, not Nullable<T>
+                if (content.Contains("IOptions", StringComparison.Ordinal)) continue;
+
                 // Check preceding lines for null guard
                 int start = Math.Max(0, i - 5);
                 bool hasGuard = addedLines[start..i]
@@ -96,9 +111,16 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 // class or interface — enforcing null validation here is incorrect
                 if (content.Contains(" override ", StringComparison.Ordinal)) continue;
 
-                // Abstract methods and delegate declarations have no method body — validation is impossible
+                // Abstract methods, delegate declarations, and partial stubs have no body
                 if (content.Contains(" abstract ", StringComparison.Ordinal) ||
-                    content.Contains(" delegate ", StringComparison.Ordinal)) continue;
+                    content.Contains(" delegate ", StringComparison.Ordinal) ||
+                    content.Contains(" partial ", StringComparison.Ordinal)) continue;
+
+                // Constructors have no return type — skip them
+                // A method signature has: <accessModifier> <returnType> <name>(<params>)
+                // A constructor has:       <accessModifier> <name>(<params>)
+                // Detect constructors by checking for a return-type token before the name
+                if (!HasReturnType(content)) continue;
 
                 // Check "string" or "object" in the parameter section, not just the return type
                 var parenIdx = content.IndexOf('(');
@@ -128,6 +150,27 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 }
             }
         }
+    }
+
+    // Returns true when the line has an explicit return type — i.e., it is a method, not a constructor.
+    // Constructors look like: public ClassName( — one identifier between access modifiers and '('
+    // Methods look like:      public ReturnType MethodName( — two identifiers before '('
+    private static bool HasReturnType(string line)
+    {
+        var t = line.TrimStart();
+        // Strip known access/modifier keywords left-to-right
+        foreach (var mod in new[] { "public ", "protected ", "static ", "async ", "virtual ",
+                                    "sealed ", "new ", "internal ", "extern " })
+        {
+            while (t.StartsWith(mod, StringComparison.Ordinal))
+                t = t[mod.Length..];
+        }
+        // After modifiers, a method has a return type token FOLLOWED BY a space and then the name.
+        // A constructor has only the class name followed directly by '('.
+        int firstParen = t.IndexOf('(');
+        int firstSpace = t.IndexOf(' ');
+        // A return type exists when there is a space before the first '(' (return-type<space>name<paren>)
+        return firstSpace > 0 && (firstParen < 0 || firstSpace < firstParen);
     }
 
     private static bool HasNullableReferenceParam(string paramSection)
@@ -228,7 +271,38 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 continue;
             }
 
+            // .Value = (LHS assignment) -- writing to a Value property, not reading a Nullable<T>
+            // Exclude .Value == (comparison) and .Value => (lambda expression body)
+            int assignPos = afterIdx;
+            while (assignPos < content.Length && content[assignPos] == ' ') assignPos++;
+            if (assignPos < content.Length && content[assignPos] == '=' &&
+                (assignPos + 1 >= content.Length ||
+                 (content[assignPos + 1] != '=' && content[assignPos + 1] != '>')))
+            {
+                pos = afterIdx;
+                continue;
+            }
+
             return true;
+        }
+        return false;
+    }
+
+    // Returns true when the line contains a `.Key` word-boundary access (not `.Keys`, `.KeyValues`, etc.)
+    // Used to detect KeyValuePair/Dictionary iterations where `.Value` is the entry value, not Nullable<T>.
+    private static bool HasDotKeyAccess(string content)
+    {
+        int pos = 0;
+        while (pos < content.Length)
+        {
+            int idx = content.IndexOf(".Key", pos, StringComparison.Ordinal);
+            if (idx < 0) return false;
+            int after = idx + 4;
+            // Ensure what follows is NOT a word character (avoids matching .Keys, .KeyValues, etc.)
+            if (after >= content.Length ||
+                (!char.IsLetterOrDigit(content[after]) && content[after] != '_'))
+                return true;
+            pos = after;
         }
         return false;
     }

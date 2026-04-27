@@ -458,12 +458,58 @@ public sealed class SilverLabelEngine
         }
 
         // GCI0006 -- Possible null dereference
-        // Tightened: require meaningful null assignment pattern — property/variable set to null, or
-        // null-forgiving operator used in a non-trivial position. Skip bare declarations and
-        // null-coalescing assignments which are safe patterns.
-        if (addedLines.Any(IsMeaningfulNullPattern))
+        // Mirror the rule signal: unsafe .Value access on an added C# line without a null guard in
+        // surrounding added lines, OR a public/protected non-constructor method with nullable params
+        // lacking a validation statement in the following lines.
         {
-            labels.Add(MakeLabel("GCI0006", "Diff contains a meaningful null assignment or null-forgiving use on added lines", 0.5));
+            bool triggered = false;
+            for (int i = 0; i < addedLines.Count && !triggered; i++)
+            {
+                var line = addedLines[i];
+                var trimmed = line.TrimStart();
+                if (trimmed.StartsWith("//") || trimmed.StartsWith("*") || trimmed.StartsWith("/*")) continue;
+
+                // --- Signal 1: unsafe .Value access ---
+                if (HasLabelerUnsafeValueAccess(line))
+                {
+                    // Skip: IOptions<T>.Value (DI pattern, always non-null)
+                    if (line.Contains("IOptions", StringComparison.Ordinal)) continue;
+                    // Skip: .Value = (LHS assignment, not reading)
+                    if (Regex.IsMatch(line, @"\.Value\s*=(?!=|>)")) continue;
+                    // Skip: KVP iteration (.Key word-bounded on same line)
+                    if (HasLabelerDotKeyAccess(line)) continue;
+                    // Check: no null guard in surrounding 10 added lines
+                    int start = Math.Max(0, i - 5);
+                    int end   = Math.Min(addedLines.Count, i + 5);
+                    bool guarded = addedLines[start..end]
+                        .Any(l => l.Contains("HasValue", StringComparison.Ordinal) ||
+                                  l.Contains("is not null", StringComparison.Ordinal) ||
+                                  Regex.IsMatch(l, @"\.Value\s*(==|!=|is)\s*null") ||
+                                  (l.Contains(".Success", StringComparison.Ordinal) &&
+                                   HasSharedRoot(line, l)));
+                    if (!guarded) triggered = true;
+                }
+
+                // --- Signal 2: public/protected non-constructor method with nullable params missing guard ---
+                if (!triggered &&
+                    (trimmed.StartsWith("public ", StringComparison.Ordinal) ||
+                     trimmed.StartsWith("protected ", StringComparison.Ordinal)) &&
+                    trimmed.Contains('(') && trimmed.Contains(')') &&
+                    Regex.IsMatch(line, @"\b(string|object)\?") &&
+                    !IsLabelerConstructor(trimmed) &&
+                    !trimmed.Contains("partial", StringComparison.Ordinal))
+                {
+                    int end = Math.Min(addedLines.Count, i + 10);
+                    bool hasValidation = addedLines[i..end]
+                        .Any(l => l.Contains("null", StringComparison.Ordinal) ||
+                                  l.Contains("ArgumentNullException", StringComparison.Ordinal) ||
+                                  l.Contains("ThrowIfNull", StringComparison.Ordinal) ||
+                                  l.Contains("Guard.", StringComparison.Ordinal));
+                    if (!hasValidation) triggered = true;
+                }
+            }
+            if (triggered)
+                labels.Add(MakeLabel("GCI0006", "Added C# code accesses .Value without a null guard or has unvalidated nullable parameters", 0.6));
         }
 
         // GCI0010 -- Hardcoded configuration value
@@ -728,6 +774,88 @@ public sealed class SilverLabelEngine
             return false;
 
         return MeaningfulNullAssign.IsMatch(line) || NullForgivingNonTrivial.IsMatch(line);
+    }
+
+    // -- GCI0006 labeler helpers -----------------------------------------------
+
+    // Returns true when the line contains an unsafe .Value access (not safe variants).
+    private static bool HasLabelerUnsafeValueAccess(string line)
+    {
+        int pos = 0;
+        while (pos < line.Length)
+        {
+            int idx = line.IndexOf(".Value", pos, StringComparison.Ordinal);
+            if (idx < 0) return false;
+            int after = idx + 6;
+            // .Values, .ValueOrDefault etc. — not a bare .Value access
+            if (after < line.Length && (char.IsLetterOrDigit(line[after]) || line[after] == '_'))
+            { pos = after; continue; }
+            // .Value! — null-forgiving
+            if (after < line.Length && line[after] == '!') { pos = after; continue; }
+            // .Value? — null-conditional
+            if (after < line.Length && line[after] == '?') { pos = after; continue; }
+            // ?.Value — null-conditional
+            if (idx > 0 && line[idx - 1] == '?') { pos = after; continue; }
+            return true;
+        }
+        return false;
+    }
+
+    // Returns true when the line has a .Key (word-boundary) access, indicating KVP iteration.
+    private static bool HasLabelerDotKeyAccess(string content)
+    {
+        int pos = 0;
+        while (pos < content.Length)
+        {
+            int idx = content.IndexOf(".Key", pos, StringComparison.Ordinal);
+            if (idx < 0) return false;
+            int after = idx + 4;
+            if (after >= content.Length ||
+                (!char.IsLetterOrDigit(content[after]) && content[after] != '_'))
+                return true;
+            pos = after;
+        }
+        return false;
+    }
+
+    // Returns true when a method signature has no return type token before the opening paren
+    // (i.e., it is a constructor).  Strips visibility/modifier keywords first.
+    private static readonly string[] LabelerCtorSkipKeywords =
+        ["public", "protected", "internal", "private", "static", "async", "virtual",
+         "override", "sealed", "new", "extern", "abstract"];
+
+    private static bool IsLabelerConstructor(string trimmedLine)
+    {
+        var part = trimmedLine;
+        bool stripped = true;
+        while (stripped)
+        {
+            stripped = false;
+            foreach (var kw in LabelerCtorSkipKeywords)
+            {
+                if (!part.StartsWith(kw + " ", StringComparison.Ordinal)) continue;
+                part = part[(kw.Length + 1)..].TrimStart();
+                stripped = true;
+            }
+        }
+        int paren = part.IndexOf('(');
+        if (paren <= 0) return false;
+        return !part[..paren].Contains(' ');
+    }
+
+    // Returns true when valueLine and guardLine share the same root identifier.
+    private static bool HasSharedRoot(string valueLine, string guardLine)
+    {
+        int vi = valueLine.IndexOf(".Value", StringComparison.Ordinal);
+        if (vi <= 0) return false;
+        int s = vi - 1;
+        while (s > 0 && valueLine[s - 1] is char c2 &&
+               (char.IsLetterOrDigit(c2) || c2 is '_' or '.' or '[' or ']')) s--;
+        var expr = valueLine[s..vi];
+        int b = expr.IndexOfAny(['.', '[']);
+        var root = b > 0 ? expr[..b] : expr;
+        root = new string(root.Where(c => char.IsLetterOrDigit(c) || c == '_').ToArray());
+        return root.Length > 0 && guardLine.Contains(root + ".Success", StringComparison.Ordinal);
     }
 
     // -- Tightened GCI0007 helper ----------------------------------------------
