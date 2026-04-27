@@ -9,6 +9,9 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- **GCI0016 rewritten as "Async Concurrency Risk"**: Dropped the static mutable field check (51 corpus FPs, ~0 TPs - private primitives dominate and generate noise on config sentinels and singletons). Fixed `.Result` ambiguity: now only flags when preceded by `)` (method-call chain) or when the expression contains explicit Task/Async context - domain property names like `response.Result` and `exception.Result` no longer fire. Rule renamed from "Concurrency and State Risk" to "Async Concurrency Risk" to reflect the tighter scope. All four remaining checks (async void, .Wait()/.GetAwaiter().GetResult()/.Result, lock(this), Thread.Sleep) are now precise and corpus-validated.
+
 ### Added
 - **Dependabot Tier 1 oracle** (`corpus dependabot enrich`): `DependabotEnricher` calls the GitHub PR API for each fixture, checks whether the PR author is `dependabot[bot]` / `dependabot-preview[bot]`, and also matches the Dependabot title pattern (`Bump X from Y to Z`). Results (including non-Dependabot rows) are written to the new `dependabot_matches` table so the `CompositeLabeler` can distinguish checked-and-clean from unchecked.
 - **Dependabot GH Archive discovery** (`corpus dependabot discover`): Scans GH Archive hourly event files for `PullRequestEvent` records where the author login starts with `dependabot` and the repo language is `C#`. Matching PRs are seeded into the `candidates` table with `source='dependabot-gharchive'` for subsequent hydration. Options: `--start-date`, `--end-date`, `--limit`.

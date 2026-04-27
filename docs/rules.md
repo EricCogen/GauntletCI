@@ -254,12 +254,12 @@ These rules detect patterns that cause performance degradation, data corruption,
 
 ---
 
-### GCI0016 · Concurrency and State Risk
+### GCI0016 · Async Concurrency Risk
 
 **Confidence:** High / Medium
-**What it detects:** Five checks on added lines. It flags methods declared as returning no value while also being asynchronous — except for legitimate event handler signatures. It flags calls that block the current thread waiting for an asynchronous operation to complete, which can deadlock in environments with a synchronization context. It flags locking on the object's own instance reference, which exposes the lock to external callers and enables deadlocks. It flags using a thread-blocking delay inside asynchronous code instead of the non-blocking equivalent. It flags static fields that are neither read-only nor constant, which represent shared mutable state across all threads and requests.
-**Why it matters:** Asynchronous methods that return no value cannot be observed by the caller — exceptions thrown in them crash the process without warning. Blocking on an asynchronous operation in the wrong context causes deadlocks. Locking on the instance reference is a well-known concurrency anti-pattern. Mutable static fields require explicit synchronization to avoid race conditions and are a frequent source of intermittent, hard-to-reproduce bugs.
-**Suggested action:** Change fire-and-forget methods to return a task. Use asynchronous waiting consistently. Use a private lock object. Use asynchronous delays. Make static fields read-only or eliminate them in favor of instance fields managed by the dependency injection container.
+**What it detects:** Four checks on added lines. It flags methods declared as `async void` — except for legitimate event handler signatures with `(object sender, ...EventArgs e)` parameters. It flags calls that block the current thread waiting for an async operation: `.Wait()`, `.GetAwaiter().GetResult()`, and `.Result` when the expression clearly operates on a Task (method call chain or explicit Task/Async context). It flags locking on `this`, which exposes the lock object to external callers. It flags `Thread.Sleep()` in production code, which blocks a thread pool thread instead of yielding it.
+**Why it matters:** `async void` methods cannot be awaited — exceptions they throw crash the process via `AppDomain.UnhandledException` with no way for the caller to recover. Blocking on async operations in a `SynchronizationContext` (ASP.NET, Blazor, WPF) deadlocks because the continuation needs the thread that is already blocked. `lock(this)` creates an external deadlock vector. `Thread.Sleep` wastes a thread pool thread and degrades throughput under load.
+**Suggested action:** Change `async void` to `async Task`. Use `await` instead of `.Result`/`.Wait()`/`.GetAwaiter().GetResult()`. Replace `lock(this)` with a dedicated `private readonly object _lock = new()`. Replace `Thread.Sleep()` with `await Task.Delay()`.
 
 ---
 
@@ -477,7 +477,7 @@ The following IDs exist in the codebase as placeholder files but do not particip
 |----|--------|
 | GCI0028 | Unassigned ID gap — reserved for future use |
 | GCI0030 | Reserved — functionality consolidated into GCI0024 (Resource Lifecycle) |
-| GCI0033 | Reserved — functionality consolidated into GCI0016 (Concurrency and State Risk) |
+| GCI0033 | Reserved — thread-safety checks originally merged into GCI0016; static mutable field detection removed in rewrite |
 
 ---
 

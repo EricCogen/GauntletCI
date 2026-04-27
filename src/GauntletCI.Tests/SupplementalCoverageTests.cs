@@ -263,26 +263,6 @@ public class SupplementalCoverageTests
         Assert.Contains(findings, f => f.Summary.Contains("lock(this)"));
     }
 
-    [Fact]
-    public async Task GCI0016_StaticMutableField_ShouldFlag()
-    {
-        var rule = new GCI0016_ConcurrencyAndStateRisk();
-        var raw = """
-            diff --git a/src/Service.cs b/src/Service.cs
-            index abc..def 100644
-            --- a/src/Service.cs
-            +++ b/src/Service.cs
-            @@ -1,1 +1,2 @@
-             // service
-            +private static int _counter;
-            """;
-
-        var diff = DiffParser.Parse(raw);
-        var findings = await rule.EvaluateAsync(diff, null);
-
-        Assert.Contains(findings, f => f.Summary.Contains("Static mutable field"));
-    }
-
     // ── RuleOrchestrator exception handling ───────────────────────────────────
 
     [Fact]
