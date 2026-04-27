@@ -552,19 +552,78 @@ public sealed class SilverLabelEngine
         // --- Rules added after initial corpus labeling ---
 
         // GCI0024 -- Resource allocated without disposal (no using/try-finally)
-        if (addedLines.Any(l =>
-                !l.TrimStart().StartsWith("//") &&
-                !l.Contains("using ", StringComparison.Ordinal) &&
-                (l.Contains("new FileStream(", StringComparison.Ordinal) ||
-                 l.Contains("new StreamWriter(", StringComparison.Ordinal) ||
-                 l.Contains("new StreamReader(", StringComparison.Ordinal) ||
-                 l.Contains("new SqlConnection(", StringComparison.Ordinal) ||
-                 l.Contains("new SqlCommand(", StringComparison.Ordinal) ||
-                 l.Contains("new TcpClient(", StringComparison.Ordinal) ||
-                 l.Contains("new GZipStream(", StringComparison.Ordinal) ||
-                 Regex.IsMatch(l, @"=\s*new [A-Z]\w*(Stream|Reader|Writer|Connection|Timer|Transaction)\("))))
+        // Mirror the rule's detection logic: suffix heuristic + explicit types list, with the same
+        // skip guards (caller-owns return, callee-owns method-arg, static singleton, lambda body).
         {
-            labels.Add(MakeLabel("GCI0024", "Diff allocates a disposable resource without a using statement on added lines", 0.55));
+            var labeler0024Explicit = new[]
+            {
+                "new FileStream(", "new StreamWriter(", "new StreamReader(", "new MemoryStream(",
+                "new SqlConnection(", "new SqlCommand(", "new SqlDataReader(",
+                "new TcpClient(", "new UdpClient(", "new Socket(",
+                "new Mutex(", "new Semaphore(", "new SemaphoreSlim(",
+                "new EventWaitHandle(", "new ManualResetEvent(",
+                "new BinaryWriter(", "new BinaryReader(",
+                "new GZipStream(", "new DeflateStream(", "new CryptoStream(",
+                "new X509Certificate(", "new RSACryptoServiceProvider(",
+            };
+            var labeler0024Suffixes = new[]
+            {
+                "Stream", "Reader", "Writer", "Connection", "Client",
+                "Listener", "Channel", "Context", "Provider", "Session", "Transaction",
+                "Certificate", "Scope", "Timer",
+            };
+            var labeler0024NonDisposable = new HashSet<string>(StringComparer.Ordinal)
+            {
+                "SyntaxContext", "AnalysisContext", "SemanticContext",
+                "SyntaxNodeAnalysisContext", "OperationAnalysisContext", "CodeBlockAnalysisContext",
+                "InvocationContext",
+                "HttpContext", "RouteContext", "FilterContext", "ActionContext",
+                "AuthorizationFilterContext", "ResourceExecutingContext", "ResourceExecutedContext",
+                "ResultExecutingContext", "ResultExecutedContext", "ExceptionContext",
+                "ValidationContext", "NavigationContext",
+                "PropagationContext", "ActivityContext", "SpanContext",
+                "MemberSelectionContext", "EquivalencyValidationContext", "CreatorPropertyContext",
+                "StrategyBuilderContext", "SelectionContext",
+                "SynchronizationContext", "DispatcherSynchronizationContext",
+                "DispatcherQueueSynchronizationContext",
+            };
+            var labeler0024Rx = new Regex(@"new ([A-Z][A-Za-z0-9]+)\(", RegexOptions.Compiled);
+
+            bool HasUnsafeDisposableAllocation(string l)
+            {
+                var trimmed = l.TrimStart();
+                if (trimmed.StartsWith("//") || trimmed.StartsWith("*") || trimmed.StartsWith("/*"))
+                    return false;
+                if (l.Contains("using ", StringComparison.Ordinal)) return false;
+                if (trimmed.StartsWith("return ", StringComparison.Ordinal)) return false;
+                if (l.Contains("static ", StringComparison.Ordinal)) return false;
+                // Lambda body: `(...) => new X(` — ownership transfers into the lambda's caller.
+                int arrowIdx = l.IndexOf("=>", StringComparison.Ordinal);
+                int newIdx   = l.IndexOf("new ", StringComparison.Ordinal);
+                if (arrowIdx >= 0 && newIdx >= 0 && newIdx > arrowIdx) return false;
+                // Fast path — explicit known types
+                if (labeler0024Explicit.Any(t => l.Contains(t, StringComparison.Ordinal))) return true;
+                // Suffix heuristic
+                var m = labeler0024Rx.Match(l);
+                if (!m.Success) return false;
+                var typeName = m.Groups[1].Value;
+                if (!labeler0024Suffixes.Any(s => typeName.EndsWith(s, StringComparison.Ordinal)))
+                    return false;
+                if (labeler0024NonDisposable.Contains(typeName)) return false;
+                // Callee-owns skip: unmatched `(` before `new typeName` means arg in a method call
+                int idx = l.IndexOf("new " + typeName, StringComparison.Ordinal);
+                if (idx > 0)
+                {
+                    var before = l[..idx];
+                    int opens  = before.Count(c => c == '(');
+                    int closes = before.Count(c => c == ')');
+                    if (opens > closes) return false;
+                }
+                return true;
+            }
+
+            if (prodCsLines.Any(HasUnsafeDisposableAllocation))
+                labels.Add(MakeLabel("GCI0024", "Diff allocates a disposable resource without a using statement on added lines", 0.60));
         }
 
         // GCI0029 -- PII term in a log call
