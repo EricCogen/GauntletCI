@@ -58,7 +58,7 @@ public sealed class SilverLabelEngine
         (["hardcoded", "hard-coded", "magic string", "magic number", "config", "environment variable"],
             "GCI0010", "Review comment mentions hardcoded value or configuration concern", 0.6),
         (["exception", "catch", "swallowing", "ignored exception"],
-            "GCI0003", "Review comment mentions exception handling concern", 0.6),
+            "GCI0032", "Review comment mentions exception handling concern", 0.6),
         // Note: "thread safe / concurrent / lock" keywords intentionally removed from GCI0016.
         // GCI0016 scope is async execution model violations only (dropped static mutable field
         // check). Thread-safety review comments signal concerns the rule no longer detects.
@@ -392,9 +392,24 @@ public sealed class SilverLabelEngine
             }
         }
 
-        // GCI0003 -- Empty catch block
+        // GCI0003 -- Non-private method signature changed in production code
+        // Fire when production .cs removes AND re-adds a public/protected/internal member
+        // with a parenthesized signature — the rule's primary detection path.
+        {
+            static bool IsSigLine(string l)
+            {
+                var t = l.TrimStart();
+                return (t.StartsWith("public ",    StringComparison.Ordinal) ||
+                        t.StartsWith("protected ", StringComparison.Ordinal) ||
+                        t.StartsWith("internal ",  StringComparison.Ordinal)) && t.Contains('(');
+            }
+            if (prodCsRemovedLines.Any(IsSigLine) && prodCsLines.Any(IsSigLine))
+                labels.Add(MakeLabel("GCI0003", "Diff removes and re-adds a non-private method signature in production code", 0.60));
+        }
+
+        // GCI0032 -- Empty or comment-only catch block (exception swallowing)
         if (HasEmptyCatch(addedLines))
-            labels.Add(MakeLabel("GCI0003", "Diff contains empty or comment-only catch block on added lines", 0.65));
+            labels.Add(MakeLabel("GCI0032", "Diff contains an empty or comment-only catch block on added lines", 0.65));
 
         // GCI0021 -- Serialization attribute removed from production CS, or EF migration schema operation removed
         // Migration detection: check if removed lines from a non-test EF migration .cs file contain actual
