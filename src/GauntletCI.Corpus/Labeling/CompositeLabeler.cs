@@ -172,6 +172,16 @@ public sealed class CompositeLabeler
             s.HasSocialSignalData && s.SocialScore < 0.5)
             return LabelUnvalidatedBehavioralRisk;
 
+        // WIP/empty PR with very low validation -> UNVALIDATED_BEHAVIORAL_RISK
+        if (s.HasPrDescriptionData && s.IsEmptyPrBody && s.HasWipKeywords &&
+            hasLowValidation && !hasScannerMatch)
+            return LabelUnvalidatedBehavioralRisk;
+
+        // First-time contributor + empty body -> amplified UNVALIDATED_BEHAVIORAL_RISK signal
+        if (s.HasAuthorData && s.IsFirstContributor &&
+            s.HasPrDescriptionData && s.IsEmptyPrBody && !hasScannerMatch)
+            return LabelUnvalidatedBehavioralRisk;
+
         // Very low validation, no scanner hit -> UNVALIDATED_BEHAVIORAL_RISK
         if (hasLowValidation && !hasScannerMatch)
             return LabelUnvalidatedBehavioralRisk;
@@ -190,7 +200,7 @@ public sealed class CompositeLabeler
                                         : s.HasNuGetAdvisoryData && s.NuGetAdvisoryCount > 0 ? 0.85
                                         : 0.60,
         LabelSilentLogicChange         => 0.55,
-        LabelUnvalidatedBehavioralRisk => 0.50,
+        LabelUnvalidatedBehavioralRisk => s.HasPrDescriptionData && s.HasLinkedIssue ? 0.40 : 0.50,
         LabelHotPathUnreviewed         => 0.65,
         LabelStandardChange            => s.ReviewerCount >= 2 ? 0.75 : 0.60,
         _                              => 0.0,
@@ -382,6 +392,41 @@ public sealed class CompositeLabeler
             }
         }
 
+        using (var cmd = db.Connection.CreateCommand())
+        {
+            cmd.CommandText = """
+                SELECT is_empty_body, has_linked_issue, has_wip_keywords
+                FROM   pr_description_enrichments
+                WHERE  fixture_id = $id
+                """;
+            cmd.Parameters.AddWithValue("$id", fixtureId);
+            using var reader = await cmd.ExecuteReaderAsync(ct);
+            if (await reader.ReadAsync(ct))
+            {
+                s.HasPrDescriptionData = true;
+                s.IsEmptyPrBody        = reader.GetInt32(0) == 1;
+                s.HasLinkedIssue       = reader.GetInt32(1) == 1;
+                s.HasWipKeywords       = reader.GetInt32(2) == 1;
+            }
+        }
+
+        using (var cmd = db.Connection.CreateCommand())
+        {
+            cmd.CommandText = """
+                SELECT is_first_contributor, experience_tier
+                FROM   author_experience_enrichments
+                WHERE  fixture_id = $id
+                """;
+            cmd.Parameters.AddWithValue("$id", fixtureId);
+            using var reader = await cmd.ExecuteReaderAsync(ct);
+            if (await reader.ReadAsync(ct))
+            {
+                s.HasAuthorData        = true;
+                s.IsFirstContributor   = reader.GetInt32(0) == 1;
+                s.AuthorExperienceTier = reader.GetString(1);
+            }
+        }
+
         return s;
     }
 
@@ -408,6 +453,10 @@ public sealed class CompositeLabeler
             test_coverage_gap      = signals.HasTestCoverageData ? (bool?)signals.TestCoverageGap : null,
             normalized_entropy     = signals.HasEntropyData ? (double?)signals.NormalizedEntropy : null,
             migration_detected     = signals.HasEfMigrationData ? (bool?)signals.MigrationDetected : null,
+            is_empty_pr_body       = signals.HasPrDescriptionData ? (bool?)signals.IsEmptyPrBody : null,
+            has_linked_issue       = signals.HasPrDescriptionData ? (bool?)signals.HasLinkedIssue : null,
+            is_first_contributor   = signals.HasAuthorData ? (bool?)signals.IsFirstContributor : null,
+            author_experience_tier = signals.HasAuthorData ? signals.AuthorExperienceTier : null,
         });
 
         using var cmd = db.Connection.CreateCommand();
@@ -507,6 +556,17 @@ public sealed class CompositeLabeler
         public bool   HasEfMigrationData  { get; set; }
         public bool   MigrationDetected   { get; set; }
         public double MigrationConfidence { get; set; }
+
+        // PR description enrichment signals
+        public bool   HasPrDescriptionData { get; set; }
+        public bool   IsEmptyPrBody        { get; set; }
+        public bool   HasLinkedIssue       { get; set; }
+        public bool   HasWipKeywords       { get; set; }
+
+        // Author experience enrichment signals
+        public bool   HasAuthorData           { get; set; }
+        public bool   IsFirstContributor      { get; set; }
+        public string AuthorExperienceTier    { get; set; } = "unknown";
 
         // Alias used in ClassifyLabel for readability
         public double SocialScore => SocialSignalScore;

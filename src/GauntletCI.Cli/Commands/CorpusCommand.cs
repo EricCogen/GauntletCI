@@ -116,6 +116,14 @@ public static class CorpusCommand
         efMigration.AddCommand(CreateEfMigrationEnrich());
         corpus.AddCommand(efMigration);
 
+        var prDescription = new Command("pr-description", "PR description quality enrichment");
+        prDescription.AddCommand(CreatePrDescriptionEnrich());
+        corpus.AddCommand(prDescription);
+
+        var authorExperience = new Command("author-experience", "PR author experience and first-contributor enrichment");
+        authorExperience.AddCommand(CreateAuthorExperienceEnrich());
+        corpus.AddCommand(authorExperience);
+
         return corpus;
     }
 
@@ -3328,6 +3336,114 @@ public static class CorpusCommand
                 Console.WriteLine($"  Fixtures processed       : {result.FixturesProcessed}");
                 Console.WriteLine($"  Fixtures with advisories : {result.FixturesWithAdvisories}");
                 Console.WriteLine($"  Total advisories found   : {result.TotalAdvisories}");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus pr-description enrich ───────────────────────────────
+
+    private static Command CreatePrDescriptionEnrich()
+    {
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
+        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
+        var delayOpt    = new Option<int>   ("--delay-ms", () => 250,                           "Delay between GitHub API calls (ms)");
+
+        var cmd = new Command("enrich", "Fetch PR title/body quality signals (linked issue, WIP keywords, empty body) from GitHub API");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+        cmd.AddOption(tierOpt);
+        cmd.AddOption(limitOpt);
+        cmd.AddOption(delayOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath  = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var tier    = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit   = ctx.ParseResult.GetValueForOption(limitOpt);
+            var delayMs = ctx.ParseResult.GetValueForOption(delayOpt);
+            var ct      = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                var fixtures = await LoadFixturesWithPrAsync(db, tier, ct);
+                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+
+                Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with PR description data...");
+                Console.WriteLine();
+
+                using var enricher = new PRDescriptionEnricher();
+                var result = await enricher.EnrichAsync(
+                    fixtures, db, delayMs,
+                    progress: msg => Console.WriteLine(msg),
+                    ct: ct);
+
+                if (result.AuthMissing) { ctx.ExitCode = 1; return; }
+
+                Console.WriteLine();
+                Console.WriteLine("-- PR Description Enrichment Summary --");
+                Console.WriteLine($"  Fixtures processed : {result.FixturesProcessed}");
+                Console.WriteLine($"  Empty body count   : {result.EmptyBodyCount}");
+                Console.WriteLine($"  Linked issue count : {result.LinkedIssueCount}");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus author-experience enrich ────────────────────────────
+
+    private static Command CreateAuthorExperienceEnrich()
+    {
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
+        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
+        var delayOpt    = new Option<int>   ("--delay-ms", () => 400,                           "Delay between fixture GitHub API calls (ms)");
+
+        var cmd = new Command("enrich", "Fetch PR author commit history and first-contributor status from GitHub API");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+        cmd.AddOption(tierOpt);
+        cmd.AddOption(limitOpt);
+        cmd.AddOption(delayOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath  = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var tier    = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit   = ctx.ParseResult.GetValueForOption(limitOpt);
+            var delayMs = ctx.ParseResult.GetValueForOption(delayOpt);
+            var ct      = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                var fixtures = await LoadFixturesWithPrAsync(db, tier, ct);
+                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+
+                Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with author experience data...");
+                Console.WriteLine();
+
+                using var enricher = new AuthorExperienceEnricher();
+                var result = await enricher.EnrichAsync(
+                    fixtures, db, delayMs,
+                    progress: msg => Console.WriteLine(msg),
+                    ct: ct);
+
+                if (result.AuthMissing) { ctx.ExitCode = 1; return; }
+
+                Console.WriteLine();
+                Console.WriteLine("-- Author Experience Enrichment Summary --");
+                Console.WriteLine($"  Fixtures processed        : {result.FixturesProcessed}");
+                Console.WriteLine($"  First contributors        : {result.FirstContributors}");
+                Console.WriteLine($"  Low-experience (none/low) : {result.LowExperienceCount}");
             }
         });
 

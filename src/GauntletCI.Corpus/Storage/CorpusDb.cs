@@ -406,5 +406,29 @@ internal static class SchemaInitializer
             analyzed_at_utc         TEXT NOT NULL DEFAULT (datetime('now'))
         )
         """,
+        """
+        CREATE TABLE IF NOT EXISTS pr_description_enrichments (
+            fixture_id          TEXT NOT NULL PRIMARY KEY,
+            repo                TEXT NOT NULL,
+            title_length        INTEGER NOT NULL DEFAULT 0,
+            body_length         INTEGER NOT NULL DEFAULT 0,
+            is_empty_body       INTEGER NOT NULL DEFAULT 0,
+            has_linked_issue    INTEGER NOT NULL DEFAULT 0,
+            has_wip_keywords    INTEGER NOT NULL DEFAULT 0,
+            label_count         INTEGER NOT NULL DEFAULT 0,
+            fetched_at_utc      TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS author_experience_enrichments (
+            fixture_id              TEXT NOT NULL PRIMARY KEY,
+            repo                    TEXT NOT NULL,
+            author_login            TEXT NOT NULL DEFAULT '',
+            commit_count            INTEGER NOT NULL DEFAULT 0,
+            is_first_contributor    INTEGER NOT NULL DEFAULT 0,
+            experience_tier         TEXT NOT NULL DEFAULT 'unknown',
+            fetched_at_utc          TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+        """,
     ];
 }
