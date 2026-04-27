@@ -2123,7 +2123,7 @@ public static class CorpusCommand
     {
         var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root folder");
-        var tierOpt     = new Option<string>("--tier",     () => "silver",                      "Fixture tier to enrich (silver)");
+        var tierOpt     = new Option<string>("--tier",     () => "discovery",                   "Fixture tier to enrich (discovery|gold|silver)");
 
         var cmd = new Command("enrich", "Cross-reference corpus fixtures against SonarCloud open issues");
         cmd.AddOption(dbOpt);
@@ -2193,7 +2193,7 @@ public static class CorpusCommand
     {
         var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root folder");
-        var tierOpt     = new Option<string>("--tier",     () => "silver",                      "Fixture tier to enrich (silver)");
+        var tierOpt     = new Option<string>("--tier",     () => "discovery",                   "Fixture tier to enrich (discovery|gold|silver)");
 
         var cmd = new Command("enrich", "Cross-reference corpus fixtures against GitHub CodeQL open alerts (requires GITHUB_TOKEN)");
         cmd.AddOption(dbOpt);
@@ -2270,7 +2270,7 @@ public static class CorpusCommand
     {
         var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
-        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to process");
+        var tierOpt     = new Option<string>("--tier",     () => "discovery",                   "Fixture tier to process (discovery|gold|silver)");
         var limitOpt    = new Option<int?>  ("--limit",                                          "Maximum number of diffs to fetch (default: all)");
         var delayMsOpt  = new Option<int>   ("--delay-ms", () => 1000,                           "Delay in ms between GitHub API requests");
         var dryRunOpt   = new Option<bool>  ("--dry-run",  () => false,                          "List missing diffs without fetching");
@@ -2409,7 +2409,7 @@ public static class CorpusCommand
     {
         var dbOpt            = new Option<string>  ("--db",              () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var fixturesOpt      = new Option<string>  ("--fixtures",        () => "./data/fixtures",             "Path to fixtures root directory");
-        var tierOpt          = new Option<string>  ("--tier",            () => "Silver",                      "Fixture tier used to determine repo list");
+        var tierOpt          = new Option<string>  ("--tier",            () => "discovery",                   "Fixture tier used to determine repo list (discovery|gold|silver)");
         var reposOpt         = new Option<string[]>("--repos",                                                "Additional repos to check (owner/repo), comma-separated") { AllowMultipleArgumentsPerToken = true };
         var seedCandidatesOpt = new Option<int?>   ("--seed-candidates",                                     "Discover and add this many candidate PRs per CodeQL-enabled repo");
 
@@ -2597,7 +2597,7 @@ public static class CorpusCommand
     private static Command CreateDependabotEnrich()
     {
         var dbOpt      = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var tierOpt    = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver)");
+        var tierOpt    = new Option<string>("--tier",     () => "discovery",                   "Fixture tier to enrich (discovery|gold|silver)");
         var limitOpt   = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
         var delayOpt   = new Option<int>   ("--delay-ms", () => 200,                           "Delay between GitHub API calls (ms)");
 
@@ -2785,7 +2785,7 @@ public static class CorpusCommand
     private static Command CreateSocialSignalEnrich()
     {
         var dbOpt    = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var tierOpt  = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver)");
+        var tierOpt  = new Option<string>("--tier",     () => "discovery",                   "Fixture tier to enrich (discovery|gold|silver)");
         var limitOpt = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
         var delayOpt = new Option<int>   ("--delay-ms", () => 300,                           "Delay between GitHub API calls (ms)");
 
@@ -2836,7 +2836,7 @@ public static class CorpusCommand
     private static Command CreateCompositeLabelApply()
     {
         var dbOpt                 = new Option<string>("--db",                      () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var tierOpt               = new Option<string>("--tier",                    () => "Silver",                      "Fixture tier to label (Silver)");
+        var tierOpt               = new Option<string>("--tier",                    () => "discovery",                   "Fixture tier to label (discovery|gold|silver)");
         var limitOpt              = new Option<int>   ("--limit",                   () => 0,                             "Max fixtures to process (0 = all)");
         var updateExpectedOpt     = new Option<bool>  ("--update-expected-findings", () => false,                        "Seed expected_findings rows from composite labels (INSERT OR IGNORE - never overwrites gold labels)");
 
