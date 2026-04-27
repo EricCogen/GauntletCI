@@ -89,8 +89,12 @@ public sealed class SilverLabelEngineTests
     }
 
     [Fact]
-    public async Task InferLabelsFromComments_CommentMentioningThreadSafe_EmitsGCI0016Label()
+    public async Task InferLabelsFromComments_CommentMentioningThreadSafe_DoesNotEmitGCI0016Label()
     {
+        // Thread-safety comments no longer map to GCI0016 — that scope was dropped when
+        // static mutable field detection was removed from the rule. "thread safe / race condition"
+        // concerns belong to static analysis tools, not this diff-pattern rule.
+
         // Arrange
         var json = CommentsJson("Is this method thread safe? Could there be a race condition here?");
 
@@ -98,8 +102,7 @@ public sealed class SilverLabelEngineTests
         var labels = await _engine.InferLabelsFromCommentsAsync(json);
 
         // Assert
-        var label = Assert.Single(labels, l => l.RuleId == "GCI0016");
-        Assert.True(label.ShouldTrigger);
+        Assert.DoesNotContain(labels, l => l.RuleId == "GCI0016");
     }
 
     [Fact]
@@ -201,6 +204,60 @@ public sealed class SilverLabelEngineTests
 
         // Assert
         Assert.Contains(labels, l => l.RuleId == "GCI0016" && l.ShouldTrigger);
+    }
+
+    [Fact]
+    public async Task InferLabels_DiffWithAsyncVoid_EmitsGCI0016Label()
+    {
+        // Arrange — async void method (not an event handler)
+        var diff = """
+            --- a/src/Worker.cs
+            +++ b/src/Worker.cs
+            @@ -5,5 +5,6 @@
+            +    public async void RunBackground() { await Task.Delay(1000); }
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("fix-001", diff);
+
+        // Assert
+        Assert.Contains(labels, l => l.RuleId == "GCI0016" && l.ShouldTrigger);
+    }
+
+    [Fact]
+    public async Task InferLabels_DiffWithLockThis_EmitsGCI0016Label()
+    {
+        // Arrange — lock(this) antipattern
+        var diff = """
+            --- a/src/Cache.cs
+            +++ b/src/Cache.cs
+            @@ -5,5 +5,6 @@
+            +    lock (this) { _items.Add(item); }
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("fix-001", diff);
+
+        // Assert
+        Assert.Contains(labels, l => l.RuleId == "GCI0016" && l.ShouldTrigger);
+    }
+
+    [Fact]
+    public async Task InferLabels_DiffWithAsyncVoidEventHandler_DoesNotEmitGCI0016Label()
+    {
+        // Arrange — async void event handler is a legitimate pattern
+        var diff = """
+            --- a/src/Page.cs
+            +++ b/src/Page.cs
+            @@ -5,5 +5,6 @@
+            +    private async void OnClick(object sender, EventArgs e) { await LoadAsync(); }
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("fix-001", diff);
+
+        // Assert
+        Assert.DoesNotContain(labels, l => l.RuleId == "GCI0016" && l.ShouldTrigger);
     }
 
     [Fact]
