@@ -7,9 +7,12 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0047 – Naming/Contract Alignment
-/// Detects method renames where the new CRUD verb semantically contradicts the old verb,
-/// and boolean property naming inversions.
+/// GCI0047 - Naming/Contract Alignment
+/// Detects public method renames in non-test files where the new CRUD verb semantically
+/// contradicts the old verb (e.g. AddUser renamed to RemoveUser), and boolean property
+/// naming inversions (e.g. IsEnabled renamed to IsDisabled).
+/// Only fires when the same base suffix appears on both sides with different verbs in the
+/// same file, keeping precision high and avoiding cross-file false positives.
 /// </summary>
 public class GCI0047_NamingContractAlignment : RuleBase
 {
@@ -20,6 +23,9 @@ public class GCI0047_NamingContractAlignment : RuleBase
         @"(?:public|private|protected|internal)\s+(?:(?:static|async|virtual|override|sealed)\s+)*[\w<>\[\]?]+\s+((?:Get|Set|Add|Remove|Delete|Create|Update|Find|Fetch|Load|Save|Insert|Put|Post)(\w*))\s*\(",
         RegexOptions.Compiled);
 
+    // Pairs where the rename implies a semantic reversal of intent.
+    // Read-family verbs (Get/Find/Fetch/Load) swapped with write-destructive verbs
+    // (Delete/Remove) are unambiguous contradictions. Symmetry: both directions listed.
     private static readonly HashSet<(string, string)> ContradictoryPairs = new()
     {
         ("Get",    "Delete"),  ("Delete", "Get"),
@@ -27,8 +33,17 @@ public class GCI0047_NamingContractAlignment : RuleBase
         ("Add",    "Remove"),  ("Remove", "Add"),
         ("Add",    "Delete"),  ("Delete", "Add"),
         ("Create", "Delete"),  ("Delete", "Create"),
+        ("Create", "Remove"),  ("Remove", "Create"),
         ("Insert", "Delete"),  ("Delete", "Insert"),
+        ("Insert", "Remove"),  ("Remove", "Insert"),
         ("Save",   "Delete"),  ("Delete", "Save"),
+        ("Save",   "Remove"),  ("Remove", "Save"),
+        ("Find",   "Delete"),  ("Delete", "Find"),
+        ("Find",   "Remove"),  ("Remove", "Find"),
+        ("Fetch",  "Delete"),  ("Delete", "Fetch"),
+        ("Fetch",  "Remove"),  ("Remove", "Fetch"),
+        ("Load",   "Delete"),  ("Delete", "Load"),
+        ("Load",   "Remove"),  ("Remove", "Load"),
     };
 
     private static readonly (Regex Removed, Regex Added)[] BooleanInversionPairs =
@@ -50,7 +65,9 @@ public class GCI0047_NamingContractAlignment : RuleBase
 
         foreach (var file in context.Diff.Files)
         {
-            if (WellKnownPatterns.IsGeneratedFile(file.NewPath ?? file.OldPath ?? "")) continue;
+            var filePath = file.NewPath ?? file.OldPath ?? "";
+            if (WellKnownPatterns.IsGeneratedFile(filePath)) continue;
+            if (WellKnownPatterns.IsTestFile(filePath)) continue;
             CheckCrudVerbContradict(file, findings);
             CheckBooleanNamingInversion(file, findings);
         }
@@ -68,14 +85,23 @@ public class GCI0047_NamingContractAlignment : RuleBase
         var addedMethods = ExtractVerbSuffixPairs(file.AddedLines);
         if (addedMethods.Count == 0) return;
 
+        // Build lookup sets for the both-sides guard (method wasn't renamed if it still exists post-change).
+        var addedVerbSuffixes   = new HashSet<(string, string)>(addedMethods.Select(m => (m.Verb, m.Suffix)));
+        var removedVerbSuffixes = new HashSet<(string, string)>(removedMethods.Select(m => (m.Verb, m.Suffix)));
+
         // Accumulate counts per unique (removedVerb, addedVerb) pair to avoid N×M explosion.
         var pairCounts = new Dictionary<(string RemovedVerb, string AddedVerb), (int Count, string FirstSuffix)>();
 
         foreach (var (removedVerb, suffix) in removedMethods)
         {
+            // Guard: if this verb+suffix also appears in added lines the method wasn't renamed away.
+            if (addedVerbSuffixes.Contains((removedVerb, suffix))) continue;
+
             foreach (var (addedVerb, addedSuffix) in addedMethods)
             {
                 if (!string.Equals(suffix, addedSuffix, StringComparison.Ordinal)) continue;
+                // Guard: if the added verb+suffix also appears in removed lines it wasn't newly introduced.
+                if (removedVerbSuffixes.Contains((addedVerb, addedSuffix))) continue;
                 if (!ContradictoryPairs.Contains((removedVerb, addedVerb))) continue;
 
                 var key = (removedVerb, addedVerb);
@@ -112,8 +138,15 @@ public class GCI0047_NamingContractAlignment : RuleBase
             var removedMatch = removedPattern.Match(removedContent);
             if (!removedMatch.Success) continue;
 
+            // Guard: if the "removed" symbol also appears in added lines, it was not renamed away.
+            // Example: adding `readonly` to both IsValid and IsInvalid leaves both on each side.
+            if (removedPattern.IsMatch(addedContent)) continue;
+
             var addedMatch = addedPattern.Match(addedContent);
             if (!addedMatch.Success) continue;
+
+            // Guard: if the "added" symbol also appears in removed lines, it was not newly introduced.
+            if (addedPattern.IsMatch(removedContent)) continue;
 
             findings.Add(CreateFinding(
                 file,

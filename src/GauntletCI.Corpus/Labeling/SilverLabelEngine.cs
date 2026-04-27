@@ -68,8 +68,8 @@ public sealed class SilverLabelEngine
             "GCI0022", "Review comment mentions large or binary file", 0.6),
         (["migration", "schema change", "db migration", "database migration"],
             "GCI0021", "Review comment mentions migration concern", 0.65),
-        (["rename", "too many files", "broad change", "sweeping change"],
-            "GCI0047", "Review comment mentions broad rename or contradictory naming", 0.50),
+        (["contradictory method", "wrong method name", "naming inversion", "method semantics", "misleading name", "method name contradicts"],
+            "GCI0047", "Review comment flags a contradictory or misleading method name", 0.65),
 
         // --- Rules added after initial corpus labeling ---
 
@@ -608,26 +608,47 @@ public sealed class SilverLabelEngine
         }
 
         // GCI0047 -- Contradictory CRUD verb rename: requires the SAME base name to appear in
-        // both removed and added lines with DIFFERENT verb prefixes (e.g. GetUser removed, DeleteUser added).
-        // This prevents firing on diffs that merely touch any method with a CRUD verb on each side.
+        // both removed and added lines with DIFFERENT verb prefixes from the same ContradictoryPairs
+        // set used by the rule (e.g. GetUser removed, DeleteUser added). Uses production .cs files
+        // only and requires a method signature context (access modifier) to avoid call-site noise.
+        // Cross-file renames (method removed from one file, added to another) are detectable here
+        // since we collect globally; the rule fires per-file so those produce FNs by design.
         {
-            var crudPattern = @"\b(Get|Set|Add|Remove|Delete|Create|Update|Find|Fetch|Load|Save|Insert)([A-Z]\w{2,})\s*\(";
-            var removedBases = removedLines
-                .Select(l => Regex.Match(l, crudPattern))
+            var crudSigPattern = @"(?:public|private|protected|internal)\s+(?:(?:static|async|virtual|override|sealed)\s+)*[\w<>\[\]?]+\s+((?:Get|Set|Add|Remove|Delete|Create|Update|Find|Fetch|Load|Save|Insert)(\w*))\s*\(";
+            // Mirror GCI0047_NamingContractAlignment.ContradictoryPairs exactly.
+            var contradictoryPairs = new HashSet<(string, string)>
+            {
+                ("Get","Delete"), ("Delete","Get"), ("Get","Remove"), ("Remove","Get"),
+                ("Add","Remove"), ("Remove","Add"), ("Add","Delete"), ("Delete","Add"),
+                ("Create","Delete"), ("Delete","Create"), ("Create","Remove"), ("Remove","Create"),
+                ("Insert","Delete"), ("Delete","Insert"), ("Insert","Remove"), ("Remove","Insert"),
+                ("Save","Delete"), ("Delete","Save"), ("Save","Remove"), ("Remove","Save"),
+                ("Find","Delete"), ("Delete","Find"), ("Find","Remove"), ("Remove","Find"),
+                ("Fetch","Delete"), ("Delete","Fetch"), ("Fetch","Remove"), ("Remove","Fetch"),
+                ("Load","Delete"), ("Delete","Load"), ("Load","Remove"), ("Remove","Load"),
+            };
+            var removedBases = prodCsRemovedLines
+                .Select(l => Regex.Match(l, crudSigPattern))
                 .Where(m => m.Success)
-                .Select(m => (Verb: m.Groups[1].Value, Base: m.Groups[2].Value))
+                .Select(m => (Verb: m.Groups[1].Value[..^m.Groups[2].Value.Length], Base: m.Groups[2].Value))
                 .ToList();
-            var addedBases = addedLines
-                .Select(l => Regex.Match(l, crudPattern))
+            var addedBases = prodCsLines
+                .Select(l => Regex.Match(l, crudSigPattern))
                 .Where(m => m.Success)
-                .Select(m => (Verb: m.Groups[1].Value, Base: m.Groups[2].Value))
+                .Select(m => (Verb: m.Groups[1].Value[..^m.Groups[2].Value.Length], Base: m.Groups[2].Value))
                 .ToList();
+            var addedVerbBases   = new HashSet<(string, string)>(addedBases.Select(a  => (a.Verb, a.Base)));
+            var removedVerbBases = new HashSet<(string, string)>(removedBases.Select(r => (r.Verb, r.Base)));
             bool hasContradiction = removedBases.Any(r =>
+                // Guard: skip if the removed method still exists in added lines (not renamed away)
+                !addedVerbBases.Contains((r.Verb, r.Base)) &&
                 addedBases.Any(a =>
-                    !string.Equals(r.Verb, a.Verb, StringComparison.OrdinalIgnoreCase) &&
-                    string.Equals(r.Base, a.Base, StringComparison.OrdinalIgnoreCase)));
+                    string.Equals(r.Base, a.Base, StringComparison.OrdinalIgnoreCase) &&
+                    // Guard: skip if the added method already existed in removed lines (not newly introduced)
+                    !removedVerbBases.Contains((a.Verb, a.Base)) &&
+                    contradictoryPairs.Contains((r.Verb, a.Verb))));
             if (hasContradiction)
-                labels.Add(MakeLabel("GCI0047", "Diff renames a CRUD-verb method to an opposing verb on the same base name", 0.55));
+                labels.Add(MakeLabel("GCI0047", "Diff renames a CRUD-verb method to a semantically opposing verb on the same base name", 0.65));
         }
 
         // GCI0049 -- Float/double equality comparison
