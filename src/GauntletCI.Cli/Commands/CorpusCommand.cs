@@ -84,6 +84,14 @@ public static class CorpusCommand
         compositeLabel.AddCommand(CreateCompositeLabelApply());
         corpus.AddCommand(compositeLabel);
 
+        var semgrep = new Command("semgrep", "Semgrep scanner enrichment");
+        semgrep.AddCommand(CreateSemgrepEnrich());
+        corpus.AddCommand(semgrep);
+
+        var structural = new Command("structural", "Structural/file-churn enrichment");
+        structural.AddCommand(CreateStructuralEnrich());
+        corpus.AddCommand(structural);
+
         return corpus;
     }
 
@@ -2879,8 +2887,118 @@ public static class CorpusCommand
                 Console.WriteLine($"  HIGH_RISK_GHOST              : {result.HighRiskGhost}");
                 Console.WriteLine($"  SILENT_LOGIC_CHANGE          : {result.SilentLogicChange}");
                 Console.WriteLine($"  UNVALIDATED_BEHAVIORAL_RISK  : {result.UnvalidatedBehavioralRisk}");
+                Console.WriteLine($"  HOT_PATH_UNREVIEWED          : {result.HotPathUnreviewed}");
                 Console.WriteLine($"  STANDARD_CHANGE              : {result.StandardChange}");
                 Console.WriteLine($"  INSUFFICIENT_DATA            : {result.InsufficientData}");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus semgrep enrich ─────────────────────────────────────
+
+    private static Command CreateSemgrepEnrich()
+    {
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
+        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
+        var configOpt   = new Option<string>("--config",   () => "auto",                        "Semgrep config (e.g. auto, p/default, p/owasp-top-ten)");
+
+        var cmd = new Command("enrich", "Run Semgrep C# ruleset against each fixture's added lines (Tier 1 scanner oracle)");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+        cmd.AddOption(tierOpt);
+        cmd.AddOption(limitOpt);
+        cmd.AddOption(configOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
+            var config       = ctx.ParseResult.GetValueForOption(configOpt)!;
+            var ct           = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                var fixtures = await LoadFixturesAsync(db, tier, ct);
+                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+
+                Console.WriteLine($"Running Semgrep on {fixtures.Count} {tier} fixtures (config={config})...");
+                Console.WriteLine();
+
+                var enricher = new SemgrepEnricher(config);
+                var result   = await enricher.EnrichAsync(
+                    fixtures, db, fixturesPath,
+                    progress: msg => Console.WriteLine(msg),
+                    ct: ct);
+
+                if (result.SemgrepMissing) { ctx.ExitCode = 1; return; }
+
+                Console.WriteLine();
+                Console.WriteLine("-- Semgrep Enrichment Summary --");
+                Console.WriteLine($"  Fixtures processed    : {result.FixturesProcessed}");
+                Console.WriteLine($"  Fixtures with findings: {result.FixturesWithFindings}");
+                Console.WriteLine($"  Total findings        : {result.TotalFindings}");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus structural enrich ───────────────────────────────────
+
+    private static Command CreateStructuralEnrich()
+    {
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
+        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
+        var delayOpt    = new Option<int>   ("--delay-ms", () => 200,                           "Delay between GitHub API calls (ms)");
+
+        var cmd = new Command("enrich", "Detect sensitive file paths and fetch file-level commit churn from GitHub (Tier 3 structural enricher)");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+        cmd.AddOption(tierOpt);
+        cmd.AddOption(limitOpt);
+        cmd.AddOption(delayOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
+            var delayMs      = ctx.ParseResult.GetValueForOption(delayOpt);
+            var ct           = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                var fixtures = await LoadFixturesAsync(db, tier, ct);
+                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+
+                Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with structural data...");
+                Console.WriteLine();
+
+                using var enricher = new StructuralEnricher();
+                var result = await enricher.EnrichAsync(
+                    fixtures, db, fixturesPath, delayMs,
+                    progress: msg => Console.WriteLine(msg),
+                    ct: ct);
+
+                if (result.AuthMissing) { ctx.ExitCode = 1; return; }
+
+                Console.WriteLine();
+                Console.WriteLine("-- Structural Enrichment Summary --");
+                Console.WriteLine($"  Fixtures processed      : {result.FixturesProcessed}");
+                Console.WriteLine($"  Sensitive-path fixtures : {result.SensitivePathFixtures}");
             }
         });
 
