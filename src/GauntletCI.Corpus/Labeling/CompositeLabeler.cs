@@ -109,11 +109,16 @@ public sealed class CompositeLabeler
         // No enrichment data at all -> cannot classify
         if (!s.HasDependabotData && !s.HasSocialSignalData &&
             s.SonarMatchCount == 0 && s.CodeQlMatchCount == 0 &&
-            !s.HasSemgrepData && !s.HasStructuralData)
+            !s.HasSemgrepData && !s.HasStructuralData &&
+            !s.HasNuGetAdvisoryData && !s.HasChurnData && !s.HasNlpData)
             return LabelInsufficientData;
 
         // Tier 1 Dependabot - highest confidence
         if (s.IsDependabot) return LabelDependabotFix;
+
+        // NuGet vulnerability in diff = high risk
+        if (s.HasNuGetAdvisoryData && s.NuGetAdvisoryCount > 0 && !s.IsDependabot)
+            return LabelHighRiskGhost;
 
         var hasScannerMatch  = s.SonarMatchCount > 0 || s.CodeQlMatchCount > 0
                             || (s.HasSemgrepData && s.SemgrepFindingCount > 0);
@@ -132,6 +137,11 @@ public sealed class CompositeLabeler
         // Structural: sensitive path + high risk score + low social validation -> HOT_PATH_UNREVIEWED
         if (s.HasStructuralData && s.HasSensitivePath &&
             s.StructuralRiskScore >= 0.6 && !hasScannerMatch &&
+            s.HasSocialSignalData && s.SocialSignalScore < 0.5)
+            return LabelHotPathUnreviewed;
+
+        // File churn: high hotspot score + low social validation -> HOT_PATH_UNREVIEWED
+        if (s.HasChurnData && s.MaxHotspotScore >= 0.7 &&
             s.HasSocialSignalData && s.SocialSignalScore < 0.5)
             return LabelHotPathUnreviewed;
 
@@ -156,7 +166,9 @@ public sealed class CompositeLabeler
     private static double ComputeConfidence(FixtureSignals s, string label) => label switch
     {
         LabelDependabotFix             => 0.95,
-        LabelHighRiskGhost             => s.SonarMatchCount > 0 || s.CodeQlMatchCount > 0 ? 0.80 : 0.60,
+        LabelHighRiskGhost             => s.SonarMatchCount > 0 || s.CodeQlMatchCount > 0 ? 0.80
+                                        : s.HasNuGetAdvisoryData && s.NuGetAdvisoryCount > 0 ? 0.85
+                                        : 0.60,
         LabelSilentLogicChange         => 0.55,
         LabelUnvalidatedBehavioralRisk => 0.50,
         LabelHotPathUnreviewed         => 0.65,
@@ -259,6 +271,46 @@ public sealed class CompositeLabeler
             }
         }
 
+        using (var cmd = db.Connection.CreateCommand())
+        {
+            cmd.CommandText = "SELECT advisory_count FROM nuget_advisory_enrichments WHERE fixture_id = $id";
+            cmd.Parameters.AddWithValue("$id", fixtureId);
+            var val = await cmd.ExecuteScalarAsync(ct);
+            if (val is not null)
+            {
+                s.HasNuGetAdvisoryData = true;
+                s.NuGetAdvisoryCount   = Convert.ToInt32(val);
+            }
+        }
+
+        using (var cmd = db.Connection.CreateCommand())
+        {
+            cmd.CommandText = """
+                SELECT COALESCE(MAX(hotspot_score), 0.0)
+                FROM   file_churn_enrichments
+                WHERE  fixture_id = $id
+                """;
+            cmd.Parameters.AddWithValue("$id", fixtureId);
+            var val = await cmd.ExecuteScalarAsync(ct);
+            if (val is not null)
+            {
+                s.HasChurnData    = true;
+                s.MaxHotspotScore = Convert.ToDouble(val);
+            }
+        }
+
+        using (var cmd = db.Connection.CreateCommand())
+        {
+            cmd.CommandText = "SELECT matched_rule_id FROM review_comment_nlp_enrichments WHERE fixture_id = $id";
+            cmd.Parameters.AddWithValue("$id", fixtureId);
+            using var reader = await cmd.ExecuteReaderAsync(ct);
+            while (await reader.ReadAsync(ct))
+            {
+                s.NlpMatchedRuleIds.Add(reader.GetString(0));
+                s.HasNlpData = true;
+            }
+        }
+
         return s;
     }
 
@@ -279,6 +331,9 @@ public sealed class CompositeLabeler
             semgrep_findings       = signals.HasSemgrepData ? signals.SemgrepFindingCount : (int?)null,
             structural_risk_score  = signals.HasStructuralData ? signals.StructuralRiskScore : (double?)null,
             has_sensitive_path     = signals.HasStructuralData ? signals.HasSensitivePath : (bool?)null,
+            nuget_advisories       = signals.HasNuGetAdvisoryData ? signals.NuGetAdvisoryCount : (int?)null,
+            max_hotspot_score      = signals.HasChurnData ? signals.MaxHotspotScore : (double?)null,
+            nlp_matched_rules      = signals.HasNlpData ? signals.NlpMatchedRuleIds.Count : (int?)null,
         });
 
         using var cmd = db.Connection.CreateCommand();
@@ -337,6 +392,12 @@ public sealed class CompositeLabeler
         public bool   HasStructuralData   { get; set; }
         public double StructuralRiskScore { get; set; }
         public bool   HasSensitivePath    { get; set; }
+        public int    NuGetAdvisoryCount  { get; set; }
+        public bool   HasNuGetAdvisoryData { get; set; }
+        public bool   HasChurnData        { get; set; }
+        public double MaxHotspotScore     { get; set; }
+        public HashSet<string> NlpMatchedRuleIds { get; set; } = new(StringComparer.Ordinal);
+        public bool   HasNlpData          { get; set; }
 
         // Alias used in ClassifyLabel for readability
         public double SocialScore => SocialSignalScore;

@@ -92,6 +92,10 @@ public static class CorpusCommand
         structural.AddCommand(CreateStructuralEnrich());
         corpus.AddCommand(structural);
 
+        var nugetAdvisory = new Command("nuget-advisory", "NuGet advisory GHSA vulnerability enrichment");
+        nugetAdvisory.AddCommand(CreateNuGetAdvisoryEnrich());
+        corpus.AddCommand(nugetAdvisory);
+
         return corpus;
     }
 
@@ -2999,6 +3003,61 @@ public static class CorpusCommand
                 Console.WriteLine("-- Structural Enrichment Summary --");
                 Console.WriteLine($"  Fixtures processed      : {result.FixturesProcessed}");
                 Console.WriteLine($"  Sensitive-path fixtures : {result.SensitivePathFixtures}");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus nuget-advisory enrich ────────────────────────────────
+
+    private static Command CreateNuGetAdvisoryEnrich()
+    {
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
+        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
+        var delayOpt    = new Option<int>   ("--delay-ms", () => 200,                           "Delay between GitHub GraphQL API calls (ms)");
+
+        var cmd = new Command("enrich", "Query GHSA for NuGet vulnerabilities in changed packages (GraphQL advisory enricher)");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+        cmd.AddOption(tierOpt);
+        cmd.AddOption(limitOpt);
+        cmd.AddOption(delayOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
+            var delayMs      = ctx.ParseResult.GetValueForOption(delayOpt);
+            var ct           = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                var fixtures = await LoadFixturesAsync(db, tier, ct);
+                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+
+                Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with NuGet advisory data...");
+                Console.WriteLine();
+
+                using var enricher = new NuGetAdvisoryEnricher();
+                var result = await enricher.EnrichAsync(
+                    fixtures, db, fixturesPath, delayMs,
+                    progress: msg => Console.WriteLine(msg),
+                    ct: ct);
+
+                if (result.AuthMissing) { ctx.ExitCode = 1; return; }
+
+                Console.WriteLine();
+                Console.WriteLine("-- NuGet Advisory Enrichment Summary --");
+                Console.WriteLine($"  Fixtures processed       : {result.FixturesProcessed}");
+                Console.WriteLine($"  Fixtures with advisories : {result.FixturesWithAdvisories}");
+                Console.WriteLine($"  Total advisories found   : {result.TotalAdvisories}");
             }
         });
 

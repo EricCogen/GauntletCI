@@ -333,5 +333,41 @@ internal static class SchemaInitializer
             UNIQUE(fixture_id)
         )
         """,
+        """
+        CREATE TABLE IF NOT EXISTS nuget_advisory_enrichments (
+            fixture_id           TEXT NOT NULL,
+            repo                 TEXT NOT NULL,
+            packages_checked     INTEGER NOT NULL DEFAULT 0,
+            advisory_count       INTEGER NOT NULL DEFAULT 0,
+            highest_severity     TEXT,
+            advisories_json      TEXT,
+            scanned_at_utc       TEXT NOT NULL,
+            UNIQUE(fixture_id)
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS file_churn_enrichments (
+            id                INTEGER PRIMARY KEY AUTOINCREMENT,
+            fixture_id        TEXT NOT NULL,
+            repo              TEXT NOT NULL,
+            file_path         TEXT NOT NULL,
+            churn_90d         INTEGER NOT NULL DEFAULT 0,
+            hotspot_score     REAL NOT NULL DEFAULT 0.0,
+            fetched_at_utc    TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(fixture_id, file_path)
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS review_comment_nlp_enrichments (
+            id                INTEGER PRIMARY KEY AUTOINCREMENT,
+            fixture_id        TEXT NOT NULL,
+            repo              TEXT NOT NULL,
+            matched_rule_id   TEXT NOT NULL,
+            matched_keyword   TEXT NOT NULL,
+            confidence        REAL NOT NULL DEFAULT 0.0,
+            fetched_at_utc    TEXT NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(fixture_id, matched_rule_id)
+        )
+        """,
     ];
 }
