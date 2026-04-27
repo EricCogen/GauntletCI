@@ -65,12 +65,24 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
     {
         if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) return;
 
+        // Collect enum member names present in added lines — skips members that were
+        // moved (refactored into a new namespace/file) rather than truly deleted.
+        var addedMemberNames = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var addedLine in file.AddedLines)
+        {
+            var ac = addedLine.Content.Trim();
+            if (IsEnumMember(ac))
+                addedMemberNames.Add(ac.TrimEnd(',').Trim().Split('=')[0].Trim());
+        }
+
         var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
 
         bool inEnumBody = false;
         bool pendingEnumOpen = false;
         int braceDepth = 0;
         int enumBraceDepth = 0;
+        // Tracks the last removed line inside the enum body, used to detect preceding serialization attributes.
+        string lastRemovedInEnum = string.Empty;
 
         foreach (var line in allLines)
         {
@@ -102,12 +114,43 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
                 }
             }
 
-            if (line.Kind != DiffLineKind.Removed) continue;
+            if (!inEnumBody)
+            {
+                lastRemovedInEnum = string.Empty;
+                continue;
+            }
+
+            if (line.Kind != DiffLineKind.Removed)
+            {
+                // Context lines between removed lines break the attribute-member adjacency assumption.
+                lastRemovedInEnum = string.Empty;
+                continue;
+            }
 
             var content = raw.Trim();
             if (content.Length == 0 || content.StartsWith("//")) continue;
-            if (!inEnumBody) continue;
-            if (!IsEnumMember(content)) continue;
+            if (!IsEnumMember(content))
+            {
+                lastRemovedInEnum = content;
+                continue;
+            }
+
+            var memberName = content.TrimEnd(',').Trim().Split('=')[0].Trim();
+            if (addedMemberNames.Contains(memberName))
+            {
+                lastRemovedInEnum = content;
+                continue; // moved, not deleted
+            }
+
+            // Only flag members that have an explicit serialization attribute on the preceding
+            // removed line — this ensures we only flag truly serialized enums (e.g. [JsonProperty("x")]).
+            // Internal/API enums without serialization attributes are not a schema compat concern.
+            bool hasPrecedingSerializationAttr = SerializationAttributes.Any(a =>
+                lastRemovedInEnum.TrimStart().StartsWith(a, StringComparison.OrdinalIgnoreCase));
+
+            lastRemovedInEnum = content;
+
+            if (!hasPrecedingSerializationAttr) continue;
 
             findings.Add(CreateFinding(
                 file,
@@ -121,6 +164,8 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
 
     private static bool IsEnumMember(string content)
     {
+        // Statements end with ';' — enum members never do (they end with ',' or nothing).
+        if (content.TrimEnd().EndsWith(';')) return false;
         // Matches: "SomeName," or "SomeName = 5," or "SomeName = 0x1,"
         var trimmed = content.TrimEnd(',').Trim();
         // Split on '=' to handle "Name = Value"

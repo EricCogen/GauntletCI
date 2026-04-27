@@ -183,4 +183,25 @@ public class GCI0012Tests
 
         Assert.Contains(findings, f => f.Summary.Contains("Dangerous"));
     }
+
+    [Fact]
+    public async Task TokenFieldAssignedViaMethodCall_ShouldNotFlagCredential()
+    {
+        // A field named _validateTokenSwitch is a UI element, not a credential.
+        // The assigned value is an element ID passed to a factory method, not a bare string literal.
+        var diff = MakeDiff("    private readonly IUISwitch _validateTokenSwitch = Switch(\"jwt-decode-validate-token\");");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("hardcoded") || f.Summary.Contains("credential"));
+    }
+
+    [Fact]
+    public async Task DictionaryKeyWithTokenName_AssignedNonLiteral_ShouldNotFlagCredential()
+    {
+        // Dictionary key contains "token" but value is a constructor call, not a bare string literal.
+        var diff = MakeDiff("    [\"budget_tokens\"] = new(budgetTokens),");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("hardcoded") || f.Summary.Contains("credential"));
+    }
 }
