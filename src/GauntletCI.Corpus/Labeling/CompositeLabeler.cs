@@ -30,6 +30,7 @@ public sealed class CompositeLabeler
     public const string LabelSilentLogicChange        = "SILENT_LOGIC_CHANGE";
     public const string LabelUnvalidatedBehavioralRisk = "UNVALIDATED_BEHAVIORAL_RISK";
     public const string LabelStandardChange           = "STANDARD_CHANGE";
+    public const string LabelHotPathUnreviewed        = "HOT_PATH_UNREVIEWED";
     public const string LabelInsufficientData         = "INSUFFICIENT_DATA";
 
     // Guide thresholds
@@ -55,6 +56,10 @@ public sealed class CompositeLabeler
             [LabelUnvalidatedBehavioralRisk] =
             [
                 ("GCI0003", "Unvalidated behavioral change; likely swallowed exception or missing error handling"),
+            ],
+            [LabelHotPathUnreviewed] =
+            [
+                ("GCI0003", "Sensitive file path changed with high structural risk and low social validation"),
             ],
         };
 
@@ -103,13 +108,15 @@ public sealed class CompositeLabeler
     {
         // No enrichment data at all -> cannot classify
         if (!s.HasDependabotData && !s.HasSocialSignalData &&
-            s.SonarMatchCount == 0 && s.CodeQlMatchCount == 0)
+            s.SonarMatchCount == 0 && s.CodeQlMatchCount == 0 &&
+            !s.HasSemgrepData && !s.HasStructuralData)
             return LabelInsufficientData;
 
         // Tier 1 Dependabot - highest confidence
         if (s.IsDependabot) return LabelDependabotFix;
 
-        var hasScannerMatch  = s.SonarMatchCount > 0 || s.CodeQlMatchCount > 0;
+        var hasScannerMatch  = s.SonarMatchCount > 0 || s.CodeQlMatchCount > 0
+                            || (s.HasSemgrepData && s.SemgrepFindingCount > 0);
         var hasLowValidation = s.HasSocialSignalData && s.SocialSignalScore < LowValidationThreshold;
         var hasHighValidation = s.HasSocialSignalData && s.SocialSignalScore >= HighValidationThreshold;
 
@@ -121,6 +128,12 @@ public sealed class CompositeLabeler
 
         // Scanner match with unknown social signal
         if (hasScannerMatch) return LabelHighRiskGhost;
+
+        // Structural: sensitive path + high risk score + low social validation -> HOT_PATH_UNREVIEWED
+        if (s.HasStructuralData && s.HasSensitivePath &&
+            s.StructuralRiskScore >= 0.6 && !hasScannerMatch &&
+            s.HasSocialSignalData && s.SocialSignalScore < 0.5)
+            return LabelHotPathUnreviewed;
 
         // Guide: Snyk(Clean) + LibGit2Sharp(Logic Diff > 0) -> SILENT_LOGIC_CHANGE
         // Proxy: social signal exists (diff is real), no scanner, low-medium validation, sparse review
@@ -146,6 +159,7 @@ public sealed class CompositeLabeler
         LabelHighRiskGhost             => s.SonarMatchCount > 0 || s.CodeQlMatchCount > 0 ? 0.80 : 0.60,
         LabelSilentLogicChange         => 0.55,
         LabelUnvalidatedBehavioralRisk => 0.50,
+        LabelHotPathUnreviewed         => 0.65,
         LabelStandardChange            => s.ReviewerCount >= 2 ? 0.75 : 0.60,
         _                              => 0.0,
     };
@@ -158,6 +172,7 @@ public sealed class CompositeLabeler
             case LabelHighRiskGhost:            r.HighRiskGhost++;            break;
             case LabelSilentLogicChange:        r.SilentLogicChange++;        break;
             case LabelUnvalidatedBehavioralRisk: r.UnvalidatedBehavioralRisk++; break;
+            case LabelHotPathUnreviewed:        r.HotPathUnreviewed++;        break;
             case LabelStandardChange:           r.StandardChange++;           break;
             default:                            r.InsufficientData++;         break;
         }
@@ -211,6 +226,39 @@ public sealed class CompositeLabeler
             }
         }
 
+        using (var cmd = db.Connection.CreateCommand())
+        {
+            cmd.CommandText = """
+                SELECT finding_count
+                FROM   semgrep_enrichments
+                WHERE  fixture_id = $id
+                """;
+            cmd.Parameters.AddWithValue("$id", fixtureId);
+            var val = await cmd.ExecuteScalarAsync(ct);
+            if (val is not null)
+            {
+                s.HasSemgrepData      = true;
+                s.SemgrepFindingCount = Convert.ToInt32(val);
+            }
+        }
+
+        using (var cmd = db.Connection.CreateCommand())
+        {
+            cmd.CommandText = """
+                SELECT sensitive_file_count, structural_risk_score
+                FROM   structural_enrichments
+                WHERE  fixture_id = $id
+                """;
+            cmd.Parameters.AddWithValue("$id", fixtureId);
+            using var reader = await cmd.ExecuteReaderAsync(ct);
+            if (await reader.ReadAsync(ct))
+            {
+                s.HasStructuralData   = true;
+                s.HasSensitivePath    = reader.GetInt32(0) > 0;
+                s.StructuralRiskScore = reader.GetDouble(1);
+            }
+        }
+
         return s;
     }
 
@@ -222,12 +270,15 @@ public sealed class CompositeLabeler
     {
         var signalsJson = JsonSerializer.Serialize(new
         {
-            sonar_matches    = signals.SonarMatchCount,
-            codeql_matches   = signals.CodeQlMatchCount,
-            is_dependabot    = signals.IsDependabot,
-            social_score     = signals.HasSocialSignalData ? signals.SocialSignalScore : (double?)null,
-            review_time_min  = signals.ReviewTimeMinutes,
-            reviewer_count   = signals.ReviewerCount,
+            sonar_matches          = signals.SonarMatchCount,
+            codeql_matches         = signals.CodeQlMatchCount,
+            is_dependabot          = signals.IsDependabot,
+            social_score           = signals.HasSocialSignalData ? signals.SocialSignalScore : (double?)null,
+            review_time_min        = signals.ReviewTimeMinutes,
+            reviewer_count         = signals.ReviewerCount,
+            semgrep_findings       = signals.HasSemgrepData ? signals.SemgrepFindingCount : (int?)null,
+            structural_risk_score  = signals.HasStructuralData ? signals.StructuralRiskScore : (double?)null,
+            has_sensitive_path     = signals.HasStructuralData ? signals.HasSensitivePath : (bool?)null,
         });
 
         using var cmd = db.Connection.CreateCommand();
@@ -273,14 +324,22 @@ public sealed class CompositeLabeler
 
     private sealed class FixtureSignals
     {
-        public int    SonarMatchCount    { get; set; }
-        public int    CodeQlMatchCount   { get; set; }
-        public bool   IsDependabot       { get; set; }
-        public bool   HasDependabotData  { get; set; }
-        public double SocialSignalScore  { get; set; }
-        public double ReviewTimeMinutes  { get; set; }
-        public int    ReviewerCount      { get; set; }
+        public int    SonarMatchCount     { get; set; }
+        public int    CodeQlMatchCount    { get; set; }
+        public bool   IsDependabot        { get; set; }
+        public bool   HasDependabotData   { get; set; }
+        public double SocialSignalScore   { get; set; }
+        public double ReviewTimeMinutes   { get; set; }
+        public int    ReviewerCount       { get; set; }
         public bool   HasSocialSignalData { get; set; }
+        public bool   HasSemgrepData      { get; set; }
+        public int    SemgrepFindingCount { get; set; }
+        public bool   HasStructuralData   { get; set; }
+        public double StructuralRiskScore { get; set; }
+        public bool   HasSensitivePath    { get; set; }
+
+        // Alias used in ClassifyLabel for readability
+        public double SocialScore => SocialSignalScore;
     }
 }
 
@@ -292,6 +351,7 @@ public sealed class CompositeLabelerResult
     public int HighRiskGhost             { get; set; }
     public int SilentLogicChange         { get; set; }
     public int UnvalidatedBehavioralRisk { get; set; }
+    public int HotPathUnreviewed         { get; set; }
     public int StandardChange            { get; set; }
     public int InsufficientData          { get; set; }
 }

@@ -309,5 +309,29 @@ internal static class SchemaInitializer
             UNIQUE(fixture_id, changed_file, codeql_rule)
         )
         """,
+        """
+        CREATE TABLE IF NOT EXISTS semgrep_enrichments (
+            fixture_id        TEXT NOT NULL,
+            repo              TEXT NOT NULL,
+            finding_count     INTEGER NOT NULL DEFAULT 0,
+            rules_fired       TEXT,
+            highest_severity  TEXT,
+            findings_json     TEXT,
+            scanned_at_utc    TEXT NOT NULL,
+            UNIQUE(fixture_id)
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS structural_enrichments (
+            fixture_id            TEXT NOT NULL,
+            repo                  TEXT NOT NULL,
+            changed_files_json    TEXT,
+            sensitive_file_count  INTEGER NOT NULL DEFAULT 0,
+            max_file_churn_30d    INTEGER NOT NULL DEFAULT 0,
+            structural_risk_score REAL NOT NULL DEFAULT 0.0,
+            fetched_at_utc        TEXT NOT NULL,
+            UNIQUE(fixture_id)
+        )
+        """,
     ];
 }
