@@ -81,6 +81,29 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0010_HardcodedUrl_ShouldFlag()
     {
+        // Localhost URL with port — a hardcoded service endpoint that breaks across environments.
+        var rule = new GCI0010_HardcodingAndConfiguration();
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,1 +1,2 @@
+             // service
+            +var baseUrl = "http://localhost:5000/api/v1";
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.RuleId == "GCI0010");
+    }
+
+    [Fact]
+    public async Task GCI0010_PublicApiUrl_ShouldNotFlag()
+    {
+        // Public API URLs (api.example.com, docs.microsoft.com, etc.) are intentional
+        // references, not environment-specific hardcoding. Rule only fires on localhost/private IPs.
         var rule = new GCI0010_HardcodingAndConfiguration();
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
@@ -95,7 +118,7 @@ public class SupplementalCoverageTests
         var diff = DiffParser.Parse(raw);
         var findings = await rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f => f.Summary.Contains("Hardcoded URL"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("URL") || f.Summary.Contains("IP"));
     }
 
     [Fact]

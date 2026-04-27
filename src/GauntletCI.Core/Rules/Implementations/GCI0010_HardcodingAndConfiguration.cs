@@ -19,8 +19,25 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
     public override string Id => "GCI0010";
     public override string Name => "Hardcoding and Configuration";
 
-    private static readonly Regex IpAddressRegex =
-        new(@"\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b", RegexOptions.Compiled);
+    // Localhost/private-network patterns that are genuinely hardcoded and environment-specific.
+    private static readonly Regex HardcodedUrlRegex =
+        new(@"https?://(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})[:/]",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+    // IP address in a string literal — scoped to literals (not whole line) to avoid matching
+    // version strings (1.0.0.0) in XML, NuGet manifests, and comments.
+    private static readonly Regex BareIpAddressRegex =
+        new(@"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", RegexOptions.Compiled);
+
+    // Safe-list: public reference URLs that are intentional in code (docs, examples, well-known APIs).
+    private static readonly string[] SafeUrlPrefixes =
+    [
+        "https://docs.microsoft.com", "https://learn.microsoft.com",
+        "https://www.nuget.org", "https://nuget.org",
+        "https://github.com", "https://raw.githubusercontent.com",
+        "https://schema.org", "https://json-schema.org",
+        "https://aka.ms", "https://example.com", "http://example.com",
+    ];
 
     private static readonly string[] ConnectionStringMarkers =
         ["Server=", "Data Source=", "mongodb://", "redis://"];
@@ -57,18 +74,30 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         {
             var content = line.Content;
             var trimmed = content.Trim();
-
             if (IsCommentLine(trimmed)) continue;
-            var match = IpAddressRegex.Match(content);
-            if (!match.Success) continue;
 
-            findings.Add(CreateFinding(
-                file,
-                summary: $"Hardcoded IP address detected: {match.Value}",
-                evidence: $"Line {line.LineNumber}: {content.Trim()}",
-                whyItMatters: "Hardcoded IPs break across environments and make infrastructure changes require code changes.",
-                suggestedAction: "Move the IP to configuration (appsettings.json, environment variable, etc.).",
-                confidence: Confidence.Medium));
+            // Scope to string literals only: prevents matching version strings like "1.0.0.0"
+            // in XML, NuGet manifests, and assembly attributes.
+            var literals = ExtractStringLiterals(content);
+            if (literals.Count == 0) continue;
+
+            foreach (var literal in literals)
+            {
+                // Skip if this is a URL — CheckHardcodedUrl already handles that case.
+                if (literal.Contains("://", StringComparison.Ordinal)) continue;
+
+                var match = BareIpAddressRegex.Match(literal.Trim());
+                if (!match.Success) continue;
+
+                findings.Add(CreateFinding(
+                    file,
+                    summary: $"Hardcoded IP address in string literal: {match.Value}",
+                    evidence: $"Line {line.LineNumber}: {content.Trim()}",
+                    whyItMatters: "Hardcoded IPs break across environments and make infrastructure changes require code changes.",
+                    suggestedAction: "Move the IP to configuration (appsettings.json, environment variable, etc.).",
+                    confidence: Confidence.Medium));
+                break;
+            }
         }
     }
 
@@ -84,16 +113,20 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
             var literals = ExtractStringLiterals(content);
             if (literals.Count == 0) continue;
 
-            bool hasUrlLiteral = literals.Any(l =>
-                l.Contains("http://", StringComparison.OrdinalIgnoreCase) ||
-                l.Contains("https://", StringComparison.OrdinalIgnoreCase));
-            if (!hasUrlLiteral) continue;
+            // Only fire on localhost/IP URLs — public URLs (docs, CDN, GitHub, etc.) are
+            // intentional references, not hardcoded configuration. CheckIpAddress covers
+            // the IP-in-URL case; this check adds non-IP localhost specifically.
+            bool hasPrivateUrl = literals.Any(l =>
+                HardcodedUrlRegex.IsMatch(l) &&
+                !SafeUrlPrefixes.Any(s => l.StartsWith(s, StringComparison.OrdinalIgnoreCase)));
+
+            if (!hasPrivateUrl) continue;
 
             findings.Add(CreateFinding(
                 file,
-                summary: "Hardcoded URL in string literal.",
+                summary: "Hardcoded localhost or private-IP URL in string literal.",
                 evidence: $"Line {line.LineNumber}: {content.Trim()}",
-                whyItMatters: "Hardcoded URLs break across environments and cannot be easily changed without recompilation.",
+                whyItMatters: "Hardcoded localhost/IP URLs break across environments and cannot be changed without recompilation.",
                 suggestedAction: "Move URL to configuration (IConfiguration, environment variable).",
                 confidence: Confidence.Medium));
         }
@@ -161,13 +194,22 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
 
             foreach (var env in EnvironmentNames)
             {
-                if (!literals.Any(l => l.Contains(env, StringComparison.OrdinalIgnoreCase))) continue;
+                if (!literals.Any(l => string.Equals(l, env, StringComparison.OrdinalIgnoreCase) ||
+                                       string.Equals(l, $"ASPNETCORE_ENVIRONMENT={env}", StringComparison.OrdinalIgnoreCase) ||
+                                       string.Equals(l, $"DOTNET_ENVIRONMENT={env}", StringComparison.OrdinalIgnoreCase)))
+                    continue;
+
+                // Skip IHostEnvironment fluent calls — IsProduction() etc. are the correct pattern
+                if (content.Contains(".IsProduction()", StringComparison.OrdinalIgnoreCase) ||
+                    content.Contains(".IsStaging()",    StringComparison.OrdinalIgnoreCase) ||
+                    content.Contains(".IsDevelopment()", StringComparison.OrdinalIgnoreCase))
+                    continue;
 
                 findings.Add(CreateFinding(
                     file,
                     summary: $"Hardcoded environment name '{env}' in code.",
                     evidence: $"Line {line.LineNumber}: {content.Trim()}",
-                    whyItMatters: "Hardcoded environment names create branching logic that is fragile and hard to test.",
+                    whyItMatters: "Hardcoded environment names create fragile branching logic that is hard to test.",
                     suggestedAction: "Use IHostEnvironment.IsProduction() or configuration-driven feature flags.",
                     confidence: Confidence.Medium));
                 break;
