@@ -42,7 +42,9 @@ public class GCI0024_ResourceLifecycle : RuleBase
     [
         "Stream", "Reader", "Writer", "Connection", "Client",
         "Listener", "Channel", "Context", "Provider", "Session", "Transaction",
-        "Certificate", "Scope", "Timer", "Enumerator"
+        "Certificate", "Scope", "Timer"
+        // Enumerator removed: custom enumerators are typically short-lived structs;
+        // IEnumerator disposal in foreach is compiler-managed.
     ];
 
     // Types whose lifecycle detection is owned by another rule. Suppress in GCI0024 to avoid
@@ -67,6 +69,14 @@ public class GCI0024_ResourceLifecycle : RuleBase
         "ResultExecutingContext", "ResultExecutedContext", "ExceptionContext",
         // Other common non-disposable context types
         "ValidationContext", "NavigationContext",
+        // OpenTelemetry value types
+        "PropagationContext", "ActivityContext", "SpanContext",
+        // FluentAssertions / comparison context types
+        "MemberSelectionContext", "EquivalencyValidationContext", "CreatorPropertyContext",
+        "StrategyBuilderContext", "SelectionContext",
+        // WPF/WinForms SynchronizationContext — SynchronizationContext is not IDisposable
+        "SynchronizationContext", "DispatcherSynchronizationContext",
+        "DispatcherQueueSynchronizationContext",
     };
 
     private static readonly Regex NewTypeRegex =
@@ -106,6 +116,20 @@ public class GCI0024_ResourceLifecycle : RuleBase
 
             // Defer to the owning rule (GCI0039) rather than double-reporting.
             if (GCI0039OwnedTypes.Contains(typeName)) continue;
+
+            // Skip: `return new X(...)` or `return foo(new X(...))` — caller takes ownership.
+            var trimmed = content.TrimStart();
+            if (trimmed.StartsWith("return ", StringComparison.Ordinal)) continue;
+
+            // Skip: `new X(...)` inside a method/constructor call argument — the callee takes
+            // ownership (e.g. services.AddSingleton(new X()), collection.Add(new X())).
+            // Detect by counting unmatched `(` before the `new` keyword: if opens > closes,
+            // we are inside a parameter list.
+            if (IsInsideMethodCallArg(content, typeName)) continue;
+
+            // Skip: `static readonly X = new X()` — process-lifetime singletons are never disposed
+            // by design; flagging them produces only noise with no actionable fix.
+            if (content.Contains("static ", StringComparison.Ordinal)) continue;
 
             if (content.Contains("using ", StringComparison.Ordinal)) continue;
 
@@ -164,6 +188,21 @@ public class GCI0024_ResourceLifecycle : RuleBase
         }
 
         return (null, false);
+    }
+
+    // Returns true when the `new TypeName(` pattern appears inside an open method or constructor
+    // call argument list — i.e., there are more `(` than `)` in the text before the `new` keyword.
+    // In that case the callee owns the object's lifetime, so no `using` is expected here.
+    private static bool IsInsideMethodCallArg(string content, string typeName)
+    {
+        var needle = "new " + typeName;
+        int idx = content.IndexOf(needle, StringComparison.Ordinal);
+        if (idx <= 0) return false;
+        var before = content[..idx];
+        int opens  = 0;
+        int closes = 0;
+        foreach (char c in before) { if (c == '(') opens++; else if (c == ')') closes++; }
+        return opens > closes;
     }
 
     private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)
