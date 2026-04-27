@@ -369,5 +369,42 @@ internal static class SchemaInitializer
             UNIQUE(fixture_id, matched_rule_id)
         )
         """,
+        """
+        CREATE TABLE IF NOT EXISTS test_coverage_enrichments (
+            fixture_id          TEXT NOT NULL PRIMARY KEY,
+            repo                TEXT NOT NULL,
+            prod_cs_count       INTEGER NOT NULL DEFAULT 0,
+            test_cs_count       INTEGER NOT NULL DEFAULT 0,
+            test_coverage_gap   INTEGER NOT NULL DEFAULT 0,
+            test_to_prod_ratio  REAL NOT NULL DEFAULT 0.0,
+            analyzed_at_utc     TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS diff_entropy_enrichments (
+            fixture_id          TEXT NOT NULL PRIMARY KEY,
+            repo                TEXT NOT NULL,
+            file_count          INTEGER NOT NULL DEFAULT 0,
+            directory_count     INTEGER NOT NULL DEFAULT 0,
+            namespace_count     INTEGER NOT NULL DEFAULT 0,
+            total_lines_changed INTEGER NOT NULL DEFAULT 0,
+            change_entropy      REAL NOT NULL DEFAULT 0.0,
+            normalized_entropy  REAL NOT NULL DEFAULT 0.0,
+            analyzed_at_utc     TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS ef_migration_enrichments (
+            fixture_id              TEXT NOT NULL PRIMARY KEY,
+            repo                    TEXT NOT NULL,
+            migration_detected      INTEGER NOT NULL DEFAULT 0,
+            has_migration_file      INTEGER NOT NULL DEFAULT 0,
+            has_sql_file            INTEGER NOT NULL DEFAULT 0,
+            has_ef_content          INTEGER NOT NULL DEFAULT 0,
+            has_ddl_content         INTEGER NOT NULL DEFAULT 0,
+            migration_confidence    REAL NOT NULL DEFAULT 0.0,
+            analyzed_at_utc         TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+        """,
     ];
 }
