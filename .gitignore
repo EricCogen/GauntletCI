@@ -62,6 +62,9 @@ artifacts/
 !docs/risky-diffs/sharpcompress-overflow.md
 !docs/risky-diffs/anglesharp-enum-removal.md
 
+# Publish artifacts (self-contained EXE - too large for GitHub)
+publish/
+
 # Internal pipeline and tooling (commercial — not public)
 build-corpus.ps1
 audit-dead-code.ps1
