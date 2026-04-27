@@ -64,8 +64,8 @@ public sealed class SilverLabelEngine
         // check). Thread-safety review comments signal concerns the rule no longer detects.
         (["secret", "password", "credential", "api key", "api_key"],
             "GCI0012", "Review comment mentions credential/secret concern", 0.75),
-        (["large file", "file size", "binary file", "binary blob"],
-            "GCI0022", "Review comment mentions large or binary file", 0.6),
+        (["idempotent", "idempotency", "idempotency key", "duplicate request", "retry safe", "insert duplicate", "upsert"],
+            "GCI0022", "Review comment mentions idempotency, retry safety, or duplicate-insert concern", 0.65),
         (["migration", "schema change", "db migration", "database migration"],
             "GCI0021", "Review comment mentions migration concern", 0.65),
         (["contradictory method", "wrong method name", "naming inversion", "method semantics", "misleading name", "method name contradicts"],
@@ -479,16 +479,28 @@ public sealed class SilverLabelEngine
             labels.Add(MakeLabel("GCI0010", "Diff contains hardcoded localhost URL, connection string, or host/port literal", 0.6));
         }
 
-        // GCI0022 -- Large binary or generated file
-        if (pathLines.Any(l =>
-                l.Contains(".min.js",  StringComparison.OrdinalIgnoreCase) ||
-                l.Contains(".bundle.", StringComparison.OrdinalIgnoreCase) ||
-                l.Contains(".dll",     StringComparison.OrdinalIgnoreCase) ||
-                l.Contains(".exe",     StringComparison.OrdinalIgnoreCase) ||
-                l.Contains(".png",     StringComparison.OrdinalIgnoreCase) ||
-                l.Contains(".jpg",     StringComparison.OrdinalIgnoreCase)))
+        // GCI0022 -- Idempotency and retry safety
+        // Fire when an HttpPost endpoint is added without idempotency signals,
+        // OR when a raw INSERT INTO appears without an upsert guard.
         {
-            labels.Add(MakeLabel("GCI0022", "Diff touches a binary or generated file", 0.65));
+            var idempotencySignals = new[] { "IdempotencyKey", "Idempotency-Key", "idempotencyKey", "idempotent", "dedup", "Dedup", "RequestId", "requestId", "MessageId", "messageId" };
+            var upsertPatterns     = new[] { "ON DUPLICATE KEY", "ON CONFLICT", "INSERT OR REPLACE", "INSERT OR IGNORE", "MERGE INTO", "UPSERT" };
+            bool hasHttpPostAdded  = addedLines.Any(l =>
+            {
+                var t = l.Trim();
+                return t.Equals("[HttpPost]", StringComparison.Ordinal) ||
+                       t.StartsWith("[HttpPost(", StringComparison.Ordinal);
+            });
+            bool hasInsertWithoutUpsert = addedLines.Any(l =>
+                l.Contains("INSERT INTO", StringComparison.OrdinalIgnoreCase) &&
+                !upsertPatterns.Any(p => l.Contains(p, StringComparison.OrdinalIgnoreCase)));
+            if (hasHttpPostAdded || hasInsertWithoutUpsert)
+            {
+                bool hasIdempotencySignal = addedLines.Any(l =>
+                    idempotencySignals.Any(sig => l.Contains(sig, StringComparison.OrdinalIgnoreCase)));
+                if (!hasIdempotencySignal)
+                    labels.Add(MakeLabel("GCI0022", "Diff adds an [HttpPost] endpoint or raw INSERT INTO without idempotency/upsert guard", 0.60));
+            }
         }
 
         // --- Rules added after initial corpus labeling ---
