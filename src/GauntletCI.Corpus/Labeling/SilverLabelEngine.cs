@@ -720,20 +720,69 @@ public sealed class SilverLabelEngine
                 labels.Add(MakeLabel("GCI0043", "Diff disables nullable warnings or uses null-forgiving operator on added lines", 0.60));
         }
 
-        // GCI0044 -- LINQ call inside a loop construct
+        // GCI0044 -- Performance hotpath risk: Thread.Sleep / LINQ in loop / unbounded .Add in loop
+        // Mirror the rule's three checks.  LINQ and .Add checks need loop context from unchanged
+        // diff lines; parse non-removed lines from rawDiff (same approach as the rule's lookback).
         {
-            var linqMethods = new[] { ".Where(", ".Select(", ".FirstOrDefault(", ".Any(", ".Count(" };
-            var loopKeywords = new[] { "for (", "foreach (", "while (" };
-            bool inLoop = false;
-            foreach (var line in addedLines)
+            // Check 1: Thread.Sleep — no loop context required
+            if (prodCsLines.Any(l => l.Contains("Thread.Sleep(", StringComparison.Ordinal)))
             {
-                if (loopKeywords.Any(k => line.Contains(k, StringComparison.Ordinal))) inLoop = true;
-                if (inLoop && linqMethods.Any(m => line.Contains(m, StringComparison.Ordinal)))
+                labels.Add(MakeLabel("GCI0044", "Diff adds Thread.Sleep in production code", 0.65));
+            }
+            else
+            {
+                // Build non-removed lines list from rawDiff, scoped to non-test C# files,
+                // preserving context lines so loop keywords on unchanged code are visible.
+                bool inTestFile44 = false;
+                bool inCsFile44   = false;
+                var nonRemoved44  = new List<(bool IsAdded, string Content)>();
+                foreach (var dl in rawDiff.Split('\n'))
                 {
-                    labels.Add(MakeLabel("GCI0044", "Diff contains a LINQ call inside a loop construct on added lines", 0.50));
-                    break;
+                    if (dl.StartsWith("+++ b/", StringComparison.Ordinal))
+                    {
+                        var fp = dl[6..].TrimEnd('\r');
+                        inCsFile44   = fp.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
+                        inTestFile44 = fp.Contains("test", StringComparison.OrdinalIgnoreCase) ||
+                                       fp.Contains("spec", StringComparison.OrdinalIgnoreCase);
+                        continue;
+                    }
+                    if (!inCsFile44 || inTestFile44) continue;
+                    if (dl.StartsWith("---") || dl.StartsWith("+++") || dl.StartsWith("@@")) continue;
+                    if (dl.StartsWith("-")) continue;
+                    nonRemoved44.Add((dl.StartsWith("+"), dl.StartsWith("+") ? dl[1..] : dl));
                 }
-                if (line.TrimStart().StartsWith("}")) inLoop = false;
+
+                var linqMethods44        = new[] { ".Where(", ".Select(", ".FirstOrDefault(", ".Any(", ".Count(" };
+                var loopKeywordsAll44    = new[] { "for (", "foreach (", "while (" };
+                var unboundedLoops44     = new[] { "for (", "while (" };
+
+                bool triggered44 = false;
+                for (int i = 0; i < nonRemoved44.Count && !triggered44; i++)
+                {
+                    if (!nonRemoved44[i].IsAdded) continue;
+                    var lc = nonRemoved44[i].Content;
+
+                    bool hasLinq = linqMethods44.Any(m => lc.Contains(m, StringComparison.Ordinal));
+                    // Unsafe.Add(ref ...) is pointer arithmetic — neutralise before checking .Add(
+                    bool hasCollectionAdd = lc.Replace("Unsafe.Add(", "UNSAFE_PTR(")
+                                             .Contains(".Add(", StringComparison.Ordinal);
+
+                    if (!hasLinq && !hasCollectionAdd) continue;
+
+                    var keywords = hasLinq ? loopKeywordsAll44 : unboundedLoops44;
+                    int lookback = Math.Max(0, i - 10);
+                    for (int j = lookback; j < i; j++)
+                    {
+                        if (keywords.Any(k => nonRemoved44[j].Content.Contains(k, StringComparison.Ordinal)))
+                        {
+                            triggered44 = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (triggered44)
+                    labels.Add(MakeLabel("GCI0044", "Diff adds LINQ call or unbounded .Add inside a loop on production code", 0.55));
             }
         }
 

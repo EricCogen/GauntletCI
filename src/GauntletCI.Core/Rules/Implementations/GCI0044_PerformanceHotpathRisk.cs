@@ -134,6 +134,10 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
                 if (nonRemovedLines[i].Kind != DiffLineKind.Added) continue;
                 var content = nonRemovedLines[i].Content;
                 if (!content.Contains(".Add(", StringComparison.Ordinal)) continue;
+                // Unsafe.Add(ref ...) is SIMD/pointer arithmetic, not a collection mutation.
+                // Neutralise it and re-check so mixed lines (Unsafe.Add + real .Add) still fire.
+                if (!content.Replace("Unsafe.Add(", "UNSAFE_PTR(")
+                            .Contains(".Add(", StringComparison.Ordinal)) continue;
 
                 int lookbackStart = Math.Max(0, i - 10);
                 bool inLoop = false;
