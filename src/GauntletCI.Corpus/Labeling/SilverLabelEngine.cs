@@ -429,12 +429,17 @@ public sealed class SilverLabelEngine
             labels.Add(MakeLabel("GCI0021", "Diff removes a serialization attribute from production C# or modifies an EF migration file", 0.60));
         }
 
-        // GCI0004 -- Breaking change signals (public API removed/renamed)
-        if (addedLines.Any(l =>
-                Regex.IsMatch(l, @"\[Obsolete", RegexOptions.IgnoreCase) ||
-                Regex.IsMatch(l, @"(public|protected)\s+(abstract|virtual|override)\s+\w+.*\(") && l.Contains("throw new NotImplemented")))
+        // GCI0004 -- Breaking change signals
+        // Use production-CS-only lines to match the rule's file-scope filters (no test files, no .md docs).
+        // Fire for [Obsolete] ADDED (active deprecation) OR [Obsolete] REMOVED (guard stripped).
+        bool hasObsoleteAdded   = prodCsLines.Any(l => l.Contains("[Obsolete", StringComparison.OrdinalIgnoreCase));
+        bool hasObsoleteRemoved = prodCsRemovedLines.Any(l => l.Contains("[Obsolete", StringComparison.OrdinalIgnoreCase));
+        if (hasObsoleteAdded || hasObsoleteRemoved)
         {
-            labels.Add(MakeLabel("GCI0004", "Diff contains [Obsolete] attribute or throws NotImplemented on public API", 0.55));
+            var reason = hasObsoleteAdded
+                ? "Production C# adds [Obsolete] attribute (API being deprecated)"
+                : "Production C# removes [Obsolete] attribute (deprecation guard stripped)";
+            labels.Add(MakeLabel("GCI0004", reason, 0.60));
         }
 
         // GCI0006 -- Possible null dereference
