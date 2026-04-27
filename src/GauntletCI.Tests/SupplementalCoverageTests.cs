@@ -442,10 +442,10 @@ public class SupplementalCoverageTests
         Assert.Contains(findings, f => f.Summary.Contains("CA2100"));
     }
 
-    // ── GCI0004 public class/interface removed ────────────────────────────────
+    // ── GCI0004 [Obsolete] added signals active deprecation ─────────────────────
 
     [Fact]
-    public async Task GCI0004_RemovedPublicClass_ShouldFlag()
+    public async Task GCI0004_ObsoleteAdded_ShouldFlag()
     {
         var rule = new GCI0004_BreakingChangeRisk();
         var raw = """
@@ -453,16 +453,17 @@ public class SupplementalCoverageTests
             index abc..def 100644
             --- a/src/Service.cs
             +++ b/src/Service.cs
-            @@ -1,3 +1,2 @@
+            @@ -1,3 +1,4 @@
              // file
-            -public class UserService {
+            +[Obsolete("Use UserServiceV2 instead.")]
+             public class UserService {
              // end
             """;
 
         var diff = DiffParser.Parse(raw);
         var findings = await rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f => f.Summary.Contains("Public API removed"));
+        Assert.Contains(findings, f => f.Summary.Contains("[Obsolete] added"));
     }
 
     // ── GCI0003 no logic removed, no finding ──────────────────────────────────

@@ -10,73 +10,25 @@ public class GCI0004Tests
     private static readonly GCI0004_BreakingChangeRisk Rule = new();
 
     [Fact]
-    public async Task ManyFilesWithRemovals_ShouldCollapseToSingleFinding()
+    public async Task ObsoleteAttributeAdded_ShouldFlag()
     {
-        // 4 files each removing a public method - should collapse to one cross-file summary.
-        static string FileBlock(string name) => $"""
-            diff --git a/src/{name}.cs b/src/{name}.cs
-            index abc..def 100644
-            --- a/src/{name}.cs
-            +++ b/src/{name}.cs
-            @@ -1,3 +1,2 @@
-             // class
-            -public void Execute()
-             // end
-            """;
-
-        var raw = string.Join("\n", new[] { "Alpha", "Beta", "Gamma", "Delta" }.Select(FileBlock));
-        var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
-
-        var f = Assert.Single(findings, x => x.Summary.Contains("Public API removed"));
-        Assert.Contains("4 files", f.Summary);
-        Assert.Contains("Files:", f.Evidence);
-    }
-
-    [Fact]
-    public async Task ManyFilesWithSigChanges_ShouldCollapseToSingleFinding()
-    {
-        // 4 files each changing the same public method sig - should collapse to one summary.
-        static string FileBlock(string name) => $"""
-            diff --git a/src/{name}.cs b/src/{name}.cs
-            index abc..def 100644
-            --- a/src/{name}.cs
-            +++ b/src/{name}.cs
-            @@ -1,3 +1,3 @@
-             // class
-            -public void Process(string s)
-            +public void Process(string s, int timeout)
-             // end
-            """;
-
-        var raw = string.Join("\n", new[] { "Alpha", "Beta", "Gamma", "Delta" }.Select(FileBlock));
-        var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
-
-        var f = Assert.Single(findings, x => x.Summary.Contains("signature changed"));
-        Assert.Contains("4 files", f.Summary);
-    }
-    [Fact]
-    public async Task RemovedPublicMethod_ShouldFlagHighConfidence()
-    {
-
         var raw = """
-            diff --git a/src/Calculator.cs b/src/Calculator.cs
+            diff --git a/src/PaymentService.cs b/src/PaymentService.cs
             index abc..def 100644
-            --- a/src/Calculator.cs
-            +++ b/src/Calculator.cs
-            @@ -1,3 +1,2 @@
-             // calculator
-            -public void Calculate(int x)
-             // end
+            --- a/src/PaymentService.cs
+            +++ b/src/PaymentService.cs
+            @@ -1,3 +1,4 @@
+             // service
+            +[Obsolete("Use PaymentServiceV2 instead.")]
+             public void ProcessPayment(decimal amount) { }
             """;
 
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f =>
-            f.Summary.Contains("Public API removed") &&
-            f.Confidence == Confidence.High);
+        var f = Assert.Single(findings);
+        Assert.Contains("[Obsolete] added", f.Summary);
+        Assert.Equal(Confidence.Medium, f.Confidence);
     }
 
     [Fact]
@@ -96,34 +48,34 @@ public class GCI0004Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f => f.Summary.Contains("[Obsolete]"));
+        Assert.Contains(findings, f => f.Summary.Contains("[Obsolete] attribute removed"));
     }
 
     [Fact]
-    public async Task RenamedPublicMethod_ShouldFlag()
+    public async Task PublicMethodRemovedWithoutObsolete_ShouldNotFlag()
     {
-        // Remove GetName, add FetchName — different names → "Public API removed"
+        // Regression: rule no longer fires on raw public API removal (117 FPs in corpus).
         var raw = """
-            diff --git a/src/UserService.cs b/src/UserService.cs
+            diff --git a/src/Calculator.cs b/src/Calculator.cs
             index abc..def 100644
-            --- a/src/UserService.cs
-            +++ b/src/UserService.cs
-            @@ -1,3 +1,3 @@
-             // service
-            -public string GetName()
-            +public string FetchName()
+            --- a/src/Calculator.cs
+            +++ b/src/Calculator.cs
+            @@ -1,3 +1,2 @@
+             // calculator
+            -public void Calculate(int x)
+             // end
             """;
 
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f => f.Summary.Contains("Public API removed"));
+        Assert.Empty(findings);
     }
 
     [Fact]
-    public async Task ChangedPublicMethodSignature_ShouldFlagMediumConfidence()
+    public async Task PublicSignatureChangedWithoutObsolete_ShouldNotFlag()
     {
-        // Same name, different signature → "Public API signature changed"
+        // Regression: rule no longer fires on signature changes alone.
         var raw = """
             diff --git a/src/Calculator.cs b/src/Calculator.cs
             index abc..def 100644
@@ -138,43 +90,22 @@ public class GCI0004Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f =>
-            f.Summary.Contains("Calculate") &&
-            f.Confidence == Confidence.Medium);
+        Assert.Empty(findings);
     }
 
     [Fact]
-    public async Task OnlyAddedPublicMethod_ShouldNotFlag()
+    public async Task ObsoleteInGeneratedFile_ShouldNotFlag()
     {
+        // .netstandard2.0.cs API surface files must be ignored.
         var raw = """
-            diff --git a/src/Calculator.cs b/src/Calculator.cs
+            diff --git a/sdk/Azure.Search.Documents.netstandard2.0.cs b/sdk/Azure.Search.Documents.netstandard2.0.cs
             index abc..def 100644
-            --- a/src/Calculator.cs
-            +++ b/src/Calculator.cs
-            @@ -1,2 +1,3 @@
-             // calculator
-            +public int Add(int x, int y)
-             // end
-            """;
-
-        var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
-
-        Assert.DoesNotContain(findings, f => f.Summary.Contains("Public API removed"));
-    }
-
-    [Fact]
-    public async Task RemovedPrivateMethod_ShouldNotFlag()
-    {
-        var raw = """
-            diff --git a/src/Calculator.cs b/src/Calculator.cs
-            index abc..def 100644
-            --- a/src/Calculator.cs
-            +++ b/src/Calculator.cs
-            @@ -1,3 +1,2 @@
-             // calculator
-            -private void ComputeInternal(int x)
-             // end
+            --- a/sdk/Azure.Search.Documents.netstandard2.0.cs
+            +++ b/sdk/Azure.Search.Documents.netstandard2.0.cs
+            @@ -1,3 +1,4 @@
+             // generated
+            +[Obsolete("Deprecated property.")]
+             public string Category { get; set; }
             """;
 
         var diff = DiffParser.Parse(raw);
@@ -184,45 +115,46 @@ public class GCI0004Tests
     }
 
     [Fact]
-    public async Task SamePublicSignatureRemovedAndReadded_ShouldNotFlag()
+    public async Task ObsoleteInTestFile_ShouldNotFlag()
     {
-        // Same name AND same content re-added (e.g., just moved within file).
         var raw = """
-            diff --git a/src/Service.cs b/src/Service.cs
+            diff --git a/tests/LegacyTests.cs b/tests/LegacyTests.cs
             index abc..def 100644
-            --- a/src/Service.cs
-            +++ b/src/Service.cs
-            @@ -1,3 +1,3 @@
-             // service
-            -public void Execute(int id)
-            +public void Execute(int id)
+            --- a/tests/LegacyTests.cs
+            +++ b/tests/LegacyTests.cs
+            @@ -1,3 +1,4 @@
+             // tests
+            +[Obsolete("old test helper")]
+             public void TestOldPath() { }
             """;
 
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.DoesNotContain(findings, f => f.Summary.Contains("Public API removed"));
-        Assert.DoesNotContain(findings, f => f.Summary.Contains("Public API signature changed"));
+        Assert.Empty(findings);
     }
 
     [Fact]
-    public async Task PublicMethodOnlyOptionalParamsAdded_ShouldNotFlag()
+    public async Task ManyFilesWithObsoleteAdded_ShouldCollapseToSingleFinding()
     {
-        // Backward-compatible extension — new params all have defaults
-        var raw = """
-            diff --git a/src/Calculator.cs b/src/Calculator.cs
+        // 4 files each adding [Obsolete] - should collapse to one cross-file summary.
+        static string FileBlock(string name) => $"""
+            diff --git a/src/{name}.cs b/src/{name}.cs
             index abc..def 100644
-            --- a/src/Calculator.cs
-            +++ b/src/Calculator.cs
-            @@ -1,3 +1,3 @@
-             // calculator
-            -public void Calculate(int x)
-            +public void Calculate(int x, string label = "default", bool verbose = false)
+            --- a/src/{name}.cs
+            +++ b/src/{name}.cs
+            @@ -1,2 +1,3 @@
+             // class
+            +[Obsolete("Use V2.")]
+             public void Run();
             """;
 
+        var raw = string.Join("\n", new[] { "Alpha", "Beta", "Gamma", "Delta" }.Select(FileBlock));
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.DoesNotContain(findings, f => f.Summary.Contains("signature changed"));
+        var f = Assert.Single(findings, x => x.Summary.Contains("[Obsolete] added"));
+        Assert.Contains("4 files", f.Summary);
+        Assert.Contains("Files:", f.Evidence);
     }
 }
