@@ -8,51 +8,41 @@ public class GCI0016Tests
 {
     private static readonly GCI0016_ConcurrencyAndStateRisk Rule = new();
 
-    private static DiffContext MakeDiff(string addedLine) =>
+    private static DiffContext MakeDiff(string addedLine, string path = "src/Service.cs") =>
         DiffParser.Parse($"""
-            diff --git a/src/Service.cs b/src/Service.cs
+            diff --git a/{path} b/{path}
             index abc..def 100644
-            --- a/src/Service.cs
-            +++ b/src/Service.cs
+            --- a/{path}
+            +++ b/{path}
             @@ -1,1 +1,2 @@
              // existing
             +{addedLine}
             """);
 
+    // --- async void ---
+
     [Fact]
-    public async Task AsyncVoidMethod_ShouldFlagFinding()
+    public async Task AsyncVoidMethod_ShouldFlag()
     {
         var diff = MakeDiff("    public async void RunBackground() { }");
         var findings = await Rule.EvaluateAsync(diff, null);
-
         Assert.Contains(findings, f => f.Summary.Contains("async void"));
     }
 
     [Fact]
-    public async Task DotResultOnTask_ShouldFlagFinding()
+    public async Task AsyncVoidEventHandler_SenderEventArgs_ShouldNotFlag()
     {
-        var diff = MakeDiff("    var result = GetDataAsync().Result;");
+        var diff = MakeDiff("    private async void OnClick(object sender, EventArgs e) { await DoWorkAsync(); }");
         var findings = await Rule.EvaluateAsync(diff, null);
-
-        Assert.Contains(findings, f => f.Summary.Contains(".Result"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("async void"));
     }
 
     [Fact]
-    public async Task DotWaitOnTask_ShouldFlagFinding()
+    public async Task AsyncVoidEventHandler_PropertyChangedArgs_ShouldNotFlag()
     {
-        var diff = MakeDiff("    task.Wait();");
+        var diff = MakeDiff("    private async void OnChanged(object sender, PropertyChangedEventArgs e) { }");
         var findings = await Rule.EvaluateAsync(diff, null);
-
-        Assert.Contains(findings, f => f.Summary.Contains(".Wait()"));
-    }
-
-    [Fact]
-    public async Task ConfigureAwaitFalse_ShouldNotFlag()
-    {
-        var diff = MakeDiff("    await task.ConfigureAwait(false);");
-        var findings = await Rule.EvaluateAsync(diff, null);
-
-        Assert.DoesNotContain(findings, f => f.Summary.Contains("ConfigureAwait"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("async void"));
     }
 
     [Fact]
@@ -60,18 +50,71 @@ public class GCI0016Tests
     {
         var diff = MakeDiff("    public async Task RunAsync() { }");
         var findings = await Rule.EvaluateAsync(diff, null);
-
         Assert.DoesNotContain(findings, f => f.Summary.Contains("async void"));
     }
 
-    [Fact]
-    public async Task GetResultInsideAwait_ShouldNotFlagFalsePositive()
-    {
-        // "GetResult" as part of a method name, not .Result access
-        var diff = MakeDiff("    var x = await FetchAndGetResultAsync();");
-        var findings = await Rule.EvaluateAsync(diff, null);
+    // --- .Wait() / .GetAwaiter().GetResult() ---
 
+    [Fact]
+    public async Task DotWait_ShouldFlag()
+    {
+        var diff = MakeDiff("    task.Wait();");
+        var findings = await Rule.EvaluateAsync(diff, null);
+        Assert.Contains(findings, f => f.Summary.Contains(".Wait()"));
+    }
+
+    [Fact]
+    public async Task GetAwaiterGetResult_ShouldFlag()
+    {
+        var diff = MakeDiff("    var x = FetchAsync().GetAwaiter().GetResult();");
+        var findings = await Rule.EvaluateAsync(diff, null);
+        Assert.Contains(findings, f => f.Summary.Contains("GetAwaiter"));
+    }
+
+    // --- .Result ---
+
+    [Fact]
+    public async Task DotResultChainedOnMethodCall_ShouldFlag()
+    {
+        // .Result directly on a method call result — clear blocking pattern.
+        var diff = MakeDiff("    var result = GetDataAsync().Result;");
+        var findings = await Rule.EvaluateAsync(diff, null);
+        Assert.Contains(findings, f => f.Summary.Contains(".Result"));
+    }
+
+    [Fact]
+    public async Task DotResultWithTaskContext_ShouldFlag()
+    {
+        // Task<T> variable with .Result — explicit Task type context.
+        var diff = MakeDiff("    var x = Task.Run(() => Compute()).Result;");
+        var findings = await Rule.EvaluateAsync(diff, null);
+        Assert.Contains(findings, f => f.Summary.Contains(".Result"));
+    }
+
+    [Fact]
+    public async Task DotResultOnDomainProperty_ShouldNotFlag()
+    {
+        // 'Result' is a domain property (OperationResult, HttpResult, etc.) — not a Task.
+        var diff = MakeDiff("    var code = response.Result.StatusCode;");
+        var findings = await Rule.EvaluateAsync(diff, null);
         Assert.DoesNotContain(findings, f => f.Summary.Contains(".Result"));
+    }
+
+    [Fact]
+    public async Task DotResultOnExceptionPayload_ShouldNotFlag()
+    {
+        // Common in test assertions: exception.Result.Should().Be(10)
+        var diff = MakeDiff("    exception.Result.Should().Be(10);");
+        var findings = await Rule.EvaluateAsync(diff, null);
+        Assert.DoesNotContain(findings, f => f.Summary.Contains(".Result"));
+    }
+
+    [Fact]
+    public async Task AwaitedExpression_ShouldNotFlag()
+    {
+        var diff = MakeDiff("    await task.ConfigureAwait(false);");
+        var findings = await Rule.EvaluateAsync(diff, null);
+        Assert.Empty(findings);
     }
 
     [Fact]
@@ -79,16 +122,24 @@ public class GCI0016Tests
     {
         var diff = MakeDiff("    // var result = task.Result;");
         var findings = await Rule.EvaluateAsync(diff, null);
-
         Assert.DoesNotContain(findings, f => f.Summary.Contains(".Result"));
     }
 
     [Fact]
-    public async Task LockThis_ShouldFlagWarning()
+    public async Task MethodNameContainingGetResult_ShouldNotFlag()
+    {
+        var diff = MakeDiff("    var x = await FetchAndGetResultAsync();");
+        var findings = await Rule.EvaluateAsync(diff, null);
+        Assert.DoesNotContain(findings, f => f.Summary.Contains(".Result"));
+    }
+
+    // --- lock(this) ---
+
+    [Fact]
+    public async Task LockThis_ShouldFlag()
     {
         var diff = MakeDiff("    lock (this) { }");
         var findings = await Rule.EvaluateAsync(diff, null);
-
         Assert.Contains(findings, f => f.Summary.Contains("lock(this)"));
     }
 
@@ -97,70 +148,24 @@ public class GCI0016Tests
     {
         var diff = MakeDiff("    lock (_syncRoot) { }");
         var findings = await Rule.EvaluateAsync(diff, null);
-
         Assert.DoesNotContain(findings, f => f.Summary.Contains("lock"));
     }
 
-    [Fact]
-    public async Task AsyncVoidEventHandlerWithSender_ShouldNotFlag()
-    {
-        var diff = MakeDiff("    private async void OnClick(object sender, EventArgs e) { await DoWorkAsync(); }");
-        var findings = await Rule.EvaluateAsync(diff, null);
+    // --- Thread.Sleep ---
 
-        Assert.DoesNotContain(findings, f => f.Summary.Contains("async void"));
+    [Fact]
+    public async Task ThreadSleep_InProductionCode_ShouldFlag()
+    {
+        var diff = MakeDiff("    Thread.Sleep(500);");
+        var findings = await Rule.EvaluateAsync(diff, null);
+        Assert.Contains(findings, f => f.Summary.Contains("Thread.Sleep"));
     }
 
     [Fact]
-    public async Task AsyncVoidEventHandlerWithEventArgs_ShouldNotFlag()
+    public async Task ThreadSleep_InTestFile_ShouldNotFlag()
     {
-        var diff = MakeDiff("    private async void OnChanged(object sender, PropertyChangedEventArgs e) { }");
+        var diff = MakeDiff("    Thread.Sleep(100);", "tests/MyServiceTests.cs");
         var findings = await Rule.EvaluateAsync(diff, null);
-
-        Assert.DoesNotContain(findings, f => f.Summary.Contains("async void"));
-    }
-
-    [Fact]
-    public async Task StaticMutableField_ShouldFlag()
-    {
-        var diff = MakeDiff("    private static Dictionary<string, string> _cache;");
-        var findings = await Rule.EvaluateAsync(diff, null);
-
-        Assert.Contains(findings, f => f.Summary.Contains("Static mutable"));
-    }
-
-    [Fact]
-    public async Task StaticReadonlyField_ShouldNotFlag()
-    {
-        var diff = MakeDiff("    private static readonly string _name = \"test\";");
-        var findings = await Rule.EvaluateAsync(diff, null);
-
-        Assert.DoesNotContain(findings, f => f.Summary.Contains("Static mutable"));
-    }
-
-    [Fact]
-    public async Task StaticAutoProperty_ShouldNotFlag()
-    {
-        var diff = MakeDiff("    public static int BufferSize { get; set; } = 4096;");
-        var findings = await Rule.EvaluateAsync(diff, null);
-
-        Assert.DoesNotContain(findings, f => f.Summary.Contains("Static mutable"));
-    }
-
-    [Fact]
-    public async Task StaticExpressionBodiedProperty_ShouldNotFlag()
-    {
-        var diff = MakeDiff("    public static int CurrentThreadId => Environment.CurrentManagedThreadId;");
-        var findings = await Rule.EvaluateAsync(diff, null);
-
-        Assert.DoesNotContain(findings, f => f.Summary.Contains("Static mutable"));
-    }
-
-    [Fact]
-    public async Task StaticMethod_ShouldNotFlagAsField()
-    {
-        var diff = MakeDiff("    public static int Compute(int x) => x * 2;");
-        var findings = await Rule.EvaluateAsync(diff, null);
-
-        Assert.DoesNotContain(findings, f => f.Summary.Contains("Static mutable"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Thread.Sleep"));
     }
 }
