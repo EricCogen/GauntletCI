@@ -174,8 +174,18 @@ These rules examine logic changes that could alter how the software behaves at r
 
 **Confidence:** Low
 **What it detects:** Three checks. First, it tracks brace nesting depth across added lines in each file; if any point in the added code reaches more than four levels of nesting, it flags the file. Second, it identifies method-like blocks in the added code that contain more than thirty lines. Third, it looks for lines that appear three or more times verbatim across all added lines in the diff, which suggests duplicated logic.
-**Why it matters:** Deep nesting makes code harder to read, test, and change without introducing bugs. Long methods are difficult to understand in isolation and tend to accumulate responsibilities over time. Duplicated logic creates maintenance debt — a fix in one copy must be replicated in all others.
+**Why it matters:** Deep nesting makes code harder to read, test, and change without introducing bugs. Long methods are difficult to understand in isolation and tend to accumulate responsibilities over time. Duplicated logic creates maintenance debt - a fix in one copy must be replicated in all others.
 **Suggested action:** Extract nested logic into private helpers and use early-return guard clauses to reduce nesting. Break long methods into smaller, focused functions. Extract repeated logic into a shared method or constant.
+
+---
+
+### GCI0047 · Naming/Contract Alignment
+
+**Confidence:** Medium
+**What it detects:** Two checks. First, it scans method signatures in non-test .cs files for renames where the new CRUD verb is a semantic contradiction of the old verb on the same base name. It extracts the verb prefix (Get, Add, Create, Find, Fetch, Load, Save, Insert) and the base suffix from removed and added method signatures in the same file, then reports any pair where the same base name now carries a destructive verb (Delete, Remove) in place of a constructive or read verb (or vice versa). Second, it checks whether a boolean property or field name was renamed to its semantic inverse in the same file - for example IsEnabled changed to IsDisabled, or IsActive changed to IsInactive.
+**Why it matters:** A method renamed from AddUser to RemoveUser has the same parameter list but the opposite effect on the system. Callers written against the old contract will silently do the wrong thing. The compiler cannot catch this because the signature is otherwise valid. Boolean inversions are equally dangerous: every conditional that checked IsEnabled is now logically negated without any change to the condition itself.
+**Suggested action:** Confirm the rename is intentional and that the behavior changed to match the new name. If the behavior did not change, revert the rename. If the behavior did change, audit every call site to verify it was also updated. For boolean inversions, prefer keeping the positive-form name and changing the stored value rather than inverting the name.
+**Known limitations:** Fires only when both the old and new method definitions appear in the same file. If the rename spans files, or if only the definition was updated without updating the callers, this rule will not fire. Test files are excluded.
 
 ---
 
