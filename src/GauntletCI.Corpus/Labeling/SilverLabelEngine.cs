@@ -58,8 +58,9 @@ public sealed class SilverLabelEngine
             "GCI0010", "Review comment mentions hardcoded value or configuration concern", 0.6),
         (["exception", "catch", "swallowing", "ignored exception"],
             "GCI0003", "Review comment mentions exception handling concern", 0.6),
-        (["thread safe", "thread-safe", "race condition", "concurrent", "lock"],
-            "GCI0016", "Review comment mentions thread safety concern", 0.6),
+        // Note: "thread safe / concurrent / lock" keywords intentionally removed from GCI0016.
+        // GCI0016 scope is async execution model violations only (dropped static mutable field
+        // check). Thread-safety review comments signal concerns the rule no longer detects.
         (["secret", "password", "credential", "api key", "api_key"],
             "GCI0012", "Review comment mentions credential/secret concern", 0.75),
         (["large file", "file size", "binary file", "binary blob"],
@@ -319,18 +320,40 @@ public sealed class SilverLabelEngine
 
     private static void ApplyDiffHeuristics(List<string> addedLines, List<string> removedLines, List<string> pathLines, List<ExpectedFinding> labels)
     {
-        // GCI0016 -- Sync-over-async: .GetAwaiter().GetResult() is unambiguous;
-        // .Result/.Wait() only count when there is a Task/async context on the same line.
-        if (addedLines.Any(l =>
+        // GCI0016 -- Async execution model violations. Mirrors the four checks in the rule exactly.
+        // .GetAwaiter().GetResult() is unambiguous; .Result only counts with Task/Async context;
+        // .Wait() counts with Task/CancellationToken context; async void skips event-handler sigs;
+        // lock(this) and Thread.Sleep in non-test paths are also flagged.
+        {
+            bool isTestPath = pathLines.Any(l =>
+                l.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
+                l.Contains("Spec", StringComparison.OrdinalIgnoreCase));
+
+            bool hasBlockingCall = addedLines.Any(l =>
                 l.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal) ||
+                l.Contains(".Wait()", StringComparison.Ordinal) ||
                 (l.Contains(".Result", StringComparison.Ordinal) &&
                     (l.Contains("Task", StringComparison.Ordinal) ||
                      l.Contains("Async", StringComparison.Ordinal))) ||
                 (l.Contains(".Wait(", StringComparison.Ordinal) &&
                     (l.Contains("Task", StringComparison.Ordinal) ||
-                     l.Contains("CancellationToken", StringComparison.Ordinal)))))
-        {
-            labels.Add(MakeLabel("GCI0016", "Diff contains sync-over-async (.GetAwaiter().GetResult() or Task.Result/.Wait()) on added lines", 0.6));
+                     l.Contains("CancellationToken", StringComparison.Ordinal))));
+
+            bool hasAsyncVoid = addedLines.Any(l =>
+                l.Contains("async void ", StringComparison.Ordinal) &&
+                !l.Contains("EventArgs", StringComparison.Ordinal) &&
+                !l.Contains("object sender", StringComparison.Ordinal));
+
+            bool hasLockThis = addedLines.Any(l =>
+                l.Contains("lock(this)", StringComparison.Ordinal) ||
+                l.Contains("lock (this)", StringComparison.Ordinal));
+
+            bool hasThreadSleep = !isTestPath && addedLines.Any(l =>
+                l.Contains("Thread.Sleep(", StringComparison.Ordinal) &&
+                !l.TrimStart().StartsWith("//"));
+
+            if (hasBlockingCall || hasAsyncVoid || hasLockThis || hasThreadSleep)
+                labels.Add(MakeLabel("GCI0016", "Diff contains async execution model violation (blocking call, async void, lock(this), or Thread.Sleep)", 0.65));
         }
 
         // GCI0012 -- Secret/credential exposure
