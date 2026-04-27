@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using GauntletCI.Corpus.Interfaces;
 using GauntletCI.Corpus.Models;
+using GauntletCI.Corpus.Normalization;
 
 namespace GauntletCI.Corpus.Labeling;
 
@@ -136,9 +137,10 @@ public sealed class SilverLabelEngine
         var addedLines   = ExtractAddedLines(diffText);
         var removedLines = ExtractRemovedLines(diffText);
         var pathLines    = ExtractPathLines(diffText);
+        var prodCsLines  = ExtractAddedLinesFromProductionCsFiles(diffText);
         var labels       = new List<ExpectedFinding>();
 
-        ApplyDiffHeuristics(addedLines, removedLines, pathLines, labels);
+        ApplyDiffHeuristics(addedLines, removedLines, pathLines, prodCsLines, labels);
 
         return Task.FromResult<IReadOnlyList<ExpectedFinding>>(labels);
     }
@@ -318,7 +320,7 @@ public sealed class SilverLabelEngine
 
     // -- Heuristic application -------------------------------------------------
 
-    private static void ApplyDiffHeuristics(List<string> addedLines, List<string> removedLines, List<string> pathLines, List<ExpectedFinding> labels)
+    private static void ApplyDiffHeuristics(List<string> addedLines, List<string> removedLines, List<string> pathLines, List<string> prodCsLines, List<ExpectedFinding> labels)
     {
         // GCI0016 -- Async execution model violations. Mirrors the four checks in the rule exactly.
         // .GetAwaiter().GetResult() is unambiguous; .Result only counts with Task/Async context;
@@ -356,12 +358,37 @@ public sealed class SilverLabelEngine
                 labels.Add(MakeLabel("GCI0016", "Diff contains async execution model violation (blocking call, async void, lock(this), or Thread.Sleep)", 0.65));
         }
 
-        // GCI0012 -- Secret/credential exposure
-        // Tightened: exclude CancellationToken, require assignment to literal string value
-        // to avoid flagging benign token/password parameter names.
-        if (addedLines.Any(IsCredentialAssignment))
+        // GCI0012 -- Secret/credential exposure + weak cryptography + SQL injection
+        // Use production-CS-only lines to avoid FNs from test helper passwords, sample
+        // JWTs in test classes, and SHA/MD5 uses that are intentional in test code.
+        // When the diff has no production C# files, no GCI0012 label is emitted — the
+        // rule also only processes production .cs files.
+        if (prodCsLines.Count > 0)
         {
-            labels.Add(MakeLabel("GCI0012", "Diff contains credential keyword assigned to a literal string value on added lines", 0.7));
+            bool hasCredential = prodCsLines.Any(IsCredentialAssignment);
+
+            bool hasWeakHash = prodCsLines.Any(l =>
+                !l.TrimStart().StartsWith("//") &&
+                (l.Contains("MD5.Create()", StringComparison.Ordinal) ||
+                 l.Contains("SHA1.Create()", StringComparison.Ordinal) ||
+                 l.Contains("new MD5CryptoServiceProvider(", StringComparison.Ordinal) ||
+                 l.Contains("new SHA1Managed(", StringComparison.Ordinal) ||
+                 l.Contains("new SHA1CryptoServiceProvider(", StringComparison.Ordinal)));
+
+            bool hasSqlInjection = prodCsLines.Any(l =>
+                !l.TrimStart().StartsWith("//") &&
+                SqlStringLiteralStart.IsMatch(l) &&
+                (l.Contains(" + ", StringComparison.Ordinal) ||
+                 (l.Contains("{", StringComparison.Ordinal) && l.Contains("$\"", StringComparison.Ordinal)) ||
+                 l.Contains("string.Format(", StringComparison.Ordinal)));
+
+            if (hasCredential || hasWeakHash || hasSqlInjection)
+            {
+                var reason = hasWeakHash   ? "Diff adds use of weak hashing algorithm (MD5 or SHA1) in production code"
+                           : hasSqlInjection ? "Diff builds SQL string via concatenation or interpolation in production code"
+                           : "Diff contains credential keyword assigned to a literal string value on added production lines";
+                labels.Add(MakeLabel("GCI0012", reason, 0.7));
+            }
         }
 
         // GCI0003 -- Empty catch block
@@ -630,14 +657,22 @@ public sealed class SilverLabelEngine
 
     // -- Tightened GCI0007 helper ----------------------------------------------
 
+    // SQL string literal starting with a DML keyword (trailing space prevents matching
+    // LINQ .Select(), C# identifiers like UpdateEntityType, or English words like "selection").
+    private static readonly Regex SqlStringLiteralStart = new(
+        @"(?:=|return|\(|,)\s*(?:@|\$)?""(?:SELECT |INSERT |UPDATE |DELETE )",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     // Credential keyword assigned to a quoted string literal — the real risky pattern
     private static readonly Regex CredentialAssignToLiteral = new(
         @"(password|secret|api_key|apikey|private_key|privatekey|client_secret|access_token|auth_token)\s*[=:]\s*""[^""]",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     // Hard-coded credential-looking value (base64 or long alphanumeric after = "")
+    // Requires at least one digit to avoid matching pure-CamelCase identifiers like
+    // "SignatureVerificationFailed" or "ResolvePackageAssets" which are constant names, not secrets.
     private static readonly Regex HardcodedCredentialValue = new(
-        @"=\s*""[A-Za-z0-9+/]{20,}={0,2}""",
+        @"=\s*""(?=[A-Za-z0-9+/]*[0-9])[A-Za-z0-9+/]{20,}={0,2}""",
         RegexOptions.Compiled);
 
     private static bool IsCredentialAssignment(string line)
@@ -721,6 +756,61 @@ public sealed class SilverLabelEngine
         return diffText.Split('\n')
             .Where(l => l.StartsWith("--- ") || l.StartsWith("+++ ") || l.StartsWith("diff --git"))
             .ToList();
+    }
+
+    /// <summary>
+    /// Extracts added lines only from production <c>.cs</c> files, skipping test, generated,
+    /// and non-production (benchmark/sample/example) files. Used for GCI0012 checks where
+    /// test-file credential/hash patterns are intentional.
+    /// Returns an empty list when the diff has no eligible production CS files.
+    /// </summary>
+    private static List<string> ExtractAddedLinesFromProductionCsFiles(string diffText)
+    {
+        var result = new List<string>();
+        var currentFile = string.Empty;
+        var inProductionCs = false;
+
+        foreach (var line in diffText.Split('\n'))
+        {
+            if (line.StartsWith("+++ b/", StringComparison.Ordinal))
+            {
+                currentFile = line[6..].TrimEnd('\r');
+                inProductionCs = currentFile.EndsWith(".cs", StringComparison.OrdinalIgnoreCase) &&
+                                 !TestFileClassifier.IsTestFile(currentFile) &&
+                                 !IsGeneratedCsFile(currentFile) &&
+                                 !IsBenchmarkOrSampleFile(currentFile);
+                continue;
+            }
+            if (inProductionCs && line.StartsWith('+') && !line.StartsWith("+++"))
+                result.Add(line[1..]);
+        }
+        return result;
+    }
+
+    private static bool IsGeneratedCsFile(string path)
+    {
+        var lower = path.ToLowerInvariant();
+        return lower.EndsWith(".g.cs") ||
+               lower.EndsWith(".g.i.cs") ||
+               lower.EndsWith(".designer.cs") ||
+               lower.EndsWith("assemblyinfo.cs") ||
+               lower.Contains("/obj/") ||
+               lower.Contains("/generated/");
+    }
+
+    private static bool IsBenchmarkOrSampleFile(string path)
+    {
+        // Check each directory segment (exclude the file name at the end)
+        var segments = path.ToLowerInvariant().Split(['/', '\\']);
+        foreach (var seg in segments.Take(segments.Length - 1))
+        {
+            if (seg is "benchmark" or "benchmarks" or "sample" or "samples" or "example" or "examples")
+                return true;
+            if (seg.EndsWith(".benchmark") || seg.EndsWith(".benchmarks") ||
+                seg.EndsWith(".sample") || seg.EndsWith(".samples"))
+                return true;
+        }
+        return false;
     }
 
     private static string ExtractFileDiffHunk(string diffText, string? filePath, int maxChars = 800)

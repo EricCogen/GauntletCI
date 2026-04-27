@@ -151,12 +151,18 @@ public class GCI0012_SecurityRisk : RuleBase
 
             if (!HasAssignment(content)) continue;
 
-            var literals = ExtractStringLiterals(content);
-            if (literals.Count == 0) continue;
+            // Only fire when the RHS is a bare string literal (e.g. = "value"), not a method
+            // call whose argument happens to contain a string (e.g. Switch("ui-element-id")).
+            // This prevents FPs from UI component field declarations named after token concepts.
+            var literal = ExtractDirectlyAssignedLiteral(content);
+            if (literal is null) continue;
 
-            // Skip lines where every string literal looks like an env var name (ALL_CAPS_UNDERSCORES).
-            // These are references to env var keys, not hardcoded credential values.
-            if (literals.All(IsEnvVarName)) continue;
+            // Skip references to env var names (ALL_CAPS_UNDERSCORES) — not credential values.
+            if (IsEnvVarName(literal)) continue;
+
+            // Skip obviously benign default values: empty strings, HTTP scheme names,
+            // and other initialization placeholders that are never real credentials.
+            if (IsBenignLiteralValue(literal)) continue;
 
             // Check secret keyword only in the left-hand side of the assignment (the variable name),
             // not anywhere in the line — avoids false positives from type names like HtmlTokenType.
@@ -188,6 +194,19 @@ public class GCI0012_SecurityRisk : RuleBase
     // An env var name is ALL_CAPS with digits and underscores (e.g. GITHUB_TOKEN, MY_API_KEY).
     private static bool IsEnvVarName(string literal) =>
         literal.Length > 0 && literal.All(c => char.IsUpper(c) || char.IsDigit(c) || c == '_');
+
+    // Returns true for values that look like initialization defaults, never actual secrets:
+    // empty strings, well-known HTTP auth scheme names, and C# keyword literals.
+    private static bool IsBenignLiteralValue(string value) =>
+        string.IsNullOrEmpty(value) ||
+        value.Length < 3 ||
+        value.Equals("Bearer",    StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("Basic",     StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("Token",     StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("Anonymous", StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("null",      StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("true",      StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("false",     StringComparison.OrdinalIgnoreCase);
 
     // Returns true only if the line contains a real assignment = (not ==, !=, <=, >=, =>).
     // Skips = signs inside string literals to avoid false positives from format strings.
@@ -228,25 +247,36 @@ public class GCI0012_SecurityRisk : RuleBase
         return content.Length;
     }
 
-    private static List<string> ExtractStringLiterals(string content)
+    // Returns the string value only when the direct RHS of an assignment is a bare string literal.
+    // Returns null if the RHS is a method call, object initializer, or anything other than a literal.
+    // This prevents FPs from patterns like: _tokenField = SomeFactory("ui-element-id")
+    // where the string argument is not a credential, just an argument to a factory method.
+    private static string? ExtractDirectlyAssignedLiteral(string content)
     {
-        if (string.IsNullOrWhiteSpace(content) || !content.Contains('"', StringComparison.Ordinal))
-            return [];
+        int eqIdx = FindAssignmentIndex(content);
+        if (eqIdx >= content.Length) return null;
+
+        var rhs = content[(eqIdx + 1)..].TrimStart();
+
+        // Must open with a string literal — not a method call, `new`, identifier, etc.
+        if (!rhs.StartsWith('"') &&
+            !rhs.StartsWith("@\"", StringComparison.Ordinal) &&
+            !rhs.StartsWith("$\"", StringComparison.Ordinal))
+            return null;
 
         try
         {
-            var wrapped = $"class __G {{ void __M() {{ {content} }} }}";
+            var wrapped = $"class __G {{ void __M() {{ var __v = {rhs.TrimEnd(';', ' ', ',')}; }} }}";
             var tree = CSharpSyntaxTree.ParseText(wrapped);
-            var root = tree.GetRoot();
-
-            return root.DescendantTokens()
+            return tree.GetRoot()
+                .DescendantTokens()
                 .Where(t => t.IsKind(SyntaxKind.StringLiteralToken))
                 .Select(t => t.ValueText)
-                .ToList();
+                .FirstOrDefault();
         }
         catch
         {
-            return [];
+            return null;
         }
     }
 
