@@ -524,7 +524,7 @@ public sealed class SilverLabelEngine
         // GCI0029 -- PII term in a log call
         {
             var piiLogPrefixes = new[] { "_logger.", "logger.", "Logger.", "_log.", "log.", "Log.Information", "Log.Warning", "Log.Error", "Log.Debug" };
-            var piiTerms       = new[] { "email", "ssn", "phonenumber", "creditcard", "dateofbirth", "passport", "bankaccount", "address", "ipaddress", "token", "username" };
+            var piiTerms       = new[] { "email", "ssn", "phonenumber", "creditcard", "dateofbirth", "passport", "bankaccount", "nationalid", "taxid", "dob", "birthdate", "zipcode", "postalcode", "geolocation" };
             if (addedLines.Any(l =>
                     piiLogPrefixes.Any(p => l.Contains(p, StringComparison.Ordinal)) &&
                     piiTerms.Any(t => l.Contains(t, StringComparison.OrdinalIgnoreCase))))
