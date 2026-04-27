@@ -96,6 +96,10 @@ public static class CorpusCommand
         nugetAdvisory.AddCommand(CreateNuGetAdvisoryEnrich());
         corpus.AddCommand(nugetAdvisory);
 
+        var fileChurn = new Command("file-churn", "90-day per-file commit churn hotspot enrichment");
+        fileChurn.AddCommand(CreateFileChurnEnrich());
+        corpus.AddCommand(fileChurn);
+
         return corpus;
     }
 
@@ -3003,6 +3007,61 @@ public static class CorpusCommand
                 Console.WriteLine("-- Structural Enrichment Summary --");
                 Console.WriteLine($"  Fixtures processed      : {result.FixturesProcessed}");
                 Console.WriteLine($"  Sensitive-path fixtures : {result.SensitivePathFixtures}");
+            }
+        });
+
+        return cmd;
+    }
+
+    // ── gauntletci corpus file-churn enrich ───────────────────────────────────
+
+    private static Command CreateFileChurnEnrich()
+    {
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
+        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
+        var delayOpt    = new Option<int>   ("--delay-ms", () => 200,                           "Delay between GitHub API calls (ms)");
+
+        var cmd = new Command("enrich", "Fetch 90-day per-file commit churn from GitHub and compute hotspot scores");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(fixturesOpt);
+        cmd.AddOption(tierOpt);
+        cmd.AddOption(limitOpt);
+        cmd.AddOption(delayOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
+            var delayMs      = ctx.ParseResult.GetValueForOption(delayOpt);
+            var ct           = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                var fixtures = await LoadFixturesAsync(db, tier, ct);
+                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+
+                Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with file churn data...");
+                Console.WriteLine();
+
+                using var enricher = new FileChurnEnricher();
+                var result = await enricher.EnrichAsync(
+                    fixtures, db, fixturesPath, delayMs,
+                    progress: msg => Console.WriteLine(msg),
+                    ct: ct);
+
+                if (result.AuthMissing) { ctx.ExitCode = 1; return; }
+
+                Console.WriteLine();
+                Console.WriteLine("-- File Churn Enrichment Summary --");
+                Console.WriteLine($"  Fixtures processed   : {result.FixturesProcessed}");
+                Console.WriteLine($"  Hotspot fixtures     : {result.HotspotFixtures}");
+                Console.WriteLine($"  Total files analyzed : {result.TotalFilesAnalyzed}");
             }
         });
 
