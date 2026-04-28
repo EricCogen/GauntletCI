@@ -68,7 +68,7 @@ public class GitHubRestHydratorTests : IDisposable
     [Fact]
     public void ParsePrUrl_UrlWithLeadingWhitespace_Works()
     {
-        // Arrange — leading space should be trimmed
+        // Arrange: leading space should be trimmed
         const string url = " https://github.com/owner/repo/pull/1";
 
         // Act
@@ -91,7 +91,7 @@ public class GitHubRestHydratorTests : IDisposable
     [Fact]
     public void ParsePrUrl_InvalidUrl_NotAPull_Throws()
     {
-        // Arrange — "issues" is not "pull"
+        // Arrange: "issues" is not "pull"
         const string url = "https://github.com/owner/repo/issues/1";
 
         // Act / Assert

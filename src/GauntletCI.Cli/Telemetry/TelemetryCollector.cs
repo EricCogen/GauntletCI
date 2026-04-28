@@ -7,7 +7,7 @@ namespace GauntletCI.Cli.Telemetry;
 
 /// <summary>
 /// Orchestrates post-analysis telemetry: consent check → event creation → local store → async upload.
-/// Call after every successful analysis. Always safe — all failures are silently swallowed.
+/// Call after every successful analysis. Always safe: all failures are silently swallowed.
 /// </summary>
 public static class TelemetryCollector
 {
@@ -49,7 +49,7 @@ public static class TelemetryCollector
                 LinesRemoved   = linesRemoved,
             });
 
-            // 1 event per finding (rule signal — most valuable for the model)
+            // 1 event per finding (rule signal: most valuable for the model)
             foreach (var finding in result.Findings)
             {
                 await AppendAsync(new TelemetryEvent
@@ -63,7 +63,7 @@ public static class TelemetryCollector
                 });
             }
 
-            // 1 event per rule — timing and outcome for model training / perf monitoring
+            // 1 event per rule: timing and outcome for model training / perf monitoring
             foreach (var metric in result.RuleMetrics)
             {
                 await AppendAsync(new TelemetryEvent
@@ -88,7 +88,7 @@ public static class TelemetryCollector
     private static string? ExtractExt(string? evidence)
     {
         if (string.IsNullOrEmpty(evidence)) return null;
-        // Evidence often contains a file path — extract extension only
+        // Evidence often contains a file path: extract extension only
         var parts = evidence.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         foreach (var part in parts)
         {

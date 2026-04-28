@@ -172,7 +172,7 @@ export default function WhyCodeReviewMissesBugsPage() {
             <p className="text-muted-foreground leading-relaxed">
               Confirmation bias compounds this structural limit. A reviewer scanning new code for
               correctness is primed to verify that the additions achieve their purpose. That mental
-              mode makes it less likely — not more — that the same reviewer will notice what
+              mode makes it less likely: not more: that the same reviewer will notice what
               disappeared. &quot;Does this code do what it should?&quot; and &quot;what used to
               happen on this code path?&quot; are different cognitive tasks. Review concentrates
               attention on the first. Detecting removed behavior requires a deliberate audit of
@@ -409,7 +409,7 @@ export default function WhyCodeReviewMissesBugsPage() {
               rules and common anti-patterns. Type checkers verify contract conformance within a
               single build boundary. These tools are valuable and should run alongside structural
               diff analysis. None are designed to detect removed guard clauses, changed exception
-              types, or deleted null checks — the behavioral drift patterns that structural
+              types, or deleted null checks: the behavioral drift patterns that structural
               pre-commit analysis specifically targets.
             </p>
           </section>

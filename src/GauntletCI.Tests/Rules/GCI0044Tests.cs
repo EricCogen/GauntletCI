@@ -132,7 +132,7 @@ public class GCI0044Tests
     [Fact]
     public async Task ForeachAddAccumulator_ShouldNotFire()
     {
-        // foreach + .Add() is the standard accumulator pattern — should not be flagged
+        // foreach + .Add() is the standard accumulator pattern: should not be flagged
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -205,7 +205,7 @@ public class GCI0044Tests
     public async Task LinqInRuleImplementationFile_ShouldNotFire()
     {
         // Rule implementation files use LINQ inside analysis loops as standard practice.
-        // These are engine internals, not production hotpaths — should not be flagged.
+        // These are engine internals, not production hotpaths: should not be flagged.
         var raw = """
             diff --git a/src/GauntletCI.Core/Rules/Implementations/GCI0099_Example.cs b/src/GauntletCI.Core/Rules/Implementations/GCI0099_Example.cs
             index abc..def 100644
@@ -233,7 +233,7 @@ public class GCI0044Tests
     public async Task AddInsideDbReaderWhileLoop_ShouldNotFire()
     {
         // while (reader.Read()) { rows.Add(...) } is the standard ADO.NET reader pattern.
-        // The loop is bounded by query results — not a hotpath risk.
+        // The loop is bounded by query results: not a hotpath risk.
         var raw = """
             diff --git a/src/GauntletCI.Llm/Embeddings/VectorStore.cs b/src/GauntletCI.Llm/Embeddings/VectorStore.cs
             index abc..def 100644

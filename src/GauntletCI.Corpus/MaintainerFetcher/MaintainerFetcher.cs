@@ -163,7 +163,7 @@ public sealed class MaintainerFetcher : IDisposable
 
             var wait = GetWaitTime(resp, baseDelay);
             baseDelay = TimeSpan.FromSeconds(Math.Min(baseDelay.TotalSeconds * 2, 64));
-            Console.Error.WriteLine($"[maintainer-fetcher] Rate limited (HTTP {(int)resp.StatusCode}) — waiting {wait.TotalSeconds:F0}s…");
+            Console.Error.WriteLine($"[maintainer-fetcher] Rate limited (HTTP {(int)resp.StatusCode}): waiting {wait.TotalSeconds:F0}s…");
             await Task.Delay(wait, ct);
         }
     }

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://gauntletci.dev/schemas/gauntletci-schema.json",
   "title": "GauntletCI Configuration",
-  "description": "Schema for .gauntletci.json — the optional GauntletCI configuration file placed at your repository root.",
+  "description": "Schema for .gauntletci.json: the optional GauntletCI configuration file placed at your repository root.",
   "type": "object",
   "additionalProperties": false,
   "properties": {

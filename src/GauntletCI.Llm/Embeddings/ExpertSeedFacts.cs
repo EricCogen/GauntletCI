@@ -42,7 +42,7 @@ public static class ExpertSeedFacts
 
         new(
             Id:      "dotnet/runtime#issues/14267",
-            Content: "Task.WhenAll does not short-circuit on first failure; all tasks continue running and all exceptions are aggregated — callers must inspect AggregateException.InnerExceptions.",
+            Content: "Task.WhenAll does not short-circuit on first failure; all tasks continue running and all exceptions are aggregated: callers must inspect AggregateException.InnerExceptions.",
             Source:  "https://github.com/dotnet/runtime/issues/14267"),
 
         new(

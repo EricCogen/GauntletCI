@@ -28,7 +28,7 @@ public static class GitHubChecksWriter
         if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(repository) || string.IsNullOrEmpty(sha))
         {
             Console.Error.WriteLine(
-                "[GauntletCI] --github-checks: missing GITHUB_TOKEN, GITHUB_REPOSITORY, or GITHUB_SHA — skipping.");
+                "[GauntletCI] --github-checks: missing GITHUB_TOKEN, GITHUB_REPOSITORY, or GITHUB_SHA: skipping.");
             return;
         }
 
@@ -74,7 +74,7 @@ public static class GitHubChecksWriter
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync(ct);
-                Console.Error.WriteLine($"[GauntletCI] --github-checks: API error {response.StatusCode} — {body}");
+                Console.Error.WriteLine($"[GauntletCI] --github-checks: API error {response.StatusCode}: {body}");
             }
             else
             {
@@ -84,7 +84,7 @@ public static class GitHubChecksWriter
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[GauntletCI] --github-checks: request failed — {ex.Message}");
+            Console.Error.WriteLine($"[GauntletCI] --github-checks: request failed: {ex.Message}");
         }
     }
 
@@ -122,7 +122,7 @@ public static class GitHubChecksWriter
                     start_line       = g.PrimaryLine!.Value,
                     end_line         = g.PrimaryLine!.Value,
                     annotation_level = ToAnnotationLevel(g.Severity),
-                    title            = $"{g.RuleId} — {g.RuleName}{lineLabel}",
+                    title            = $"{g.RuleId}: {g.RuleName}{lineLabel}",
                     message          = g.Summary,
                     raw_details      = rawDetails,
                 };
@@ -137,7 +137,7 @@ public static class GitHubChecksWriter
     internal static string BuildSummaryMarkdown(EvaluationResult result)
     {
         if (result.Findings.Count == 0)
-            return "✅ **GauntletCI** — Scan complete. No risk signals detected.";
+            return "✅ **GauntletCI**: Scan complete. No risk signals detected.";
 
         var groups = FindingGrouper.Group(result.Findings);
         var sb = new StringBuilder();
@@ -196,13 +196,13 @@ public static class GitHubChecksWriter
         var sb = new StringBuilder();
         var loc = g.FilePath is not null
             ? (g.Lines.Count > 1
-                ? $" — `{g.FilePath}` (lines {string.Join(", ", g.Lines)})"
+                ? $": `{g.FilePath}` (lines {string.Join(", ", g.Lines)})"
                 : g.PrimaryLine.HasValue
-                    ? $" — `{g.FilePath}:{g.PrimaryLine}`"
-                    : $" — `{g.FilePath}`")
+                    ? $": `{g.FilePath}:{g.PrimaryLine}`"
+                    : $": `{g.FilePath}`")
             : string.Empty;
 
-        sb.AppendLine($"**{g.RuleId} — {g.RuleName}**{loc}");
+        sb.AppendLine($"**{g.RuleId}: {g.RuleName}**{loc}");
         sb.AppendLine();
         sb.AppendLine($"**Summary:** {g.Summary}");
 
@@ -234,7 +234,7 @@ public static class GitHubChecksWriter
         return sb.ToString();
     }
 
-    // Block=0 (highest priority), Warn=1, Info=2, Advisory=3 — enum values cannot be relied on.
+    // Block=0 (highest priority), Warn=1, Info=2, Advisory=3: enum values cannot be relied on.
     private static int SeverityPriority(RuleSeverity s) => s switch
     {
         RuleSeverity.Block    => 0,

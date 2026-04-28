@@ -8,7 +8,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0035 – Architecture Layer Guard
+/// GCI0035, Architecture Layer Guard
 /// Checks added using directives against configured forbidden import pairs.
 /// </summary>
 public class GCI0035_ArchitectureLayerGuard : RuleBase, IConfigurableRule

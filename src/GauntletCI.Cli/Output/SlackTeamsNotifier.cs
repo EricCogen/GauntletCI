@@ -43,7 +43,7 @@ public static class SlackTeamsNotifier
                 if (!response.IsSuccessStatusCode)
                 {
                     var body = await response.Content.ReadAsStringAsync(ct);
-                    Console.Error.WriteLine($"[GauntletCI] Slack notification failed: {response.StatusCode} — {body}");
+                    Console.Error.WriteLine($"[GauntletCI] Slack notification failed: {response.StatusCode}: {body}");
                 }
             }
             catch (Exception ex)
@@ -62,7 +62,7 @@ public static class SlackTeamsNotifier
                 if (!response.IsSuccessStatusCode)
                 {
                     var body = await response.Content.ReadAsStringAsync(ct);
-                    Console.Error.WriteLine($"[GauntletCI] Teams notification failed: {response.StatusCode} — {body}");
+                    Console.Error.WriteLine($"[GauntletCI] Teams notification failed: {response.StatusCode}: {body}");
                 }
             }
             catch (Exception ex)

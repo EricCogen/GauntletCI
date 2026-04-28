@@ -181,7 +181,7 @@ public class GCI0049Tests
     [Fact]
     public async Task StringComparisonFirstThenFloat_ShouldFire()
     {
-        // String comparison appears first on the line but float equality follows — must fire.
+        // String comparison appears first on the line but float equality follows: must fire.
         var raw = """
             diff --git a/src/Core/Checker.cs b/src/Core/Checker.cs
             index abc..def 100644
@@ -223,7 +223,7 @@ public class GCI0049Tests
     [Fact]
     public async Task VerbatimStringWithEqualityOperator_ShouldNotFlag()
     {
-        // A verbatim string containing float-like patterns — should not fire
+        // A verbatim string containing float-like patterns: should not fire
         var raw = """
             diff --git a/src/Parser.cs b/src/Parser.cs
             index abc..def 100644
@@ -269,7 +269,7 @@ public class GCI0049Tests
     [Fact]
     public async Task RegularStringWithEqualityOperator_ShouldNotFlag()
     {
-        // A regular string containing == 0.0 — should not fire (it's inside a string literal)
+        // A regular string containing == 0.0: should not fire (it's inside a string literal)
         var raw = """
             diff --git a/src/Analyzer.cs b/src/Analyzer.cs
             index abc..def 100644

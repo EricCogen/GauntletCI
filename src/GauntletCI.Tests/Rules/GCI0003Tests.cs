@@ -12,7 +12,7 @@ public class GCI0003Tests
     [Fact]
     public async Task RemovedLogicWithoutTests_ShouldFlag()
     {
-        // 17 removed lines all containing explicit control-flow keywords — well above
+        // 17 removed lines all containing explicit control-flow keywords: well above
         // the threshold (15). Represents a whole validation method body being deleted.
         var raw = """
             diff --git a/src/Validator.cs b/src/Validator.cs
@@ -50,7 +50,7 @@ public class GCI0003Tests
     [Fact]
     public async Task SmallLogicRemoval_ShouldNotFlag()
     {
-        // Only 5 removed logic lines — routine refactor, below the 15-line threshold.
+        // Only 5 removed logic lines: routine refactor, below the 15-line threshold.
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -204,7 +204,7 @@ public class GCI0003Tests
     [Fact]
     public async Task ExpressionBodyChange_ShouldNotFlagSignatureChange()
     {
-        // Only the expression body changes — the signature (name + params) is identical.
+        // Only the expression body changes: the signature (name + params) is identical.
         var raw = """
             diff --git a/src/Core/Checker.cs b/src/Core/Checker.cs
             index abc..def 100644

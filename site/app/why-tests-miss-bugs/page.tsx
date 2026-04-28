@@ -46,7 +46,7 @@ const categories = [
   },
   {
     title: "Flaky tests and the normalcy bias",
-    body: "A test that fails intermittently due to timing dependencies, ordering assumptions, or environmental variability is commonly disabled, skipped, or rationalized away. When teams become accustomed to a suite that sometimes fails for no clear reason, they lose the signal that CI is supposed to provide. Re-running a failure becomes routine. The normalcy bias compounds the problem: a module that has passed CI for eighteen months without a test covering a critical path is assumed to be safe, not merely untested. The absence of a failure is mistaken for the presence of correctness. When a real regression arrives, it is indistinguishable from the noise — and gets merged.",
+    body: "A test that fails intermittently due to timing dependencies, ordering assumptions, or environmental variability is commonly disabled, skipped, or rationalized away. When teams become accustomed to a suite that sometimes fails for no clear reason, they lose the signal that CI is supposed to provide. Re-running a failure becomes routine. The normalcy bias compounds the problem: a module that has passed CI for eighteen months without a test covering a critical path is assumed to be safe, not merely untested. The absence of a failure is mistaken for the presence of correctness. When a real regression arrives, it is indistinguishable from the noise: and gets merged.",
     example: "A test that asserts on the order of items returned from a LINQ query fails on roughly one in ten runs because the underlying store does not guarantee sort order. The team adds it to the known-flaky list and re-runs on failure. A refactor later introduces a genuine ordering regression. The team sees the failure, re-runs, it passes on the retry (the new bug is also intermittent under the test data), and the change merges. The regression surfaces in production support tickets three weeks later.",
   },
 ];
@@ -152,7 +152,7 @@ export default function WhyTestsMissBugsPage() {
             <figure className="my-8 rounded-xl overflow-hidden border border-border">
               <img
                 src="/articles/why-tests-miss-bugs-hero.png"
-                alt="The green build fallacy: CI shows build passed, 23 tests, no warnings — but below: guard removed, no test covered it, leading to production NullReferenceException"
+                alt="The green build fallacy: CI shows build passed, 23 tests, no warnings: but below: guard removed, no test covered it, leading to production NullReferenceException"
                 width={1120}
                 height={520}
                 className="w-full h-auto"
@@ -181,7 +181,7 @@ export default function WhyTestsMissBugsPage() {
             <div className="rounded-lg border border-border bg-card/50 p-5">
               <p className="text-sm font-semibold text-cyan-400 mb-2">Testing terminology: false negatives and false positives</p>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                A <em>false negative</em> is when a test passes despite a real defect existing — the suite
+                A <em>false negative</em> is when a test passes despite a real defect existing: the suite
                 says "all good" while the production system is broken. This is the core problem this article
                 examines. A <em>false positive</em> (a test that fails when no real defect exists) is also
                 harmful, but its primary damage is wasted developer time and eroded trust in the suite, not
@@ -200,7 +200,7 @@ export default function WhyTestsMissBugsPage() {
                 as a primary driver of that cost.{" "}
                 <a href="#cite-1" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[1]</a>
                 {" "}The Consortium for IT Software Quality (CISQ) updated this estimate in 2022, placing
-                the cost of poor software quality in the U.S. at $2.41 trillion — driven largely by
+                the cost of poor software quality in the U.S. at $2.41 trillion: driven largely by
                 operational failures and the compounding cost of defects not caught during development.{" "}
                 <a href="#cite-6" className="text-cyan-400 hover:text-cyan-300 text-xs align-super font-mono">[6]</a>
                 {" "}Counter-evidence note: cost estimates vary significantly by methodology, scope, and
@@ -480,7 +480,7 @@ export default function WhyTestsMissBugsPage() {
             <p className="text-muted-foreground leading-relaxed">
               There is also a structural bias built into the act of writing tests itself. Tests are written
               to confirm expectations, not to challenge them. A developer who implements a method and then
-              writes its tests will naturally gravitate toward the inputs that make the method work —
+              writes its tests will naturally gravitate toward the inputs that make the method work : 
               because those are the inputs the developer had in mind when writing the code. The edge cases
               that are not in the developer's mental model are not in the test suite either. This is not a
               failure of diligence; it is a property of how humans form and verify mental models. The same
@@ -511,7 +511,7 @@ export default function WhyTestsMissBugsPage() {
           <section className="space-y-5">
             <h2 className="text-2xl font-bold tracking-tight">Can TDD prevent these failures?</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Test-Driven Development (TDD) — writing the test before the code — is a meaningful partial
+              Test-Driven Development (TDD): writing the test before the code: is a meaningful partial
               mitigation for one specific subset of this problem. When a developer writes the failing test
               first, they are forced to define the expected behavior before implementing it. This reduces
               the likelihood of missing a test for newly <em>added</em> behavior, because the test is the

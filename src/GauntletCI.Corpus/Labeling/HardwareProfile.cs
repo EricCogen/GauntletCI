@@ -13,7 +13,7 @@ public sealed record HardwareProfile
     public long TotalRamBytes  { get; init; }
     public int  CpuCores       { get; init; }
     public long GpuVramBytes   { get; init; }   // 0 = no dedicated GPU detected
-    public bool IsAppleSilicon { get; init; }   // unified memory — Metal acceleration
+    public bool IsAppleSilicon { get; init; }   // unified memory: Metal acceleration
 
     // Convenience in GB
     public double TotalRamGb => TotalRamBytes / 1_073_741_824.0;
@@ -32,7 +32,7 @@ public sealed record HardwareProfile
     {
         get
         {
-            // Apple Silicon: unified RAM works like VRAM — full memory available for inference
+            // Apple Silicon: unified RAM works like VRAM: full memory available for inference
             if (IsAppleSilicon)
             {
                 if (TotalRamGb >= 32) return "llama3";       // 8B, ~5GB quantized

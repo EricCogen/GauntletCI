@@ -7,7 +7,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0003 – Behavioral Change Detection
+/// GCI0003, Behavioral Change Detection
 /// Detects removed logic lines and changed method signatures.
 /// </summary>
 public class GCI0003_BehavioralChangeDetection : RuleBase
@@ -34,7 +34,7 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
 
     private void CheckLogicRemovedWithoutTests(DiffContext diff, List<Finding> findings)
     {
-        // Only count logic removals from production files — skip test and generated files.
+        // Only count logic removals from production files: skip test and generated files.
         var removedLogicLines = diff.Files
             .Where(f => !WellKnownPatterns.IsTestFile(f.NewPath) && !WellKnownPatterns.IsGeneratedFile(f.NewPath))
             .SelectMany(f => f.RemovedLines)

@@ -94,7 +94,7 @@ public class LlmConfig
 
     /// <summary>
     /// Name of the environment variable that holds the API key for the CI endpoint.
-    /// The key is never stored in config — always read from the environment at runtime.
+    /// The key is never stored in config: always read from the environment at runtime.
     /// </summary>
     public string CiApiKeyEnv { get; set; } = "GAUNTLETCI_LLM_KEY";
 
@@ -178,12 +178,12 @@ public class EngineeringPolicyConfig
     /// <summary>
     /// Self-documenting description of this feature.
     /// Evaluates diffs against a structured engineering policy document using an LLM.
-    /// Requires an LLM to be available (local model or CI endpoint). Findings are emitted as Advisory severity —
+    /// Requires an LLM to be available (local model or CI endpoint). Findings are emitted as Advisory severity : 
     /// always shown in output but never block a commit.
     /// </summary>
     public string Description { get; set; } =
         "Evaluates diffs against a structured engineering policy document using an LLM. " +
-        "Requires an LLM to be available (local model or CI endpoint). Findings are emitted as Advisory severity — " +
+        "Requires an LLM to be available (local model or CI endpoint). Findings are emitted as Advisory severity: " +
         "shown in output but never block a commit.";
 
     /// <summary>

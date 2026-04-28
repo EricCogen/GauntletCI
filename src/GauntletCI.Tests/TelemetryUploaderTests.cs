@@ -4,7 +4,7 @@ using GauntletCI.Cli.Telemetry;
 namespace GauntletCI.Tests;
 
 /// <summary>
-/// Tests for TelemetryUploader — observable contract only.
+/// Tests for TelemetryUploader: observable contract only.
 /// The uploader depends on static state and creates its own HttpClient internally,
 /// so tests verify fire-and-forget safety, early-return behaviour, and exception swallowing.
 /// </summary>
@@ -26,7 +26,7 @@ public class TelemetryUploaderTests
     }
 
     // -------------------------------------------------------------------------
-    // UploadAsync — early-return paths (no network traffic)
+    // UploadAsync: early-return paths (no network traffic)
     // -------------------------------------------------------------------------
 
     [Fact]
@@ -46,7 +46,7 @@ public class TelemetryUploaderTests
     }
 
     // -------------------------------------------------------------------------
-    // UploadAsync — Shared consent with no reachable server
+    // UploadAsync: Shared consent with no reachable server
     // -------------------------------------------------------------------------
 
     [Fact]

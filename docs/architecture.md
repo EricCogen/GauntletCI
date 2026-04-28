@@ -7,7 +7,7 @@
 | `GauntletCI.Core` | Rule engine, diff parser, static analysis runner, configuration models, domain types |
 | `GauntletCI.Cli` | System.CommandLine entry point, output formatters, telemetry pipeline, all CLI commands |
 | `GauntletCI.Llm` | ONNX runtime integration (Phi-4 Mini); `NullLlmEngine` is the default no-op |
-| `GauntletCI.Corpus` | Corpus ingestion pipeline — pull request hydration, normalization, scoring |
+| `GauntletCI.Corpus` | Corpus ingestion pipeline: pull request hydration, normalization, scoring |
 | `GauntletCI.Tests` | xUnit test suite for Core and Cli |
 | `GauntletCI.BenchmarkReporter` | Benchmark report generation |
 | `GauntletCI.Benchmarks` | BenchmarkDotNet harness (in `/tests/`) |
@@ -41,7 +41,7 @@ gauntletci analyze [options]
         │
         ▼
 4. Rule evaluation          RuleOrchestrator.RunAsync()
-        │                  Rules are auto-discovered via reflection — all non-abstract
+        │                  Rules are auto-discovered via reflection: all non-abstract
         │                  IRule implementations in the Core assembly are loaded and
         │                  sorted by ID. IConfigurableRule instances receive the config.
         │                  Each rule runs with a 30-second per-rule timeout.
@@ -86,7 +86,7 @@ public interface IRule
 
 `RuleBase` is the abstract base class that all built-in rules extend. It provides:
 
-- `CreateFinding(summary, evidence, whyItMatters, suggestedAction, confidence)` — constructs a `Finding` with the rule's `Id` and `Name` pre-filled.
+- `CreateFinding(summary, evidence, whyItMatters, suggestedAction, confidence)`: constructs a `Finding` with the rule's `Id` and `Name` pre-filled.
 
 `IConfigurableRule` is an optional secondary interface for rules that need access to `GauntletConfig` (e.g., GCI0035 Architecture Layer Guard reads `ForbiddenImports`).
 
@@ -101,11 +101,11 @@ typeof(RuleOrchestrator).Assembly.GetTypes()
     .Where(r => IsRuleEnabled(r.Id, config))
 ```
 
-Adding a new rule requires only dropping a new `IRule` class into the assembly — no registration step.
+Adding a new rule requires only dropping a new `IRule` class into the assembly: no registration step.
 
 ### Rule IDs
 
-Rules span `GCI0001`–`GCI0053`. `GCI0028` is reserved (never issued).
+Rules span `GCI0001`-`GCI0053`. `GCI0028` is reserved (never issued).
 
 ### Per-rule timeout
 
@@ -128,11 +128,11 @@ Rules are configured via `.gauntletci.json`:
 
 ### Rule interdependencies and self-interference
 
-Because GauntletCI is analyzed by its own rules during development and in CI, some rules fire on the files that implement other rules. This is called **self-interference** — a rule detecting a pattern inside the implementation of another (or the same) rule.
+Because GauntletCI is analyzed by its own rules during development and in CI, some rules fire on the files that implement other rules. This is called **self-interference**: a rule detecting a pattern inside the implementation of another (or the same) rule.
 
 #### Why it happens
 
-Rules analyze raw diff text using text patterns, regex, and line-count heuristics. They have no awareness of which file they are scanning; they apply the same logic to all eligible `.cs` files. When a rule's own implementation uses the exact pattern the rule is designed to detect — or when two rules share overlapping pattern vocabularies — self-interference occurs.
+Rules analyze raw diff text using text patterns, regex, and line-count heuristics. They have no awareness of which file they are scanning; they apply the same logic to all eligible `.cs` files. When a rule's own implementation uses the exact pattern the rule is designed to detect: or when two rules share overlapping pattern vocabularies: self-interference occurs.
 
 #### Block-severity false positives resolved (April 2026 audit)
 
@@ -141,14 +141,14 @@ A full-codebase audit (`git diff empty-tree..HEAD`, 83 Block findings) revealed 
 | Firing rule | Target | Root cause | Resolution |
 |---|---|---|---|
 | **GCI0046** PatternConsistencyDeviation | `GCI0038_DependencyInjectionSafety.cs` | `ServiceLocatorPatterns` string array contains the exact strings the rule detects | `IsInsideStringLiteral` quote-counting guard in `CheckServiceLocator` |
-| **GCI0042** TodoStubDetection | `GCI0042_TodoStubDetection.cs` | `/// GCI0042 — TODO/Stub Detection` XML doc comment triggered its own TODO detection | Skip lines starting with `///` |
-| **GCI0048** InsecureRandomInSecurityContext | `SyntaxGuard.cs` | Code-example comment `// e.g. $"{new Random().Next()}"` — Roslyn syntax guard is null in diff-only mode | `IsAfterLineComment` fallback guard after Roslyn guard |
-| **GCI0049** FloatDoubleEqualityComparison | `LlmAdjudicator.cs` | `(tp + fp) == 0 ? 0.0 : (double)tp / (tp + fp)` — `==` is an integer zero-guard, not a float comparison | `IntegerZeroGuardRegex` to detect safe-division ternaries |
+| **GCI0042** TodoStubDetection | `GCI0042_TodoStubDetection.cs` | `/// GCI0042: TODO/Stub Detection` XML doc comment triggered its own TODO detection | Skip lines starting with `///` |
+| **GCI0048** InsecureRandomInSecurityContext | `SyntaxGuard.cs` | Code-example comment `// e.g. $"{new Random().Next()}"`: Roslyn syntax guard is null in diff-only mode | `IsAfterLineComment` fallback guard after Roslyn guard |
+| **GCI0049** FloatDoubleEqualityComparison | `LlmAdjudicator.cs` | `(tp + fp) == 0 ? 0.0 : (double)tp / (tp + fp)`: `==` is an integer zero-guard, not a float comparison | `IntegerZeroGuardRegex` to detect safe-division ternaries |
 | **GCI0044** PerformanceHotpathRisk | All `Rules/Implementations/*.cs` (~14 files) | Analysis loops (`foreach (var file in diff.Files)`) triggered LINQ-in-loop detection for inner `.FirstOrDefault()`/`.Any()` calls | `IsRuleImplementationFile` path exclusion |
 | **GCI0044** PerformanceHotpathRisk | `VectorStore.cs` | `while (reader.Read()) { rows.Add(...) }` ADO.NET reader pattern flagged as unbounded collection growth | `.Read()` detection skips DB reader loops in `CheckAddInsideLoop` |
-| **GCI0043** NullabilityTypeSafety | All `Commands/*.cs` files (~12 files) | `GetValueForOption(opt)!` is System.CommandLine's idiomatic required-option pattern (3–48 occurrences per file exceeded the threshold of 1) | Filter excludes `GetValueForOption(` lines from the null-forgiving operator count |
+| **GCI0043** NullabilityTypeSafety | All `Commands/*.cs` files (~12 files) | `GetValueForOption(opt)!` is System.CommandLine's idiomatic required-option pattern (3-48 occurrences per file exceeded the threshold of 1) | Filter excludes `GetValueForOption(` lines from the null-forgiving operator count |
 
-#### Remaining interactions (Warn / Info — not false positives)
+#### Remaining interactions (Warn / Info: not false positives)
 
 These cross-rule interactions are retained because they reflect real patterns in tool code. They would be suppressed by a normal `.gauntletci-baseline.json` workflow:
 
@@ -198,11 +198,11 @@ DiffContext
 ```
 
 Cross-file helpers on `DiffContext`:
-- `AllAddedLines` — flattens added lines across all files and hunks.
-- `AllRemovedLines` — flattens removed lines across all files and hunks.
+- `AllAddedLines`: flattens added lines across all files and hunks.
+- `AllRemovedLines`: flattens removed lines across all files and hunks.
 
 Per-file helpers on `DiffFile`:
-- `AddedLines`, `RemovedLines` — lines within that file only.
+- `AddedLines`, `RemovedLines`: lines within that file only.
 
 `DiffParser` handles both the standard `diff --git` header format and bare unified diff format (e.g., from `git diff` piped through stdin).
 
@@ -213,7 +213,7 @@ Per-file helpers on `DiffFile`:
 | File | Purpose |
 |---|---|
 | `.gauntletci.json` | Per-rule `enabled`/`severity` overrides; `policy_refs`; `llm` block; `forbidden_imports` for GCI0035 |
-| `.gauntletci-ignore` | One rule ID per line — suppresses that rule's findings for the entire repo |
+| `.gauntletci-ignore` | One rule ID per line: suppresses that rule's findings for the entire repo |
 
 `ConfigLoader.Load(repoPath)` returns a default `GauntletConfig` (all rules enabled, no overrides) when the file is absent or unparseable, so no config file is required to run.
 
@@ -244,12 +244,12 @@ Consent is prompted on first non-`init` run and stored in a local preference fil
 ### Anonymization
 
 - **Install ID**: stable random UUID stored locally; identifies an installation, not a person.
-- **Repo hash**: 8-character SHA-256 prefix of the git remote URL — identifies a repo without revealing its path or name.
+- **Repo hash**: 8-character SHA-256 prefix of the git remote URL: identifies a repo without revealing its path or name.
 
 ### Storage and upload
 
 - `TelemetryStore`: appends NDJSON records to `~/.gauntletci/telemetry.ndjson`.
-- `TelemetryUploader`: fires a background HTTP upload (`Shared` mode only). Failures are silently swallowed — telemetry never crashes the tool.
+- `TelemetryUploader`: fires a background HTTP upload (`Shared` mode only). Failures are silently swallowed: telemetry never crashes the tool.
 
 ---
 
@@ -268,7 +268,7 @@ GauntletCI supports two LLM enrichment paths:
 
 - Configured via the `llm` block in `.gauntletci.json`.
 - Routes to any OpenAI-chat-completions-compatible endpoint (e.g., `api.openai.com`, Azure OpenAI).
-- API key read from the environment variable named by `ciApiKeyEnv` — never stored in config.
+- API key read from the environment variable named by `ciApiKeyEnv`: never stored in config.
 - Requires a GauntletCI license key in the environment variable named by `licenseKeyEnv`.
 
 In both cases, enrichment applies only to `High`-confidence findings and appends a `LlmExplanation` string to each.

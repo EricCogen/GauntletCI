@@ -18,7 +18,7 @@ const jsonLd = {
   url: "https://gauntletci.com/articles",
 };
 
-// Newest articles first — add new entries at the bottom, display is reversed
+// Newest articles first: add new entries at the bottom, display is reversed
 const articles = [
   {
     href: "/why-code-review-misses-bugs",

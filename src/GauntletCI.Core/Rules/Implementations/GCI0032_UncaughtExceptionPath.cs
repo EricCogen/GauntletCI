@@ -6,7 +6,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0032 – Uncaught Exception Path
+/// GCI0032, Uncaught Exception Path
 /// Fires when throw new is added without Assert.Throws or Should().Throw evidence in test files.
 /// Boundary with GCI0042 (TODO/Stub Detection): GCI0042 owns throw new NotImplementedException
 /// detection (it is a stub marker, not an exception path risk). Those throws are excluded here
@@ -42,7 +42,7 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
             .Where(f => !f.NewPath.Contains("Test", StringComparison.OrdinalIgnoreCase) &&
                         !f.NewPath.Contains("Spec", StringComparison.OrdinalIgnoreCase))
             .SelectMany(f => f.AddedLines)
-            // GCI0042 (TODO/Stub Detection) owns NotImplementedException — exclude to avoid double-reporting.
+            // GCI0042 (TODO/Stub Detection) owns NotImplementedException: exclude to avoid double-reporting.
             // Guard-clause throws (ArgumentNullException etc.) are defensive programming, not untested logic paths.
             .Count(l => l.Content.Contains("throw new", StringComparison.Ordinal) &&
                         !l.Content.Contains("throw new NotImplementedException", StringComparison.Ordinal) &&

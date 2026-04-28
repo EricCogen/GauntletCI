@@ -4,7 +4,7 @@ using GauntletCI.Cli.Commands;
 using GauntletCI.Cli.LlmDaemon;
 using GauntletCI.Cli.Telemetry;
 
-// Hidden daemon mode — spawned by LlmDaemonClient, not intended for direct user invocation
+// Hidden daemon mode: spawned by LlmDaemonClient, not intended for direct user invocation
 if (args is ["__llm-daemon"])
 {
     await LlmDaemonServer.RunAsync();
@@ -16,11 +16,11 @@ var isTelemetryCommand = args.Any(a => string.Equals(a, "telemetry", StringCompa
 var isMcpServe = args.Any(a => string.Equals(a, "mcp", StringComparison.OrdinalIgnoreCase));
 
 // First-run prompt for non-init paths (init handles its own prompt and supports --no-telemetry)
-// Skip for mcp serve — stdout is the MCP protocol channel and must not be polluted
+// Skip for mcp serve: stdout is the MCP protocol channel and must not be polluted
 if (!isInitCommand && !isTelemetryCommand && !isMcpServe)
     TelemetryConsent.PromptIfNeeded();
 
-var rootCommand = new RootCommand("GauntletCI — deterministic pre-commit risk detection engine");
+var rootCommand = new RootCommand("GauntletCI: deterministic pre-commit risk detection engine");
 
 rootCommand.AddCommand(AnalyzeCommand.Create());
 rootCommand.AddCommand(AuditCommand.Create());

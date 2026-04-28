@@ -52,7 +52,7 @@ public sealed class IssueEnricher : IDisposable
 
     /// <summary>
     /// Parses issue references from <paramref name="prBody"/>, fetches each referenced issue from GitHub,
-    /// upserts it into the corpus DB, and creates fixture–issue links.
+    /// upserts it into the corpus DB, and creates fixture-issue links.
     /// </summary>
     /// <param name="db">Open SQLite connection for the corpus database.</param>
     /// <param name="fixtureId">The fixture ID to link resolved issues against.</param>
@@ -85,7 +85,7 @@ public sealed class IssueEnricher : IDisposable
             }
             catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                // Issue deleted or cross-repo reference we can't resolve — skip silently
+                // Issue deleted or cross-repo reference we can't resolve: skip silently
             }
         }
         return linked;

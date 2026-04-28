@@ -76,7 +76,7 @@ public sealed class OllamaLlmLabeler : ILlmLabeler, IDisposable
                 UseShellExecute = false,
                 CreateNoWindow  = true,
             };
-            Process.Start(psi); // fire-and-forget — Ollama manages its own lifecycle
+            Process.Start(psi); // fire-and-forget: Ollama manages its own lifecycle
         }
         catch { return false; }
 

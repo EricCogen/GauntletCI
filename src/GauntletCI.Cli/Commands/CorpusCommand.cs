@@ -221,7 +221,7 @@ public static class CorpusCommand
             var (db, store, pipeline) = await BuildPipeline(dbPath, fixtures, ct);
             using (db)
             {
-                // Derive owner/repo/pr from existing metadata.json — unambiguous and avoids
+                // Derive owner/repo/pr from existing metadata.json: unambiguous and avoids
                 // underscore-splitting heuristics that break for repos with underscores in the name.
                 if (string.IsNullOrEmpty(owner) || string.IsNullOrEmpty(repo) || prNumber == 0)
                 {
@@ -707,7 +707,7 @@ public static class CorpusCommand
                 // Rate limit summary (gh-search only)
                 if (provider is GitHubSearchDiscoveryProvider ghSearch)
                 {
-                    var sb = new System.Text.StringBuilder("[corpus] Rate limit summary — Search: ");
+                    var sb = new System.Text.StringBuilder("[corpus] Rate limit summary: Search: ");
                     if (ghSearch.LastSearchRemaining.HasValue && ghSearch.LastSearchLimit.HasValue)
                     {
                         var used      = ghSearch.LastSearchLimit.Value - ghSearch.LastSearchRemaining.Value;
@@ -721,7 +721,7 @@ public static class CorpusCommand
                     }
                     else
                     {
-                        sb.Append("(no data — no API calls made or all skipped)");
+                        sb.Append("(no data: no API calls made or all skipped)");
                     }
                     if (ghSearch.ThrottleCount > 0)
                         sb.Append($" | Throttled: {ghSearch.ThrottleCount}×");
@@ -850,7 +850,7 @@ public static class CorpusCommand
                             $"Skipped because repo was rejected earlier in this run: {cachedRejectReason}",
                             hydrated: null,
                             ct);
-                        Console.WriteLine($"[corpus] Skip {owner}/{repo}#{prNumber} — repo already rejected ({cachedRejectReason})");
+                        Console.WriteLine($"[corpus] Skip {owner}/{repo}#{prNumber}: repo already rejected ({cachedRejectReason})");
                         continue;
                     }
 
@@ -1171,7 +1171,7 @@ public static class CorpusCommand
 
                     if (fixturePath is null || !File.Exists(diffPath!))
                     {
-                        Console.WriteLine($"[corpus] SKIP {metadata.FixtureId} — diff.patch not found");
+                        Console.WriteLine($"[corpus] SKIP {metadata.FixtureId}: diff.patch not found");
                         failed++;
                         continue;
                     }
@@ -1244,7 +1244,7 @@ public static class CorpusCommand
 
                 if (scorecards.Count == 0)
                 {
-                    Console.WriteLine("[corpus] No scorecards — run 'corpus run-all' first to generate actual.json files.");
+                    Console.WriteLine("[corpus] No scorecards: run 'corpus run-all' first to generate actual.json files.");
                     return;
                 }
 
@@ -1527,7 +1527,7 @@ public static class CorpusCommand
                     if (fixturePath is null || !File.Exists(diffPath!))
                     {
                         Interlocked.Increment(ref skipped);
-                        output.Add((false, $"[corpus] SKIP {metadata.FixtureId,-40} — diff.patch not found"));
+                        output.Add((false, $"[corpus] SKIP {metadata.FixtureId,-40}: diff.patch not found"));
                         FlushOutput(output);
                         return;
                     }
@@ -1809,7 +1809,7 @@ public static class CorpusCommand
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"[corpus] Error: Could not reach api.github.com — {ex.Message}");
+                Console.Error.WriteLine($"[corpus] Error: Could not reach api.github.com: {ex.Message}");
                 ctx.ExitCode = 1;
                 return;
             }
@@ -1881,7 +1881,7 @@ public static class CorpusCommand
 
             if (!File.Exists(dbPath))
             {
-                Console.WriteLine("[corpus] (DB not found — skipping recent errors)");
+                Console.WriteLine("[corpus] (DB not found: skipping recent errors)");
                 return;
             }
 
@@ -1960,7 +1960,7 @@ public static class CorpusCommand
 
                 if (conditions.Count == 0)
                 {
-                    Console.WriteLine("[corpus] purge: no filters specified — nothing to do.");
+                    Console.WriteLine("[corpus] purge: no filters specified: nothing to do.");
                     return;
                 }
 
@@ -1997,7 +1997,7 @@ public static class CorpusCommand
 
                 if (toPurge.Count == 0)
                 {
-                    Console.WriteLine("[corpus] purge: no fixtures matched the filter — corpus is clean.");
+                    Console.WriteLine("[corpus] purge: no fixtures matched the filter: corpus is clean.");
                     return;
                 }
 
@@ -2037,7 +2037,7 @@ public static class CorpusCommand
                         try { Directory.Delete(path, recursive: true); }
                         catch (Exception ex)
                         {
-                            Console.Error.WriteLine($"[corpus] purge: warning — could not delete {path}: {ex.Message}");
+                            Console.Error.WriteLine($"[corpus] purge: warning: could not delete {path}: {ex.Message}");
                         }
                     }
 
@@ -3529,7 +3529,7 @@ public static class CorpusCommand
     {
         var normalizedUrls = NormalizeOllamaUrls(baseUrls);
 
-        // 1. Hardware detection — pick best model if user didn't specify one
+        // 1. Hardware detection: pick best model if user didn't specify one
         var hw = HardwareProfile.Detect();
         var model = !string.IsNullOrWhiteSpace(modelOverride)
             ? modelOverride
@@ -3550,7 +3550,7 @@ public static class CorpusCommand
             {
                 if (isLocalEndpoint && hasOllamaCli)
                 {
-                    Console.WriteLine($"[corpus] Ollama endpoint {baseUrl} not running — attempting to start...");
+                    Console.WriteLine($"[corpus] Ollama endpoint {baseUrl} not running: attempting to start...");
                     if (!await labeler.TryStartServerAsync(ct: ct))
                     {
                         Console.Error.WriteLine($"[corpus] Could not start Ollama at {baseUrl}. Skipping endpoint.");
@@ -3572,7 +3572,7 @@ public static class CorpusCommand
             {
                 if (isLocalEndpoint && hasOllamaCli)
                 {
-                    Console.WriteLine($"[corpus] Model '{model}' not found at {baseUrl} — pulling (this may take several minutes)...");
+                    Console.WriteLine($"[corpus] Model '{model}' not found at {baseUrl}: pulling (this may take several minutes)...");
                     var pulled = await labeler.TryPullModelAsync(
                         line => Console.WriteLine($"         {line}"), ct);
 

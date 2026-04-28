@@ -3,7 +3,7 @@ namespace GauntletCI.Cli.Audit;
 
 /// <summary>
 /// A single scan record written to the local audit log.
-/// Contains full finding detail — not anonymised like telemetry.
+/// Contains full finding detail: not anonymised like telemetry.
 /// </summary>
 public record AuditLogEntry
 {

@@ -41,7 +41,7 @@ public class TelemetryCollectorTests
     [Fact]
     public async Task CollectAsync_WhenTelemetryOff_DoesNotThrow()
     {
-        // CollectAsync swallows all exceptions — verify it completes cleanly.
+        // CollectAsync swallows all exceptions: verify it completes cleanly.
         // Avoid SetMode to prevent file-lock contention with TelemetryConsentTests.
         await TelemetryCollector.CollectAsync(EmptyResult(), EmptyDiff(), Path.GetTempPath());
         // Reaching here without exception = pass
@@ -50,7 +50,7 @@ public class TelemetryCollectorTests
     [Fact]
     public async Task CollectAsync_WithEmptyDiff_DoesNotThrow()
     {
-        // CollectAsync swallows all exceptions — verify it completes cleanly
+        // CollectAsync swallows all exceptions: verify it completes cleanly
         await TelemetryCollector.CollectAsync(EmptyResult(), EmptyDiff(), Path.GetTempPath(), quiet: true);
     }
 

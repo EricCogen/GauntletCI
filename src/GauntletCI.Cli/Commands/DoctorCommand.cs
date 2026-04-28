@@ -8,7 +8,7 @@ using Spectre.Console;
 namespace GauntletCI.Cli.Commands;
 
 /// <summary>
-/// Implements <c>gauntletci doctor</c> — a self-diagnostic command that validates
+/// Implements <c>gauntletci doctor</c>: a self-diagnostic command that validates
 /// the local environment: config files, rule status, Ollama connectivity, and baseline.
 /// </summary>
 public static class DoctorCommand
@@ -51,12 +51,12 @@ public static class DoctorCommand
             if (File.Exists(homeConfigPath))
                 AnsiConsole.MarkupLine($"[green]  ✓[/] Home config    : {Markup.Escape(homeConfigPath)}");
             else
-                AnsiConsole.MarkupLine($"[dim]  –[/] Home config    : {Markup.Escape(homeConfigPath)} [dim](not found)[/]");
+                AnsiConsole.MarkupLine($"[dim]  -[/] Home config    : {Markup.Escape(homeConfigPath)} [dim](not found)[/]");
 
             if (repoConfigPath is not null && File.Exists(repoConfigPath))
                 AnsiConsole.MarkupLine($"[green]  ✓[/] Repo config    : {Markup.Escape(repoConfigPath)}");
             else if (repoConfigPath is not null)
-                AnsiConsole.MarkupLine($"[dim]  –[/] Repo config    : {Markup.Escape(repoConfigPath)} [dim](not found — using defaults)[/]");
+                AnsiConsole.MarkupLine($"[dim]  -[/] Repo config    : {Markup.Escape(repoConfigPath)} [dim](not found: using defaults)[/]");
             else
                 AnsiConsole.MarkupLine("[yellow]  ![/] Repo config    : not inside a Git repository");
 
@@ -68,7 +68,7 @@ public static class DoctorCommand
             var config = ConfigLoader.Load(effectiveRoot);
 
             AnsiConsole.MarkupLine($"  ExitOn      : {config.ExitOn}");
-            AnsiConsole.MarkupLine($"  LLM model   : {config.Llm?.CiModel ?? "(none — local only)"}");
+            AnsiConsole.MarkupLine($"  LLM model   : {config.Llm?.CiModel ?? "(none: local only)"}");
             AnsiConsole.MarkupLine($"  Ollama URL  : {config.Llm?.EmbeddingOllamaUrl ?? "http://localhost:11434"}");
             AnsiConsole.MarkupLine($"  Ollama model: {config.Llm?.Model ?? LlmDefaults.OllamaModel}");
             AnsiConsole.MarkupLine($"  EP policy   : {(config.Experimental.EngineeringPolicy.Enabled ? "[green]enabled[/]" : "[dim]disabled[/]")}");
@@ -123,13 +123,13 @@ public static class DoctorCommand
                 var baseline = BaselineStore.Load(effectiveRoot);
                 if (baseline is not null)
                 {
-                    AnsiConsole.MarkupLine($"[green]  ✓[/] Active — {baseline.Fingerprints.Count} fingerprint(s), created {baseline.CreatedAt:u}");
+                    AnsiConsole.MarkupLine($"[green]  ✓[/] Active: {baseline.Fingerprints.Count} fingerprint(s), created {baseline.CreatedAt:u}");
                     if (baseline.Commit is not null)
                         AnsiConsole.MarkupLine($"  [dim]  Commit: {Markup.Escape(baseline.Commit)}[/]");
                 }
                 else
                 {
-                    AnsiConsole.MarkupLine("[dim]  –  No baseline found (run 'gauntletci baseline create --staged' to create one)[/]");
+                    AnsiConsole.MarkupLine("[dim] ,  No baseline found (run 'gauntletci baseline create --staged' to create one)[/]");
                 }
             }
             catch (Exception ex)

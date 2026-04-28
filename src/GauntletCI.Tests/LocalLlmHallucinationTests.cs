@@ -8,8 +8,8 @@ namespace GauntletCI.Tests;
 
 /// <summary>
 /// Measures Phi-4 Mini's tendency to hallucinate under two prompt regimes:
-///   BASELINE    — current EnrichFinding prompt (no system constraints)
-///   CONSTRAINED — EnrichFindingConstrained with anti-hallucination system rules
+///   BASELINE   : current EnrichFinding prompt (no system constraints)
+///   CONSTRAINED: EnrichFindingConstrained with anti-hallucination system rules
 ///
 /// Opt-in: set env var GAUNTLETCI_HALLUCINATION_PROBE=1 before running.
 /// These tests are skipped unless that variable is set, because loading the
@@ -117,10 +117,10 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
         var lowerText = text.ToLowerInvariant();
 
         if (words.Length < 4)
-            flags.Add(new("TOO_SHORT", $"Only {words.Length} words — likely degenerate output."));
+            flags.Add(new("TOO_SHORT", $"Only {words.Length} words: likely degenerate output."));
 
         if (words.Length > 60)
-            flags.Add(new("OVER_LONG", $"{words.Length} words — far exceeds 30-word constraint."));
+            flags.Add(new("OVER_LONG", $"{words.Length} words: far exceeds 30-word constraint."));
 
         // Prompt echo: 6-word verbatim span from probe appears in output
         var sourceWords = $"{probe.Summary} {probe.Evidence}"
@@ -161,7 +161,7 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
         foreach (var term in inversionTerms)
             if (lowerText.Contains(term))
             {
-                flags.Add(new("INVERTED_GUIDANCE", $"Contains \"{term}\" — sycophancy under constraint?"));
+                flags.Add(new("INVERTED_GUIDANCE", $"Contains \"{term}\": sycophancy under constraint?"));
                 break;
             }
 
@@ -170,7 +170,7 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
         foreach (var term in refusalTerms)
             if (lowerText.Contains(term))
             {
-                flags.Add(new("APOLOGETIC_REFUSAL", $"Contains \"{term}\" — over-refusal under constraint."));
+                flags.Add(new("APOLOGETIC_REFUSAL", $"Contains \"{term}\": over-refusal under constraint."));
                 break;
             }
 
@@ -252,14 +252,14 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
             > 10  => "  VERDICT: Constraints meaningfully reduced hallucination (>10pp improvement).",
             > 0   => "  VERDICT: Constraints helped slightly but not decisively.",
             0     => "  VERDICT: Constraints had no measurable effect on this model.",
-            _     => "  VERDICT: Constraints increased refusal/empty output — inspect APOLOGETIC_REFUSAL flags."
+            _     => "  VERDICT: Constraints increased refusal/empty output: inspect APOLOGETIC_REFUSAL flags."
         });
         sb.AppendLine("═══════════════════════════════════════════════════════════════════");
         output.WriteLine(sb.ToString());
 
         // Soft guard: constrained should not produce dramatically more flags than baseline
         Assert.True(conRate <= baseRate + 20,
-            $"Constrained prompt is {conRate - baseRate:F0}pp worse than baseline — system prompt may be malformed.");
+            $"Constrained prompt is {conRate - baseRate:F0}pp worse than baseline: system prompt may be malformed.");
     }
 
     // ── Helper ───────────────────────────────────────────────────────────────

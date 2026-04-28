@@ -7,7 +7,7 @@ using GauntletCI.Core.Rules;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0036 – Pure Context Mutation
+/// GCI0036, Pure Context Mutation
 /// Detects assignment operators inside property getter blocks or methods decorated with [Pure].
 /// </summary>
 public class GCI0036_PureContextMutation : RuleBase
@@ -110,7 +110,7 @@ public class GCI0036_PureContextMutation : RuleBase
             {
                 findings.Add(CreateFinding(
                     file,
-                    summary: $"Assignment in getter or [Pure] method in {file.NewPath} — mutation in a pure context.",
+                    summary: $"Assignment in getter or [Pure] method in {file.NewPath}: mutation in a pure context.",
                     evidence: $"Line {line.LineNumber}: {trimmed}",
                     whyItMatters: "Property getters and [Pure]-annotated methods are expected to be side-effect free. Mutations break this contract and can cause subtle bugs with lazy initialization, caching, or framework reflection.",
                     suggestedAction: "Move state mutations to setter, constructor, or a dedicated method. If lazy init is intended, use Lazy<T> or Interlocked.",
@@ -122,7 +122,7 @@ public class GCI0036_PureContextMutation : RuleBase
 
     /// <summary>
     /// Returns true when the assignment on this line is preceded within 20 lines by a null check
-    /// on the same field — the lazy-initialization pattern (check-then-assign) is intentional.
+    /// on the same field: the lazy-initialization pattern (check-then-assign) is intentional.
     /// The window is 20 lines to cover nested double-check-lock patterns.
     /// </summary>
     private static bool IsNullGuardedAssignment(List<DiffLine> allLines, int idx, string trimmed)
@@ -193,7 +193,7 @@ public class GCI0036_PureContextMutation : RuleBase
         var rawLhs = trimmed[..eqIdx].TrimEnd('+', '-', '*', '/', '%', '|', '&', '^', ' ').Trim();
         if (rawLhs.Length == 0) return false;
 
-        // Dotted (this.x) or indexed (arr[i]) — can't be a plain local
+        // Dotted (this.x) or indexed (arr[i]): can't be a plain local
         if (rawLhs.Contains('.') || rawLhs.Contains('[') || rawLhs.Contains(')')) return false;
 
         // Private-field naming conventions → always a field, never a local

@@ -123,7 +123,7 @@ public class GCI0032Tests
     public async Task GuardClauseThrows_ShouldNotFlag()
     {
         // ArgumentNullException, ArgumentException, ArgumentOutOfRangeException, and
-        // ObjectDisposedException are defensive guard clauses — they do not represent
+        // ObjectDisposedException are defensive guard clauses: they do not represent
         // untested business logic paths and must not trigger this rule.
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs

@@ -131,7 +131,7 @@ public static class BaselineCommand
             if (BaselineStore.Clear(repo.FullName))
                 AnsiConsole.MarkupLine("[green]Baseline cleared.[/]");
             else
-                AnsiConsole.MarkupLine("[yellow]No baseline found — nothing to clear.[/]");
+                AnsiConsole.MarkupLine("[yellow]No baseline found: nothing to clear.[/]");
 
             ctx.ExitCode = 0;
         });
@@ -174,7 +174,7 @@ public static class BaselineCommand
                 return;
             }
 
-            AnsiConsole.MarkupLine($"[bold cyan]Baseline[/] — {baseline.Fingerprints.Count} fingerprint(s)");
+            AnsiConsole.MarkupLine($"[bold cyan]Baseline[/]: {baseline.Fingerprints.Count} fingerprint(s)");
             AnsiConsole.MarkupLine($"[dim]  Created : {baseline.CreatedAt:u}[/]");
             if (baseline.Commit is not null)
                 AnsiConsole.MarkupLine($"[dim]  Commit  : {Markup.Escape(baseline.Commit)}[/]");

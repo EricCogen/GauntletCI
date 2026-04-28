@@ -10,7 +10,7 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0010 – Hardcoding and Configuration
+/// GCI0010, Hardcoding and Configuration
 /// Detects hardcoded IPs, URLs, connection strings, ports, and environment names.
 /// (Hardcoded credentials/secrets are detected by GCI0012 Security Risk to avoid duplicate findings.)
 /// </summary>
@@ -24,7 +24,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         new(@"https?://(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})[:/]",
             RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-    // IP address in a string literal — scoped to literals (not whole line) to avoid matching
+    // IP address in a string literal: scoped to literals (not whole line) to avoid matching
     // version strings (1.0.0.0) in XML, NuGet manifests, and comments.
     private static readonly Regex BareIpAddressRegex =
         new(@"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", RegexOptions.Compiled);
@@ -83,7 +83,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
 
             foreach (var literal in literals)
             {
-                // Skip if this is a URL — CheckHardcodedUrl already handles that case.
+                // Skip if this is a URL: CheckHardcodedUrl already handles that case.
                 if (literal.Contains("://", StringComparison.Ordinal)) continue;
 
                 var match = BareIpAddressRegex.Match(literal.Trim());
@@ -113,7 +113,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
             var literals = ExtractStringLiterals(content);
             if (literals.Count == 0) continue;
 
-            // Only fire on localhost/IP URLs — public URLs (docs, CDN, GitHub, etc.) are
+            // Only fire on localhost/IP URLs: public URLs (docs, CDN, GitHub, etc.) are
             // intentional references, not hardcoded configuration. CheckIpAddress covers
             // the IP-in-URL case; this check adds non-IP localhost specifically.
             bool hasPrivateUrl = literals.Any(l =>
@@ -199,7 +199,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
                                        string.Equals(l, $"DOTNET_ENVIRONMENT={env}", StringComparison.OrdinalIgnoreCase)))
                     continue;
 
-                // Skip IHostEnvironment fluent calls — IsProduction() etc. are the correct pattern
+                // Skip IHostEnvironment fluent calls: IsProduction() etc. are the correct pattern
                 if (content.Contains(".IsProduction()", StringComparison.OrdinalIgnoreCase) ||
                     content.Contains(".IsStaging()",    StringComparison.OrdinalIgnoreCase) ||
                     content.Contains(".IsDevelopment()", StringComparison.OrdinalIgnoreCase))

@@ -106,7 +106,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
         var ghComments = commentsTask.Result;
         var ghCommits  = commitsTask.Result;
 
-        // Diff requires a separate Accept header — serial request
+        // Diff requires a separate Accept header: serial request
         var diffText = await GetDiffAsync(base_, ct);
 
         // Persist raw snapshots
@@ -255,7 +255,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
             baseDelay = TimeSpan.FromSeconds(Math.Min(baseDelay.TotalSeconds * 2, 64));
 
             Console.Error.WriteLine(
-                $"[corpus] Rate limit (HTTP {(int)resp.StatusCode}) — attempt {attempt + 1}/{MaxRetries}, " +
+                $"[corpus] Rate limit (HTTP {(int)resp.StatusCode}): attempt {attempt + 1}/{MaxRetries}, " +
                 $"waiting {waitTime.TotalSeconds:F0}s before retry…");
 
             await Task.Delay(waitTime, ct);

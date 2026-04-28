@@ -57,7 +57,7 @@ public class DiffFile
         Hunks.SelectMany(h => h.Lines).Where(l => l.Kind == DiffLineKind.Context);
 }
 
-/// <summary>The full parsed diff — all changed files and their hunks.</summary>
+/// <summary>The full parsed diff: all changed files and their hunks.</summary>
 public class DiffContext
 {
     /// <summary>The original unified diff text this context was parsed from.</summary>

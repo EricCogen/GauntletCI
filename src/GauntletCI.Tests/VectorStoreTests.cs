@@ -140,7 +140,7 @@ public sealed class VectorStoreTests : IDisposable
         _store.Upsert("2d", "two dim",   "test", [1f, 0f]);
         _store.Upsert("3d", "three dim", "test", [1f, 0f, 0f]);
 
-        // Query with 2D vector — 3D record should be ignored (dim mismatch)
+        // Query with 2D vector: 3D record should be ignored (dim mismatch)
         var results = _store.Search([1f, 0f], topK: 5);
         Assert.Single(results);
         Assert.Equal("2d", results[0].Id);

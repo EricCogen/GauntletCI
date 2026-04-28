@@ -6,7 +6,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0021 – Data &amp; Schema Compatibility
+/// GCI0021, Data &amp; Schema Compatibility
 /// Detects removed serialization attributes and enum member removals that may break
 /// existing stored data, caches, or wire formats.
 /// </summary>
@@ -65,7 +65,7 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
     {
         if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) return;
 
-        // Collect enum member names present in added lines — skips members that were
+        // Collect enum member names present in added lines: skips members that were
         // moved (refactored into a new namespace/file) rather than truly deleted.
         var addedMemberNames = new HashSet<string>(StringComparer.Ordinal);
         foreach (var addedLine in file.AddedLines)
@@ -143,7 +143,7 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
             }
 
             // Only flag members that have an explicit serialization attribute on the preceding
-            // removed line — this ensures we only flag truly serialized enums (e.g. [JsonProperty("x")]).
+            // removed line: this ensures we only flag truly serialized enums (e.g. [JsonProperty("x")]).
             // Internal/API enums without serialization attributes are not a schema compat concern.
             bool hasPrecedingSerializationAttr = SerializationAttributes.Any(a =>
                 lastRemovedInEnum.TrimStart().StartsWith(a, StringComparison.OrdinalIgnoreCase));
@@ -164,7 +164,7 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
 
     private static bool IsEnumMember(string content)
     {
-        // Statements end with ';' — enum members never do (they end with ',' or nothing).
+        // Statements end with ';': enum members never do (they end with ',' or nothing).
         if (content.TrimEnd().EndsWith(';')) return false;
         // Matches: "SomeName," or "SomeName = 5," or "SomeName = 0x1,"
         var trimmed = content.TrimEnd(',').Trim();

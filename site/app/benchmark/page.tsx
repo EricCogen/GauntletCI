@@ -55,6 +55,8 @@ interface Rule {
   improvement?: Improvement;
   note?: string;
   notableFP?: string;
+  ciP?: string;
+  ciR?: string;
   status: RuleStatus;
 }
 
@@ -124,6 +126,11 @@ function RuleCard({ rule }: { rule: Rule }) {
               >
                 {rule.precision}
               </div>
+              {rule.ciP && rule.ciP !== "--" && (
+                <div className="text-xs text-muted-foreground/40 font-mono leading-none mt-0.5">
+                  {rule.ciP}
+                </div>
+              )}
               <div className="text-xs text-muted-foreground/60 mt-0.5">
                 Precision
               </div>
@@ -134,6 +141,11 @@ function RuleCard({ rule }: { rule: Rule }) {
               >
                 {rule.recall}
               </div>
+              {rule.ciR && rule.ciR !== "--" && (
+                <div className="text-xs text-muted-foreground/40 font-mono leading-none mt-0.5">
+                  {rule.ciR}
+                </div>
+              )}
               <div className="text-xs text-muted-foreground/60 mt-0.5">
                 Recall
               </div>
@@ -245,6 +257,8 @@ const passingRules: Rule[] = [
       prevRecall: "40.4%",
       note: "LogicKeywords narrowed from 7 to 4 tokens; logic-removal threshold raised 5 to 15 lines; empty-catch labeler heuristic redirected to GCI0032.",
     },
+    ciP: "±3.0%",
+    ciR: "±6.6%",
     status: "passing",
   },
   {
@@ -257,6 +271,8 @@ const passingRules: Rule[] = [
     recall: "100%",
     f1: "100%",
     triggerPct: "4.0",
+    ciP: "±6.7%",
+    ciR: "±6.7%",
     status: "passing",
   },
   {
@@ -269,6 +285,8 @@ const passingRules: Rule[] = [
     recall: "88.2%",
     f1: "93.7%",
     triggerPct: "4.9",
+    ciP: "±5.7%",
+    ciR: "±11.0%",
     status: "passing",
   },
   {
@@ -282,6 +300,8 @@ const passingRules: Rule[] = [
     f1: "100%",
     triggerPct: "0.2",
     note: "Low prevalence in corpus (1 fixture). Metrics are directional at this sample size.",
+    ciP: "±39.7%",
+    ciR: "±39.7%",
     status: "passing",
   },
   {
@@ -299,6 +319,8 @@ const passingRules: Rule[] = [
       prevRecall: "3.0%",
       note: "Labeler was mapping binary/generated file presence to this rule. Replaced with correct idempotency signals: HTTP POST attribute and INSERT without upsert guard.",
     },
+    ciP: "±39.7%",
+    ciR: "±39.7%",
     status: "passing",
   },
   {
@@ -316,6 +338,8 @@ const passingRules: Rule[] = [
       prevRecall: "55.9%",
       note: "Added four skip guards: return new X (caller takes ownership), callee-owns paren check for service registration, static singletons, Enumerator suffix removed from disposable types.",
     },
+    ciP: "±10.7%",
+    ciR: "±13.1%",
     status: "passing",
   },
   {
@@ -333,6 +357,8 @@ const passingRules: Rule[] = [
       prevRecall: "33.3%",
       note: "Labeler global early-return replaced with per-file tracking. Generated files (.Designer.cs, .g.cs) excluded. IsNullGuardedInLabelerScope helper added with 20-line lookback.",
     },
+    ciP: "±32.9%",
+    ciR: "±32.9%",
     status: "passing",
   },
   {
@@ -352,6 +378,8 @@ const passingRules: Rule[] = [
     },
     notableFP:
       "gRPC's GrpcCallInvokerFactory.cs had a [LoggerMessage] attribute with Message = '...only some HttpClient properties...' - the substring 'HttpClient ' triggered the timeout check on a file that never instantiates an HttpClient.",
+    ciP: "±21.7%",
+    ciR: "±21.7%",
     status: "passing",
   },
   {
@@ -371,6 +399,8 @@ const passingRules: Rule[] = [
     },
     notableFP:
       "Jellyfin's codec path had '// add a spec-compliant dvh1/dav1 variant before the hvc1 hack variant.' - the word 'hack' used as a codec term in a prose comment, not as a HACK: marker.",
+    ciP: "±4.9%",
+    ciR: "±4.9%",
     status: "passing",
   },
   {
@@ -388,6 +418,8 @@ const passingRules: Rule[] = [
       prevRecall: "45.8%",
       note: "Labeler threshold raised from any (1+) null-forgiving operator to count > 1, matching the rule's matchingLines.Count <= 1 early-return guard. This was generating 65 false-negative labels.",
     },
+    ciP: "±4.6%",
+    ciR: "±8.6%",
     status: "passing",
   },
   {
@@ -405,6 +437,8 @@ const passingRules: Rule[] = [
       prevRecall: "44.0%",
       note: "Labeler rewritten to mirror rule's three-check structure. Unsafe.Add( excluded from .Add() check. Loop detection added for LINQ-in-loop using non-removed-lines context lookback.",
     },
+    ciP: "±5.8%",
+    ciR: "±8.0%",
     status: "passing",
   },
   {
@@ -417,6 +451,8 @@ const passingRules: Rule[] = [
     recall: "83.3%",
     f1: "90.9%",
     triggerPct: "0.8",
+    ciP: "±21.7%",
+    ciR: "±26.7%",
     status: "passing",
   },
 ];
@@ -437,6 +473,8 @@ const inProgressRules: Rule[] = [
       prevRecall: "38.5%",
       note: "Precision fixed: .Value= on LHS skipped, IOptions<T>.Value skipped, constructors excluded, same-line null guard narrowed to regex. Recall gap (62 FNs) remains - the rule processes only added lines and misses .Value access on unchanged context lines.",
     },
+    ciP: "±4.6%",
+    ciR: "±7.9%",
     status: "in-progress",
   },
   {
@@ -450,6 +488,8 @@ const inProgressRules: Rule[] = [
     f1: "66.7%",
     triggerPct: "0.6",
     note: "Only 2 positive fixtures in corpus. P=50% reflects 2 FPs out of 4 total fires. Low sample size makes metrics noisy.",
+    ciP: "±35.0%",
+    ciR: "±32.9%",
     status: "in-progress",
   },
   {
@@ -463,6 +503,8 @@ const inProgressRules: Rule[] = [
     f1: "57.2%",
     triggerPct: "9.1",
     note: "Precision is excellent (98.2%). The 81 false negatives are the active work item - the rule's sub-checks cover specific empty-catch patterns but many real exception-swallowing patterns (logging without rethrowing, catch-then-return-null) are not yet detected.",
+    ciP: "±4.6%",
+    ciR: "±8.1%",
     status: "in-progress",
   },
   {
@@ -475,6 +517,8 @@ const inProgressRules: Rule[] = [
     recall: "47.7%",
     f1: "57.5%",
     triggerPct: "4.7",
+    ciP: "±15.5%",
+    ciR: "±14.2%",
     status: "in-progress",
   },
   {
@@ -494,6 +538,8 @@ const inProgressRules: Rule[] = [
     },
     notableFP:
       "NUnit's testdata directory had [SkipLocalsInit] on a performance-sensitive method. The attribute is a .NET runtime hint with no connection to test skipping - only the substring 'Skip' triggered the match.",
+    ciP: "±20.5%",
+    ciR: "±12.9%",
     status: "in-progress",
   },
   {
@@ -506,6 +552,8 @@ const inProgressRules: Rule[] = [
     recall: "27.1%",
     f1: "38.3%",
     triggerPct: "3.2",
+    ciP: "±19.3%",
+    ciR: "±12.2%",
     status: "in-progress",
   },
   {
@@ -518,6 +566,8 @@ const inProgressRules: Rule[] = [
     recall: "56.7%",
     f1: "66.7%",
     triggerPct: "3.4",
+    ciP: "±16.2%",
+    ciR: "±16.7%",
     status: "in-progress",
   },
 ];
@@ -547,6 +597,8 @@ const limitedRules: Rule[] = [
     f1: "--",
     triggerPct: "0.0",
     note: "Rule was narrowed from any http:// literal to localhost/private IP only (docs URLs, nuget.org, github.com excluded). The labeler still marks 13 fixtures as positive from the broader original criteria. Rule fires nothing on current corpus.",
+    ciP: "--",
+    ciR: "±11.4%",
     status: "limited",
   },
   {
@@ -560,6 +612,8 @@ const limitedRules: Rule[] = [
     f1: "--",
     triggerPct: "0.6",
     note: "PII terms were narrowed from 21 to 16 high-confidence terms, removing 'token', 'address', 'username', 'ipaddress', 'deviceid'. The labeler was updated to match. The 4 remaining FPs fire on the corpus but no fixture is labeled positive - the remaining PII term hits are likely false positives the labeler correctly marks as negative.",
+    ciP: "±24.5%",
+    ciR: "--",
     status: "limited",
   },
   {
@@ -734,6 +788,27 @@ export default function BenchmarkPage() {
               100% Silver precision and recall while still having real-world
               edge cases the labeler does not model.
             </p>
+            <div className="rounded-lg border border-border/50 bg-card/20 px-5 py-4 space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/50">
+                On confidence intervals
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Precision and recall on a small corpus have a known failure
+                mode: a rule that fires correctly on 5 fixtures and incorrectly
+                on 0 reports 100% precision. That number is accurate on the
+                sample but statistically uninformative. A 95% Wilson score
+                interval for that result spans 57% to 100%.
+              </p>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Per-rule cards include Wilson score confidence intervals
+                alongside each reported figure. The Wilson method is preferred
+                over the standard Wald interval because it stays well-behaved
+                when the proportion is near 0 or 1 and when sample counts are
+                small: both conditions apply to several rules here. A wide
+                interval is not a criticism of the rule. It is a statement
+                about estimation uncertainty given the current corpus size.
+              </p>
+            </div>
           </section>
 
           {/* 5. The labeler-rule gap */}

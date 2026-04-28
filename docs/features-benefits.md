@@ -1,10 +1,10 @@
-# GauntletCI — Features & Benefits
+# GauntletCI: Features & Benefits
 
 ---
 
 ## What It Does
 
-GauntletCI analyzes the exact lines added or removed in a pull request and flags patterns that introduce unvalidated behavioral risk — before code is merged. No compilation, no AST, no network. Results in under one second.
+GauntletCI analyzes the exact lines added or removed in a pull request and flags patterns that introduce unvalidated behavioral risk: before code is merged. No compilation, no AST, no network. Results in under one second.
 
 ---
 
@@ -15,7 +15,7 @@ GauntletCI analyzes the exact lines added or removed in a pull request and flags
 #### Behavior & Contract Safety
 - Removed logic (return, throw, if/else, boolean operators) without matching test changes
 - Public API removals, signature changes, and dropped `[Obsolete]` attributes
-- Breaking serialization changes — removed `[JsonProperty]`, `[Column]`, `[DataMember]` attributes and dropped public enum members
+- Breaking serialization changes: removed `[JsonProperty]`, `[Column]`, `[DataMember]` attributes and dropped public enum members
 
 #### Security
 - SQL injection via string concatenation or interpolation
@@ -113,7 +113,7 @@ GauntletCI analyzes the exact lines added or removed in a pull request and flags
 | `baseline create` | Snapshot all current findings as the baseline |
 | `baseline clear` | Remove the baseline file |
 | `baseline show` | Print current baseline contents |
-| `postmortem --commit <sha>` | Run analysis on a past commit — see what GauntletCI would have caught |
+| `postmortem --commit <sha>` | Run analysis on a past commit: see what GauntletCI would have caught |
 | `doctor` | Validate environment: config, rules, Ollama connectivity, baseline status |
 | `audit export` | Export full scan history as JSON or CSV |
 | `audit stats` | Summary: total scans, findings count, top rules fired |
@@ -135,7 +135,7 @@ Run GauntletCI on a branch over time without accumulating noise. `baseline creat
 
 ### GitHub Actions
 
-Drop-in composite action with inputs for commit SHA, fail-on-findings, inline PR comments, ASCII mode, and .NET/GauntletCI version pinning. Outputs `findings-count`. Posts findings directly as inline review comments on the diff — no manual review step required.
+Drop-in composite action with inputs for commit SHA, fail-on-findings, inline PR comments, ASCII mode, and .NET/GauntletCI version pinning. Outputs `findings-count`. Posts findings directly as inline review comments on the diff: no manual review step required.
 
 ---
 
@@ -153,11 +153,11 @@ Drop-in composite action with inputs for commit SHA, fail-on-findings, inline PR
 | Benefit | Why it matters |
 |---|---|
 | Catches what green tests miss | Tests pass even when behavior changes without matching validation |
-| Runs in under one second | No compile, no AST, no network — structural heuristics on diff lines only |
+| Runs in under one second | No compile, no AST, no network: structural heuristics on diff lines only |
 | Zero noise about style | Every rule targets behavioral or security risk, not formatting or preferences |
 | Works anywhere git does | Pre-commit hook, CI pipeline, or ad-hoc on any commit SHA |
-| Baseline suppression | Teams can snapshot known findings and only see what is new — no alert fatigue |
-| Fully private by default | All analysis is local — telemetry is opt-in, anonymous, and excludes all code |
+| Baseline suppression | Teams can snapshot known findings and only see what is new: no alert fatigue |
+| Fully private by default | All analysis is local: telemetry is opt-in, anonymous, and excludes all code |
 | Auditable | Every scan logged to `~/.gauntletci/audit-log.ndjson`; exportable as CSV |
 | Plugs into AI assistants | MCP server lets Claude, Cursor, Copilot, and Windsurf call GauntletCI mid-conversation |
 | Configurable without breaking | Per-rule severity override via `.gauntletci.json`; suppression via `.gauntletci-ignore` |
@@ -166,42 +166,42 @@ Drop-in composite action with inputs for commit SHA, fail-on-findings, inline PR
 
 ## Validated Against Real OSS PRs
 
-22 rules have been manually confirmed against a corpus of real .NET pull requests across top OSS projects. All findings were human-reviewed against the actual diff — not machine-labeled.
+22 rules have been manually confirmed against a corpus of real .NET pull requests across top OSS projects. All findings were human-reviewed against the actual diff: not machine-labeled.
 
 | Rule | What was caught | Example project |
 |---|---|---|
-| GCI0003 — Removed logic without tests | Return/throw removed from production code with no test diff | Multiple repos |
-| GCI0004 — Breaking API change | Public method signatures changed or removed | Multiple repos |
-| GCI0006 — Edge case handling | `OpenAsyncWriteStream(string path, ...)` added with no null guard on `path` | SharpCompress |
-| GCI0007 — Breaking serialization change | `[JsonProperty]` / `[DataMember]` attributes removed from DTO | Multiple repos |
-| GCI0010 — Hardcoded secret | `_secretKey = "secretkey"` — credential-like string literal in AWS signing code | aws-sdk-net |
-| GCI0012 — Hardcoded secret | Password literal assigned in production code | Multiple repos |
-| GCI0015 — Unchecked cast | `(int)input.Position` — `Stream.Position` is `long`; overflows for files >2 GB | SharpCompress |
-| GCI0016 — Async void | `async void` handler in production event wiring | Multiple repos |
-| GCI0021 — Data schema compatibility | `Tentative`, `Certain`, `Irrelevant` public enum members removed from `TextSource` | AngleSharp |
-| GCI0022 — Idempotency / retry safety | Six `MessageBus<T>.Subscribers +=` handlers registered without deduplication guard | ILSpy |
-| GCI0024 — Disposable without using | `FileStream` returned without `using`, leaking the handle | Multiple repos |
-| GCI0032 — Untested throw paths | 3 `throw new` statements added with no `Assert.Throws` in the diff | aaubry/YamlDotNet |
-| GCI0036 — Pure context mutation | `_maxNodes = CommandLine.GetInt32(...)` — field mutation inside a property getter | Akka.NET |
-| GCI0038 — Service locator | `GetRequiredService<T>()` in production IoC composition | DevToys |
-| GCI0039 — Direct HttpClient | `new HttpClient()` used directly, bypassing factory and timeout | googleapis/google-api-dotnet-client, grpc/grpc-dotnet, restsharp/RestSharp |
-| GCI0041 — Silenced tests | `[Skip]` placed on existing passing tests | Multiple repos |
-| GCI0042 — TODO/Stub detection | `throw new NotImplementedException()` in 4 production JWT files — unshipped stubs merged | DevToys |
-| GCI0043 — Nullability and type safety | Null-forgiving `!` used 65 times in `SqlMapper.cs` when enabling nullable annotations | Dapper |
-| GCI0044 — Performance hotpath risk | LINQ `.Where()` inside outer loop in EF Core model diff logic — O(n^2) | dotnet/efcore |
-| GCI0045 — Complexity control | `abstract class RespAttributeReader` added with no abstract members | StackExchange.Redis |
-| GCI0046 — Pattern consistency deviation | `Subscribe()` and `SubscribeAsync()` both added — mixed sync/async API surface | StackExchange.Redis |
-| GCI0047 — Naming/contract alignment | `IsValid` renamed to `IsInvalid` — boolean polarity inversion at all call sites | SixLabors/ImageSharp |
+| GCI0003: Removed logic without tests | Return/throw removed from production code with no test diff | Multiple repos |
+| GCI0004: Breaking API change | Public method signatures changed or removed | Multiple repos |
+| GCI0006: Edge case handling | `OpenAsyncWriteStream(string path, ...)` added with no null guard on `path` | SharpCompress |
+| GCI0007: Breaking serialization change | `[JsonProperty]` / `[DataMember]` attributes removed from DTO | Multiple repos |
+| GCI0010: Hardcoded secret | `_secretKey = "secretkey"`: credential-like string literal in AWS signing code | aws-sdk-net |
+| GCI0012: Hardcoded secret | Password literal assigned in production code | Multiple repos |
+| GCI0015: Unchecked cast | `(int)input.Position`: `Stream.Position` is `long`; overflows for files >2 GB | SharpCompress |
+| GCI0016: Async void | `async void` handler in production event wiring | Multiple repos |
+| GCI0021: Data schema compatibility | `Tentative`, `Certain`, `Irrelevant` public enum members removed from `TextSource` | AngleSharp |
+| GCI0022: Idempotency / retry safety | Six `MessageBus<T>.Subscribers +=` handlers registered without deduplication guard | ILSpy |
+| GCI0024: Disposable without using | `FileStream` returned without `using`, leaking the handle | Multiple repos |
+| GCI0032: Untested throw paths | 3 `throw new` statements added with no `Assert.Throws` in the diff | aaubry/YamlDotNet |
+| GCI0036: Pure context mutation | `_maxNodes = CommandLine.GetInt32(...)`: field mutation inside a property getter | Akka.NET |
+| GCI0038: Service locator | `GetRequiredService<T>()` in production IoC composition | DevToys |
+| GCI0039: Direct HttpClient | `new HttpClient()` used directly, bypassing factory and timeout | googleapis/google-api-dotnet-client, grpc/grpc-dotnet, restsharp/RestSharp |
+| GCI0041: Silenced tests | `[Skip]` placed on existing passing tests | Multiple repos |
+| GCI0042: TODO/Stub detection | `throw new NotImplementedException()` in 4 production JWT files: unshipped stubs merged | DevToys |
+| GCI0043: Nullability and type safety | Null-forgiving `!` used 65 times in `SqlMapper.cs` when enabling nullable annotations | Dapper |
+| GCI0044: Performance hotpath risk | LINQ `.Where()` inside outer loop in EF Core model diff logic: O(n^2) | dotnet/efcore |
+| GCI0045: Complexity control | `abstract class RespAttributeReader` added with no abstract members | StackExchange.Redis |
+| GCI0046: Pattern consistency deviation | `Subscribe()` and `SubscribeAsync()` both added: mixed sync/async API surface | StackExchange.Redis |
+| GCI0047: Naming/contract alignment | `IsValid` renamed to `IsInvalid`: boolean polarity inversion at all call sites | SixLabors/ImageSharp |
 
 Rules not yet validated from corpus:
-- **GCI0001** — Diff integrity check; disabled in GauntletCI own CI config; no corpus example found
-- **GCI0029** — PII in logs; high FP rate on broad terms like `name`; excluded from showcase
-- **GCI0035** — Layer import violations; requires `ForbiddenImports` config to fire
-- **GCI0048** — Insecure random; newly added; corpus validation pending
-- **GCI0049** — Float equality; newly added; corpus validation pending
-- **GCI0050** — SQL column truncation; newly added; corpus validation pending
+- **GCI0001**: Diff integrity check; disabled in GauntletCI own CI config; no corpus example found
+- **GCI0029**: PII in logs; high FP rate on broad terms like `name`; excluded from showcase
+- **GCI0035**: Layer import violations; requires `ForbiddenImports` config to fire
+- **GCI0048**: Insecure random; newly added; corpus validation pending
+- **GCI0049**: Float equality; newly added; corpus validation pending
+- **GCI0050**: SQL column truncation; newly added; corpus validation pending
 
 Known precision caveats (as of current version):
-- **GCI0029** — `name` term fires on logging context keys and property names, not just PII; use `.gauntletci-ignore` to suppress per path
-- **GCI0038** — `GetService` calls in xUnit test fixtures can trigger; suppress with `.gauntletci-ignore`
-- **GCI0046** — fires on intentional sync+async library APIs; suppress when both forms are deliberate design
+- **GCI0029**: `name` term fires on logging context keys and property names, not just PII; use `.gauntletci-ignore` to suppress per path
+- **GCI0038**: `GetService` calls in xUnit test fixtures can trigger; suppress with `.gauntletci-ignore`
+- **GCI0046**: fires on intentional sync+async library APIs; suppress when both forms are deliberate design

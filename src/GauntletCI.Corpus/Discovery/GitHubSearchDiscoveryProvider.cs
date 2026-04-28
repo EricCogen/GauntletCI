@@ -211,12 +211,12 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider, IDisposa
             if (root.TryGetProperty("archived", out var archivedEl) && archivedEl.GetBoolean())
                 return "repo is archived";
 
-            // Renamed/transferred check — canonical name differs from the requested spec
+            // Renamed/transferred check: canonical name differs from the requested spec
             if (root.TryGetProperty("full_name", out var fullNameEl))
             {
                 var canonical = fullNameEl.GetString() ?? repoSpec;
                 if (!string.Equals(canonical, repoSpec, StringComparison.OrdinalIgnoreCase))
-                    return $"repo was renamed/transferred — canonical name is '{canonical}' (update allowlist)";
+                    return $"repo was renamed/transferred: canonical name is '{canonical}' (update allowlist)";
             }
 
             // Star threshold check

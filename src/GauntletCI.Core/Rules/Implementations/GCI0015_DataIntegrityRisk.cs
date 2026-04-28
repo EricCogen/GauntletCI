@@ -7,7 +7,7 @@ using GauntletCI.Core.StaticAnalysis;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0015 – Data Integrity Risk
+/// GCI0015, Data Integrity Risk
 /// Detects unchecked casts, mass assignment without validation, and SQL IGNORE patterns.
 /// </summary>
 public class GCI0015_DataIntegrityRisk : RuleBase
@@ -83,7 +83,7 @@ public class GCI0015_DataIntegrityRisk : RuleBase
                 {
                     findings.Add(CreateFinding(
                         file,
-                        summary: "Possible unsafe HTTP input binding — mass-assignment without allowlist",
+                        summary: "Possible unsafe HTTP input binding: mass-assignment without allowlist",
                         evidence: $"Starting at line {firstLine} in {file.NewPath}",
                         whyItMatters: "Binding HTTP request data directly to entity properties without an explicit allowlist (e.g. [Bind], DTO projection, or manual mapping) can expose internal fields to over-posting attacks (OWASP A03).",
                         suggestedAction: "Use a dedicated DTO or add [Bind(Include=...)] to restrict which properties can be set from request data.",

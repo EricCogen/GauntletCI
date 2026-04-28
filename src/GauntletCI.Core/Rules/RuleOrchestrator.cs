@@ -12,7 +12,7 @@ namespace GauntletCI.Core.Rules;
 /// <summary>
 /// Runs all registered rules against a <see cref="DiffContext"/> and aggregates findings.
 /// File eligibility filtering runs once before all rules via <see cref="ChangedFileAnalyzer"/>.
-/// Rules are loaded via reflection — drop a new IRule implementation into the assembly
+/// Rules are loaded via reflection: drop a new IRule implementation into the assembly
 /// and it will be picked up automatically.
 /// </summary>
 public class RuleOrchestrator
@@ -68,7 +68,7 @@ public class RuleOrchestrator
 
         var ruleType = typeof(IRule);
         // Discover all IRule implementations via reflection at startup;
-        // no manual registration needed — drop a new class in the assembly to register it
+        // no manual registration needed: drop a new class in the assembly to register it
         var rules = typeof(RuleOrchestrator).Assembly
             .GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false }
@@ -160,12 +160,12 @@ public class RuleOrchestrator
             catch (OperationCanceledException) when (!ct.IsCancellationRequested)
             {
                 outcome = RuleOutcome.TimedOut;
-                Console.Error.WriteLine($"[GauntletCI] Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s — analysis truncated.");
+                Console.Error.WriteLine($"[GauntletCI] Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s: analysis truncated.");
                 allFindings.Add(new Finding
                 {
                     RuleId          = rule.Id,
                     RuleName        = rule.Name,
-                    Summary         = $"Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s — results may be incomplete.",
+                    Summary         = $"Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s: results may be incomplete.",
                     Evidence        = $"Analysis exceeded the {_ruleTimeout.TotalSeconds:0}-second per-rule time limit.",
                     WhyItMatters    = "A timeout may indicate pathologically complex diff input (Roslyn Bomb) or a hung analyzer.",
                     SuggestedAction = "Investigate the diff for unusual patterns or report this as a GauntletCI issue.",

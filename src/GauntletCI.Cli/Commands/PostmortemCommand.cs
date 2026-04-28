@@ -25,7 +25,7 @@ public static class PostmortemCommand
         var noBannerOption = new Option<bool>("--no-banner", "Disable banner");
         var asciiFlag = new Option<bool>("--ascii", "ASCII-only output");
 
-        var cmd = new Command("postmortem", "Analyse a past commit — see what GauntletCI would have caught")
+        var cmd = new Command("postmortem", "Analyse a past commit: see what GauntletCI would have caught")
         {
             commitOption,
             repoOption,
@@ -61,7 +61,7 @@ public static class PostmortemCommand
                 else
                 {
                     var shortSha = commit.Length >= 8 ? commit[..8] : commit;
-                    AnsiConsole.MarkupLine($"[dim]  ⏪  Postmortem — commit {Markup.Escape(shortSha)}[/]");
+                    AnsiConsole.MarkupLine($"[dim]  ⏪  Postmortem: commit {Markup.Escape(shortSha)}[/]");
                     AnsiConsole.MarkupLine("[dim]     These findings would have been caught at pre-commit time.[/]");
                     AnsiConsole.WriteLine();
                     ConsoleReporter.Report(result, ascii, elapsed: sw.Elapsed);

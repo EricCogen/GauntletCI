@@ -46,7 +46,7 @@ dotnet test GauntletCI.slnx --nologo --collect:"XPlat Code Coverage" --results-d
 | Project | Purpose |
 |---------|---------|
 | `GauntletCI.Tests` | Unit tests for rules, diff parser, config, LLM templates (~570 tests) |
-| `GauntletCI.Benchmarks` | Curated fixture tests — true/false positive regression checks |
+| `GauntletCI.Benchmarks` | Curated fixture tests: true/false positive regression checks |
 
 ### Opt-in tests
 
@@ -118,7 +118,7 @@ dotnet tool install --global --add-source ./nupkg GauntletCI
 
 - **SPDX header**: all source files start with `// SPDX-License-Identifier: Elastic-2.0`
 - **Namespaces**: `GauntletCI.{Project}.{Area}` (e.g., `GauntletCI.Core.Rules`)
-- **Commit tags**: `[RULE]`, `[CLI]`, `[CONFIG]`, `[TEST]`, `[INFRA]`, `[DOCS]` — see [CONTRIBUTING.md](../.github/CONTRIBUTING.md)
+- **Commit tags**: `[RULE]`, `[CLI]`, `[CONFIG]`, `[TEST]`, `[INFRA]`, `[DOCS]`: see [CONTRIBUTING.md](../.github/CONTRIBUTING.md)
 - **Rule IDs**: never reuse a retired ID; check `docs/rules.md` for the current registry
 
 ---

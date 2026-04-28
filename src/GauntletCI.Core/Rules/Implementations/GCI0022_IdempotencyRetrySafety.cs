@@ -6,7 +6,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0022 – Idempotency &amp; Retry Safety
+/// GCI0022, Idempotency &amp; Retry Safety
 /// Detects HTTP POST endpoints without idempotency keys, raw INSERT without upsert guards,
 /// and event handler registrations without deduplication.
 /// </summary>

@@ -55,7 +55,7 @@ internal static class WellKnownPatterns
     }
 
     // Returns true when a lowercase directory segment represents a test directory.
-    // Requires "test" to appear at a word boundary — avoids "latest", "protest", etc.
+    // Requires "test" to appear at a word boundary: avoids "latest", "protest", etc.
     private static bool IsTestSegment(string segment)
     {
         if (segment.StartsWith("test")) return true;

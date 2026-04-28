@@ -12,7 +12,7 @@ using Spectre.Console;
 namespace GauntletCI.Cli.Commands;
 
 /// <summary>
-/// Implements <c>gauntletci trace</c> — post-mortem incident correlation.
+/// Implements <c>gauntletci trace</c>: post-mortem incident correlation.
 /// Gets the diff since a deploy tag, re-runs GauntletCI analysis, optionally fetches
 /// PagerDuty/Opsgenie incidents, and outputs a Change Risk Heatmap.
 /// </summary>
@@ -63,7 +63,7 @@ public static class TraceCommand
             "--ascii",
             "ASCII-only output");
 
-        var cmd = new Command("trace", "Post-mortem incident correlation — correlates deploy diff with PagerDuty/Opsgenie incidents")
+        var cmd = new Command("trace", "Post-mortem incident correlation: correlates deploy diff with PagerDuty/Opsgenie incidents")
         {
             deployTagOption,
             fromCommitOption,
@@ -139,7 +139,7 @@ public static class TraceCommand
                 }
                 else
                 {
-                    Console.Error.WriteLine("[GauntletCI] No PagerDuty token — skipping PD incident fetch (set --pd-token or PAGERDUTY_TOKEN).");
+                    Console.Error.WriteLine("[GauntletCI] No PagerDuty token: skipping PD incident fetch (set --pd-token or PAGERDUTY_TOKEN).");
                 }
 
                 if (!string.IsNullOrWhiteSpace(ogToken))
@@ -151,7 +151,7 @@ public static class TraceCommand
                 }
                 else
                 {
-                    Console.Error.WriteLine("[GauntletCI] No Opsgenie token — skipping OG alert fetch (set --og-token or OPSGENIE_TOKEN).");
+                    Console.Error.WriteLine("[GauntletCI] No Opsgenie token: skipping OG alert fetch (set --og-token or OPSGENIE_TOKEN).");
                 }
 
                 // Step 4: correlate

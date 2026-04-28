@@ -7,7 +7,7 @@ using GauntletCI.Core.StaticAnalysis;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0006 – Edge Case Handling
+/// GCI0006, Edge Case Handling
 /// Detects potential null dereferences and missing validation in added code.
 /// Boundary with GCI0043 (Nullability and Type Safety): GCI0043 detects as-casts without null checks
 /// but suppresses when the same line also has a .Value access, deferring to GCI0006 as the
@@ -43,10 +43,10 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 var content = addedLines[i].Content;
                 if (!HasUnsafeValueAccess(content)) continue;
 
-                // Skip comment lines — .Value in a comment is not executable code
+                // Skip comment lines: .Value in a comment is not executable code
                 if (content.TrimStart().StartsWith("//")) continue;
 
-                // Skip expression-bodied property/method declarations — the .Value access IS
+                // Skip expression-bodied property/method declarations: the .Value access IS
                 // the declaration body (e.g. public override object? Value => _inner.Value;)
                 var trimmed = content.TrimStart();
                 if ((trimmed.StartsWith("public ", StringComparison.Ordinal) ||
@@ -97,18 +97,18 @@ public class GCI0006_EdgeCaseHandling : RuleBase
     {
         foreach (var file in diff.Files)
         {
-            // Test helpers do not need null guards — skip test files entirely
+            // Test helpers do not need null guards: skip test files entirely
             if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
 
             var addedLines = file.AddedLines.ToList();
             for (int i = 0; i < addedLines.Count; i++)
             {
                 var content = addedLines[i].Content;
-                // Only flag public or protected methods — private/internal callers are controlled
+                // Only flag public or protected methods: private/internal callers are controlled
                 if (!IsPublicOrProtectedSignature(content)) continue;
 
                 // Override methods cannot change the parameter contract declared by the base
-                // class or interface — enforcing null validation here is incorrect
+                // class or interface: enforcing null validation here is incorrect
                 if (content.Contains(" override ", StringComparison.Ordinal)) continue;
 
                 // Abstract methods, delegate declarations, and partial stubs have no body
@@ -116,7 +116,7 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                     content.Contains(" delegate ", StringComparison.Ordinal) ||
                     content.Contains(" partial ", StringComparison.Ordinal)) continue;
 
-                // Constructors have no return type — skip them
+                // Constructors have no return type: skip them
                 // A method signature has: <accessModifier> <returnType> <name>(<params>)
                 // A constructor has:       <accessModifier> <name>(<params>)
                 // Detect constructors by checking for a return-type token before the name
@@ -152,9 +152,9 @@ public class GCI0006_EdgeCaseHandling : RuleBase
         }
     }
 
-    // Returns true when the line has an explicit return type — i.e., it is a method, not a constructor.
-    // Constructors look like: public ClassName( — one identifier between access modifiers and '('
-    // Methods look like:      public ReturnType MethodName( — two identifiers before '('
+    // Returns true when the line has an explicit return type: i.e., it is a method, not a constructor.
+    // Constructors look like: public ClassName(: one identifier between access modifiers and '('
+    // Methods look like:      public ReturnType MethodName(: two identifiers before '('
     private static bool HasReturnType(string line)
     {
         var t = line.TrimStart();
@@ -219,7 +219,7 @@ public class GCI0006_EdgeCaseHandling : RuleBase
 
         var expr = valueLine[start..valIdx]; // e.g. "match.Groups[1]"
 
-        // Extract the root identifier — the first segment before '.' or '['
+        // Extract the root identifier: the first segment before '.' or '['
         int boundary = expr.IndexOfAny(['.', '[']);
         var root = boundary > 0 ? expr[..boundary] : expr;
         root = new string(root.Where(c => char.IsLetterOrDigit(c) || c == '_').ToArray());

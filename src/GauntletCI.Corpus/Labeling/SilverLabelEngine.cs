@@ -16,7 +16,7 @@ namespace GauntletCI.Corpus.Labeling;
 /// For each rule that has a heuristic, the engine emits BOTH positive labels (heuristic matched →
 /// ShouldTrigger = true) and negative labels (heuristic didn't match → ShouldTrigger = false).
 /// Negative labels are emitted at lower confidence (0.4) to enable real precision computation.
-/// Rules without any heuristic receive no label — precision/recall stays Unknown for those rules.
+/// Rules without any heuristic receive no label: precision/recall stays Unknown for those rules.
 /// </remarks>
 public sealed class SilverLabelEngine
 {
@@ -362,7 +362,7 @@ public sealed class SilverLabelEngine
         // GCI0012 -- Secret/credential exposure + weak cryptography + SQL injection
         // Use production-CS-only lines to avoid FNs from test helper passwords, sample
         // JWTs in test classes, and SHA/MD5 uses that are intentional in test code.
-        // When the diff has no production C# files, no GCI0012 label is emitted — the
+        // When the diff has no production C# files, no GCI0012 label is emitted: the
         // rule also only processes production .cs files.
         if (prodCsLines.Count > 0)
         {
@@ -394,7 +394,7 @@ public sealed class SilverLabelEngine
 
         // GCI0003 -- Non-private method signature changed in production code
         // Fire when production .cs removes AND re-adds a public/protected/internal member
-        // with a parenthesized signature — the rule's primary detection path.
+        // with a parenthesized signature: the rule's primary detection path.
         {
             static bool IsSigLine(string l)
             {
@@ -413,7 +413,7 @@ public sealed class SilverLabelEngine
 
         // GCI0021 -- Serialization attribute removed from production CS, or EF migration schema operation removed
         // Migration detection: check if removed lines from a non-test EF migration .cs file contain actual
-        // schema operations (migrationBuilder.Drop*, AlterColumn, etc.) — not just any modification to files
+        // schema operations (migrationBuilder.Drop*, AlterColumn, etc.): not just any modification to files
         // in a migrations directory (that would match scaffolding/processor changes which are not schema risks).
         bool hasMigrationModified = false;
         if (pathLines.Any(l => l.StartsWith("--- a/", StringComparison.Ordinal) &&
@@ -597,11 +597,11 @@ public sealed class SilverLabelEngine
                 if (l.Contains("using ", StringComparison.Ordinal)) return false;
                 if (trimmed.StartsWith("return ", StringComparison.Ordinal)) return false;
                 if (l.Contains("static ", StringComparison.Ordinal)) return false;
-                // Lambda body: `(...) => new X(` — ownership transfers into the lambda's caller.
+                // Lambda body: `(...) => new X(`: ownership transfers into the lambda's caller.
                 int arrowIdx = l.IndexOf("=>", StringComparison.Ordinal);
                 int newIdx   = l.IndexOf("new ", StringComparison.Ordinal);
                 if (arrowIdx >= 0 && newIdx >= 0 && newIdx > arrowIdx) return false;
-                // Fast path — explicit known types
+                // Fast path: explicit known types
                 if (labeler0024Explicit.Any(t => l.Contains(t, StringComparison.Ordinal))) return true;
                 // Suffix heuristic
                 var m = labeler0024Rx.Match(l);
@@ -671,12 +671,33 @@ public sealed class SilverLabelEngine
             }
         }
 
-        // GCI0039 -- Direct HttpClient instantiation (IHttpClientFactory bypass)
-        if (addedLines.Any(l =>
-                !l.TrimStart().StartsWith("//") &&
-                l.Contains("new HttpClient(", StringComparison.Ordinal)))
+        // GCI0039 -- Direct HttpClient instantiation in non-test .cs files.
+        // Per-file iteration mirrors the rule's IsTestFile guard so test-only
+        // new HttpClient() (e.g., RestSharp tests, google-api tests) are not labeled Positive.
         {
-            labels.Add(MakeLabel("GCI0039", "Diff instantiates HttpClient directly, bypassing IHttpClientFactory", 0.65));
+            bool hasDirectHttpClient39 = false;
+            bool inNonTestCs39 = false;
+            foreach (var rawLine in rawDiff.Split('\n'))
+            {
+                var t39 = rawLine.TrimEnd('\r');
+                if (t39.StartsWith("+++ b/"))
+                {
+                    var path39 = t39[6..].Trim();
+                    bool isCsFile39 = path39.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
+                    bool isTest39 = path39.Contains("test", StringComparison.OrdinalIgnoreCase)
+                        || path39.Contains("spec", StringComparison.OrdinalIgnoreCase);
+                    inNonTestCs39 = isCsFile39 && !isTest39;
+                    continue;
+                }
+                if (!inNonTestCs39) continue;
+                if (!t39.StartsWith('+') || t39.StartsWith("+++")) continue;
+                var c39 = t39[1..];
+                if (c39.TrimStart().StartsWith("//")) continue;
+                if (c39.Contains("new HttpClient(", StringComparison.Ordinal))
+                { hasDirectHttpClient39 = true; break; }
+            }
+            if (hasDirectHttpClient39)
+                labels.Add(MakeLabel("GCI0039", "Diff instantiates HttpClient directly in a non-test C# file, bypassing IHttpClientFactory", 0.65));
         }
 
         // GCI0041 -- Silenced tests in test files.
@@ -757,12 +778,12 @@ public sealed class SilverLabelEngine
             var nullableCodes43 = new[] { "nullable", "CS8600", "CS8601", "CS8602", "CS8603", "CS8604" };
             var nullCheckPatterns43 = new[] { "is null", "== null", "!= null", "?? ", "is not null" };
 
-            // Check 1: Pragma disable for nullable — mirrors CheckPragmaDisable (per-line, no threshold)
+            // Check 1: Pragma disable for nullable: mirrors CheckPragmaDisable (per-line, no threshold)
             bool hasPragma43 = prodCsLines.Any(l =>
                 l.Contains("#pragma warning disable", StringComparison.OrdinalIgnoreCase) &&
                 nullableCodes43.Any(c => l.Contains(c, StringComparison.OrdinalIgnoreCase)));
 
-            // Check 2: Null-forgiving — mirrors CheckNullForgiving's >1 threshold (matchingLines.Count <= 1 returns early)
+            // Check 2: Null-forgiving: mirrors CheckNullForgiving's >1 threshold (matchingLines.Count <= 1 returns early)
             int nullForgivingCount = prodCsLines.Count(l =>
                 !l.TrimStart().StartsWith("//") &&
                 !l.Contains("GetValueForOption(", StringComparison.Ordinal) &&
@@ -771,7 +792,7 @@ public sealed class SilverLabelEngine
                  l.Contains("!,", StringComparison.Ordinal)));
             bool hasNullForgiving43 = nullForgivingCount > 1;
 
-            // Check 3: Unchecked as-cast — mirrors CheckUncheckedAsCast with same skip guards
+            // Check 3: Unchecked as-cast: mirrors CheckUncheckedAsCast with same skip guards
             bool hasUncheckedAsCast43 = false;
             var asCastLines = prodCsLines.ToList();
             for (int i = 0; i < asCastLines.Count && !hasUncheckedAsCast43; i++)
@@ -782,12 +803,12 @@ public sealed class SilverLabelEngine
                 if (t.StartsWith("//") || t.StartsWith("///") || t.StartsWith("*")) continue;
                 var ap = l.IndexOf(" as ", StringComparison.Ordinal);
                 var afterAs43 = l[(ap + 4)..].TrimStart();
-                // as object — always safe
+                // as object: always safe
                 if (afterAs43.StartsWith("object", StringComparison.Ordinal) &&
                     (afterAs43.Length == 6 || (!char.IsLetterOrDigit(afterAs43[6]) && afterAs43[6] != '_'))) continue;
-                // (x as T)?. — null-conditional, safe
+                // (x as T)?.: null-conditional, safe
                 if (l[(ap + 4)..].Contains(")?.", StringComparison.Ordinal)) continue;
-                // .Value boundary — owned by GCI0006
+                // .Value boundary: owned by GCI0006
                 if (l.Contains(".Value", StringComparison.Ordinal)) continue;
                 // ±2 null-check window
                 int s43 = Math.Max(0, i - 2), e43 = Math.Min(asCastLines.Count - 1, i + 2);
@@ -806,7 +827,7 @@ public sealed class SilverLabelEngine
         // Mirror the rule's three checks.  LINQ and .Add checks need loop context from unchanged
         // diff lines; parse non-removed lines from rawDiff (same approach as the rule's lookback).
         {
-            // Check 1: Thread.Sleep — no loop context required
+            // Check 1: Thread.Sleep: no loop context required
             if (prodCsLines.Any(l => l.Contains("Thread.Sleep(", StringComparison.Ordinal)))
             {
                 labels.Add(MakeLabel("GCI0044", "Diff adds Thread.Sleep in production code", 0.65));
@@ -845,7 +866,7 @@ public sealed class SilverLabelEngine
                     var lc = nonRemoved44[i].Content;
 
                     bool hasLinq = linqMethods44.Any(m => lc.Contains(m, StringComparison.Ordinal));
-                    // Unsafe.Add(ref ...) is pointer arithmetic — neutralise before checking .Add(
+                    // Unsafe.Add(ref ...) is pointer arithmetic: neutralise before checking .Add(
                     bool hasCollectionAdd = lc.Replace("Unsafe.Add(", "UNSAFE_PTR(")
                                              .Contains(".Add(", StringComparison.Ordinal);
 
@@ -977,14 +998,14 @@ public sealed class SilverLabelEngine
             int idx = line.IndexOf(".Value", pos, StringComparison.Ordinal);
             if (idx < 0) return false;
             int after = idx + 6;
-            // .Values, .ValueOrDefault etc. — not a bare .Value access
+            // .Values, .ValueOrDefault etc.: not a bare .Value access
             if (after < line.Length && (char.IsLetterOrDigit(line[after]) || line[after] == '_'))
             { pos = after; continue; }
-            // .Value! — null-forgiving
+            // .Value!: null-forgiving
             if (after < line.Length && line[after] == '!') { pos = after; continue; }
-            // .Value? — null-conditional
+            // .Value?: null-conditional
             if (after < line.Length && line[after] == '?') { pos = after; continue; }
-            // ?.Value — null-conditional
+            // ?.Value: null-conditional
             if (idx > 0 && line[idx - 1] == '?') { pos = after; continue; }
             return true;
         }
@@ -1056,7 +1077,7 @@ public sealed class SilverLabelEngine
         @"(?:=|return|\(|,)\s*(?:@|\$)?""(?:SELECT |INSERT |UPDATE |DELETE )",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-    // Credential keyword assigned to a quoted string literal — the real risky pattern
+    // Credential keyword assigned to a quoted string literal: the real risky pattern
     private static readonly Regex CredentialAssignToLiteral = new(
         @"(password|secret|api_key|apikey|private_key|privatekey|client_secret|access_token|auth_token)\s*[=:]\s*""[^""]",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -1227,7 +1248,7 @@ public sealed class SilverLabelEngine
 
     /// <summary>
     /// Returns true when the assignment LHS is preceded within 20 lines by a null check
-    /// on the same name — mirrors the rule's <c>IsNullGuardedAssignment</c> logic.
+    /// on the same name: mirrors the rule's <c>IsNullGuardedAssignment</c> logic.
     /// </summary>
     private static bool IsNullGuardedInLabelerScope(string[] diffLines, int idx, string lhsName)
     {
@@ -1406,7 +1427,7 @@ public sealed class SilverLabelEngine
                 continue;
             }
 
-            // File was deleted entirely — the rule never processes deleted files, so skip.
+            // File was deleted entirely: the rule never processes deleted files, so skip.
             if (line.StartsWith("+++ /dev/null", StringComparison.Ordinal))
             {
                 inProductionCs = false;

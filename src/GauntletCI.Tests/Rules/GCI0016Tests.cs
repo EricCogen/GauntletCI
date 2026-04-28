@@ -76,7 +76,7 @@ public class GCI0016Tests
     [Fact]
     public async Task DotResultChainedOnMethodCall_ShouldFlag()
     {
-        // .Result directly on a method call result — clear blocking pattern.
+        // .Result directly on a method call result: clear blocking pattern.
         var diff = MakeDiff("    var result = GetDataAsync().Result;");
         var findings = await Rule.EvaluateAsync(diff, null);
         Assert.Contains(findings, f => f.Summary.Contains(".Result"));
@@ -85,7 +85,7 @@ public class GCI0016Tests
     [Fact]
     public async Task DotResultWithTaskContext_ShouldFlag()
     {
-        // Task<T> variable with .Result — explicit Task type context.
+        // Task<T> variable with .Result: explicit Task type context.
         var diff = MakeDiff("    var x = Task.Run(() => Compute()).Result;");
         var findings = await Rule.EvaluateAsync(diff, null);
         Assert.Contains(findings, f => f.Summary.Contains(".Result"));
@@ -94,7 +94,7 @@ public class GCI0016Tests
     [Fact]
     public async Task DotResultOnDomainProperty_ShouldNotFlag()
     {
-        // 'Result' is a domain property (OperationResult, HttpResult, etc.) — not a Task.
+        // 'Result' is a domain property (OperationResult, HttpResult, etc.): not a Task.
         var diff = MakeDiff("    var code = response.Result.StatusCode;");
         var findings = await Rule.EvaluateAsync(diff, null);
         Assert.DoesNotContain(findings, f => f.Summary.Contains(".Result"));

@@ -110,7 +110,7 @@ public class IssueEnricherTests
     [Fact]
     public void ParseBodyRefs_NoMatchingKeywords_ReturnsEmpty()
     {
-        // Arrange / Act — "See" is not a closing keyword
+        // Arrange / Act: "See" is not a closing keyword
         var result = IssueEnricher.ParseBodyRefs(DefaultOwner, DefaultRepo, "See #123 for context");
 
         // Assert

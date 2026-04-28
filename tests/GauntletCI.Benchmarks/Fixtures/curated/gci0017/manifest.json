@@ -16,7 +16,7 @@
         "GCI0004",
         "GCI0016"
       ],
-      "notes": "Removes IDisposable implementation (resource leak on every page render), introduces Task.Run().Result blocking in UI property getter, and drops the null-check guard — memory leak plus deadlock risk with no tests.",
+      "notes": "Removes IDisposable implementation (resource leak on every page render), introduces Task.Run().Result blocking in UI property getter, and drops the null-check guard: memory leak plus deadlock risk with no tests.",
       "origin": "real",
       "source_url": "https://github.com/CoraCodeDev/PdfSplitter/pull/3"
     }

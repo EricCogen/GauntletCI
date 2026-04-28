@@ -102,7 +102,7 @@ foreach (var (dir, entry) in allEntries)
         }
         else
         {
-            // no specific rule expected — count as aggregate TP/FN
+            // no specific rule expected: count as aggregate TP/FN
             if (result.HasFindings) aggTp++;
             else aggFn++;
         }

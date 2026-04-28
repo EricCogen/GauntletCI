@@ -33,7 +33,7 @@ public class GCI0021Tests
     [Fact]
     public async Task RemovedEnumMember_WithSerializationAttr_ShouldFlag()
     {
-        // Enum member removed WITH a preceding [JsonProperty] attribute — should flag.
+        // Enum member removed WITH a preceding [JsonProperty] attribute: should flag.
         var raw = """
             diff --git a/src/Status.cs b/src/Status.cs
             index abc..def 100644
@@ -59,7 +59,7 @@ public class GCI0021Tests
     [Fact]
     public async Task RemovedEnumMember_WithoutSerializationAttr_ShouldNotFlag()
     {
-        // Enum member removed WITHOUT a serialization attribute — not a schema compat concern.
+        // Enum member removed WITHOUT a serialization attribute: not a schema compat concern.
         var raw = """
             diff --git a/src/Status.cs b/src/Status.cs
             index abc..def 100644
@@ -82,7 +82,7 @@ public class GCI0021Tests
     [Fact]
     public async Task RemovedSerializationAttr_AddedToNonCsFile_ShouldNotFlag()
     {
-        // Non-.cs file — rule should ignore it
+        // Non-.cs file: rule should ignore it
         var raw = """
             diff --git a/config.json b/config.json
             index abc..def 100644

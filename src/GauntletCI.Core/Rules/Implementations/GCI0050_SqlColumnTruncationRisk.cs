@@ -7,7 +7,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0050 – SQL Column Truncation Risk
+/// GCI0050, SQL Column Truncation Risk
 /// Detects short string column definitions (<c>nvarchar(N)</c>, <c>varchar(N)</c>,
 /// <c>[StringLength(N)]</c>, <c>[MaxLength(N)]</c>, or <c>HasMaxLength(N)</c>)
 /// where N &lt; 100, in EF migration and model files (<c>.cs</c>).
@@ -65,7 +65,7 @@ public class GCI0050_SqlColumnTruncationRisk : RuleBase
                         summary: $"Short string column ({pattern}) may silently truncate user input",
                         evidence: $"Line {line.LineNumber}: {(trimmed.Length > 120 ? trimmed[..120] + "…" : trimmed)}",
                         whyItMatters: $"A column width of {length} characters will silently drop any input longer than {length} chars " +
-                                      "at the database layer. If users can provide this value, data loss occurs without an exception — " +
+                                      "at the database layer. If users can provide this value, data loss occurs without an exception: " +
                                       "the application continues without any error signal.",
                         suggestedAction: $"Increase the column width (e.g. nvarchar(256) or nvarchar(max)) or add server-side validation " +
                                          $"that rejects strings longer than {length} characters before they reach the database.",

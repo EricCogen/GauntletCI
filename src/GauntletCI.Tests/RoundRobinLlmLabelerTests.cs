@@ -89,7 +89,7 @@ public sealed class RoundRobinLlmLabelerTests
     }
 
     // ────────────────────────────────────────────────────────────────────────
-    // ConsecutiveFailures reset on disable — endpoint gets full window on re-entry
+    // ConsecutiveFailures reset on disable: endpoint gets full window on re-entry
     // ────────────────────────────────────────────────────────────────────────
 
     [Fact]
@@ -120,7 +120,7 @@ public sealed class RoundRobinLlmLabelerTests
         // threshold window before being disabled again.
         await Task.Delay(100);
 
-        // Make 2 calls — the round-robin counter alternates between index 0 (bad)
+        // Make 2 calls: the round-robin counter alternates between index 0 (bad)
         // and index 1 (good), so at least one of the two will route through bad.
         await rr.ClassifyAsync("GCI0001", "", "", null, [], "", default);
         await rr.ClassifyAsync("GCI0001", "", "", null, [], "", default);
@@ -150,7 +150,7 @@ public sealed class RoundRobinLlmLabelerTests
         var first = await rr.ClassifyAsync("GCI0001", "", "", null, [], "", default);
         Assert.Null(first);
 
-        // Second call — all disabled; should return null immediately.
+        // Second call: all disabled; should return null immediately.
         var second = await rr.ClassifyAsync("GCI0001", "", "", null, [], "", default);
         Assert.Null(second);
     }
@@ -217,7 +217,7 @@ public sealed class RoundRobinLlmLabelerTests
     }
 
     // ────────────────────────────────────────────────────────────────────────
-    // IDisposable — disposes underlying labelers that implement IDisposable
+    // IDisposable: disposes underlying labelers that implement IDisposable
     // ────────────────────────────────────────────────────────────────────────
 
     [Fact]

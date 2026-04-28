@@ -94,7 +94,7 @@ public class GCI0006Tests
     [Fact]
     public async Task ValueInCommentLine_ShouldNotFlag()
     {
-        // .Value inside a code comment — not executable
+        // .Value inside a code comment: not executable
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -114,7 +114,7 @@ public class GCI0006Tests
     [Fact]
     public async Task PrivateMethodWithStringParam_ShouldNotFlag()
     {
-        // Private methods — callers are controlled, no need for null guards
+        // Private methods: callers are controlled, no need for null guards
         var raw = """
             diff --git a/src/Processor.cs b/src/Processor.cs
             index abc..def 100644
@@ -135,7 +135,7 @@ public class GCI0006Tests
     [Fact]
     public async Task PublicMethodStringReturnType_NoStringParam_ShouldNotFlag()
     {
-        // "string" in return type only — no string parameter
+        // "string" in return type only: no string parameter
         var raw = """
             diff --git a/src/Processor.cs b/src/Processor.cs
             index abc..def 100644
@@ -199,7 +199,7 @@ public class GCI0006Tests
     [Fact]
     public async Task UnrelatedSuccessGuard_ShouldStillFlag()
     {
-        // op.Success does not prove that nullable is non-null — should still flag
+        // op.Success does not prove that nullable is non-null: should still flag
         var raw = """
             diff --git a/src/Parser.cs b/src/Parser.cs
             index abc..def 100644
@@ -221,7 +221,7 @@ public class GCI0006Tests
     [Fact]
     public async Task NullableInsideGenericParam_ShouldNotFlag()
     {
-        // Dictionary<string?, int> is non-nullable at the top level — no guard needed
+        // Dictionary<string?, int> is non-nullable at the top level: no guard needed
         var raw = """
             diff --git a/src/Processor.cs b/src/Processor.cs
             index abc..def 100644

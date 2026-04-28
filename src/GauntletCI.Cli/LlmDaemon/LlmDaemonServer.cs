@@ -55,7 +55,7 @@ internal static class LlmDaemonServer
                 }
                 catch (OperationCanceledException) when (!ct.IsCancellationRequested)
                 {
-                    continue; // poll window elapsed — loop back to check idle timeout
+                    continue; // poll window elapsed: loop back to check idle timeout
                 }
 
                 lastActivity = DateTime.UtcNow;

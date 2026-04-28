@@ -36,7 +36,7 @@ These options are available on the root command:
 
 | Code | Meaning |
 |------|---------|
-| `0` | Success — no findings detected (for `analyze` / `postmortem`) or command completed normally |
+| `0` | Success: no findings detected (for `analyze` / `postmortem`) or command completed normally |
 | `1` | Findings detected (for `analyze` / `postmortem`), or invalid input for other commands |
 | `2` | Unhandled error / exception |
 
@@ -56,8 +56,8 @@ Exactly one diff source should be specified. If none is provided, diff content i
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--diff <path>` | `file` | — | Path to a `.diff` file |
-| `--commit <sha>` | `string` | — | Commit SHA to analyse |
+| `--diff <path>` | `file` |: | Path to a `.diff` file |
+| `--commit <sha>` | `string` |: | Commit SHA to analyse |
 | `--staged` | `bool` | `false` | Analyse staged changes (`git diff --cached`) |
 | `--unstaged` | `bool` | `false` | Analyse unstaged changes (`git diff`) |
 | `--all-changes` | `bool` | `false` | Analyse all local changes: staged + unstaged (`git diff HEAD`) |
@@ -122,7 +122,7 @@ After running `gauntletci init`, a git `pre-commit` hook is installed automatica
 
 ## corpus
 
-Manage the GauntletCI fixture corpus — a local database of pull requests used to evaluate and score rule quality.
+Manage the GauntletCI fixture corpus: a local database of pull requests used to evaluate and score rule quality.
 
 ```
 gauntletci corpus <subcommand> [options]
@@ -165,9 +165,9 @@ gauntletci corpus normalize --fixture <id> [options]
 |------|------|---------|-------------|
 | `--fixture <id>` | `string` | **required** | Fixture ID (e.g. `owner_repo_pr1234`) |
 | `--tier <tier>` | `string` | `discovery` | Fixture tier: `gold`, `silver`, or `discovery` |
-| `--owner <owner>` | `string` | — | Repo owner override |
-| `--repo <repo>` | `string` | — | Repo name override |
-| `--pr <number>` | `int` | — | PR number override |
+| `--owner <owner>` | `string` |: | Repo owner override |
+| `--repo <repo>` | `string` |: | Repo name override |
+| `--pr <number>` | `int` |: | PR number override |
 | `--db <path>` | `string` | `./data/gauntletci-corpus.db` | Path to corpus SQLite database |
 | `--fixtures <path>` | `string` | `./data/fixtures` | Path to fixtures root directory |
 
@@ -187,9 +187,9 @@ gauntletci corpus list [options]
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--tier <tier>` | `string` | — | Filter by tier: `gold`, `silver`, or `discovery` |
-| `--language <lang>` | `string` | — | Filter by language (e.g. `cs`, `py`) |
-| `--tag <tag>` | `string[]` | — | Filter by tag (repeatable or comma-separated) |
+| `--tier <tier>` | `string` |: | Filter by tier: `gold`, `silver`, or `discovery` |
+| `--language <lang>` | `string` |: | Filter by language (e.g. `cs`, `py`) |
+| `--tag <tag>` | `string[]` |: | Filter by tag (repeatable or comma-separated) |
 | `--output <format>` | `string` | `text` | Output format: `text` or `json` |
 | `--db <path>` | `string` | `./data/gauntletci-corpus.db` | Path to corpus SQLite database |
 | `--fixtures <path>` | `string` | `./data/fixtures` | Path to fixtures root directory |
@@ -222,10 +222,10 @@ gauntletci corpus discover --provider <provider> [options]
 |------|------|---------|-------------|
 | `--provider <provider>` | `string` | **required** | Discovery provider: `gh-search` or `gh-archive` |
 | `--limit <n>` | `int` | `100` | Maximum candidates to fetch |
-| `--language <lang>` | `string` | — | Filter by programming language (e.g. `cs`, `python`) |
+| `--language <lang>` | `string` |: | Filter by programming language (e.g. `cs`, `python`) |
 | `--min-stars <n>` | `int` | `0` | Minimum stars on the repository |
 | `--min-comments <n>` | `int` | `0` | Minimum review comment count |
-| `--start-date <date>` | `DateTime` | — | Filter by merge/event date (inclusive, UTC) |
+| `--start-date <date>` | `DateTime` |: | Filter by merge/event date (inclusive, UTC) |
 | `--db <path>` | `string` | `./data/gauntletci-corpus.db` | Path to corpus SQLite database |
 | `--fixtures <path>` | `string` | `./data/fixtures` | Path to fixtures root directory |
 
@@ -298,7 +298,7 @@ gauntletci corpus run-all [options]
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--tier <tier>` | `string` | — | Filter by tier: `gold`, `silver`, or `discovery` |
+| `--tier <tier>` | `string` |: | Filter by tier: `gold`, `silver`, or `discovery` |
 | `--db <path>` | `string` | `./data/gauntletci-corpus.db` | Path to corpus SQLite database |
 | `--fixtures <path>` | `string` | `./data/fixtures` | Path to fixtures root directory |
 
@@ -322,8 +322,8 @@ gauntletci corpus score [options]
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--rule <id>` | `string` | — | Filter by rule ID (e.g. `GCI0001`) |
-| `--tier <tier>` | `string` | — | Filter by tier: `gold`, `silver`, or `discovery` |
+| `--rule <id>` | `string` |: | Filter by rule ID (e.g. `GCI0001`) |
+| `--tier <tier>` | `string` |: | Filter by tier: `gold`, `silver`, or `discovery` |
 | `--db <path>` | `string` | `./data/gauntletci-corpus.db` | Path to corpus SQLite database |
 | `--fixtures <path>` | `string` | `./data/fixtures` | Path to fixtures root directory |
 
@@ -468,7 +468,7 @@ gauntletci feedback <vote>
 
 | Argument | Type | Description |
 |----------|------|-------------|
-| `vote` | `string` | **required** — `up` (useful) or `down` (too noisy) |
+| `vote` | `string` | **required**: `up` (useful) or `down` (too noisy) |
 
 ```bash
 # Mark the last analysis as useful
@@ -497,7 +497,7 @@ With no options, prints the current telemetry status and install ID.
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
 | `--status` | `bool` | `false` | Show current telemetry status and install ID |
-| `--mode <mode>` | `string` | — | Set telemetry mode: `shared`, `local`, or `off` |
+| `--mode <mode>` | `string` |: | Set telemetry mode: `shared`, `local`, or `off` |
 | `--enable` | `bool` | `false` | Opt in to shared telemetry (alias for `--mode shared`) |
 | `--disable` | `bool` | `false` | Disable telemetry completely (alias for `--mode off`) |
 
@@ -506,7 +506,7 @@ With no options, prints the current telemetry status and install ID.
 | Mode | Behaviour |
 |------|-----------|
 | `shared` | Events stored locally **and** uploaded anonymously for aggregate analysis |
-| `local` | Events stored locally only — no network calls |
+| `local` | Events stored locally only: no network calls |
 | `off` | Telemetry disabled entirely |
 
 ```bash
@@ -580,7 +580,7 @@ gauntletci init [options]
 
 ### What it does
 
-1. Creates `.gauntletci.json` in the target directory with all rules enabled (`GCI0001`–`GCI0027`).
+1. Creates `.gauntletci.json` in the target directory with all rules enabled (`GCI0001`-`GCI0027`).
 2. Installs `.git/hooks/pre-commit` (bash) and `.git/hooks/pre-commit.ps1` (PowerShell) hooks that run `gauntletci analyze --staged` on every commit.
 3. Prompts for telemetry consent on first run (unless `--no-telemetry` is passed).
 
@@ -614,13 +614,13 @@ gauntletci ignore <rule-id> [options]
 
 | Argument | Type | Description |
 |----------|------|-------------|
-| `rule-id` | `string` | **required** — Rule ID to suppress (e.g. `GCI0003`). Case-insensitive; normalized to uppercase. |
+| `rule-id` | `string` | **required**: Rule ID to suppress (e.g. `GCI0003`). Case-insensitive; normalized to uppercase. |
 
 ### Options
 
 | Flag | Type | Default | Description |
 |------|------|---------|-------------|
-| `--path <glob>` | `string` | — | Optional glob pattern to restrict suppression to matching paths (e.g. `src/Generated/**`) |
+| `--path <glob>` | `string` |: | Optional glob pattern to restrict suppression to matching paths (e.g. `src/Generated/**`) |
 | `--repo <path>` | `directory` | CWD | Repository root (where `.gauntletci-ignore` lives) |
 
 ### Examples

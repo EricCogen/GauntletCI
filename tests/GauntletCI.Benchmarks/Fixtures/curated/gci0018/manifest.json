@@ -2,6 +2,6 @@
   "mapped_gci_rules": [
     "GCI018"
   ],
-  "description": "Accountability Standard: Apply senior ownership bar — no known bugs shipped, no dead code, no deferred correctness.",
+  "description": "Accountability Standard: Apply senior ownership bar: no known bugs shipped, no dead code, no deferred correctness.",
   "fixtures": []
 }

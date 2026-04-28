@@ -19,7 +19,7 @@ public class AnalyzerResult
 
     /// <summary>
     /// Per-file Roslyn syntax trees built during analysis.
-    /// Not serialized — used at runtime only by <see cref="SyntaxContext"/> guards.
+    /// Not serialized: used at runtime only by <see cref="SyntaxContext"/> guards.
     /// Null when analysis was not run or all files failed to parse.
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]

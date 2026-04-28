@@ -6,7 +6,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0053 – Lockfile Changed Without Source Review
+/// GCI0053, Lockfile Changed Without Source Review
 /// Fires when a diff contains only lockfile changes with no accompanying source-file edits.
 /// This can hide malicious dependency upgrades or unexpected breaking changes.
 /// </summary>
@@ -60,7 +60,7 @@ public class GCI0053_LockfileChangedWithoutSource : RuleBase
         foreach (var lockfileRecord in lockfileChanges)
         {
             findings.Add(CreateFinding(
-                summary:         "Lockfile modified without accompanying source changes — verify dependency upgrade",
+                summary:         "Lockfile modified without accompanying source changes: verify dependency upgrade",
                 evidence:        lockfileRecord.FilePath,
                 whyItMatters:    "Lockfile-only changes introduce new dependency versions without visible source context. Malicious packages or unexpected breaking changes may go unnoticed.",
                 suggestedAction: "Review the lockfile diff carefully. Verify each changed package version is intentional and from a trusted source. Consider adding a comment in the PR description describing the upgrade reason.",

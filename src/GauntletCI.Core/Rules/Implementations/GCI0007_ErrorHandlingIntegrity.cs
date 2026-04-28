@@ -7,7 +7,7 @@ using GauntletCI.Core.StaticAnalysis;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0007 – Error Handling Integrity
+/// GCI0007, Error Handling Integrity
 /// Detects swallowed exceptions and empty catch blocks.
 /// </summary>
 public class GCI0007_ErrorHandlingIntegrity : RuleBase
@@ -44,7 +44,7 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
         {
             foreach (var hunk in file.Hunks)
             {
-                // Collect Added+Context lines only — excluding Removed lines so a previously
+                // Collect Added+Context lines only: excluding Removed lines so a previously
                 // deleted throw/log cannot mask a genuinely empty new catch body.
                 var hunkLines = new List<DiffLine>();
                 foreach (var l in hunk.Lines)
@@ -62,7 +62,7 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
                         content.Contains("OperationCanceledException", StringComparison.Ordinal))
                         continue;
 
-                    // Only flag bare catch{} or catch(Exception) — specific typed catches
+                    // Only flag bare catch{} or catch(Exception): specific typed catches
                     // (e.g. catch (ChannelClosedException) { break; }) represent explicit
                     // handling intent and must not be flagged as swallowed.
                     if (!IsBareOrBaseCatch(content)) continue;
@@ -150,7 +150,7 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
                 file,
                 summary: $"Error-level logging removed from error handling block in {file.NewPath}.",
                 evidence: $"{removedHighSev} error-level log call(s) removed, {addedHighSev} added in error-handling context.",
-                whyItMatters: "Removing error logs from catch/rescue blocks leaves exceptions silent — critical failure context is lost for incident triage.",
+                whyItMatters: "Removing error logs from catch/rescue blocks leaves exceptions silent: critical failure context is lost for incident triage.",
                 suggestedAction: "Preserve or replace the error logging so that failure context is not silently dropped.",
                 confidence: Confidence.High));
         }
@@ -164,12 +164,12 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
     /// </summary>
     private static bool IsBareOrBaseCatch(string catchLine)
     {
-        // "catch {" or "catch{" — no type at all
+        // "catch {" or "catch{": no type at all
         if (!catchLine.Contains('(')) return true;
 
         var open  = catchLine.IndexOf('(');
         var close = catchLine.IndexOf(')', open + 1);
-        if (open < 0 || close <= open) return true; // malformed — treat conservatively
+        if (open < 0 || close <= open) return true; // malformed: treat conservatively
 
         var typePart = catchLine[(open + 1)..close].Trim();
         // Strip variable name: "Exception e" → "Exception"
@@ -182,7 +182,7 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
     private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)    {
         if (staticAnalysis is null) return;
         // CA2000 (don't dispose objects) and CA1001 (types owning disposable) are owned by GCI0024
-        // (Resource Lifecycle) — see DiagnosticMapper. GCI0007 keeps only CA1031 (catch generic
+        // (Resource Lifecycle): see DiagnosticMapper. GCI0007 keeps only CA1031 (catch generic
         // exception) to avoid producing two findings on the same diagnostic.
         foreach (var diag in staticAnalysis.Diagnostics.Where(d => d.Id is "CA1031"))
         {

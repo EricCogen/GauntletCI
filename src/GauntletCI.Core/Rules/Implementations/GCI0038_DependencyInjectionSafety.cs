@@ -7,7 +7,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0038 – Dependency Injection Safety
+/// GCI0038, Dependency Injection Safety
 /// Detects DI anti-patterns: service locator usage, direct instantiation of injectable types,
 /// and captive dependencies (singleton capturing scoped/transient services).
 /// </summary>
@@ -128,7 +128,7 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
         findings.Add(CreateFinding(
             file,
             summary: "Potential captive dependency: singleton may capture scoped service",
-            evidence: $"{file.NewPath}: mixed lifetimes detected — {firstEvidence}",
+            evidence: $"{file.NewPath}: mixed lifetimes detected: {firstEvidence}",
             whyItMatters: "A singleton that depends on a scoped service will capture a stale instance, causing bugs that are hard to diagnose.",
             suggestedAction: "Ensure singleton services only depend on other singletons, or use IServiceScopeFactory to create scopes explicitly.",
             confidence: Confidence.Medium));

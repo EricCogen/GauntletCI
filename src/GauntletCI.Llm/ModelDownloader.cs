@@ -50,7 +50,7 @@ public class ModelDownloader
 
         Directory.CreateDirectory(_modelDir);
         progress?.Report($"Downloading Phi-4 Mini (INT4 ONNX) to {_modelDir} ...");
-        progress?.Report("Note: model.onnx.data is ~2 GB — this may take several minutes.");
+        progress?.Report("Note: model.onnx.data is ~2 GB: this may take several minutes.");
 
         using var http = new HttpClient { Timeout = TimeSpan.FromMinutes(30) };
         http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");

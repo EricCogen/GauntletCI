@@ -73,7 +73,7 @@ public sealed class CorpusAutoLabelTests
     [Fact]
     public async Task ApplyToFixture_FilePathCorrelation_EmitsPositiveLabelForMatchingRule()
     {
-        // Arrange — reviewer commented on Foo/Bar.cs, GCI0006 fired on the same file
+        // Arrange: reviewer commented on Foo/Bar.cs, GCI0006 fired on the same file
         var actualFindings = new List<ActualFinding>
         {
             new() { RuleId = "GCI0006", DidTrigger = true, FilePath = "Foo/Bar.cs", Message = "Null dereference risk" },
@@ -84,17 +84,17 @@ public sealed class CorpusAutoLabelTests
         var store  = new FakeFixtureStore(actualFindings, reviewJson);
         var engine = new SilverLabelEngine(store, new NullLlmLabeler());
 
-        // Act — benign diff that doesn't trigger any Tier 1 heuristic for GCI0006
+        // Act: benign diff that doesn't trigger any Tier 1 heuristic for GCI0006
         await engine.ApplyToFixtureAsync("test-fixture", "--- a/Foo/Bar.cs\n+++ b/Foo/Bar.cs\n@@ -1 +1 @@\n+public class Foo {}");
 
-        // Assert — at least one positive label for GCI0006 via file-path correlation
+        // Assert: at least one positive label for GCI0006 via file-path correlation
         Assert.Contains(store.SavedFindings, f => f.RuleId == "GCI0006" && f.ShouldTrigger);
     }
 
     [Fact]
     public async Task ApplyToFixture_FilePathCorrelation_NormalizesPathCasing()
     {
-        // Arrange — reviewer path uses different casing from finding's FilePath
+        // Arrange: reviewer path uses different casing from finding's FilePath
         var actualFindings = new List<ActualFinding>
         {
             new() { RuleId = "GCI0006", DidTrigger = true, FilePath = "Src/My.cs", Message = "Null risk" },
@@ -112,7 +112,7 @@ public sealed class CorpusAutoLabelTests
     [Fact]
     public async Task ApplyToFixture_FilePathCorrelation_NoMatchWhenPathsDiffer()
     {
-        // Arrange — reviewer commented on a different file than where GCI0006 fired
+        // Arrange: reviewer commented on a different file than where GCI0006 fired
         var actualFindings = new List<ActualFinding>
         {
             new() { RuleId = "GCI0006", DidTrigger = true, FilePath = "Src/Other.cs", Message = "Null risk" },
@@ -133,7 +133,7 @@ public sealed class CorpusAutoLabelTests
     [Fact]
     public async Task ApplyToFixture_FilePathCorrelation_DoesNotDuplicateExistingPositiveLabel()
     {
-        // Arrange — Tier 1 already produced a positive GCI0006 label via diff heuristic
+        // Arrange: Tier 1 already produced a positive GCI0006 label via diff heuristic
         var actualFindings = new List<ActualFinding>
         {
             new() { RuleId = "GCI0006", DidTrigger = true, FilePath = "Foo/Bar.cs", Message = "Null risk" },
@@ -214,7 +214,7 @@ public sealed class CorpusAutoLabelTests
     [Fact]
     public async Task ApplyToFixture_LlmReviewDoesNotOverwriteHumanReviewLabel()
     {
-        // Arrange — existing GCI0006 has a HumanReview label (manually decided: false positive)
+        // Arrange: existing GCI0006 has a HumanReview label (manually decided: false positive)
         var existingLabels = new List<ExpectedFinding>
         {
             new()
@@ -233,14 +233,14 @@ public sealed class CorpusAutoLabelTests
             new() { RuleId = "GCI0006", DidTrigger = true, FilePath = "Foo/Bar.cs", Message = "Null risk" },
         };
 
-        // LLM says it's a TP — should be ignored because HumanReview is gold
+        // LLM says it's a TP: should be ignored because HumanReview is gold
         var llmLabeler = new FakeLlmLabeler(new LlmLabelResult(true, 0.9, "Looks risky"));
         var store      = new FakeFixtureStore(actualFindings, null, existingLabels);
         var engine     = new SilverLabelEngine(store, llmLabeler);
 
         await engine.ApplyToFixtureAsync("test-fixture", "");
 
-        // Assert — HumanReview label must be preserved
+        // Assert: HumanReview label must be preserved
         var gci6Label = Assert.Single(store.SavedFindings, f => f.RuleId == "GCI0006");
         Assert.Equal(LabelSource.HumanReview, gci6Label.LabelSource);
         Assert.False(gci6Label.ShouldTrigger);
@@ -249,7 +249,7 @@ public sealed class CorpusAutoLabelTests
     [Fact]
     public async Task ApplyToFixture_LlmReviewLabelAppliedForUncertainFinding()
     {
-        // Arrange — GCI0006 fires but no Tier 1/2 heuristic matches; LLM should label it
+        // Arrange: GCI0006 fires but no Tier 1/2 heuristic matches; LLM should label it
         var actualFindings = new List<ActualFinding>
         {
             new() { RuleId = "GCI0006", DidTrigger = true, FilePath = "Src/Foo.cs", Message = "Null risk" },
@@ -259,7 +259,7 @@ public sealed class CorpusAutoLabelTests
         var store      = new FakeFixtureStore(actualFindings);
         var engine     = new SilverLabelEngine(store, llmLabeler);
 
-        // Benign diff — no Tier 1 signal for GCI0006
+        // Benign diff: no Tier 1 signal for GCI0006
         await engine.ApplyToFixtureAsync("test-fixture", "--- a/x.cs\n+++ b/x.cs\n@@ -1 +1 @@\n+public class X {}");
 
         var gci6Label = store.SavedFindings.FirstOrDefault(f => f.RuleId == "GCI0006");
@@ -272,7 +272,7 @@ public sealed class CorpusAutoLabelTests
     [Fact]
     public async Task ApplyToFixture_InconclusiveLlmResult_EmitsNegativeLabel()
     {
-        // Arrange — LLM returns a result with confidence < 0.4 (inconclusive)
+        // Arrange: LLM returns a result with confidence < 0.4 (inconclusive)
         var actualFindings = new List<ActualFinding>
         {
             new() { RuleId = "GCI0006", DidTrigger = true, FilePath = "Src/Foo.cs", Message = "Null risk" },

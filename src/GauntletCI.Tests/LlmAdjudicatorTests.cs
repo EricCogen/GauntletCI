@@ -104,7 +104,7 @@ public sealed class LlmAdjudicatorTests : IDisposable
         _store.Upsert("fact1", "HttpClient should be reused.", "source1", vec1);
         _store.Upsert("fact2", "SemaphoreSlim over lock in async.", "source2", vec2);
 
-        // Engine returns vec1 for all queries — both findings get fact1
+        // Engine returns vec1 for all queries: both findings get fact1
         var adjudicator = new LlmAdjudicator(FakeEngine(vec1), _store, minScore: 0.0f);
 
         var f1 = MakeFinding("GCI0001");
@@ -139,7 +139,7 @@ public sealed class LlmAdjudicatorTests : IDisposable
         // when the store contains content overlapping with any of those fields.
         var finding = MakeFinding();
         // If query = "Blocking Async Calls: ValueTask awaited more than once. Causes deadlock..."
-        // the embedding (faked as constant) still hits the store — we just verify ExpertContext is set.
+        // the embedding (faked as constant) still hits the store: we just verify ExpertContext is set.
         Assert.NotEmpty(finding.RuleName);
         Assert.NotEmpty(finding.Summary);
         Assert.NotEmpty(finding.WhyItMatters);
@@ -189,7 +189,7 @@ public sealed class LlmAdjudicatorTests : IDisposable
         var f1 = MakeFinding("GCI0001");
         var f2 = MakeFinding("GCI0002");
 
-        // Should not throw — errors are caught per-finding
+        // Should not throw: errors are caught per-finding
         await adjudicator.AdjudicateAsync([f1, f2]);
 
         // Both findings should still have null context because engine throws

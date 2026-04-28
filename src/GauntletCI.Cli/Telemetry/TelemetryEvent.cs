@@ -25,7 +25,7 @@ public record TelemetryEvent
     // finding event fields
     public string? RuleId     { get; init; }
     public string? Confidence { get; init; }
-    /// <summary>File extension only — never the full path.</summary>
+    /// <summary>File extension only: never the full path.</summary>
     public string? FileExt    { get; init; }
 
     // rule_metric event fields

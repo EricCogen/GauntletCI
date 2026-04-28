@@ -7,7 +7,7 @@ namespace GauntletCI.Core.StaticAnalysis;
 
 /// <summary>
 /// Analyses a single C# file using Roslyn and returns diagnostics on changed lines.
-/// Not a full project compilation — intentionally lightweight for speed.
+/// Not a full project compilation: intentionally lightweight for speed.
 /// </summary>
 public class RoslynAnalyzer
 {

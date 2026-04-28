@@ -57,7 +57,7 @@ public class SyntaxGuardTests
     public void IsInCommentOrString_WhenLineIsCode_ReturnsFalse()
     {
         var tree = Parse("var r = new Random();");
-        // Column 8 is at 'new Random(' — live code
+        // Column 8 is at 'new Random(': live code
         Assert.False(SyntaxGuard.IsInCommentOrStringLiteral(tree, 1, 8));
     }
 
@@ -80,9 +80,9 @@ public class SyntaxGuardTests
     [Fact]
     public void IsInCommentOrString_WhenCodeHasAdjacentStringOnSameLine_ReturnsFalse()
     {
-        // The float literal `0.0` is live code — the adjacent string "bad" must not cause suppression
+        // The float literal `0.0` is live code: the adjacent string "bad" must not cause suppression
         var tree = Parse("if (result == 0.0) throw new Exception(\"bad\");");
-        // Column 12 is at '== 0.0' — live code
+        // Column 12 is at '== 0.0': live code
         Assert.False(SyntaxGuard.IsInCommentOrStringLiteral(tree, 1, 12));
     }
 
@@ -108,7 +108,7 @@ public class SyntaxGuardTests
     public void SyntaxContext_IsConfirmedObjectCreation_PassesThroughWhenNoTree()
     {
         var ctx = new SyntaxContext(new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>());
-        // No tree for this file — should pass through (return true, don't suppress)
+        // No tree for this file: should pass through (return true, don't suppress)
         Assert.True(ctx.IsConfirmedObjectCreation("src/Foo.cs", 1, "Random"));
     }
 
@@ -116,7 +116,7 @@ public class SyntaxGuardTests
     public void SyntaxContext_IsInCommentOrString_DoesNotSuppressWhenNoTree()
     {
         var ctx = new SyntaxContext(new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>());
-        // No tree — should NOT suppress (return false)
+        // No tree: should NOT suppress (return false)
         Assert.False(ctx.IsInCommentOrStringLiteral("src/Foo.cs", 1, 0));
     }
 

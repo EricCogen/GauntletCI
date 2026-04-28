@@ -14,7 +14,7 @@ Description: |-
   GauntletCI analyzes git diffs for behavioral changes that may not be properly validated.
   It runs a suite of deterministic rules over pull request or pre-commit diffs and flags
   risks such as concurrency issues, missing error handling, schema changes, secrets exposure,
-  and more — all without sending code to an external service.
+  and more: all without sending code to an external service.
 Moniker: gauntletci
 Tags:
   - git

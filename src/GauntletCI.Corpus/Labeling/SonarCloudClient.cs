@@ -34,7 +34,7 @@ public sealed class SonarCloudClient : IDisposable
         if (await ProjectExistsAsync(conventional, ct))
             return conventional;
 
-        // Org search fallback — some projects use non-conventional keys
+        // Org search fallback: some projects use non-conventional keys
         var url = $"{BaseUrl}/components/search"
                 + $"?organization={Uri.EscapeDataString(owner.ToLowerInvariant())}"
                 + $"&q={Uri.EscapeDataString(repo)}"

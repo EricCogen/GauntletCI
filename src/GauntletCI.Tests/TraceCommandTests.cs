@@ -89,7 +89,7 @@ public class TraceCommandTests
     public void CorrelateIncidents_FileMatchesTitle_ReturnsCorrelated()
     {
         var finding  = MakeFinding(filePath: "src/Auth.cs");
-        var incident = MakeIncident("INC001", "Outage in Auth.cs module — users cannot log in");
+        var incident = MakeIncident("INC001", "Outage in Auth.cs module: users cannot log in");
 
         var result = IncidentClient.CorrelateIncidents([finding], [incident]);
 

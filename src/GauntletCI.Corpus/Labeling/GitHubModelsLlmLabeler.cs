@@ -7,7 +7,7 @@ namespace GauntletCI.Corpus.Labeling;
 
 /// <summary>
 /// Calls the GitHub Models API (OpenAI-compatible) to classify a rule finding as true/false positive.
-/// Uses GITHUB_TOKEN for authentication — no separate API key required.
+/// Uses GITHUB_TOKEN for authentication: no separate API key required.
 /// Returns null on any HTTP or parse error.
 /// </summary>
 public sealed class GitHubModelsLlmLabeler : ILlmLabeler, IDisposable

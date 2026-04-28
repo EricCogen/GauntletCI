@@ -111,7 +111,7 @@ public sealed class EvaluationClassifierTests
     [Fact]
     public void Classify_InconclusiveLabelIgnored_FiresAsUnknown()
     {
-        // Arrange — label is inconclusive, so it is excluded from consideration
+        // Arrange: label is inconclusive, so it is excluded from consideration
         var fixture  = Fixture();
         var expected = new[] { Label("GCI0001", shouldTrigger: true, inconclusive: true) };
         var actual   = new[] { Actual("GCI0001", didTrigger: true) };
@@ -119,7 +119,7 @@ public sealed class EvaluationClassifierTests
         // Act
         var results = _classifier.Classify(fixture, expected, actual);
 
-        // Assert — rule fired but no valid label exists → Unknown
+        // Assert: rule fired but no valid label exists → Unknown
         var eval = Assert.Single(results);
         Assert.Equal(EvaluationStatus.Unknown, eval.Status);
         Assert.Equal(LabelConfidence.Unknown, eval.LabelConfidence);
@@ -158,7 +158,7 @@ public sealed class EvaluationClassifierTests
     [Fact]
     public void Classify_MultipleRules_ClassifiesAllCorrectly()
     {
-        // Arrange — GCI0001 fired + should → TP; GCI0002 fired + shouldn't → FP; GCI0003 not fired + should → FN
+        // Arrange: GCI0001 fired + should → TP; GCI0002 fired + shouldn't → FP; GCI0003 not fired + should → FN
         var fixture  = Fixture();
         var expected = new[]
         {
@@ -199,14 +199,14 @@ public sealed class EvaluationClassifierTests
     [Fact]
     public void Classify_NothingFired_NothingExpected_ReturnsEmpty()
     {
-        // Arrange — rule exists in actual but didn't fire, and there are no labels
+        // Arrange: rule exists in actual but didn't fire, and there are no labels
         var fixture = Fixture();
         var actual  = new[] { Actual("GCI0001", didTrigger: false) };
 
         // Act
         var results = _classifier.Classify(fixture, [], actual);
 
-        // Assert — unfired rules with no label are silently omitted
+        // Assert: unfired rules with no label are silently omitted
         Assert.Empty(results);
     }
 }

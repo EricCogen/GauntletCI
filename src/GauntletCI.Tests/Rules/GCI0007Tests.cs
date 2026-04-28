@@ -146,7 +146,7 @@ public class GCI0007Tests
     public async Task CatchWithRemovedThrowAndEmptyBody_ShouldFlag()
     {
         // A throw was removed from the catch body; the body is now empty.
-        // The removed throw must NOT suppress detection — Removed lines are excluded.
+        // The removed throw must NOT suppress detection: Removed lines are excluded.
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -171,7 +171,7 @@ public class GCI0007Tests
     [Fact]
     public async Task SpecificTypedCatchWithBreakOneLiner_ShouldNotFlag()
     {
-        // catch (ChannelClosedException) { break; } on one line — explicit typed handling
+        // catch (ChannelClosedException) { break; } on one line: explicit typed handling
         var raw = """
             diff --git a/src/Queue.cs b/src/Queue.cs
             index abc..def 100644
@@ -191,7 +191,7 @@ public class GCI0007Tests
     [Fact]
     public async Task SpecificTypedCatchMultiLine_ShouldNotFlag()
     {
-        // Multi-line typed catch with explicit handling — should not flag
+        // Multi-line typed catch with explicit handling: should not flag
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644

@@ -12,7 +12,7 @@ namespace GauntletCI.Cli.Analysis;
 /// </summary>
 internal static class EngineeringPolicyEvaluator
 {
-    // LLM input cap default — overridden by EngineeringPolicyConfig.MaxDiffChars.
+    // LLM input cap default: overridden by EngineeringPolicyConfig.MaxDiffChars.
     // At ~4 chars/token this is ~3000 tokens, well within a 16K context window.
 
     private static readonly HashSet<string> CanonicalRuleIds =
@@ -136,7 +136,7 @@ internal static class EngineeringPolicyEvaluator
 
     private static string BuildSystemPrompt(string policy) => $"""
         You are a code reviewer evaluating git diffs against an engineering policy.
-        Enforce only the invariants listed in the policy below. Return ONLY valid JSON — no explanation, no markdown fences.
+        Enforce only the invariants listed in the policy below. Return ONLY valid JSON: no explanation, no markdown fences.
 
         ## Rules
         - Only report violations you have high confidence in. Report at most 5 findings.
@@ -170,7 +170,7 @@ internal static class EngineeringPolicyEvaluator
             - "ruleId": short tag like "EP_SCOPE", "EP_CONTRACTS", "EP_OBSERVABILITY", "EP_FAILURE", "EP_TESTING", "EP_CORRECTNESS"
             - "ruleName": the exact policy area name from above
             - "summary": one hedged sentence describing the specific issue you saw in the diff
-            - "evidence": MUST name a file from the list above and what you observed (e.g. "Foo.cs — exception swallowed in catch block")
+            - "evidence": MUST name a file from the list above and what you observed (e.g. "Foo.cs: exception swallowed in catch block")
             - "whyItMatters": one sentence on the engineering risk
             - "suggestedAction": one concrete fix
             """;
@@ -251,7 +251,7 @@ internal static class EngineeringPolicyEvaluator
 
     /// <summary>
     /// Returns true if evidence references at least one known file, or if no known files exist
-    /// (e.g. stdin diff with no FILE markers — skip validation in that case).
+    /// (e.g. stdin diff with no FILE markers: skip validation in that case).
     /// </summary>
     private static bool EvidenceReferencesKnownFile(string evidence, List<string> knownFiles) =>
         knownFiles.Count == 0

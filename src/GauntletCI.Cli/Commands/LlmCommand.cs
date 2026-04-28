@@ -51,7 +51,7 @@ public static class LlmCommand
             var distillery = new Distillery(new NullLlmEngine(), embedding, store);
             var seeded     = await distillery.SeedAsync(ExpertSeedFacts.All, ct);
 
-            Console.WriteLine($"[llm] Seeded {seeded}/{ExpertSeedFacts.All.Count} facts (skipped {ExpertSeedFacts.All.Count - seeded} — embedding unavailable)");
+            Console.WriteLine($"[llm] Seeded {seeded}/{ExpertSeedFacts.All.Count} facts (skipped {ExpertSeedFacts.All.Count - seeded}: embedding unavailable)");
         });
 
         return cmd;

@@ -55,7 +55,7 @@ public sealed class EvaluationClassifier : IEvaluationClassifier
             }
             else
             {
-                // Fired but no label — must be visible, not silently dropped
+                // Fired but no label: must be visible, not silently dropped
                 results.Add(new FindingEvaluation
                 {
                     FixtureId       = fixture.FixtureId,

@@ -8,14 +8,14 @@ namespace GauntletCI.Core.Model;
 /// </summary>
 public enum RuleSeverity
 {
-    /// <summary>Rule is disabled — findings are suppressed and the rule is not executed.</summary>
+    /// <summary>Rule is disabled: findings are suppressed and the rule is not executed.</summary>
     None = 0,
-    /// <summary>Informational — shown only with <c>--verbose</c>; never blocks a commit.</summary>
+    /// <summary>Informational: shown only with <c>--verbose</c>; never blocks a commit.</summary>
     Info = 1,
-    /// <summary>Warning — shown by default; does not block unless <c>exitOn</c> is set to <c>Warn</c>.</summary>
+    /// <summary>Warning: shown by default; does not block unless <c>exitOn</c> is set to <c>Warn</c>.</summary>
     Warn = 2,
-    /// <summary>Blocking — always shown; causes a non-zero exit code by default.</summary>
+    /// <summary>Blocking: always shown; causes a non-zero exit code by default.</summary>
     Block = 3,
-    /// <summary>Advisory — always shown; produced by LLM policy evaluation; never causes a non-zero exit code.</summary>
+    /// <summary>Advisory: always shown; produced by LLM policy evaluation; never causes a non-zero exit code.</summary>
     Advisory = 4,
 }

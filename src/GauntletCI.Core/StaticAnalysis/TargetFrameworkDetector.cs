@@ -42,7 +42,7 @@ public static class TargetFrameworkDetector
         }
         catch (Exception)
         {
-            // File system errors are non-fatal — TFM detection is best-effort
+            // File system errors are non-fatal: TFM detection is best-effort
         }
 
         return null;
@@ -57,7 +57,7 @@ public static class TargetFrameworkDetector
     {
         if (string.IsNullOrEmpty(tfm)) return false;
 
-        // net8.0, net9.0, net10.0, …  — match netN.M where N >= 8
+        // net8.0, net9.0, net10.0, … : match netN.M where N >= 8
         var m = Regex.Match(tfm, @"^net(\d+)\.\d+$", RegexOptions.IgnoreCase);
         return m.Success && int.TryParse(m.Groups[1].Value, out var major) && major >= 8;
     }

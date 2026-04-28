@@ -135,7 +135,7 @@ public class TestFileClassifierTests
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 4. FixtureFolderStore (integration — real temp dir + real CorpusDb)
+// 4. FixtureFolderStore (integration: real temp dir + real CorpusDb)
 // ─────────────────────────────────────────────────────────────────────────────
 
 public sealed class FixtureFolderStoreTests : IDisposable
@@ -348,7 +348,7 @@ public sealed class RuleCorpusRunnerTests : IDisposable
     private readonly FixtureFolderStore _store;
     private readonly RuleCorpusRunner _runner;
 
-    // A minimal unified diff that mixes code and a markdown file — triggers GCI0001.
+    // A minimal unified diff that mixes code and a markdown file: triggers GCI0001.
     private const string MixedScopeDiff = """
         diff --git a/src/Foo.cs b/src/Foo.cs
         index abc..def 100644
@@ -491,7 +491,7 @@ public sealed class CandidateDeduplicationTests : IDisposable
         cmd1.Parameters.AddWithValue("$id", Guid.NewGuid().ToString());
         await cmd1.ExecuteNonQueryAsync();
 
-        // Same (repo_owner, repo_name, pr_number), different primary key — should be ignored.
+        // Same (repo_owner, repo_name, pr_number), different primary key: should be ignored.
         using var cmd2 = _db.Connection.CreateCommand();
         cmd2.CommandText = insertSql;
         cmd2.Parameters.AddWithValue("$id", Guid.NewGuid().ToString());
