@@ -173,6 +173,28 @@ public class GCI0029Tests
     }
 
     [Fact]
+    public async Task TypeFullNameInLogCall_ShouldNotFlag()
+    {
+        // Regression: Type.FullName / Assembly.FullName / FileInfo.FullName caused FPs.
+        // "fullname" removed from PiiTerms - Type.FullName is a .NET reflection property, not a person name.
+        var raw = """
+            diff --git a/src/Configurator.cs b/src/Configurator.cs
+            index abc..def 100644
+            --- a/src/Configurator.cs
+            +++ b/src/Configurator.cs
+            @@ -1,3 +1,4 @@
+             public class Configurator {
+            +    LogLog.Error(_declaringType, $"Cannot create [{converterType.FullName}]", e);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
     public async Task CancellationTokenInLog_ShouldNotFlag()
     {
         // "token" removed from PiiTerms -- CancellationToken was causing FPs
