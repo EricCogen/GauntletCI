@@ -80,7 +80,7 @@ export function Footer() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="https://github.com/ericcogen/gauntletci/releases" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    <Link href="/releases" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                       Releases
                     </Link>
                   </li>
