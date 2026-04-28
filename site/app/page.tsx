@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HowItWorks } from "@/components/how-it-works";
 import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
 import { Stats } from "@/components/stats";
@@ -37,6 +38,7 @@ export default function Home() {
       <VisibilityGap />
       <BehavioralChangeRisk />
       <TerminalBlock />
+      <HowItWorks />
       <ProofExample />
       <Features />
       <FeaturesBenefits />
