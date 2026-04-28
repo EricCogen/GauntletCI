@@ -176,16 +176,17 @@ public sealed class SilverLabelEngineTests
         // Arrange - spot-check a representative subset of rules with heuristics
         var expected = new[]
         {
-            "GCI0003", "GCI0004", "GCI0006", "GCI0010",
-            "GCI0012", "GCI0016", "GCI0021", "GCI0022",
-            "GCI0024", "GCI0029", "GCI0036", "GCI0047",
+            "GCI0001", "GCI0003", "GCI0004", "GCI0006", "GCI0010",
+            "GCI0012", "GCI0015", "GCI0016", "GCI0021", "GCI0022",
+            "GCI0024", "GCI0029", "GCI0035", "GCI0036", "GCI0047",
+            "GCI0048", "GCI0050", "GCI0052", "GCI0053",
         };
 
         // Assert: every expected rule is present and the set has the expected total
         foreach (var ruleId in expected)
             Assert.Contains(ruleId, SilverLabelEngine.RulesWithHeuristics);
 
-        Assert.Equal(22, SilverLabelEngine.RulesWithHeuristics.Count);
+        Assert.Equal(29, SilverLabelEngine.RulesWithHeuristics.Count);
     }
 
     [Fact]
