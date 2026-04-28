@@ -64,6 +64,7 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
     private void CheckServiceLocator(DiffFile file, List<Finding> findings)
     {
         if (IsInfrastructureFile(file.NewPath)) return;
+        if (IsTestFile(file.NewPath)) return;
 
         foreach (var line in file.AddedLines)
         {
