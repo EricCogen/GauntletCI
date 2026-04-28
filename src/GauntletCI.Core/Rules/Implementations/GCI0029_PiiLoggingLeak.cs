@@ -22,10 +22,12 @@ public class GCI0029_PiiLoggingLeak : RuleBase
         "email", "ssn", "socialsecurity", "phonenumber", "creditcard", "cardnumber",
         "dateofbirth", "passport", "nationalid", "taxid", "bankaccount",
         "dob", "birthdate", "zipcode", "postalcode", "geolocation",
-        "username", "firstname", "lastname", "fullname", "displayname", "personname",
+        "username", "firstname", "lastname", "displayname", "personname",
     ];
 
     // No weak terms: "name" alone is too broad and fires on component/logger/appender names.
+    // "fullname" excluded: Type.FullName / Assembly.FullName / FileInfo.FullName are ubiquitous
+    // .NET reflection properties that are NOT person names.
     // Specific person-name compound terms (username, firstname, etc.) are in PiiTerms above.
     private static readonly string[] WeakPiiTerms = [];
 

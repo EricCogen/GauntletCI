@@ -11,7 +11,7 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 - **`action.yml` Marketplace readiness**: Input `commit` default changed from an illegal expression (`${{ github.event.pull_request.head.sha || github.sha }}`) to `""`. GitHub Actions does not evaluate expressions in `action.yml` defaults; the raw string was passed as the commit SHA. The run step now resolves the SHA via `[ -z "$COMMIT" ] && COMMIT="${{ ... }}"`. Default `gauntletci-version` bumped from `2.0.0` to `2.1.0`.
-- **GCI0029 false positives**: Removed `name` from `WeakPiiTerms` - it fired on `appender.Name`, `repository.Name`, `configAttr.Name` (component names in logging framework code, not human PII). Added compound person-name terms `username`, `firstname`, `lastname`, `fullname`, `displayname`, `personname` to `PiiTerms` as word-boundary replacements. Removed unused `ContainsWeakTermInContext` helper. All 4 corpus FPs were from one log4net fixture where `appender.Name` matched the weak term.
+- **GCI0029 false positives (round 2)**: Removed `fullname` from `PiiTerms`. `Type.FullName`, `Assembly.FullName`, and `FileInfo.FullName` are ubiquitous .NET reflection properties - not person names. All 8 corpus triggers from `apache_logging-log4net_pr201` were `converterType.FullName`, `objectType?.FullName`, `configFile.FullName`, etc. Added `TypeFullNameInLogCall_ShouldNotFlag` regression test. 1190 tests pass.
 - **GCI0010 labeler over-labeling**: Removed `config` and `environment variable` from the GCI0010 `CommentRules` keyword set. Both were too broad - any review comment mentioning config changes (unrelated to hardcoding) caused spurious positive labels. Retained `hardcoded`, `hard-coded`, `magic string`, and `magic number` as the signal set.
 
 ### Added
