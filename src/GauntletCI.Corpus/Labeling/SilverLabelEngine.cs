@@ -710,16 +710,45 @@ public sealed class SilverLabelEngine
                 labels.Add(MakeLabel("GCI0041", "Diff silences or skips a test in a test file", 0.65));
         }
 
-        // GCI0042 -- TODO/FIXME/HACK or NotImplementedException in non-comment lines
-        if (addedLines.Any(l =>
-                !l.TrimStart().StartsWith("///") &&
-                !l.TrimStart().StartsWith("//") &&
-                (l.Contains("TODO", StringComparison.OrdinalIgnoreCase) ||
-                 l.Contains("FIXME", StringComparison.OrdinalIgnoreCase) ||
-                 l.Contains("HACK", StringComparison.OrdinalIgnoreCase) ||
-                 l.Contains("throw new NotImplementedException", StringComparison.Ordinal))))
+        // GCI0042 -- TODO/FIXME/HACK marker or NotImplementedException in non-test .cs files
+        // Per-file iteration mirrors the rule: only non-test .cs files, comment markers must
+        // be the first token after // (prevents "hvc1 hack variant"-style prose matches).
         {
-            labels.Add(MakeLabel("GCI0042", "Diff contains a TODO/FIXME/HACK marker or NotImplementedException stub", 0.70));
+            bool hasStub42 = false;
+            bool inNonTestCs42 = false;
+            foreach (var rawLine in rawDiff.Split('\n'))
+            {
+                var trimmed42 = rawLine.TrimEnd('\r');
+                if (trimmed42.StartsWith("+++ b/"))
+                {
+                    var path42 = trimmed42[6..].Trim();
+                    bool isCsFile = path42.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
+                    bool isTest42 = path42.Contains("test", StringComparison.OrdinalIgnoreCase)
+                        || path42.Contains("spec", StringComparison.OrdinalIgnoreCase);
+                    inNonTestCs42 = isCsFile && !isTest42;
+                    continue;
+                }
+                if (!inNonTestCs42) continue;
+                if (!trimmed42.StartsWith('+') || trimmed42.StartsWith("+++")) continue;
+                var content42 = trimmed42[1..];
+                var ct42 = content42.TrimStart();
+                if (ct42.StartsWith("///", StringComparison.Ordinal)) continue;
+                if (ct42.StartsWith("//", StringComparison.Ordinal))
+                {
+                    var body42 = ct42[2..].TrimStart();
+                    if (body42.StartsWith("TODO", StringComparison.OrdinalIgnoreCase) ||
+                        body42.StartsWith("FIXME", StringComparison.OrdinalIgnoreCase) ||
+                        body42.StartsWith("HACK", StringComparison.OrdinalIgnoreCase))
+                    { hasStub42 = true; break; }
+                }
+                else if (content42.Contains("TODO", StringComparison.OrdinalIgnoreCase) ||
+                         content42.Contains("FIXME", StringComparison.OrdinalIgnoreCase) ||
+                         content42.Contains("HACK", StringComparison.OrdinalIgnoreCase) ||
+                         content42.Contains("throw new NotImplementedException", StringComparison.Ordinal))
+                { hasStub42 = true; break; }
+            }
+            if (hasStub42)
+                labels.Add(MakeLabel("GCI0042", "Diff contains a TODO/FIXME/HACK marker or NotImplementedException stub in a non-test C# file", 0.70));
         }
 
         // GCI0043 -- Null-forgiving / nullable pragma disable / unchecked as-cast

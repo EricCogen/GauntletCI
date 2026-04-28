@@ -37,7 +37,16 @@ public class GCI0042_TodoStubDetection : RuleBase
                 // XML doc comments are meta-documentation, not production stubs
                 if (trimmed.StartsWith("///", StringComparison.Ordinal)) continue;
 
-                if (StubKeywords.Any(k => content.Contains(k, StringComparison.OrdinalIgnoreCase)))
+                bool isLineComment = trimmed.StartsWith("//", StringComparison.Ordinal);
+                if (isLineComment)
+                {
+                    // For comment lines, require the marker to be the first token after //
+                    // This prevents "hvc1 hack variant" or similar prose matches
+                    var commentBody = trimmed[2..].TrimStart();
+                    if (StubKeywords.Any(k => commentBody.StartsWith(k, StringComparison.OrdinalIgnoreCase)))
+                        evidence.Add($"Line {line.LineNumber}: {trimmed}");
+                }
+                else if (StubKeywords.Any(k => content.Contains(k, StringComparison.OrdinalIgnoreCase)))
                     evidence.Add($"Line {line.LineNumber}: {trimmed}");
                 else if (content.Contains("throw new NotImplementedException", StringComparison.Ordinal))
                     evidence.Add($"Line {line.LineNumber}: {trimmed}");
