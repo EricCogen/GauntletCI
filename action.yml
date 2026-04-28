@@ -1,4 +1,4 @@
-name: "GauntletCI - Pre-commit Behavioral Change Risk Validation"
+name: "GauntletCI - Validate Code Changes Before Review"
 description: "Deterministic pre-commit risk detection for pull requests. Analyzes your git diff and posts findings as annotations."
 author: "Eric Cogen"
 
