@@ -204,6 +204,89 @@ public class GCI0038Tests
     }
 
     [Fact]
+    public async Task DirectInstantiation_InInfrastructureFile_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/ServiceExtensions.cs b/src/ServiceExtensions.cs
+            index abc..def 100644
+            --- a/src/ServiceExtensions.cs
+            +++ b/src/ServiceExtensions.cs
+            @@ -1,3 +1,4 @@
+             public static class ServiceExtensions {
+            +    services.AddSingleton(new OrderService(opts));
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Direct instantiation"));
+    }
+
+    [Fact]
+    public async Task CaptiveDependency_InInfrastructureFile_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/AuthExtensions.cs b/src/AuthExtensions.cs
+            index abc..def 100644
+            --- a/src/AuthExtensions.cs
+            +++ b/src/AuthExtensions.cs
+            @@ -1,3 +1,6 @@
+             public static class AuthExtensions {
+            +    services.AddSingleton<ITokenService, TokenService>();
+            +    services.AddScoped<IUserContext, UserContext>();
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("captive dependency"));
+    }
+
+    [Fact]
+    public async Task CaptiveDependency_InTestFile_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/tests/TestOverrides.cs b/tests/TestOverrides.cs
+            index abc..def 100644
+            --- a/tests/TestOverrides.cs
+            +++ b/tests/TestOverrides.cs
+            @@ -1,3 +1,6 @@
+             public class TestOverrides {
+            +    services.AddSingleton<ICache, NullCache>();
+            +    services.AddScoped<ISession, FakeSession>();
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("captive dependency"));
+    }
+
+    [Fact]
+    public async Task DirectInstantiation_EventHandlerDelegate_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/Observable.cs b/src/Observable.cs
+            index abc..def 100644
+            --- a/src/Observable.cs
+            +++ b/src/Observable.cs
+            @@ -1,3 +1,5 @@
+             public class Observable {
+            +    button.Click += new RoutedEventHandler(OnClick);
+            +    nav.RequestNavigate += new RequestNavigateEventHandler(OnNavigate);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Direct instantiation"));
+    }
+
+    [Fact]
     public async Task CleanFile_ShouldProduceNoFindings()
     {
         var raw = """

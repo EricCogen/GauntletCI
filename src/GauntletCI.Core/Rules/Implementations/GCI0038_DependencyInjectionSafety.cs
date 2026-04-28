@@ -29,7 +29,8 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
     private static readonly Regex DirectInstantiationRegex =
         new(@"new [A-Z][a-zA-Z]*(Service|Repository|Manager|Handler|Client)\(", RegexOptions.Compiled);
 
-    private static readonly string[] DirectInstantiationExclusions = ["// ", "Mock<", "Fake<", "Stub<"];
+    private static readonly string[] DirectInstantiationExclusions =
+        ["// ", "Mock<", "Fake<", "Stub<", "EventHandler(", "+= new "];
 
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
@@ -87,6 +88,7 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
     private void CheckDirectInstantiation(DiffFile file, List<Finding> findings)
     {
         if (IsTestFile(file.NewPath)) return;
+        if (IsInfrastructureFile(file.NewPath)) return;
 
         foreach (var line in file.AddedLines)
         {
@@ -108,6 +110,9 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
 
     private void CheckCaptiveDependency(DiffFile file, List<Finding> findings)
     {
+        if (IsInfrastructureFile(file.NewPath)) return;
+        if (IsTestFile(file.NewPath)) return;
+
         var addedLines = file.AddedLines.ToList();
 
         bool hasSingleton = addedLines.Any(l =>
