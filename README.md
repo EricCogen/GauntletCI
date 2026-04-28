@@ -30,7 +30,7 @@ before they reach code review.
 
 * ⚡ Sub-second analysis: no compilation, no AST, no network
 * 🔒 Runs locally: no code leaves your machine
-* 🎯 High-signal output: designed to surface 0-3 findings per run
+* 🎯 High-signal output: designed to surface up to 3 findings per run
 
 It answers one question:
 
@@ -44,7 +44,7 @@ GauntletCI detects **Behavioral Change Risk**: unverified behavior changes intro
 
 * Install the tool
 * Run it on your current changes
-* See 0-3 high-signal findings (or none)
+* See up to 3 high-signal findings (or none)
 
 No setup required.
 
@@ -181,7 +181,7 @@ gauntletci analyze --staged
 > Running against [StackExchange.Redis PR#2995](https://github.com/StackExchange/StackExchange.Redis/pull/2995) - GauntletCI flags a swallowed exception in production connection handling.
 > GIF recorded with [ScreenToGif](https://github.com/NickeManarin/ScreenToGif) (open source)
 
-Typical output includes **0-3 high-signal findings**.
+Typical output includes **up to 3 high-signal findings**.
 
 ---
 
