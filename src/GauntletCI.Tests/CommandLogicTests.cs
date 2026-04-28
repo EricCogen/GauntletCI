@@ -251,7 +251,7 @@ public class CommandLogicTests : IDisposable
         }
     }
 
-    // ── TelemetryCommand — mode parsing ───────────────────────────────────────
+    // ── TelemetryCommand: mode parsing ───────────────────────────────────────
 
     private static TelemetryMode? ParseMode(string mode) =>
         mode.Trim().ToLowerInvariant() switch
@@ -292,7 +292,7 @@ public class CommandLogicTests : IDisposable
         Assert.Null(ParseMode(input));
     }
 
-    // ── FeedbackCommand — vote validation ─────────────────────────────────────
+    // ── FeedbackCommand: vote validation ─────────────────────────────────────
 
     private static bool IsValidVote(string raw)
     {

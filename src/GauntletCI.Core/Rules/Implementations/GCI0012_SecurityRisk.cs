@@ -9,7 +9,7 @@ using Microsoft.CodeAnalysis.CSharp;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0012 – Security Risk
+/// GCI0012, Security Risk
 /// Detects SQL injection, weak crypto, dangerous APIs, and credential exposure.
 /// Boundary with GCI0029 (PII Logging Leak): GCI0029 owns PII-in-log-call detection including
 /// the 'token' term. CheckHardcodedCredentials skips log-call lines to avoid double-reporting.
@@ -157,7 +157,7 @@ public class GCI0012_SecurityRisk : RuleBase
             var literal = ExtractDirectlyAssignedLiteral(content);
             if (literal is null) continue;
 
-            // Skip references to env var names (ALL_CAPS_UNDERSCORES) — not credential values.
+            // Skip references to env var names (ALL_CAPS_UNDERSCORES): not credential values.
             if (IsEnvVarName(literal)) continue;
 
             // Skip obviously benign default values: empty strings, HTTP scheme names,
@@ -165,7 +165,7 @@ public class GCI0012_SecurityRisk : RuleBase
             if (IsBenignLiteralValue(literal)) continue;
 
             // Check secret keyword only in the left-hand side of the assignment (the variable name),
-            // not anywhere in the line — avoids false positives from type names like HtmlTokenType.
+            // not anywhere in the line: avoids false positives from type names like HtmlTokenType.
             var eqIndex = FindAssignmentIndex(content);
             var lhs = content[..eqIndex].ToLowerInvariant();
 
@@ -258,7 +258,7 @@ public class GCI0012_SecurityRisk : RuleBase
 
         var rhs = content[(eqIdx + 1)..].TrimStart();
 
-        // Must open with a string literal — not a method call, `new`, identifier, etc.
+        // Must open with a string literal: not a method call, `new`, identifier, etc.
         if (!rhs.StartsWith('"') &&
             !rhs.StartsWith("@\"", StringComparison.Ordinal) &&
             !rhs.StartsWith("$\"", StringComparison.Ordinal))

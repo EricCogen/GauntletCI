@@ -75,7 +75,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
             <figure className="my-8 rounded-xl overflow-hidden border border-border">
               <img
                 src="/articles/what-is-diff-based-analysis-hero.png"
-                alt="Scope determines signal: full scan shows 47 findings from 498 lines; diff-only shows 1 finding from 6 changed lines — same codebase, narrower scope eliminates noise"
+                alt="Scope determines signal: full scan shows 47 findings from 498 lines; diff-only shows 1 finding from 6 changed lines: same codebase, narrower scope eliminates noise"
                 width={1120}
                 height={440}
                 className="w-full h-auto"
@@ -98,7 +98,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
             </p>
             <p className="text-muted-foreground leading-relaxed">
               The example below shows a single-line deletion. A guard clause that validated the
-              method input has been removed — a category of change that{" "}
+              method input has been removed: a category of change that{" "}
               <Link href="/why-code-review-misses-bugs" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">code review consistently misses</Link>{" "}
               for structural reasons. A full-codebase scanner may or may not surface this
               depending on whether it has a rule for missing input validation. A diff-based scanner

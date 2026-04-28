@@ -5,7 +5,7 @@ namespace GauntletCI.Cli.Telemetry;
 
 /// <summary>
 /// Uploads pending telemetry events to the GauntletCI telemetry endpoint.
-/// Upload failures are silent — never block or crash the tool.
+/// Upload failures are silent: never block or crash the tool.
 /// </summary>
 public static class TelemetryUploader
 {
@@ -16,7 +16,7 @@ public static class TelemetryUploader
     /// Fire-and-forget: upload pending events in the background.
     /// Call without await from the CLI to avoid blocking.
     /// </summary>
-    /// <returns>A detached <see cref="Task"/> — the caller must not await it; all exceptions are suppressed.</returns>
+    /// <returns>A detached <see cref="Task"/>: the caller must not await it; all exceptions are suppressed.</returns>
     public static void UploadInBackground() =>
         Task.Run(UploadAsync).ContinueWith(_ => { }); // swallow all exceptions
 

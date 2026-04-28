@@ -7,7 +7,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0001 – Diff Integrity
+/// GCI0001, Diff Integrity
 /// Detects unrelated changes, formatting churn, and mixed scope within a single diff.
 /// </summary>
 public class GCI0001_DiffIntegrity : RuleBase

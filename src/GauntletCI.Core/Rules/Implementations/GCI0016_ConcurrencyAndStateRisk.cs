@@ -6,13 +6,13 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0016 – Async Concurrency Risk
+/// GCI0016, Async Concurrency Risk
 /// Detects violations of the async execution contract: async void methods, blocking async
 /// calls (.Result / .Wait() / .GetAwaiter().GetResult()), lock(this), and Thread.Sleep
 /// in production code.
 ///
 /// Scope: async execution model violations only. Classic thread-safety concerns
-/// (static mutable fields, monitor patterns) are out of scope — they produce high FP
+/// (static mutable fields, monitor patterns) are out of scope: they produce high FP
 /// rates on legitimate patterns (singletons, config caches, type registries) and are
 /// better handled by static analysis tools with full type information.
 /// </summary>
@@ -52,7 +52,7 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
         var content = line.Content;
         if (!content.Contains("async void ", StringComparison.Ordinal)) return;
 
-        // Event handlers: (object sender, ...EventArgs ...) — legitimate use.
+        // Event handlers: (object sender, ...EventArgs ...): legitimate use.
         if (content.Contains("EventHandler", StringComparison.Ordinal) ||
             content.Contains("object sender", StringComparison.Ordinal) ||
             content.Contains("EventArgs", StringComparison.Ordinal) ||
@@ -71,7 +71,7 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
     {
         var content = line.Content;
 
-        // .Wait() and .GetAwaiter().GetResult() are unambiguous blocking patterns — always flag.
+        // .Wait() and .GetAwaiter().GetResult() are unambiguous blocking patterns: always flag.
         if (content.Contains(".Wait()", StringComparison.Ordinal) ||
             content.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal))
         {
@@ -86,7 +86,7 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
 
         // .Result is ambiguous: it is a Task property but also a common domain property name
         // (HttpResult, OperationResult, ValidationResult, etc.). Only flag when the expression
-        // clearly operates on an async result — i.e., .Result is chained directly on a method
+        // clearly operates on an async result: i.e., .Result is chained directly on a method
         // call (preceded by ')') or the left-hand expression contains explicit Task/Async context.
         if (!content.Contains(".Result", StringComparison.Ordinal)) return;
 

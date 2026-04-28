@@ -161,7 +161,7 @@ public class GCI0024Tests
     [Fact]
     public async Task SystemCommandLineCommand_ShouldNotFlag()
     {
-        // System.CommandLine.Command is not IDisposable — "Command" suffix removed from heuristic
+        // System.CommandLine.Command is not IDisposable: "Command" suffix removed from heuristic
         var raw = """
             diff --git a/src/Cli/MyCommand.cs b/src/Cli/MyCommand.cs
             index abc..def 100644

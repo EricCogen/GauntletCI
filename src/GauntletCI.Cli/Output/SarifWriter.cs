@@ -79,7 +79,7 @@ public static class SarifWriter
 
         var message = string.IsNullOrWhiteSpace(finding.WhyItMatters)
             ? finding.Summary
-            : $"{finding.Summary} — {finding.WhyItMatters}";
+            : $"{finding.Summary}: {finding.WhyItMatters}";
 
         if (!string.IsNullOrWhiteSpace(finding.SuggestedAction))
             message += $" Action: {finding.SuggestedAction}";

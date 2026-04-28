@@ -76,7 +76,7 @@ public class TestFileClassifierAdditionalTests
     [Fact]
     public void IsTestFile_FileWithTestInName_ButNotSuffix_ReturnsFalse()
     {
-        // "TestHelpers.cs" — file name doesn't end with a test suffix,
+        // "TestHelpers.cs": file name doesn't end with a test suffix,
         // and no segment equals "test"/"tests" or matches the project-hint rules.
         Assert.False(TestFileClassifier.IsTestFile("src/TestHelpers.cs"));
     }

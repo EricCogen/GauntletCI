@@ -46,7 +46,7 @@ public class WellKnownPatternsTests
         var diff = DiffParser.Parse(MakeDiff(path));
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        // Should fire — this is a production file, not a test file
+        // Should fire: this is a production file, not a test file
         Assert.NotEmpty(findings);
     }
 
@@ -67,7 +67,7 @@ public class WellKnownPatternsTests
         var diff = DiffParser.Parse(MakeDiff(path));
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        // Should not fire — rule skips test files
+        // Should not fire: rule skips test files
         Assert.Empty(findings);
     }
 }

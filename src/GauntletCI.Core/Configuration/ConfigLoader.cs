@@ -36,7 +36,7 @@ public static class ConfigLoader
         }
         catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
         {
-            Console.Error.WriteLine("[GauntletCI] Warning: could not parse .gauntletci.json — using defaults.");
+            Console.Error.WriteLine("[GauntletCI] Warning: could not parse .gauntletci.json: using defaults.");
             return new GauntletConfig();
         }
     }

@@ -231,7 +231,7 @@ public class GCI0043Tests
     [Fact]
     public async Task AsInStringLiteral_ShouldNotFire()
     {
-        // "as" inside a string argument — not a C# as-cast operator
+        // "as" inside a string argument: not a C# as-cast operator
         var raw = """
             diff --git a/src/BaselineCommand.cs b/src/BaselineCommand.cs
             index abc..def 100644
@@ -254,7 +254,7 @@ public class GCI0043Tests
     public async Task GetValueForOptionNullForgiving_ShouldNotFire()
     {
         // GetValueForOption(opt)! is System.CommandLine's idiomatic pattern for
-        // required options — the value is always set and the ! is safe, so
+        // required options: the value is always set and the ! is safe, so
         // multiple occurrences should not trigger the null-forgiving finding.
         var raw = """
             diff --git a/src/GauntletCI.Cli/Commands/AnalyzeCommand.cs b/src/GauntletCI.Cli/Commands/AnalyzeCommand.cs

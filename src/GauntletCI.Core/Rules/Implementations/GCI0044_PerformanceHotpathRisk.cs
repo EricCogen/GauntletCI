@@ -6,7 +6,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0044 – Performance Hotpath Risk
+/// GCI0044, Performance Hotpath Risk
 /// Detects Thread.Sleep, LINQ inside loops, and unbounded collection growth inside loops.
 /// </summary>
 public class GCI0044_PerformanceHotpathRisk : RuleBase
@@ -20,7 +20,7 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
     private static readonly string[] LoopKeywords =
         ["for (", "foreach (", "while ("];
 
-    // "foreach" is the standard accumulator pattern — only flag for/while unbounded growth
+    // "foreach" is the standard accumulator pattern: only flag for/while unbounded growth
     private static readonly string[] UnboundedLoopKeywords = ["for (", "while ("];
 
     private static bool IsTestFile(string path) =>
@@ -147,7 +147,7 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
                     {
                         if (nonRemovedLines[j].Content.Contains(k, StringComparison.Ordinal))
                         {
-                            // DB reader loops are bounded by query results — not a hotpath risk.
+                            // DB reader loops are bounded by query results: not a hotpath risk.
                             if (nonRemovedLines[j].Content.Contains(".Read()", StringComparison.Ordinal))
                                 break;
                             inLoop = true;

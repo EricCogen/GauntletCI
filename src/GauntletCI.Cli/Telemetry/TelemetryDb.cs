@@ -9,7 +9,7 @@ namespace GauntletCI.Cli.Telemetry;
 /// Path: ~/.gauntletci/telemetry.db
 ///
 /// Runs alongside TelemetryStore (JSON upload queue). TelemetryDb is the
-/// durable local analytics store — events are retained even for Local/Off users.
+/// durable local analytics store: events are retained even for Local/Off users.
 /// </summary>
 public static class TelemetryDb
 {

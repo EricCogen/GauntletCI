@@ -79,8 +79,8 @@ public class GCI0038NoEchoLogsTests
     [Theory]
     [InlineData("Line 42: _logger.LogInformation(user.Email)", "Line 42: [REDACTED]")]
     [InlineData("Line 7: Log.Information(\"SSN={ssn}\", patient.Ssn)", "Line 7: [REDACTED]")]
-    [InlineData("src/Auth.cs:99", "src/Auth.cs:99")]   // no snippet — unchanged
-    [InlineData("No colon-space here", "No colon-space here")]  // no pattern — unchanged
+    [InlineData("src/Auth.cs:99", "src/Auth.cs:99")]   // no snippet: unchanged
+    [InlineData("No colon-space here", "No colon-space here")]  // no pattern: unchanged
     public void MaskEvidenceSnippet_MasksSnippetButKeepsFileRef(string input, string expected)
     {
         Assert.Equal(expected, ConsoleReporter.MaskEvidenceSnippet(input));

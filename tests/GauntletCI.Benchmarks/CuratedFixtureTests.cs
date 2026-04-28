@@ -90,6 +90,6 @@ public class CuratedFixtureTests
                     result.HasFindings,
                     $"[{fixtureId}] Expected no findings but engine returned: [{string.Join(", ", firedRuleIds)}]");
         }
-        // edge-case entries are not asserted — they're for observation only
+        // edge-case entries are not asserted: they're for observation only
     }
 }

@@ -57,7 +57,7 @@ public static class FeedbackCommand
             TelemetryUploader.UploadInBackground();
 
             var emoji = vote == "up" ? "👍" : "👎";
-            AnsiConsole.MarkupLine($"[green]  {emoji}  Feedback recorded — thank you![/]");
+            AnsiConsole.MarkupLine($"[green]  {emoji}  Feedback recorded: thank you![/]");
             ctx.ExitCode = 0;
         });
 

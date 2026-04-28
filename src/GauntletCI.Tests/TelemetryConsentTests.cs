@@ -6,7 +6,7 @@ using GauntletCI.Cli.Telemetry;
 namespace GauntletCI.Tests;
 
 /// <summary>
-/// Tests for TelemetryConsent — mode parsing, mode enum values, and migration from legacy consent.json.
+/// Tests for TelemetryConsent: mode parsing, mode enum values, and migration from legacy consent.json.
 /// Uses reflection to reset the internal static cache between tests.
 /// Runs serially with TelemetryCollectorTests to prevent file-lock races on the consent file.
 /// </summary>
@@ -46,7 +46,7 @@ public class TelemetryConsentTests
     [Fact]
     public void TelemetryMode_Confidence_MapsCorrectly()
     {
-        // Confidence.High == 2 in Finding JSON output — Shared telemetry should also be 2
+        // Confidence.High == 2 in Finding JSON output: Shared telemetry should also be 2
         // This test documents the intentional parallel: High confidence = Shared mode = value 2
         Assert.Equal((int)TelemetryMode.Shared, 2);
     }
@@ -96,7 +96,7 @@ public class TelemetryConsentTests
     {
         ResetCache();
 
-        // SetMode writes to ~/.gauntletci/config.json — only verify the public API
+        // SetMode writes to ~/.gauntletci/config.json: only verify the public API
         // returns the value we set without throwing.
         var before = TelemetryConsent.GetMode();
 
@@ -178,7 +178,7 @@ public class TelemetryConsentTests
     [Fact]
     public void LegacyConsentJson_CanDeserializeToExpectedShape()
     {
-        // Verify the legacy JSON shape can be read — guards against future accidental breakage
+        // Verify the legacy JSON shape can be read: guards against future accidental breakage
         var legacyJson = """
             {
               "InstallId": "test-install-id-abc",

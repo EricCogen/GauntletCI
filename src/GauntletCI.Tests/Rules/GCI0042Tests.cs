@@ -106,7 +106,7 @@ public class GCI0042Tests
             @@ -1,3 +1,7 @@
              public class MyRule {
             +    /// <summary>
-            +    /// TODO/Stub Detection rule — fires on incomplete markers.
+            +    /// TODO/Stub Detection rule: fires on incomplete markers.
             +    /// </summary>
             +    public void Evaluate() { }
              }

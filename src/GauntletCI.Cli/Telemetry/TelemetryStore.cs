@@ -9,9 +9,9 @@ namespace GauntletCI.Cli.Telemetry;
 /// Path: ~/.gauntletci/telemetry-queue.json
 ///
 /// Concurrency strategy (two layers):
-///   1. SemaphoreSlim (_inProcessGuard) — prevents concurrent async callers within
+///   1. SemaphoreSlim (_inProcessGuard): prevents concurrent async callers within
 ///      the same process from all entering Mutex.WaitOne() simultaneously.
-///   2. Named Mutex (cross-process) — serializes access across multiple CLI processes
+///   2. Named Mutex (cross-process): serializes access across multiple CLI processes
 ///      that share the same queue file (e.g., parallel pre-commit hooks).
 /// All file I/O inside the mutex is synchronous to avoid thread-affinity violations.
 /// Unique per-write temp file names prevent cross-process .tmp collisions.
@@ -22,7 +22,7 @@ public static class TelemetryStore
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
         ".gauntletci", "telemetry-queue.json");
 
-    // Cross-process named mutex — scoped to current user session on all platforms.
+    // Cross-process named mutex: scoped to current user session on all platforms.
     private const string MutexName = "GauntletCI.TelemetryQueue";
 
     // In-process guard: keeps concurrent async callers from all blocking on WaitOne at once.
@@ -45,7 +45,7 @@ public static class TelemetryStore
             {
                 var events = Load();
                 events.Add(evt);
-                // Keep queue bounded — drop oldest sent events first, then oldest unsent
+                // Keep queue bounded: drop oldest sent events first, then oldest unsent
                 // Bounded to 500 events to prevent unbounded growth in offline scenarios
                 if (events.Count > 500)
                     events = events.OrderBy(e => e.Sent).ThenBy(e => e.Timestamp).Skip(50).ToList();

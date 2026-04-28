@@ -42,7 +42,7 @@ public class GCI0010Tests
     [Fact]
     public async Task PublicHttpsUrl_ShouldNotFlag()
     {
-        // Public reference URLs (docs, CDN, GitHub) are intentional — do not flag.
+        // Public reference URLs (docs, CDN, GitHub) are intentional: do not flag.
         var diff = MakeDiff("    var docsLink = \"https://docs.microsoft.com/en-us/dotnet/\";");
         var findings = await Rule.EvaluateAsync(diff, null);
 

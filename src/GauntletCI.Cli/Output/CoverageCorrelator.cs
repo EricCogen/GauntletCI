@@ -51,7 +51,7 @@ public static class CoverageCorrelator
             var json = await response.Content.ReadAsStringAsync(ct);
             var fileCoverageMap = ParseCoverageResponse(json);
 
-            // Skip annotation entirely when the coverage map could not be parsed —
+            // Skip annotation entirely when the coverage map could not be parsed : 
             // we must not flag files as zero-coverage based on missing data.
             if (fileCoverageMap is null)
                 return;

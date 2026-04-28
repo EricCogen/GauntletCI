@@ -5,7 +5,7 @@ namespace GauntletCI.Core.Diff;
 
 /// <summary>
 /// Parses unified git diff text into a <see cref="DiffContext"/>.
-/// Uses git.exe output — no custom diff implementation.
+/// Uses git.exe output: no custom diff implementation.
 /// </summary>
 public static class DiffParser
 {
@@ -83,7 +83,7 @@ public static class DiffParser
 
             if (currentFile == null) continue;
 
-            // Update new path from "+++ b/path" (bare format or git format — safe to apply always)
+            // Update new path from "+++ b/path" (bare format or git format: safe to apply always)
             if (line.StartsWith("+++ b/")) { currentFile.NewPath = line[6..]; continue; }
 
             if (AddedFileMarker.IsMatch(line)) { isAdded = true; continue; }
@@ -219,7 +219,7 @@ public static class DiffParser
         }
         catch { /* non-fatal */ }
 
-        // Get diff — for a single commit use commit^..commit; for a range pass as-is
+        // Get diff: for a single commit use commit^..commit; for a range pass as-is
         var diffArg = commitRef.Contains("..") ? commitRef : $"{commitRef}^..{commitRef}";
         var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff -U{contextLines} {diffArg}", ct);
         return (diff, message);
@@ -251,7 +251,7 @@ public static class DiffParser
             catch (InvalidOperationException) { /* already exited */ }
             catch (NotSupportedException)
             {
-                // entireProcessTree not supported on all platforms — fall back to single-process kill.
+                // entireProcessTree not supported on all platforms: fall back to single-process kill.
                 try { if (!process.HasExited) process.Kill(); }
                 catch (InvalidOperationException) { /* already exited */ }
             }

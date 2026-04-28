@@ -37,7 +37,7 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
             }
             catch (HttpRequestException)
             {
-                // Archive slot may not exist yet (e.g., future hours) — skip silently
+                // Archive slot may not exist yet (e.g., future hours): skip silently
                 continue;
             }
 
@@ -103,7 +103,7 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
                 }
                 catch (JsonException)
                 {
-                    // Malformed line — skip
+                    // Malformed line: skip
                 }
             }
         }

@@ -129,7 +129,7 @@ public class McpToolTests
         Assert.True(findings.Count > 0);
         foreach (var f in findings)
         {
-            // NullLlmEngine produces no enrichment — llmExplanation should be absent or null
+            // NullLlmEngine produces no enrichment: llmExplanation should be absent or null
             if (f.TryGetProperty("llmExplanation", out var expl))
                 Assert.Equal(JsonValueKind.Null, expl.ValueKind);
         }
@@ -197,7 +197,7 @@ public class McpToolTests
     [Fact]
     public async Task analyze_diff_WithFakeEngine_OnlyMediumLowFindings_ZeroEnrichmentCalls()
     {
-        // SampleDiff adds a Console.WriteLine — triggers complexity/edge-case rules at
+        // SampleDiff adds a Console.WriteLine: triggers complexity/edge-case rules at
         // Medium/Low confidence, but no High-confidence findings.
         var countingEngine = new CountingLlmEngine();
         GauntletTools.SetEngine(countingEngine);
@@ -299,7 +299,7 @@ public class McpToolTests
     [Fact]
     public async Task analyze_diff_WhenEngineThrows_DoesNotPropagate()
     {
-        // Engine throws during enrichment — should not bubble up to the caller
+        // Engine throws during enrichment: should not bubble up to the caller
         GauntletTools.SetEngine(new ThrowingLlmEngine());
 
         var result = await GauntletTools.analyze_diff(CredentialDiff);

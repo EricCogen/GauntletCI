@@ -112,7 +112,7 @@ public class GCI0048Tests
             +++ b/src/Utils/Guard.cs
             @@ -1,4 +1,7 @@
              public class Guard {
-            +    // Returns true when the token is in an interpolated hole — e.g.
+            +    // Returns true when the token is in an interpolated hole: e.g.
             +    // $"{new Random().Next()}" is a real finding that should fire.
             +    public bool Check(SyntaxToken token) => token.IsKind(SyntaxKind.IdentifierToken);
              }

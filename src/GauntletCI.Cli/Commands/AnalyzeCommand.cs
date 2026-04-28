@@ -38,7 +38,7 @@ public static class AnalyzeCommand
             "--output",
             () => "text",
             "Output format: text, json, or sarif");
-        var noLlmFlag = new Option<bool>("--no-llm", "Disable LLM enrichment (deprecated — LLM is now opt-in via --with-llm)") { IsHidden = true };
+        var noLlmFlag = new Option<bool>("--no-llm", "Disable LLM enrichment (deprecated: LLM is now opt-in via --with-llm)") { IsHidden = true };
         var withLlmFlag = new Option<bool>("--with-llm", "Enable LLM enrichment of High-confidence findings (requires 'gauntletci model download', adds latency)");
         var asciiFlag = new Option<bool>("--ascii", "Use ASCII-only output (for terminals without Unicode support)");
         var noBannerOption = new Option<bool>("--no-banner", "Disable ASCII banner");
@@ -172,7 +172,7 @@ public static class AnalyzeCommand
                                     ? await DiffParser.FromAllChangesAsync(repo.FullName, config.DiffContextLines, ct)
                                     : DiffParser.Parse(await Console.In.ReadToEndAsync(ct));
 
-                // Merge config defaults — CLI value wins when explicitly passed; config fills in the rest.
+                // Merge config defaults: CLI value wins when explicitly passed; config fills in the rest.
                 withLlm       = withLlm       || (config.Llm?.Enabled      == true);
                 withExpertCtx = withExpertCtx || (config.Llm?.ExpertContext == true);
                 if (ctx.ParseResult.FindResultFor(withTicketCtxFlag) is null)

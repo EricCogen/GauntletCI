@@ -81,7 +81,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0010_HardcodedUrl_ShouldFlag()
     {
-        // Localhost URL with port — a hardcoded service endpoint that breaks across environments.
+        // Localhost URL with port: a hardcoded service endpoint that breaks across environments.
         var rule = new GCI0010_HardcodingAndConfiguration();
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
@@ -377,7 +377,7 @@ public class SupplementalCoverageTests
         var findings = await rule.EvaluateAsync(diff, staticAnalysis);
 
         // GCI0007 owns CA1031 only. CA2000/CA1001 are owned by GCI0024 (Resource Lifecycle)
-        // — see DiagnosticMapper. This prevents the same Roslyn diagnostic from producing
+        //: see DiagnosticMapper. This prevents the same Roslyn diagnostic from producing
         // two findings (one in each rule).
         Assert.Contains(findings, f => f.Summary.Contains("CA1031") && f.RuleId == "GCI0007");
         Assert.DoesNotContain(findings, f => f.Summary.Contains("CA2000") && f.RuleId == "GCI0007");

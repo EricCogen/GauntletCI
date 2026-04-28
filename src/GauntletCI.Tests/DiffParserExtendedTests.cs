@@ -149,7 +149,7 @@ public class DiffParserExtendedTests
 
         Assert.Equal(500, ctx.Files.Count);
         Assert.True(sw.Elapsed < TimeSpan.FromSeconds(5),
-            $"Parsing 500-file diff took {sw.Elapsed.TotalSeconds:F2}s — exceeded 5s limit");
+            $"Parsing 500-file diff took {sw.Elapsed.TotalSeconds:F2}s: exceeded 5s limit");
     }
 
     [Fact]

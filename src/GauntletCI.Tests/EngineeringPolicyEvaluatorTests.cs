@@ -46,7 +46,7 @@ public class EngineeringPolicyEvaluatorTests
                     "ruleId": "EP_CORRECTNESS",
                     "ruleName": "Correctness and Intent",
                     "summary": "TODO comment left in added code",
-                    "evidence": "Foo.cs:10 — // TODO: implement",
+                    "evidence": "Foo.cs:10: // TODO: implement",
                     "whyItMatters": "Implies incomplete implementation.",
                     "suggestedAction": "Remove TODO or implement before merging."
                   }

@@ -17,7 +17,7 @@ public static class DiagnosticMapper
             ["CA2153"] = ("GCI0012", "Security Risk", Confidence.High),
             // Exception handling
             ["CA1031"] = ("GCI0007", "Error Handling Integrity", Confidence.High),
-            // Resource disposal — owned by GCI0024 (Resource Lifecycle) to avoid duplicate findings
+            // Resource disposal: owned by GCI0024 (Resource Lifecycle) to avoid duplicate findings
             // with GCI0007. See also GCI0024.AddRoslynFindings.
             ["CA2000"] = ("GCI0024", "Resource Lifecycle", Confidence.Medium),
             ["CA1001"] = ("GCI0024", "Resource Lifecycle", Confidence.Medium),
@@ -47,7 +47,7 @@ public static class DiagnosticMapper
                 RuleName = mapping.RuleName,
                 Summary = $"Roslyn diagnostic {diag.Id}: {diag.Message}",
                 Evidence = $"{diag.FilePath}:{diag.Line},{diag.Column}",
-                WhyItMatters = $"Static analysis flagged {diag.Id} — a known code quality or security concern.",
+                WhyItMatters = $"Static analysis flagged {diag.Id}: a known code quality or security concern.",
                 SuggestedAction = "Review the diagnostic and address the underlying issue.",
                 Confidence = mapping.Confidence,
             };

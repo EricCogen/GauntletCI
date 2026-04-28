@@ -144,9 +144,9 @@ export default function DetectBreakingChangesPage() {
             <p className="text-muted-foreground leading-relaxed">
               These are not rare edge cases. They are the normal state of any system with more
               than one service, any persistence layer, or any public API surface. The compiler
-              success guarantee is narrow. The runtime failure surface is wide. This gap — the
+              success guarantee is narrow. The runtime failure surface is wide. This gap: the
               delta between what the compiler checks within the solution boundary and what the
-              runtime encounters across all consumers — is The Compiler&apos;s Blind Spot.
+              runtime encounters across all consumers: is The Compiler&apos;s Blind Spot.
             </p>
           </section>
 
@@ -175,7 +175,7 @@ export default function DetectBreakingChangesPage() {
             </p>
             <p className="text-muted-foreground leading-relaxed">
               The intent gap matters here. The developer who renamed that method was not
-              negligent — they were doing their job. The build passed, the tests passed, the
+              negligent: they were doing their job. The build passed, the tests passed, the
               linter was clean. The breaking change was an unintended side effect of a correct,
               intentional action. A pre-commit structural check is designed for exactly this
               case: flagging the unintended consequence before the developer has moved on.
@@ -257,7 +257,7 @@ export default function DetectBreakingChangesPage() {
               <p className="text-sm font-semibold text-cyan-400 mb-2">Terminology: source-incompatible vs binary-incompatible</p>
               <p className="text-sm text-muted-foreground leading-relaxed">
                 A <em>source-incompatible change</em> prevents existing consumer code from compiling
-                against the new version — the compiler surfaces the error immediately at build time.
+                against the new version: the compiler surfaces the error immediately at build time.
                 A <em>binary-incompatible change</em> allows consumer code to compile against the old
                 assembly but fails at runtime when the updated binary is deployed. The consumer&apos;s
                 build passes because it was compiled against the old API surface; the failure appears
@@ -553,7 +553,7 @@ export default function DetectBreakingChangesPage() {
               compatibility analyzers verify API surface after a library is built or released.
               They are valuable for library maintainers managing a public NuGet surface across
               versions. GauntletCI is designed for an earlier moment: before the commit is
-              created, before CI runs, and before any consumer is affected — the only point
+              created, before CI runs, and before any consumer is affected: the only point
               where the cost of the fix is zero and the developer still has full context to
               address it.
             </p>

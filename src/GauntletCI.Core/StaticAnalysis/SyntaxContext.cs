@@ -10,8 +10,8 @@ namespace GauntletCI.Core.StaticAnalysis;
 /// <para>
 /// Pass-through semantics when no tree is available for a file:
 /// <list type="bullet">
-///   <item><description><see cref="IsConfirmedObjectCreation"/> returns <c>true</c> (don't suppress — no evidence to filter).</description></item>
-///   <item><description><see cref="IsInCommentOrStringLiteral"/> returns <c>false</c> (don't suppress — no evidence to suppress).</description></item>
+///   <item><description><see cref="IsConfirmedObjectCreation"/> returns <c>true</c> (don't suppress: no evidence to filter).</description></item>
+///   <item><description><see cref="IsInCommentOrStringLiteral"/> returns <c>false</c> (don't suppress: no evidence to suppress).</description></item>
 /// </list>
 /// </para>
 /// </summary>

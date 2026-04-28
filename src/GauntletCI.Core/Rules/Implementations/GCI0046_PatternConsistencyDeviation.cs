@@ -8,7 +8,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0046 – Pattern Consistency Deviation
+/// GCI0046, Pattern Consistency Deviation
 /// Detects service locator anti-patterns and mixed sync/async naming within the same file.
 /// </summary>
 public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
@@ -52,7 +52,7 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
 
     private static readonly HashSet<string> FrameworkExemptPairs = new(StringComparer.OrdinalIgnoreCase)
     {
-        // Standard BCL async interface pairs — adding both sync+async is required by .NET design
+        // Standard BCL async interface pairs: adding both sync+async is required by .NET design
         "Dispose", "Flush", "Open", "Close", "Connect", "Disconnect",
         "Read", "Write", "Serialize", "Deserialize", "Initialize",
         "Shutdown", "Start", "Stop", "Subscribe", "Unsubscribe",

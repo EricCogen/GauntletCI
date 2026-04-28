@@ -8,7 +8,7 @@ namespace GauntletCI.Core.StaticAnalysis;
 /// <summary>
 /// Provides syntax-tree-based guards for reducing false positives in regex-based rules.
 /// All methods operate on a pre-parsed <see cref="SyntaxTree"/> and are intentionally
-/// lightweight — no semantic model, no compilation, no disk I/O.
+/// lightweight: no semantic model, no compilation, no disk I/O.
 /// </summary>
 public static class SyntaxGuard
 {

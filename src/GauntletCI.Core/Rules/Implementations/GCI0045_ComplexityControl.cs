@@ -8,7 +8,7 @@ using GauntletCI.Core.Rules;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0045 – Complexity Control
+/// GCI0045, Complexity Control
 /// Detects over-engineering: single-use interfaces, abstract classes without abstract members,
 /// and passive delegation wrappers.
 /// </summary>
@@ -104,7 +104,7 @@ public class GCI0045_ComplexityControl : RuleBase
 
             if (classHasBaseType) continue;
 
-            // Check all visible hunk lines (not just added) — abstract members may be in context.
+            // Check all visible hunk lines (not just added): abstract members may be in context.
             var allVisible = file.Hunks.SelectMany(h => h.Lines)
                 .Where(l => l.Kind != DiffLineKind.Removed)
                 .ToList();

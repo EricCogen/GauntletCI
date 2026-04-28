@@ -39,7 +39,7 @@ public static class GitHubPrReviewWriter
         if (string.IsNullOrEmpty(githubAuth) || string.IsNullOrEmpty(repository) || string.IsNullOrEmpty(sha))
         {
             Console.Error.WriteLine(
-                "[GauntletCI] --github-pr-comments: missing GITHUB_TOKEN, GITHUB_REPOSITORY, or GITHUB_SHA — skipping inline comments.");
+                "[GauntletCI] --github-pr-comments: missing GITHUB_TOKEN, GITHUB_REPOSITORY, or GITHUB_SHA: skipping inline comments.");
             return;
         }
 
@@ -47,7 +47,7 @@ public static class GitHubPrReviewWriter
         {
             Console.Error.WriteLine(
                 "[GauntletCI] --github-pr-comments: cannot determine PR number " +
-                "(set GAUNTLETCI_PR_NUMBER or ensure GITHUB_REF is refs/pull/*/merge) — skipping inline comments.");
+                "(set GAUNTLETCI_PR_NUMBER or ensure GITHUB_REF is refs/pull/*/merge): skipping inline comments.");
             return;
         }
 
@@ -98,7 +98,7 @@ public static class GitHubPrReviewWriter
     public static string BuildCommentBody(Finding finding)
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"**{finding.RuleId} — {finding.RuleName}**");
+        sb.AppendLine($"**{finding.RuleId}: {finding.RuleName}**");
         sb.AppendLine();
         sb.AppendLine(finding.Summary);
 
@@ -143,7 +143,7 @@ public static class GitHubPrReviewWriter
             var t = finding.TicketContext;
             var link = t.Url is not null ? $"[{t.Id}]({t.Url})" : t.Id;
             sb.AppendLine();
-            sb.AppendLine($"🎫 **Ticket ({t.Provider}):** {link} — {t.Title}");
+            sb.AppendLine($"🎫 **Ticket ({t.Provider}):** {link}: {t.Title}");
             if (!string.IsNullOrWhiteSpace(t.Description))
                 sb.AppendLine($"> {t.Description}");
             sb.AppendLine();
@@ -165,9 +165,9 @@ public static class GitHubPrReviewWriter
     {
         var sb = new StringBuilder();
         var lineLabel = group.Lines.Count > 1
-            ? $" — lines {string.Join(", ", group.Lines)}"
+            ? $": lines {string.Join(", ", group.Lines)}"
             : string.Empty;
-        sb.AppendLine($"**{group.RuleId} — {group.RuleName}**{lineLabel}");
+        sb.AppendLine($"**{group.RuleId}: {group.RuleName}**{lineLabel}");
         sb.AppendLine();
         sb.AppendLine(group.Summary);
 
@@ -214,7 +214,7 @@ public static class GitHubPrReviewWriter
             var t = group.TicketContext;
             var link = t.Url is not null ? $"[{t.Id}]({t.Url})" : t.Id;
             sb.AppendLine();
-            sb.AppendLine($"🎫 **Ticket ({t.Provider}):** {link} — {t.Title}");
+            sb.AppendLine($"🎫 **Ticket ({t.Provider}):** {link}: {t.Title}");
             if (!string.IsNullOrWhiteSpace(t.Description))
                 sb.AppendLine($"> {t.Description}");
         }
@@ -320,7 +320,7 @@ public static class GitHubPrReviewWriter
             if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
             {
                 Console.Error.WriteLine(
-                    "[GauntletCI] --github-pr-comments: 403 Forbidden — " +
+                    "[GauntletCI] --github-pr-comments: 403 Forbidden: " +
                     "add `pull-requests: write` to your workflow permissions.");
                 return false;
             }
@@ -328,18 +328,18 @@ public static class GitHubPrReviewWriter
             if (response.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity && inlineGroups.Count > 0)
             {
                 Console.Error.WriteLine(
-                    "[GauntletCI] --github-pr-comments: one or more finding lines are outside the diff — " +
+                    "[GauntletCI] --github-pr-comments: one or more finding lines are outside the diff: " +
                     "retrying as summary comment.");
                 return true;  // signal retry without inline comments
             }
 
             Console.Error.WriteLine(
-                $"[GauntletCI] --github-pr-comments: API error {response.StatusCode} — {responseBody}");
+                $"[GauntletCI] --github-pr-comments: API error {response.StatusCode}: {responseBody}");
             return false;
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[GauntletCI] --github-pr-comments: request failed — {ex.Message}");
+            Console.Error.WriteLine($"[GauntletCI] --github-pr-comments: request failed: {ex.Message}");
             return false;
         }
     }
@@ -368,7 +368,7 @@ public static class GitHubPrReviewWriter
                 : string.Empty;
 
             sb.AppendLine("<details>");
-            sb.AppendLine($"<summary><strong>{g.RuleId} — {g.RuleName}</strong>{location}: {g.Summary}</summary>");
+            sb.AppendLine($"<summary><strong>{g.RuleId}: {g.RuleName}</strong>{location}: {g.Summary}</summary>");
             sb.AppendLine();
             sb.AppendLine(BuildCommentBody(g));
             sb.AppendLine();

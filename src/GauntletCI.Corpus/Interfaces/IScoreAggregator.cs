@@ -13,8 +13,8 @@ public sealed record RuleScorecard(
     FixtureTier Tier,
     int Fixtures,           // total labeled fixture/rule pairs evaluated
     double TriggerRate,     // fired / all fixtures in this tier
-    double Precision,       // TP / (TP + FP)  — labeled only
-    double Recall,          // TP / (TP + FN)  — labeled only
+    double Precision,       // TP / (TP + FP) : labeled only
+    double Recall,          // TP / (TP + FN) : labeled only
     double InconclusiveRate,
     double AvgUsefulness,
     string Notes,

@@ -726,7 +726,7 @@ export default function BCRFormalFrameworkPage() {
                   "Integration of flaky test signal analysis into BCRV workflows.",
                 ].map((item) => (
                   <li key={item} className="flex gap-2">
-                    <span className="text-cyan-400 shrink-0">—</span>
+                    <span className="text-cyan-400 shrink-0">: </span>
                     <span>{item}</span>
                   </li>
                 ))}
@@ -808,18 +808,18 @@ export default function BCRFormalFrameworkPage() {
             <ol className="space-y-4">
               {[
                 { id: 1, authors: "Haben, G., Habchi, S., Papadakis, M., Cordy, M., & Le Traon, Y.", year: "2023", title: "The Importance of Discerning Flaky from Fault-triggering Test Failures: A Case Study on the Chromium CI.", venue: "arXiv:2302.10594.", url: "https://arxiv.org/abs/2302.10594" },
-                { id: 2, authors: "Zemín, L., Godio, A., Cornejo, C., Degiovanni, R., Gutiérrez Brida, S., Regis, G., Aguirre, N., & Frias, M.F.", year: "2025", title: "An Empirical Study on the Suitability of Test-based Patch Acceptance Criteria.", venue: "ACM Transactions on Software Engineering and Methodology, 34(3), 57:1–57:20. DOI: 10.1145/3702971.", url: null },
-                { id: 3, authors: "Schwartz, A., Puckett, D., Meng, Y., & Gay, G.", year: "2018", title: "Investigating Faults Missed by Test Suites Achieving High Code Coverage.", venue: "Journal of Systems and Software, 144, 106–120. DOI: 10.1016/j.jss.2018.06.024.", url: null },
-                { id: 4, authors: "Gay, G. & Salahirad, A.", year: "2023", title: "How Closely are Common Mutation Operators Coupled to Real Faults?", venue: "IEEE ICST, pp. 129–140. DOI: 10.1109/ICST57152.2023.00021.", url: null },
+                { id: 2, authors: "Zemín, L., Godio, A., Cornejo, C., Degiovanni, R., Gutiérrez Brida, S., Regis, G., Aguirre, N., & Frias, M.F.", year: "2025", title: "An Empirical Study on the Suitability of Test-based Patch Acceptance Criteria.", venue: "ACM Transactions on Software Engineering and Methodology, 34(3), 57:1-57:20. DOI: 10.1145/3702971.", url: null },
+                { id: 3, authors: "Schwartz, A., Puckett, D., Meng, Y., & Gay, G.", year: "2018", title: "Investigating Faults Missed by Test Suites Achieving High Code Coverage.", venue: "Journal of Systems and Software, 144, 106-120. DOI: 10.1016/j.jss.2018.06.024.", url: null },
+                { id: 4, authors: "Gay, G. & Salahirad, A.", year: "2023", title: "How Closely are Common Mutation Operators Coupled to Real Faults?", venue: "IEEE ICST, pp. 129-140. DOI: 10.1109/ICST57152.2023.00021.", url: null },
                 { id: 5, authors: "Barr, E. T., et al.", year: "2015", title: "The Oracle Problem in Software Testing: A Survey.", venue: "IEEE Transactions on Software Engineering.", url: null },
                 { id: 6, authors: "Inozemtseva, L., & Holmes, R.", year: "2014", title: "Coverage is Not Strongly Correlated with Test Suite Effectiveness.", venue: "ICSE.", url: "https://dl.acm.org/doi/10.1145/2568225.2568271" },
                 { id: 7, authors: "Just, R., et al.", year: "2014", title: "Are Mutants a Valid Substitute for Real Faults in Software Testing?", venue: "FSE.", url: null },
                 { id: 8, authors: "Luo, Q., et al.", year: "2014", title: "An Empirical Analysis of Flaky Tests.", venue: "FSE.", url: null },
-                { id: 9, authors: "Fraser, G. & Arcuri, A.", year: "2013", title: "Whole Test Suite Generation.", venue: "IEEE Transactions on Software Engineering, 39(2), 276–291. DOI: 10.1109/TSE.2012.14.", url: null },
-                { id: 10, authors: "Eder, S., Hauptmann, B., Junker, M., Jürgens, E., Vaas, R., & Prommer, J.", year: "2013", title: "Did we test our changes? Assessing alignment between tests and development in practice.", venue: "AST@ICSE 2013, pp. 107–110. DOI: 10.1109/IWAST.2013.6595800.", url: null },
+                { id: 9, authors: "Fraser, G. & Arcuri, A.", year: "2013", title: "Whole Test Suite Generation.", venue: "IEEE Transactions on Software Engineering, 39(2), 276-291. DOI: 10.1109/TSE.2012.14.", url: null },
+                { id: 10, authors: "Eder, S., Hauptmann, B., Junker, M., Jürgens, E., Vaas, R., & Prommer, J.", year: "2013", title: "Did we test our changes? Assessing alignment between tests and development in practice.", venue: "AST@ICSE 2013, pp. 107-110. DOI: 10.1109/IWAST.2013.6595800.", url: null },
                 { id: 11, authors: "Haas, D., Sailer, L., Joblin, M., Juergens, E., & Apel, S.", year: "2025", title: "Prioritizing Test Gaps by Risk in Industrial Practice.", venue: "IEEE Transactions on Software Engineering. DOI: 10.1109/TSE.2025.3556248.", url: null },
-                { id: 12, authors: "Wloka, J., Ryder, B. G., & Tip, F.", year: "2009", title: "JUnitMX — A change-aware unit testing tool.", venue: "ICSE 2009, pp. 567–570. DOI: 10.1109/ICSE.2009.5070557.", url: null },
-                { id: 13, authors: "Jin, W., Orso, A., & Xie, T.", year: "2010", title: "Automated Behavioral Regression Testing.", venue: "ICST 2010, pp. 137–146. DOI: 10.1109/ICST.2010.64.", url: null },
+                { id: 12, authors: "Wloka, J., Ryder, B. G., & Tip, F.", year: "2009", title: "JUnitMX: A change-aware unit testing tool.", venue: "ICSE 2009, pp. 567-570. DOI: 10.1109/ICSE.2009.5070557.", url: null },
+                { id: 13, authors: "Jin, W., Orso, A., & Xie, T.", year: "2010", title: "Automated Behavioral Regression Testing.", venue: "ICST 2010, pp. 137-146. DOI: 10.1109/ICST.2010.64.", url: null },
                 { id: 14, authors: "Su, Y., Pradel, M., & Chen, C.", year: "2026", title: "RippleGUItester: Change-Aware Exploratory Testing.", venue: "arXiv:2603.03121.", url: "https://arxiv.org/abs/2603.03121" },
               ].map((ref) => (
                 <li key={ref.id} id={`cite-${ref.id}`} className="flex gap-3 text-sm text-muted-foreground leading-relaxed">

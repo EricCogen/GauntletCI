@@ -9,7 +9,7 @@ using GauntletCI.Core.Rules;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0024 – Resource Lifecycle
+/// GCI0024, Resource Lifecycle
 /// Detects disposable resources allocated without a using statement or try/finally disposal.
 /// Covers both explicit known types (FileStream, SqlConnection, …) and any type whose name
 /// ends with a disposable suffix (Stream, Reader, Writer, Connection, Client, etc.).
@@ -35,9 +35,9 @@ public class GCI0024_ResourceLifecycle : RuleBase
         "new X509Certificate(", "new RSACryptoServiceProvider("
     ];
 
-    // Suffix-based heuristic (from GCI0030) — catches any type whose name ends in these.
+    // Suffix-based heuristic (from GCI0030): catches any type whose name ends in these.
     // Note: "Command" is intentionally excluded; SqlCommand is covered by DisposableTypes above,
-    // and System.CommandLine.Command is not IDisposable — including the suffix causes FPs.
+    // and System.CommandLine.Command is not IDisposable: including the suffix causes FPs.
     private static readonly string[] DisposableSuffixes =
     [
         "Stream", "Reader", "Writer", "Connection", "Client",
@@ -74,7 +74,7 @@ public class GCI0024_ResourceLifecycle : RuleBase
         // FluentAssertions / comparison context types
         "MemberSelectionContext", "EquivalencyValidationContext", "CreatorPropertyContext",
         "StrategyBuilderContext", "SelectionContext",
-        // WPF/WinForms SynchronizationContext — SynchronizationContext is not IDisposable
+        // WPF/WinForms SynchronizationContext: SynchronizationContext is not IDisposable
         "SynchronizationContext", "DispatcherSynchronizationContext",
         "DispatcherQueueSynchronizationContext",
     };
@@ -117,17 +117,17 @@ public class GCI0024_ResourceLifecycle : RuleBase
             // Defer to the owning rule (GCI0039) rather than double-reporting.
             if (GCI0039OwnedTypes.Contains(typeName)) continue;
 
-            // Skip: `return new X(...)` or `return foo(new X(...))` — caller takes ownership.
+            // Skip: `return new X(...)` or `return foo(new X(...))`: caller takes ownership.
             var trimmed = content.TrimStart();
             if (trimmed.StartsWith("return ", StringComparison.Ordinal)) continue;
 
-            // Skip: `new X(...)` inside a method/constructor call argument — the callee takes
+            // Skip: `new X(...)` inside a method/constructor call argument: the callee takes
             // ownership (e.g. services.AddSingleton(new X()), collection.Add(new X())).
             // Detect by counting unmatched `(` before the `new` keyword: if opens > closes,
             // we are inside a parameter list.
             if (IsInsideMethodCallArg(content, typeName)) continue;
 
-            // Skip: `static readonly X = new X()` — process-lifetime singletons are never disposed
+            // Skip: `static readonly X = new X()`: process-lifetime singletons are never disposed
             // by design; flagging them produces only noise with no actionable fix.
             if (content.Contains("static ", StringComparison.Ordinal)) continue;
 
@@ -164,14 +164,14 @@ public class GCI0024_ResourceLifecycle : RuleBase
 
     private static (string? TypeName, bool IsExplicit) MatchDisposableType(string content)
     {
-        // Fast path: explicit known types — High confidence
+        // Fast path: explicit known types: High confidence
         foreach (var knownType in DisposableTypes)
         {
             if (content.Contains(knownType, StringComparison.Ordinal))
                 return (knownType.Replace("new ", "").TrimEnd('('), true);
         }
 
-        // Suffix heuristic — Medium confidence
+        // Suffix heuristic: Medium confidence
         var match = NewTypeRegex.Match(content);
         if (match.Success)
         {
@@ -191,7 +191,7 @@ public class GCI0024_ResourceLifecycle : RuleBase
     }
 
     // Returns true when the `new TypeName(` pattern appears inside an open method or constructor
-    // call argument list — i.e., there are more `(` than `)` in the text before the `new` keyword.
+    // call argument list: i.e., there are more `(` than `)` in the text before the `new` keyword.
     // In that case the callee owns the object's lifetime, so no `using` is expected here.
     private static bool IsInsideMethodCallArg(string content, string typeName)
     {

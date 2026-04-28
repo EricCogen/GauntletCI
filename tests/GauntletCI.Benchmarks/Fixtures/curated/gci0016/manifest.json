@@ -12,7 +12,7 @@
       "expected_gci_rules": [
         "GCI016"
       ],
-      "notes": "Property getter calls Task.Run().Result, blocking the thread-pool thread for synchronous I/O inside an async-capable MAUI app — classic deadlock anti-pattern.",
+      "notes": "Property getter calls Task.Run().Result, blocking the thread-pool thread for synchronous I/O inside an async-capable MAUI app: classic deadlock anti-pattern.",
       "origin": "real",
       "source_url": "https://github.com/CoraCodeDev/PdfSplitter/pull/3"
     },
@@ -24,7 +24,7 @@
       "expected_gci_rules": [
         "GCI016"
       ],
-      "notes": "GetAwaiter().GetResult() blocks the calling thread, but the overall fix reads stdout and stderr concurrently via Task.WhenAll — debatable: avoids the pipe deadlock but still blocks the outer thread.",
+      "notes": "GetAwaiter().GetResult() blocks the calling thread, but the overall fix reads stdout and stderr concurrently via Task.WhenAll: debatable: avoids the pipe deadlock but still blocks the outer thread.",
       "origin": "real",
       "source_url": "https://github.com/abpframework/abp/pull/25155"
     },

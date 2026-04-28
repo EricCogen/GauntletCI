@@ -6,7 +6,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0042 – TODO/Stub Detection
+/// GCI0042, TODO/Stub Detection
 /// Fires when added lines in non-test files contain TODO, FIXME, HACK, or throw new NotImplementedException.
 /// </summary>
 public class GCI0042_TodoStubDetection : RuleBase

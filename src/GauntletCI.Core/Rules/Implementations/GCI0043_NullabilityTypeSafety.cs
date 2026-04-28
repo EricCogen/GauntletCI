@@ -6,7 +6,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0043 – Nullability and Type Safety
+/// GCI0043, Nullability and Type Safety
 /// Detects null-forgiving operator overuse, pragma warning disables for nullable, and unchecked as-casts.
 /// Boundary with GCI0006 (Edge Case Handling): GCI0006 owns .Value access detection (nullable .Value
 /// without a null guard). When an as-cast result is accessed via .Value on the same line, GCI0006 is
@@ -71,7 +71,7 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
         var matchingLines = file.AddedLines
             .Where(l => IsNullForgivingLine(l.Content))
             // GetValueForOption(opt)! is System.CommandLine's idiomatic pattern for
-            // required options — the value is always set, so the ! is safe.
+            // required options: the value is always set, so the ! is safe.
             .Where(l => !l.Content.Contains("GetValueForOption(", StringComparison.Ordinal))
             .ToList();
 
@@ -115,7 +115,7 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
             var content = addedLines[i].Content;
             if (!content.Contains(" as ", StringComparison.Ordinal)) continue;
 
-            // Skip XML doc comment lines — they contain "as" in natural prose
+            // Skip XML doc comment lines: they contain "as" in natural prose
             if (content.TrimStart().StartsWith("///")) continue;
 
             // Skip regular comment lines (// and /* ... */ block-comment body lines starting with *)
@@ -126,13 +126,13 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
             var asPos = content.IndexOf(" as ", StringComparison.Ordinal);
             if (IsInsideStringLiteral(content, asPos)) continue;
 
-            // `as object` always succeeds for any non-null reference — safe, never returns null.
+            // `as object` always succeeds for any non-null reference: safe, never returns null.
             var afterAs = content[(asPos + 4)..].TrimStart();
             if (afterAs.StartsWith("object", StringComparison.Ordinal) &&
                 (afterAs.Length == 6 || (!char.IsLetterOrDigit(afterAs[6]) && afterAs[6] != '_')))
                 continue;
 
-            // (x as T)?. — null-conditional usage; NullReferenceException is impossible here.
+            // (x as T)?.: null-conditional usage; NullReferenceException is impossible here.
             if (content[(asPos + 4)..].Contains(")?.", StringComparison.Ordinal)) continue;
 
             // GCI0006 (Edge Case Handling) owns .Value access detection. When the as-cast result

@@ -11,7 +11,7 @@ public record IncidentSummary(string Id, string Title, string? Description, stri
 
 /// <summary>
 /// Fetches incidents from PagerDuty and Opsgenie, and correlates them with GauntletCI findings.
-/// All HTTP calls soft-fail — network errors log to stderr and return empty lists.
+/// All HTTP calls soft-fail: network errors log to stderr and return empty lists.
 /// </summary>
 public static class IncidentClient
 {
@@ -123,7 +123,7 @@ public static class IncidentClient
             if (!response.IsSuccessStatusCode)
             {
                 var err = await response.Content.ReadAsStringAsync(ct);
-                Console.Error.WriteLine($"[GauntletCI] PagerDuty note post failed: {(int)response.StatusCode} — {err}");
+                Console.Error.WriteLine($"[GauntletCI] PagerDuty note post failed: {(int)response.StatusCode}: {err}");
                 return false;
             }
 

@@ -146,7 +146,7 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider, IDisposab
             baseDelay = TimeSpan.FromSeconds(Math.Min(baseDelay.TotalSeconds * 2, 64));
 
             Console.Error.WriteLine(
-                $"[corpus/issues] Rate limit (HTTP {(int)resp.StatusCode}) — " +
+                $"[corpus/issues] Rate limit (HTTP {(int)resp.StatusCode}): " +
                 $"attempt {attempt + 1}/{MaxRetries}, waiting {waitTime.TotalSeconds:F0}s…");
 
             await Task.Delay(waitTime, ct);

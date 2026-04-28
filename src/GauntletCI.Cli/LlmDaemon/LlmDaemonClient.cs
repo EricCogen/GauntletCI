@@ -53,10 +53,10 @@ internal sealed class LlmDaemonClient : ILlmEngine
         if (!TrySpawnDaemon())
             return null;
 
-        // Notify the user immediately — they'll see this before the wait begins
+        // Notify the user immediately: they'll see this before the wait begins
         Console.Error.WriteLine();
         Console.Error.WriteLine(
-            "  ℹ  LLM enrichment requested. Starting local model daemon — " +
+            "  ℹ  LLM enrichment requested. Starting local model daemon: " +
             "this may take up to 30s on first run.");
         Console.Error.WriteLine(
             "     Subsequent runs will connect instantly once the daemon is warm.");
@@ -131,7 +131,7 @@ internal sealed class LlmDaemonClient : ILlmEngine
                 CreateNoWindow  = true,
             };
 
-            // Start the daemon and immediately release our handle — we don't own its lifetime.
+            // Start the daemon and immediately release our handle: we don't own its lifetime.
             using var proc = Process.Start(psi);
             return proc is not null;
         }

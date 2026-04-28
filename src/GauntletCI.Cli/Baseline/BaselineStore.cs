@@ -10,7 +10,7 @@ namespace GauntletCI.Cli.Baseline;
 /// <summary>
 /// Reads and writes <c>.gauntletci-baseline.json</c> and computes stable finding fingerprints.
 /// A fingerprint is a SHA-256 hash of the rule ID, file path, and the first 100 characters of
-/// the evidence string — stable enough to survive minor text reflow but sensitive to actual
+/// the evidence string: stable enough to survive minor text reflow but sensitive to actual
 /// code changes.
 /// </summary>
 public static class BaselineStore

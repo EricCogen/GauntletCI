@@ -7,9 +7,9 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0029 – PII Entity Logging Leak
+/// GCI0029, PII Entity Logging Leak
 /// Detects PII terms in log calls in added lines of .cs files.
-/// See also: GCI0023 (Structured Logging) — detects format issues in log calls.
+/// See also: GCI0023 (Structured Logging): detects format issues in log calls.
 /// These rules are complementary: GCI0029 checks content (PII), GCI0023 checks format.
 /// </summary>
 public class GCI0029_PiiLoggingLeak : RuleBase
@@ -24,7 +24,7 @@ public class GCI0029_PiiLoggingLeak : RuleBase
         "dob", "birthdate", "zipcode", "postalcode", "geolocation"
     ];
 
-    // "name" is weak — only fires when it appears in an assignment/interpolation context
+    // "name" is weak: only fires when it appears in an assignment/interpolation context
     // (e.g. name=, {name}, .name, "name") to avoid false positives on prose like "by name"
     private static readonly string[] WeakPiiTerms = ["name"];
 
@@ -79,7 +79,7 @@ public class GCI0029_PiiLoggingLeak : RuleBase
 
                 findings.Add(CreateFinding(
                     file,
-                    summary: $"PII term '{matchedTerm}' found in log call — may expose sensitive data in {file.NewPath}.",
+                    summary: $"PII term '{matchedTerm}' found in log call: may expose sensitive data in {file.NewPath}.",
                     evidence: $"Line {line.LineNumber}: {content.Trim()}",
                     whyItMatters: "Logging PII violates GDPR, CCPA, and HIPAA. Once in logs, PII propagates to log aggregators, storage, and third-party monitoring tools.",
                     suggestedAction: "Redact or omit PII from log calls. Log only anonymized identifiers (e.g. UserId, not Email or SSN).",

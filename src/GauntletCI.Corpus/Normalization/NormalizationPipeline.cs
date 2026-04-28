@@ -11,7 +11,7 @@ namespace GauntletCI.Corpus.Normalization;
 /// HydratedPullRequest → all fixture files on disk + SQLite index entry.
 ///
 /// Writes: metadata.json, expected.json, diff.patch, notes.md (via store),
-/// and updates the SQLite fixtures table. Idempotent — safe to re-run.
+/// and updates the SQLite fixtures table. Idempotent: safe to re-run.
 /// </summary>
 public sealed class NormalizationPipeline
 {
@@ -46,7 +46,7 @@ public sealed class NormalizationPipeline
         // 2. diff.patch
         await WriteDiffPatchAsync(metadata, pr.DiffText, ct);
 
-        // 3. expected.json — empty list for discovery-tier fixtures
+        // 3. expected.json: empty list for discovery-tier fixtures
         //    (human or heuristic labels will populate this later)
         if (metadata.Tier == FixtureTier.Discovery)
             await _store.SaveExpectedFindingsAsync(metadata.FixtureId, [], ct);

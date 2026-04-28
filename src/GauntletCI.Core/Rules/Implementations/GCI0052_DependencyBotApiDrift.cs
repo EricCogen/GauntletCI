@@ -6,7 +6,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0052 – Dependency Bot API Drift
+/// GCI0052, Dependency Bot API Drift
 /// Fires when a dependency bot actor (Dependabot, Renovate, Snyk) opens a PR that
 /// contains both a lockfile change and a public API method signature change in C# files.
 /// </summary>
@@ -77,7 +77,7 @@ public class GCI0052_DependencyBotApiDrift : RuleBase
 
                 findings.Add(CreateFinding(
                     file,
-                    summary:         "Dependency bot PR introduces a public API change — verify backward compatibility",
+                    summary:         "Dependency bot PR introduces a public API change: verify backward compatibility",
                     evidence:        $"{file.NewPath} line {line.LineNumber}: {line.Content.Trim()}",
                     whyItMatters:    "Automated dependency bots (Dependabot, Renovate, Snyk) should not be changing public method signatures. This may indicate a transitive dependency pulled in an unexpected API change or a bot misconfiguration.",
                     suggestedAction: "Review the public API change carefully. If unintentional, revert the non-lockfile changes. If intentional, use a human-authored PR instead.",

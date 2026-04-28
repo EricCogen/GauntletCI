@@ -56,9 +56,9 @@ gauntletci analyze --diff pr.diff    # analyze a diff file
 
 **Possible causes:**
 
-1. **All files were filtered as ineligible** — GauntletCI skips binary files, generated code, vendored dependencies, and lock files. Run with `--verbose` to see the file eligibility report.
-2. **Rules are disabled in config** — check `.gauntletci.json` for `"enabled": false` entries.
-3. **Diff was empty** — `git diff --staged` with nothing staged produces an empty diff.
+1. **All files were filtered as ineligible**: GauntletCI skips binary files, generated code, vendored dependencies, and lock files. Run with `--verbose` to see the file eligibility report.
+2. **Rules are disabled in config**: check `.gauntletci.json` for `"enabled": false` entries.
+3. **Diff was empty**: `git diff --staged` with nothing staged produces an empty diff.
 
 ---
 
@@ -91,7 +91,7 @@ Use `gauntletci ignore add GCI00XX` to add a one-time suppression for a specific
 | Cause | Fix |
 |-------|-----|
 | Model not downloaded | Run `gauntletci model download` first |
-| CPU inference timeout | Inference on CPU takes 30–90 seconds per finding. The default timeout is 60 seconds — this is usually sufficient, but a heavily loaded machine may need longer. |
+| CPU inference timeout | Inference on CPU takes 30-90 seconds per finding. The default timeout is 60 seconds: this is usually sufficient, but a heavily loaded machine may need longer. |
 | DirectML not available | The model falls back to CPU automatically. GPU via DirectML greatly speeds up inference on Windows. |
 
 ---
@@ -100,7 +100,7 @@ Use `gauntletci ignore add GCI00XX` to add a one-time suppression for a specific
 
 The Phi-4 Mini ONNX model is ~2.6 GB. Download speed depends on your connection. The model is cached at `~/.gauntletci/models/phi4-mini` after the first download.
 
-If the download stalls, cancel and retry — the download is resumable.
+If the download stalls, cancel and retry: the download is resumable.
 
 ---
 
@@ -128,15 +128,15 @@ ollama serve   # in a separate terminal
 
 **Possible causes:**
 
-1. **No GitHub token configured** — set `GITHUB_TOKEN` environment variable or place a PAT in `.misc/ghapi.key`
-2. **Rate limit hit** — the GitHub API has rate limits. Wait and retry, or use a token with higher limits.
-3. **Network timeout** — retry with `--max-pages 1` to test connectivity.
+1. **No GitHub token configured**: set `GITHUB_TOKEN` environment variable or place a PAT in `.misc/ghapi.key`
+2. **Rate limit hit**: the GitHub API has rate limits. Wait and retry, or use a token with higher limits.
+3. **Network timeout**: retry with `--max-pages 1` to test connectivity.
 
 ---
 
 ### `corpus run-all` is slow
 
-The corpus runner evaluates all rules against every fixture. With 500+ fixtures and 20 active rules, this can take 10–30 minutes. Run a subset:
+The corpus runner evaluates all rules against every fixture. With 500+ fixtures and 20 active rules, this can take 10-30 minutes. Run a subset:
 
 ```bash
 gauntletci corpus run-all --limit 50
@@ -150,7 +150,7 @@ gauntletci corpus run-all --limit 50
 # Back up first
 Copy-Item data/gauntletci-corpus.db data/gauntletci-corpus.db.bak
 
-# Delete and reinitialize (data loss — be sure you have a backup)
+# Delete and reinitialize (data loss: be sure you have a backup)
 Remove-Item data/gauntletci-corpus.db
 gauntletci corpus discover   # recreates the DB with fresh schema
 ```
@@ -169,7 +169,7 @@ This writes `"consent": "OptedOut"` to `~/.gauntletci/config.json`. No data is s
 
 ### Where is telemetry stored locally?
 
-`~/.gauntletci/telemetry-queue.json` — a bounded JSON queue (max 500 events). Inspect it at any time.
+`~/.gauntletci/telemetry-queue.json`: a bounded JSON queue (max 500 events). Inspect it at any time.
 
 ---
 
@@ -177,7 +177,7 @@ This writes `"consent": "OptedOut"` to `~/.gauntletci/config.json`. No data is s
 
 ### Action fails with `gauntletci: not found`
 
-**Fix:** Ensure `dotnet-version` is set to `8.0.x` in the action input and the .NET tools path is on `PATH`. The composite action handles this automatically — verify you're using the action correctly:
+**Fix:** Ensure `dotnet-version` is set to `8.0.x` in the action input and the .NET tools path is on `PATH`. The composite action handles this automatically: verify you're using the action correctly:
 
 ```yaml
 - uses: EricCogen/GauntletCI@v1

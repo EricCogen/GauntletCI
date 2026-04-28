@@ -43,7 +43,7 @@ public sealed class CorpusDb : IDisposable
         cmd.CommandText = SchemaInitializer.Ddl;
         await cmd.ExecuteNonQueryAsync(cancellationToken);
 
-        // Idempotent migrations — ALTER TABLE errors if column exists; that is harmless.
+        // Idempotent migrations: ALTER TABLE errors if column exists; that is harmless.
         foreach (var migration in SchemaInitializer.Migrations)
         {
             try
@@ -55,7 +55,7 @@ public sealed class CorpusDb : IDisposable
         catch (Exception ex) when (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase)
                                  || ex.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase))
         {
-            // Idempotent — column or table already exists; safe to ignore
+            // Idempotent: column or table already exists; safe to ignore
         }
         }
     }

@@ -7,7 +7,7 @@ namespace GauntletCI.Tests;
 
 public sealed class SilverLabelEngineTests
 {
-    // Stub store — InferLabels* methods do not call _store
+    // Stub store: InferLabels* methods do not call _store
     private sealed class NullFixtureStore : IFixtureStore
     {
         public Task SaveMetadataAsync(FixtureMetadata metadata, CancellationToken cancellationToken = default) =>
@@ -91,7 +91,7 @@ public sealed class SilverLabelEngineTests
     [Fact]
     public async Task InferLabelsFromComments_CommentMentioningThreadSafe_DoesNotEmitGCI0016Label()
     {
-        // Thread-safety comments no longer map to GCI0016 — that scope was dropped when
+        // Thread-safety comments no longer map to GCI0016: that scope was dropped when
         // static mutable field detection was removed from the rule. "thread safe / race condition"
         // concerns belong to static analysis tools, not this diff-pattern rule.
 
@@ -118,7 +118,7 @@ public sealed class SilverLabelEngineTests
     [Fact]
     public async Task InferLabelsFromComments_MalformedJson_ReturnsEmpty_NoException()
     {
-        // Act — malformed JSON must not throw; engine silently swallows JsonException
+        // Act: malformed JSON must not throw; engine silently swallows JsonException
         var labels = await _engine.InferLabelsFromCommentsAsync("{ not valid json {{{{");
 
         // Assert
@@ -128,7 +128,7 @@ public sealed class SilverLabelEngineTests
     [Fact]
     public async Task InferLabelsFromComments_MultipleMatchingComments_DeduplicatesLabels()
     {
-        // Arrange — two comments both match "needs tests" → only one GCI0041 label emitted
+        // Arrange: two comments both match "needs tests" → only one GCI0041 label emitted
         var json = CommentsJson("You need to add test coverage here", "Also needs tests for the edge case");
 
         // Act
@@ -145,7 +145,7 @@ public sealed class SilverLabelEngineTests
     [Fact]
     public async Task InferLabels_DiffWithNoMatchingPatterns_ReturnsEmptyList()
     {
-        // Arrange — benign change with no heuristic triggers
+        // Arrange: benign change with no heuristic triggers
         var diff = """
             --- a/src/Foo.cs
             +++ b/src/Foo.cs
@@ -156,7 +156,7 @@ public sealed class SilverLabelEngineTests
         // Act
         var labels = await _engine.InferLabelsAsync("fix-001", diff);
 
-        // Assert — InferLabelsAsync only emits positive labels; no match → empty
+        // Assert: InferLabelsAsync only emits positive labels; no match → empty
         Assert.Empty(labels);
     }
 
@@ -181,7 +181,7 @@ public sealed class SilverLabelEngineTests
             "GCI0024", "GCI0029", "GCI0036", "GCI0047",
         };
 
-        // Assert — every expected rule is present and the set has the expected total
+        // Assert: every expected rule is present and the set has the expected total
         foreach (var ruleId in expected)
             Assert.Contains(ruleId, SilverLabelEngine.RulesWithHeuristics);
 
@@ -191,7 +191,7 @@ public sealed class SilverLabelEngineTests
     [Fact]
     public async Task InferLabels_DiffWithResultPattern_EmitsGCI0016Label()
     {
-        // Arrange — added line accesses .Result (sync-over-async anti-pattern)
+        // Arrange: added line accesses .Result (sync-over-async anti-pattern)
         var diff = """
             --- a/src/Service.cs
             +++ b/src/Service.cs
@@ -209,7 +209,7 @@ public sealed class SilverLabelEngineTests
     [Fact]
     public async Task InferLabels_DiffWithAsyncVoid_EmitsGCI0016Label()
     {
-        // Arrange — async void method (not an event handler)
+        // Arrange: async void method (not an event handler)
         var diff = """
             --- a/src/Worker.cs
             +++ b/src/Worker.cs
@@ -227,7 +227,7 @@ public sealed class SilverLabelEngineTests
     [Fact]
     public async Task InferLabels_DiffWithLockThis_EmitsGCI0016Label()
     {
-        // Arrange — lock(this) antipattern
+        // Arrange: lock(this) antipattern
         var diff = """
             --- a/src/Cache.cs
             +++ b/src/Cache.cs
@@ -245,7 +245,7 @@ public sealed class SilverLabelEngineTests
     [Fact]
     public async Task InferLabels_DiffWithAsyncVoidEventHandler_DoesNotEmitGCI0016Label()
     {
-        // Arrange — async void event handler is a legitimate pattern
+        // Arrange: async void event handler is a legitimate pattern
         var diff = """
             --- a/src/Page.cs
             +++ b/src/Page.cs
@@ -263,7 +263,7 @@ public sealed class SilverLabelEngineTests
     [Fact]
     public async Task InferLabels_DiffWithMigrationFileAndDropColumn_EmitsGCI0021Label()
     {
-        // Arrange — migration file modified with a removed migrationBuilder.DropColumn call
+        // Arrange: migration file modified with a removed migrationBuilder.DropColumn call
         var diff = """
             diff --git a/src/Migrations/20240101_AddUsersTable.cs b/src/Migrations/20240101_AddUsersTable.cs
             --- a/src/Migrations/20240101_AddUsersTable.cs
@@ -285,7 +285,7 @@ public sealed class SilverLabelEngineTests
     [Fact]
     public async Task InferLabels_DiffWithMigrationFileNoSchemaOp_ShouldNotEmitGCI0021Label()
     {
-        // Arrange — migration file modified but removed lines have no schema operations (scaffolding logic only)
+        // Arrange: migration file modified but removed lines have no schema operations (scaffolding logic only)
         var diff = """
             diff --git a/src/Migrations/Internal/SnapshotProcessor.cs b/src/Migrations/Internal/SnapshotProcessor.cs
             --- a/src/Migrations/Internal/SnapshotProcessor.cs
@@ -297,14 +297,14 @@ public sealed class SilverLabelEngineTests
         // Act
         var labels = await _engine.InferLabelsAsync("fix-001", diff);
 
-        // Assert — no GCI0021 trigger: modified migration-dir file but no schema op in removed lines
+        // Assert: no GCI0021 trigger: modified migration-dir file but no schema op in removed lines
         Assert.DoesNotContain(labels, l => l.RuleId == "GCI0021" && l.ShouldTrigger);
     }
 
     [Fact]
     public async Task InferLabels_DiffWithCredentialAssignment_EmitsGCI0012Label()
     {
-        // Arrange — added line assigns a literal string to a credential keyword variable
+        // Arrange: added line assigns a literal string to a credential keyword variable
         var diff = """
             --- a/src/Config.cs
             +++ b/src/Config.cs

@@ -87,7 +87,7 @@ public class TelemetryDbTests : IDisposable
         var evt = new TelemetryEvent { EventType = "analysis" };
         await TelemetryDb.AppendAsync(evt, _dbPath);
 
-        // Mark sent — event is recent so won't be purged by the 7-day cutoff
+        // Mark sent: event is recent so won't be purged by the 7-day cutoff
         await TelemetryDb.MarkSentAsync([evt.EventId], _dbPath);
 
         // Still present (sent but recent)

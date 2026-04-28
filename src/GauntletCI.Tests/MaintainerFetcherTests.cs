@@ -23,7 +23,7 @@ public sealed class MaintainerFetcherTests
     [Fact]
     public async Task GetTopContributorLogins_ReturnsMappedLogins()
     {
-        // 10 contributors — top 5% = ceil(0.5) = 1, but MinTopCount=10, so we get all 10
+        // 10 contributors: top 5% = ceil(0.5) = 1, but MinTopCount=10, so we get all 10
         var json = MakeContributors(10);
         var handler = new FakeHttpHandler(url => url.Contains("/contributors")
             ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json) }
@@ -39,7 +39,7 @@ public sealed class MaintainerFetcherTests
     [Fact]
     public async Task GetTopContributorLogins_TakesTopPercentileForLargeRepos()
     {
-        // 200 contributors — top 5% = 10 = MinTopCount, so exactly 10 (or 200*0.05=10)
+        // 200 contributors: top 5% = 10 = MinTopCount, so exactly 10 (or 200*0.05=10)
         var json = MakeContributors(200);
         var handler = new FakeHttpHandler(url => url.Contains("/contributors")
             ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json) }
@@ -54,7 +54,7 @@ public sealed class MaintainerFetcherTests
     [Fact]
     public async Task GetTopContributorLogins_LargeRepo_TakesPercentileWhenGreaterThanMin()
     {
-        // 400 contributors — top 5% = 20 > MinTopCount(10), so we get 20
+        // 400 contributors: top 5% = 20 > MinTopCount(10), so we get 20
         var json = MakeContributors(400);
         var handler = new FakeHttpHandler(url => url.Contains("/contributors")
             ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json) }
@@ -132,7 +132,7 @@ public sealed class MaintainerFetcherTests
         var targets = new[] { new MaintainerTarget("dotnet", "runtime", ["performance", "design-discussion"]) };
         var results = await fetcher.FetchAsync(targets, 100, default);
 
-        // PR #42 found in both "performance" and "design-discussion" searches — deduplicated to 1
+        // PR #42 found in both "performance" and "design-discussion" searches: deduplicated to 1
         Assert.Single(results);
         Assert.Equal(42, results[0].Number);
     }

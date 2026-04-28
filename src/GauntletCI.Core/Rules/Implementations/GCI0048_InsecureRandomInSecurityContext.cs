@@ -8,7 +8,7 @@ using GauntletCI.Core.StaticAnalysis;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0048 – Insecure Random in Security Context
+/// GCI0048, Insecure Random in Security Context
 /// Detects <c>System.Random</c> instantiation within 5 lines of security-sensitive identifiers
 /// such as <c>apikey</c>, <c>token</c>, <c>secret</c>, <c>password</c>, <c>privatekey</c>,
 /// <c>accesskey</c>, <c>salt</c>, or similar compound security terms in non-test files.
@@ -83,7 +83,7 @@ public class GCI0048_InsecureRandomInSecurityContext : RuleBase
 
                 findings.Add(CreateFinding(
                     file,
-                    summary: "System.Random used near security-sensitive identifier — use a cryptographic RNG instead",
+                    summary: "System.Random used near security-sensitive identifier: use a cryptographic RNG instead",
                     evidence: $"Line {line.LineNumber}: {line.Content.Trim()}",
                     whyItMatters: "System.Random is a pseudo-random number generator seeded from the system clock. " +
                                   "Its output is predictable and must never be used for cryptographic purposes " +

@@ -7,7 +7,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0041 – Test Quality Gaps
+/// GCI0041, Test Quality Gaps
 /// Detects low-quality test patterns: silenced tests, uninformative method names, and missing assertions.
 /// Only evaluates files whose path contains "test" or "spec" (case-insensitive).
 /// </summary>
@@ -37,7 +37,7 @@ public class GCI0041_TestQualityGaps : RuleBase
     [
         // xUnit / NUnit / MSTest
         "Assert.", "Xunit.Assert", "NUnit.Framework.Assert",
-        // Bare Assert() call (no dot) — MongoDB, classic NUnit style
+        // Bare Assert() call (no dot): MongoDB, classic NUnit style
         "Assert(",
         // FluentAssertions / Shouldly
         "Should", ".ShouldBe", ".ShouldNotBe", ".ShouldBeNull", ".ShouldNotBeNull",
@@ -170,7 +170,7 @@ public class GCI0041_TestQualityGaps : RuleBase
 
         if (!hasTestAttribute) return;
 
-        // Check both added lines and context lines — assertions may live in helper calls
+        // Check both added lines and context lines: assertions may live in helper calls
         // or in lines that weren't changed in this diff.
         var allVisibleLines = file.Hunks.SelectMany(h => h.Lines)
             .Where(l => l.Kind != DiffLineKind.Removed)

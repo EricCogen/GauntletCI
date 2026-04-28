@@ -6,7 +6,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0039 – External Service Safety
+/// GCI0039, External Service Safety
 /// Detects unsafe HTTP client and external service usage patterns in C# code.
 /// </summary>
 public class GCI0039_ExternalServiceSafety : RuleBase
@@ -79,7 +79,7 @@ public class GCI0039_ExternalServiceSafety : RuleBase
         if (!hasNewHttpClient) return;
 
         // Code that configures HttpClient via factory (IHttpClientFactory / AddHttpClient)
-        // manages timeout at the channel/handler level — not via client.Timeout directly.
+        // manages timeout at the channel/handler level: not via client.Timeout directly.
         bool isFactoryConfig = addedLines.Any(l =>
             l.Content.Contains("IHttpClientFactory", StringComparison.Ordinal)
             || l.Content.Contains("AddHttpClient", StringComparison.Ordinal)

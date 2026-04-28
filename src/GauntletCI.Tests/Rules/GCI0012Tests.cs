@@ -87,7 +87,7 @@ public class GCI0012Tests
     [Fact]
     public async Task EnvVarNameOnly_ShouldNotFlag()
     {
-        // String literal looks like an env var name (ALL_CAPS_UNDERSCORES) — this is a key reference, not a hardcoded value.
+        // String literal looks like an env var name (ALL_CAPS_UNDERSCORES): this is a key reference, not a hardcoded value.
         var diff = MakeDiff("    var apiKey = Environment.GetEnvironmentVariable(\"MY_API_KEY\");");
         var findings = await Rule.EvaluateAsync(diff, null);
 
@@ -115,7 +115,7 @@ public class GCI0012Tests
     [Fact]
     public async Task CommentedCredential_DoesNotFlag()
     {
-        // GCI0012 skips comment lines for the credential check — commented-out code is
+        // GCI0012 skips comment lines for the credential check: commented-out code is
         // historically common (TODOs/examples) and treating it as a hardcoded credential is noisy.
         var diff = MakeDiff("    // var apiKey = \"test1234\";");
         var findings = await Rule.EvaluateAsync(diff, null);

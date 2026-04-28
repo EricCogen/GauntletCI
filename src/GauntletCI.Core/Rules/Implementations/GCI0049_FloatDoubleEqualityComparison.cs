@@ -7,7 +7,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0049 – Float/Double Equality Comparison
+/// GCI0049, Float/Double Equality Comparison
 /// Detects direct equality (<c>==</c> / <c>!=</c>) comparisons involving floating-point
 /// literals or expressions on added lines in non-test files.
 /// Floating-point arithmetic is inexact; equality comparisons almost always produce
@@ -19,7 +19,7 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
     public override string Name => "Float/Double Equality Comparison";
 
     // Matches: == or != followed by a float/double literal (e.g. 0.0, 1.5f, 2.0d, .5F)
-    // Excludes decimal (m/M) suffixes — decimal equality is exact and not a precision pitfall.
+    // Excludes decimal (m/M) suffixes: decimal equality is exact and not a precision pitfall.
     // Both alternatives require at least one digit after the decimal point to prevent the
     // regex engine from matching "1." (backtracking) when "1.0m" appears.
     private static readonly Regex FloatLiteralOnRightRegex = new(
@@ -74,7 +74,7 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
                     continue;
 
                 // When the line is an integer zero-guard ternary (e.g. count == 0 ? 0.0 : (double)a/b),
-                // the (double)/(float) cast and the == appear in different clauses — skip cast/type checks.
+                // the (double)/(float) cast and the == appear in different clauses: skip cast/type checks.
                 bool hasSafeDivGuard = IsGuardedIntegerZeroCheck(content);
 
                 bool matches = HasMatchOutsideStringLiteral(FloatLiteralOnRightRegex, content)
@@ -86,7 +86,7 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
 
                 findings.Add(CreateFinding(
                     file,
-                    summary: "Direct equality comparison on a floating-point value — use an epsilon threshold instead",
+                    summary: "Direct equality comparison on a floating-point value: use an epsilon threshold instead",
                     evidence: $"Line {line.LineNumber}: {(trimmed.Length > 120 ? trimmed[..120] + "…" : trimmed)}",
                     whyItMatters: "Floating-point arithmetic is inexact due to binary representation. " +
                                   "Two values that are mathematically equal may differ by a tiny rounding error, " +

@@ -6,7 +6,7 @@ namespace GauntletCI.Core.Rules;
 
 /// <summary>
 /// Contract for a single GauntletCI rule that inspects a diff and returns zero or more findings.
-/// Implementations are auto-discovered via reflection — no manual registration is required.
+/// Implementations are auto-discovered via reflection: no manual registration is required.
 /// </summary>
 public interface IRule
 {
