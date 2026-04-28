@@ -538,7 +538,7 @@ public sealed class SilverLabelEngine
                        t.StartsWith("[HttpPost(", StringComparison.Ordinal);
             });
             bool hasInsertWithoutUpsert = addedLines.Any(l =>
-                l.Contains("INSERT INTO", StringComparison.OrdinalIgnoreCase) &&
+                l.Contains("INSERT INTO", StringComparison.Ordinal) &&
                 !upsertPatterns.Any(p => l.Contains(p, StringComparison.OrdinalIgnoreCase)));
             if (hasHttpPostAdded || hasInsertWithoutUpsert)
             {

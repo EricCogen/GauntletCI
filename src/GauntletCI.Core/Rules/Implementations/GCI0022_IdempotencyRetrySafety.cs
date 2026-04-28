@@ -36,7 +36,6 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
         foreach (var file in diff.Files)
         {
             CheckHttpPostWithoutIdempotency(file, findings);
-            CheckEventHandlerWithoutDedup(file, findings);
             CheckRawInsertWithoutUpsert(file, findings);
         }
 
@@ -100,91 +99,5 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
                     line: line));
             }
         }
-    }
-
-    private void CheckEventHandlerWithoutDedup(DiffFile file, List<Finding> findings)
-    {
-        // Test files intentionally exercise event subscription patterns — skip them
-        if (WellKnownPatterns.IsTestFile(file.NewPath)) return;
-
-        var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
-
-        for (int i = 0; i < allLines.Count; i++)
-        {
-            var line = allLines[i];
-            if (line.Kind != DiffLineKind.Added) continue;
-            var content = line.Content.Trim();
-
-            // Event subscription pattern: "SomeEvent += Handler;"
-            if (!content.Contains(" += ") || !content.EndsWith(';')) continue;
-            if (!content.Contains("Event") && !content.Contains("Handler") &&
-                !content.Contains("Listener") && !content.Contains("Callback")) continue;
-
-            // Generic typed event channels (e.g. MessageBus<T>.Subscribers +=) are intentional
-            // single-registration patterns at startup — deduplication concern does not apply.
-            {
-                int plusEq = content.IndexOf(" += ", StringComparison.Ordinal);
-                int gtIdx  = content.IndexOf('>', StringComparison.Ordinal);
-                if (gtIdx > 0 && gtIdx < plusEq) continue;
-            }
-
-            // Exempt += inside a static constructor (runs exactly once — inherently idempotent)
-            if (IsInsideStaticConstructor(allLines, i)) continue;
-
-            // Look for deduplication guard nearby (unsubscribe or bool guard)
-            int start = Math.Max(0, i - 5);
-            int end = Math.Min(allLines.Count, i + 10);
-            var window = allLines[start..end].Select(l => l.Content);
-
-            bool hasDedup = window.Any(l =>
-                l.Contains(" -= ") ||
-                l.Contains("_subscribed", StringComparison.Ordinal) ||
-                l.Contains("_registered", StringComparison.Ordinal) ||
-                l.Contains("_attached", StringComparison.Ordinal));
-
-            if (!hasDedup)
-            {
-                findings.Add(CreateFinding(
-                    file,
-                    summary: $"Event handler registered without deduplication guard in {file.NewPath}.",
-                    evidence: $"Line {line.LineNumber}: {content}",
-                    whyItMatters: "Event handlers registered multiple times fire multiple times, causing duplicate side effects that are hard to debug.",
-                    suggestedAction: "Unsubscribe before subscribing (-= then +=), or guard with a boolean flag to prevent duplicate registration.",
-                    confidence: Confidence.Low,
-                    line: line));
-            }
-        }
-    }
-
-    /// <summary>
-    /// Returns true when the line at <paramref name="idx"/> appears to be inside a static constructor,
-    /// which is inherently idempotent (runs exactly once per AppDomain lifetime).
-    /// Detects the pattern <c>static ClassName()</c> within the preceding 20 lines.
-    /// A static constructor has no return type, so the identifier immediately follows "static " with
-    /// no whitespace-separated token between it and the opening parenthesis.
-    /// </summary>
-    private static bool IsInsideStaticConstructor(List<DiffLine> allLines, int idx)
-    {
-        int searchStart = Math.Max(0, idx - 20);
-        for (int j = idx - 1; j >= searchStart; j--)
-        {
-            var trimmed = allLines[j].Content.Trim();
-            if (!trimmed.StartsWith("static ")) continue;
-
-            // Extract everything after "static " and trim leading whitespace
-            var afterStatic = trimmed["static ".Length..].TrimStart();
-
-            // Find the first '(' — everything before it must contain NO whitespace.
-            // Static constructor: "static TypeName(" — one token before '('
-            // Static method:      "static ReturnType MethodName(" — two tokens before '('
-            var parenIdx = afterStatic.IndexOf('(');
-            if (parenIdx < 0) continue;
-
-            var beforeParen = afterStatic[..parenIdx].TrimEnd(); // trim trailing whitespace (e.g. "static Foo ()")
-            if (beforeParen.Contains(' ') || beforeParen.Contains('\t')) continue;
-
-            return true;
-        }
-        return false;
     }
 }
