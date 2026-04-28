@@ -1,5 +1,5 @@
 # GauntletCI
-<div><img src="GauntletCI.png" alt="GauntletCI Logo" width="200" align="right"/></div>
+<div><img src="https://raw.githubusercontent.com/EricCogen/GauntletCI/main/GauntletCI.png" alt="GauntletCI Logo" width="200" align="right"/></div>
 
 [![GauntletCI](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/EricCogen/db3979f1a5d69ce37d425b73bdcf4ada/raw/gauntletci-badge.json)](https://github.com/EricCogen/GauntletCI)
 [![GitHub last commit](https://img.shields.io/github/last-commit/EricCogen/GauntletCI)](https://github.com/EricCogen/GauntletCI/commits/main)
@@ -177,7 +177,7 @@ gauntletci analyze --staged
 
 ## 🧪 What you see on first run
 
-![GauntletCI terminal demo](docs/assets/gauntletci-terminal-demo.gif)
+![GauntletCI terminal demo](https://raw.githubusercontent.com/EricCogen/GauntletCI/main/docs/assets/gauntletci-terminal-demo.gif)
 
 > Running against [StackExchange.Redis PR#2995](https://github.com/StackExchange/StackExchange.Redis/pull/2995) - GauntletCI flags a swallowed exception in production connection handling.
 > GIF recorded with [ScreenToGif](https://github.com/NickeManarin/ScreenToGif) (open source)
