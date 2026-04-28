@@ -144,4 +144,97 @@ public class GCI0032Tests
 
         Assert.Empty(findings);
     }
+
+    [Fact]
+    public async Task SingleLineEmptyCatch_ShouldFlag()
+    {
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,5 +1,8 @@
+             public class Service {
+            +    try {
+            +        DoWork();
+            +    } catch (Exception ex) { }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("empty") && f.Summary.Contains("catch"));
+    }
+
+    [Fact]
+    public async Task MultiLineEmptyCatch_ShouldFlag()
+    {
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,5 +1,10 @@
+             public class Service {
+            +    try {
+            +        DoWork();
+            +    } catch (IOException ex) {
+            +        // intentionally ignored
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("empty") && f.Summary.Contains("catch"));
+    }
+
+    [Fact]
+    public async Task CatchWithExecutableStatement_ShouldNotFlag()
+    {
+        // A catch block with actual code (e.g., logging or rethrow) is not empty.
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,5 +1,10 @@
+             public class Service {
+            +    try {
+            +        DoWork();
+            +    } catch (IOException ex) {
+            +        _logger.LogError(ex, "DoWork failed");
+            +        throw;
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("empty") && f.Summary.Contains("catch"));
+    }
+
+    [Fact]
+    public async Task EmptyCatchInTestFile_ShouldNotFlag()
+    {
+        // Empty catch blocks in test files (e.g., expected-exception patterns) are not flagged.
+        var raw = """
+            diff --git a/src/ServiceTests.cs b/src/ServiceTests.cs
+            index abc..def 100644
+            --- a/src/ServiceTests.cs
+            +++ b/src/ServiceTests.cs
+            @@ -1,5 +1,8 @@
+             public class ServiceTests {
+            +    try { service.Run(); } catch { }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("empty") && f.Summary.Contains("catch"));
+    }
 }
