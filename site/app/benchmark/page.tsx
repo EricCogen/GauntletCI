@@ -6,7 +6,7 @@ import { Footer } from "@/components/footer";
 export const metadata: Metadata = {
   title: "The Silver Benchmark | GauntletCI Detection Accuracy",
   description:
-    "618 real .NET OSS pull requests. 23 rules. Precision and recall of each GauntletCI detection rule measured against a labeled corpus of open-source PRs.",
+    "618 real .NET OSS pull requests. 30 rules. Precision and recall of each GauntletCI detection rule measured against a labeled corpus of open-source PRs.",
   alternates: { canonical: "/benchmark" },
   openGraph: {
     images: [{ url: "/og/benchmark.png", width: 1200, height: 630 }],
@@ -18,7 +18,7 @@ const jsonLd = {
   "@type": "Article",
   headline: "The Silver Benchmark",
   description:
-    "618 real .NET OSS pull requests. 23 rules. Precision and recall of each GauntletCI detection rule measured against a labeled corpus.",
+    "618 real .NET OSS pull requests. 30 rules. Precision and recall of each GauntletCI detection rule measured against a labeled corpus.",
   url: "https://gauntletci.com/benchmark",
   publisher: {
     "@type": "Organization",
@@ -696,7 +696,7 @@ export default function BenchmarkPage() {
               The Silver Benchmark
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed text-pretty">
-              618 real .NET OSS pull requests. 23 rules. Every number earned
+              618 real .NET OSS pull requests. 30 rules. Every number earned
               through iteration.
             </p>
             <p className="text-muted-foreground leading-relaxed max-w-3xl">
@@ -940,7 +940,7 @@ export default function BenchmarkPage() {
                   Limited corpus coverage
                 </h3>
                 <span className="text-sm text-muted-foreground">
-                  0 fixtures or no signal - 4 rules
+                  0 fixtures or no signal - 11 rules
                 </span>
               </div>
               <div className="space-y-4">

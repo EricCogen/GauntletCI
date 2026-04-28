@@ -226,7 +226,7 @@ export default function CliReferencePage() {
             { href: "/docs/configuration", label: "Configuration", desc: "Customize rules and severity in .gauntletci.json" },
             { href: "/docs/integrations", label: "CI/CD Integrations", desc: "Use GauntletCI in GitHub Actions and Azure Pipelines" },
             { href: "/docs/local-llm", label: "Local LLM Setup", desc: "Enable offline AI-powered finding explanations" },
-            { href: "/docs/rules", label: "Rule Library", desc: "Browse all 30+ detection rules" },
+            { href: "/docs/rules", label: "Rule Library", desc: "Browse all 30 detection rules" },
           ].map((link) => (
             <Link
               key={link.href}

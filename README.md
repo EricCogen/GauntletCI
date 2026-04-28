@@ -241,7 +241,7 @@ Only **new risks introduced by the current change** are shown.
 
 ## 📏 Detection Coverage
 
-GauntletCI includes **35 built-in detection rules** across:
+GauntletCI includes **30 built-in detection rules** across:
 
 * Behavior & Contracts
 * Security
