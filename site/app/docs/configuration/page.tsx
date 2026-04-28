@@ -192,7 +192,7 @@ export default function ConfigurationPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
             { href: "/docs/cli-reference", label: "CLI Reference", desc: "All commands, flags, and exit codes" },
-            { href: "/docs/rules", label: "Rule Library", desc: "Browse all 30+ detection rules by category" },
+            { href: "/docs/rules", label: "Rule Library", desc: "Browse all 30 detection rules by category" },
             { href: "/docs/integrations", label: "CI/CD Integrations", desc: "GitHub Actions, Azure Pipelines, and pre-commit hooks" },
           ].map((link) => (
             <Link

@@ -392,7 +392,7 @@ CreateFinding(file, summary, evidence, whyItMatters, suggestedAction, confidence
           <h2 className="text-2xl font-semibold mb-4">Next steps</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
-              { href: "/docs/rules", label: "Rule Library", desc: "Browse all 35 built-in detection rules" },
+              { href: "/docs/rules", label: "Rule Library", desc: "Browse all 30 built-in detection rules" },
               { href: "/docs/configuration", label: "Configuration", desc: "Engineering policy and .gauntletci.json options" },
               { href: "/docs/cli-reference", label: "CLI Reference", desc: "All commands, flags, and exit codes" },
             ].map((link) => (

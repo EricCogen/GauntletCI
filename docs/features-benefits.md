@@ -10,7 +10,7 @@ GauntletCI analyzes the exact lines added or removed in a pull request and flags
 
 ## Features
 
-### 28 Built-in Detection Rules
+### 30 Built-in Detection Rules
 
 #### Behavior & Contract Safety
 - Removed logic (return, throw, if/else, boolean operators) without matching test changes
@@ -199,7 +199,8 @@ Rules not yet validated from corpus:
 - **GCI0035**: Layer import violations; requires `ForbiddenImports` config to fire
 - **GCI0048**: Insecure random; newly added; corpus validation pending
 - **GCI0049**: Float equality; newly added; corpus validation pending
-- **GCI0050**: SQL column truncation; newly added; corpus validation pending
+- **GCI0052**: Dependency bot API drift; fires when bot-updated package appears in source without API surface update; corpus validation pending
+- **GCI0053**: Lockfile changed without source; fires when lockfile changes with no corresponding .cs changes; corpus validation pending
 
 Known precision caveats (as of current version):
 - **GCI0029**: `name` term fires on logging context keys and property names, not just PII; use `.gauntletci-ignore` to suppress per path
