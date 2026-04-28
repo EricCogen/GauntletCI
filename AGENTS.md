@@ -6,7 +6,7 @@ GauntletCI is a deterministic pre-commit change-risk detection engine built in C
 ## Build & Test
 ```
 dotnet build GauntletCI.slnx -v quiet --nologo
-dotnet test GauntletCI.slnx --no-build --nologo -q
+dotnet test GauntletCI.slnx --nologo -q
 ```
 All tests must pass before committing.
 
