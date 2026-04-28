@@ -10,18 +10,23 @@ namespace GauntletCI.Tests;
 /// </summary>
 public class EndToEndTests
 {
+    // Diff that reliably fires GCI0007 (swallowed exception) so "GCI" always appears in output.
     private const string SimpleDiff = """
         diff --git a/src/Foo.cs b/src/Foo.cs
         index 0000000..1111111 100644
         --- a/src/Foo.cs
         +++ b/src/Foo.cs
-        @@ -1,5 +1,8 @@
+        @@ -1,5 +1,12 @@
          public class Foo
          {
         -    public void Bar() { }
         +    public void Bar()
         +    {
-        +        Console.WriteLine("hello");
+        +        try
+        +        {
+        +            Console.WriteLine("hello");
+        +        }
+        +        catch { }
         +    }
          }
         """;
@@ -38,10 +43,12 @@ public class EndToEndTests
     {
         var psi = new ProcessStartInfo("dotnet", $"\"{dll}\" {args}")
         {
-            RedirectStandardOutput = true,
-            RedirectStandardError  = true,
-            RedirectStandardInput  = stdin is not null,
-            UseShellExecute        = false,
+            RedirectStandardOutput  = true,
+            RedirectStandardError   = true,
+            RedirectStandardInput   = stdin is not null,
+            UseShellExecute         = false,
+            StandardOutputEncoding  = System.Text.Encoding.UTF8,
+            StandardErrorEncoding   = System.Text.Encoding.UTF8,
         };
         psi.Environment["CI"]       = "true"; // suppress telemetry prompt + banner
         psi.Environment["NO_COLOR"] = "1";
