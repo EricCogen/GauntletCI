@@ -10,6 +10,9 @@ Versions follow [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Plausible Analytics**: Privacy-first analytics script added to site layout (`gauntletci.com` domain, loads after interactive, no cookies).
+
+### Added
 - **GitHub stars badge in site header**: Stars badge (shields.io social style) added to the desktop nav, linking to /stargazers.
 
 ### Fixed
