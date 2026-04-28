@@ -17,7 +17,7 @@
     <projectUrl>https://github.com/EricCogen/GauntletCI</projectUrl>
     <repository type="git" url="https://github.com/EricCogen/GauntletCI.git" branch="main" />
     <icon>GauntletCI.png</icon>
-    <readme>README.md</readme>
+    <readme>nuget-readme.md</readme>
     <language>en-US</language>
 
     <!--
@@ -158,7 +158,7 @@ v2.0.0
     <file src="bin\Release\net8.0\publish\**" target="tools\net8.0\any" />
 
     <!-- Package assets -->
-    <file src="..\..\README.md" target="" />
+    <file src="..\..\nuget-readme.md" target="" />
     <file src="..\..\GauntletCI.png" target="" />
     <file src="..\..\LICENSE" target="" />
   </files>
