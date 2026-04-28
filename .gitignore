@@ -49,6 +49,7 @@ artifacts/
 !Docker/docker.md
 !worker/README.md
 !SUPPORT.md
+!nuget-readme.md
 !docs/noise-and-false-positives.md
 !docs/rules/GCI0003-behavioral-change-detection.md
 !docs/rules/GCI0004-breaking-change-risk.md

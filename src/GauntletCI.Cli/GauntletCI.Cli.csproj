@@ -15,7 +15,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\nuget-readme.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\README.md" Pack="false" />
     <None Include="..\..\GauntletCI.png" Pack="true" PackagePath="\" />
     <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
   </ItemGroup>
@@ -49,7 +50,7 @@
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/EricCogen/GauntletCI.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReadmeFile>nuget-readme.md</PackageReadmeFile>
     <PackageIcon>GauntletCI.png</PackageIcon>
   </PropertyGroup>
 
