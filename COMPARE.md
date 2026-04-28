@@ -2,7 +2,7 @@
 
 > **🤝 A Note on Comparisons**
 >
-> GauntletCI does not aim to replace any of the tools listed below. Each serves a distinct purpose. This page exists to help you understand where GauntletCI fits in your existing toolchain—not to convince you to abandon tools you already trust.
+> GauntletCI does not aim to replace any of the tools listed below. Each serves a distinct purpose. This page exists to help you understand where GauntletCI fits in your existing toolchain, not to convince you to abandon tools you already trust.
 
 ---
 
@@ -38,7 +38,7 @@ GauntletCI answers a different question:
 
 ## ⚔️ GauntletCI vs SonarQube
 
-SonarQube is excellent at what it does. If you need broad language support, historical trend analysis, and enterprise reporting, it's the correct choice. GauntletCI is not a replacement—it's a specialized layer for .NET teams who are still seeing unexplained production incidents despite clean SonarQube reports. We call this the "Coverage Mirage." SonarQube says the code is clean. GauntletCI asks if it survives the runtime.
+SonarQube is excellent at what it does. If you need broad language support, historical trend analysis, and enterprise reporting, it's the correct choice. GauntletCI is not a replacement; it's a specialized layer for .NET teams who are still seeing unexplained production incidents despite clean SonarQube reports. We call this the "Coverage Mirage." SonarQube says the code is clean. GauntletCI asks if it survives the runtime.
 
 GauntletCI and SonarQube are both used during development, but they solve fundamentally different problems.
 
@@ -240,7 +240,7 @@ That difference is what allows it to detect a class of problems that traditional
 
 ## 🕯️ The Bottom Line
 
-If your security scanner is green, your linter is happy, and your AI says the code looks "clean," but you're still worried about what happens when this hits production at 2 AM—that's why we built GauntletCI.
+If your security scanner is green, your linter is happy, and your AI says the code looks "clean," but you're still worried about what happens when this hits production at 2 AM; that's why we built GauntletCI.
 
 Fewer 2 AM calls. Fewer quiet walks to the parking lot. Fewer unthought assumptions.
 

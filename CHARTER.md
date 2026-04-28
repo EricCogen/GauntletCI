@@ -8,7 +8,7 @@ GauntletCI is an evolving system.
 
 The deterministic rule engine is implemented and actively tested against a growing fixture corpus. The **Corpus of Failure** is under active construction, with ongoing ingestion of real-world pull requests, linked issues, and documented .NET runtime failure cases.
 
-This Charter defines the methodology and direction as the system matures. It is the philosophical anchor—the principles do not change, but the evidence base deepens over time.
+This Charter defines the methodology and direction as the system matures. It is the philosophical anchor: the principles do not change, but the evidence base deepens over time.
 
 ---
 
@@ -16,7 +16,7 @@ This Charter defines the methodology and direction as the system matures. It is 
 
 The software development landscape of 2026 is defined by unprecedented velocity. AI-assisted coding tools have democratized the act of creation, generating syntactically flawless code at a scale previously unimaginable.[^1][^2]
 
-Yet, a shadow accompanies this acceleration. Engineering teams report a troubling divergence: CI pipelines glow green with passing tests and clean linter logs, while "unexplained" production incidents rise in frequency and severity.[^3][^16] This phenomenon is the **Coverage Mirage**—the false sense of security derived from high quantitative metrics that conceal systemic, behavioral fragility.
+Yet, a shadow accompanies this acceleration. Engineering teams report a troubling divergence: CI pipelines glow green with passing tests and clean linter logs, while "unexplained" production incidents rise in frequency and severity.[^3][^16] This phenomenon is the **Coverage Mirage**: the false sense of security derived from high quantitative metrics that conceal systemic, behavioral fragility.
 
 Code can be formatted perfectly, pass every unit test, and satisfy every rule in a traditional SAST scanner, while still harboring hidden async deadlocks[^4], resource exhaustion vectors[^5], or silent data corruption paths specific to the .NET Common Language Runtime.[^6]
 
@@ -36,13 +36,13 @@ Traditional tools ask: *"Is this code compliant with Style X?"*
 We ask a more rigorous question: *"Given the known failure vectors of the .NET runtime, does this implementation survive?"* We seek to falsify the hypothesis of safety.
 
 **III. Intent is Material Context**
-A code change is not an isolated event; it is a response to a requirement. When available, linked Issues and commit messages provide critical context that enhances the fidelity of behavioral auditing. The absence of Intent does not block analysis—it simply reduces the confidence interval of the adjudication.
+A code change is not an isolated event; it is a response to a requirement. When available, linked Issues and commit messages provide critical context that enhances the fidelity of behavioral auditing. The absence of Intent does not block analysis; it simply reduces the confidence interval of the adjudication.
 
 **IV. Privacy is Absolute**
 Behavioral auditing is a deep inspection of proprietary logic. It must never require code exfiltration to a third-party cloud. Intelligence lives at the edge. GauntletCI's reasoning is local-first, ensuring zero trust and zero data leakage.
 
 **V. Determinism Anchors Intelligence**
-Large Language Models are powerful but non-deterministic.[^9] GauntletCI uses a local, small-parameter model **exclusively for context mapping and explanation**. The enforcement of a Hard Fail is always governed by deterministic Roslyn-based rules[^10] (`GCI0001`–`GCI0037`). The model advises; the analyzer enforces.
+Large Language Models are powerful but non-deterministic.[^9] GauntletCI uses a local, small-parameter model **exclusively for context mapping and explanation**. The enforcement of a Hard Fail is always governed by deterministic Roslyn-based rules[^10] (`GCI0001`-`GCI0037`). The model advises; the analyzer enforces.
 
 ---
 
@@ -127,15 +127,15 @@ This Charter is ratified by the maintainers of GauntletCI. It serves as the immu
 
 [^1]: GitHub, *The Octoverse 2024: AI in Software Development* (2024). <https://github.blog/news-insights/octoverse/octoverse-2024/>
 
-[^2]: Stack Overflow, *Developer Survey 2024 — AI Tools* (2024). <https://survey.stackoverflow.co/2024/ai/>
+[^2]: Stack Overflow, *Developer Survey 2024: AI Tools* (2024). <https://survey.stackoverflow.co/2024/ai/>
 
 [^3]: DORA, *2024 State of DevOps Report* (2024). <https://dora.dev/research/2024/dora-report/>
 
 [^4]: Stephen Cleary, *"Async/Await Best Practices in Asynchronous Programming,"* MSDN Magazine, March 2013. <https://learn.microsoft.com/en-us/archive/msdn-magazine/2013/march/async-await-best-practices-in-asynchronous-programming>
 
-[^5]: Microsoft, *SqlConnection Class — Remarks (connection pool and disposal),* .NET API Documentation. <https://learn.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlconnection>
+[^5]: Microsoft, *SqlConnection Class: Remarks (connection pool and disposal),* .NET API Documentation. <https://learn.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlconnection>
 
-[^6]: .NET Runtime GitHub Repository — Issues and Performance Discussions. <https://github.com/dotnet/runtime/issues>
+[^6]: .NET Runtime GitHub Repository: Issues and Performance Discussions. <https://github.com/dotnet/runtime/issues>
 
 [^7]: Stephen Toub, *"ConfigureAwait FAQ,"* .NET Blog, 2019. <https://devblogs.microsoft.com/dotnet/configureawait-faq/>
 
@@ -147,18 +147,18 @@ This Charter is ratified by the maintainers of GauntletCI. It serves as the immu
 
 [^11]: Microsoft, *.NET Runtime Documentation.* <https://learn.microsoft.com/en-us/dotnet/core/whats-new/>
 
-[^12]: National Vulnerability Database (NVD) — .NET CVEs. <https://nvd.nist.gov/vuln/search/results?query=.net&results_type=overview>
+[^12]: National Vulnerability Database (NVD): .NET CVEs. <https://nvd.nist.gov/vuln/search/results?query=.net&results_type=overview>
 
 [^13]: ONNX Runtime, *ONNX Runtime Documentation.* <https://onnxruntime.ai/docs/>
 
 [^14]: Microsoft Research, *"Phi-4 Technical Report: A Highly Capable Language Model Locally on Your Phone,"* arXiv:2404.14219 (2024). <https://arxiv.org/abs/2404.14219>
 
-[^15]: Microsoft, *"Caching in .NET — Memory Cache,"* .NET Documentation (unbounded growth risk). <https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory>
+[^15]: Microsoft, *"Caching in .NET: Memory Cache,"* .NET Documentation (unbounded growth risk). <https://learn.microsoft.com/en-us/aspnet/core/performance/caching/memory>
 
-[^16]: Veracode, *State of Software Security 2024* — organizations with automated scanning still ship high flaw density, revealing a gap between CI quality signals and actual production risk. <https://www.veracode.com/state-of-software-security-report>
+[^16]: Veracode, *State of Software Security 2024*: organizations with automated scanning still ship high flaw density, revealing a gap between CI quality signals and actual production risk. <https://www.veracode.com/state-of-software-security-report>
 
-[^17]: Eirini Kalliamvakou, *"Research: Quantifying GitHub Copilot's Impact in the Enterprise,"* GitHub Blog, 2023 — documents Copilot's 55% faster task completion, quantifying the write-velocity optimization. <https://github.blog/news-insights/research/research-quantifying-github-copilots-impact-in-the-enterprise/>
+[^17]: Eirini Kalliamvakou, *"Research: Quantifying GitHub Copilot's Impact in the Enterprise,"* GitHub Blog, 2023: documents Copilot's 55% faster task completion, quantifying the write-velocity optimization. <https://github.blog/news-insights/research/research-quantifying-github-copilots-impact-in-the-enterprise/>
 
-[^18]: OWASP, *"Source Code Analysis Tools,"* OWASP Foundation — characterizes SAST tools as detecting syntactic and pattern-based vulnerabilities in source code, not runtime behavioral semantics. <https://owasp.org/www-community/Source_Code_Analysis_Tools>
+[^18]: OWASP, *"Source Code Analysis Tools,"* OWASP Foundation: characterizes SAST tools as detecting syntactic and pattern-based vulnerabilities in source code, not runtime behavioral semantics. <https://owasp.org/www-community/Source_Code_Analysis_Tools>
 
 [^19]: DeepSeek-AI, *"DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning,"* arXiv:2501.12948 (2025); OpenAI, *"Learning to Reason with LLMs,"* OpenAI Blog (2024). <https://arxiv.org/abs/2501.12948> · <https://openai.com/index/learning-to-reason-with-llms/>

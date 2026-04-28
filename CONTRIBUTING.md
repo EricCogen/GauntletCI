@@ -81,7 +81,7 @@ The sections below cover the technical workflow, commit conventions, and a step-
 2. Build: `dotnet build GauntletCI.slnx`
 3. Test: `dotnet test GauntletCI.slnx --nologo -q`
 4. Create a branch: `git checkout -b feature/<short-description>`
-5. Open an issue before starting large changes — alignment first saves rework
+5. Open an issue before starting large changes: alignment first saves rework
 
 See [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md) for full build and project layout details.
 
@@ -117,7 +117,7 @@ GauntletCI rules detect **behavioral risk** in diffs, not style. A rule is eligi
 - The pattern has caused production incidents in real systems
 - It is detectable from the diff alone (no runtime information required)
 - It produces a low false-positive rate on typical PRs
-- The finding is actionable — a developer can fix it immediately
+- The finding is actionable: a developer can fix it immediately
 
 Rules that check formatting, naming conventions, or code style are **not eligible**.
 
@@ -142,7 +142,7 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI00XX – Your Rule Name
+/// GCI00XX: Your Rule Name
 /// One-sentence description of what this rule detects.
 /// </summary>
 public class GCI00XX_YourRuleName : RuleBase
@@ -182,7 +182,7 @@ public class GCI00XX_YourRuleName : RuleBase
 
 ### 3. Key APIs
 
-**`AnalysisContext`** — passed to every rule:
+**`AnalysisContext`**: passed to every rule:
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -191,7 +191,7 @@ public class GCI00XX_YourRuleName : RuleBase
 | `context.EligibleFiles` | `IReadOnlyList<ChangedFileAnalysisRecord>` | File classification metadata |
 | `context.StaticAnalysis` | `AnalyzerResult?` | Optional static analysis results (may be null) |
 
-**`DiffFile`** — a changed file:
+**`DiffFile`**: a changed file:
 
 | Property | Description |
 |----------|-------------|
@@ -214,9 +214,9 @@ CreateFinding(file, summary, evidence, whyItMatters, suggestedAction, confidence
 ```
 
 **`Confidence` enum:** `High`, `Medium`, `Low`
-- `High` — pattern is almost certainly a problem; reviewer should block
-- `Medium` — likely a problem; reviewer should verify
-- `Low` — possible concern; reviewer should be aware
+- `High`: pattern is almost certainly a problem; reviewer should block
+- `Medium`: likely a problem; reviewer should verify
+- `Low`: possible concern; reviewer should be aware
 
 ### 4. Configurable rules (optional)
 
@@ -303,7 +303,7 @@ Cover at minimum: one true positive, one false positive, and one edge case (empt
 Add an entry for your rule in the appropriate section of `docs/rules.md`. Follow the existing format:
 
 ```markdown
-### GCI00XX — Your Rule Name
+### GCI00XX: Your Rule Name
 
 | | |
 |---|---|
@@ -332,7 +332,7 @@ If a rule is no longer useful:
 
 1. Delete the rule file from `src/GauntletCI.Core/Rules/Implementations/`
 2. Delete the test file from `src/GauntletCI.Tests/Rules/`
-3. Mark the rule as retired in `docs/rules.md` (do **not** delete the entry — the ID is permanently reserved)
+3. Mark the rule as retired in `docs/rules.md` (do **not** delete the entry; the ID is permanently reserved)
 4. Commit with `[RULE] Retire GCI00XX <reason>`
 
 Never reuse a retired rule ID.
