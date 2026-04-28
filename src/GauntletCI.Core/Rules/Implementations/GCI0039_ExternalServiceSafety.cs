@@ -19,6 +19,13 @@ public class GCI0039_ExternalServiceSafety : RuleBase
         ".GetAsync(", ".PostAsync(", ".PutAsync(", ".DeleteAsync(", ".SendAsync("
     ];
 
+    // Subset used for CheckMissingCancellationToken: .DeleteAsync( is excluded because
+    // many non-HTTP SDKs (DynamoDB, CosmosDB, etc.) expose identically-named methods.
+    private static readonly string[] CtCheckHttpMethods =
+    [
+        ".GetAsync(", ".PostAsync(", ".PutAsync(", ".SendAsync("
+    ];
+
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -63,10 +70,22 @@ public class GCI0039_ExternalServiceSafety : RuleBase
     private void CheckMissingTimeout(DiffFile file, List<Finding> findings)
     {
         var addedLines = file.AddedLines.ToList();
-        bool hasHttpClientUsage = addedLines.Any(l =>
-            l.Content.Contains("new HttpClient(") || l.Content.Contains("HttpClient "));
 
-        if (!hasHttpClientUsage) return;
+        // Only flag files that directly instantiate a new HttpClient; using
+        // an injected/pre-existing client means timeout is someone else's responsibility.
+        bool hasNewHttpClient = addedLines.Any(l =>
+            l.Content.Contains("new HttpClient(", StringComparison.Ordinal));
+
+        if (!hasNewHttpClient) return;
+
+        // Code that configures HttpClient via factory (IHttpClientFactory / AddHttpClient)
+        // manages timeout at the channel/handler level — not via client.Timeout directly.
+        bool isFactoryConfig = addedLines.Any(l =>
+            l.Content.Contains("IHttpClientFactory", StringComparison.Ordinal)
+            || l.Content.Contains("AddHttpClient", StringComparison.Ordinal)
+            || l.Content.Contains("HttpClientFactoryOptions", StringComparison.Ordinal));
+
+        if (isFactoryConfig) return;
 
         bool hasTimeoutConfig = addedLines.Any(l =>
             l.Content.Contains(".Timeout =")
@@ -87,12 +106,14 @@ public class GCI0039_ExternalServiceSafety : RuleBase
 
     private void CheckMissingCancellationToken(DiffFile file, List<Finding> findings)
     {
-        foreach (var line in file.AddedLines)
+        var addedLines = file.AddedLines.ToList();
+
+        foreach (var line in addedLines)
         {
             var content = line.Content;
             if (content.TrimStart().StartsWith("//")) continue;
 
-            bool hasHttpCall = HttpCallMethods.Any(m => content.Contains(m));
+            bool hasHttpCall = CtCheckHttpMethods.Any(m => content.Contains(m));
             if (!hasHttpCall) continue;
 
             bool hasCancellationToken =
