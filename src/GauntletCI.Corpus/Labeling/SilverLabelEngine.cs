@@ -56,8 +56,8 @@ public sealed class SilverLabelEngine
             "GCI0004", "Review comment mentions breaking change", 0.65),
         ([".result", ".wait()", "async", "blocking", "deadlock", "configureawait"],
             "GCI0016", "Review comment mentions async/blocking concern", 0.65),
-        (["hardcoded", "hard-coded", "magic string", "magic number", "config", "environment variable"],
-            "GCI0010", "Review comment mentions hardcoded value or configuration concern", 0.6),
+        (["hardcoded", "hard-coded", "magic string", "magic number"],
+            "GCI0010", "Review comment mentions hardcoded value or magic number/string", 0.6),
         (["exception", "catch", "swallowing", "ignored exception"],
             "GCI0032", "Review comment mentions exception handling concern", 0.6),
         // Note: "thread safe / concurrent / lock" keywords intentionally removed from GCI0016.
