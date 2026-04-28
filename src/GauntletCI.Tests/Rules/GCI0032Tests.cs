@@ -237,4 +237,34 @@ public class GCI0032Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("empty") && f.Summary.Contains("catch"));
     }
+
+    [Fact]
+    public async Task ThrowNewWithRemovedAssertionInTestFile_ShouldFlag()
+    {
+        // Removed (-) assertion lines must not suppress the finding.
+        // If the only Assert.Throws evidence was deleted, the throw path is now untested.
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,3 +1,4 @@
+             public class Service {
+            +    throw new InvalidOperationException("Not ready");
+             }
+            diff --git a/src/ServiceTests.cs b/src/ServiceTests.cs
+            index abc..def 100644
+            --- a/src/ServiceTests.cs
+            +++ b/src/ServiceTests.cs
+            @@ -1,4 +1,3 @@
+             public class ServiceTests {
+            -    Assert.Throws<InvalidOperationException>(() => service.Do());
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("throw new"));
+    }
 }
