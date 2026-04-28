@@ -37,11 +37,12 @@ public sealed class SilverLabelEngine
     /// </summary>
     public static readonly IReadOnlySet<string> RulesWithHeuristics = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "GCI0003", "GCI0004", "GCI0006", "GCI0010",
-        "GCI0012", "GCI0016", "GCI0021", "GCI0022",
-        "GCI0024", "GCI0029", "GCI0032", "GCI0036", "GCI0038",
+        "GCI0001", "GCI0003", "GCI0004", "GCI0006", "GCI0010",
+        "GCI0012", "GCI0015", "GCI0016", "GCI0021", "GCI0022",
+        "GCI0024", "GCI0029", "GCI0032", "GCI0035", "GCI0036", "GCI0038",
         "GCI0039", "GCI0041", "GCI0042", "GCI0043", "GCI0044",
-        "GCI0045", "GCI0046", "GCI0047", "GCI0049",
+        "GCI0045", "GCI0046", "GCI0047", "GCI0048", "GCI0049",
+        "GCI0050", "GCI0052", "GCI0053",
     };
 
     // Review comment keyword -> (ruleId, reason, confidence) mapping
@@ -114,6 +115,27 @@ public sealed class SilverLabelEngine
 
         (["float comparison", "floating point equality", "double equality", "use epsilon", "math.abs comparison", "floating-point"],
             "GCI0049", "Review comment mentions floating-point equality comparison concern", 0.65),
+
+        (["mixed scope", "unrelated changes", "formatting churn", "split this pr", "separate pr", "unrelated file"],
+            "GCI0001", "Review comment flags unrelated changes or mixed file scope in the diff", 0.55),
+
+        (["mass assignment", "over-posting", "sql ignore", "on conflict do nothing", "input binding", "unchecked cast", "data integrity"],
+            "GCI0015", "Review comment mentions mass assignment, SQL IGNORE pattern, or data integrity concern", 0.60),
+
+        (["layer violation", "architecture violation", "cross layer", "wrong layer", "should not reference", "dependency inversion"],
+            "GCI0035", "Review comment flags an architecture layer boundary violation", 0.65),
+
+        (["insecure random", "use securerandom", "cryptographic rng", "system.random", "randomnumbergenerator", "not cryptographically"],
+            "GCI0048", "Review comment flags use of System.Random in a security context", 0.70),
+
+        (["sql truncation", "column too short", "string length", "max length", "nvarchar too small", "data truncation"],
+            "GCI0050", "Review comment mentions SQL column truncation or short string column width", 0.60),
+
+        (["api drift", "dependency bot changed", "breaking upgrade", "renovate changed", "dependabot api", "automated pr changed api"],
+            "GCI0052", "Review comment flags API change in a dependency bot PR", 0.65),
+
+        (["lockfile only", "lockfile changed without", "no source change", "why is the lockfile", "bump without source"],
+            "GCI0053", "Review comment mentions lockfile change without accompanying source changes", 0.55),
     ];
 
     /// <summary>
@@ -955,6 +977,174 @@ public sealed class SilverLabelEngine
                  Regex.IsMatch(l, @"\b(?:float|double)\b.*(?:==|!=)", RegexOptions.IgnoreCase))))
         {
             labels.Add(MakeLabel("GCI0049", "Diff contains floating-point equality comparison on added lines", 0.60));
+        }
+
+        // GCI0001 -- Mixed scope: code (.cs) and non-code files in the same diff.
+        // pathLines contains "+++ b/path" headers; detect both CS paths and non-code non-lockfile paths.
+        {
+            var lockfileNames0001 = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "packages.lock.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml",
+                "Gemfile.lock", "poetry.lock", "Cargo.lock", "go.sum", "composer.lock",
+            };
+            var nonCodeExts0001 = new[] { ".md", ".txt", ".json", ".xml", ".yml", ".yaml", ".png", ".svg", ".ico", ".css", ".html" };
+            bool hasCsPath0001 = pathLines.Any(l =>
+                l.StartsWith("+++ b/", StringComparison.Ordinal) &&
+                l.TrimEnd('\r').EndsWith(".cs", StringComparison.OrdinalIgnoreCase));
+            bool hasNonCodePath0001 = pathLines.Any(l =>
+            {
+                if (!l.StartsWith("+++ b/", StringComparison.Ordinal)) return false;
+                var path = l[6..].TrimEnd('\r');
+                if (lockfileNames0001.Contains(Path.GetFileName(path))) return false;
+                return nonCodeExts0001.Contains(Path.GetExtension(path).ToLowerInvariant());
+            });
+            if (hasCsPath0001 && hasNonCodePath0001)
+                labels.Add(MakeLabel("GCI0001", "Diff contains both C# source files and non-code files (mixed scope)", 0.50));
+        }
+
+        // GCI0015 -- Data integrity risk: SQL IGNORE pattern or HTTP input binding in production code.
+        {
+            var httpSignals0015 = new[] { "Request.Form", "Request.Query", "Request.Body", "HttpContext.Request", "[FromBody]", "[FromForm]", "[FromQuery]" };
+            var sqlIgnore0015   = new[] { "INSERT IGNORE", "ON CONFLICT DO NOTHING", "INSERT OR IGNORE" };
+            bool hasSqlIgnore0015 = addedLines.Any(l =>
+                sqlIgnore0015.Any(p => l.Contains(p, StringComparison.OrdinalIgnoreCase)));
+            bool hasHttpInput0015 = prodCsLines.Any(l =>
+                httpSignals0015.Any(s => l.Contains(s, StringComparison.Ordinal)));
+            if (hasSqlIgnore0015 || hasHttpInput0015)
+                labels.Add(MakeLabel("GCI0015", "Diff contains SQL IGNORE pattern or HTTP input binding in production code", 0.55));
+        }
+
+        // GCI0035 -- Architecture layer guard: added using directive importing an infrastructure namespace
+        // inside a file under a domain or application layer path.
+        {
+            bool triggered0035 = false;
+            bool inDomainOrApp = false;
+            foreach (var rawLine in rawDiff.Split('\n'))
+            {
+                var t35 = rawLine.TrimEnd('\r');
+                if (t35.StartsWith("+++ b/", StringComparison.Ordinal))
+                {
+                    var lower35 = t35[6..].ToLowerInvariant();
+                    inDomainOrApp = lower35.Contains("/domain/") || lower35.Contains("/application/")
+                                 || lower35.Contains(".domain.") || lower35.Contains(".application.");
+                    continue;
+                }
+                if (!inDomainOrApp) continue;
+                if (!t35.StartsWith('+') || t35.StartsWith("+++")) continue;
+                var c35 = t35[1..].TrimStart();
+                if (!c35.StartsWith("using ", StringComparison.Ordinal)) continue;
+                if (c35.Contains(".Infrastructure.", StringComparison.OrdinalIgnoreCase) ||
+                    c35.Contains(".Persistence.", StringComparison.OrdinalIgnoreCase) ||
+                    c35.Contains(".Data.", StringComparison.OrdinalIgnoreCase) ||
+                    c35.Contains(".Database.", StringComparison.OrdinalIgnoreCase))
+                { triggered0035 = true; break; }
+            }
+            if (triggered0035)
+                labels.Add(MakeLabel("GCI0035", "Diff adds a using directive importing an infrastructure namespace in a domain/application layer file", 0.60));
+        }
+
+        // GCI0048 -- System.Random instantiation near a security-sensitive identifier in production code.
+        {
+            var secTerms0048 = new[] { "token", "secret", "password", "apikey", "api_key", "privatekey", "private_key", "accesskey", "access_key", "salt", "nonce", "credential", "passphrase", "hmac" };
+            var prodList0048 = prodCsLines.ToList();
+            bool triggered0048 = false;
+            for (int i = 0; i < prodList0048.Count && !triggered0048; i++)
+            {
+                var l48 = prodList0048[i];
+                if (!Regex.IsMatch(l48, @"\bnew\s+Random\s*\(", RegexOptions.IgnoreCase)) continue;
+                if (l48.TrimStart().StartsWith("//")) continue;
+                int s48 = Math.Max(0, i - 5), e48 = Math.Min(prodList0048.Count - 1, i + 5);
+                for (int j = s48; j <= e48 && !triggered0048; j++)
+                {
+                    var lower48 = prodList0048[j].ToLowerInvariant();
+                    if (secTerms0048.Any(t => lower48.Contains(t))) triggered0048 = true;
+                }
+            }
+            if (triggered0048)
+                labels.Add(MakeLabel("GCI0048", "Diff instantiates System.Random near a security-sensitive identifier in production code", 0.70));
+        }
+
+        // GCI0050 -- SQL column truncation risk: short nvarchar/varchar or StringLength/MaxLength in schema files.
+        {
+            var schemaTokens0050 = new[] { "/migration", "migration.cs", "schema", "dbcontext", "entityconfig", "modelbuilder", "fluent" };
+            bool inSchema0050    = false;
+            bool triggered0050   = false;
+            var varcharRx0050    = new Regex(@"\bn?varchar\s*\(\s*(\d+)\s*\)", RegexOptions.IgnoreCase);
+            var attrRx0050       = new Regex(@"\[(?:StringLength|MaxLength)\s*\(\s*(\d+)", RegexOptions.IgnoreCase);
+            var fluentRx0050     = new Regex(@"\bHasMaxLength\s*\(\s*(\d+)\s*\)");
+            foreach (var rawLine in rawDiff.Split('\n'))
+            {
+                var t50 = rawLine.TrimEnd('\r');
+                if (t50.StartsWith("+++ b/", StringComparison.Ordinal))
+                {
+                    var lower50 = t50[6..].ToLowerInvariant();
+                    inSchema0050 = lower50.EndsWith(".cs") && schemaTokens0050.Any(tok => lower50.Contains(tok));
+                    continue;
+                }
+                if (!inSchema0050) continue;
+                if (!t50.StartsWith('+') || t50.StartsWith("+++")) continue;
+                var c50 = t50[1..];
+                var tr50 = c50.TrimStart();
+                if (tr50.StartsWith("//") || tr50.StartsWith("--") || tr50.StartsWith("*")) continue;
+                foreach (var rx50 in new[] { varcharRx0050, attrRx0050, fluentRx0050 })
+                {
+                    var m50 = rx50.Match(c50);
+                    if (m50.Success && int.TryParse(m50.Groups[1].Value, out int n50) && n50 < 100)
+                    { triggered0050 = true; break; }
+                }
+                if (triggered0050) break;
+            }
+            if (triggered0050)
+                labels.Add(MakeLabel("GCI0050", "Diff adds a short string column definition (< 100 chars) in a schema or migration file", 0.65));
+        }
+
+        // GCI0052 -- Dependency bot API drift: lockfile change alongside a public method signature addition.
+        // Rule also requires GITHUB_ACTOR to be a bot; labeler approximates from diff content alone.
+        {
+            var lockfileNames0052 = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "packages.lock.json", "package-lock.json", "yarn.lock", "Pipfile.lock",
+                "go.sum", "Cargo.lock", "Directory.Packages.props",
+            };
+            bool hasLockfile0052 = pathLines.Any(l =>
+            {
+                if (!l.StartsWith("+++ b/", StringComparison.Ordinal)) return false;
+                var path = l[6..].TrimEnd('\r');
+                return lockfileNames0052.Contains(Path.GetFileName(path)) ||
+                       Path.GetExtension(path).Equals(".csproj", StringComparison.OrdinalIgnoreCase);
+            });
+            if (hasLockfile0052 && prodCsLines.Any(l =>
+                    Regex.IsMatch(l, @"^\s*public\s+(static\s+|async\s+|virtual\s+|override\s+|abstract\s+)*[\w<>\[\],]+\s+\w+\s*\(")))
+            {
+                labels.Add(MakeLabel("GCI0052", "Diff contains a lockfile change alongside a public method signature addition in production C#", 0.55));
+            }
+        }
+
+        // GCI0053 -- Lockfile changed without source changes.
+        {
+            var lockfileNames0053 = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                "packages.lock.json", "package-lock.json", "yarn.lock", "Pipfile.lock",
+                "go.sum", "Cargo.lock", "Directory.Packages.props", "pnpm-lock.yaml", "poetry.lock",
+            };
+            var sourceExts0053 = new[] { ".cs", ".ts", ".js", ".py", ".go", ".rs" };
+            bool hasLockfile0053 = pathLines.Any(l =>
+            {
+                if (!l.StartsWith("+++ b/", StringComparison.Ordinal)) return false;
+                var path = l[6..].TrimEnd('\r');
+                return lockfileNames0053.Contains(Path.GetFileName(path)) ||
+                       Path.GetExtension(path).Equals(".lock", StringComparison.OrdinalIgnoreCase);
+            });
+            if (hasLockfile0053)
+            {
+                bool hasSource0053 = pathLines.Any(l =>
+                {
+                    if (!l.StartsWith("+++ b/", StringComparison.Ordinal)) return false;
+                    return sourceExts0053.Contains(Path.GetExtension(l[6..].TrimEnd('\r')).ToLowerInvariant());
+                });
+                if (!hasSource0053)
+                    labels.Add(MakeLabel("GCI0053", "Diff modifies a lockfile without any accompanying source file changes", 0.60));
+            }
         }
     }
 
