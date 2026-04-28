@@ -9,7 +9,11 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- **GitHub stars badge in site header**: Stars badge (shields.io social style) added to the desktop nav, linking to /stargazers.
+
 ### Fixed
+- **README custom badge link**: First badge (custom endpoint) now links to the GitHub repository instead of displaying as an unlinked image.
 - **GCI0045 recall improvement**: Rule now fires when a new interface has 0 visible implementers in the diff (not just exactly 1). Change: `implCount != 1` guard replaced with `implCount > 1`. Interfaces added with no implementation in the same PR are often premature abstraction. Finding message distinguishes "no visible" from "exactly one" implementer. Added `NewInterfaceWithNoImplementorInDiff_ShouldFire` regression test. 1191 tests pass.
 - **GCI0045 labeler false positives**: Heuristic changed from `addedLines` (all files, all extensions) to `prodCsLines` (non-test `.cs` files only) to mirror the rule's own filtering. Previously, interface definitions in `.txt` API-approval snapshots and test files created false positive expected labels that the rule correctly never fires on - pulling down apparent recall from labeler noise, not real rule misses.
 - **GCI0032 rule bug - removed assertion lines**: The throw-assertion check now filters out `DiffLineKind.Removed` hunk lines from test files. Previously a deleted `Assert.Throws` line (evidence that coverage was removed) incorrectly suppressed the finding. Added `ThrowNewWithRemovedAssertionInTestFile_ShouldFlag` regression test.

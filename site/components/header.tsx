@@ -100,6 +100,11 @@ export function Header() {
               <Link href="https://github.com/ericcogen/gauntletci" target="_blank" rel="noopener noreferrer">
                 <Github className="mr-2 h-4 w-4" />
                 GitHub
+                <img
+                  src="https://img.shields.io/github/stars/EricCogen/GauntletCI?style=social"
+                  alt="GitHub stars"
+                  className="ml-2 h-4 w-auto"
+                />
               </Link>
             </Button>
             <Button variant="outline" size="sm" asChild>
