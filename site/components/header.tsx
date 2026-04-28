@@ -76,6 +76,13 @@ export function Header() {
                     >
                       Case Studies
                     </Link>
+                    <Link
+                      href="/benchmark"
+                      className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      onClick={() => setProductOpen(false)}
+                    >
+                      Benchmark
+                    </Link>
                   </div>
                 )}
               </div>
@@ -131,6 +138,9 @@ export function Header() {
             </Link>
             <Link href="/case-studies" className="text-sm text-muted-foreground hover:text-foreground pl-2" onClick={() => setMobileMenuOpen(false)}>
               Case Studies
+            </Link>
+            <Link href="/benchmark" className="text-sm text-muted-foreground hover:text-foreground pl-2" onClick={() => setMobileMenuOpen(false)}>
+              Benchmark
             </Link>
             <Link href="/docs" className="text-sm text-muted-foreground hover:text-foreground" onClick={() => setMobileMenuOpen(false)}>
               Docs
