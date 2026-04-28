@@ -37,12 +37,12 @@ public sealed class SilverLabelEngine
     /// </summary>
     public static readonly IReadOnlySet<string> RulesWithHeuristics = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "GCI0001", "GCI0003", "GCI0004", "GCI0006", "GCI0010",
+        "GCI0003", "GCI0004", "GCI0006", "GCI0010",
         "GCI0012", "GCI0015", "GCI0016", "GCI0021", "GCI0022",
         "GCI0024", "GCI0029", "GCI0032", "GCI0035", "GCI0036", "GCI0038",
         "GCI0039", "GCI0041", "GCI0042", "GCI0043", "GCI0044",
         "GCI0045", "GCI0046", "GCI0047", "GCI0048", "GCI0049",
-        "GCI0050", "GCI0052", "GCI0053",
+        "GCI0050", "GCI0053",
     };
 
     // Review comment keyword -> (ruleId, reason, confidence) mapping
@@ -116,9 +116,6 @@ public sealed class SilverLabelEngine
         (["float comparison", "floating point equality", "double equality", "use epsilon", "math.abs comparison", "floating-point"],
             "GCI0049", "Review comment mentions floating-point equality comparison concern", 0.65),
 
-        (["mixed scope", "unrelated changes", "formatting churn", "split this pr", "separate pr", "unrelated file"],
-            "GCI0001", "Review comment flags unrelated changes or mixed file scope in the diff", 0.55),
-
         (["mass assignment", "over-posting", "sql ignore", "on conflict do nothing", "input binding", "unchecked cast", "data integrity"],
             "GCI0015", "Review comment mentions mass assignment, SQL IGNORE pattern, or data integrity concern", 0.60),
 
@@ -130,9 +127,6 @@ public sealed class SilverLabelEngine
 
         (["sql truncation", "column too short", "string length", "max length", "nvarchar too small", "data truncation"],
             "GCI0050", "Review comment mentions SQL column truncation or short string column width", 0.60),
-
-        (["api drift", "dependency bot changed", "breaking upgrade", "renovate changed", "dependabot api", "automated pr changed api"],
-            "GCI0052", "Review comment flags API change in a dependency bot PR", 0.65),
 
         (["lockfile only", "lockfile changed without", "no source change", "why is the lockfile", "bump without source"],
             "GCI0053", "Review comment mentions lockfile change without accompanying source changes", 0.55),
@@ -979,29 +973,6 @@ public sealed class SilverLabelEngine
             labels.Add(MakeLabel("GCI0049", "Diff contains floating-point equality comparison on added lines", 0.60));
         }
 
-        // GCI0001 -- Mixed scope: code (.cs) and non-code files in the same diff.
-        // pathLines contains "+++ b/path" headers; detect both CS paths and non-code non-lockfile paths.
-        {
-            var lockfileNames0001 = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            {
-                "packages.lock.json", "package-lock.json", "yarn.lock", "pnpm-lock.yaml",
-                "Gemfile.lock", "poetry.lock", "Cargo.lock", "go.sum", "composer.lock",
-            };
-            var nonCodeExts0001 = new[] { ".md", ".txt", ".json", ".xml", ".yml", ".yaml", ".png", ".svg", ".ico", ".css", ".html" };
-            bool hasCsPath0001 = pathLines.Any(l =>
-                l.StartsWith("+++ b/", StringComparison.Ordinal) &&
-                l.TrimEnd('\r').EndsWith(".cs", StringComparison.OrdinalIgnoreCase));
-            bool hasNonCodePath0001 = pathLines.Any(l =>
-            {
-                if (!l.StartsWith("+++ b/", StringComparison.Ordinal)) return false;
-                var path = l[6..].TrimEnd('\r');
-                if (lockfileNames0001.Contains(Path.GetFileName(path))) return false;
-                return nonCodeExts0001.Contains(Path.GetExtension(path).ToLowerInvariant());
-            });
-            if (hasCsPath0001 && hasNonCodePath0001)
-                labels.Add(MakeLabel("GCI0001", "Diff contains both C# source files and non-code files (mixed scope)", 0.50));
-        }
-
         // GCI0015 -- Data integrity risk: SQL IGNORE pattern or HTTP input binding in production code.
         {
             var httpSignals0015 = new[] { "Request.Form", "Request.Query", "Request.Body", "HttpContext.Request", "[FromBody]", "[FromForm]", "[FromQuery]" };
@@ -1096,28 +1067,6 @@ public sealed class SilverLabelEngine
             }
             if (triggered0050)
                 labels.Add(MakeLabel("GCI0050", "Diff adds a short string column definition (< 100 chars) in a schema or migration file", 0.65));
-        }
-
-        // GCI0052 -- Dependency bot API drift: lockfile change alongside a public method signature addition.
-        // Rule also requires GITHUB_ACTOR to be a bot; labeler approximates from diff content alone.
-        {
-            var lockfileNames0052 = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-            {
-                "packages.lock.json", "package-lock.json", "yarn.lock", "Pipfile.lock",
-                "go.sum", "Cargo.lock", "Directory.Packages.props",
-            };
-            bool hasLockfile0052 = pathLines.Any(l =>
-            {
-                if (!l.StartsWith("+++ b/", StringComparison.Ordinal)) return false;
-                var path = l[6..].TrimEnd('\r');
-                return lockfileNames0052.Contains(Path.GetFileName(path)) ||
-                       Path.GetExtension(path).Equals(".csproj", StringComparison.OrdinalIgnoreCase);
-            });
-            if (hasLockfile0052 && prodCsLines.Any(l =>
-                    Regex.IsMatch(l, @"^\s*public\s+(static\s+|async\s+|virtual\s+|override\s+|abstract\s+)*[\w<>\[\],]+\s+\w+\s*\(")))
-            {
-                labels.Add(MakeLabel("GCI0052", "Diff contains a lockfile change alongside a public method signature addition in production C#", 0.55));
-            }
         }
 
         // GCI0053 -- Lockfile changed without source changes.
