@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { WhoItsFor } from "@/components/who-its-for";
 import { HowItWorks } from "@/components/how-it-works";
 import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
@@ -46,6 +47,7 @@ export default function Home() {
       <ProvenReliability />
       <DetectionRules />
       <WhyTeams />
+      <WhoItsFor />
       <Integrations />
       <QuickStart />
       <Faq />
