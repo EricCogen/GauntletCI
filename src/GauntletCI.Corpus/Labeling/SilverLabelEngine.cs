@@ -718,16 +718,52 @@ public sealed class SilverLabelEngine
         }
 
         // GCI0038 -- DI anti-pattern: service locator or direct injectable instantiation
+        // Per-file iteration mirrors the rule's IsTestFile + IsInfrastructureFile guards:
+        //   - Service locator patterns: only in non-test, non-infra prod .cs files
+        //   - Direct instantiation: only in non-test, non-infra prod .cs files
+        // Using the same prefix patterns as the rule to avoid matching test-base methods like GetRequiredService<T>()
         {
-            var diPatterns = new[] { ".GetService<", ".GetRequiredService<", "_serviceProvider.GetService", "_serviceProvider.GetRequiredService" };
-            var newInjectableRegex = new Regex(@"=\s*new [A-Z][a-zA-Z]*(Service|Repository|Manager|Handler)\(", RegexOptions.Compiled);
-            if (addedLines.Any(l =>
-                    !l.TrimStart().StartsWith("//") &&
-                    (diPatterns.Any(p => l.Contains(p, StringComparison.Ordinal)) ||
-                     newInjectableRegex.IsMatch(l))))
+            var serviceLocatorPatterns38 = new[]
             {
-                labels.Add(MakeLabel("GCI0038", "Diff contains a service locator call or direct instantiation of an injectable type", 0.60));
+                "provider.GetService<",
+                "provider.GetRequiredService<",
+                "serviceProvider.GetService<",
+                "serviceProvider.GetRequiredService<",
+                "_serviceProvider.GetService<",
+                "_serviceProvider.GetRequiredService<",
+            };
+            var newInjectableRegex38 = new Regex(
+                @"=\s*new [A-Z][a-zA-Z]*(Service|Repository|Manager|Handler|Client)\(",
+                RegexOptions.Compiled);
+            string[] infraNames38 = ["Program.cs", "Startup.cs"];
+            bool hasGci0038 = false;
+            bool inProdCs38 = false;
+            foreach (var dl in rawDiff.Split('\n'))
+            {
+                if (dl.StartsWith("+++ b/", StringComparison.Ordinal))
+                {
+                    var fp38 = dl[6..].TrimEnd('\r');
+                    bool isCsFile38 = fp38.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
+                    bool isTest38 = fp38.Contains("test", StringComparison.OrdinalIgnoreCase) ||
+                                    fp38.Contains("spec", StringComparison.OrdinalIgnoreCase);
+                    var fn38 = Path.GetFileName(fp38);
+                    bool isInfra38 = infraNames38.Any(n => string.Equals(fn38, n, StringComparison.OrdinalIgnoreCase)) ||
+                                     fn38.EndsWith("Extensions.cs", StringComparison.OrdinalIgnoreCase) ||
+                                     fp38.Contains("ServiceCollection", StringComparison.OrdinalIgnoreCase);
+                    inProdCs38 = isCsFile38 && !isTest38 && !isInfra38;
+                    continue;
+                }
+                if (!inProdCs38) continue;
+                if (!dl.StartsWith("+") || dl.StartsWith("+++")) continue;
+                var c38 = dl[1..];
+                if (c38.TrimStart().StartsWith("//")) continue;
+
+                if (serviceLocatorPatterns38.Any(p => c38.Contains(p, StringComparison.Ordinal)) ||
+                    newInjectableRegex38.IsMatch(c38))
+                { hasGci0038 = true; break; }
             }
+            if (hasGci0038)
+                labels.Add(MakeLabel("GCI0038", "Diff contains a service locator call or direct instantiation of an injectable type", 0.60));
         }
 
         // GCI0039 -- Direct HttpClient instantiation in non-test .cs files.

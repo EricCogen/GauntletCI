@@ -181,6 +181,29 @@ public class GCI0038Tests
     }
 
     [Fact]
+    public async Task ServiceLocator_InTestFile_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/tests/IdentityTests.cs b/tests/IdentityTests.cs
+            index abc..def 100644
+            --- a/tests/IdentityTests.cs
+            +++ b/tests/IdentityTests.cs
+            @@ -1,3 +1,5 @@
+             public class IdentityTests : BaseTest {
+            +    public IdentityTests() {
+            +        _manager = GetRequiredService<IdentityUserManager>();
+            +        _svc = _serviceProvider.GetRequiredService<IUserService>();
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Service locator"));
+    }
+
+    [Fact]
     public async Task CleanFile_ShouldProduceNoFindings()
     {
         var raw = """
