@@ -906,7 +906,8 @@ public sealed class SilverLabelEngine
         }
 
         // GCI0045 -- New interface definition (potential single-use interface)
-        if (addedLines.Any(l => Regex.IsMatch(l, @"\binterface\s+I[A-Z]")))
+        // Use prodCsLines (non-test .cs only) to mirror the rule, which skips test files and non-.cs files.
+        if (prodCsLines.Any(l => Regex.IsMatch(l, @"\binterface\s+I[A-Z]")))
             labels.Add(MakeLabel("GCI0045", "Diff adds a new interface definition (potential single-use abstraction)", 0.45));
 
         // GCI0046 -- Service locator pattern or mixed sync/async method names

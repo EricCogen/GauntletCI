@@ -76,11 +76,19 @@ public class GCI0045_ComplexityControl : RuleBase
                 }
             }
 
-            if (implCount != 1) continue;
+            // Fire when 0 or 1 visible implementers:
+            // - 0: interface added with no implementation in the diff (often premature abstraction)
+            // - 1: exactly one implementer (single-use interface)
+            // Skip when >1 implementers are visible (the interface earns its keep).
+            if (implCount > 1) continue;
+
+            var evidenceDetail = implFile != null
+                ? $"Interface defined in {Path.GetFileName(sourcePath)}; single implementor in {Path.GetFileName(implFile)}"
+                : $"Interface defined in {Path.GetFileName(sourcePath)}; no implementing class visible in this diff";
 
             findings.Add(CreateFinding(
-                summary: $"Interface {interfaceName} has exactly one implementing class in this diff",
-                evidence: $"Interface defined in {Path.GetFileName(sourcePath)}; single implementor in {Path.GetFileName(implFile ?? sourcePath)}",
+                summary: $"Interface {interfaceName} has {(implCount == 0 ? "no visible" : "exactly one")} implementing class in this diff",
+                evidence: evidenceDetail,
                 whyItMatters: "An interface with a single implementation adds indirection without enabling polymorphism or testability. It is often premature abstraction.",
                 suggestedAction: "Consider using a concrete class directly. Add the interface only when a second implementation or mocking boundary is needed.",
                 confidence: Confidence.Low));
