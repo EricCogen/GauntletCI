@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PipelineDiagram } from "@/components/pipeline-diagram";
 import { WhyExists } from "@/components/why-exists";
 import { WhoItsFor } from "@/components/who-its-for";
 import { HowItWorks } from "@/components/how-it-works";
@@ -38,6 +39,7 @@ export default function Home() {
       <Hero />
       <Stats />
       <VisibilityGap />
+      <PipelineDiagram />
       <BehavioralChangeRisk />
       <TerminalBlock />
       <HowItWorks />
