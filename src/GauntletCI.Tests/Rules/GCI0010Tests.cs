@@ -22,10 +22,31 @@ public class GCI0010Tests
     [Fact]
     public async Task HardcodedIpAddress_ShouldFlagFinding()
     {
+        // Bare IP in a string literal (assignment) should fire.
         var diff = MakeDiff("    var host = \"192.168.1.100\";");
         var findings = await Rule.EvaluateAsync(diff, null);
 
         Assert.Contains(findings, f => f.Summary.Contains("IP address"));
+    }
+
+    [Fact]
+    public async Task HardcodedLocalhostUrl_ShouldFlagFinding()
+    {
+        // Localhost URL with port is a hardcoded service endpoint.
+        var diff = MakeDiff("    var url = \"http://localhost:8080/api\";");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.RuleId == "GCI0010");
+    }
+
+    [Fact]
+    public async Task PublicHttpsUrl_ShouldNotFlag()
+    {
+        // Public reference URLs (docs, CDN, GitHub) are intentional — do not flag.
+        var diff = MakeDiff("    var docsLink = \"https://docs.microsoft.com/en-us/dotnet/\";");
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("URL"));
     }
 
     [Fact]

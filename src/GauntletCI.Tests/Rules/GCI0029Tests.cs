@@ -149,4 +149,46 @@ public class GCI0029Tests
 
         Assert.Contains(findings, f => f.Summary.Contains("name"));
     }
+
+    [Fact]
+    public async Task CancellationTokenInLog_ShouldNotFlag()
+    {
+        // "token" removed from PiiTerms -- CancellationToken was causing FPs
+        var raw = """
+            diff --git a/src/PaymentService.cs b/src/PaymentService.cs
+            index abc..def 100644
+            --- a/src/PaymentService.cs
+            +++ b/src/PaymentService.cs
+            @@ -1,3 +1,4 @@
+             public class PaymentService {
+            +    _logger.LogInformation("Processing payment with token {Token}", cancellationToken);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public async Task NetworkAddressInLog_ShouldNotFlag()
+    {
+        // "address" removed from PiiTerms -- network addresses and method parameters were causing FPs
+        var raw = """
+            diff --git a/src/ConnectionService.cs b/src/ConnectionService.cs
+            index abc..def 100644
+            --- a/src/ConnectionService.cs
+            +++ b/src/ConnectionService.cs
+            @@ -1,3 +1,4 @@
+             public class ConnectionService {
+            +    _logger.LogInformation("Connecting to address {Address}", serverAddress);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
 }

@@ -58,14 +58,14 @@ public sealed class SilverLabelEngine
         (["hardcoded", "hard-coded", "magic string", "magic number", "config", "environment variable"],
             "GCI0010", "Review comment mentions hardcoded value or configuration concern", 0.6),
         (["exception", "catch", "swallowing", "ignored exception"],
-            "GCI0003", "Review comment mentions exception handling concern", 0.6),
+            "GCI0032", "Review comment mentions exception handling concern", 0.6),
         // Note: "thread safe / concurrent / lock" keywords intentionally removed from GCI0016.
         // GCI0016 scope is async execution model violations only (dropped static mutable field
         // check). Thread-safety review comments signal concerns the rule no longer detects.
         (["secret", "password", "credential", "api key", "api_key"],
             "GCI0012", "Review comment mentions credential/secret concern", 0.75),
-        (["large file", "file size", "binary file", "binary blob"],
-            "GCI0022", "Review comment mentions large or binary file", 0.6),
+        (["idempotent", "idempotency", "idempotency key", "duplicate request", "retry safe", "insert duplicate", "upsert"],
+            "GCI0022", "Review comment mentions idempotency, retry safety, or duplicate-insert concern", 0.65),
         (["migration", "schema change", "db migration", "database migration"],
             "GCI0021", "Review comment mentions migration concern", 0.65),
         (["contradictory method", "wrong method name", "naming inversion", "method semantics", "misleading name", "method name contradicts"],
@@ -141,7 +141,7 @@ public sealed class SilverLabelEngine
         var prodCsRemovedLines  = ExtractRemovedLinesFromProductionCsFiles(diffText);
         var labels       = new List<ExpectedFinding>();
 
-        ApplyDiffHeuristics(addedLines, removedLines, pathLines, prodCsLines, prodCsRemovedLines, labels);
+        ApplyDiffHeuristics(addedLines, removedLines, pathLines, prodCsLines, prodCsRemovedLines, labels, diffText);
 
         return Task.FromResult<IReadOnlyList<ExpectedFinding>>(labels);
     }
@@ -321,7 +321,7 @@ public sealed class SilverLabelEngine
 
     // -- Heuristic application -------------------------------------------------
 
-    private static void ApplyDiffHeuristics(List<string> addedLines, List<string> removedLines, List<string> pathLines, List<string> prodCsLines, List<string> prodCsRemovedLines, List<ExpectedFinding> labels)
+    private static void ApplyDiffHeuristics(List<string> addedLines, List<string> removedLines, List<string> pathLines, List<string> prodCsLines, List<string> prodCsRemovedLines, List<ExpectedFinding> labels, string rawDiff = "")
     {
         // GCI0016 -- Async execution model violations. Mirrors the four checks in the rule exactly.
         // .GetAwaiter().GetResult() is unambiguous; .Result only counts with Task/Async context;
@@ -392,9 +392,24 @@ public sealed class SilverLabelEngine
             }
         }
 
-        // GCI0003 -- Empty catch block
+        // GCI0003 -- Non-private method signature changed in production code
+        // Fire when production .cs removes AND re-adds a public/protected/internal member
+        // with a parenthesized signature — the rule's primary detection path.
+        {
+            static bool IsSigLine(string l)
+            {
+                var t = l.TrimStart();
+                return (t.StartsWith("public ",    StringComparison.Ordinal) ||
+                        t.StartsWith("protected ", StringComparison.Ordinal) ||
+                        t.StartsWith("internal ",  StringComparison.Ordinal)) && t.Contains('(');
+            }
+            if (prodCsRemovedLines.Any(IsSigLine) && prodCsLines.Any(IsSigLine))
+                labels.Add(MakeLabel("GCI0003", "Diff removes and re-adds a non-private method signature in production code", 0.60));
+        }
+
+        // GCI0032 -- Empty or comment-only catch block (exception swallowing)
         if (HasEmptyCatch(addedLines))
-            labels.Add(MakeLabel("GCI0003", "Diff contains empty or comment-only catch block on added lines", 0.65));
+            labels.Add(MakeLabel("GCI0032", "Diff contains an empty or comment-only catch block on added lines", 0.65));
 
         // GCI0021 -- Serialization attribute removed from production CS, or EF migration schema operation removed
         // Migration detection: check if removed lines from a non-test EF migration .cs file contain actual
@@ -464,16 +479,28 @@ public sealed class SilverLabelEngine
             labels.Add(MakeLabel("GCI0010", "Diff contains hardcoded localhost URL, connection string, or host/port literal", 0.6));
         }
 
-        // GCI0022 -- Large binary or generated file
-        if (pathLines.Any(l =>
-                l.Contains(".min.js",  StringComparison.OrdinalIgnoreCase) ||
-                l.Contains(".bundle.", StringComparison.OrdinalIgnoreCase) ||
-                l.Contains(".dll",     StringComparison.OrdinalIgnoreCase) ||
-                l.Contains(".exe",     StringComparison.OrdinalIgnoreCase) ||
-                l.Contains(".png",     StringComparison.OrdinalIgnoreCase) ||
-                l.Contains(".jpg",     StringComparison.OrdinalIgnoreCase)))
+        // GCI0022 -- Idempotency and retry safety
+        // Fire when an HttpPost endpoint is added without idempotency signals,
+        // OR when a raw INSERT INTO appears without an upsert guard.
         {
-            labels.Add(MakeLabel("GCI0022", "Diff touches a binary or generated file", 0.65));
+            var idempotencySignals = new[] { "IdempotencyKey", "Idempotency-Key", "idempotencyKey", "idempotent", "dedup", "Dedup", "RequestId", "requestId", "MessageId", "messageId" };
+            var upsertPatterns     = new[] { "ON DUPLICATE KEY", "ON CONFLICT", "INSERT OR REPLACE", "INSERT OR IGNORE", "MERGE INTO", "UPSERT" };
+            bool hasHttpPostAdded  = addedLines.Any(l =>
+            {
+                var t = l.Trim();
+                return t.Equals("[HttpPost]", StringComparison.Ordinal) ||
+                       t.StartsWith("[HttpPost(", StringComparison.Ordinal);
+            });
+            bool hasInsertWithoutUpsert = addedLines.Any(l =>
+                l.Contains("INSERT INTO", StringComparison.OrdinalIgnoreCase) &&
+                !upsertPatterns.Any(p => l.Contains(p, StringComparison.OrdinalIgnoreCase)));
+            if (hasHttpPostAdded || hasInsertWithoutUpsert)
+            {
+                bool hasIdempotencySignal = addedLines.Any(l =>
+                    idempotencySignals.Any(sig => l.Contains(sig, StringComparison.OrdinalIgnoreCase)));
+                if (!hasIdempotencySignal)
+                    labels.Add(MakeLabel("GCI0022", "Diff adds an [HttpPost] endpoint or raw INSERT INTO without idempotency/upsert guard", 0.60));
+            }
         }
 
         // --- Rules added after initial corpus labeling ---
@@ -497,7 +524,7 @@ public sealed class SilverLabelEngine
         // GCI0029 -- PII term in a log call
         {
             var piiLogPrefixes = new[] { "_logger.", "logger.", "Logger.", "_log.", "log.", "Log.Information", "Log.Warning", "Log.Error", "Log.Debug" };
-            var piiTerms       = new[] { "email", "ssn", "phonenumber", "creditcard", "dateofbirth", "passport", "bankaccount", "address", "ipaddress", "token", "username" };
+            var piiTerms       = new[] { "email", "ssn", "phonenumber", "creditcard", "dateofbirth", "passport", "bankaccount", "nationalid", "taxid", "dob", "birthdate", "zipcode", "postalcode", "geolocation" };
             if (addedLines.Any(l =>
                     piiLogPrefixes.Any(p => l.Contains(p, StringComparison.Ordinal)) &&
                     piiTerms.Any(t => l.Contains(t, StringComparison.OrdinalIgnoreCase))))
@@ -517,9 +544,17 @@ public sealed class SilverLabelEngine
                 labels.Add(MakeLabel("GCI0032", "Diff adds a throw new (non-guard) expression without test assertion coverage", 0.55));
         }
 
-        // GCI0036 -- [Pure] attribute added, or mutation pattern inside getter
-        if (addedLines.Any(l => l.Contains("[Pure]", StringComparison.Ordinal)))
-            labels.Add(MakeLabel("GCI0036", "Diff adds a [Pure] attribute — mutation within this context would be flagged", 0.50));
+        // GCI0036 -- [Pure] attribute added OR mutation in a visible getter block
+        {
+            bool hasPureAdded = addedLines.Any(l => l.Contains("[Pure]", StringComparison.Ordinal));
+            bool hasGetterMutation = !hasPureAdded && HasGetterMutationInDiff(rawDiff, pathLines);
+            if (hasPureAdded || hasGetterMutation)
+                labels.Add(MakeLabel("GCI0036",
+                    hasPureAdded
+                        ? "Diff adds a [Pure] attribute -- mutation within this context would be flagged"
+                        : "Diff adds a field assignment inside a property getter block",
+                    0.60));
+        }
 
         // GCI0038 -- DI anti-pattern: service locator or direct injectable instantiation
         {
@@ -715,12 +750,114 @@ public sealed class SilverLabelEngine
         @"=\s*""(?=[A-Za-z0-9+/]*[0-9])[A-Za-z0-9+/]{20,}={0,2}""",
         RegexOptions.Compiled);
 
+    /// <summary>
+    /// Mirrors the getter-mutation scan in GCI0036 by walking all diff lines (context + added)
+    /// and checking whether a `+` line contains a field/property assignment inside a getter block.
+    /// Resets state only at file headers, not at hunk boundaries, to match rule behavior.
+    /// </summary>
+    private static bool HasGetterMutationInDiff(string rawDiff, List<string> pathLines)
+    {
+        if (string.IsNullOrEmpty(rawDiff)) return false;
+
+        // Skip test/spec files
+        if (pathLines.Any(l =>
+            l.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
+            l.Contains("Spec", StringComparison.OrdinalIgnoreCase)))
+            return false;
+
+        int braceDepth = 0;
+        bool inGetter = false;
+        int getterExitDepth = -1;
+        bool expectGetterBrace = false;
+
+        foreach (var rawLine in rawDiff.Split('\n'))
+        {
+            // File headers reset state
+            if (rawLine.StartsWith("diff ", StringComparison.Ordinal) ||
+                rawLine.StartsWith("index ", StringComparison.Ordinal) ||
+                rawLine.StartsWith("--- ", StringComparison.Ordinal) ||
+                rawLine.StartsWith("+++ ", StringComparison.Ordinal))
+            {
+                braceDepth = 0; inGetter = false; getterExitDepth = -1; expectGetterBrace = false;
+                continue;
+            }
+            if (rawLine.StartsWith("@@")) continue; // hunk header -- no state reset (mirrors rule)
+
+            bool isAdded = rawLine.Length > 0 && rawLine[0] == '+';
+            bool isRemoved = rawLine.Length > 0 && rawLine[0] == '-';
+            if (isRemoved) continue;
+
+            var content = rawLine.Length > 0 ? rawLine[1..] : "";
+            var trimmed = content.TrimStart();
+
+            // Getter start -- inline brace
+            if (trimmed.StartsWith("get {", StringComparison.Ordinal) ||
+                trimmed.Contains(" get {", StringComparison.Ordinal))
+            {
+                getterExitDepth = braceDepth;
+                inGetter = true;
+                expectGetterBrace = false;
+            }
+            // Getter on its own line
+            else if (trimmed == "get" ||
+                (trimmed.Length > 4 && trimmed.EndsWith(" get", StringComparison.Ordinal) && !trimmed.Contains('{')))
+            {
+                expectGetterBrace = true;
+            }
+            // Deferred opening brace
+            else if (expectGetterBrace && (trimmed == "{" || trimmed.StartsWith("{ ", StringComparison.Ordinal)))
+            {
+                getterExitDepth = braceDepth;
+                inGetter = true;
+                expectGetterBrace = false;
+            }
+            else
+            {
+                expectGetterBrace = false;
+            }
+
+            bool inPureContext = inGetter;
+
+            foreach (char c in content)
+            {
+                if (c == '{') braceDepth++;
+                else if (c == '}') braceDepth--;
+            }
+
+            if (inGetter && braceDepth <= getterExitDepth)
+                inGetter = false;
+
+            // Check for field/property assignment on an added line inside a getter
+            if (isAdded && inPureContext && !trimmed.StartsWith("//", StringComparison.Ordinal))
+            {
+                if (!trimmed.StartsWith("var ", StringComparison.Ordinal) &&
+                    !trimmed.StartsWith("for ", StringComparison.Ordinal) &&
+                    !trimmed.StartsWith("for(", StringComparison.Ordinal))
+                {
+                    for (int k = 0; k < trimmed.Length; k++)
+                    {
+                        if (trimmed[k] != '=') continue;
+                        char prev = k > 0 ? trimmed[k - 1] : '\0';
+                        char next = k + 1 < trimmed.Length ? trimmed[k + 1] : '\0';
+                        if (prev is '=' or '!' or '<' or '>') continue;
+                        if (next is '=' or '>') continue;
+                        var lhs = trimmed[..k].TrimEnd('+', '-', '*', '/', '%', '|', '&', '^', ' ');
+                        if (!lhs.Contains(' '))
+                            return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     private static bool IsCredentialAssignment(string line)
     {
         // Skip test/mock values and comments
         var trimmed = line.TrimStart();
         if (trimmed.StartsWith("//") || trimmed.StartsWith("*"))
             return false;
+
         // Skip obvious test placeholder strings
         if (line.Contains("fake", StringComparison.OrdinalIgnoreCase) ||
             line.Contains("mock", StringComparison.OrdinalIgnoreCase) ||

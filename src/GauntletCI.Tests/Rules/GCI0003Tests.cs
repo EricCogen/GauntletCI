@@ -12,6 +12,45 @@ public class GCI0003Tests
     [Fact]
     public async Task RemovedLogicWithoutTests_ShouldFlag()
     {
+        // 17 removed lines all containing explicit control-flow keywords — well above
+        // the threshold (15). Represents a whole validation method body being deleted.
+        var raw = """
+            diff --git a/src/Validator.cs b/src/Validator.cs
+            index abc..def 100644
+            --- a/src/Validator.cs
+            +++ b/src/Validator.cs
+            @@ -1,22 +1,4 @@
+             public class Validator {
+            -    public bool Validate(Order order) {
+            -        if (order == null) throw new ArgumentNullException(nameof(order));
+            -        if (order.Amount <= 0) return false;
+            -        if (order.Amount > 10000) return false;
+            -        if (string.IsNullOrEmpty(order.CustomerId)) return false;
+            -        if (order.Items.Count == 0) return false;
+            -        if (order.Items.Any(i => i.Quantity <= 0)) return false;
+            -        if (order.Items.Any(i => i.Price < 0)) return false;
+            -        if (order.Currency != "USD") return false;
+            -        if (order.ShippingAddress == null) throw new ArgumentException("required");
+            -        if (order.ShippingAddress.ZipCode.Length < 5) return false;
+            -        if (order.ShippingAddress.Country == null) return false;
+            -        if (order.DeliveryDate < DateTime.UtcNow) return false;
+            -        if (order.DeliveryDate > DateTime.UtcNow.AddYears(1)) return false;
+            -        if (order.Notes != null && order.Notes.Length > 500) return false;
+            -        return true;
+            -    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("logic line(s) removed"));
+    }
+
+    [Fact]
+    public async Task SmallLogicRemoval_ShouldNotFlag()
+    {
+        // Only 5 removed logic lines — routine refactor, below the 15-line threshold.
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -30,7 +69,7 @@ public class GCI0003Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f => f.Summary.Contains("logic line(s) removed"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("logic line(s) removed"));
     }
 
     [Fact]

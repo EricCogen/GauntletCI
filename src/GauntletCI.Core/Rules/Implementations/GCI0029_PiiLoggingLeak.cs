@@ -21,8 +21,7 @@ public class GCI0029_PiiLoggingLeak : RuleBase
     [
         "email", "ssn", "socialsecurity", "phonenumber", "creditcard", "cardnumber",
         "dateofbirth", "passport", "nationalid", "taxid", "bankaccount",
-        "address", "dob", "birthdate", "username", "zipcode", "postalcode",
-        "geolocation", "ipaddress", "deviceid", "token"
+        "dob", "birthdate", "zipcode", "postalcode", "geolocation"
     ];
 
     // "name" is weak — only fires when it appears in an assignment/interpolation context

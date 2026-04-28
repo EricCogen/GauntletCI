@@ -15,7 +15,9 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
     public override string Id => "GCI0003";
     public override string Name => "Behavioral Change Detection";
 
-    private static readonly string[] LogicKeywords = ["return ", "throw ", "if (", "if(", "else", " && ", " || "];
+    // Narrower keyword set: "else", "&&", "||" appear in virtually every C# file so
+    // counting them as "logic" drives massive false-positive rates.
+    private static readonly string[] LogicKeywords = ["return ", "throw ", "if (", "if("];
     private static readonly string[] AccessModifiers = ["public ", "private ", "protected ", "internal "];
 
     public override Task<List<Finding>> EvaluateAsync(
@@ -40,7 +42,10 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
                      && LogicKeywords.Any(k => l.Content.Contains(k, StringComparison.Ordinal)))
             .ToList();
 
-        if (removedLogicLines.Count < 5) return;
+        // Threshold of 15: small refactors routinely remove 5-10 lines of control flow.
+        // Only a large-scale logic deletion (whole method body stripped, significant function
+        // rewrite) should trigger without accompanying test changes.
+        if (removedLogicLines.Count < 15) return;
 
         bool hasTestChanges = diff.Files.Any(f =>
             f.NewPath.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
