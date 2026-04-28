@@ -131,7 +131,7 @@ public class GCI0029Tests
     }
 
     [Fact]
-    public async Task NamePropertyInLogCall_ShouldFlag()
+    public async Task UsernameInLogCall_ShouldFlag()
     {
         var raw = """
             diff --git a/src/UserService.cs b/src/UserService.cs
@@ -140,14 +140,36 @@ public class GCI0029Tests
             +++ b/src/UserService.cs
             @@ -1,3 +1,4 @@
              public class UserService {
-            +    _logger.LogInformation("User {name}", user.name);
+            +    _logger.LogInformation("User {username}", user.userName);
              }
             """;
 
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f => f.Summary.Contains("name"));
+        Assert.Contains(findings, f => f.Summary.Contains("username"));
+    }
+
+    [Fact]
+    public async Task ComponentNameInLogCall_ShouldNotFlag()
+    {
+        // Regression: appender.Name / repository.Name used to cause FPs via the "name" weak term.
+        // "name" alone is no longer a PII term; only compound terms like "username" fire.
+        var raw = """
+            diff --git a/src/AppenderImpl.cs b/src/AppenderImpl.cs
+            index abc..def 100644
+            --- a/src/AppenderImpl.cs
+            +++ b/src/AppenderImpl.cs
+            @@ -1,3 +1,4 @@
+             public class AppenderImpl {
+            +    LogLog.Error(_declaringType, $"Failed to append to appender [{appender.Name}]", e);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
     }
 
     [Fact]
