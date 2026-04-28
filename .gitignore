@@ -30,7 +30,6 @@ artifacts/
 # Markdown policy: only README.md is committed; all others stay local
 *.md
 !README.md
-!AGENTS.md
 !CHARTER.md
 !STORY.md
 !COMPARE.md
