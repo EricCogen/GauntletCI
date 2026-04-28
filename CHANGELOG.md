@@ -10,6 +10,9 @@ Versions follow [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **NuGet downloads badge**: Added to README linking to the GauntletCI NuGet package page.
+
+### Added
 - **Custom 404 page**: `not-found.tsx` added with header, footer, and helpful links to Home, Docs, Detections, Pricing, and Benchmark.
 - **GitHub stars badge in site header**: Stars badge (shields.io social style) added to the desktop nav, linking to /stargazers.
 
