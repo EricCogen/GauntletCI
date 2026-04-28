@@ -649,15 +649,12 @@ public sealed class SilverLabelEngine
                 labels.Add(MakeLabel("GCI0032", "Diff adds a throw new (non-guard) expression without test assertion coverage", 0.55));
         }
 
-        // GCI0036 -- [Pure] attribute added OR mutation in a visible getter block
+        // GCI0036 -- mutation in a visible getter block (or mutation within [Pure]-annotated context)
         {
-            bool hasPureAdded = addedLines.Any(l => l.Contains("[Pure]", StringComparison.Ordinal));
-            bool hasGetterMutation = !hasPureAdded && HasGetterMutationInDiff(rawDiff, pathLines);
-            if (hasPureAdded || hasGetterMutation)
+            bool hasGetterMutation = HasGetterMutationInDiff(rawDiff, pathLines);
+            if (hasGetterMutation)
                 labels.Add(MakeLabel("GCI0036",
-                    hasPureAdded
-                        ? "Diff adds a [Pure] attribute -- mutation within this context would be flagged"
-                        : "Diff adds a field assignment inside a property getter block",
+                    "Diff adds a field assignment inside a property getter block",
                     0.60));
         }
 
@@ -1033,26 +1030,33 @@ public sealed class SilverLabelEngine
     {
         if (string.IsNullOrEmpty(rawDiff)) return false;
 
-        // Skip test/spec files
-        if (pathLines.Any(l =>
-            l.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
-            l.Contains("Spec", StringComparison.OrdinalIgnoreCase)))
-            return false;
-
         int braceDepth = 0;
         bool inGetter = false;
         int getterExitDepth = -1;
+        int getterStartIdx = -1;
         bool expectGetterBrace = false;
+        bool skipCurrentFile = false;
 
-        foreach (var rawLine in rawDiff.Split('\n'))
+        var diffLines = rawDiff.Split('\n');
+        for (int i = 0; i < diffLines.Length; i++)
         {
-            // File headers reset state
+            var rawLine = diffLines[i];
+
+            // File headers reset state; track per-file test status
             if (rawLine.StartsWith("diff ", StringComparison.Ordinal) ||
                 rawLine.StartsWith("index ", StringComparison.Ordinal) ||
-                rawLine.StartsWith("--- ", StringComparison.Ordinal) ||
-                rawLine.StartsWith("+++ ", StringComparison.Ordinal))
+                rawLine.StartsWith("--- ", StringComparison.Ordinal))
             {
-                braceDepth = 0; inGetter = false; getterExitDepth = -1; expectGetterBrace = false;
+                braceDepth = 0; inGetter = false; getterExitDepth = -1; getterStartIdx = -1; expectGetterBrace = false;
+                continue;
+            }
+            if (rawLine.StartsWith("+++ ", StringComparison.Ordinal))
+            {
+                braceDepth = 0; inGetter = false; getterExitDepth = -1; getterStartIdx = -1; expectGetterBrace = false;
+                skipCurrentFile = rawLine.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
+                                  rawLine.Contains("Spec", StringComparison.OrdinalIgnoreCase) ||
+                                  rawLine.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase) ||
+                                  rawLine.Contains(".g.cs", StringComparison.OrdinalIgnoreCase);
                 continue;
             }
             if (rawLine.StartsWith("@@")) continue; // hunk header -- no state reset (mirrors rule)
@@ -1069,6 +1073,7 @@ public sealed class SilverLabelEngine
                 trimmed.Contains(" get {", StringComparison.Ordinal))
             {
                 getterExitDepth = braceDepth;
+                getterStartIdx = i;
                 inGetter = true;
                 expectGetterBrace = false;
             }
@@ -1082,6 +1087,7 @@ public sealed class SilverLabelEngine
             else if (expectGetterBrace && (trimmed == "{" || trimmed.StartsWith("{ ", StringComparison.Ordinal)))
             {
                 getterExitDepth = braceDepth;
+                getterStartIdx = i;
                 inGetter = true;
                 expectGetterBrace = false;
             }
@@ -1099,7 +1105,10 @@ public sealed class SilverLabelEngine
             }
 
             if (inGetter && braceDepth <= getterExitDepth)
+            {
                 inGetter = false;
+                getterStartIdx = -1;
+            }
 
             // Check for field/property assignment on an added line inside a getter
             if (isAdded && inPureContext && !trimmed.StartsWith("//", StringComparison.Ordinal))
@@ -1116,10 +1125,91 @@ public sealed class SilverLabelEngine
                         if (prev is '=' or '!' or '<' or '>') continue;
                         if (next is '=' or '>') continue;
                         var lhs = trimmed[..k].TrimEnd('+', '-', '*', '/', '%', '|', '&', '^', ' ');
-                        if (!lhs.Contains(' '))
-                            return true;
+                        if (!lhs.Contains(' ') && !IsLocalVariableInLabelerScope(diffLines, getterStartIdx, i, lhs)
+                            && !IsNullGuardedInLabelerScope(diffLines, i, lhs))
+                        {
+                            if (!skipCurrentFile) return true;
+                        }
                     }
                 }
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Returns true when <paramref name="lhsName"/> was declared as a local variable in the
+    /// getter scope starting at <paramref name="scopeStart"/> in <paramref name="diffLines"/>.
+    /// Mirrors the rule's <c>IsLocalVariableInScope</c> helper using raw diff line content.
+    /// </summary>
+    private static bool IsLocalVariableInLabelerScope(string[] diffLines, int scopeStart, int idx, string lhsName)
+    {
+        if (scopeStart < 0 || string.IsNullOrEmpty(lhsName)) return false;
+
+        // Private-field naming conventions → always a field
+        if (lhsName.StartsWith("_", StringComparison.Ordinal) ||
+            lhsName.StartsWith("m_", StringComparison.Ordinal)) return false;
+
+        // Dotted or indexed → can't be a plain local
+        if (lhsName.Contains('.') || lhsName.Contains('[')) return false;
+
+        for (int j = scopeStart; j < idx && j < diffLines.Length; j++)
+        {
+            var raw = diffLines[j];
+            if (raw.Length == 0) continue;
+            // Strip diff prefix (+, -, space)
+            var content = raw[0] is '+' or '-' or ' ' ? raw[1..] : raw;
+            if (string.IsNullOrWhiteSpace(content)) continue;
+
+            int pos = -1;
+            while ((pos = content.IndexOf(lhsName, pos + 1, StringComparison.Ordinal)) >= 0)
+            {
+                if (pos == 0 || content[pos - 1] != ' ') continue;
+                int afterPos = pos + lhsName.Length;
+                if (afterPos < content.Length &&
+                    content[afterPos] is not (' ' or '=' or ';' or ',')) continue;
+                var before = content[..pos].TrimEnd();
+                if (before.Length == 0) continue;
+                char lastChar = before[^1];
+                if (char.IsLetterOrDigit(lastChar) || lastChar is '>' or ']' or '?')
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Returns true when the assignment LHS is preceded within 20 lines by a null check
+    /// on the same name — mirrors the rule's <c>IsNullGuardedAssignment</c> logic.
+    /// </summary>
+    private static bool IsNullGuardedInLabelerScope(string[] diffLines, int idx, string lhsName)
+    {
+        if (string.IsNullOrEmpty(lhsName)) return false;
+
+        // Strip this. prefix for matching
+        var name = lhsName.Contains('.')
+            ? lhsName[(lhsName.LastIndexOf('.') + 1)..]
+            : lhsName;
+        if (string.IsNullOrEmpty(name)) return false;
+
+        int scanned = 0;
+        for (int j = idx - 1; j >= 0 && scanned < 20; j--)
+        {
+            var raw = diffLines[j];
+            if (raw.Length == 0) continue;
+            var content = raw[0] is '+' or '-' or ' ' ? raw[1..] : raw;
+            var trimmed = content.TrimStart();
+            if (string.IsNullOrEmpty(trimmed)) continue;
+            scanned++;
+
+            if (trimmed.Contains(name, StringComparison.Ordinal) &&
+                (trimmed.Contains("== null",     StringComparison.Ordinal) ||
+                 trimmed.Contains("is null",     StringComparison.Ordinal) ||
+                 trimmed.Contains("!= null",     StringComparison.Ordinal) ||
+                 trimmed.Contains("is not null", StringComparison.Ordinal) ||
+                 trimmed.Contains("ReferenceEquals", StringComparison.Ordinal)))
+            {
+                return true;
             }
         }
         return false;
