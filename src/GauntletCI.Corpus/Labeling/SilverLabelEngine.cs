@@ -679,17 +679,35 @@ public sealed class SilverLabelEngine
             labels.Add(MakeLabel("GCI0039", "Diff instantiates HttpClient directly, bypassing IHttpClientFactory", 0.65));
         }
 
-        // GCI0041 -- Silenced tests in test files
+        // GCI0041 -- Silenced tests in test files.
+        // Uses per-file tracking so .Skip() in source files (stream/reader methods) and
+        // [SkipLocalsInit] attributes never match. Only added lines inside test paths count.
         {
-            var silenceTokens = new[] { "[Ignore", "[Skip", ".Skip(", "[Fact(Skip", "[Theory(Skip" };
-            bool isInTestPath = pathLines.Any(l =>
-                l.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
-                l.Contains("Spec", StringComparison.OrdinalIgnoreCase));
-            if (isInTestPath && addedLines.Any(l =>
-                    silenceTokens.Any(s => l.Contains(s, StringComparison.OrdinalIgnoreCase))))
+            var silenceTokens = new[] { "[Ignore", "[Skip]", "[Skip(", ".Skip(", "[Fact(Skip", "[Theory(Skip" };
+            bool hasSilencedTest = false;
+            bool inTestFile = false;
+            foreach (var diffLine in rawDiff.Split('\n'))
             {
-                labels.Add(MakeLabel("GCI0041", "Diff silences or skips a test in a test file", 0.65));
+                var trimmed = diffLine.TrimEnd('\r');
+                if (trimmed.StartsWith("+++ b/", StringComparison.Ordinal))
+                {
+                    var filePath = trimmed[6..];
+                    inTestFile = (filePath.Contains("test", StringComparison.OrdinalIgnoreCase) ||
+                                  filePath.Contains("spec", StringComparison.OrdinalIgnoreCase)) &&
+                                 !filePath.Contains("testdata", StringComparison.OrdinalIgnoreCase);
+                    continue;
+                }
+                if (!inTestFile) continue;
+                if (!trimmed.StartsWith('+') || trimmed.StartsWith("+++")) continue;
+                var content = trimmed[1..];
+                if (silenceTokens.Any(s => content.Contains(s, StringComparison.OrdinalIgnoreCase)))
+                {
+                    hasSilencedTest = true;
+                    break;
+                }
             }
+            if (hasSilencedTest)
+                labels.Add(MakeLabel("GCI0041", "Diff silences or skips a test in a test file", 0.65));
         }
 
         // GCI0042 -- TODO/FIXME/HACK or NotImplementedException in non-comment lines

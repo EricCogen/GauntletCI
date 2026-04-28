@@ -235,6 +235,149 @@ public class GCI0041Tests
     }
 
     [Fact]
+    public async Task SkipLocalsInitInTestFile_ShouldNotFlagSilenced()
+    {
+        var raw = """
+            diff --git a/src/OrderTests.cs b/src/OrderTests.cs
+            index abc..def 100644
+            --- a/src/OrderTests.cs
+            +++ b/src/OrderTests.cs
+            @@ -1,3 +1,5 @@
+             public class OrderTests {
+            +    [SkipLocalsInit]
+            +    public void FastHelper() { }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("silenced"));
+    }
+
+    [Fact]
+    public async Task SkipAttributeInTestFile_ShouldFlagSilenced()
+    {
+        var raw = """
+            diff --git a/src/OrderTests.cs b/src/OrderTests.cs
+            index abc..def 100644
+            --- a/src/OrderTests.cs
+            +++ b/src/OrderTests.cs
+            @@ -1,3 +1,6 @@
+             public class OrderTests {
+            +    [Fact]
+            +    [Skip("pending")]
+            +    public void Foo_WhenBar_ShouldBaz() { }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("silenced"));
+    }
+
+    [Fact]
+    public async Task TestdataPathFile_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/NUnitFramework/testdata/SomeFixture.cs b/src/NUnitFramework/testdata/SomeFixture.cs
+            index abc..def 100644
+            --- a/src/NUnitFramework/testdata/SomeFixture.cs
+            +++ b/src/NUnitFramework/testdata/SomeFixture.cs
+            @@ -1,3 +1,8 @@
+             public class SomeFixture {
+            +    [Test]
+            +    public void Test1() { }
+            +    [Test]
+            +    public void Test3() { }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public async Task BareAssertCall_ShouldNotFlagEmptyAssertions()
+    {
+        var raw = """
+            diff --git a/src/SortTests.cs b/src/SortTests.cs
+            index abc..def 100644
+            --- a/src/SortTests.cs
+            +++ b/src/SortTests.cs
+            @@ -1,3 +1,8 @@
+             public class SortTests {
+            +    [Fact]
+            +    public void Sort_ShouldBeStable()
+            +    {
+            +        var result = Sort(input);
+            +        Assert(result.IsStable, "sort should be stable");
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("assertions"));
+    }
+
+    [Fact]
+    public async Task TaskCompletionSourceTest_ShouldNotFlagEmptyAssertions()
+    {
+        var raw = """
+            diff --git a/src/ConsumerTests.cs b/src/ConsumerTests.cs
+            index abc..def 100644
+            --- a/src/ConsumerTests.cs
+            +++ b/src/ConsumerTests.cs
+            @@ -1,3 +1,10 @@
+             public class ConsumerTests {
+            +    [Fact]
+            +    public async Task Consumer_ShouldReceiveMessage()
+            +    {
+            +        var tcs = new TaskCompletionSource<bool>();
+            +        consumer.Received += (s, e) => tcs.SetResult(true);
+            +        await WaitAsync(tcs, TimeSpan.FromSeconds(5));
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("assertions"));
+    }
+
+    [Fact]
+    public async Task BrowserAssertionTest_ShouldNotFlagEmptyAssertions()
+    {
+        var raw = """
+            diff --git a/src/E2ETests/BrowserTests.cs b/src/E2ETests/BrowserTests.cs
+            index abc..def 100644
+            --- a/src/E2ETests/BrowserTests.cs
+            +++ b/src/E2ETests/BrowserTests.cs
+            @@ -1,3 +1,9 @@
+             public class BrowserTests {
+            +    [Fact]
+            +    public void CanLoadHomepage()
+            +    {
+            +        Navigate("/");
+            +        Browser.Equal("loaded", () => Browser.Exists(By.Id("status")).Text);
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("assertions"));
+    }
+
+
+    [Fact]
     public async Task CleanTestFile_ShouldNotFlag()
     {
         var raw = """

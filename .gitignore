@@ -77,7 +77,8 @@ docs/benchmarks/
 /data/*
 !data/corpus-fixtures.csv
 
-
+
+
 # Node / Cloudflare Worker
 node_modules/
 worker/.wrangler/
@@ -94,3 +95,4 @@ site/tsconfig.tsbuildinfo
 **/*.pyo
 *.zip
 *.7z
+.aider*
