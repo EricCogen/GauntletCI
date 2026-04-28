@@ -17,7 +17,7 @@ public class GCI0041_TestQualityGaps : RuleBase
     public override string Name => "Test Quality Gaps";
 
     private static readonly string[] SilencePatterns =
-        ["[Ignore", "[Skip", ".Skip(", "[Fact(Skip", "[Theory(Skip"];
+        ["[Ignore", "[Skip]", "[Skip(", ".Skip(", "[Fact(Skip", "[Theory(Skip"];
 
     private static readonly string[] TestAttributeMarkers =
         ["[Fact]", "[Theory]", "[Test]"];
@@ -37,6 +37,8 @@ public class GCI0041_TestQualityGaps : RuleBase
     [
         // xUnit / NUnit / MSTest
         "Assert.", "Xunit.Assert", "NUnit.Framework.Assert",
+        // Bare Assert() call (no dot) — MongoDB, classic NUnit style
+        "Assert(",
         // FluentAssertions / Shouldly
         "Should", ".ShouldBe", ".ShouldNotBe", ".ShouldBeNull", ".ShouldNotBeNull",
         ".Must(",
@@ -48,6 +50,14 @@ public class GCI0041_TestQualityGaps : RuleBase
         "Throws<", "DoesNotThrow", "ThrowsAsync", "expect(", "Expect(",
         "IsTrue(", "IsFalse(", "IsNull(", "IsNotNull(", "AreEqual(", "AreNotEqual(",
         "Contains(", "IsInstanceOf",
+        // Visual comparison / image assertions (ImageSharp etc.)
+        ".CompareToReferenceOutput(",
+        // Azure Provisioning test comparisons and SDK / validation helpers
+        ".Compare(", ".ValidateAsync(", ".Lint(",
+        // Selenium / Playwright browser integration tests (ASP.NET Core E2E)
+        "Browser.",
+        // Event-driven async tests: validates via TaskCompletionSource completion
+        "TaskCompletionSource",
     ];
 
     // Matches custom assertion helpers: AssertValid(...), VerifyResult(...), CheckState(...)
@@ -75,6 +85,9 @@ public class GCI0041_TestQualityGaps : RuleBase
     private static bool IsTestFile(DiffFile file)
     {
         var path = file.NewPath;
+        // Skip test-data directories used as test subjects by the framework itself.
+        if (path.Contains("testdata", StringComparison.OrdinalIgnoreCase))
+            return false;
         return path.Contains("test", StringComparison.OrdinalIgnoreCase)
             || path.Contains("spec", StringComparison.OrdinalIgnoreCase);
     }
@@ -144,6 +157,12 @@ public class GCI0041_TestQualityGaps : RuleBase
 
     private void CheckEmptyAssertions(DiffFile file, List<Finding> findings)
     {
+        // Skip documentation/sample files that intentionally use test attributes without assertions.
+        var path = file.NewPath;
+        if (path.Contains("snippet", StringComparison.OrdinalIgnoreCase) ||
+            path.Contains("sample", StringComparison.OrdinalIgnoreCase))
+            return;
+
         var addedLines = file.AddedLines.ToList();
 
         bool hasTestAttribute = addedLines.Any(l =>
