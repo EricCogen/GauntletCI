@@ -28,9 +28,9 @@ missing validations, and hidden regressions that pass tests and code review.
 It analyzes what changed in your code and flags **unverified behavioral changes**
 before they reach code review.
 
-* ⚡ Sub-second analysis — no compilation, no AST, no network
-* 🔒 Runs locally — no code leaves your machine
-* 🎯 High-signal output — designed to surface 0–3 findings per run
+* ⚡ Sub-second analysis: no compilation, no AST, no network
+* 🔒 Runs locally: no code leaves your machine
+* 🎯 High-signal output: designed to surface 0-3 findings per run
 
 It answers one question:
 
@@ -44,7 +44,7 @@ GauntletCI detects **Behavioral Change Risk**: unverified behavior changes intro
 
 * Install the tool
 * Run it on your current changes
-* See 0–3 high-signal findings (or none)
+* See 0-3 high-signal findings (or none)
 
 No setup required.
 
@@ -57,11 +57,11 @@ Want to see GauntletCI catch real bugs in real PRs before installing anything?
 The **[GauntletCI-Demo](https://github.com/EricCogen/GauntletCI-Demo)** repo
 is a realistic ASP.NET Core OrderService with **6 always-open scenario PRs**.
 Each PR makes a plausible multi-file change with a single risky line buried
-inside. GauntletCI runs on every PR — open one and read the workflow output:
+inside. GauntletCI runs on every PR: open one and read the workflow output:
 
 | PR | Scenario | Expected verdict |
 | --- | --- | --- |
-| 01 | Safe typo fix | ✅ clean — no findings |
+| 01 | Safe typo fix | ✅ clean: no findings |
 | 02 | Silent `catch { }` around payment call | ❌ GCI0007 Error Handling Integrity |
 | 03 | Hardcoded API key in `Program.cs` | ❌ GCI0012 Secret Hygiene |
 | 04 | `CancellationToken` dropped from `IPaymentClient` | ❌ GCI0004 Public API Contract |
@@ -71,7 +71,7 @@ inside. GauntletCI runs on every PR — open one and read the workflow output:
 **[→ Browse the live demo PRs](https://github.com/EricCogen/GauntletCI-Demo/pulls)**
 
 Want to drive it yourself? **[Fork or clone GauntletCI-Demo](https://github.com/EricCogen/GauntletCI-Demo#run-it-yourself-recommended)**
-and run the scenarios on your own copy — the demo repo's README has a one-click
+and run the scenarios on your own copy; the demo repo's README has a one-click
 fork-and-run path plus a local-CLI walkthrough.
 
 ---
@@ -82,7 +82,7 @@ Tests and code review do not reliably validate behavioral changes.
 
 Even experienced developers miss things in diffs.
 
-Not because they lack skill — but because diffs are deceptive.
+Not because they lack skill, but because diffs are deceptive.
 
 A small change can silently alter behavior:
 
@@ -93,7 +93,7 @@ A small change can silently alter behavior:
 * A conditional branch shifts logic
 
 These are not syntax errors.
-They are **behavior changes** — and they regularly slip through code review.
+They are **behavior changes**, and they regularly slip through code review.
 
 ---
 
