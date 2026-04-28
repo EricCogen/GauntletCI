@@ -3,7 +3,7 @@ import { softwareApplicationSchema, buildFaqSchema } from "@/lib/schemas";
 
 export const metadata: Metadata = {
   title: "CI/CD Integrations | GauntletCI Docs",
-  description: "Integrate GauntletCI with GitHub Actions, Azure Pipelines, and other CI/CD systems.",
+  description: "Integrate GauntletCI with GitHub Actions, GitLab CI, Azure Pipelines, Bitbucket Pipelines, and other CI/CD systems. Install as a .NET global tool on any runner.",
   alternates: { canonical: "/docs/integrations" },
 };
 
@@ -11,12 +11,20 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "TechArticle",
   "headline": "GauntletCI CI/CD Integrations",
-  "description": "Integrate GauntletCI with GitHub Actions, Azure Pipelines, and other CI/CD systems.",
+  "description": "Integrate GauntletCI with GitHub Actions, GitLab CI, Azure Pipelines, Bitbucket Pipelines, and other CI/CD systems.",
   "url": "https://gauntletci.com/docs/integrations",
   "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
 };
 
 const faqSchema = buildFaqSchema([
+  {
+    q: "How do I integrate GauntletCI with GitLab CI?",
+    a: "Add a job with the mcr.microsoft.com/dotnet/sdk:8.0 image. Install the tool with dotnet tool install -g GauntletCI (then export PATH to include $HOME/.dotnet/tools), fetch the target branch, generate a diff with git diff origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME...HEAD > pr.diff, and run gauntletci analyze --diff pr.diff --no-banner.",
+  },
+  {
+    q: "How do I integrate GauntletCI with Bitbucket Pipelines?",
+    a: "Use the mcr.microsoft.com/dotnet/sdk:8.0 image. Install with dotnet tool install -g GauntletCI, fetch the destination branch, generate the diff with git diff origin/$BITBUCKET_PR_DESTINATION_BRANCH...HEAD > pr.diff, and run gauntletci analyze --diff pr.diff --no-banner.",
+  },
   {
     q: "How do I integrate GauntletCI with GitHub Actions?",
     a: "Add a workflow that checks out the repo with fetch-depth: 0, installs the .NET 8 tool, then runs: git diff origin/${{ github.base_ref }}...HEAD > pr.diff and gauntletci analyze --diff pr.diff --github-annotations. The step exits with code 1 if blocking findings are detected, failing the check.",
@@ -50,16 +58,47 @@ export default function IntegrationsPage() {
         <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">CI/CD Integrations</p>
         <h1 className="text-4xl font-bold tracking-tight mb-4">CI/CD Integrations</h1>
         <p className="text-lg text-muted-foreground">
-          GauntletCI runs anywhere that can execute a .NET tool. The most common setup is as a
-          pre-commit hook on developer machines, with an optional CI gate for pull request enforcement.
+          GauntletCI runs anywhere that can execute a .NET tool. Install it with <code className="bg-muted px-1 rounded text-xs">dotnet tool install -g GauntletCI</code> on any runner that has .NET 8 available - GitHub Actions, GitLab CI, Azure Pipelines, Bitbucket Pipelines, or your local machine.
         </p>
       </div>
 
       <section>
         <h2 className="text-2xl font-semibold mb-3">GitHub Actions</h2>
-        <p className="text-muted-foreground mb-4">
-          Add this workflow to analyze every pull request. The <code className="bg-muted px-1 rounded text-xs">--github-annotations</code> flag
-          emits inline comments directly on the diff lines where findings occur.
+        <p className="text-muted-foreground mb-2">
+          The simplest setup uses the published Marketplace action. Add this workflow to analyze every pull request:
+        </p>
+        <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm overflow-x-auto mb-4">
+          <pre className="text-foreground whitespace-pre">{`name: GauntletCI Analysis
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  pull-requests: write   # required for inline-comments: 'true'
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: EricCogen/GauntletCI@v2.1.0
+        with:
+          sensitivity: 'balanced'
+          inline-comments: 'true'
+          fail-on-findings: 'true'`}</pre>
+        </div>
+        <p className="text-sm text-muted-foreground mb-6">
+          The action installs .NET, installs GauntletCI, runs analysis against the PR commit, and optionally posts findings as inline review comments.
+          Set <code className="bg-muted px-1 rounded text-xs">inline-comments: &apos;false&apos;</code> to write findings to the Actions log only.
+        </p>
+
+        <p className="text-sm font-semibold mb-2">Manual install (without the Marketplace action)</p>
+        <p className="text-muted-foreground text-sm mb-3">
+          Use this approach if you need full control over the workflow steps or are pinning to a specific tool version.
         </p>
         <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm overflow-x-auto">
           <pre className="text-foreground whitespace-pre">{`name: GauntletCI Analysis
@@ -97,6 +136,32 @@ jobs:
       </section>
 
       <section>
+        <h2 className="text-2xl font-semibold mb-3">GitLab CI</h2>
+        <p className="text-muted-foreground mb-4">
+          Add this job to your <code className="bg-muted px-1 rounded text-xs">.gitlab-ci.yml</code>. The job runs only on merge request pipelines
+          and uses the official Microsoft .NET SDK Docker image.
+        </p>
+        <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm overflow-x-auto">
+          <pre className="text-foreground whitespace-pre">{`gauntletci-analysis:
+  image: mcr.microsoft.com/dotnet/sdk:8.0
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+  script:
+    - export PATH="$PATH:$HOME/.dotnet/tools"
+    - dotnet tool install -g GauntletCI
+    - git fetch origin $CI_MERGE_REQUEST_TARGET_BRANCH_NAME
+    - git diff origin/$CI_MERGE_REQUEST_TARGET_BRANCH_NAME...HEAD > pr.diff
+    - gauntletci analyze --diff pr.diff --no-banner --ascii
+  allow_failure: false`}</pre>
+        </div>
+        <p className="mt-3 text-sm text-muted-foreground">
+          GitLab CI exposes <code className="bg-muted px-1 rounded text-xs">$CI_MERGE_REQUEST_TARGET_BRANCH_NAME</code> automatically
+          on merge request pipelines. The <code className="bg-muted px-1 rounded text-xs">allow_failure: false</code> line blocks the merge
+          if findings are detected. Set it to <code className="bg-muted px-1 rounded text-xs">true</code> to make the job advisory only.
+        </p>
+      </section>
+
+      <section>
         <h2 className="text-2xl font-semibold mb-3">Azure Pipelines</h2>
         <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm overflow-x-auto">
           <pre className="text-foreground whitespace-pre">{`trigger: none
@@ -120,6 +185,33 @@ steps:
       gauntletci analyze --diff pr.diff --no-banner
     displayName: Analyze PR diff`}</pre>
         </div>
+      </section>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-3">Bitbucket Pipelines</h2>
+        <p className="text-muted-foreground mb-4">
+          Add this to your <code className="bg-muted px-1 rounded text-xs">bitbucket-pipelines.yml</code>. The job runs on all pull request branches
+          using the Microsoft .NET SDK image.
+        </p>
+        <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm overflow-x-auto">
+          <pre className="text-foreground whitespace-pre">{`image: mcr.microsoft.com/dotnet/sdk:8.0
+
+pipelines:
+  pull-requests:
+    '**':
+      - step:
+          name: GauntletCI Analysis
+          script:
+            - export PATH="$PATH:$HOME/.dotnet/tools"
+            - dotnet tool install -g GauntletCI
+            - git fetch origin $BITBUCKET_PR_DESTINATION_BRANCH
+            - git diff origin/$BITBUCKET_PR_DESTINATION_BRANCH...HEAD > pr.diff
+            - gauntletci analyze --diff pr.diff --no-banner --ascii`}</pre>
+        </div>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Bitbucket exposes <code className="bg-muted px-1 rounded text-xs">$BITBUCKET_PR_DESTINATION_BRANCH</code> automatically on pull
+          request pipelines. The step fails (blocking merge) if GauntletCI exits with code 1.
+        </p>
       </section>
 
       <section>
