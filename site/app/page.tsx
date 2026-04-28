@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { WhyExists } from "@/components/why-exists";
 import { WhoItsFor } from "@/components/who-its-for";
 import { HowItWorks } from "@/components/how-it-works";
 import { Header } from "@/components/header";
@@ -48,6 +49,7 @@ export default function Home() {
       <DetectionRules />
       <WhyTeams />
       <WhoItsFor />
+      <WhyExists />
       <Integrations />
       <QuickStart />
       <Faq />
