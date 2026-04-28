@@ -56,10 +56,12 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
 
         if (throwCount > 0)
         {
+            // Only non-removed lines: a deleted assertion is evidence that coverage was removed, not added.
             var testLines = diff.Files
                 .Where(f => f.NewPath.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
                             f.NewPath.Contains("Spec", StringComparison.OrdinalIgnoreCase))
                 .SelectMany(f => f.Hunks.SelectMany(h => h.Lines))
+                .Where(l => l.Kind != DiffLineKind.Removed)
                 .Select(l => l.Content)
                 .ToList();
 

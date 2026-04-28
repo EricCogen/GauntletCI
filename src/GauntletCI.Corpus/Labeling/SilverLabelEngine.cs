@@ -655,13 +655,56 @@ public sealed class SilverLabelEngine
         }
 
         // GCI0032 -- Non-guard throw new without test assertion coverage
+        // Per-file tracking mirrors the rule:
+        //   - throws: only added (+) lines in non-test .cs files
+        //   - assertions: non-removed lines (added + context) in test .cs files, same as rule's hunk scan
         {
-            var guardPrefixes = new[] { "throw new ArgumentNullException", "throw new ArgumentException", "throw new ArgumentOutOfRangeException", "throw new ObjectDisposedException", "throw new NotImplementedException" };
-            bool hasRealThrow = addedLines.Any(l =>
-                l.Contains("throw new", StringComparison.Ordinal) &&
-                !guardPrefixes.Any(g => l.Contains(g, StringComparison.Ordinal)) &&
-                !l.TrimStart().StartsWith("//"));
-            if (hasRealThrow)
+            var guardPrefixes0032 = new[] {
+                "throw new ArgumentNullException", "throw new ArgumentException",
+                "throw new ArgumentOutOfRangeException", "throw new ObjectDisposedException",
+                "throw new NotImplementedException"
+            };
+            var throwAssertions0032 = new[] { "Assert.Throws", ".Should().Throw", "ThrowsAsync", "ThrowsExceptionAsync", "Throws<" };
+            bool hasRealThrow32 = false;
+            bool hasThrowAssertion32 = false;
+            bool inTestFile32 = false;
+            bool inCsFile32 = false;
+
+            foreach (var dl in rawDiff.Split('\n'))
+            {
+                if (dl.StartsWith("+++ b/", StringComparison.Ordinal))
+                {
+                    var fp32 = dl[6..].TrimEnd('\r');
+                    inCsFile32   = fp32.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
+                    inTestFile32 = fp32.Contains("test", StringComparison.OrdinalIgnoreCase) ||
+                                   fp32.Contains("spec", StringComparison.OrdinalIgnoreCase);
+                    continue;
+                }
+                if (!inCsFile32) continue;
+                if (dl.StartsWith("---") || dl.StartsWith("+++") || dl.StartsWith("@@")) continue;
+                if (dl.StartsWith("-")) continue;  // Skip removed lines for both checks
+
+                // Line is either added (+) or context (space/empty).
+                var content32 = dl.StartsWith("+") ? dl[1..] : dl;
+                var trimmed32 = content32.TrimStart();
+                if (trimmed32.StartsWith("//")) continue;
+
+                if (inTestFile32)
+                {
+                    // Context and added lines both count as assertion evidence (matches rule hunk scan).
+                    if (throwAssertions0032.Any(a => content32.Contains(a, StringComparison.Ordinal)))
+                        hasThrowAssertion32 = true;
+                }
+                else if (dl.StartsWith("+"))
+                {
+                    // Only new (+) lines in prod code can be new throw paths.
+                    if (content32.Contains("throw new", StringComparison.Ordinal) &&
+                        !guardPrefixes0032.Any(g => content32.Contains(g, StringComparison.Ordinal)))
+                        hasRealThrow32 = true;
+                }
+            }
+
+            if (hasRealThrow32 && !hasThrowAssertion32)
                 labels.Add(MakeLabel("GCI0032", "Diff adds a throw new (non-guard) expression without test assertion coverage", 0.55));
         }
 
