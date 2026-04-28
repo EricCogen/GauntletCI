@@ -95,6 +95,30 @@ public class GCI0045Tests
     }
 
     [Fact]
+    public async Task NewInterfaceWithNoImplementorInDiff_ShouldFire()
+    {
+        // Regression: interface added with no visible implementor in the diff was missing (FN).
+        // implCount == 0 should now fire, same as implCount == 1.
+        var raw = """
+            diff --git a/src/IReaderOptions.cs b/src/IReaderOptions.cs
+            index abc..def 100644
+            --- a/src/IReaderOptions.cs
+            +++ b/src/IReaderOptions.cs
+            @@ -0,0 +1,4 @@
+            +public interface IReaderOptions : IStreamOptions, IEncodingOptions {
+            +    Encoding GetEncoding();
+            +    bool PreserveRawEntryData { get; set; }
+            +}
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("IReaderOptions"));
+    }
+
+
+    [Fact]
     public async Task AbstractClassWithNoAbstractMembers_ShouldFire()
     {
         var raw = """
