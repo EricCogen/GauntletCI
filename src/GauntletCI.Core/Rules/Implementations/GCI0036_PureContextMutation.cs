@@ -39,6 +39,7 @@ public class GCI0036_PureContextMutation : RuleBase
         int braceDepth = 0;
         bool inGetter = false;
         int getterExitDepth = -1;
+        int getterStartIdx = -1;
         bool expectGetterBrace = false;
         bool seenPure = false;
         int pureLineIdx = -1;
@@ -62,6 +63,7 @@ public class GCI0036_PureContextMutation : RuleBase
             if (trimmed.StartsWith("get {") || trimmed.Contains(" get {"))
             {
                 getterExitDepth = braceDepth;
+                getterStartIdx = i;
                 inGetter = true;
                 expectGetterBrace = false;
             }
@@ -74,6 +76,7 @@ public class GCI0036_PureContextMutation : RuleBase
             else if (expectGetterBrace && (trimmed == "{" || trimmed.StartsWith("{ ")))
             {
                 getterExitDepth = braceDepth;
+                getterStartIdx = i;
                 inGetter = true;
                 expectGetterBrace = false;
             }
@@ -84,6 +87,7 @@ public class GCI0036_PureContextMutation : RuleBase
 
             // Capture pure context state before brace counting
             bool inPureContext = inGetter || seenPure;
+            int contextStartIdx = inGetter ? getterStartIdx : (seenPure ? pureLineIdx : -1);
 
             // Count braces
             foreach (char c in content)
@@ -94,11 +98,15 @@ public class GCI0036_PureContextMutation : RuleBase
 
             // Exit getter when depth returns to entry level
             if (inGetter && braceDepth <= getterExitDepth)
+            {
                 inGetter = false;
+                getterStartIdx = -1;
+            }
 
             // Check for mutations in pure context (added lines only)
             if (line.Kind == DiffLineKind.Added && inPureContext && IsFieldOrPropertyAssignment(trimmed)
-                && !IsNullGuardedAssignment(allLines, i, trimmed))
+                && !IsNullGuardedAssignment(allLines, i, trimmed)
+                && !IsLocalVariableInScope(allLines, contextStartIdx, i, trimmed))
             {
                 findings.Add(CreateFinding(
                     file,
@@ -113,8 +121,9 @@ public class GCI0036_PureContextMutation : RuleBase
     }
 
     /// <summary>
-    /// Returns true when the assignment on this line is preceded within 10 lines by a null check
+    /// Returns true when the assignment on this line is preceded within 20 lines by a null check
     /// on the same field — the lazy-initialization pattern (check-then-assign) is intentional.
+    /// The window is 20 lines to cover nested double-check-lock patterns.
     /// </summary>
     private static bool IsNullGuardedAssignment(List<DiffLine> allLines, int idx, string trimmed)
     {
@@ -131,7 +140,7 @@ public class GCI0036_PureContextMutation : RuleBase
         if (string.IsNullOrEmpty(lhsName) || lhsName.Contains(' ')) return false;
 
         int scanned = 0;
-        for (int j = idx - 1; j >= 0 && scanned < 10; j--)
+        for (int j = idx - 1; j >= 0 && scanned < 20; j--)
         {
             var prev = allLines[j].Content.Trim();
             if (string.IsNullOrEmpty(prev)) continue;
@@ -165,6 +174,58 @@ public class GCI0036_PureContextMutation : RuleBase
 
         // If LHS still contains a space it's a type declaration (e.g. "int x", "Dictionary<K,V> result")
         return !lhs.Contains(' ');
+    }
+
+    /// <summary>
+    /// Returns true when the LHS name was declared as a local variable within the getter/pure
+    /// scope that starts at <paramref name="scopeStart"/>. Scans lines [scopeStart, idx) for
+    /// "TypeName varName" or "var varName" declaration patterns. Skips private-field naming
+    /// conventions (_name, m_name) since those are always fields and never locals.
+    /// </summary>
+    private static bool IsLocalVariableInScope(
+        List<DiffLine> allLines, int scopeStart, int idx, string trimmed)
+    {
+        if (scopeStart < 0) return false;
+
+        int eqIdx = FindAssignmentIndex(trimmed);
+        if (eqIdx < 0) return false;
+
+        var rawLhs = trimmed[..eqIdx].TrimEnd('+', '-', '*', '/', '%', '|', '&', '^', ' ').Trim();
+        if (rawLhs.Length == 0) return false;
+
+        // Dotted (this.x) or indexed (arr[i]) — can't be a plain local
+        if (rawLhs.Contains('.') || rawLhs.Contains('[') || rawLhs.Contains(')')) return false;
+
+        // Private-field naming conventions → always a field, never a local
+        if (rawLhs.StartsWith("_", StringComparison.Ordinal) ||
+            rawLhs.StartsWith("m_", StringComparison.Ordinal)) return false;
+
+        // Search within the getter/pure scope for "Type varName" or "var varName"
+        for (int j = scopeStart; j < idx; j++)
+        {
+            var content = allLines[j].Content;
+            if (string.IsNullOrWhiteSpace(content)) continue;
+
+            int pos = -1;
+            while ((pos = content.IndexOf(rawLhs, pos + 1, StringComparison.Ordinal)) >= 0)
+            {
+                // Name must be preceded by a space (type separator)
+                if (pos == 0 || content[pos - 1] != ' ') continue;
+
+                // Name must be followed by space, =, ;, or , (end of declarator)
+                int afterPos = pos + rawLhs.Length;
+                if (afterPos < content.Length &&
+                    content[afterPos] is not (' ' or '=' or ';' or ',')) continue;
+
+                // What precedes the space must end with a type-name character (letter, digit, >, ], ?)
+                var before = content[..pos].TrimEnd();
+                if (before.Length == 0) continue;
+                char lastChar = before[^1];
+                if (char.IsLetterOrDigit(lastChar) || lastChar is '>' or ']' or '?')
+                    return true;
+            }
+        }
+        return false;
     }
 
     private static int FindAssignmentIndex(string content)
