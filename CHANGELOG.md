@@ -10,6 +10,7 @@ Versions follow [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Auto-parsed /releases page**: `site/lib/parseChangelog.ts` now extracts release metadata from CHANGELOG.md at build time. The releases page dynamically renders all versions, sections, and summaries - no manual duplication required. Sitemap includes /releases with 0.8 priority.
 - **NuGet downloads badge**: Added to README linking to the GauntletCI NuGet package page.
 - **Self-contained binary releases**: `release.yml` now publishes self-contained single-file executables for win-x64, win-arm64, osx-x64, osx-arm64, linux-x64, and linux-arm64, plus a `checksums.txt`, as GitHub release assets alongside the NuGet package.
 - **Homebrew tap**: Created `EricCogen/homebrew-gauntletci` tap. Install with `brew tap EricCogen/gauntletci && brew install gauntletci`. SHA256 values auto-updated after each release via `update-homebrew-tap.yml`.
