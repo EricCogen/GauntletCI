@@ -61,6 +61,9 @@ artifacts/
 !docs/risky-diffs/stackexchange-redis-context-mutation.md
 !docs/risky-diffs/sharpcompress-overflow.md
 !docs/risky-diffs/anglesharp-enum-removal.md
+!docs/integrations/husky.md
+!docs/integrations/dotnet-husky.md
+!docs/integrations/lefthook.md
 
 # Publish artifacts (self-contained EXE - too large for GitHub)
 publish/
