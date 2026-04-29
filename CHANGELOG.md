@@ -9,6 +9,9 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- **Lighthouse CI workflow**: Added `staticDistDir: ./out` to serve the Next.js static export directly instead of trying to connect to localhost. Fixes 404 errors during audit collection.
+
 ### Added
 - **Auto-parsed /releases page**: `site/lib/parseChangelog.ts` now extracts release metadata from CHANGELOG.md at build time. The releases page dynamically renders all versions, sections, and summaries - no manual duplication required. Sitemap includes /releases with 0.8 priority.
 - **NuGet downloads badge**: Added to README linking to the GauntletCI NuGet package page.
