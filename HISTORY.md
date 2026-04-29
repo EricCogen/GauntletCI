@@ -31,6 +31,8 @@ static export). Work in this phase:
 - Pagefind full-text search (client-side, zero backend, build-time indexed)
 - Playwright e2e test suite including a link-graph test that enforces every page
   has at least one inbound and one outbound content link
+- Releases page (`/releases`) auto-parses CHANGELOG.md at build time, eliminating
+  manual duplication of version metadata
 
 ---
 
