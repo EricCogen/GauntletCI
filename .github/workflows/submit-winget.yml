@@ -1,0 +1,18 @@
+name: Submit to winget
+
+on:
+  release:
+    types: [published]
+
+# Requires WINGET_TOKEN secret: a PAT with public_repo scope on an account
+# that has forked microsoft/winget-pkgs. The action submits a PR to the fork
+# and then opens a PR to microsoft/winget-pkgs from that fork.
+jobs:
+  winget:
+    runs-on: windows-latest
+    steps:
+      - uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: EricCogen.GauntletCI
+          installers-regex: '^gauntletci-win-(x64|arm64)-.*\.zip$'
+          token: ${{ secrets.WINGET_TOKEN }}

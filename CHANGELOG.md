@@ -11,6 +11,10 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ### Added
 - **NuGet downloads badge**: Added to README linking to the GauntletCI NuGet package page.
+- **Self-contained binary releases**: `release.yml` now publishes self-contained single-file executables for win-x64, win-arm64, osx-x64, osx-arm64, linux-x64, and linux-arm64, plus a `checksums.txt`, as GitHub release assets alongside the NuGet package.
+- **Homebrew tap**: Created `EricCogen/homebrew-gauntletci` tap. Install with `brew tap EricCogen/gauntletci && brew install gauntletci`. SHA256 values auto-updated after each release via `update-homebrew-tap.yml`.
+- **winget packaging**: Manifests updated to v2.1.0 with correct installer URLs. `submit-winget.yml` auto-submits a PR to `microsoft/winget-pkgs` on each release (requires `WINGET_TOKEN` secret).
+- **`update-homebrew-tap.yml`**: Post-release workflow that downloads `checksums.txt`, parses SHA256 values, and pushes an updated formula to the tap repo (requires `HOMEBREW_TAP_TOKEN` secret).
 
 ### Added
 - **Custom 404 page**: `not-found.tsx` added with header, footer, and helpful links to Home, Docs, Detections, Pricing, and Benchmark.
