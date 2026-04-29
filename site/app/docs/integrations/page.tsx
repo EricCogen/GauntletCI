@@ -77,22 +77,58 @@ export default function IntegrationsPage() {
               tag: "CI/CD",
             },
             {
-              href: "/docs/integrations/vscode",
-              label: "VS Code Extension",
-              desc: "Inline diagnostic squiggles, status bar, and analyze-on-save.",
-              tag: "Editor",
-            },
-            {
               href: "/docs/integrations/azure-devops",
               label: "Azure DevOps Task",
               desc: "Pipeline task with inline ##vso annotations and branch policy enforcement.",
               tag: "CI/CD",
             },
             {
+              href: "/docs/integrations/gitlab",
+              label: "GitLab CI",
+              desc: "Block MR merges on high-risk changes using the .NET SDK Docker image.",
+              tag: "CI/CD",
+            },
+            {
+              href: "/docs/integrations/bitbucket",
+              label: "Bitbucket Pipelines",
+              desc: "Analyze pull request diffs in Bitbucket Pipelines, block on Block findings.",
+              tag: "CI/CD",
+            },
+            {
+              href: "/docs/integrations/vscode",
+              label: "VS Code Extension",
+              desc: "Inline diagnostic squiggles, status bar, and analyze-on-save.",
+              tag: "Editor",
+            },
+            {
+              href: "/docs/integrations/visual-studio",
+              label: "Visual Studio 2022",
+              desc: "Error List and Output window findings without leaving Visual Studio.",
+              tag: "Editor",
+            },
+            {
+              href: "/docs/integrations/rider",
+              label: "JetBrains Rider",
+              desc: "Inline annotation squiggles with tooltip rule links in Rider.",
+              tag: "Editor",
+            },
+            {
+              href: "/docs/integrations/neovim",
+              label: "Neovim",
+              desc: "Native vim.diagnostic entries via lazy.nvim or packer.",
+              tag: "Editor",
+            },
+            {
               href: "/docs/integrations/mcp",
               label: "MCP Server",
               desc: "Let Claude, Copilot, and Cursor analyze commits and explain findings.",
               tag: "AI",
+            },
+            {
+              href: "/docs/integrations/pre-commit",
+              label: "Pre-commit Hooks",
+              desc: "Wire into husky, dotnet-husky, or Lefthook to block commits locally.",
+              tag: "Local",
             },
           ].map((card) => (
             <Link
