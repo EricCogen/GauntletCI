@@ -15,6 +15,10 @@ Versions follow [Semantic Versioning](https://semver.org/).
 - **Homebrew tap**: Created `EricCogen/homebrew-gauntletci` tap. Install with `brew tap EricCogen/gauntletci && brew install gauntletci`. SHA256 values auto-updated after each release via `update-homebrew-tap.yml`.
 - **winget packaging**: Manifests updated to v2.1.0 with correct installer URLs. `submit-winget.yml` auto-submits a PR to `microsoft/winget-pkgs` on each release (requires `WINGET_TOKEN` secret).
 - **`update-homebrew-tap.yml`**: Post-release workflow that downloads `checksums.txt`, parses SHA256 values, and pushes an updated formula to the tap repo (requires `HOMEBREW_TAP_TOKEN` secret).
+- **Extension docs**: Added full documentation pages for VS Code extension, GitHub Action, Azure DevOps task, and MCP server at `/docs/integrations/{vscode,github-action,azure-devops,mcp}`. Each page includes setup instructions, all inputs/settings, UI mockups, and troubleshooting guidance.
+- **Docs sidebar grouped nav**: Split docs sidebar into "Documentation" and "Extensions" groups for easier navigation.
+- **Integrations overview cards**: `/docs/integrations` now opens with extension cards linking to each sub-page before the CI/CD reference content.
+- **Getting Started install options**: Added winget, Homebrew, and manual binary download install options to the Getting Started page alongside the existing `dotnet tool install` command.
 
 ### Added
 - **Custom 404 page**: `not-found.tsx` added with header, footer, and helpful links to Home, Docs, Detections, Pricing, and Benchmark.

@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { softwareApplicationSchema, buildFaqSchema } from "@/lib/schemas";
 
 export const metadata: Metadata = {
   title: "CI/CD Integrations | GauntletCI Docs",
-  description: "Integrate GauntletCI with GitHub Actions, GitLab CI, Azure Pipelines, Bitbucket Pipelines, and other CI/CD systems. Install as a .NET global tool on any runner.",
+  description: "Integrate GauntletCI with GitHub Actions, GitLab CI, Azure Pipelines, Bitbucket Pipelines, VS Code, and other CI/CD systems. Install as a .NET global tool on any runner.",
   alternates: { canonical: "/docs/integrations" },
 };
 
@@ -55,12 +56,61 @@ export default function IntegrationsPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <div className="space-y-10">
       <div>
-        <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">CI/CD Integrations</p>
-        <h1 className="text-4xl font-bold tracking-tight mb-4">CI/CD Integrations</h1>
+        <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">Extensions</p>
+        <h1 className="text-4xl font-bold tracking-tight mb-4">Integrations</h1>
         <p className="text-lg text-muted-foreground">
-          GauntletCI runs anywhere that can execute a .NET tool. Install it with <code className="bg-muted px-1 rounded text-xs">dotnet tool install -g GauntletCI</code> on any runner that has .NET 8 available - GitHub Actions, GitLab CI, Azure Pipelines, Bitbucket Pipelines, or your local machine.
+          GauntletCI runs anywhere that can execute a .NET tool - in CI/CD pipelines, your editor,
+          your AI assistant, or as a pre-commit hook. Install it with{" "}
+          <code className="bg-muted px-1 rounded text-xs">dotnet tool install -g GauntletCI</code>{" "}
+          and the extension for wherever you work.
         </p>
       </div>
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-4">Extensions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8">
+          {[
+            {
+              href: "/docs/integrations/github-action",
+              label: "GitHub Action",
+              desc: "Block merges on high-risk changes. Post inline PR review comments.",
+              tag: "CI/CD",
+            },
+            {
+              href: "/docs/integrations/vscode",
+              label: "VS Code Extension",
+              desc: "Inline diagnostic squiggles, status bar, and analyze-on-save.",
+              tag: "Editor",
+            },
+            {
+              href: "/docs/integrations/azure-devops",
+              label: "Azure DevOps Task",
+              desc: "Pipeline task with inline ##vso annotations and branch policy enforcement.",
+              tag: "CI/CD",
+            },
+            {
+              href: "/docs/integrations/mcp",
+              label: "MCP Server",
+              desc: "Let Claude, Copilot, and Cursor analyze commits and explain findings.",
+              tag: "AI",
+            },
+          ].map((card) => (
+            <Link
+              key={card.href}
+              href={card.href}
+              className="rounded-lg border border-border bg-card p-4 hover:border-cyan-500/50 transition-colors block"
+            >
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <p className="font-medium text-sm">{card.label}</p>
+                <span className="text-xs text-cyan-400 border border-cyan-400/30 rounded px-1.5 py-0.5 shrink-0">
+                  {card.tag}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">{card.desc}</p>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <section>
         <h2 className="text-2xl font-semibold mb-3">GitHub Actions</h2>
@@ -85,15 +135,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: EricCogen/GauntletCI@v2.1.0
+      - uses: EricCogen/GauntletCI@v2.1.1
         with:
           sensitivity: 'balanced'
           inline-comments: 'true'
           fail-on-findings: 'true'`}</pre>
         </div>
-        <p className="text-sm text-muted-foreground mb-6">
+        <p className="text-sm text-muted-foreground mb-3">
           The action installs .NET, installs GauntletCI, runs analysis against the PR commit, and optionally posts findings as inline review comments.
-          Set <code className="bg-muted px-1 rounded text-xs">inline-comments: &apos;false&apos;</code> to write findings to the Actions log only.
+          See the <Link href="/docs/integrations/github-action" className="text-cyan-400 hover:underline">GitHub Action docs</Link> for the full input reference.
         </p>
 
         <p className="text-sm font-semibold mb-2">Manual install (without the Marketplace action)</p>
@@ -185,6 +235,13 @@ steps:
       gauntletci analyze --diff pr.diff --no-banner
     displayName: Analyze PR diff`}</pre>
         </div>
+        <p className="mt-3 text-sm text-muted-foreground">
+          For inline pipeline annotations, use the{" "}
+          <Link href="/docs/integrations/azure-devops" className="text-cyan-400 hover:underline">
+            Azure DevOps Marketplace task
+          </Link>{" "}
+          instead, which emits <code className="bg-muted px-1 rounded text-xs">##vso</code> logging commands automatically.
+        </p>
       </section>
 
       <section>
@@ -285,28 +342,18 @@ pipelines:
           <span className="text-foreground">gauntletci analyze --staged --output json | ConvertFrom-Json | Select-Object -ExpandProperty findings</span>
         </div>
 
-        <p className="text-sm font-semibold mb-2">With Python (no jq required)</p>
-        <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm mb-5">
-          <p><span className="text-cyan-400">$</span>{" "}
-          <span className="text-foreground">{`gauntletci analyze --staged --output json | python -c "import sys,json; data=json.load(sys.stdin); print(json.dumps(data['findings'], indent=2))"`}</span></p>
-        </div>
-
         <p className="text-sm font-semibold mb-2">Save to file</p>
         <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm mb-3">
           <span className="text-cyan-400">$</span>{" "}
           <span className="text-foreground">gauntletci analyze --staged --output json &gt; report.json</span>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Writing to a file works with any downstream tool: upload to S3, attach to a Slack
-          notification, parse in a build script, or archive as a CI artifact.
-        </p>
       </section>
 
       <section>
         <h2 className="text-2xl font-semibold mb-3">LLM enrichment in CI/CD</h2>
         <p className="text-muted-foreground mb-4">
           The built-in ONNX engine (Option 1 in the{" "}
-          <a href="/docs/local-llm" className="text-cyan-400 hover:underline">Local LLM Setup docs</a>)
+          <Link href="/docs/local-llm" className="text-cyan-400 hover:underline">Local LLM Setup docs</Link>)
           is not available in CI. Loading a 2 GB model in an ephemeral runner is impractical.
           To use <code className="bg-muted px-1 rounded text-xs">--with-llm</code> in CI, configure
           a remote OpenAI-compatible endpoint:
@@ -333,3 +380,4 @@ GAUNTLETCI_LLM_API_KEY=sk-...
     </>
   );
 }
+
