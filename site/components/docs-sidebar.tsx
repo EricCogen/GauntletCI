@@ -15,9 +15,15 @@ const coreItems = [
 const integrationItems = [
   { href: "/docs/integrations", label: "CI/CD Overview" },
   { href: "/docs/integrations/github-action", label: "GitHub Action" },
-  { href: "/docs/integrations/vscode", label: "VS Code" },
   { href: "/docs/integrations/azure-devops", label: "Azure DevOps" },
+  { href: "/docs/integrations/gitlab", label: "GitLab CI" },
+  { href: "/docs/integrations/bitbucket", label: "Bitbucket Pipelines" },
+  { href: "/docs/integrations/vscode", label: "VS Code" },
+  { href: "/docs/integrations/visual-studio", label: "Visual Studio 2022" },
+  { href: "/docs/integrations/rider", label: "JetBrains Rider" },
+  { href: "/docs/integrations/neovim", label: "Neovim" },
   { href: "/docs/integrations/mcp", label: "MCP Server (AI)" },
+  { href: "/docs/integrations/pre-commit", label: "Pre-commit Hooks" },
 ];
 
 export function DocsSidebar() {
