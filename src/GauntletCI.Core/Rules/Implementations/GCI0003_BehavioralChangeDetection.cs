@@ -8,7 +8,7 @@ namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
 /// GCI0003, Behavioral Change Detection
-/// Detects removed logic lines and changed method signatures.
+/// Detects removed logic lines, changed method signatures, and cryptographic boundary changes.
 /// </summary>
 public class GCI0003_BehavioralChangeDetection : RuleBase
 {
@@ -20,6 +20,12 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
     private static readonly string[] LogicKeywords = ["return ", "throw ", "if (", "if("];
     private static readonly string[] AccessModifiers = ["public ", "private ", "protected ", "internal "];
 
+    // Cryptographic methods where argument changes represent behavioral/security boundaries
+    private static readonly string[] CryptographicMethods = [
+        "ComputeHmac", "ComputeHash", "Encrypt", "Decrypt",
+        "Sign", "Verify", "GetHashCode", "EncryptionAsync", "DecryptionAsync"
+    ];
+
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -28,6 +34,7 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
 
         CheckLogicRemovedWithoutTests(diff, findings);
         CheckMethodSignatureChanges(diff, findings);
+        CheckCryptographicBoundaryChanges(context, findings);
 
         return Task.FromResult(findings);
     }
@@ -246,5 +253,98 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
         foreach (var m in AccessModifiers)
             if (rest.StartsWith(m, StringComparison.Ordinal)) return true;
         return false;
+    }
+
+    private void CheckCryptographicBoundaryChanges(AnalysisContext context, List<Finding> findings)
+    {
+        var diff = context.Diff;
+
+        foreach (var file in diff.Files)
+        {
+            if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+
+            // Extract all cryptographic method calls from removed and added lines
+            var removedCalls = ExtractCryptoMethodCalls(file.RemovedLines.ToList());
+            var addedCalls = ExtractCryptoMethodCalls(file.AddedLines.ToList());
+
+            // For each cryptographic method name, check if arguments differ between removed and added
+            foreach (var methodName in CryptographicMethods)
+            {
+                if (!removedCalls.TryGetValue(methodName, out var removedArgs)) continue;
+                if (!addedCalls.TryGetValue(methodName, out var addedArgs)) continue;
+
+                // Same method called with different arguments = behavioral/security boundary change
+                if (removedArgs != addedArgs)
+                {
+                    findings.Add(CreateFinding(
+                        file,
+                        summary: $"Cryptographic method '{methodName}' called with different arguments: potential security boundary change.",
+                        evidence: $"Was: {removedArgs} | Now: {addedArgs}",
+                        whyItMatters: "Changes to cryptographic method arguments can alter trust boundaries, validation scope, or data protection. For example, changing ComputeHash(ciphertext) to ComputeHash(ciphertext.Skip(16).ToArray()) leaves parts of the payload unvalidated, breaking authentication guarantees.",
+                        suggestedAction: "Verify the argument change is intentional and review its security implications. Document why the boundary change is safe.",
+                        confidence: Confidence.High));
+                }
+            }
+        }
+    }
+
+    // Extracts cryptographic method calls from a list of lines.
+    // Returns a dictionary: methodName -> argumentString for calls found.
+    private static Dictionary<string, string> ExtractCryptoMethodCalls(List<DiffLine> lines)
+    {
+        var result = new Dictionary<string, string>();
+
+        foreach (var line in lines)
+        {
+            var content = line.Content;
+
+            foreach (var method in CryptographicMethods)
+            {
+                var pattern = $"{method}(";
+                var idx = content.IndexOf(pattern, StringComparison.Ordinal);
+                if (idx < 0) continue;
+
+                var argsStart = idx + pattern.Length;
+                var closeParen = FindMatchingCloseParen(content, argsStart - 1);
+                if (closeParen < 0) continue;
+
+                var args = content[argsStart..closeParen].Trim();
+                // Store the first occurrence of each method (or could store all and compare)
+                if (!result.ContainsKey(method))
+                {
+                    result[method] = args;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    // Finds the matching closing parenthesis, accounting for nested parens and string literals.
+    private static int FindMatchingCloseParen(string content, int openParenIdx)
+    {
+        if (openParenIdx < 0 || openParenIdx >= content.Length) return -1;
+
+        int depth = 0;
+        bool inString = false;
+        char delim = '"';
+
+        for (int i = openParenIdx; i < content.Length; i++)
+        {
+            char c = content[i];
+
+            if (inString)
+            {
+                if (c == '\\') { i++; continue; }
+                if (c == delim) inString = false;
+                continue;
+            }
+
+            if (c is '"' or '\'') { inString = true; delim = c; continue; }
+            if (c == '(') depth++;
+            else if (c == ')') { depth--; if (depth == 0) return i; }
+        }
+
+        return -1;
     }
 }
