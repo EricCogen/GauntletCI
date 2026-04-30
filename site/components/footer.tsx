@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Github } from "lucide-react";
+import { Github, Twitter, Linkedin, MessageSquare } from "lucide-react";
 
 export function Footer() {
   return (
@@ -95,13 +95,44 @@ export function Footer() {
           </div>
         </div>
         
-        <div className="border-t border-border py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
-            Elastic License 2.0. Built by{" "}
-            <Link href="/about" className="text-foreground hover:text-cyan-400 transition-colors">
-              Eric Cogen
-            </Link>
-          </p>
+        <div className="border-t border-border py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+          <div className="flex flex-col gap-4">
+            <p className="text-sm text-muted-foreground">
+              Elastic License 2.0. Built by{" "}
+              <Link href="/about" className="text-foreground hover:text-cyan-400 transition-colors">
+                Eric Cogen
+              </Link>
+            </p>
+            <div className="flex items-center gap-4">
+              <Link
+                href="https://github.com/ericcogen/gauntletci"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="GitHub"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Github className="h-5 w-5" />
+              </Link>
+              <Link
+                href="https://twitter.com/GauntletCI_BCRV"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Twitter"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Twitter className="h-5 w-5" />
+              </Link>
+              <Link
+                href="https://github.com/ericcogen/gauntletci/discussions"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Discussions"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <MessageSquare className="h-5 w-5" />
+              </Link>
+            </div>
+          </div>
           <Link
             href="https://github.com/ericcogen/gauntletci"
             target="_blank"
