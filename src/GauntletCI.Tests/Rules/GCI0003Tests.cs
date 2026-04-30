@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules.Implementations;
@@ -8,6 +9,8 @@ namespace GauntletCI.Tests.Rules;
 public class GCI0003Tests
 {
     private static readonly GCI0003_BehavioralChangeDetection Rule = new();
+
+    private static AnalysisContext MakeContext(DiffContext diff) => new() { Diff = diff };
 
     [Fact]
     public async Task RemovedLogicWithoutTests_ShouldFlag()
@@ -42,7 +45,7 @@ public class GCI0003Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
 
         Assert.Contains(findings, f => f.Summary.Contains("logic line(s) removed"));
     }
@@ -67,7 +70,7 @@ public class GCI0003Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("logic line(s) removed"));
     }
@@ -90,7 +93,7 @@ public class GCI0003Tests
 
         var raw = string.Join("\n", new[] { "Alpha", "Beta", "Gamma", "Delta" }.Select(FileBlock));
         var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
 
         var f = Assert.Single(findings, x => x.Summary.Contains("signatures changed"));
         Assert.Contains("4 files", f.Summary);
@@ -110,7 +113,7 @@ public class GCI0003Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
 
         Assert.Contains(findings, f => f.Summary.Contains("signature changed"));
     }
@@ -129,7 +132,7 @@ public class GCI0003Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("signature changed"));
     }
@@ -148,7 +151,7 @@ public class GCI0003Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
 
         var f = Assert.Single(findings, f => f.Summary.Contains("Backward-compatible", StringComparison.Ordinal));
         Assert.Equal(Confidence.Low, f.Confidence);
@@ -168,7 +171,7 @@ public class GCI0003Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
 
         var f = Assert.Single(findings, f => f.Summary.Contains("signature changed"));
         Assert.Equal(Confidence.Medium, f.Confidence);
@@ -196,7 +199,7 @@ public class GCI0003Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("logic line(s) removed"));
     }
@@ -218,7 +221,7 @@ public class GCI0003Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("signature changed"));
     }
@@ -241,7 +244,7 @@ public class GCI0003Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("signature changed"));
     }
@@ -263,7 +266,7 @@ public class GCI0003Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
 
         Assert.Contains(findings, f => f.Summary.Contains("signature changed"));
     }
@@ -285,8 +288,107 @@ public class GCI0003Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
 
         Assert.Contains(findings, f => f.Summary.Contains("signature changed"));
     }
+
+    [Fact]
+    public async Task CryptographicMethodArgumentChange_ShouldFlagBoundaryChange()
+    {
+        // .NET 10.0.7 HMAC validation vulnerability: arguments to ComputeHash changed
+        // from entire payload to payload with first 16 bytes skipped.
+        var raw = """
+            diff --git a/src/DataProtection.cs b/src/DataProtection.cs
+            index abc..def 100644
+            --- a/src/DataProtection.cs
+            +++ b/src/DataProtection.cs
+            @@ -1,3 +1,3 @@
+            -var tag = _hmac.ComputeHash(ciphertext);
+            +var tag = _hmac.ComputeHash(ciphertext.Skip(16).ToArray());
+             return result;
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
+
+        var f = Assert.Single(findings, x => x.Summary.Contains("Cryptographic method"));
+        Assert.Equal(Confidence.High, f.Confidence);
+        Assert.Contains("ComputeHash", f.Summary);
+        Assert.Contains("different arguments", f.Summary);
+    }
+
+    [Fact]
+    public async Task CryptographicMethodDecryptArgumentChange_ShouldFlagBoundaryChange()
+    {
+        // Changes to Decrypt method arguments also represent security boundary changes.
+        var raw = """
+            diff --git a/src/Cipher.cs b/src/Cipher.cs
+            index abc..def 100644
+            --- a/src/Cipher.cs
+            +++ b/src/Cipher.cs
+            @@ -1,5 +1,5 @@
+             public class Cipher {
+            -    byte[] plaintext = _aes.Decrypt(ciphertext, iv);
+            +    byte[] plaintext = _aes.Decrypt(ciphertext.Skip(1), iv);
+                 return plaintext;
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
+
+        var f = Assert.Single(findings, x => x.Summary.Contains("Cryptographic method"));
+        Assert.Equal(Confidence.High, f.Confidence);
+    }
+
+    [Fact]
+    public async Task MultipleCryptographicMethodsChanged_ShouldFlagEach()
+    {
+        // Multiple cryptographic methods changed in the same diff should each be flagged.
+        var raw = """
+            diff --git a/src/Cipher.cs b/src/Cipher.cs
+            index abc..def 100644
+            --- a/src/Cipher.cs
+            +++ b/src/Cipher.cs
+            @@ -1,7 +1,7 @@
+             public class Cipher {
+            -    var hmac1 = _alg.ComputeHash(data);
+            +    var hmac1 = _alg.ComputeHash(data.Skip(1).ToArray());
+             public void Method2() {
+            -    var sig = _key.Sign(message);
+            +    var sig = _key.Sign(message.Substring(1));
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
+
+        Assert.True(findings.Count(x => x.Summary.Contains("Cryptographic method")) >= 1);
+    }
+
+    [Fact]
+    public async Task CryptographicMethodInTestFile_ShouldNotFlag()
+    {
+        // Changes to cryptographic methods in test files are not flagged (tests can change logic freely).
+        var raw = """
+            diff --git a/tests/DataProtectionTests.cs b/tests/DataProtectionTests.cs
+            index abc..def 100644
+            --- a/tests/DataProtectionTests.cs
+            +++ b/tests/DataProtectionTests.cs
+            @@ -1,3 +1,3 @@
+             public class Tests {
+            -    var result1 = _hmac.ComputeHash(testPayload);
+            +    var result2 = _hmac.ComputeHash(testPayload.Skip(4).ToArray());
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(MakeContext(diff), default);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Cryptographic method"));
+    }
 }
+
+
