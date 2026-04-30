@@ -2,7 +2,10 @@
 
 ## Questions
 
-For usage questions, open a GitHub issue using the most relevant template.
+For usage questions, open a GitHub issue using the most relevant template or start a discussion.
+
+- **GitHub Discussions**: https://github.com/EricCogen/GauntletCI/discussions
+- **Twitter**: [@GauntletCI_BCRV](https://twitter.com/GauntletCI_BCRV)
 
 ## Bugs
 

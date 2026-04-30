@@ -362,6 +362,16 @@ LLM integration enhances explanation only.
 
 ---
 
+## 🤝 Community
+
+Questions? Ideas? Found a false positive?
+
+* **Twitter**: [@GauntletCI_BCRV](https://twitter.com/GauntletCI_BCRV) - announcements and updates
+* **GitHub Issues**: [Report bugs or request features](https://github.com/EricCogen/GauntletCI/issues)
+* **GitHub Discussions**: [Ask questions and share ideas](https://github.com/EricCogen/GauntletCI/discussions)
+
+---
+
 ## 📄 License
 
 Elastic License 2.0
