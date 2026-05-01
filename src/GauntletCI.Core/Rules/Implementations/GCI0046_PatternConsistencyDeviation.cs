@@ -17,7 +17,16 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
     public override string Name => "Pattern Consistency Deviation";
 
     private static readonly string[] ServiceLocatorPatterns =
-        [".GetService<", ".GetRequiredService<", "ServiceLocator.Current"];
+        [
+            ".GetService<",      // IServiceProvider.GetService<T>()
+            ".GetRequiredService<",  // IServiceProvider.GetRequiredService<T>()
+            "ServiceLocator.Current",  // Legacy ServiceLocator
+            "ServiceLocator.GetService",  // ServiceLocator static method
+            "GetService(",  // Bare GetService call (legacy ASMX, ObjectFactory)
+            ".Resolve<",  // Autofac-style DI
+            ".GetInstance<",  // Autofac/CastleWindsor-style DI
+            "container.Resolve",  // Container.Resolve pattern
+        ];
 
     private static readonly Regex MethodNameRegex =
         new(@"(?:public|private|protected|internal)\s+(?:async\s+)?(?:Task|void|[\w<>\[\]]+)\s+(\w+)\s*\(",
@@ -87,7 +96,14 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
     {
         if (IsInfrastructureFile(file.NewPath)) return;
 
-        foreach (var line in file.AddedLines)
+        // Check both added and context lines to catch service locator patterns
+        // that may appear in modified sections or existing code
+        var allAddedOrContextLines = file.Hunks
+            .SelectMany(h => h.Lines)
+            .Where(l => l.Kind == DiffLineKind.Added || l.Kind == DiffLineKind.Context)
+            .ToList();
+
+        foreach (var line in allAddedOrContextLines)
         {
             var matched = ServiceLocatorPatterns.FirstOrDefault(
                 p => line.Content.Contains(p, StringComparison.Ordinal));
@@ -96,6 +112,9 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
 
             // Skip pattern-definition arrays: the match is inside a string literal
             if (IsInsideStringLiteral(line.Content, matched)) continue;
+
+            // Only flag added lines (not context) to avoid over-reporting
+            if (line.Kind != DiffLineKind.Added) continue;
 
             findings.Add(CreateFinding(
                 file,
@@ -110,12 +129,25 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
 
     private void CheckMixedSyncAsync(DiffFile file, List<Finding> findings)
     {
+        // Get all added method names
         var addedMethodNames = file.AddedLines
             .Select(l => MethodNameRegex.Match(l.Content))
             .Where(m => m.Success)
             .Select(m => m.Groups[1].Value)
             .ToHashSet(StringComparer.Ordinal);
 
+        // Also check context lines to catch existing methods paired with new ones
+        var allMethodLines = file.Hunks
+            .SelectMany(h => h.Lines)
+            .Where(l => l.Kind == DiffLineKind.Added || l.Kind == DiffLineKind.Context);
+
+        var allMethodNames = allMethodLines
+            .Select(l => MethodNameRegex.Match(l.Content))
+            .Where(m => m.Success)
+            .Select(m => m.Groups[1].Value)
+            .ToHashSet(StringComparer.Ordinal);
+
+        // Flag if ANY added method creates a sync+async pair with existing methods
         var asyncMethodBases = addedMethodNames
             .Where(n => n.EndsWith("Async", StringComparison.Ordinal))
             .Select(n => n[..^"Async".Length])
@@ -123,7 +155,8 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
 
         foreach (var baseName in asyncMethodBases)
         {
-            if (!addedMethodNames.Contains(baseName)) continue;
+            // Check if the sync variant exists (either added or in context)
+            if (!allMethodNames.Contains(baseName)) continue;
 
             // Skip pairs in the framework-exempt list (standard .NET async interface pairs)
             if (FrameworkExemptPairs.Contains(baseName)) continue;
@@ -133,8 +166,31 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
 
             findings.Add(CreateFinding(
                 file,
-                summary: $"Mixed sync/async: both '{baseName}' and '{baseName}Async' added in same file",
-                evidence: $"{Path.GetFileName(file.NewPath)}: adds both {baseName}() and {baseName}Async()",
+                summary: $"Mixed sync/async: both '{baseName}' and '{baseName}Async' in same file",
+                evidence: $"{Path.GetFileName(file.NewPath)}: adds {baseName}Async() with existing/added {baseName}()",
+                whyItMatters: "Exposing sync and async variants with the same base name creates confusion about which to call, risks accidental deadlock, and violates the async-all-the-way principle.",
+                suggestedAction: "Provide only the async variant and let callers use .GetAwaiter().GetResult() if blocking is truly needed, or adopt the async-all-the-way pattern throughout.",
+                confidence: Confidence.Low));
+        }
+
+        // Also check reverse: if sync methods are added, flag async variants
+        var syncMethodBases = addedMethodNames
+            .Where(n => !n.EndsWith("Async", StringComparison.Ordinal))
+            .ToList();
+
+        foreach (var baseName in syncMethodBases)
+        {
+            var asyncName = baseName + "Async";
+            if (!allMethodNames.Contains(asyncName)) continue;
+
+            // Skip framework-exempt and configured pairs
+            if (FrameworkExemptPairs.Contains(baseName)) continue;
+            if (_allowedSyncAsyncPairs.Contains(baseName)) continue;
+
+            findings.Add(CreateFinding(
+                file,
+                summary: $"Mixed sync/async: both '{baseName}' and '{baseName}Async' in same file",
+                evidence: $"{Path.GetFileName(file.NewPath)}: adds {baseName}() with existing/added {asyncName}()",
                 whyItMatters: "Exposing sync and async variants with the same base name creates confusion about which to call, risks accidental deadlock, and violates the async-all-the-way principle.",
                 suggestedAction: "Provide only the async variant and let callers use .GetAwaiter().GetResult() if blocking is truly needed, or adopt the async-all-the-way pattern throughout.",
                 confidence: Confidence.Low));
