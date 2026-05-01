@@ -1,0 +1,153 @@
+{
+  "rule_id": "GCI0004",
+  "sample_count": 10,
+  "fp_samples": [
+    {
+      "fixture_id": "aws_aws-sdk-net_pr4377",
+      "repo": "aws/aws-sdk-net",
+      "pr_number": 4377,
+      "language": "C#",
+      "tags_json": "[\"api-change\",\"async\",\"contract-change\",\"early-return\",\"exception-flow\",\"null-safety\",\"state-mutation\"]",
+      "has_tests_changed": 1,
+      "has_review_comments": 1,
+      "detection_count": 27
+    },
+    {
+      "fixture_id": "microsoft_powertoys_pr44021",
+      "repo": "microsoft/PowerToys",
+      "pr_number": 44021,
+      "language": "C#",
+      "tags_json": "[\"api-change\",\"async\",\"contract-change\",\"early-return\",\"exception-flow\",\"null-safety\",\"state-mutation\"]",
+      "has_tests_changed": 1,
+      "has_review_comments": 1,
+      "detection_count": 9
+    },
+    {
+      "fixture_id": "ricosuter_namotion.reflection_pr60",
+      "repo": "RicoSuter/Namotion.Reflection",
+      "pr_number": 60,
+      "language": "C#",
+      "tags_json": "[\"api-change\",\"contract-change\",\"early-return\",\"null-safety\",\"state-mutation\"]",
+      "has_tests_changed": 1,
+      "has_review_comments": 1,
+      "detection_count": 9
+    },
+    {
+      "fixture_id": "dotnet_runtime_pr125384",
+      "repo": "dotnet/runtime",
+      "pr_number": 125384,
+      "language": "C#",
+      "tags_json": "[\"api-change\",\"contract-change\",\"early-return\",\"exception-flow\",\"null-safety\",\"state-mutation\"]",
+      "has_tests_changed": 1,
+      "has_review_comments": 1,
+      "detection_count": 9
+    },
+    {
+      "fixture_id": "files-community_files_pr18061",
+      "repo": "files-community/Files",
+      "pr_number": 18061,
+      "language": "C#",
+      "tags_json": "[\"api-change\",\"async\",\"contract-change\",\"early-return\",\"exception-flow\",\"null-safety\"]",
+      "has_tests_changed": 0,
+      "has_review_comments": 1,
+      "detection_count": 9
+    },
+    {
+      "fixture_id": "fluentvalidation_fluentvalidation_pr1636",
+      "repo": "FluentValidation/FluentValidation",
+      "pr_number": 1636,
+      "language": "C#",
+      "tags_json": "[\"api-change\",\"contract-change\",\"early-return\",\"exception-flow\",\"null-safety\",\"state-mutation\"]",
+      "has_tests_changed": 1,
+      "has_review_comments": 1,
+      "detection_count": 36
+    },
+    {
+      "fixture_id": "dotnet_reactive_pr2268",
+      "repo": "dotnet/reactive",
+      "pr_number": 2268,
+      "language": "C#",
+      "tags_json": "[\"api-change\",\"async\",\"contract-change\",\"early-return\",\"exception-flow\",\"null-safety\",\"state-mutation\"]",
+      "has_tests_changed": 1,
+      "has_review_comments": 1,
+      "detection_count": 84
+    },
+    {
+      "fixture_id": "mongodb_mongo-csharp-driver_pr1893",
+      "repo": "mongodb/mongo-csharp-driver",
+      "pr_number": 1893,
+      "language": "C#",
+      "tags_json": "[\"api-change\",\"async\",\"contract-change\",\"early-return\",\"exception-flow\",\"null-safety\",\"state-mutation\"]",
+      "has_tests_changed": 1,
+      "has_review_comments": 1,
+      "detection_count": 9
+    },
+    {
+      "fixture_id": "fluentassertions_fluentassertions_pr3133",
+      "repo": "fluentassertions/fluentassertions",
+      "pr_number": 3133,
+      "language": "C#",
+      "tags_json": "[\"api-change\",\"contract-change\",\"early-return\",\"exception-flow\",\"null-safety\",\"state-mutation\"]",
+      "has_tests_changed": 1,
+      "has_review_comments": 1,
+      "detection_count": 18
+    },
+    {
+      "fixture_id": "dotnet_roslyn_pr83157",
+      "repo": "dotnet/roslyn",
+      "pr_number": 83157,
+      "language": "C#",
+      "tags_json": "[\"api-change\",\"async\",\"contract-change\",\"early-return\",\"exception-flow\",\"null-safety\",\"state-mutation\"]",
+      "has_tests_changed": 1,
+      "has_review_comments": 1,
+      "detection_count": 9
+    }
+  ],
+  "tp_samples": [
+    {
+      "fixture_id": "jamesnk_newtonsoft.json_pr2424",
+      "repo": "JamesNK/Newtonsoft.Json",
+      "pr_number": 2424,
+      "language": "C#",
+      "tags_json": "[\"api-change\",\"async\",\"contract-change\",\"early-return\",\"exception-flow\",\"null-safety\",\"state-mutation\"]",
+      "has_tests_changed": 1,
+      "has_review_comments": 1
+    },
+    {
+      "fixture_id": "microsoft_powertoys_pr45288",
+      "repo": "microsoft/PowerToys",
+      "pr_number": 45288,
+      "language": "C#",
+      "tags_json": "[\"api-change\",\"async\",\"contract-change\",\"early-return\",\"exception-flow\",\"null-safety\",\"state-mutation\"]",
+      "has_tests_changed": 1,
+      "has_review_comments": 1
+    },
+    {
+      "fixture_id": "apache_logging-log4net_pr138",
+      "repo": "apache/logging-log4net",
+      "pr_number": 138,
+      "language": "C#",
+      "tags_json": "[\"api-change\",\"contract-change\",\"early-return\",\"exception-flow\",\"logging\",\"null-safety\",\"state-mutation\"]",
+      "has_tests_changed": 1,
+      "has_review_comments": 1
+    },
+    {
+      "fixture_id": "dotnet_reactive_pr2240",
+      "repo": "dotnet/reactive",
+      "pr_number": 2240,
+      "language": "C#",
+      "tags_json": "[\"api-change\",\"async\",\"contract-change\",\"early-return\",\"exception-flow\",\"null-safety\",\"state-mutation\"]",
+      "has_tests_changed": 1,
+      "has_review_comments": 1
+    },
+    {
+      "fixture_id": "dotnet_orleans_pr9983",
+      "repo": "dotnet/orleans",
+      "pr_number": 9983,
+      "language": "C#",
+      "tags_json": "[\"api-change\",\"async\",\"contract-change\",\"early-return\",\"exception-flow\",\"logging\",\"null-safety\",\"state-mutation\"]",
+      "has_tests_changed": 1,
+      "has_review_comments": 1
+    }
+  ]
+}
