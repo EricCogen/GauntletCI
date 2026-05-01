@@ -67,6 +67,7 @@ artifacts/
 !docs/case-studies/gci0039-insecure-serialization.md
 !docs/case-studies/gci0045-service-locator.md
 !docs/case-studies/gci0048-insecure-random.md
+!docs/case-studies/gci0050-sql-truncation.md
 !docs/case-studies/gci0054-async-void-abuse.md
 !docs/case-studies/gci0055-method-signature-change.md
 
