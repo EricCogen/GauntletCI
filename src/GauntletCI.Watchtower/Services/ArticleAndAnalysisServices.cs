@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using GauntletCI.Watchtower.Data;
+using GauntletCI.Watchtower.Models;
 using GauntletCI.Watchtower.Models.Entities;
 
 namespace GauntletCI.Watchtower.Services;

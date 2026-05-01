@@ -57,7 +57,7 @@ public class CVEFeedService : ICVEFeedService
         return newEntries;
     }
 
-    private async Task<List<CVEFeedEntry>> PollNvdAsync()
+    public async Task<List<CVEFeedEntry>> PollNvdAsync()
     {
         _logger.LogInformation("Starting NVD API polling");
         var nvdUrl = _configuration.GetValue<string>("NVD:ApiUrl") ?? "https://services.nvd.nist.gov/rest/json/cves/2.0";
@@ -302,7 +302,7 @@ public class CVEFeedService : ICVEFeedService
         return entries;
     }
 
-    private async Task<List<CVEFeedEntry>> PollGhsaAsync()
+    public async Task<List<CVEFeedEntry>> PollGhsaAsync()
     {
         _logger.LogInformation("Starting GHSA polling (placeholder - GitHub GraphQL would go here)");
         // Note: Full GHSA implementation requires GitHub token which isn't configured
@@ -418,6 +418,30 @@ public class TechnicalAnalysisService : ITechnicalAnalysisService
         }
     }
 
+    public async Task<TechnicalAnalysis> AnalyzeAsync(List<CVEFeedEntry> entries)
+    {
+        _logger.LogInformation("Analyzing batch of {Count} CVE entries", entries.Count);
+        
+        var analysis = new TechnicalAnalysis { AnalyzedAt = DateTime.UtcNow };
+        
+        try
+        {
+            foreach (var entry in entries)
+            {
+                await AnalyzeCveAsync(entry);
+                analysis.CveId = entry.CveId; // Track last processed
+            }
+
+            _logger.LogInformation("Batch analysis complete");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during batch analysis");
+        }
+
+        return analysis;
+    }
+
     private Models.Entities.TechnicalData AnalyzeTechnicalDetails(int cveId, string description)
     {
         var analysisNotes = new List<string>();
@@ -526,24 +550,6 @@ public class ValidationExecutor : IValidationExecutor
         
         // Implemented in ArticleAndAnalysisServices.cs as ValidationExecutorImpl
         return (true, string.Empty, string.Empty, 0);
-    }
-}
-
-public class ResultParser : IResultParser
-{
-    private readonly ILogger<ResultParser> _logger;
-
-    public ResultParser(ILogger<ResultParser> logger)
-    {
-        _logger = logger;
-    }
-
-    public (bool Detected, float Confidence, List<string> TriggeredRules) ParseResults(string jsonOutput)
-    {
-        _logger.LogInformation("Parsing validation results");
-        
-        // Implemented in ArticleAndAnalysisServices.cs as ResultParserImpl
-        return (false, 0f, new List<string>());
     }
 }
 
