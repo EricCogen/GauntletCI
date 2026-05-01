@@ -129,13 +129,14 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 var paramSection = (parenIdx >= 0 && closeIdx > parenIdx) ? content[parenIdx..(closeIdx + 1)] : "";
                 if (!HasNullableReferenceParam(paramSection)) continue;
 
+                // Guard: Skip if NRT (Nullable Reference Type) is enabled for non-nullable params
+                // In NRT-enabled files, `string` param is explicitly non-nullable, so no validation needed
+                if (IsNullableReferenceTypeEnabled(file) && HasNonNullableParams(paramSection)) continue;
+
                 // Check next 5 lines for null/range validation
                 int end = Math.Min(addedLines.Count, i + 6);
                 bool hasValidation = addedLines[(i + 1)..end]
-                    .Any(l => l.Content.Contains("null", StringComparison.Ordinal) ||
-                               l.Content.Contains("ArgumentNull", StringComparison.Ordinal) ||
-                               l.Content.Contains("ArgumentException", StringComparison.Ordinal) ||
-                               l.Content.Contains("throw", StringComparison.Ordinal));
+                    .Any(l => HasNullValidationPattern(l.Content));
 
                 if (!hasValidation)
                 {
@@ -488,5 +489,71 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 Confidence = Confidence.Medium,
             });
         }
+    }
+
+    // Guard: Check if NRT (Nullable Reference Type) is enabled for this file
+    private static bool IsNullableReferenceTypeEnabled(DiffFile file)
+    {
+        var fileContent = string.Join("\n", file.AddedLines.Select(l => l.Content));
+        // Check for #nullable enable directive anywhere in the file
+        if (fileContent.Contains("#nullable enable", StringComparison.OrdinalIgnoreCase) ||
+            fileContent.Contains("#nullable restore", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Check for nullable context in project file markers (common in modern .NET projects)
+        // If the file has non-nullable string params (string, not string?), assume NRT is enabled
+        return false;
+    }
+
+    // Guard: Check if the parameter list contains explicitly non-nullable parameters
+    // In NRT-enabled context, 'string' is non-nullable and doesn't need validation
+    private static bool HasNonNullableParams(string paramSection)
+    {
+        // Look for 'string' not followed by '?' (indicating non-nullable in NRT context)
+        int angleDepth = 0;
+        for (int i = 0; i < paramSection.Length; i++)
+        {
+            char c = paramSection[i];
+            if (c == '<') { angleDepth++; continue; }
+            if (c == '>') { angleDepth = Math.Max(0, angleDepth - 1); continue; }
+            if (angleDepth > 0) continue;
+
+            // Match "string" not followed by "?"
+            if (i + 6 < paramSection.Length && paramSection.AsSpan(i, 6).SequenceEqual("string"))
+            {
+                if (i + 6 < paramSection.Length && paramSection[i + 6] != '?')
+                {
+                    // Check boundary
+                    bool leadOk = i == 0 || paramSection[i - 1] is ' ' or '(' or ',' or '<';
+                    bool trailOk = i + 6 >= paramSection.Length || paramSection[i + 6] is ' ' or '[' or ',' or ')';
+                    if (leadOk && trailOk) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Guard: Recognize common null-validation patterns
+    private static bool HasNullValidationPattern(string content)
+    {
+        // Direct null checks
+        if (content.Contains("null", StringComparison.Ordinal)) return true;
+        if (content.Contains("ArgumentNull", StringComparison.Ordinal)) return true;
+        if (content.Contains("ArgumentException", StringComparison.Ordinal)) return true;
+        if (content.Contains("throw", StringComparison.Ordinal)) return true;
+
+        // Common null-check patterns
+        if (content.Contains("ThrowIfNull", StringComparison.Ordinal)) return true;
+        if (content.Contains("is null", StringComparison.Ordinal)) return true;
+        if (content.Contains("is not null", StringComparison.Ordinal)) return true;
+        if (content.Contains("== null", StringComparison.Ordinal)) return true;
+        if (content.Contains("!= null", StringComparison.Ordinal)) return true;
+        if (content.Contains("?.", StringComparison.Ordinal)) return true; // null-conditional operator
+
+        // Guard clauses and early returns
+        if (content.Contains("guard", StringComparison.OrdinalIgnoreCase)) return true;
+        if (content.Contains("return", StringComparison.Ordinal)) return true;
+
+        return false;
     }
 }
