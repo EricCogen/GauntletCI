@@ -239,4 +239,46 @@ public class GCI0024Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("HttpClient"));
     }
+
+    [Fact]
+    public async Task LoggingAdapterScope_ShouldNotFlag()
+    {
+        // LoggingAdapterScope: short-lived diagnostic scopes are managed at higher level.
+        var raw = """
+            diff --git a/src/Diagnostics.cs b/src/Diagnostics.cs
+            index abc..def 100644
+            --- a/src/Diagnostics.cs
+            +++ b/src/Diagnostics.cs
+            @@ -1,2 +1,3 @@
+             public class Diagnostics {
+            +    var scope = new LoggingAdapterScope();
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("LoggingAdapterScope"));
+    }
+
+    [Fact]
+    public async Task EnumeratorType_ShouldNotFlag()
+    {
+        // Enumerator types: typically short-lived value types or immediately consumed.
+        var raw = """
+            diff --git a/src/Collections.cs b/src/Collections.cs
+            index abc..def 100644
+            --- a/src/Collections.cs
+            +++ b/src/Collections.cs
+            @@ -1,2 +1,3 @@
+             public class Collections {
+            +    var enumerator = new WhiteSpaceSegmentEnumerator();
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Enumerator"));
+    }
 }
