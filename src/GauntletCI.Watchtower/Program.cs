@@ -35,6 +35,9 @@ try
             // Add logging
             services.AddLogging();
 
+            // Add HttpClient for external API calls
+            services.AddHttpClient();
+
             // Add command runner
             services.AddScoped<GauntletCommandRunner>();
 
@@ -43,7 +46,8 @@ try
             services.AddDbContext<WatchtowerDbContext>(options =>
                 options.UseSqlite($"Data Source={dbPath}"));
 
-            // Register services
+            // Register services - order matters for dependency injection
+            services.AddScoped<IAlertService, AlertService>();
             services.AddScoped<ICVEFeedService, CVEFeedService>();
             services.AddScoped<ITechnicalAnalysisService, TechnicalAnalysisService>();
             services.AddScoped<IGauntletSyncService, GauntletSyncServiceImpl>();
@@ -53,7 +57,6 @@ try
             services.AddScoped<IArticleGeneratorService, ArticleGeneratorServiceImpl>();
             services.AddScoped<IGapAnalyzerService, GapAnalyzerServiceImpl>();
             services.AddScoped<IArticlePublisherService, ArticlePublisherServiceImpl>();
-            services.AddScoped<IAlertService, AlertService>();
             services.AddScoped<IRunSummaryService, RunSummaryServiceImpl>();
 
             // Add hosted service (the main worker)
