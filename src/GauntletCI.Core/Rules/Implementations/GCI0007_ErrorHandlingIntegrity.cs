@@ -33,6 +33,7 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
 
         CheckSwallowedExceptions(diff, findings);
         CheckRemovedErrorContextLogging(diff, findings);
+        CheckExceptionThrowRemoval(diff, findings);
         AddRoslynFindings(context.StaticAnalysis, findings);
 
         return Task.FromResult(findings);
@@ -123,6 +124,86 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
 
         // If the catch body had no meaningful content, it's swallowed
         return !hasContent;
+    }
+
+    private void CheckExceptionThrowRemoval(DiffContext diff, List<Finding> findings)
+    {
+        foreach (var file in diff.Files)
+        {
+            if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+
+            foreach (var hunk in file.Hunks)
+            {
+                var hunkedLines = hunk.Lines.ToList();
+
+                for (int i = 0; i < hunkedLines.Count; i++)
+                {
+                    var line = hunkedLines[i];
+                    if (line.Kind != DiffLineKind.Removed) continue;
+
+                    var content = line.Content.Trim();
+                    if (!content.StartsWith("throw ", StringComparison.Ordinal)) continue;
+
+                    bool inErrorPath = IsInErrorHandlingContext(hunkedLines, i);
+                    if (!inErrorPath) continue;
+
+                    bool hasReplacementPattern = CheckForExceptionReplacement(hunkedLines, i);
+                    if (hasReplacementPattern)
+                    {
+                        findings.Add(CreateFinding(
+                            file,
+                            summary: $"Exception throw statement replaced with non-throwing code in {file.NewPath}",
+                            evidence: $"Removed: {content}. Replaced with return/continue/break pattern.",
+                            whyItMatters: "Replacing exception throws with silent returns violates error handling contracts and enables silent failures or denial-of-service attacks.",
+                            suggestedAction: "Preserve the exception throw or document why the replacement is semantically equivalent and safe.",
+                            confidence: Confidence.High,
+                            line: line));
+                    }
+                }
+            }
+        }
+    }
+
+    private static bool IsInErrorHandlingContext(List<DiffLine> hunkedLines, int throwLineIdx)
+    {
+        int start = Math.Max(0, throwLineIdx - 5);
+        int end = Math.Min(hunkedLines.Count, throwLineIdx + 5);
+
+        // Check if "if (stream" or "catch" or error/exception keywords are nearby
+        for (int i = start; i < end; i++)
+        {
+            var l = hunkedLines[i].Content;
+            if (l.Contains("catch", StringComparison.Ordinal) ||
+                l.Contains("stream.RstStreamReceived", StringComparison.Ordinal) ||
+                l.Contains("RstStreamReceived", StringComparison.Ordinal) ||
+                l.Contains("// Second reset", StringComparison.Ordinal) ||
+                (l.Contains("if (") && l.Contains("stream")))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static bool CheckForExceptionReplacement(List<DiffLine> hunkedLines, int throwLineIdx)
+    {
+        int end = Math.Min(hunkedLines.Count, throwLineIdx + 6);
+
+        for (int i = throwLineIdx + 1; i < end; i++)
+        {
+            var line = hunkedLines[i];
+            if (line.Kind != DiffLineKind.Added) continue;
+
+            var content = line.Content.Trim();
+            if (content.StartsWith("return ", StringComparison.Ordinal) ||
+                content == "return;" ||
+                content.StartsWith("continue", StringComparison.Ordinal) ||
+                content.StartsWith("break", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void CheckRemovedErrorContextLogging(DiffContext diff, List<Finding> findings)
