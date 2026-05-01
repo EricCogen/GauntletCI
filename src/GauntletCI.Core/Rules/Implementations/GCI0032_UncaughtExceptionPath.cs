@@ -32,6 +32,12 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
         "throw new ArgumentException",
         "throw new ArgumentOutOfRangeException",
         "throw new ObjectDisposedException",
+        "throw new InvalidOperationException",
+        "throw new NotSupportedException",
+        "throw new FormatException",
+        "throw new IndexOutOfRangeException",
+        "throw new KeyNotFoundException",
+        "throw new UnauthorizedAccessException",
     ];
 
     public override Task<List<Finding>> EvaluateAsync(

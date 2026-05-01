@@ -18,8 +18,8 @@ public class GCI0032Tests
             +++ b/src/Service.cs
             @@ -1,3 +1,5 @@
              public class Service {
-            +    if (!state.IsReady) throw new InvalidOperationException("Service not ready");
-            +    if (quota.Exceeded) throw new QuotaExceededException("Rate limit hit");
+            +    if (state.HasError) throw new Exception("Service error detected");
+            +    if (quota.Exceeded) throw new CustomException("Rate limit hit");
              }
             """;
 
@@ -250,7 +250,7 @@ public class GCI0032Tests
             +++ b/src/Service.cs
             @@ -1,3 +1,4 @@
              public class Service {
-            +    throw new InvalidOperationException("Not ready");
+            +    throw new CustomException("Processing failed");
              }
             diff --git a/src/ServiceTests.cs b/src/ServiceTests.cs
             index abc..def 100644
@@ -258,7 +258,7 @@ public class GCI0032Tests
             +++ b/src/ServiceTests.cs
             @@ -1,4 +1,3 @@
              public class ServiceTests {
-            -    Assert.Throws<InvalidOperationException>(() => service.Do());
+            -    Assert.Throws<CustomException>(() => service.Do());
              }
             """;
 
