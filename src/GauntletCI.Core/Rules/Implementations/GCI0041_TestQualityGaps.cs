@@ -17,7 +17,7 @@ public class GCI0041_TestQualityGaps : RuleBase
     public override string Name => "Test Quality Gaps";
 
     private static readonly string[] SilencePatterns =
-        ["[Ignore", "[Skip]", "[Skip(", ".Skip(", "[Fact(Skip", "[Theory(Skip"];
+        ["[Ignore]", "[Ignore(", "[Skip]", "[Skip(", ".Skip(", "[Fact(Skip", "[Theory(Skip"];
 
     private static readonly string[] TestAttributeMarkers =
         ["[Fact]", "[Theory]", "[Test]"];
@@ -97,6 +97,12 @@ public class GCI0041_TestQualityGaps : RuleBase
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
+            
+            // Guard: skip if this is a decorator/attribute for non-test purposes
+            if (content.Contains("[SkipLocalsInit]", StringComparison.OrdinalIgnoreCase) ||
+                content.Contains("[SkipOn", StringComparison.OrdinalIgnoreCase))
+                continue;
+            
             foreach (var pattern in SilencePatterns)
             {
                 if (!content.Contains(pattern, StringComparison.OrdinalIgnoreCase)) continue;

@@ -1,0 +1,6 @@
+MSBUILD : error MSB1001: Unknown switch.
+    Full command line: 'C:\Program Files\dotnet\sdk\10.0.201\MSBuild.dll -maxcpucount --verbosity:m -tlp:default=auto --property:VSTestNoBuild=true --property:VSTestNoLogo=true --property:NuGetInteractive=false --property:VSTestArtifactsProcessingMode=collect --property:VSTestSessionCorrelationId=16140_03472396-910f-416f-b66b-394283eb9826 --target:VSTest --nologo -nodereuse:false -k GCI0020_IterationLimitRemoval_DetectsMaxIterationsRemoved -distributedlogger:Microsoft.DotNet.Cli.Commands.MSBuild.MSBuildLogger,C:\Program Files\dotnet\sdk\10.0.201\dotnet.dll*Microsoft.DotNet.Cli.Commands.MSBuild.MSBuildForwardingLogger,C:\Program Files\dotnet\sdk\10.0.201\dotnet.dll'
+  Switches appended by response files:
+Switch: -k
+
+For switch syntax, type "MSBuild -help"
