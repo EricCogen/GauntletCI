@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using GauntletCI.Watchtower.Data;
 using GauntletCI.Watchtower.Models.Entities;
@@ -197,11 +198,16 @@ public class GapAnalyzerServiceImpl : IGapAnalyzerService
 {
     private readonly WatchtowerDbContext _dbContext;
     private readonly ILogger<GapAnalyzerServiceImpl> _logger;
+    private readonly IConfiguration _configuration;
 
-    public GapAnalyzerServiceImpl(WatchtowerDbContext dbContext, ILogger<GapAnalyzerServiceImpl> logger)
+    public GapAnalyzerServiceImpl(
+        WatchtowerDbContext dbContext,
+        ILogger<GapAnalyzerServiceImpl> logger,
+        IConfiguration configuration)
     {
         _dbContext = dbContext;
         _logger = logger;
+        _configuration = configuration;
     }
 
     public async Task<Miss> AnalyzeMissAsync(ValidationResult result, CVE cve)
@@ -237,9 +243,28 @@ public class GapAnalyzerServiceImpl : IGapAnalyzerService
             reasons.Add("Insufficient diff context provided");
         }
 
+        // Check technical data for complexity
+        var techData = _dbContext.TechnicalData.FirstOrDefault(t => t.CveId == cve.Id);
+        if (techData != null)
+        {
+            if (techData.AnalysisNotes.Contains("RemoteCodeExecution"))
+            {
+                reasons.Add("RCE vulnerabilities often require sophisticated pattern matching");
+            }
+            if (techData.AnalysisNotes.Contains("InfoDisc"))
+            {
+                reasons.Add("Information disclosure may require semantic analysis to detect");
+            }
+        }
+
         if (cve.CvssScore >= 9.0)
         {
             reasons.Add("Critical severity CVE - may require specialized detection logic");
+        }
+
+        if (cve.CvssScore >= 7.0 && cve.CvssScore < 9.0)
+        {
+            reasons.Add("High severity CVE - detection pattern may be evasive or complex");
         }
 
         if (reasons.Count == 0)
@@ -254,27 +279,93 @@ public class GapAnalyzerServiceImpl : IGapAnalyzerService
     {
         var suggestions = new List<string>();
 
+        // Get technical data for better recommendations
+        var techData = _dbContext.TechnicalData.FirstOrDefault(t => t.CveId == cve.Id);
+
         if (cve.CvssScore >= 9.0)
         {
             suggestions.Add("Create dedicated rule for critical-severity behavioral patterns");
+            suggestions.Add("Consider YARA rule integration for binary-level detection");
+        }
+
+        if (cve.CvssScore >= 7.0 && cve.CvssScore < 9.0)
+        {
+            suggestions.Add("Add heuristic rules to detect high-severity vulnerability indicators");
+        }
+
+        if (techData?.AnalysisNotes.Contains("RemoteCodeExecution") == true)
+        {
+            suggestions.Add("Add YARA rule for RCE bytecode patterns");
+            suggestions.Add("Implement stack trace analysis for RCE detection");
+        }
+
+        if (techData?.AnalysisNotes.Contains("InfoDisc") == true)
+        {
+            suggestions.Add("Implement semantic analysis for data leak patterns");
+            suggestions.Add("Add memory dump analysis rules");
+        }
+
+        if (techData?.AnalysisNotes.Contains("XSS") == true)
+        {
+            suggestions.Add("Add DOM-based XSS detection rules");
+            suggestions.Add("Implement JavaScript AST analysis");
         }
 
         suggestions.Add("Review advisory for additional context clues that could inform new detection rules");
         suggestions.Add("Analyze false negative patterns to improve rule precision");
+        suggestions.Add("Consider cross-reference with existing GauntletCI detections");
 
         return string.Join("; ", suggestions);
     }
+
+    public async Task<CoverageMetrics> GenerateCoverageMetricsAsync()
+    {
+        var totalAnalyzed = _dbContext.CVEs.Count();
+        var detectedResults = _dbContext.ValidationResults.Where(r => r.DetectionOccurred).Count();
+        var missedResults = _dbContext.ValidationResults.Where(r => !r.DetectionOccurred).Count();
+        var criticalMissed = _dbContext.Misses
+            .Where(m => _dbContext.CVEs.Any(c => c.CveId == m.CveId && c.CvssScore >= 9.0))
+            .Count();
+
+        return new CoverageMetrics
+        {
+            TotalCvesTested = totalAnalyzed,
+            DetectedCount = detectedResults,
+            MissedCount = missedResults,
+            CriticalMissedCount = criticalMissed,
+            DetectionRate = totalAnalyzed > 0 ? ((float)detectedResults / totalAnalyzed * 100) : 0,
+            GeneratedAt = DateTime.UtcNow
+        };
+    }
+}
+
+public struct CoverageMetrics
+{
+    public int TotalCvesTested { get; set; }
+    public int DetectedCount { get; set; }
+    public int MissedCount { get; set; }
+    public int CriticalMissedCount { get; set; }
+    public float DetectionRate { get; set; }
+    public DateTime GeneratedAt { get; set; }
 }
 
 public class ArticlePublisherServiceImpl : IArticlePublisherService
 {
     private readonly WatchtowerDbContext _dbContext;
     private readonly ILogger<ArticlePublisherServiceImpl> _logger;
+    private readonly IConfiguration _configuration;
+    private readonly IAlertService _alertService;
 
-    public ArticlePublisherServiceImpl(WatchtowerDbContext dbContext, ILogger<ArticlePublisherServiceImpl> logger)
+    public ArticlePublisherServiceImpl(
+        WatchtowerDbContext dbContext,
+        ILogger<ArticlePublisherServiceImpl> logger,
+        IConfiguration configuration,
+        IAlertService alertService)
     {
         _dbContext = dbContext;
         _logger = logger;
+        _configuration = configuration;
+        _alertService = alertService;
     }
 
     public async Task<bool> PublishArticleAsync(ArticleDraft draft)
@@ -283,17 +374,38 @@ public class ArticlePublisherServiceImpl : IArticlePublisherService
 
         try
         {
-            // Create published article
+            // Validate draft is ready for publication
+            if (string.IsNullOrWhiteSpace(draft.DraftBody))
+            {
+                _logger.LogWarning("Cannot publish draft for {CveId}: empty body", draft.CveId);
+                await _alertService.CreateAlertAsync(
+                    AlertType.ValidationError,
+                    AlertSeverity.Warning,
+                    $"Cannot publish article for {draft.CveId}: draft body is empty");
+                return false;
+            }
+
+            // Get the CVE and validation result data
+            var cve = _dbContext.CVEs.FirstOrDefault(c => c.CveId == draft.CveId);
+            var validationResult = _dbContext.ValidationResults.FirstOrDefault(r => r.Id == draft.ValidationResultId);
+
+            if (cve == null || validationResult == null)
+            {
+                _logger.LogWarning("Cannot publish: missing CVE or validation result");
+                return false;
+            }
+
+            // Create article with YAML frontmatter
             var article = new Article
             {
                 CveId = draft.CveId,
                 ValidationResultId = draft.ValidationResultId,
-                GauntletVersionTested = "1.0.0", // TODO: Get from actual version
+                GauntletVersionTested = "1.0.0", // TODO: Get from GauntletRun
                 ArticleBody = draft.DraftBody,
-                RulesFired = "", // TODO: Extract from draft
-                ConfidenceScores = 0f, // TODO: Extract from result
+                RulesFired = validationResult.TriggeredRules,
+                ConfidenceScores = validationResult.ConfidenceScore,
                 PublicationDate = DateTime.UtcNow,
-                ArticleUrl = $"/blog/{draft.CveId.ToLower()}" // TODO: Generate proper URL
+                ArticleUrl = $"/blog/{draft.CveId.ToLower()}"
             };
 
             _dbContext.Articles.Add(article);
@@ -304,14 +416,77 @@ public class ArticlePublisherServiceImpl : IArticlePublisherService
 
             await _dbContext.SaveChangesAsync();
 
+            // Attempt to write to file if path is configured
+            await TryWriteArticleFileAsync(draft, cve, validationResult);
+
             _logger.LogInformation("Article published with ID {ArticleId}", article.Id);
+            
+            await _alertService.CreateAlertAsync(
+                AlertType.DetectionMilestone,
+                AlertSeverity.Info,
+                $"Article published for {draft.CveId}");
+
             return true;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to publish article");
+            await _alertService.CreateAlertAsync(
+                AlertType.ValidationError,
+                AlertSeverity.Error,
+                $"Failed to publish article for {draft.CveId}: {ex.Message}");
             return false;
         }
+    }
+
+    private async Task TryWriteArticleFileAsync(ArticleDraft draft, CVE cve, ValidationResult validationResult)
+    {
+        try
+        {
+            var outputPath = _configuration.GetValue<string>("Publishing:ArticlesOutputPath");
+            if (string.IsNullOrEmpty(outputPath))
+            {
+                _logger.LogDebug("Publishing output path not configured");
+                return;
+            }
+
+            Directory.CreateDirectory(outputPath);
+
+            // Create filename from CVE ID
+            var filename = $"{draft.CveId.ToLower()}.md";
+            var filePath = Path.Combine(outputPath, filename);
+
+            // Create article with frontmatter
+            var content = GenerateArticleWithFrontmatter(draft, cve, validationResult);
+
+            // Write to file
+            await File.WriteAllTextAsync(filePath, content);
+            _logger.LogInformation("Article file written to {FilePath}", filePath);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to write article file");
+            // Don't fail the publication if file write fails
+        }
+    }
+
+    private string GenerateArticleWithFrontmatter(ArticleDraft draft, CVE cve, ValidationResult validationResult)
+    {
+        var frontmatter = new System.Text.StringBuilder();
+        frontmatter.AppendLine("---");
+        frontmatter.AppendLine($"cve_id: {cve.CveId}");
+        frontmatter.AppendLine($"title: GauntletCI Detected {cve.CveId}");
+        frontmatter.AppendLine($"cvss_score: {cve.CvssScore}");
+        frontmatter.AppendLine($"severity: {cve.Severity}");
+        frontmatter.AppendLine($"published_date: {cve.FirstSeenDate:O}");
+        frontmatter.AppendLine($"confidence: {validationResult.ConfidenceScore:P}");
+        frontmatter.AppendLine($"rules_triggered: {validationResult.TriggeredRules}");
+        frontmatter.AppendLine($"gauntlet_version: 1.0.0");
+        frontmatter.AppendLine($"detection_date: {DateTime.UtcNow:O}");
+        frontmatter.AppendLine("---");
+        frontmatter.AppendLine();
+
+        return frontmatter.ToString() + draft.DraftBody;
     }
 }
 
