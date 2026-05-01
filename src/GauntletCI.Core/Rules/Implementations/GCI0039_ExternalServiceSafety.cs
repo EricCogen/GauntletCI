@@ -108,6 +108,11 @@ public class GCI0039_ExternalServiceSafety : RuleBase
     {
         var addedLines = file.AddedLines.ToList();
 
+        // If this file uses factory-managed or injected HTTP clients, skip CancellationToken checks
+        // (timeout is managed at factory/handler level, not per-call)
+        if (UsesFactoryManagedClients(addedLines))
+            return;
+
         foreach (var line in addedLines)
         {
             var content = line.Content;
@@ -115,6 +120,10 @@ public class GCI0039_ExternalServiceSafety : RuleBase
 
             bool hasHttpCall = CtCheckHttpMethods.Any(m => content.Contains(m));
             if (!hasHttpCall) continue;
+
+            // Skip if this is a static/injected client being reused (pattern: _client.GetAsync)
+            if (IsInjectedOrStaticClient(content))
+                continue;
 
             bool hasCancellationToken =
                 content.Contains("cancellationToken")
@@ -133,5 +142,32 @@ public class GCI0039_ExternalServiceSafety : RuleBase
                     line: line));
             }
         }
+    }
+
+    private static bool UsesFactoryManagedClients(List<DiffLine> addedLines)
+    {
+        var factoryPatterns = new[]
+        {
+            "IHttpClientFactory", "AddHttpClient", "HttpClientFactoryOptions",
+            "AddPolicyHandler", "AddTransientHttpErrorPolicy", "Polly"
+        };
+
+        return addedLines.Any(l =>
+            factoryPatterns.Any(p => l.Content.Contains(p, StringComparison.Ordinal)));
+    }
+
+    private static bool IsInjectedOrStaticClient(string content)
+    {
+        // Pattern: _httpClient.GetAsync, this.client.PostAsync, httpClient.SendAsync
+        // These are typically injected via DI or stored as static/field
+        var injectionPatterns = new[]
+        {
+            "_httpClient", "_client", "this.client", "this._client",
+            "httpClient.", "_http.", "HttpClient."
+        };
+
+        return injectionPatterns.Any(p =>
+            content.Contains(p, StringComparison.Ordinal) &&
+            CtCheckHttpMethods.Any(m => content.Contains(m)));
     }
 }

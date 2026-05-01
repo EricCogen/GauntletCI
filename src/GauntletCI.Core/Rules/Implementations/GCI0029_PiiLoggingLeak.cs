@@ -66,6 +66,10 @@ public class GCI0029_PiiLoggingLeak : RuleBase
                 }
                 if (!hasLogPrefix) continue;
 
+                // Skip if data is being hashed, tokenized, or otherwise transformed before logging
+                if (IsDataTransformed(content))
+                    continue;
+
                 string? matchedTerm = null;
                 foreach (var term in PiiTerms)
                 {
@@ -86,6 +90,19 @@ public class GCI0029_PiiLoggingLeak : RuleBase
         }
 
         return Task.FromResult(findings);
+    }
+
+    private static bool IsDataTransformed(string content)
+    {
+        // Check for common hashing, tokenization, or redaction patterns
+        var transformPatterns = new[]
+        {
+            "Hash", "hash", "SHA", "HMAC", "MD5", "SHA256",
+            "Token", "token", "anonymize", "Anonymize", "redact", "Redact",
+            "Encrypt", "encrypt", "SecureString", "Mask", "mask"
+        };
+
+        return transformPatterns.Any(p => content.Contains(p));
     }
 
     private static bool ContainsPiiTerm(string content, string term)

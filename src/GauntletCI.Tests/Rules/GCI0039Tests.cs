@@ -104,7 +104,7 @@ public class GCI0039Tests
             +++ b/src/DataService.cs
             @@ -1,3 +1,4 @@
              public class DataService {
-            +    var result = await _client.GetAsync("https://api.example.com/data");
+            +    var result = await client.GetAsync("https://api.example.com/data");
              }
             """;
 
@@ -127,6 +127,27 @@ public class GCI0039Tests
             @@ -1,3 +1,4 @@
              public class DataService {
             +    var result = await _client.GetAsync("https://api.example.com/data", cancellationToken);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("HTTP call missing CancellationToken"));
+    }
+
+    [Fact]
+    public async Task InjectedHttpClient_ShouldNotRequireCancellationToken()
+    {
+        var raw = """
+            diff --git a/src/DataService.cs b/src/DataService.cs
+            index abc..def 100644
+            --- a/src/DataService.cs
+            +++ b/src/DataService.cs
+            @@ -1,5 +1,6 @@
+             public class DataService {
+                 private readonly HttpClient _httpClient;
+            +    var result = await _httpClient.GetAsync("https://api.example.com/data");
              }
             """;
 
