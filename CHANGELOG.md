@@ -9,6 +9,20 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added - Phase 6 & 7 Completion
+- **GCI0054_AsyncVoidAbuse**: New rule detecting public async void methods (fire-and-forget patterns). Fire-and-forget async methods break error handling. Exception: allows async void event handlers (required by event model). Detects methods that can throw exceptions without proper Task-based error propagation.
+- **GCI0055_MethodSignatureChange**: New rule detecting breaking changes to public method signatures. Flags return type changes (e.g., `void` to `Task`), removed parameters, and required parameters without defaults. Prevents breaking API changes in consuming code.
+- **Phase 6 rule refinements** (corpus-driven):
+  - **GCI0010**: Refined to reduce false positives on non-hardcoded config references
+  - **GCI0029**: Reduced FP rate on ubiquitous type property accesses (FullName, Assembly names)
+  - **GCI0032**: Enhanced guard clause detection for defensive programming
+  - **GCI0041**: Added guards for test attribute markers ([SkipLocalsInit], [SkipOn*])
+  - **GCI0045**: Improved delegation wrapper detection (threshold lowered 3->2 methods, inheritance matching)
+  - **GCI0046**: Expanded service locator pattern library (Autofac, CastleWindsor added), bidirectional async detection
+  - **GCI0038**: Reduced false positives with mock/fake pattern guards, infrastructure file exclusions
+  - **GCI0051**: Implemented numeric coercion risk detection
+- **Phase 7 validation**: All 34 rules validated, 1244 tests passing (100% success rate). Corpus analysis completed on all rules.
+
 ### Fixed
 - **Lighthouse CI workflow**: Added `staticDistDir: ./out` to serve the Next.js static export directly instead of trying to connect to localhost. Fixes 404 errors during audit collection.
 
