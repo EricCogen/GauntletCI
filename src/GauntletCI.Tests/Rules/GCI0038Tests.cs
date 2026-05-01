@@ -287,6 +287,67 @@ public class GCI0038Tests
     }
 
     [Fact]
+    public async Task DirectInstantiation_ReturnStatementFactoryMethod_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/ServiceFactory.cs b/src/ServiceFactory.cs
+            index abc..def 100644
+            --- a/src/ServiceFactory.cs
+            +++ b/src/ServiceFactory.cs
+            @@ -1,3 +1,4 @@
+             public class ServiceFactory {
+            +    return new UserService(db);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Direct instantiation"));
+    }
+
+    [Fact]
+    public async Task DirectInstantiation_TestDoubleVariable_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/UserControllerTests.cs b/src/UserControllerTests.cs
+            index abc..def 100644
+            --- a/src/UserControllerTests.cs
+            +++ b/src/UserControllerTests.cs
+            @@ -1,3 +1,5 @@
+             public class UserControllerTests {
+            +    var mockService = new Mock<UserService>();
+            +    var fakeRepository = new FakeRepository(cfg);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Direct instantiation"));
+    }
+
+    [Fact]
+    public async Task DirectInstantiation_CreatedViaFactoryMethod_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/UserRepositoryTests.cs b/src/UserRepositoryTests.cs
+            index abc..def 100644
+            --- a/src/UserRepositoryTests.cs
+            +++ b/src/UserRepositoryTests.cs
+            @@ -1,3 +1,4 @@
+             public class UserRepositoryTests {
+            +    var repo = CreateFakeRepository();
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Direct instantiation"));
+    }
+
+    [Fact]
     public async Task CleanFile_ShouldProduceNoFindings()
     {
         var raw = """
