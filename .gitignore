@@ -70,6 +70,8 @@ artifacts/
 !docs/case-studies/gci0050-sql-truncation.md
 !docs/case-studies/gci0054-async-void-abuse.md
 !docs/case-studies/gci0055-method-signature-change.md
+!docs/case-studies/README.md
+!docs/PHASE_9_CORPUS_ANALYSIS_DECISION.md
 
 # Publish artifacts (self-contained EXE - too large for GitHub)
 publish/
