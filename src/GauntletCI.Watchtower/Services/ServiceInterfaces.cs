@@ -1,3 +1,4 @@
+using GauntletCI.Watchtower.Models;
 using GauntletCI.Watchtower.Models.Entities;
 
 namespace GauntletCI.Watchtower.Services;
@@ -5,11 +6,18 @@ namespace GauntletCI.Watchtower.Services;
 public interface ICVEFeedService
 {
     Task<List<CVEFeedEntry>> PollNewCvesAsync();
+    
+    // Individual feed methods for testing/monitoring
+    Task<List<CVEFeedEntry>> PollNvdAsync();
+    Task<List<CVEFeedEntry>> PollGhsaAsync();
 }
 
 public interface ITechnicalAnalysisService
 {
     Task AnalyzeCveAsync(CVEFeedEntry feedEntry);
+    
+    // Batch analysis for testing
+    Task<TechnicalAnalysis> AnalyzeAsync(List<CVEFeedEntry> entries);
 }
 
 public interface IGauntletSyncService
