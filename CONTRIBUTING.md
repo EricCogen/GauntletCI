@@ -87,6 +87,24 @@ See [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md) for full build and project lay
 
 ---
 
+## Repository organization
+
+### Permanent rule: Temporary and internal files must be in `.misc/`
+
+All analysis scripts, phase-related work, debugging utilities, and internal documentation that are not part of the public codebase **must be stored in the `.misc/` folder**. This includes:
+
+- Phase analysis scripts (`phase*.py`, `phase*.json`, etc.)
+- Debugging and investigation scripts (`debug-*.py`, `check-*.py`, `analyze-*.py`, etc.)
+- Database synchronization utilities (`sync-*.py`, `recompute-*.py`)
+- Internal documentation and notes
+- Spotchecks, validation tools, and temporary fixtures
+
+These files are kept locally for development purposes but are gitignored and not committed to the public repository.
+
+**Why:** This keeps the public repo clean, focused on production code, and prevents accumulation of development artifacts that clutter the browsing experience.
+
+---
+
 ## Commit conventions
 
 Every commit must have a bracketed tag prefix:
