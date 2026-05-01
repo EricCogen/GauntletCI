@@ -50,9 +50,13 @@ public class GCI0029_PiiLoggingLeak : RuleBase
             foreach (var line in file.AddedLines)
             {
                 var content = line.Content;
+                var trimmed = content.TrimStart();
 
                 // XML documentation comments are never runtime log calls
-                if (content.TrimStart().StartsWith("///")) continue;
+                if (trimmed.StartsWith("///")) continue;
+                
+                // Skip comment lines entirely (// or *)
+                if (trimmed.StartsWith("//") || trimmed.StartsWith("*")) continue;
 
                 bool hasLogPrefix = false;
                 foreach (var prefix in LogPrefixes)

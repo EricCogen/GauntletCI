@@ -40,10 +40,10 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
     ];
 
     private static readonly string[] ConnectionStringMarkers =
-        ["Server=", "Data Source=", "mongodb://", "redis://"];
+        ["Server=", "Data Source=", "mongodb://", "redis://", "mysql://", "postgresql://", "Database="];
 
     private static readonly string[] EnvironmentNames =
-        ["production", "staging", "prod"];
+        ["production", "staging", "prod", "dev", "sandbox", "development"];
 
     private static readonly int[] KnownPorts = [8080, 3306, 5432, 27017, 6379, 1433, 3000, 8443];
 
@@ -75,6 +75,19 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
             var content = line.Content;
             var trimmed = content.Trim();
             if (IsCommentLine(trimmed)) continue;
+
+            // Check for IP address assignment patterns (e.g., var ip = "192.168.1.1")
+            if (content.Contains("=") && BareIpAddressRegex.IsMatch(trimmed.Split('=').LastOrDefault()?.Trim() ?? ""))
+            {
+                findings.Add(CreateFinding(
+                    file,
+                    summary: "Hardcoded IP address assignment detected.",
+                    evidence: $"Line {line.LineNumber}: {content.Trim()}",
+                    whyItMatters: "Hardcoded IPs break across environments and make infrastructure changes require code changes.",
+                    suggestedAction: "Move the IP to configuration (appsettings.json, environment variable, etc.).",
+                    confidence: Confidence.Medium));
+                continue;
+            }
 
             // Scope to string literals only: prevents matching version strings like "1.0.0.0"
             // in XML, NuGet manifests, and assembly attributes.
