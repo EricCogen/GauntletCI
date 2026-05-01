@@ -9,6 +9,25 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added - Phase 9 Documentation & Case Studies
+- **Case Studies (6 deep-dive articles)**:
+  - **GCI0054**: Async Void Abuse - Fire-and-forget exception handling failures
+  - **GCI0055**: Method Signature Change - Breaking API changes and compatibility
+  - **GCI0045**: Service Locator Anti-Pattern - Hidden dependencies and testability
+  - **GCI0048**: Insecure Random - Cryptographic RNG failures in security contexts
+  - **GCI0039**: Insecure Deserialization - Deserialization RCE vulnerabilities
+  - **GCI0050**: SQL Column Truncation - Silent data loss in schema migrations
+  - Each case study includes: real-world failure incidents, detection patterns, false positive guards, and remediation code
+  - Located in `/docs/case-studies/` with central index `/docs/case-studies/README.md`
+
+### Added - Phase 9B/C Analysis
+- **Corpus Analysis Decision Document** (`/docs/PHASE_9_CORPUS_ANALYSIS_DECISION.md`):
+  - Analyzed corpus database for high-FP rules (GCI0003: 98.6% FP, GCI0004: 78.9% FP)
+  - Identified data quality issues: corpus labels may not align with current rule implementations
+  - Decision: Deferred speculative refinements; focused on documentation value instead
+  - Test coverage (1258 tests, 100% passing) is a more reliable signal than corpus labels
+  - Recommended Phase 10 approach: systematic corpus re-labeling with explicit ground truth baseline
+
 ### Added - Phase 8 Test Coverage & Quality Assurance
 - **GCI0053_LockfileChangedWithoutSource**: Added 14 new test cases validating rule fires when lockfile changes lack accompanying source code changes. Covers all supported lock file formats (package-lock.json, yarn.lock, Cargo.lock, go.sum, poetry.lock, pnpm-lock.yaml, packages.lock.json, Pipfile.lock, .lock files). Verifies source language detection works across C#, TypeScript, JavaScript, Python, Go, and Rust.
 - **GCI0048-GCI0050 quality verification**: Confirmed existing test suites (47 total tests across 3 rules) all passing. GCI0048 (Insecure Random in security contexts: 6 tests), GCI0049 (Float/Double equality: 4 tests), GCI0050 (SQL column truncation: 23 tests). Each rule verified to have proper false positive guards and edge case coverage.
