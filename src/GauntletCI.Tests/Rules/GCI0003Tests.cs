@@ -389,6 +389,8 @@ public class GCI0003Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("Cryptographic method"));
     }
+
 }
+
 
 
