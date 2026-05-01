@@ -180,4 +180,89 @@ public class GCI0046Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("Subscribe"));
     }
+
+    [Fact]
+    public async Task AutofacResolvePattern_ShouldFire()
+    {
+        var raw = """
+            diff --git a/src/Factory.cs b/src/Factory.cs
+            index abc..def 100644
+            --- a/src/Factory.cs
+            +++ b/src/Factory.cs
+            @@ -1,3 +1,4 @@
+             public class Factory {
+            +    var svc = container.Resolve<IMyService>();
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("Service locator"));
+    }
+
+    [Fact]
+    public async Task GetInstancePattern_ShouldFire()
+    {
+        var raw = """
+            diff --git a/src/Locator.cs b/src/Locator.cs
+            index abc..def 100644
+            --- a/src/Locator.cs
+            +++ b/src/Locator.cs
+            @@ -1,3 +1,4 @@
+             public class Locator {
+            +    var svc = _registry.GetInstance<IService>();
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("Service locator"));
+    }
+
+    [Fact]
+    public async Task SyncAddedWithExistingAsync_ShouldFire()
+    {
+        var raw = """
+            diff --git a/src/DataService.cs b/src/DataService.cs
+            index abc..def 100644
+            --- a/src/DataService.cs
+            +++ b/src/DataService.cs
+            @@ -1,5 +1,7 @@
+             public class DataService {
+                 public async Task<Data> LoadDataAsync(int id) {
+                     return await _repo.GetAsync(id);
+                 }
+            +    public Data LoadData(int id) {
+            +        return _repo.Get(id);
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("sync/async"));
+    }
+
+    [Fact]
+    public async Task ServiceLocatorInString_ShouldNotFire()
+    {
+        var raw = """
+            diff --git a/src/Logger.cs b/src/Logger.cs
+            index abc..def 100644
+            --- a/src/Logger.cs
+            +++ b/src/Logger.cs
+            @@ -1,3 +1,4 @@
+             public class Logger {
+            +    Log("Warning: use container.Resolve<T>() instead of ServiceLocator");
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Service locator"));
+    }
 }
