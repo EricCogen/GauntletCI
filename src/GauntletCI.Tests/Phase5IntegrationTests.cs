@@ -39,7 +39,7 @@ public class Phase5IntegrationTests
 
         // Verify that behavioral change detection ran and context signals were evaluated
         Assert.NotNull(result);
-        Assert.Equal(31, result.RulesEvaluated);
+        Assert.Equal(32, result.RulesEvaluated);
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public class Phase5IntegrationTests
         var result = await orchestrator.RunAsync(diff);
 
         Assert.NotNull(result);
-        Assert.Equal(31, result.RulesEvaluated);
+        Assert.Equal(32, result.RulesEvaluated);
     }
 
     [Fact]
@@ -201,6 +201,6 @@ public class Phase5IntegrationTests
             """);
 
         var result = await orchestrator.RunAsync(cleanDiff);
-        Assert.Equal(31, result.RulesEvaluated);
+        Assert.Equal(32, result.RulesEvaluated);
     }
 }
