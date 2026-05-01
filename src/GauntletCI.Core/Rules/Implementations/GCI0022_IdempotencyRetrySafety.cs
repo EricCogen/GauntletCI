@@ -80,6 +80,10 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
 
     private void CheckRawInsertWithoutUpsert(DiffFile file, List<Finding> findings)
     {
+        // Skip migration and seed data files - they use raw INSERT intentionally
+        if (IsMigrationOrSeedFile(file.NewPath))
+            return;
+
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
@@ -99,5 +103,27 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
                     line: line));
             }
         }
+    }
+
+    private static bool IsMigrationOrSeedFile(string filePath)
+    {
+        // Migration files: EF Core migrations directory
+        if (filePath.Contains("Migrations/", StringComparison.OrdinalIgnoreCase) ||
+            filePath.Contains("\\Migrations\\", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Migration SQL scripts
+        if (filePath.EndsWith(".sql", StringComparison.OrdinalIgnoreCase) &&
+            (filePath.Contains("Migration", StringComparison.OrdinalIgnoreCase) ||
+             filePath.Contains("Seed", StringComparison.OrdinalIgnoreCase) ||
+             filePath.Contains("Setup", StringComparison.OrdinalIgnoreCase)))
+            return true;
+
+        // EF seed configurations (ModelBuilder.Entity.HasData)
+        if (filePath.Contains("SeedData", StringComparison.OrdinalIgnoreCase) ||
+            filePath.Contains("DataSeeding", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
     }
 }
