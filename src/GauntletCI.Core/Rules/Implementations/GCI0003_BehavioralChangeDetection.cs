@@ -258,6 +258,9 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
         {
             foreach (var (file, items) in perFile)
             {
+                // Guard: Reduce confidence if this file has patterns suggesting test code with non-critical changes
+                var adjustedConfidence = AdjustConfidenceForContext(confidence, file);
+
                 var names = FormatNames(items.Select(c => c.Name));
                 var (_, firstRemoved, firstAdded) = items[0];
                 var summary = items.Count == 1
@@ -266,7 +269,7 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
                 var evidence = items.Count == 1
                     ? $"Was: {firstRemoved.Content.Trim()} | Now: {firstAdded.Content.Trim()}"
                     : $"Changed: {names} | e.g. Was: {firstRemoved.Content.Trim()} | Now: {firstAdded.Content.Trim()}";
-                findings.Add(CreateFinding(file, summary, evidence, whyItMatters, suggestedAction, confidence, firstAdded));
+                findings.Add(CreateFinding(file, summary, evidence, whyItMatters, suggestedAction, adjustedConfidence, firstAdded));
             }
         }
         else
@@ -456,5 +459,34 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
         }
 
         return -1;
+    }
+
+    // Guard: Adjust confidence based on file context
+    // Reduces confidence for test files or patterns that suggest non-critical changes
+    private static Confidence AdjustConfidenceForContext(Confidence baseConfidence, DiffFile file)
+    {
+        // Check if the file contains test-related patterns in the path or content
+        var filePath = file.NewPath ?? file.OldPath;
+        
+        // Patterns from corpus analysis showing high FP rates in test code
+        var testIndicators = new[] { 
+            "/test/", ".test/", "/tests/", ".tests/", 
+            ".Tests/", "/Tests/", "/UnitTests/", 
+            "Mock", "Fake", "Builder", "Factory" 
+        };
+
+        bool isTestRelated = testIndicators.Any(indicator => 
+            filePath.Contains(indicator, StringComparison.OrdinalIgnoreCase));
+
+        // Patterns indicating refactored test helpers (low behavioral risk)
+        var testHelperPatterns = new[] { "Helper", "Extension", "Utility", "TestDouble" };
+        bool isTestHelper = testHelperPatterns.Any(pattern =>
+            filePath.Contains(pattern, StringComparison.OrdinalIgnoreCase));
+
+        // If this appears to be test code with helper/extension patterns, reduce confidence
+        if (isTestRelated && isTestHelper && baseConfidence == Confidence.Medium)
+            return Confidence.Low;
+
+        return baseConfidence;
     }
 }
