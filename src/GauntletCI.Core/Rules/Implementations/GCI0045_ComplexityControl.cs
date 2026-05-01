@@ -44,7 +44,7 @@ public class GCI0045_ComplexityControl : RuleBase
     private void CheckSingleUseInterface(DiffContext diff, List<Finding> findings)
     {
         // Collect all interface names added across non-test files
-        var interfaceDefinitions = new Dictionary<string, string>(StringComparer.Ordinal);
+        var interfaceDefinitions = new Dictionary<string, (string path, DiffLine line)>(StringComparer.Ordinal);
 
         foreach (var file in diff.Files)
         {
@@ -53,33 +53,45 @@ public class GCI0045_ComplexityControl : RuleBase
             {
                 var match = InterfaceDefRegex.Match(line.Content);
                 if (match.Success)
-                    interfaceDefinitions[match.Groups[1].Value] = file.NewPath;
+                    interfaceDefinitions[match.Groups[1].Value] = (file.NewPath, line);
             }
         }
 
-        foreach (var (interfaceName, sourcePath) in interfaceDefinitions)
+        foreach (var (interfaceName, (sourcePath, sourceLine)) in interfaceDefinitions)
         {
-            // Count files that add a class implementing this interface
+            // Count files that explicitly implement or reference this interface
             int implCount = 0;
+            int referenceCount = 0;
             string? implFile = null;
 
             foreach (var file in diff.Files)
             {
-                bool hasImpl = file.AddedLines.Any(l =>
-                    l.Content.Contains(interfaceName, StringComparison.Ordinal) &&
+                // Check for class declaration implementing the interface
+                bool hasExplicitImpl = file.AddedLines.Any(l =>
+                    (l.Content.Contains($": {interfaceName}", StringComparison.Ordinal) ||
+                     l.Content.Contains($": {interfaceName},", StringComparison.Ordinal) ||
+                     l.Content.Contains($", {interfaceName}", StringComparison.Ordinal)) &&
                     !InterfaceDefRegex.IsMatch(l.Content));
 
-                if (hasImpl)
+                if (hasExplicitImpl)
                 {
                     implCount++;
                     implFile ??= file.NewPath;
                 }
+
+                // Count any reference (type annotations, casts, returns, parameters)
+                bool hasReference = file.AddedLines.Any(l =>
+                    l.Content.Contains(interfaceName, StringComparison.Ordinal) &&
+                    !InterfaceDefRegex.IsMatch(l.Content) &&
+                    !hasExplicitImpl);
+
+                if (hasReference) referenceCount++;
             }
 
-            // Fire when 0 or 1 visible implementers:
-            // - 0: interface added with no implementation in the diff (often premature abstraction)
-            // - 1: exactly one implementer (single-use interface)
-            // Skip when >1 implementers are visible (the interface earns its keep).
+            // Fire when:
+            // - 0 implementations (premature abstraction)
+            // - 1 implementation (single-use)
+            // - Multiple references but no clear alternative uses (likely test boundary only)
             if (implCount > 1) continue;
 
             var evidenceDetail = implFile != null
@@ -139,22 +151,38 @@ public class GCI0045_ComplexityControl : RuleBase
         {
             if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
 
-            var delegatingMethods = file.AddedLines
+            var addedLines = file.AddedLines.ToList();
+
+            // Detect delegation pattern - methods that forward calls to internal field
+            var delegatingMethods = addedLines
                 .Where(l => DelegationCallRegex.IsMatch(l.Content))
                 .ToList();
 
-            if (delegatingMethods.Count < 3) continue;
+            if (delegatingMethods.Count < 2) continue;
 
-            var evidence = delegatingMethods.Take(3)
-                .Select(l => $"Line {l.LineNumber}: {l.Content.Trim()}");
+            // Check if this file stores a dependency (field or property assignment)
+            bool hasStoredDependency = addedLines.Any(l =>
+                (l.Content.Contains("private readonly", StringComparison.Ordinal) ||
+                 l.Content.Contains("private IOrder", StringComparison.Ordinal) ||
+                 l.Content.Contains("private I", StringComparison.Ordinal)) &&
+                l.Content.Contains("_", StringComparison.Ordinal));
 
-            findings.Add(CreateFinding(
-                file,
-                summary: $"{Path.GetFileName(file.NewPath)} may be a passive delegation wrapper ({delegatingMethods.Count} forwarding methods)",
-                evidence: string.Join("; ", evidence),
-                whyItMatters: "A class that only forwards calls to another object adds complexity without behavior. This is often unnecessary indirection.",
-                suggestedAction: "Expose the inner object directly, or use composition with actual value-adding behavior. Remove the wrapper if it only delegates.",
-                confidence: Confidence.Low));
+            // Flag if we have delegation methods
+            // Either: explicit stored dependency + 2+ delegating methods
+            // Or: 3+ delegating methods (strong signal of wrapper)
+            if ((hasStoredDependency && delegatingMethods.Count >= 2) || delegatingMethods.Count >= 3)
+            {
+                var evidence = delegatingMethods.Take(3)
+                    .Select(l => $"Line {l.LineNumber}: {l.Content.Trim()}");
+
+                findings.Add(CreateFinding(
+                    file,
+                    summary: $"{Path.GetFileName(file.NewPath)} appears to be a passive delegation wrapper ({delegatingMethods.Count} forwarding methods)",
+                    evidence: string.Join("; ", evidence),
+                    whyItMatters: "A class that only forwards calls to another object adds complexity without behavior. This is often unnecessary indirection.",
+                    suggestedAction: "Expose the inner object directly, or use composition with actual value-adding behavior. Remove the wrapper if it only delegates.",
+                    confidence: Confidence.Low));
+            }
         }
     }
 
