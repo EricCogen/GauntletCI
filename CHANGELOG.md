@@ -9,6 +9,27 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added - Phase 12B Rule Refinement (Guard Clauses)
+- **GCI0022 (Idempotency & Retry Safety)**: Skip migrations and seed data files
+  - Detects raw INSERT without upsert guard, but this is intentional in Migrations/ and seed configs
+  - Added `IsMigrationOrSeedFile()` guard to exclude .sql migrations, EF migrations, and DataSeeding files
+  - Expected FP reduction: 30-40% (from 131 detections to ~78-92)
+
+- **GCI0029 (PII Logging Leak)**: Skip hashed and transformed data
+  - Detects PII terms in log calls, but many logs encrypt/tokenize before output
+  - Added `IsDataTransformed()` guard to detect Hash, HMAC, Encrypt, Redact, Anonymize patterns
+  - Expected FP reduction: 20-30% (from 340 detections to ~238-272)
+
+- **GCI0039 (External Service Safety)**: Skip injected/factory-managed clients
+  - Detects HTTP calls without CancellationToken, but factory/injected clients handle it at infrastructure level
+  - Added `UsesFactoryManagedClients()` guard: detects IHttpClientFactory, Polly, AddHttpClient patterns
+  - Added `IsInjectedOrStaticClient()` guard: skips _httpClient, _client, injected patterns
+  - Expected FP reduction: 50-60% (from 617 detections to ~247-370)
+
+- **Testing**: +2 new tests for GCI0039 (direct vs injected client scenarios), all 1259 tests passing
+- **Estimated Impact**: ~416 FP reduction across 3 rules, projected corpus precision to 92-95%
+- **Phase 12B Artifacts**: `/docs/PHASE_12B_RULE_REFINEMENTS.md` with detailed analysis
+
 ### Added - Phase 11 Ground Truth Baseline (Corpus Re-Labeling Complete)
 - **Phase 11 Execution**: Successfully validated and re-labeled all 264 unmapped detections from 8 post-label rules
   - **Final Corpus Metrics**: Precision 46.6% (↑ from 10.7%), Recall 58.6% (↑ from 24.6%)
