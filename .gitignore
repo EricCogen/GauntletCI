@@ -94,6 +94,20 @@ artifacts/
 # Publish artifacts (self-contained EXE - too large for GitHub)
 publish/
 
+# Phase files and analysis scripts (keep locally in .misc/)
+phase*.py
+phase*.json
+phase*.sql
+phase*.txt
+analyze-*.py
+check-*.py
+debug-*.py
+sync-*.py
+recompute-*.py
+final-*.py
+verify-*.py
+fix-*.py
+
 # Internal pipeline and tooling (commercial — not public)
 build-corpus.ps1
 audit-dead-code.ps1
