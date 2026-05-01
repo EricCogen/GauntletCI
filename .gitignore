@@ -70,6 +70,12 @@ artifacts/
 !docs/case-studies/gci0050-sql-truncation.md
 !docs/case-studies/gci0054-async-void-abuse.md
 !docs/case-studies/gci0055-method-signature-change.md
+!docs/case-studies/gci0022-duplicate-charge.md
+!docs/case-studies/gci0029-pii-exposure.md
+!docs/case-studies/gci0039-thread-exhaustion.md
+!docs/case-studies/README.md
+!docs/case-studies/gci0054-async-void-abuse.md
+!docs/case-studies/gci0055-method-signature-change.md
 !docs/case-studies/README.md
 !docs/PHASE_9_CORPUS_ANALYSIS_DECISION.md
 !docs/PHASE_10A_CORPUS_ANALYSIS.md
