@@ -378,6 +378,27 @@ public class GCI0041Tests
 
 
     [Fact]
+    public async Task SkipOnPlatformAttribute_ShouldNotFlagSilenced()
+    {
+        var raw = """
+            diff --git a/src/OrderTests.cs b/src/OrderTests.cs
+            index abc..def 100644
+            --- a/src/OrderTests.cs
+            +++ b/src/OrderTests.cs
+            @@ -1,3 +1,5 @@
+             public class OrderTests {
+            +    [SkipOnPlatform("Windows")]
+            +    public void FastHelper() { }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("silenced"));
+    }
+
+    [Fact]
     public async Task CleanTestFile_ShouldNotFlag()
     {
         var raw = """

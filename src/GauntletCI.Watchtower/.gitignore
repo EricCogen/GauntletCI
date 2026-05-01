@@ -1,0 +1,10 @@
+# Watchtower .gitignore
+watchtower.db
+watchtower-*.db
+logs/
+gauntletci-repo/
+gauntletci-build/
+sandbox/
+articles/
+*.db
+*.log
