@@ -27,10 +27,17 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
     ];
 
     private static readonly Regex DirectInstantiationRegex =
-        new(@"new [A-Z][a-zA-Z]*(Service|Repository|Manager|Handler|Client)\(", RegexOptions.Compiled);
+        new(@"new [A-Z][a-zA-Z]*(Service|Repository|Manager|Handler|Client)\s*\(", RegexOptions.Compiled);
 
     private static readonly string[] DirectInstantiationExclusions =
-        ["// ", "Mock<", "Fake<", "Stub<", "EventHandler(", "+= new "];
+        [
+            "//",  // comment
+            "Mock<", "Fake<", "Stub<", "Spy<",  // test doubles
+            "EventHandler(", "new EventHandler",  // event handlers
+            "+= new",  // event subscription
+            "var mock", "var fake", "var stub", "var spy",  // test variable patterns
+            "CreateMock", "CreateFake", "CreateStub",  // test factory methods
+        ];
 
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
@@ -92,15 +99,25 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
 
         foreach (var line in file.AddedLines)
         {
-            if (DirectInstantiationExclusions.Any(e => line.Content.Contains(e, StringComparison.Ordinal)))
+            // Early exit for common exclusions
+            var lineContent = line.Content;
+            if (DirectInstantiationExclusions.Any(e => 
+                lineContent.Contains(e, StringComparison.OrdinalIgnoreCase)))
                 continue;
 
-            if (!DirectInstantiationRegex.IsMatch(line.Content)) continue;
+            if (!DirectInstantiationRegex.IsMatch(lineContent)) continue;
+
+            // Additional context guards
+            var trimmed = lineContent.Trim();
+            
+            // Skip if it's a bare return statement (likely factory method)
+            if (trimmed.StartsWith("return", StringComparison.Ordinal) && 
+                trimmed.Contains("new ", StringComparison.Ordinal)) continue;
 
             findings.Add(CreateFinding(
                 file,
                 summary: "Direct instantiation of injectable type",
-                evidence: $"{file.NewPath} line {line.LineNumber}: {line.Content.Trim()}",
+                evidence: $"{file.NewPath} line {line.LineNumber}: {lineContent.Trim()}",
                 whyItMatters: "Directly instantiating services bypasses the DI container, making the dependency untestable and unswappable.",
                 suggestedAction: "Register the type with the DI container and inject it via constructor.",
                 confidence: Confidence.Low,
