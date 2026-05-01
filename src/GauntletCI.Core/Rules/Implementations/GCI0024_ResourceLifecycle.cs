@@ -42,9 +42,10 @@ public class GCI0024_ResourceLifecycle : RuleBase
     [
         "Stream", "Reader", "Writer", "Connection", "Client",
         "Listener", "Channel", "Context", "Provider", "Session", "Transaction",
-        "Certificate", "Scope", "Timer"
+        "Certificate", "Timer"
         // Enumerator removed: custom enumerators are typically short-lived structs;
         // IEnumerator disposal in foreach is compiler-managed.
+        // Scope removed: diagnostic/logging scopes are typically managed at higher level
     ];
 
     // Types whose lifecycle detection is owned by another rule. Suppress in GCI0024 to avoid
@@ -77,6 +78,10 @@ public class GCI0024_ResourceLifecycle : RuleBase
         // WPF/WinForms SynchronizationContext: SynchronizationContext is not IDisposable
         "SynchronizationContext", "DispatcherSynchronizationContext",
         "DispatcherQueueSynchronizationContext",
+        // Logging/diagnostic adapter scopes: short-lived, often used in using expressions at higher level
+        "LoggingAdapterScope", "LoggerScope", "DiagnosticScope", "ActivityScope",
+        // Enumerators: typically short-lived value types or immediately consumed
+        "Enumerator", "WhiteSpaceSegmentEnumerator", "TokenEnumerator",
     };
 
     private static readonly Regex NewTypeRegex =
