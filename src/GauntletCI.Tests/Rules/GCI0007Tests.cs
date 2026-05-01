@@ -210,4 +210,56 @@ public class GCI0007Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("Swallowed exception"));
     }
+
+    [Fact]
+    public async Task ExceptionThrowReplacedWithReturn_CVE202131957_ShouldFlag()
+    {
+        // CVE-2021-31957: throw Http2ConnectionErrorException(...) replaced with return Task.CompletedTask
+        var raw = """
+            diff --git a/src/Http2Connection.cs b/src/Http2Connection.cs
+            index 86b13a09..10524d02 100644
+            --- a/src/Http2Connection.cs
+            +++ b/src/Http2Connection.cs
+            @@ -718,8 +718,13 @@ namespace Microsoft.AspNetCore.Server.Kestrel
+                     // Second reset
+                     if (stream.RstStreamReceived)
+                     {
+            -        // Hard abort
+            -        throw new Http2ConnectionErrorException("error", Http2ErrorCode.STREAM_CLOSED);
+            +        // Check RFC 7540
+            +        return Task.CompletedTask;
+                     }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f =>
+            f.Summary.Contains("Exception throw") &&
+            f.Confidence == Confidence.High);
+    }
+
+    [Fact]
+    public async Task ExceptionThrowReplacedWithReturn_InNonErrorPath_ShouldNotFlag()
+    {
+        // Exception throw replacement outside error handling context should not flag
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,5 +1,5 @@
+              public void Process()
+              {
+            -    throw new InvalidOperationException("Bad state");
+            +    return;
+              }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Exception throw"));
+    }
 }
+
