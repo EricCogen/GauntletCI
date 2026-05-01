@@ -78,6 +78,7 @@ artifacts/
 !docs/PHASE_10C_CATEGORIZATION_RESULTS.md
 !docs/PHASE_10C_B_RELABEL_RESULTS.md
 !docs/PHASE_10_POST_LABEL_RULES.md
+!docs/PHASE_11_GROUND_TRUTH_BASELINE.md
 !docs/case-studies/gci0054-async-void-abuse.md
 !docs/case-studies/gci0055-method-signature-change.md
 !docs/case-studies/README.md
