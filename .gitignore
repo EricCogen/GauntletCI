@@ -76,6 +76,7 @@ artifacts/
 !docs/PHASE_10B_SPOTCHECK_ANALYSIS.md
 !docs/PHASE_10C_RELABEL_PLAN.md
 !docs/PHASE_10C_CATEGORIZATION_RESULTS.md
+!docs/PHASE_10C_B_RELABEL_RESULTS.md
 !docs/PHASE_10_POST_LABEL_RULES.md
 !docs/case-studies/gci0054-async-void-abuse.md
 !docs/case-studies/gci0055-method-signature-change.md
