@@ -48,33 +48,26 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 if (!HasUnsafeValueAccess(content)) continue;
 
                 // Skip comment lines: .Value in a comment is not executable code
-                if (content.TrimStart().StartsWith("//")) continue;
+                if (GuardPatterns.IsCommentLine(content)) continue;
 
                 // Skip expression-bodied property/method declarations: the .Value access IS
                 // the declaration body (e.g. public override object? Value => _inner.Value;)
-                var trimmed = content.TrimStart();
-                if ((trimmed.StartsWith("public ", StringComparison.Ordinal) ||
-                     trimmed.StartsWith("protected ", StringComparison.Ordinal)) &&
-                    content.Contains("=>", StringComparison.Ordinal)) continue;
+                if (GuardPatterns.IsExpressionBodied(content)) continue;
 
-                // Skip KeyValuePair / Dictionary iteration: .Key (not .Keys) and .Value on the same line
+                // Skip KeyValuePair / Dictionary iteration: .Key and .Value together
                 // means this is safe dict-entry access, not a Nullable<T>.Value dereference
-                if (HasDotKeyAccess(content)) continue;
+                if (GuardPatterns.IsKeyValuePairAccess(content)) continue;
 
-                // Skip when .Value is part of a LINQ expression (.Select(x => x.Value), etc.)
+                // Skip when .Value is part of a LINQ projection (.Select(x => x.Value), etc.)
                 // LINQ projections are intentionally mapping nullable to non-nullable
-                if (WellKnownPatterns.IsLinqValueProjection(content)) continue;
+                if (GuardPatterns.IsLinqValueMapping(content)) continue;
 
-                // Skip when .Value itself is null-checked inline (e.g. `x.Value == null`,
-                // `x.Value is not null`) or when HasValue guards the same access.
-                // Avoid broad Contains("== null") which suppresses `_other != null` on the same line.
-                if (System.Text.RegularExpressions.Regex.IsMatch(
-                        content, @"\.Value\s*(is not null|is null|==\s*null|!=\s*null)") ||
-                    content.Contains("HasValue", StringComparison.Ordinal)) continue;
+                // Skip when .Value itself is null-checked inline or when HasValue guards it
+                if (GuardPatterns.HasValueNullCheck(content) || GuardPatterns.HasHasValueGuard(content)) continue;
 
                 // Skip IOptions<T>.Value / IOptionsSnapshot<T>.Value / IOptionsMonitor<T>.Value
                 // These are DI-injected configuration wrappers, not Nullable<T>
-                if (content.Contains("IOptions", StringComparison.Ordinal)) continue;
+                if (GuardPatterns.IsIOptionsValue(content)) continue;
 
                 // NRT-aware: Skip Nullable<T>.Value when T is a non-nullable reference type in NRT context
                 // In NRT-enabled files, Nullable<string> where string is non-nullable is safe (always has value)
@@ -123,14 +116,12 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 // Only flag public or protected methods: private/internal callers are controlled
                 if (!IsPublicOrProtectedSignature(content)) continue;
 
-                // Override methods cannot change the parameter contract declared by the base
+                // Override and sealed methods cannot change the parameter contract declared by the base
                 // class or interface: enforcing null validation here is incorrect
-                if (content.Contains(" override ", StringComparison.Ordinal)) continue;
+                if (GuardPatterns.IsOverrideOrSealedMethod(content)) continue;
 
                 // Abstract methods, delegate declarations, and partial stubs have no body
-                if (content.Contains(" abstract ", StringComparison.Ordinal) ||
-                    content.Contains(" delegate ", StringComparison.Ordinal) ||
-                    content.Contains(" partial ", StringComparison.Ordinal)) continue;
+                if (GuardPatterns.IsAbstractOrDelegateOrPartial(content)) continue;
 
                 // Constructors have no return type: skip them
                 // A method signature has: <accessModifier> <returnType> <name>(<params>)

@@ -1263,6 +1263,181 @@ internal static class WellKnownPatterns
         public static readonly System.Text.RegularExpressions.Regex UsingRegex =
             new(@"^\s*using\s+([\w.]+)\s*;", System.Text.RegularExpressions.RegexOptions.Compiled);
     }
+
+    /// <summary>
+    /// Guard patterns to reduce false positives across multiple rules.
+    /// These guards identify safe patterns that should be skipped from violation detection.
+    /// </summary>
+    public static class GuardPatterns
+    {
+        /// <summary>Regex: detects .Value access with null checks or guards.</summary>
+        private static readonly System.Text.RegularExpressions.Regex ValueNullCheckRegex = new(
+            @"\.Value\s*(is not null|is null|==\s*null|!=\s*null)", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        /// <summary>
+        /// Returns <c>true</c> if the content represents a .Value access that is safe because it has a null check on the same line.
+        /// Safe patterns: x.Value is not null, x.Value == null, x.Value is null, x.Value != null
+        /// </summary>
+        public static bool HasValueNullCheck(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            return ValueNullCheckRegex.IsMatch(content);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the content represents safe .Value access in a KeyValuePair or Dictionary iteration.
+        /// Pattern: .Key on the same line (KeyValuePair iteration always has both .Key and .Value)
+        /// </summary>
+        public static bool IsKeyValuePairAccess(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            // KeyValuePair/Dictionary iteration: .Key and .Value together means it's safe dict-entry access
+            return content.Contains(".Key", StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the .Value is in a LINQ projection context where the mapping is intentional.
+        /// Pattern: .Select(x => x.Value), where .Value is mapping nullable to non-nullable intentionally
+        /// </summary>
+        public static bool IsLinqValueMapping(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            // LINQ projections: .Select(...=>...Value) or similar patterns
+            return (content.Contains(".Select", StringComparison.Ordinal) && content.Contains(".Value", StringComparison.Ordinal)) ||
+                   (content.Contains(".Select", StringComparison.Ordinal) && content.Contains(" => ", StringComparison.Ordinal));
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the .Value access is on IOptions/IOptionsSnapshot/IOptionsMonitor (DI configuration wrapper).
+        /// These are always non-null (DI guarantees they're provided).
+        /// </summary>
+        public static bool IsIOptionsValue(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            return content.Contains("IOptions", StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the line is an expression-bodied property/method (safe because it's a declaration, not a dereference).
+        /// Pattern: public ReturnType PropName => expr; or public Type Name => member.Value;
+        /// </summary>
+        public static bool IsExpressionBodied(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            var trimmed = content.TrimStart();
+            // Expression-bodied: (public|protected) ... =>
+            return ((trimmed.StartsWith("public ", StringComparison.Ordinal) ||
+                     trimmed.StartsWith("protected ", StringComparison.Ordinal)) &&
+                    content.Contains("=>", StringComparison.Ordinal));
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the content has a .HasValue check (safe guard for Nullable<T>).
+        /// </summary>
+        public static bool HasHasValueGuard(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            return content.Contains("HasValue", StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the content is a comment line (safe, no executable code).
+        /// </summary>
+        public static bool IsCommentLine(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            return content.TrimStart().StartsWith("//", StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the content represents an access modifier pattern (public, private, protected, internal).
+        /// </summary>
+        public static bool HasAccessModifier(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            var trimmed = content.TrimStart();
+            return trimmed.StartsWith("public ", StringComparison.Ordinal) ||
+                   trimmed.StartsWith("private ", StringComparison.Ordinal) ||
+                   trimmed.StartsWith("protected ", StringComparison.Ordinal) ||
+                   trimmed.StartsWith("internal ", StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the content looks like an async method (has async keyword).
+        /// Used to avoid false positives on async void handlers and async patterns.
+        /// </summary>
+        public static bool IsAsyncMethod(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            var trimmed = content.TrimStart();
+            return trimmed.StartsWith("async ", StringComparison.Ordinal) ||
+                   trimmed.Contains(" async ", StringComparison.Ordinal) ||
+                   trimmed.Contains(" async(", StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the content looks like an event handler (EventHandler parameter, += subscription).
+        /// Used by GCI0022 to identify and skip event handler-related code.
+        /// </summary>
+        public static bool IsEventHandler(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            return content.Contains("EventHandler", StringComparison.Ordinal) ||
+                   content.Contains("+=", StringComparison.Ordinal) ||
+                   content.Contains("-=", StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the line contains a cryptographic method call or security boundary.
+        /// Used by GCI0003 to detect when method signature changes cross security boundaries.
+        /// </summary>
+        public static bool IsCryptographicBoundary(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            var cryptMethods = new[] { "ComputeHmac", "ComputeHash", "Encrypt", "Decrypt", "Sign", "Verify", "EncryptionAsync", "DecryptionAsync" };
+            return cryptMethods.Any(m => content.Contains(m, StringComparison.Ordinal));
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the content is an injection guard (SQL, command, path injection pattern).
+        /// Used to skip code that already has input validation.
+        /// </summary>
+        public static bool HasInjectionGuard(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            // Parameterized queries, prepared statements, safe escaping
+            return content.Contains("@", StringComparison.Ordinal) ||
+                   content.Contains("SqlParameter", StringComparison.Ordinal) ||
+                   content.Contains("DbParameter", StringComparison.Ordinal) ||
+                   content.Contains("Escape", StringComparison.Ordinal) ||
+                   content.Contains("Sanitize", StringComparison.Ordinal) ||
+                   content.Contains("Validate", StringComparison.Ordinal) ||
+                   content.Contains("Path.Combine", StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the content contains a method signature with override or sealed keywords.
+        /// Override methods cannot change the contract declared by the base class.
+        /// </summary>
+        public static bool IsOverrideOrSealedMethod(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            return content.Contains(" override ", StringComparison.Ordinal) ||
+                   content.Contains(" sealed ", StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the content is an abstract method, delegate, or partial stub.
+        /// These have no body and cannot have validation or implementation guards.
+        /// </summary>
+        public static bool IsAbstractOrDelegateOrPartial(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            return content.Contains(" abstract ", StringComparison.Ordinal) ||
+                   content.Contains(" delegate ", StringComparison.Ordinal) ||
+                   content.Contains(" partial ", StringComparison.Ordinal);
+        }
+    }
 }
 
 #pragma warning restore GCI0003  // End of WellKnownPatterns consolidation file

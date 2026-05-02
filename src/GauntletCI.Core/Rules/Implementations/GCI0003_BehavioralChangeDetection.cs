@@ -120,14 +120,14 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
         var filesWithRemovedLogic = diff.Files
             .Where(f => !WellKnownPatterns.IsTestFile(f.NewPath) && !WellKnownPatterns.IsGeneratedFile(f.NewPath))
             .Where(f => f.RemovedLines
-                .Any(l => !l.Content.TrimStart().StartsWith("//", StringComparison.Ordinal)
+                .Any(l => !GuardPatterns.IsCommentLine(l.Content)
                        && LogicKeywords.Any(k => l.Content.Contains(k, StringComparison.Ordinal))))
             .ToList();
 
         var removedLogicLines = diff.Files
             .Where(f => !WellKnownPatterns.IsTestFile(f.NewPath) && !WellKnownPatterns.IsGeneratedFile(f.NewPath))
             .SelectMany(f => f.RemovedLines)
-            .Where(l => !l.Content.TrimStart().StartsWith("//", StringComparison.Ordinal)
+            .Where(l => !GuardPatterns.IsCommentLine(l.Content)
                      && LogicKeywords.Any(k => l.Content.Contains(k, StringComparison.Ordinal)))
             .ToList();
 
@@ -167,11 +167,11 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
 
             var removedSigs = file.RemovedLines
-                .Where(l => { var t = l.Content.TrimStart(); return HasAccessModifier(t) && l.Content.Contains('('); })
+                .Where(l => { var t = l.Content.TrimStart(); return GuardPatterns.HasAccessModifier(t) && l.Content.Contains('('); })
                 .ToList();
 
             var addedSigs = file.AddedLines
-                .Where(l => { var t = l.Content.TrimStart(); return HasAccessModifier(t) && l.Content.Contains('('); })
+                .Where(l => { var t = l.Content.TrimStart(); return GuardPatterns.HasAccessModifier(t) && l.Content.Contains('('); })
                 .ToList();
 
             var incompatible = new List<(string Name, DiffLine RemovedLine, DiffLine AddedLine)>();
@@ -319,28 +319,6 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
         return s;
     }
 
-    // Returns true when the trimmed line starts with a C# access modifier,
-    // accounting for optional attribute prefix(es) like [Obsolete].
-    private static bool HasAccessModifier(string trimmedLine)
-    {
-        int idx = 0;
-        while (idx < trimmedLine.Length && trimmedLine[idx] == '[')
-        {
-            int depth = 0;
-            while (idx < trimmedLine.Length)
-            {
-                char c = trimmedLine[idx++];
-                if (c == '[') depth++;
-                else if (c == ']') { if (--depth == 0) break; }
-            }
-            while (idx < trimmedLine.Length && trimmedLine[idx] == ' ') idx++;
-        }
-        var rest = trimmedLine[idx..];
-        foreach (var m in AccessModifiers)
-            if (rest.StartsWith(m, StringComparison.Ordinal)) return true;
-        return false;
-    }
-
     private void CheckCryptographicBoundaryChanges(AnalysisContext context, List<Finding> findings)
     {
         var diff = context.Diff;
@@ -353,7 +331,7 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             var removedCalls = ExtractCryptoMethodCalls(file.RemovedLines.ToList());
             var addedCalls = ExtractCryptoMethodCalls(file.AddedLines.ToList());
 
-            // For each cryptographic method name, check if arguments differ between removed and added
+            // For each cryptographic method, check if arguments differ between removed and added
             foreach (var methodName in CryptographicMethods)
             {
                 if (!removedCalls.TryGetValue(methodName, out var removedArgs)) continue;
