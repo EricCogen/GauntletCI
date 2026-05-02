@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: Elastic-2.0
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
 namespace GauntletCI.Core.Rules;
 
 internal static class WellKnownPatterns
@@ -495,4 +499,115 @@ internal static class WellKnownPatterns
         "var mock", "var fake", "var stub", "var spy",  // test variable patterns
         "CreateMock", "CreateFake", "CreateStub",  // test factory methods
     ];
+
+    /// <summary>
+    /// Common connection string markers that indicate hardcoded database/service connections.
+    /// Used by GCI0010 to detect hardcoded configuration and GCI0012 to flag credential exposure.
+    /// </summary>
+    public static readonly string[] ConnectionStringMarkers =
+    [
+        "Server=", "Data Source=", "mongodb://", "redis://", "mysql://", "postgresql://", "Database="
+    ];
+
+    /// <summary>
+    /// Returns <c>true</c> if the line is a comment (starts with //, *, or #).
+    /// Used across rules to skip comment-only lines from analysis.
+    /// </summary>
+    public static bool IsCommentLine(string trimmed) =>
+        trimmed.StartsWith("//", System.StringComparison.Ordinal) ||
+        trimmed.StartsWith("*", System.StringComparison.Ordinal) ||
+        trimmed.StartsWith("#", System.StringComparison.Ordinal);
+
+    /// <summary>
+    /// Returns <c>true</c> if the value appears to be an environment variable name
+    /// (ALL_CAPS with digits and underscores, e.g., GITHUB_TOKEN, MY_API_KEY).
+    /// Used by GCI0012 to skip environment variable names from hardcoded credential detection.
+    /// </summary>
+    public static bool IsEnvVarName(string literal) =>
+        literal.Length > 0 && literal.All(c => char.IsUpper(c) || char.IsDigit(c) || c == '_');
+
+    /// <summary>
+    /// Returns <c>true</c> for benign literal values that are never actual secrets:
+    /// empty strings, short strings (&lt;3 chars), HTTP auth scheme names, and C# keyword literals.
+    /// Used by GCI0012 to reduce false positives in credential detection.
+    /// </summary>
+    public static bool IsBenignLiteralValue(string value) =>
+        string.IsNullOrEmpty(value) ||
+        value.Length < 3 ||
+        value.Equals("Bearer", System.StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("Basic", System.StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("Token", System.StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("Anonymous", System.StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("null", System.StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("true", System.StringComparison.OrdinalIgnoreCase) ||
+        value.Equals("false", System.StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Returns the index of the first real assignment = in the line, skipping string literals.
+    /// Distinguishes between = (assignment), == (equality), !=, &lt;=, >=, and => (lambda/expression body).
+    /// Used by GCI0012 to find credentials assigned to variables.
+    /// </summary>
+    public static int FindAssignmentIndex(string content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        bool inString = false;
+        for (int i = 0; i < content.Length; i++)
+        {
+            if (content[i] == '"' && (i == 0 || content[i - 1] != '\\'))
+                inString = !inString;
+            if (inString || content[i] != '=') continue;
+            char prev = i > 0 ? content[i - 1] : '\0';
+            char next = i < content.Length - 1 ? content[i + 1] : '\0';
+            if (prev is '!' or '<' or '>' or '=') continue;
+            if (next is '=' or '>') continue;  // == and =>
+            return i;
+        }
+        return content.Length;
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> only if the line contains a real assignment = (not ==, !=, <=, >=, =>).
+    /// Skips = signs inside string literals to avoid false positives from format strings.
+    /// Used by GCI0012 to detect variable assignments with hardcoded credentials.
+    /// </summary>
+    public static bool HasAssignment(string content)
+    {
+        ArgumentNullException.ThrowIfNull(content);
+        return FindAssignmentIndex(content) < content.Length;
+    }
+
+    /// <summary>
+    /// Returns the string value only when the direct RHS of an assignment is a bare string literal.
+    /// Returns null if the RHS is a method call, object initializer, or anything other than a literal.
+    /// Prevents false positives from patterns like: _tokenField = SomeFactory("ui-element-id")
+    /// Used by GCI0012 to find actual hardcoded credential values.
+    /// </summary>
+    public static string? ExtractDirectlyAssignedLiteral(string content)
+    {
+        int eqIdx = FindAssignmentIndex(content);
+        if (eqIdx >= content.Length) return null;
+
+        var rhs = content[(eqIdx + 1)..].TrimStart();
+
+        // Must open with a string literal: not a method call, `new`, identifier, etc.
+        if (!rhs.StartsWith('"') &&
+            !rhs.StartsWith("@\"", System.StringComparison.Ordinal) &&
+            !rhs.StartsWith("$\"", System.StringComparison.Ordinal))
+            return null;
+
+        try
+        {
+            var wrapped = $"class __G {{ void __M() {{ var __v = {rhs.TrimEnd(';', ' ', ',')}; }} }}";
+            var tree = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(wrapped);
+            return tree.GetRoot()
+                .DescendantTokens()
+                .Where(t => t.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.StringLiteralToken))
+                .Select(t => t.ValueText)
+                .FirstOrDefault();
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }

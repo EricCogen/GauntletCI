@@ -74,7 +74,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         {
             var content = line.Content;
             var trimmed = content.Trim();
-            if (IsCommentLine(trimmed)) continue;
+            if (WellKnownPatterns.IsCommentLine(trimmed)) continue;
 
             // Check for IP address assignment patterns (e.g., var ip = "192.168.1.1")
             if (content.Contains("=") && BareIpAddressRegex.IsMatch(trimmed.Split('=').LastOrDefault()?.Trim() ?? ""))
@@ -121,7 +121,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
             var content = line.Content;
             var trimmed = content.Trim();
 
-            if (IsCommentLine(trimmed)) continue;
+            if (WellKnownPatterns.IsCommentLine(trimmed)) continue;
 
             var literals = ExtractStringLiterals(content);
             if (literals.Count == 0) continue;
@@ -150,11 +150,11 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            if (IsCommentLine(content.Trim())) continue;
+            if (WellKnownPatterns.IsCommentLine(content.Trim())) continue;
             var literals = ExtractStringLiterals(content);
             if (literals.Count == 0) continue;
 
-            foreach (var marker in ConnectionStringMarkers)
+            foreach (var marker in WellKnownPatterns.ConnectionStringMarkers)
             {
                 if (!literals.Any(l => l.Contains(marker, StringComparison.OrdinalIgnoreCase))) continue;
 
@@ -175,7 +175,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            if (IsCommentLine(content.Trim())) continue;
+            if (WellKnownPatterns.IsCommentLine(content.Trim())) continue;
             var literals = ExtractStringLiterals(content);
 
             foreach (var port in KnownPorts)
@@ -201,7 +201,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            if (IsCommentLine(content.Trim())) continue;
+            if (WellKnownPatterns.IsCommentLine(content.Trim())) continue;
             var literals = ExtractStringLiterals(content);
             if (literals.Count == 0) continue;
 
@@ -230,10 +230,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         }
     }
 
-    private static bool IsCommentLine(string trimmed) =>
-        trimmed.StartsWith("//", StringComparison.Ordinal) ||
-        trimmed.StartsWith("*", StringComparison.Ordinal) ||
-        trimmed.StartsWith("#", StringComparison.Ordinal);
+
 
     private static List<string> ExtractStringLiterals(string content)
     {
