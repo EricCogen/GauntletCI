@@ -36,13 +36,16 @@ GCI0003:src/GauntletCI.Core/Rules/Implementations/GCI0035_ArchitectureLayerGuard
 GCI0003:src/GauntletCI.Core/Rules/Implementations/GCI0038_DependencyInjectionSafety.cs
 GCI0003:src/GauntletCI.Core/Rules/Implementations/GCI0039_ExternalServiceSafety.cs
 GCI0003:src/GauntletCI.Core/Rules/Implementations/GCI0042_TodoStubDetection.cs
+GCI0003:src/GauntletCI.Core/Rules/Implementations/GCI0003_BehavioralChangeDetection.cs
 GCI0007:src/GauntletCI.Core/Rules/WellKnownPatterns.cs
 GCI0015:src/GauntletCI.Core/Rules/WellKnownPatterns.cs
 GCI0024:src/GauntletCI.Core/Rules/WellKnownPatterns.cs
 GCI0032:src/GauntletCI.Core/Rules/WellKnownPatterns.cs
+GCI0032:src/GauntletCI.Core/Rules/Implementations/GCI0032_UncaughtExceptionPath.cs
 GCI0038:src/GauntletCI.Core/Rules/WellKnownPatterns.cs
 GCI0039:src/GauntletCI.Core/Rules/WellKnownPatterns.cs
 GCI0042:src/GauntletCI.Core/Rules/WellKnownPatterns.cs
+GCI0042:src/GauntletCI.Core/Rules/Implementations/GCI0032_UncaughtExceptionPath.cs
 
 # GCI0006 cannot model the data-flow guarantee from a LINQ
 # `.Where(x => x.NullableMember.HasValue)` filter, so the immediately
