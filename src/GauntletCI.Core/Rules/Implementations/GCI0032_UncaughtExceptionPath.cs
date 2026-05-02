@@ -31,15 +31,13 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
             .ToList();
 
         // --- Pattern 1: throw new without test assertions ---
-        int throwCount = nonTestFiles
-            .SelectMany(f => f.AddedLines)
-            // GCI0042 (TODO/Stub Detection) owns NotImplementedException: exclude to avoid double-reporting.
-            // Guard-clause throws (ArgumentNullException etc.) are defensive programming, not untested logic paths.
-            .Count(l => l.Content.Contains("throw new", StringComparison.Ordinal) &&
-                        !l.Content.Contains("throw new NotImplementedException", StringComparison.Ordinal) &&
-                        !WellKnownPatterns.ExceptionPatterns.GuardClauseThrows.Any(g => l.Content.Contains(g, StringComparison.Ordinal)));
-
-        if (throwCount > 0)
+        var nonTestFilesWithThrows = nonTestFiles
+            .Where(f => f.AddedLines.Any(l => l.Content.Contains("throw new", StringComparison.Ordinal) &&
+                         !l.Content.Contains("throw new NotImplementedException", StringComparison.Ordinal) &&
+                         !WellKnownPatterns.ExceptionPatterns.GuardClauseThrows.Any(g => l.Content.Contains(g, StringComparison.Ordinal))))
+            .ToList();
+        
+        if (nonTestFilesWithThrows.Any())
         {
             // Only non-removed lines: a deleted assertion is evidence that coverage was removed, not added.
             var testLines = diff.Files
@@ -55,7 +53,15 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
 
             if (!hasThrowAssertions)
             {
+                var throwCount = nonTestFilesWithThrows
+                    .SelectMany(f => f.AddedLines)
+                    .Count(l => l.Content.Contains("throw new", StringComparison.Ordinal) &&
+                               !l.Content.Contains("throw new NotImplementedException", StringComparison.Ordinal) &&
+                               !WellKnownPatterns.ExceptionPatterns.GuardClauseThrows.Any(g => l.Content.Contains(g, StringComparison.Ordinal)));
+                
+                // Attribute to the first file with throws
                 findings.Add(CreateFinding(
+                    nonTestFilesWithThrows[0],
                     summary: $"{throwCount} 'throw new' statement(s) added without Assert.Throws or Should().Throw evidence in this diff.",
                     evidence: $"{throwCount} added 'throw new' statement(s) in non-test files.",
                     whyItMatters: "New exception paths that are untested may crash callers silently in production when the edge case is reached.",
@@ -65,18 +71,31 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
         }
 
         // --- Pattern 2: empty or comment-only catch block (silent swallowing) ---
-        int emptyCatchCount = CountEmptyCatches(nonTestFiles);
-        if (emptyCatchCount > 0)
+        var filesWithEmptyCatches = nonTestFiles
+            .Where(f => CountEmptyCatchesInFile(f) > 0)
+            .ToList();
+        
+        if (filesWithEmptyCatches.Any())
         {
+            var totalEmptyCatches = filesWithEmptyCatches.Sum(f => CountEmptyCatchesInFile(f));
             findings.Add(CreateFinding(
-                summary: $"{emptyCatchCount} empty or comment-only catch block(s) added, silently swallowing exceptions.",
-                evidence: $"{emptyCatchCount} added catch block(s) in non-test files contain no executable statements.",
+                filesWithEmptyCatches[0],
+                summary: $"{totalEmptyCatches} empty or comment-only catch block(s) added, silently swallowing exceptions.",
+                evidence: $"{totalEmptyCatches} added catch block(s) in non-test files contain no executable statements.",
                 whyItMatters: "An empty catch block discards the exception entirely, hiding failures from callers and making diagnostics impossible.",
                 suggestedAction: "Add error handling, logging, or 'throw;' to propagate the exception. Never silently swallow exceptions.",
                 confidence: Confidence.High));
         }
 
         return Task.FromResult(findings);
+    }
+
+    // Counts catch blocks in added lines whose bodies contain no executable statements
+    // (empty braces, or only whitespace and comments).
+    private static int CountEmptyCatchesInFile(DiffFile file)
+    {
+        var addedLines = file.AddedLines.Select(l => l.Content).ToList();
+        return CountEmptyCatchesInLines(addedLines);
     }
 
     // Counts catch blocks in added lines whose bodies contain no executable statements

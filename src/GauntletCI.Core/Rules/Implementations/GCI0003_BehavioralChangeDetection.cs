@@ -117,6 +117,13 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
     private void CheckLogicRemovedWithoutTests(DiffContext diff, List<Finding> findings)
     {
         // Only count logic removals from production files: skip test and generated files.
+        var filesWithRemovedLogic = diff.Files
+            .Where(f => !WellKnownPatterns.IsTestFile(f.NewPath) && !WellKnownPatterns.IsGeneratedFile(f.NewPath))
+            .Where(f => f.RemovedLines
+                .Any(l => !l.Content.TrimStart().StartsWith("//", StringComparison.Ordinal)
+                       && LogicKeywords.Any(k => l.Content.Contains(k, StringComparison.Ordinal))))
+            .ToList();
+
         var removedLogicLines = diff.Files
             .Where(f => !WellKnownPatterns.IsTestFile(f.NewPath) && !WellKnownPatterns.IsGeneratedFile(f.NewPath))
             .SelectMany(f => f.RemovedLines)
@@ -133,13 +140,14 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             f.NewPath.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
             f.NewPath.Contains("Spec", StringComparison.OrdinalIgnoreCase));
 
-        if (!hasTestChanges)
+        if (!hasTestChanges && filesWithRemovedLogic.Any())
         {
             var examples = removedLogicLines
                 .Take(3)
                 .Select(l => l.Content.Trim());
 
             findings.Add(CreateFinding(
+                filesWithRemovedLogic[0],
                 summary: $"{removedLogicLines.Count} logic line(s) removed with no corresponding test changes.",
                 evidence: $"Removed logic: {string.Join(" | ", examples)}",
                 whyItMatters: "Removing control-flow logic without updating tests may silently break behaviour that was previously covered.",
