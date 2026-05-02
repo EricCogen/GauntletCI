@@ -21,6 +21,9 @@ artifacts/
 .tmp-tools/
 .misc/
 
+# Graphify knowledge graph (regenerable analysis artifact, stored in ~/.gauntletci/graphify/)
+graphify-out/
+
 # GauntletCI model cache (Phi-4 Mini ONNX — ~2.8 GB, never commit)
 .gauntletci/
 **/*.onnx

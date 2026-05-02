@@ -164,4 +164,305 @@ internal static class WellKnownPatterns
         var close = sig.LastIndexOf(')');
         return open >= 0 && close > open ? sig[(open + 1)..close] : null;
     }
+
+    /// <summary>
+    /// NRT (Nullable Reference Type) guards for detecting nullability-related patterns.
+    /// Used by GCI0006, GCI0043, and other nullability-aware rules to reduce false positives.
+    /// </summary>
+
+    /// <summary>
+    /// Returns <c>true</c> when NRT (Nullable Reference Type) is enabled for the given file.
+    /// NRT is enabled via: #nullable enable directive, project-wide settings, or modern .NET versions.
+    /// Used by GCI0006 and GCI0043 to determine if 'string' parameters are non-nullable by default.
+    /// </summary>
+    public static bool IsNullableReferenceTypeEnabled(string fileContent)
+    {
+        // Explicit NRT directive: #nullable enable or #nullable restore
+        if (fileContent.Contains("#nullable enable", StringComparison.OrdinalIgnoreCase) ||
+            fileContent.Contains("#nullable restore", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Explicit NRT disable: #nullable disable indicates NRT is not active
+        if (fileContent.Contains("#nullable disable", StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        // Heuristic: Modern .NET projects (net5+) typically have NRT enabled
+        // Look for patterns that indicate modern C# (nullable annotations, record types, init accessors)
+        if (fileContent.Contains(" record ", StringComparison.Ordinal) ||
+            fileContent.Contains("{ init; }", StringComparison.Ordinal) ||
+            fileContent.Contains("{ get; init; }", StringComparison.Ordinal))
+            return true;
+
+        // Look for the pattern: non-nullable string used in method signatures
+        // This is stronger evidence of NRT enablement than just presence of 'string'
+        // Pattern: public/protected method with 'string' param not followed by '?'
+        if (System.Text.RegularExpressions.Regex.IsMatch(
+                fileContent, @"(public|protected)\s+\w+\s+\w+\s*\(\s*string\s+\w+"))
+            return true;
+
+        // Default: assume NRT disabled (conservative approach - will validate parameters)
+        return false;
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when the parameter section contains explicitly non-nullable parameters
+    /// (e.g., 'string param' without '?'). In NRT-enabled context, these don't need validation.
+    /// </summary>
+    public static bool HasNonNullableParams(string paramSection)
+    {
+        // Look for 'string' not followed by '?' (indicating non-nullable in NRT context)
+        int angleDepth = 0;
+        for (int i = 0; i < paramSection.Length; i++)
+        {
+            char c = paramSection[i];
+            if (c == '<') { angleDepth++; continue; }
+            if (c == '>') { angleDepth = Math.Max(0, angleDepth - 1); continue; }
+            if (angleDepth > 0) continue;
+
+            // Match "string" not followed by "?"
+            if (i + 6 <= paramSection.Length && paramSection.AsSpan(i, 6).SequenceEqual("string"))
+            {
+                if (i + 6 >= paramSection.Length || paramSection[i + 6] != '?')
+                {
+                    // Check boundary
+                    bool leadOk = i == 0 || paramSection[i - 1] is ' ' or '(' or ',' or '<';
+                    bool trailOk = i + 6 >= paramSection.Length || paramSection[i + 6] is ' ' or '[' or ',' or ')';
+                    if (leadOk && trailOk) return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when the parameter list contains nullable parameters (e.g., 'string?' or 'object?').
+    /// Used by GCI0006 to detect when public methods have nullable reference type parameters.
+    /// </summary>
+    public static bool HasNullableReferenceParam(string paramSection)
+    {
+        // Walk character by character, tracking generic depth so we skip type arguments
+        // like Dictionary<string?, int> and only match top-level parameters.
+        int angleDepth = 0;
+        for (int i = 0; i < paramSection.Length; i++)
+        {
+            char c = paramSection[i];
+            if (c == '<') { angleDepth++; continue; }
+            if (c == '>') { angleDepth = Math.Max(0, angleDepth - 1); continue; }
+            if (angleDepth > 0) continue;
+
+            foreach (var keyword in new[] { "string?", "object?" })
+            {
+                if (i + keyword.Length > paramSection.Length) continue;
+                if (!paramSection.AsSpan(i).StartsWith(keyword, StringComparison.Ordinal)) continue;
+
+                // Leading boundary: must be preceded by a non-identifier char
+                bool leadOk = i == 0 || paramSection[i - 1] is ' ' or '(' or ',' or '<';
+                if (!leadOk) continue;
+
+                // Trailing boundary: must be followed by a non-identifier char
+                int after = i + keyword.Length;
+                bool trailOk = after >= paramSection.Length ||
+                               paramSection[after] is ' ' or '[' or ',' or ')' or '<';
+                if (trailOk) return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when the content contains Nullable&lt;T&gt; where T is a value type.
+    /// In NRT context, Nullable&lt;int&gt;, Nullable&lt;string&gt;, etc. always have a value.
+    /// </summary>
+    public static bool IsNullableOfNonNullableType(string content)
+    {
+        // Look for Nullable<T> or Nullable<...> patterns
+        var match = System.Text.RegularExpressions.Regex.Match(content, @"Nullable<(\w+(?:<[^>]+>)?)>");
+        if (!match.Success) return false;
+
+        var typeParam = match.Groups[1].Value;
+        
+        // If T is a value type (int, bool, DateTime, etc.), Nullable<T> always has a value in NRT context
+        var valueTypes = new[] 
+        { 
+            "int", "long", "short", "byte", "double", "float", "decimal", "bool", 
+            "uint", "ulong", "ushort", "ubyte", "char",
+            "DateTime", "TimeSpan", "DateOnly", "TimeOnly", "Guid",
+            "DateTimeOffset", "DateTimeKind"
+        };
+
+        // Also check for custom structs (heuristic: if it's PascalCase and not a built-in type)
+        bool isValueType = valueTypes.Contains(typeParam);
+        bool isCustomStruct = typeParam.Length > 0 && char.IsUpper(typeParam[0]) && !valueTypes.Contains(typeParam);
+
+        return isValueType || isCustomStruct;
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when the content contains a #pragma warning disable with nullable-related codes.
+    /// Detects suppression of nullable reference type warnings (CS8600, CS8603, etc.).
+    /// Used by GCI0043 to flag deliberate nullable warning suppression.
+    /// </summary>
+    public static bool IsPragmaNullableDisable(string content)
+    {
+        if (!content.Contains("#pragma warning disable", StringComparison.OrdinalIgnoreCase))
+            return false;
+        
+        var nullableCodes = new[] { "nullable", "CS8600", "CS8601", "CS8602", "CS8603", "CS8604" };
+        return nullableCodes.Any(code =>
+            content.Contains(code, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when the content contains a LINQ expression where .Value is intentionally mapped.
+    /// Patterns: .Select(x => x.Value), .Where(x => x.Value != null), etc.
+    /// Used by GCI0006 to avoid flagging safe LINQ projections as unsafe dereferences.
+    /// </summary>
+    public static bool IsLinqValueProjection(string content)
+    {
+        var linqMethods = new[] { "Select", "SelectMany", "Where", "OrderBy", "OrderByDescending", 
+                                  "GroupBy", "All", "Any", "First", "FirstOrDefault", 
+                                  "Last", "LastOrDefault", "Single", "SingleOrDefault" };
+
+        foreach (var method in linqMethods)
+        {
+            // Pattern: .MethodName(... => ....Value...)
+            var pattern = @"\." + method + @"\s*\([^)]*=>.*\.Value";
+            if (System.Text.RegularExpressions.Regex.IsMatch(content, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// HTTP Client and external service framework-specific guards.
+    /// Used by GCI0039 and related rules to reduce false positives on framework-specific timeout patterns.
+    /// </summary>
+
+    /// <summary>
+    /// Returns <c>true</c> when the file path indicates gRPC-related code.
+    /// gRPC channels manage timeouts at the channel/connection level, not per-HttpClient.
+    /// Used by GCI0039 to skip false positive timeout checks in gRPC contexts.
+    /// </summary>
+    public static bool IsGrpcRelatedFile(string path)
+    {
+        return path.Contains("grpc", StringComparison.OrdinalIgnoreCase)
+            || path.Contains("channel", StringComparison.OrdinalIgnoreCase)
+            || path.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when the added lines indicate HttpClient configuration via IHttpClientFactory.
+    /// Factory-managed clients configure timeout at the handler/channel level, not per-client.
+    /// </summary>
+    public static bool IsHttpFactoryConfigured(System.Collections.Generic.List<Diff.DiffLine> addedLines)
+    {
+        return addedLines.Any(l =>
+            l.Content.Contains("IHttpClientFactory", StringComparison.Ordinal)
+            || l.Content.Contains("AddHttpClient", StringComparison.Ordinal)
+            || l.Content.Contains("HttpClientFactoryOptions", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when the added lines indicate gRPC channel configuration.
+    /// gRPC channels manage timeouts via GrpcChannelOptions at the connection level.
+    /// </summary>
+    public static bool UsesGrpcChannel(System.Collections.Generic.List<Diff.DiffLine> addedLines)
+    {
+        return addedLines.Any(l =>
+            l.Content.Contains("GrpcChannel", StringComparison.Ordinal)
+            || l.Content.Contains("ChannelOptions", StringComparison.Ordinal)
+            || l.Content.Contains("GrpcChannelOptions", StringComparison.Ordinal))
+            || addedLines.Any(l => 
+                l.Content.Contains("HttpClientHandler", StringComparison.Ordinal)
+                && addedLines.Any(hl => hl.Content.Contains("GrpcChannel", StringComparison.Ordinal)));
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when the added lines indicate use of factory-managed or injected HTTP clients.
+    /// Factory patterns, Polly policies, and DI-managed clients manage timeouts externally.
+    /// </summary>
+    public static bool UsesFactoryManagedHttpClients(System.Collections.Generic.List<Diff.DiffLine> addedLines)
+    {
+        var factoryPatterns = new[]
+        {
+            "IHttpClientFactory", "AddHttpClient", "HttpClientFactoryOptions",
+            "AddPolicyHandler", "AddTransientHttpErrorPolicy", "Polly"
+        };
+
+        return addedLines.Any(l =>
+            factoryPatterns.Any(p => l.Content.Contains(p, StringComparison.Ordinal)));
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when the content indicates an injected or static HttpClient is being used.
+    /// Patterns like _httpClient.GetAsync() or this.client.PostAsync() are typically DI-managed.
+    /// </summary>
+    public static bool IsInjectedOrStaticClient(string content)
+    {
+        var injectionPatterns = new[]
+        {
+            "_httpClient", "_client", "this.client", "this._client",
+            "httpClient.", "_http.", "HttpClient."
+        };
+
+        var httpMethods = new[] { ".GetAsync(", ".PostAsync(", ".PutAsync(", ".SendAsync(" };
+
+        return injectionPatterns.Any(p =>
+            content.Contains(p, StringComparison.Ordinal) &&
+            httpMethods.Any(m => content.Contains(m)));
+    }
+
+    /// <summary>
+    /// Dependency Injection framework-specific guards.
+    /// Used by GCI0038 and related rules to reduce false positives in DI infrastructure files and test contexts.
+    /// </summary>
+
+    /// <summary>
+    /// Returns <c>true</c> when the file path indicates infrastructure/configuration code where DI setup occurs.
+    /// Service locator patterns and direct instantiation are acceptable in Program.cs, Startup.cs, etc.
+    /// </summary>
+    public static bool IsInfrastructureFile(string path)
+    {
+        var fileName = System.IO.Path.GetFileName(path);
+        return string.Equals(fileName, "Program.cs", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(fileName, "Startup.cs", StringComparison.OrdinalIgnoreCase)
+            || fileName.EndsWith("Extensions.cs", StringComparison.OrdinalIgnoreCase)
+            || path.Contains("ServiceCollection", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Array of service locator patterns that violate DI principles.
+    /// These patterns bypass DI and make testing/mocking difficult.
+    /// </summary>
+    public static readonly string[] ServiceLocatorPatterns =
+    [
+        "provider.GetService<",
+        "provider.GetRequiredService<",
+        "serviceProvider.GetService<",
+        "serviceProvider.GetRequiredService<",
+        "_serviceProvider.GetService<",
+        "_serviceProvider.GetRequiredService<",
+    ];
+
+    /// <summary>
+    /// Regex to detect direct instantiation of injectable types.
+    /// Matches patterns like: new UserService(...), new OrderRepository(...), new RequestHandler(...)
+    /// </summary>
+    public static readonly System.Text.RegularExpressions.Regex DirectInstantiationRegex =
+        new(@"new [A-Z][a-zA-Z]*(Service|Repository|Manager|Handler|Client)\s*\(", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    /// <summary>
+    /// Patterns to exclude from direct instantiation checks.
+    /// Test doubles and event handlers are legitimate cases for direct instantiation.
+    /// </summary>
+    public static readonly string[] DirectInstantiationExclusions =
+    [
+        "//",  // comment
+        "Mock<", "Fake<", "Stub<", "Spy<",  // test doubles
+        "EventHandler(", "new EventHandler",  // event handlers
+        "+= new",  // event subscription
+        "var mock", "var fake", "var stub", "var spy",  // test variable patterns
+        "CreateMock", "CreateFake", "CreateStub",  // test factory methods
+    ];
 }

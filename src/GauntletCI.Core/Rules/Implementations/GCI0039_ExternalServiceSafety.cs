@@ -34,7 +34,7 @@ public class GCI0039_ExternalServiceSafety : RuleBase
 
         foreach (var file in diff.Files)
         {
-            if (IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
 
             CheckHttpClientInstantiation(file, findings);
             CheckMissingTimeout(file, findings);
@@ -51,7 +51,7 @@ public class GCI0039_ExternalServiceSafety : RuleBase
     private void CheckHttpClientInstantiation(DiffFile file, List<Finding> findings)
     {
         // Skip gRPC files entirely - gRPC Channel initialization IS the timeout mechanism
-        if (IsGrpcRelatedFile(file.NewPath)) return;
+        if (WellKnownPatterns.IsGrpcRelatedFile(file.NewPath)) return;
 
         foreach (var line in file.AddedLines)
         {
@@ -83,23 +83,13 @@ public class GCI0039_ExternalServiceSafety : RuleBase
 
         // Code that configures HttpClient via factory (IHttpClientFactory / AddHttpClient)
         // manages timeout at the channel/handler level: not via client.Timeout directly.
-        bool isFactoryConfig = addedLines.Any(l =>
-            l.Content.Contains("IHttpClientFactory", StringComparison.Ordinal)
-            || l.Content.Contains("AddHttpClient", StringComparison.Ordinal)
-            || l.Content.Contains("HttpClientFactoryOptions", StringComparison.Ordinal));
-
-        if (isFactoryConfig) return;
+        if (WellKnownPatterns.IsHttpFactoryConfigured(addedLines))
+            return;
 
         // gRPC channels manage timeouts at the channel/connection level via GrpcChannelOptions.
         // HttpClient is typically wrapping a gRPC handler, so per-client timeout is not applicable.
-        bool usesGrpcChannel = addedLines.Any(l =>
-            l.Content.Contains("GrpcChannel", StringComparison.Ordinal)
-            || l.Content.Contains("ChannelOptions", StringComparison.Ordinal)
-            || l.Content.Contains("GrpcChannelOptions", StringComparison.Ordinal)
-            || l.Content.Contains("HttpClientHandler", StringComparison.Ordinal)
-                && addedLines.Any(hl => hl.Content.Contains("GrpcChannel", StringComparison.Ordinal)));
-
-        if (usesGrpcChannel) return;
+        if (WellKnownPatterns.UsesGrpcChannel(addedLines))
+            return;
 
         bool hasTimeoutConfig = addedLines.Any(l =>
             l.Content.Contains(".Timeout =")
@@ -160,36 +150,16 @@ public class GCI0039_ExternalServiceSafety : RuleBase
 
     private static bool UsesFactoryManagedClients(List<DiffLine> addedLines)
     {
-        var factoryPatterns = new[]
-        {
-            "IHttpClientFactory", "AddHttpClient", "HttpClientFactoryOptions",
-            "AddPolicyHandler", "AddTransientHttpErrorPolicy", "Polly"
-        };
-
-        return addedLines.Any(l =>
-            factoryPatterns.Any(p => l.Content.Contains(p, StringComparison.Ordinal)));
+        return WellKnownPatterns.UsesFactoryManagedHttpClients(addedLines);
     }
 
     private static bool IsInjectedOrStaticClient(string content)
     {
-        // Pattern: _httpClient.GetAsync, this.client.PostAsync, httpClient.SendAsync
-        // These are typically injected via DI or stored as static/field
-        var injectionPatterns = new[]
-        {
-            "_httpClient", "_client", "this.client", "this._client",
-            "httpClient.", "_http.", "HttpClient."
-        };
-
-        return injectionPatterns.Any(p =>
-            content.Contains(p, StringComparison.Ordinal) &&
-            CtCheckHttpMethods.Any(m => content.Contains(m)));
+        return WellKnownPatterns.IsInjectedOrStaticClient(content);
     }
 
     private static bool IsGrpcRelatedFile(string path)
     {
-        // gRPC files manage connection timeout at the channel level, not per-HttpClient
-        return path.Contains("grpc", StringComparison.OrdinalIgnoreCase)
-            || path.Contains("channel", StringComparison.OrdinalIgnoreCase)
-            || path.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase); // gRPC generated code
+        return WellKnownPatterns.IsGrpcRelatedFile(path);
     }
 }

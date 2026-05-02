@@ -39,6 +39,9 @@ public class GCI0006_EdgeCaseHandling : RuleBase
             if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
 
             var addedLines = file.AddedLines.ToList();
+            var fileContent = string.Join("\n", addedLines.Select(l => l.Content));
+            var isNrtEnabled = WellKnownPatterns.IsNullableReferenceTypeEnabled(fileContent);
+
             for (int i = 0; i < addedLines.Count; i++)
             {
                 var content = addedLines[i].Content;
@@ -60,7 +63,7 @@ public class GCI0006_EdgeCaseHandling : RuleBase
 
                 // Skip when .Value is part of a LINQ expression (.Select(x => x.Value), etc.)
                 // LINQ projections are intentionally mapping nullable to non-nullable
-                if (IsLinqValueProjection(content)) continue;
+                if (WellKnownPatterns.IsLinqValueProjection(content)) continue;
 
                 // Skip when .Value itself is null-checked inline (e.g. `x.Value == null`,
                 // `x.Value is not null`) or when HasValue guards the same access.
@@ -75,7 +78,7 @@ public class GCI0006_EdgeCaseHandling : RuleBase
 
                 // NRT-aware: Skip Nullable<T>.Value when T is a non-nullable reference type in NRT context
                 // In NRT-enabled files, Nullable<string> where string is non-nullable is safe (always has value)
-                if (IsNullableReferenceTypeEnabled(file) && IsNullableOfNonNullableType(content))
+                if (isNrtEnabled && WellKnownPatterns.IsNullableOfNonNullableType(content))
                     continue;
 
                 // Check preceding lines for null guard
@@ -111,6 +114,9 @@ public class GCI0006_EdgeCaseHandling : RuleBase
             if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
 
             var addedLines = file.AddedLines.ToList();
+            var fileContent = string.Join("\n", addedLines.Select(l => l.Content));
+            var isNrtEnabled = WellKnownPatterns.IsNullableReferenceTypeEnabled(fileContent);
+
             for (int i = 0; i < addedLines.Count; i++)
             {
                 var content = addedLines[i].Content;
@@ -136,11 +142,11 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 var parenIdx = content.IndexOf('(');
                 var closeIdx = parenIdx >= 0 ? content.IndexOf(')', parenIdx) : -1;
                 var paramSection = (parenIdx >= 0 && closeIdx > parenIdx) ? content[parenIdx..(closeIdx + 1)] : "";
-                if (!HasNullableReferenceParam(paramSection)) continue;
+                if (!WellKnownPatterns.HasNullableReferenceParam(paramSection)) continue;
 
                 // Guard: Skip if NRT (Nullable Reference Type) is enabled for non-nullable params
                 // In NRT-enabled files, `string` param is explicitly non-nullable, so no validation needed
-                if (IsNullableReferenceTypeEnabled(file) && HasNonNullableParams(paramSection)) continue;
+                if (isNrtEnabled && WellKnownPatterns.HasNonNullableParams(paramSection)) continue;
 
                 // Guard: Skip if file is auto-generated (reduces FP in generated code)
                 // Auto-generated files (.g.cs, .Designer.cs, migrations, API clients) have predictable patterns
@@ -541,69 +547,6 @@ public class GCI0006_EdgeCaseHandling : RuleBase
         return false;
     }
 
-    // Guard: Check if NRT (Nullable Reference Type) is enabled for this file
-    // NRT can be enabled via: #nullable enable directive, project-wide settings, or modern .NET versions
-    private static bool IsNullableReferenceTypeEnabled(DiffFile file)
-    {
-        var fileContent = string.Join("\n", file.AddedLines.Select(l => l.Content));
-        
-        // Explicit NRT directive: #nullable enable or #nullable restore
-        if (fileContent.Contains("#nullable enable", StringComparison.OrdinalIgnoreCase) ||
-            fileContent.Contains("#nullable restore", StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        // Explicit NRT disable: #nullable disable indicates NRT is not active
-        if (fileContent.Contains("#nullable disable", StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        // Heuristic: Modern .NET projects (net5+) typically have NRT enabled in csproj
-        // Look for patterns that indicate modern C# (nullable annotations, record types, init accessors)
-        // These are common in NRT-enabled projects
-        if (fileContent.Contains(" record ", StringComparison.Ordinal) ||
-            fileContent.Contains(" record ", StringComparison.Ordinal) ||
-            fileContent.Contains("{ init; }", StringComparison.Ordinal) ||
-            fileContent.Contains("{ get; init; }", StringComparison.Ordinal))
-            return true;
-
-        // Look for the pattern: non-nullable string used in method signatures
-        // This is stronger evidence of NRT enablement than just presence of 'string'
-        // Pattern: public/protected method with 'string' param not followed by '?'
-        if (System.Text.RegularExpressions.Regex.IsMatch(
-                fileContent, @"(public|protected)\s+\w+\s+\w+\s*\(\s*string\s+\w+"))
-            return true;
-
-        // Default: assume NRT disabled (conservative approach - will validate parameters)
-        return false;
-    }
-
-    // Guard: Check if the parameter list contains explicitly non-nullable parameters
-    // In NRT-enabled context, 'string' is non-nullable and doesn't need validation
-    private static bool HasNonNullableParams(string paramSection)
-    {
-        // Look for 'string' not followed by '?' (indicating non-nullable in NRT context)
-        int angleDepth = 0;
-        for (int i = 0; i < paramSection.Length; i++)
-        {
-            char c = paramSection[i];
-            if (c == '<') { angleDepth++; continue; }
-            if (c == '>') { angleDepth = Math.Max(0, angleDepth - 1); continue; }
-            if (angleDepth > 0) continue;
-
-            // Match "string" not followed by "?"
-            if (i + 6 < paramSection.Length && paramSection.AsSpan(i, 6).SequenceEqual("string"))
-            {
-                if (i + 6 < paramSection.Length && paramSection[i + 6] != '?')
-                {
-                    // Check boundary
-                    bool leadOk = i == 0 || paramSection[i - 1] is ' ' or '(' or ',' or '<';
-                    bool trailOk = i + 6 >= paramSection.Length || paramSection[i + 6] is ' ' or '[' or ',' or ')';
-                    if (leadOk && trailOk) return true;
-                }
-            }
-        }
-        return false;
-    }
-
     // Guard: Check if any parameters have default values (which implicitly handle null)
     // Parameters with defaults like 'string param = "default"' or 'int count = 0' don't need validation
     private static bool HasParameterDefaults(string paramSection)
@@ -632,68 +575,6 @@ public class GCI0006_EdgeCaseHandling : RuleBase
         // Guard clauses and early returns
         if (content.Contains("guard", StringComparison.OrdinalIgnoreCase)) return true;
         if (content.Contains("return", StringComparison.Ordinal)) return true;
-
-        return false;
-    }
-
-    // Guard: Detect Nullable<T> where T is a non-nullable type in NRT context
-    // In NRT-enabled code, Nullable<string> where 'string' is non-nullable means the value is guaranteed to exist
-    // Pattern: var x = new Nullable<string>(...) - In NRT, string is non-nullable, so Nullable<string> always has value
-    // This detects patterns like: Nullable<int>, Nullable<string>, etc.
-    private static bool IsNullableOfNonNullableType(string content)
-    {
-        // Look for Nullable<T> or Nullable<...> patterns
-        var match = System.Text.RegularExpressions.Regex.Match(content, @"Nullable<(\w+(?:<[^>]+>)?)>");
-        if (!match.Success) return false;
-
-        var typeParam = match.Groups[1].Value;
-        
-        // If T is a value type (int, bool, DateTime, etc.), Nullable<T> always has a value in NRT context
-        // Common value types (not exhaustive, but covers most cases)
-        var valueTypes = new[] 
-        { 
-            "int", "long", "short", "byte", "double", "float", "decimal", "bool", 
-            "uint", "ulong", "ushort", "ubyte", "char",
-            "DateTime", "TimeSpan", "DateOnly", "TimeOnly", "Guid",
-            "DateTimeOffset", "DateTimeKind"
-        };
-
-        // Also check for custom structs (heuristic: if it's PascalCase and not a built-in type)
-        bool isValueType = valueTypes.Contains(typeParam);
-        bool isCustomStruct = char.IsUpper(typeParam[0]) && !valueTypes.Contains(typeParam);
-
-        // In NRT context, both value types and reference types in Nullable<T> can be safely accessed
-        // if they came from a non-nullable context
-        return isValueType || isCustomStruct;
-    }
-
-    // Guard: Detect LINQ expressions where .Value is intentionally mapped (safe projection)
-    // Pattern: .Select(x => x.Value), .Where(x => x.Value != null), etc.
-    // In these cases, the developer is explicitly handling the mapping, so it's not an unsafe dereference
-    private static bool IsLinqValueProjection(string content)
-    {
-        // Look for LINQ method patterns where .Value is used as a projection
-        // Common patterns:
-        //   .Select(... => ....Value)
-        //   .SelectMany(... => ....Value)
-        //   .Where(... => ....Value)
-        //   .OrderBy(... => ....Value)
-        //   .GroupBy(... => ....Value)
-        //   .All(x => x.Value != null)
-        //   .Any(x => x.Value != null)
-
-        // Check for LINQ method calls followed by lambda with .Value access
-        var linqMethods = new[] { "Select", "SelectMany", "Where", "OrderBy", "OrderByDescending", 
-                                  "GroupBy", "All", "Any", "First", "FirstOrDefault", 
-                                  "Last", "LastOrDefault", "Single", "SingleOrDefault" };
-
-        foreach (var method in linqMethods)
-        {
-            // Pattern: .MethodName(... => ....Value...)
-            var pattern = @"\." + method + @"\s*\([^)]*=>.*\.Value";
-            if (System.Text.RegularExpressions.Regex.IsMatch(content, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
-                return true;
-        }
 
         return false;
     }
