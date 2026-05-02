@@ -38,7 +38,7 @@ public class GCI0015_DataIntegrityRisk : RuleBase
             CheckUncheckedCastsInFile(file, findings);
             foreach (var line in file.AddedLines)
             {
-                CheckSqlIgnore(line, findings);
+                CheckSqlIgnore(file, line, findings);
             }
         }
 
@@ -52,7 +52,7 @@ public class GCI0015_DataIntegrityRisk : RuleBase
         var addedLines = file.AddedLines.ToList();
 
         bool hasHttpSignal = addedLines.Any(l =>
-            WellKnownPatterns.HasHttpContextSignal(l.Content));
+            WellKnownPatterns.DataIntegrityPatterns.HasHttpContextSignal(l.Content));
 
         if (!hasHttpSignal) return;
 
@@ -93,7 +93,7 @@ public class GCI0015_DataIntegrityRisk : RuleBase
         var addedLines = file.AddedLines.ToList();
 
         bool hasHttpSignal = addedLines.Any(l =>
-            WellKnownPatterns.HasHttpContextSignal(l.Content));
+            WellKnownPatterns.DataIntegrityPatterns.HasHttpContextSignal(l.Content));
 
         if (!hasHttpSignal) return;
 
@@ -142,39 +142,43 @@ public class GCI0015_DataIntegrityRisk : RuleBase
         // Only flag unchecked numeric casts when HTTP input signals are present in the file.
         // A cast like (int)Request.Form["id"] is dangerous; (int)someInternalCounter is not.
         bool hasHttpSignal = file.AddedLines.Any(l =>
-            WellKnownPatterns.HasHttpContextSignal(l.Content));
+            WellKnownPatterns.DataIntegrityPatterns.HasHttpContextSignal(l.Content));
 
         if (!hasHttpSignal) return;
 
         foreach (var line in file.AddedLines)
         {
-            foreach (var cast in WellKnownPatterns.UncheckedCastPatterns)
+            foreach (var cast in WellKnownPatterns.DataIntegrityPatterns.UncheckedCastPatterns)
             {
                 if (!line.Content.Contains(cast, StringComparison.Ordinal)) continue;
 
                 findings.Add(CreateFinding(
+                    file,
                     summary: $"Unchecked cast {cast} on potentially user-supplied value.",
                     evidence: $"Line {line.LineNumber}: {line.Content.Trim()}",
                     whyItMatters: "Hard casts without overflow checking can cause silent data truncation or OverflowException.",
                     suggestedAction: "Use checked{} blocks, Convert.ToInt32(), or int.TryParse() with validation.",
-                    confidence: Confidence.Low));
+                    confidence: Confidence.Low,
+                    line: line));
                 break;
             }
         }
     }
 
-    private void CheckSqlIgnore(DiffLine line, List<Finding> findings)
+    private void CheckSqlIgnore(DiffFile file, DiffLine line, List<Finding> findings)
     {
-        foreach (var pattern in WellKnownPatterns.SqlIgnorePatterns)
+        foreach (var pattern in WellKnownPatterns.DataIntegrityPatterns.SqlIgnorePatterns)
         {
             if (!line.Content.Contains(pattern, StringComparison.OrdinalIgnoreCase)) continue;
 
             findings.Add(CreateFinding(
+                file,
                 summary: $"SQL IGNORE/conflict-suppression pattern detected: {pattern}",
                 evidence: $"Line {line.LineNumber}: {line.Content.Trim()}",
                 whyItMatters: "Silently ignoring insert conflicts hides data integrity violations that should be investigated.",
                 suggestedAction: "Handle conflicts explicitly with MERGE, UPSERT, or application-level logic.",
-                confidence: Confidence.Medium));
+                confidence: Confidence.Medium,
+                line: line));
             return;
         }
     }

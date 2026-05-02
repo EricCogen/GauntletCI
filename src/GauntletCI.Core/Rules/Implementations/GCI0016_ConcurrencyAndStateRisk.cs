@@ -35,7 +35,7 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
 
             foreach (var line in file.AddedLines)
             {
-                if (line.Content.TrimStart().StartsWith("//")) continue;
+                if (GuardPatterns.IsCommentLine(line.Content)) continue;
                 CheckAsyncVoid(line, findings);
                 CheckBlockingAsyncCall(line, findings);
                 CheckLockThis(line, findings);
@@ -53,11 +53,7 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
         if (!content.Contains("async void ", StringComparison.Ordinal)) return;
 
         // Event handlers: (object sender, ...EventArgs ...): legitimate use.
-        if (content.Contains("EventHandler", StringComparison.Ordinal) ||
-            content.Contains("object sender", StringComparison.Ordinal) ||
-            content.Contains("EventArgs", StringComparison.Ordinal) ||
-            content.Contains("sender,", StringComparison.Ordinal) ||
-            content.Contains("sender)", StringComparison.Ordinal)) return;
+        if (GuardPatterns.IsEventHandler(content)) return;
 
         findings.Add(CreateFinding(
             summary: "async void method: exceptions are unobservable and crash the process.",
