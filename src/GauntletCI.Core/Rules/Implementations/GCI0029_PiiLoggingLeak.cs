@@ -102,7 +102,21 @@ public class GCI0029_PiiLoggingLeak : RuleBase
             "Encrypt", "encrypt", "SecureString", "Mask", "mask"
         };
 
-        return transformPatterns.Any(p => content.Contains(p));
+        if (transformPatterns.Any(p => content.Contains(p)))
+            return true;
+
+        // Skip logging of reflection properties (Type.FullName, Assembly.FullName, etc.)
+        // These are ubiquitous in .NET code and are NOT person data
+        var reflectionPatterns = new[]
+        {
+            ".FullName", ".Name", "Type.", "Assembly.", "PropertyInfo.", "MethodInfo.",
+            "FieldInfo.", "ParameterInfo.", "Reflection."
+        };
+
+        if (reflectionPatterns.Any(p => content.Contains(p)))
+            return true;
+
+        return false;
     }
 
     private static bool ContainsPiiTerm(string content, string term)
