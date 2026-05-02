@@ -187,10 +187,11 @@ internal static class WellKnownPatterns
             return false;
 
         // Heuristic: Modern .NET projects (net5+) typically have NRT enabled
-        // Look for patterns that indicate modern C# (nullable annotations, record types, init accessors)
+        // Look for patterns that indicate modern C# (nullable annotations, record types, init accessors, required members)
         if (fileContent.Contains(" record ", StringComparison.Ordinal) ||
             fileContent.Contains("{ init; }", StringComparison.Ordinal) ||
-            fileContent.Contains("{ get; init; }", StringComparison.Ordinal))
+            fileContent.Contains("{ get; init; }", StringComparison.Ordinal) ||
+            fileContent.Contains("required ", StringComparison.Ordinal))
             return true;
 
         // Look for the pattern: non-nullable string used in method signatures
@@ -414,9 +415,38 @@ internal static class WellKnownPatterns
     }
 
     /// <summary>
-    /// Dependency Injection framework-specific guards.
-    /// Used by GCI0038 and related rules to reduce false positives in DI infrastructure files and test contexts.
+    /// Returns <c>true</c> when the file uses .NET 9+ modern patterns (checked operators, required members, etc).
+    /// These patterns strongly indicate NRT is enabled in modern project contexts.
     /// </summary>
+    public static bool UsesModernDotNetPatterns(string fileContent)
+    {
+        // .NET 9+ patterns
+        var modernPatterns = new[]
+        {
+            "checked(", "unchecked(", // Checked operators
+            "required ", // Required members (C# 11+)
+            "file class", "file struct", // File-scoped types (C# 11+)
+            "field ", // Field keyword in properties (C# 13+)
+            "collection", // Collection expression syntax
+            ".. ", // Range operator in more contexts
+            "namespace ", // File-scoped namespaces (C# 10+)
+        };
+
+        return modernPatterns.Any(p => fileContent.Contains(p, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when a method signature uses record type parameters or other modern patterns.
+    /// Helps identify rules applied to modern code that typically has NRT enabled.
+    /// </summary>
+    public static bool HasModernTypeParameters(string paramSection)
+    {
+        // Record parameters, required parameters, init properties
+        return paramSection.Contains(" record ", StringComparison.Ordinal)
+            || paramSection.Contains("required ", StringComparison.Ordinal)
+            || paramSection.Contains("{ init; }", StringComparison.Ordinal)
+            || paramSection.Contains("{ get; init; }", StringComparison.Ordinal);
+    }
 
     /// <summary>
     /// Returns <c>true</c> when the file path indicates infrastructure/configuration code where DI setup occurs.
