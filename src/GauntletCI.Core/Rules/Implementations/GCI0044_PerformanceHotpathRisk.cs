@@ -14,39 +14,6 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
     public override string Id => "GCI0044";
     public override string Name => "Performance Hotpath Risk";
 
-    private static readonly string[] LinqMethods =
-        [".Where(", ".Select(", ".FirstOrDefault(", ".Any(", ".Count("];
-
-    private static readonly string[] LoopKeywords =
-        ["for (", "foreach (", "while ("];
-
-    // "foreach" is the standard accumulator pattern: only flag for/while unbounded growth
-    private static readonly string[] UnboundedLoopKeywords = ["for (", "while ("];
-
-    private static bool IsTestFile(string path) =>
-        path.Contains("test", StringComparison.OrdinalIgnoreCase) ||
-        path.Contains("spec", StringComparison.OrdinalIgnoreCase);
-
-    // Rule implementation files use LINQ inside analysis loops as standard practice;
-    // these are engine internals, not production hotpath code.
-    private static bool IsRuleImplementationFile(string path) =>
-        path.Contains("Rules/Implementations", StringComparison.OrdinalIgnoreCase) ||
-        path.Contains(@"Rules\Implementations", StringComparison.OrdinalIgnoreCase);
-
-    private static bool HasLinqCall(string content)
-    {
-        foreach (var m in LinqMethods)
-            if (content.Contains(m, StringComparison.Ordinal)) return true;
-        return false;
-    }
-
-    private static bool HasLoopConstruct(string content)
-    {
-        foreach (var k in LoopKeywords)
-            if (content.Contains(k, StringComparison.Ordinal)) return true;
-        return false;
-    }
-
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -54,8 +21,8 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
 
         foreach (var file in context.Diff.Files)
         {
-            if (IsTestFile(file.NewPath)) continue;
-            if (IsRuleImplementationFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.PerformancePatterns.IsRuleImplementationFile(file.NewPath)) continue;
             CheckThreadSleep(file, findings);
             CheckLinqInsideLoop(file, findings);
             CheckAddInsideLoop(file, findings);
@@ -93,13 +60,13 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
             for (int i = 0; i < nonRemovedLines.Count; i++)
             {
                 if (nonRemovedLines[i].Kind != DiffLineKind.Added) continue;
-                if (!HasLinqCall(nonRemovedLines[i].Content)) continue;
+                if (!WellKnownPatterns.PerformancePatterns.HasLinqCall(nonRemovedLines[i].Content)) continue;
 
                 int lookbackStart = Math.Max(0, i - 10);
                 bool inLoop = false;
                 for (int j = lookbackStart; j < i; j++)
                 {
-                    if (HasLoopConstruct(nonRemovedLines[j].Content))
+                    if (WellKnownPatterns.PerformancePatterns.HasLoopConstruct(nonRemovedLines[j].Content))
                     {
                         inLoop = true;
                         break;
@@ -143,7 +110,7 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
                 bool inLoop = false;
                 for (int j = lookbackStart; j < i; j++)
                 {
-                    foreach (var k in UnboundedLoopKeywords)
+                    foreach (var k in WellKnownPatterns.PerformancePatterns.UnboundedLoopKeywords)
                     {
                         if (nonRemovedLines[j].Content.Contains(k, StringComparison.Ordinal))
                         {

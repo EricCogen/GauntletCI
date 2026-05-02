@@ -17,26 +17,6 @@ public class GCI0029_PiiLoggingLeak : RuleBase
     public override string Id => "GCI0029";
     public override string Name => "PII Entity Logging Leak";
 
-    private static readonly string[] PiiTerms =
-    [
-        "email", "ssn", "socialsecurity", "phonenumber", "creditcard", "cardnumber",
-        "dateofbirth", "passport", "nationalid", "taxid", "bankaccount",
-        "dob", "birthdate", "zipcode", "postalcode", "geolocation",
-        "username", "firstname", "lastname", "displayname", "personname",
-    ];
-
-    // No weak terms: "name" alone is too broad and fires on component/logger/appender names.
-    // "fullname" excluded: Type.FullName / Assembly.FullName / FileInfo.FullName are ubiquitous
-    // .NET reflection properties that are NOT person names.
-    // Specific person-name compound terms (username, firstname, etc.) are in PiiTerms above.
-    private static readonly string[] WeakPiiTerms = [];
-
-    private static readonly string[] LogPrefixes =
-    [
-        "_logger.", "logger.", "Logger.", "_log.", "log.", "Log.Information", "Log.Warning",
-        "Log.Error", "Log.Debug", "Log.Critical", "Log.Write"
-    ];
-
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -59,7 +39,7 @@ public class GCI0029_PiiLoggingLeak : RuleBase
                 if (trimmed.StartsWith("//") || trimmed.StartsWith("*")) continue;
 
                 bool hasLogPrefix = false;
-                foreach (var prefix in LogPrefixes)
+                foreach (var prefix in WellKnownPatterns.LogPrefixes)
                 {
                     if (content.Contains(prefix, StringComparison.Ordinal))
                     { hasLogPrefix = true; break; }
@@ -71,7 +51,7 @@ public class GCI0029_PiiLoggingLeak : RuleBase
                     continue;
 
                 string? matchedTerm = null;
-                foreach (var term in PiiTerms)
+                foreach (var term in WellKnownPatterns.PiiTerms)
                 {
                     if (ContainsPiiTerm(content, term))
                     { matchedTerm = term; break; }

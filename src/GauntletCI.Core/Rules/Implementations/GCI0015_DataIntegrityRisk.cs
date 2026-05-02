@@ -15,13 +15,7 @@ public class GCI0015_DataIntegrityRisk : RuleBase
     public override string Id => "GCI0015";
     public override string Name => "Data Integrity Risk";
 
-    private static readonly string[] UncheckedCastPatterns = ["(int)", "(long)", "(decimal)", "(float)", "(short)"];
-    private static readonly string[] SqlIgnorePatterns = ["INSERT IGNORE", "ON CONFLICT DO NOTHING", "INSERT OR IGNORE"];
-    private static readonly string[] HttpContextSignals =
-    [
-        "Request.Form", "Request.Query", "Request.Body",
-        "HttpContext.Request", "[FromBody]", "[FromForm]", "[FromQuery]"
-    ];
+
 
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
@@ -58,7 +52,7 @@ public class GCI0015_DataIntegrityRisk : RuleBase
         var addedLines = file.AddedLines.ToList();
 
         bool hasHttpSignal = addedLines.Any(l =>
-            HttpContextSignals.Any(s => l.Content.Contains(s, StringComparison.Ordinal)));
+            WellKnownPatterns.HasHttpContextSignal(l.Content));
 
         if (!hasHttpSignal) return;
 
@@ -98,10 +92,8 @@ public class GCI0015_DataIntegrityRisk : RuleBase
     {
         var addedLines = file.AddedLines.ToList();
 
-        // Mass-assignment is only a security concern in HTTP input contexts (OWASP A03 over-posting).
-        // Internal struct initialization or data-model building without an HTTP boundary is safe.
         bool hasHttpSignal = addedLines.Any(l =>
-            HttpContextSignals.Any(s => l.Content.Contains(s, StringComparison.Ordinal)));
+            WellKnownPatterns.HasHttpContextSignal(l.Content));
 
         if (!hasHttpSignal) return;
 
@@ -150,13 +142,13 @@ public class GCI0015_DataIntegrityRisk : RuleBase
         // Only flag unchecked numeric casts when HTTP input signals are present in the file.
         // A cast like (int)Request.Form["id"] is dangerous; (int)someInternalCounter is not.
         bool hasHttpSignal = file.AddedLines.Any(l =>
-            HttpContextSignals.Any(s => l.Content.Contains(s, StringComparison.Ordinal)));
+            WellKnownPatterns.HasHttpContextSignal(l.Content));
 
         if (!hasHttpSignal) return;
 
         foreach (var line in file.AddedLines)
         {
-            foreach (var cast in UncheckedCastPatterns)
+            foreach (var cast in WellKnownPatterns.UncheckedCastPatterns)
             {
                 if (!line.Content.Contains(cast, StringComparison.Ordinal)) continue;
 
@@ -173,7 +165,7 @@ public class GCI0015_DataIntegrityRisk : RuleBase
 
     private void CheckSqlIgnore(DiffLine line, List<Finding> findings)
     {
-        foreach (var pattern in SqlIgnorePatterns)
+        foreach (var pattern in WellKnownPatterns.SqlIgnorePatterns)
         {
             if (!line.Content.Contains(pattern, StringComparison.OrdinalIgnoreCase)) continue;
 

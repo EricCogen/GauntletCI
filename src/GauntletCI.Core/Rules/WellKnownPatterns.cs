@@ -773,4 +773,149 @@ internal static class WellKnownPatterns
         // Event-driven async tests: validates via TaskCompletionSource completion
         "TaskCompletionSource",
     ];
+
+    /// <summary>
+    /// HTTP context signals indicating user input boundaries.
+    /// Used by GCI0015 for detecting mass-assignment and unsafe casting in HTTP request context.
+    /// </summary>
+    public static readonly string[] HttpContextSignals =
+    [
+        "Request.Form", "Request.Query", "Request.Body",
+        "HttpContext.Request", "[FromBody]", "[FromForm]", "[FromQuery]"
+    ];
+
+    /// <summary>
+    /// SQL patterns that silently ignore or suppress insert/update conflicts.
+    /// Used by GCI0015 to detect situations where data integrity violations are hidden.
+    /// </summary>
+    public static readonly string[] SqlIgnorePatterns =
+    [
+        "INSERT IGNORE", "ON CONFLICT DO NOTHING", "INSERT OR IGNORE"
+    ];
+
+    /// <summary>
+    /// Numeric cast patterns that can cause silent data truncation or overflow.
+    /// Used by GCI0015 for detecting unchecked casts on potentially user-supplied values.
+    /// </summary>
+    public static readonly string[] UncheckedCastPatterns =
+    [
+        "(int)", "(long)", "(decimal)", "(float)", "(short)"
+    ];
+
+    /// <summary>
+    /// PII (Personally Identifiable Information) terms in variable/field names.
+    /// Used by GCI0029 to detect leaks of sensitive data in log calls.
+    /// Compound terms only (avoids false positives on "name", "fullname" which are ubiquitous).
+    /// </summary>
+    public static readonly string[] PiiTerms =
+    [
+        "email", "ssn", "socialsecurity", "phonenumber", "creditcard", "cardnumber",
+        "dateofbirth", "passport", "nationalid", "taxid", "bankaccount",
+        "dob", "birthdate", "zipcode", "postalcode", "geolocation",
+        "username", "firstname", "lastname", "displayname", "personname",
+    ];
+
+    /// <summary>
+    /// Logger method prefixes indicating logging calls.
+    /// Used by GCI0029 to detect log statements for PII leak analysis.
+    /// </summary>
+    public static readonly string[] LogPrefixes =
+    [
+        "_logger.", "logger.", "Logger.", "_log.", "log.", "Log.Information", "Log.Warning",
+        "Log.Error", "Log.Debug", "Log.Critical", "Log.Write"
+    ];
+
+    /// <summary>
+    /// Returns <c>true</c> if the given HTTP request content contains HTTP context signal patterns.
+    /// Used by GCI0015 to determine whether mass-assignment and unsafe cast checks apply.
+    /// </summary>
+    public static bool HasHttpContextSignal(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return false;
+        return HttpContextSignals.Any(s => content.Contains(s, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Patterns used to detect performance hotpath issues (LINQ in loops, Thread.Sleep, etc.).
+    /// </summary>
+    public static class PerformancePatterns
+    {
+        /// <summary>LINQ method calls that should not be used inside loops.</summary>
+        public static readonly string[] LinqMethods =
+        [
+            ".Where(", ".Select(", ".FirstOrDefault(", ".Any(", ".Count("
+        ];
+
+        /// <summary>Loop keywords that should not contain blocking operations or unbounded operations.</summary>
+        public static readonly string[] LoopKeywords =
+        [
+            "for (", "foreach (", "while ("
+        ];
+
+        /// <summary>Loop keywords where unbounded collection growth is a concern (for/while, not foreach).</summary>
+        public static readonly string[] UnboundedLoopKeywords =
+        [
+            "for (", "while ("
+        ];
+
+        /// <summary>Returns <c>true</c> if the given content contains a LINQ method call.</summary>
+        public static bool HasLinqCall(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            // GCI0044: This is a pattern detection helper, not a performance-sensitive query
+            return LinqMethods.Any(m => content.Contains(m, StringComparison.Ordinal));
+        }
+
+        /// <summary>Returns <c>true</c> if the given content contains a loop construct.</summary>
+        public static bool HasLoopConstruct(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            return LoopKeywords.Any(k => content.Contains(k, StringComparison.Ordinal));
+        }
+
+        /// <summary>Returns <c>true</c> if the given path is a rule implementation file (hotpath guard).</summary>
+        public static bool IsRuleImplementationFile(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return false;
+            return path.Contains("Rules/Implementations", StringComparison.OrdinalIgnoreCase) ||
+                   path.Contains(@"Rules\Implementations", StringComparison.OrdinalIgnoreCase);
+        }
+    }
+
+    /// <summary>
+    /// Floating-point literal and cast patterns used to detect unsafe equality comparisons.
+    /// </summary>
+    public static class FloatingPointPatterns
+    {
+        /// <summary>Regex: matches == or != followed by a float/double literal on the right side.</summary>
+        public static readonly System.Text.RegularExpressions.Regex FloatLiteralOnRightRegex = new(
+            @"(?:==|!=)\s*(?:[-+]?\d*\.\d+|\d+\.\d+)[fFdD]?\b",
+            System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        /// <summary>Regex: matches float/double literal on the left side of == or !=.</summary>
+        public static readonly System.Text.RegularExpressions.Regex FloatLiteralOnLeftRegex = new(
+            @"\b(?:[-+]?\d*\.\d+|\d+\.\d+)[fFdD]?\s*(?:==|!=)",
+            System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        /// <summary>Regex: matches a (float) or (double) cast alongside == or !=.</summary>
+        public static readonly System.Text.RegularExpressions.Regex FloatCastWithEqualityRegex = new(
+            @"\((?:float|double)\).*(?:==|!=)|(?:==|!=).*\((?:float|double)\)",
+            System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        /// <summary>Regex: matches a float or double type keyword alongside == or !=.</summary>
+        public static readonly System.Text.RegularExpressions.Regex FloatTypeWithEqualityRegex = new(
+            @"\b(?:float|double)\b.*(?:==|!=)|(?:==|!=).*\b(?:float|double)\b",
+            System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+        /// <summary>Regex: matches the safe-division guard pattern (integer zero-check with ternary).</summary>
+        public static readonly System.Text.RegularExpressions.Regex IntegerZeroGuardRegex = new(
+            @"(?:==|!=)\s*0\s*\?", System.Text.RegularExpressions.RegexOptions.Compiled);
+
+        /// <summary>Returns <c>true</c> if the given content is a guarded integer zero check (safe division pattern).</summary>
+        public static bool IsGuardedIntegerZeroCheck(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return false;
+            return IntegerZeroGuardRegex.IsMatch(content);
+        }
+    }
 }
