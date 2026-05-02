@@ -97,5 +97,70 @@ public class GCI0022Tests
         Assert.DoesNotContain(findings, f => f.Summary.Contains("Raw INSERT without upsert"));
     }
 
+    [Fact]
+    public async Task EventHandlerWithoutDedup_ShouldFlag()
+    {
+        // Original diff structure but simpler content
+        var raw = """
+            diff --git a/src/EventManager.cs b/src/EventManager.cs
+            index abc..def 100644
+            --- a/src/EventManager.cs
+            +++ b/src/EventManager.cs
+            @@ -1,1 +1,1 @@
+            +SomeEvent += handler;
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("Event handler"));
+    }
+
+    [Fact]
+    public async Task EventHandlerWithMinusGuard_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/EventManager.cs b/src/EventManager.cs
+            index abc..def 100644
+            --- a/src/EventManager.cs
+            +++ b/src/EventManager.cs
+            @@ -1,5 +1,9 @@
+             public class EventManager {
+            +    public void RegisterHandler(EventHandler handler) {
+            +        SomeEvent -= handler;
+            +        SomeEvent += handler;
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Event handler registered without dedup"));
+    }
+
+    [Fact]
+    public async Task EventHandlerInStaticConstructor_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/EventManager.cs b/src/EventManager.cs
+            index abc..def 100644
+            --- a/src/EventManager.cs
+            +++ b/src/EventManager.cs
+            @@ -1,5 +1,9 @@
+             public class EventManager {
+            +    static EventManager() {
+            +        // Static ctor runs exactly once - inherently idempotent
+            +        SomeEvent += handler;
+            +    }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Event handler registered without dedup"));
+    }
+
 }
 

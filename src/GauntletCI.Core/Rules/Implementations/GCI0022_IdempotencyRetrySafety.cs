@@ -36,6 +36,7 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
         foreach (var file in diff.Files)
         {
             CheckHttpPostWithoutIdempotency(file, findings);
+            CheckEventHandlerWithoutDedup(file, findings);
             CheckRawInsertWithoutUpsert(file, findings);
         }
 
@@ -105,6 +106,53 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
         }
     }
 
+    private void CheckEventHandlerWithoutDedup(DiffFile file, List<Finding> findings)
+    {
+        var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
+
+        for (int i = 0; i < allLines.Count; i++)
+        {
+            var line = allLines[i];
+            if (line.Kind != DiffLineKind.Added) continue;
+            var content = line.Content.Trim();
+
+            // Event subscription pattern: "SomeEvent += Handler;"
+            if (!content.Contains(" += ") || !content.EndsWith(';')) continue;
+            var contentLower = content.ToLowerInvariant();
+            if (!contentLower.Contains("event") && !contentLower.Contains("handler") &&
+                !contentLower.Contains("listener") && !contentLower.Contains("callback")) continue;
+
+            // Exempt += inside a static constructor (runs exactly once -- inherently idempotent)
+            if (IsInsideStaticConstructor(allLines, i)) continue;
+
+            // Exempt if in UI/XAML context (WPF, WinUI events are often attached once per control lifecycle)
+            if (IsUiEventHandler(file.NewPath)) continue;
+
+            // Look for deduplication guard nearby (unsubscribe or bool guard)
+            int start = Math.Max(0, i - 5);
+            int end = Math.Min(allLines.Count, i + 10);
+            var window = allLines[start..end].Select(l => l.Content);
+
+            bool hasDedup = window.Any(l =>
+                l.Contains(" -= ") ||
+                l.Contains("_subscribed", StringComparison.Ordinal) ||
+                l.Contains("_registered", StringComparison.Ordinal) ||
+                l.Contains("_attached", StringComparison.Ordinal));
+
+            if (!hasDedup)
+            {
+                findings.Add(CreateFinding(
+                    file,
+                    summary: $"Event handler registered without deduplication guard in {file.NewPath}.",
+                    evidence: $"Line {line.LineNumber}: {content}",
+                    whyItMatters: "Event handlers registered multiple times fire multiple times, causing duplicate side effects that are hard to debug.",
+                    suggestedAction: "Unsubscribe before subscribing (-= then +=), or guard with a boolean flag to prevent duplicate registration.",
+                    confidence: Confidence.Low,
+                    line: line));
+            }
+        }
+    }
+
     private static bool IsMigrationOrSeedFile(string filePath)
     {
         // Migration files: EF Core migrations directory
@@ -123,6 +171,60 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
         if (filePath.Contains("SeedData", StringComparison.OrdinalIgnoreCase) ||
             filePath.Contains("DataSeeding", StringComparison.OrdinalIgnoreCase))
             return true;
+
+        return false;
+    }
+
+    /// <summary>
+    /// Returns true when the line at <paramref name="idx"/> appears to be inside a static constructor,
+    /// which is inherently idempotent (runs exactly once per AppDomain lifetime).
+    /// Detects the pattern "static ClassName()" or "static()" within the preceding 20 lines.
+    /// </summary>
+    private static bool IsInsideStaticConstructor(List<DiffLine> allLines, int idx)
+    {
+        int searchStart = Math.Max(0, idx - 20);
+        for (int j = idx - 1; j >= searchStart; j--)
+        {
+            var trimmed = allLines[j].Content.Trim();
+            if (!trimmed.StartsWith("static ", StringComparison.Ordinal)) continue;
+
+            var afterStatic = trimmed["static ".Length..].TrimStart();
+            // If the next token is a C# keyword that can be a return type, it's a method not a constructor
+            if (afterStatic.StartsWith("void ", StringComparison.Ordinal) ||
+                afterStatic.StartsWith("Task", StringComparison.Ordinal) ||
+                afterStatic.StartsWith("bool ", StringComparison.Ordinal) ||
+                afterStatic.StartsWith("int ", StringComparison.Ordinal) ||
+                afterStatic.StartsWith("string ", StringComparison.Ordinal) ||
+                afterStatic.StartsWith("async ", StringComparison.Ordinal) ||
+                afterStatic.StartsWith("readonly ", StringComparison.Ordinal) ||
+                afterStatic.StartsWith("class ", StringComparison.Ordinal) ||
+                afterStatic.StartsWith("IEnumerable", StringComparison.Ordinal) ||
+                afterStatic.StartsWith("List<", StringComparison.Ordinal) ||
+                afterStatic.StartsWith("Dictionary<", StringComparison.Ordinal))
+                continue;
+
+            // The remainder should look like "TypeName()" - contains "()"
+            if (afterStatic.Contains("()")) return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Returns true if the file is a UI/XAML context (WPF, WinUI, Blazor)
+    /// where event handler registration patterns are often benign.
+    /// </summary>
+    private static bool IsUiEventHandler(string filePath)
+    {
+        var lower = filePath.ToLowerInvariant();
+        // XAML code-behind files
+        if (lower.EndsWith(".xaml.cs", StringComparison.OrdinalIgnoreCase)) return true;
+        // Blazor component files
+        if (lower.EndsWith(".razor.cs", StringComparison.OrdinalIgnoreCase)) return true;
+        // Common UI namespaces
+        if (lower.Contains("\\ui\\") || lower.Contains("/ui/") ||
+            lower.Contains("\\components\\") || lower.Contains("/components/") ||
+            lower.Contains("\\views\\") || lower.Contains("/views/") ||
+            lower.Contains("\\pages\\") || lower.Contains("/pages/")) return true;
 
         return false;
     }
