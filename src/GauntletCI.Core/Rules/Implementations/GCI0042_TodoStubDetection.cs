@@ -14,8 +14,6 @@ public class GCI0042_TodoStubDetection : RuleBase
     public override string Id => "GCI0042";
     public override string Name => "TODO/Stub Detection";
 
-    private static readonly string[] StubKeywords = ["TODO", "FIXME", "HACK"];
-
     private static bool IsTestFile(string path) =>
         path.Contains("test", StringComparison.OrdinalIgnoreCase) ||
         path.Contains("spec", StringComparison.OrdinalIgnoreCase);
@@ -43,10 +41,10 @@ public class GCI0042_TodoStubDetection : RuleBase
                     // For comment lines, require the marker to be the first token after //
                     // This prevents "hvc1 hack variant" or similar prose matches
                     var commentBody = trimmed[2..].TrimStart();
-                    if (StubKeywords.Any(k => commentBody.StartsWith(k, StringComparison.OrdinalIgnoreCase)))
+                    if (WellKnownPatterns.StubDetectionPatterns.StubKeywords.Any(k => commentBody.StartsWith(k, StringComparison.OrdinalIgnoreCase)))
                         evidence.Add($"Line {line.LineNumber}: {trimmed}");
                 }
-                else if (StubKeywords.Any(k => content.Contains(k, StringComparison.OrdinalIgnoreCase)))
+                else if (WellKnownPatterns.StubDetectionPatterns.StubKeywords.Any(k => content.Contains(k, StringComparison.OrdinalIgnoreCase)))
                     evidence.Add($"Line {line.LineNumber}: {trimmed}");
                 else if (content.Contains("throw new NotImplementedException", StringComparison.Ordinal))
                     evidence.Add($"Line {line.LineNumber}: {trimmed}");

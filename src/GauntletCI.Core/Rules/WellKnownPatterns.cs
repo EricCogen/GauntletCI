@@ -1161,5 +1161,31 @@ internal static class WellKnownPatterns
                    lowerPath.Contains("composition");
         }
     }
+
+    /// <summary>
+    /// Patterns used to detect TODO/stub markers and incomplete code.
+    /// </summary>
+    public static class StubDetectionPatterns
+    {
+        /// <summary>
+        /// Stub marker keywords (TODO, FIXME, HACK) that indicate incomplete code requiring resolution before production.
+        /// Used by GCI0042 to detect stub comments and incomplete implementations.
+        /// </summary>
+        public static readonly string[] StubKeywords = ["TODO", "FIXME", "HACK"];
+    }
+
+    /// <summary>
+    /// Patterns used to detect architectural boundary violations and policy violations.
+    /// </summary>
+    public static class ArchitecturePatterns
+    {
+        /// <summary>
+        /// Regex: matches C# using directives to extract the imported namespace.
+        /// Used by GCI0035 to validate imports against configured forbidden import pairs.
+        /// </summary>
+        public static readonly System.Text.RegularExpressions.Regex UsingRegex =
+            new(@"^\s*using\s+([\w.]+)\s*;", System.Text.RegularExpressions.RegexOptions.Compiled);
+    }
 }
+
 
