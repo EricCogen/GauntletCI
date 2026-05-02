@@ -19,27 +19,6 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
     public override string Id => "GCI0032";
     public override string Name => "Uncaught Exception Path";
 
-    private static readonly string[] ThrowAssertions =
-    [
-        "Assert.Throws", ".Should().Throw", "ThrowsAsync", "ThrowsExceptionAsync", "Throws<"
-    ];
-
-    // Guard-clause throws are expected defensive programming and do not require test coverage
-    // in the same diff. They protect preconditions, not business logic paths.
-    private static readonly string[] GuardClauseThrows =
-    [
-        "throw new ArgumentNullException",
-        "throw new ArgumentException",
-        "throw new ArgumentOutOfRangeException",
-        "throw new ObjectDisposedException",
-        "throw new InvalidOperationException",
-        "throw new NotSupportedException",
-        "throw new FormatException",
-        "throw new IndexOutOfRangeException",
-        "throw new KeyNotFoundException",
-        "throw new UnauthorizedAccessException",
-    ];
-
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -58,7 +37,7 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
             // Guard-clause throws (ArgumentNullException etc.) are defensive programming, not untested logic paths.
             .Count(l => l.Content.Contains("throw new", StringComparison.Ordinal) &&
                         !l.Content.Contains("throw new NotImplementedException", StringComparison.Ordinal) &&
-                        !GuardClauseThrows.Any(g => l.Content.Contains(g, StringComparison.Ordinal)));
+                        !WellKnownPatterns.ExceptionPatterns.GuardClauseThrows.Any(g => l.Content.Contains(g, StringComparison.Ordinal)));
 
         if (throwCount > 0)
         {
@@ -72,7 +51,7 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
                 .ToList();
 
             bool hasThrowAssertions = testLines.Any(line =>
-                ThrowAssertions.Any(assertion => line.Contains(assertion, StringComparison.Ordinal)));
+                WellKnownPatterns.ExceptionPatterns.ThrowAssertions.Any(assertion => line.Contains(assertion, StringComparison.Ordinal)));
 
             if (!hasThrowAssertions)
             {
