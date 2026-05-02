@@ -610,4 +610,167 @@ internal static class WellKnownPatterns
             return null;
         }
     }
+
+    /// <summary>
+    /// File path components indicating security-critical code sections.
+    /// Used by GCI0003 for behavioral change context analysis (confidential boost for security changes).
+    /// </summary>
+    public static readonly string[] SecurityCriticalPaths =
+    [
+        "Http2", "Kestrel", "TLS", "SSL", "Crypto", "Auth",
+        "Uri", "Parsing", "Validation", "Security", "Hmac", "Hash",
+        "Decrypt", "Encrypt", "Certificate", "Token", "Key"
+    ];
+
+    /// <summary>
+    /// Commit message keywords indicating security-focused changes.
+    /// Used by GCI0003 for behavioral change context analysis.
+    /// </summary>
+    public static readonly string[] SecurityKeywords =
+    [
+        "CVE", "security", "vulnerability", "fix", "DoS", "infinite",
+        "loop", "exhaustion", "exception", "error", "RFC", "compliance",
+        "boundary", "validation", "attack", "malicious", "payload", "regression"
+    ];
+
+    /// <summary>
+    /// Test pattern keywords indicating security-focused test additions.
+    /// Used by GCI0003 for behavioral change context analysis.
+    /// </summary>
+    public static readonly string[] SecurityTestPatterns =
+    [
+        "Error", "Exception", "Timeout", "Exhaustion", "Attack",
+        "Craft", "Malicious", "Payload", "CVE", "Boundary", "Validation"
+    ];
+
+    /// <summary>
+    /// Returns <c>true</c> if the given path contains security-critical component names.
+    /// Used by GCI0003 for identifying security-related code changes.
+    /// </summary>
+    public static bool IsSecurityCriticalPath(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return false;
+        return SecurityCriticalPaths.Any(p =>
+            path.Contains(p, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> if the given text contains security-related keywords.
+    /// Used by GCI0003 for analyzing commit messages for security focus.
+    /// </summary>
+    public static bool HasSecurityKeywords(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return false;
+        var lowerText = text.ToLowerInvariant();
+        return SecurityKeywords.Any(k =>
+            lowerText.Contains(k.ToLowerInvariant(), StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> if the given text contains security-related test patterns.
+    /// Used by GCI0003 for detecting security-focused test additions.
+    /// </summary>
+    public static bool HasSecurityTestPattern(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return false;
+        return SecurityTestPatterns.Any(p =>
+            text.Contains(p, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Patterns indicating resource timeout limits in code.
+    /// Used by GCI0020 for detecting timeout removal that could lead to resource exhaustion.
+    /// </summary>
+    public static readonly string[] TimeoutPatterns =
+    [
+        "timeout", "TimeSpan", "TimeoutException", "maxwait", "delay"
+    ];
+
+    /// <summary>
+    /// Patterns indicating iteration or loop count limits in code.
+    /// Used by GCI0020 for detecting iteration limit removal.
+    /// </summary>
+    public static readonly string[] IterationLimitPatterns =
+    [
+        "maxiterations", "max_iterations", "iterationcount", "iteration_count",
+        "loopcount", "loop_count", "maxcount", "max_count", "limit"
+    ];
+
+    /// <summary>
+    /// Patterns indicating resource limits (connections, threads, buffers, pools).
+    /// Used by GCI0020 for detecting dangerous resource limit increases.
+    /// </summary>
+    public static readonly string[] ResourceLimitPatterns =
+    [
+        "maxconnections", "max_connections", "max_threads", "maxthreads",
+        "poolsize", "pool_size", "buffersize", "buffer_size", "maxbuffer"
+    ];
+
+    /// <summary>
+    /// Patterns indicating resource cleanup/disposal operations.
+    /// Used by GCI0020 for detecting removal of resource cleanup code.
+    /// </summary>
+    public static readonly string[] ResourceCleanupPatterns =
+    [
+        "using (", "using(", "Dispose(", "dispose(", "Close()", "close()"
+    ];
+
+    /// <summary>
+    /// Patterns indicating asynchronous operations that can consume resources.
+    /// Used by GCI0020 for detecting unbounded async operations.
+    /// </summary>
+    public static readonly string[] AsyncPatterns =
+    [
+        "Task.Run", "Task.Factory", "await", "Parallel.For", "ThreadPool.QueueUserWorkItem"
+    ];
+
+    /// <summary>
+    /// Test silence/skip patterns that prevent tests from running.
+    /// Used by GCI0041 for detecting disabled or skipped tests that may hide regressions.
+    /// </summary>
+    public static readonly string[] TestSilencePatterns =
+    [
+        "[Ignore]", "[Ignore(", "[Skip]", "[Skip(", ".Skip(", "[Fact(Skip", "[Theory(Skip"
+    ];
+
+    /// <summary>
+    /// Test attribute markers that identify test methods.
+    /// Used by GCI0041 for detecting uninformative test method names.
+    /// </summary>
+    public static readonly string[] TestAttributeMarkers =
+    [
+        "[Fact]", "[Theory]", "[Test]"
+    ];
+
+    /// <summary>
+    /// Assertion keywords used across popular .NET testing frameworks.
+    /// Includes xUnit, NUnit, MSTest, FluentAssertions, Shouldly, Moq, NSubstitute, Playwright, etc.
+    /// Used by GCI0041 for detecting test methods with missing assertions.
+    /// </summary>
+    public static readonly string[] TestAssertionKeywords =
+    [
+        // xUnit / NUnit / MSTest
+        "Assert.", "Xunit.Assert", "NUnit.Framework.Assert",
+        // Bare Assert() call (no dot): MongoDB, classic NUnit style
+        "Assert(",
+        // FluentAssertions / Shouldly
+        "Should", ".ShouldBe", ".ShouldNotBe", ".ShouldBeNull", ".ShouldNotBeNull",
+        ".Must(",
+        // NSubstitute
+        "Received(", "DidNotReceive(",
+        // Moq / FakeItEasy
+        ".Verify(", ".VerifyAll(", "MustHaveHappened", "MustNotHaveHappened",
+        // Common assertion patterns
+        "Throws<", "DoesNotThrow", "ThrowsAsync", "expect(", "Expect(",
+        "IsTrue(", "IsFalse(", "IsNull(", "IsNotNull(", "AreEqual(", "AreNotEqual(",
+        "Contains(", "IsInstanceOf",
+        // Visual comparison / image assertions (ImageSharp etc.)
+        ".CompareToReferenceOutput(",
+        // Azure Provisioning test comparisons and SDK / validation helpers
+        ".Compare(", ".ValidateAsync(", ".Lint(",
+        // Selenium / Playwright browser integration tests (ASP.NET Core E2E)
+        "Browser.",
+        // Event-driven async tests: validates via TaskCompletionSource completion
+        "TaskCompletionSource",
+    ];
 }

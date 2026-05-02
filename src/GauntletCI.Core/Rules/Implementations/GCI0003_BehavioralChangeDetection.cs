@@ -12,36 +12,16 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 internal class BehavioralChangeContextAnalyzer
 {
-    // File paths that indicate security-critical components
-    private static readonly string[] SecurityCriticalPaths = [
-        "Http2", "Kestrel", "TLS", "SSL", "Crypto", "Auth",
-        "Uri", "Parsing", "Validation", "Security", "Hmac", "Hash",
-        "Decrypt", "Encrypt", "Certificate", "Token", "Key"
-    ];
-
-    // Commit message keywords indicating security-focused changes
-    private static readonly string[] SecurityKeywords = [
-        "CVE", "security", "vulnerability", "fix", "DoS", "infinite",
-        "loop", "exhaustion", "exception", "error", "RFC", "compliance",
-        "boundary", "validation", "attack", "malicious", "payload", "regression"
-    ];
-
-    // Test patterns indicating security-focused test additions
-    private static readonly string[] SecurityTestPatterns = [
-        "Error", "Exception", "Timeout", "Exhaustion", "Attack",
-        "Craft", "Malicious", "Payload", "CVE", "Boundary", "Validation"
-    ];
-
     public double CalculateContextBoost(DiffContext diff)
     {
         double boost = 0.0;
 
         // Signal 1: Security-critical file path (+0.20)
-        if (diff.Files.Any(f => IsSecurityCriticalPath(f.NewPath ?? f.OldPath)))
+        if (diff.Files.Any(f => WellKnownPatterns.IsSecurityCriticalPath(f.NewPath ?? f.OldPath)))
             boost += 0.20;
 
         // Signal 2: Security-related commit message (+0.15)
-        if (!string.IsNullOrEmpty(diff.CommitMessage) && HasSecurityKeywords(diff.CommitMessage))
+        if (!string.IsNullOrEmpty(diff.CommitMessage) && WellKnownPatterns.HasSecurityKeywords(diff.CommitMessage))
             boost += 0.15;
 
         // Signal 3: Test changes with security patterns (+0.15)
@@ -49,20 +29,6 @@ internal class BehavioralChangeContextAnalyzer
             boost += 0.15;
 
         return Math.Min(boost, 0.50); // Cap at +0.50 for maximum confidence boost
-    }
-
-    private static bool IsSecurityCriticalPath(string path)
-    {
-        if (string.IsNullOrEmpty(path)) return false;
-        return SecurityCriticalPaths.Any(p => 
-            path.Contains(p, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static bool HasSecurityKeywords(string commitMessage)
-    {
-        var lowerMessage = commitMessage.ToLowerInvariant();
-        return SecurityKeywords.Any(k => 
-            lowerMessage.Contains(k.ToLowerInvariant(), StringComparison.Ordinal));
     }
 
     private static bool HasSecurityTestChanges(DiffContext diff)
@@ -75,8 +41,7 @@ internal class BehavioralChangeContextAnalyzer
         return testFiles.Any(f =>
         {
             var testContent = string.Join(" ", f.AddedLines.Select(l => l.Content));
-            return SecurityTestPatterns.Any(p =>
-                testContent.Contains(p, StringComparison.OrdinalIgnoreCase));
+            return WellKnownPatterns.HasSecurityTestPattern(testContent);
         });
     }
 }

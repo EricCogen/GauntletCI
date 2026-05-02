@@ -20,29 +20,6 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
     public override string Id => "GCI0020";
     public override string Name => "Resource Exhaustion Pattern Detection";
 
-    // Patterns indicating resource limits
-    private static readonly string[] TimeoutPatterns = [
-        "timeout", "TimeSpan", "TimeoutException", "maxwait", "delay"
-    ];
-
-    private static readonly string[] IterationLimitPatterns = [
-        "maxiterations", "max_iterations", "iterationcount", "iteration_count",
-        "loopcount", "loop_count", "maxcount", "max_count", "limit"
-    ];
-
-    private static readonly string[] ResourceLimitPatterns = [
-        "maxconnections", "max_connections", "max_threads", "maxthreads",
-        "poolsize", "pool_size", "buffersize", "buffer_size", "maxbuffer"
-    ];
-
-    private static readonly string[] ResourceCleanupPatterns = [
-        "using (", "using(", "Dispose(", "dispose(", "Close()", "close()"
-    ];
-
-    private static readonly string[] AsyncPatterns = [
-        "Task.Run", "Task.Factory", "await", "Parallel.For", "ThreadPool.QueueUserWorkItem"
-    ];
-
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -68,7 +45,7 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
 
             // Look for removed timeout-related lines
             var removedTimeouts = file.RemovedLines
-                .Where(l => TimeoutPatterns.Any(p => 
+                .Where(l => WellKnownPatterns.TimeoutPatterns.Any(p => 
                     l.Content.Contains(p, StringComparison.OrdinalIgnoreCase) &&
                     (l.Content.Contains("=", StringComparison.Ordinal) || 
                      l.Content.Contains("(", StringComparison.Ordinal))))
@@ -78,7 +55,7 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
 
             // Check if timeout is replaced with MaxValue or removed without replacement
             var hasTimeoutInAdded = file.AddedLines
-                .Any(l => TimeoutPatterns.Any(p => 
+                .Any(l => WellKnownPatterns.TimeoutPatterns.Any(p => 
                     l.Content.Contains(p, StringComparison.OrdinalIgnoreCase)));
 
             if (!hasTimeoutInAdded)
@@ -105,14 +82,14 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
                 continue;
 
             var removedLimits = file.RemovedLines
-                .Where(l => IterationLimitPatterns.Any(p =>
+                .Where(l => WellKnownPatterns.IterationLimitPatterns.Any(p =>
                     l.Content.Contains(p, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
 
             if (removedLimits.Count == 0) continue;
 
             var hasIterationLimitInAdded = file.AddedLines
-                .Any(l => IterationLimitPatterns.Any(p =>
+                .Any(l => WellKnownPatterns.IterationLimitPatterns.Any(p =>
                     l.Content.Contains(p, StringComparison.OrdinalIgnoreCase)));
 
             if (!hasIterationLimitInAdded)
@@ -176,7 +153,7 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
                 continue;
 
             var removedCleanup = file.RemovedLines
-                .Where(l => ResourceCleanupPatterns.Any(p =>
+                .Where(l => WellKnownPatterns.ResourceCleanupPatterns.Any(p =>
                     l.Content.Contains(p, StringComparison.Ordinal)))
                 .ToList();
 
@@ -184,7 +161,7 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
 
             // Check if cleanup is added back in a different form
             var hasCleanupInAdded = file.AddedLines
-                .Any(l => ResourceCleanupPatterns.Any(p =>
+                .Any(l => WellKnownPatterns.ResourceCleanupPatterns.Any(p =>
                     l.Content.Contains(p, StringComparison.Ordinal)));
 
             if (!hasCleanupInAdded)
@@ -232,7 +209,7 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
 
     private static bool RemovalHasResourceAllocation(DiffLine line)
     {
-        return ResourceLimitPatterns.Any(p =>
+        return WellKnownPatterns.ResourceLimitPatterns.Any(p =>
             line.Content.Contains(p, StringComparison.OrdinalIgnoreCase)) &&
             line.Content.Contains("=", StringComparison.Ordinal);
     }
