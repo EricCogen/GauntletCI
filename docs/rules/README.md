@@ -21,3 +21,19 @@ A finding is not a claim that the code is definitely broken. A finding is eviden
 | [GCI0010](GCI0010-hardcoding-and-configuration.md) | Hardcoding and Configuration | Security and Configuration | Stable |
 
 For the full rule reference including all 30 rules, see [docs/rules.md](../rules.md).
+
+## Best Practices Guide
+
+Beyond deterministic risk detection, GauntletCI includes a **[Best Practices Guide](../best-practices.md)** covering 30 patterns for C# code quality across 14 categories:
+
+- **Naming** (clarity and convention)
+- **Control Flow** (readability)
+- **Exception Handling** (reliability)
+- **Async Patterns** (safety)
+- **Collections** (performance and correctness)
+- **Security** (protection against known vectors)
+- **API Design** (usability and encapsulation)
+- **Testing** (regression prevention)
+- **And 6 more...**
+
+Best practices are *advisory by default* and complement the deterministic GCI rules, which focus on behavioral safety and correctness.
