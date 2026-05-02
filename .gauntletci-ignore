@@ -22,8 +22,14 @@ GCI0006:src/GauntletCI.Core/Rules/Implementations/GCI0012_SecurityRisk.cs
 # These patterns naturally trigger the rules they represent (e.g., "new FileStream("
 # triggers GCI0024, "new HttpClient(" triggers GCI0039). These are pattern DATA,
 # not actual code violations. Suppress all affected rules for this file.
+# GCI0003 and GCI0015 are suppressed because consolidation moves guard logic
+# and exception handling patterns into this centralized file.
+# GCI0032 is suppressed because exception handling patterns are centralized here.
+GCI0003:src/GauntletCI.Core/Rules/WellKnownPatterns.cs
 GCI0007:src/GauntletCI.Core/Rules/WellKnownPatterns.cs
+GCI0015:src/GauntletCI.Core/Rules/WellKnownPatterns.cs
 GCI0024:src/GauntletCI.Core/Rules/WellKnownPatterns.cs
+GCI0032:src/GauntletCI.Core/Rules/WellKnownPatterns.cs
 GCI0038:src/GauntletCI.Core/Rules/WellKnownPatterns.cs
 GCI0039:src/GauntletCI.Core/Rules/WellKnownPatterns.cs
 GCI0042:src/GauntletCI.Core/Rules/WellKnownPatterns.cs
