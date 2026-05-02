@@ -17,15 +17,8 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
     public override string Id => "GCI0043";
     public override string Name => "Nullability and Type Safety";
 
-    private static readonly string[] NullablePragmaCodes =
-        ["nullable", "CS8600", "CS8601", "CS8602", "CS8603", "CS8604"];
-
     private static readonly string[] NullCheckPatterns =
         ["is null", "== null", "!= null", "?? ", "is not null"];
-
-    private static bool IsTestFile(string path) =>
-        path.Contains("test", StringComparison.OrdinalIgnoreCase) ||
-        path.Contains("spec", StringComparison.OrdinalIgnoreCase);
 
     private static bool IsNullForgivingLine(string content)
     {
@@ -43,20 +36,12 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
         return false;
     }
 
-    private static bool IsPragmaNullableDisable(string content)
-    {
-        if (!content.Contains("#pragma warning disable", StringComparison.OrdinalIgnoreCase))
-            return false;
-        return NullablePragmaCodes.Any(code =>
-            content.Contains(code, StringComparison.OrdinalIgnoreCase));
-    }
-
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
         var findings = new List<Finding>();
 
-        foreach (var file in context.Diff.Files.Where(f => !IsTestFile(f.NewPath)))
+        foreach (var file in context.Diff.Files.Where(f => !WellKnownPatterns.IsTestFile(f.NewPath)))
         {
             CheckNullForgiving(file, findings);
             CheckPragmaDisable(file, findings);
@@ -93,7 +78,7 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
     {
         foreach (var line in file.AddedLines)
         {
-            if (!IsPragmaNullableDisable(line.Content)) continue;
+            if (!WellKnownPatterns.IsPragmaNullableDisable(line.Content)) continue;
 
             findings.Add(CreateFinding(
                 file,

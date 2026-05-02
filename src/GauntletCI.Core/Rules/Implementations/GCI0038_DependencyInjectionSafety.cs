@@ -16,28 +16,7 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
     public override string Id => "GCI0038";
     public override string Name => "Dependency Injection Safety";
 
-    private static readonly string[] ServiceLocatorPatterns =
-    [
-        "provider.GetService<",
-        "provider.GetRequiredService<",
-        "serviceProvider.GetService<",
-        "serviceProvider.GetRequiredService<",
-        "_serviceProvider.GetService<",
-        "_serviceProvider.GetRequiredService<",
-    ];
 
-    private static readonly Regex DirectInstantiationRegex =
-        new(@"new [A-Z][a-zA-Z]*(Service|Repository|Manager|Handler|Client)\s*\(", RegexOptions.Compiled);
-
-    private static readonly string[] DirectInstantiationExclusions =
-        [
-            "//",  // comment
-            "Mock<", "Fake<", "Stub<", "Spy<",  // test doubles
-            "EventHandler(", "new EventHandler",  // event handlers
-            "+= new",  // event subscription
-            "var mock", "var fake", "var stub", "var spy",  // test variable patterns
-            "CreateMock", "CreateFake", "CreateStub",  // test factory methods
-        ];
 
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
@@ -55,15 +34,7 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
         return Task.FromResult(findings);
     }
 
-    private static bool IsInfrastructureFile(string path)
-    {
-        var fileName = Path.GetFileName(path);
-        if (string.Equals(fileName, "Program.cs", StringComparison.OrdinalIgnoreCase)) return true;
-        if (string.Equals(fileName, "Startup.cs", StringComparison.OrdinalIgnoreCase)) return true;
-        if (fileName.EndsWith("Extensions.cs", StringComparison.OrdinalIgnoreCase)) return true;
-        if (path.Contains("ServiceCollection", StringComparison.OrdinalIgnoreCase)) return true;
-        return false;
-    }
+    private static bool IsInfrastructureFile(string path) => WellKnownPatterns.IsInfrastructureFile(path);
 
     private static bool IsTestFile(string path) =>
         path.Contains("test", StringComparison.OrdinalIgnoreCase) ||
@@ -76,7 +47,7 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
 
         foreach (var line in file.AddedLines)
         {
-            var matched = ServiceLocatorPatterns.FirstOrDefault(
+            var matched = WellKnownPatterns.ServiceLocatorPatterns.FirstOrDefault(
                 p => line.Content.Contains(p, StringComparison.Ordinal));
 
             if (matched is null) continue;
@@ -101,11 +72,11 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
         {
             // Early exit for common exclusions
             var lineContent = line.Content;
-            if (DirectInstantiationExclusions.Any(e => 
+            if (WellKnownPatterns.DirectInstantiationExclusions.Any(e => 
                 lineContent.Contains(e, StringComparison.OrdinalIgnoreCase)))
                 continue;
 
-            if (!DirectInstantiationRegex.IsMatch(lineContent)) continue;
+            if (!WellKnownPatterns.DirectInstantiationRegex.IsMatch(lineContent)) continue;
 
             // Additional context guards
             var trimmed = lineContent.Trim();
