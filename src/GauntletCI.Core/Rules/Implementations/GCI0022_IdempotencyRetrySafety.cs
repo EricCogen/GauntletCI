@@ -15,18 +15,6 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
     public override string Id => "GCI0022";
     public override string Name => "Idempotency & Retry Safety";
 
-    private static readonly string[] IdempotencySignals =
-    [
-        "IdempotencyKey", "Idempotency-Key", "idempotencyKey", "idempotent",
-        "dedup", "Dedup", "RequestId", "requestId", "MessageId", "messageId"
-    ];
-
-    private static readonly string[] UpsertPatterns =
-    [
-        "ON DUPLICATE KEY", "ON CONFLICT", "INSERT OR REPLACE",
-        "INSERT OR IGNORE", "MERGE INTO", "UPSERT"
-    ];
-
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -63,7 +51,7 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
             var window = allLines[start..end].Select(l => l.Content);
 
             bool hasIdempotency = window.Any(l =>
-                IdempotencySignals.Any(sig => l.Contains(sig, StringComparison.OrdinalIgnoreCase)));
+                WellKnownPatterns.IdempotencyPatterns.IdempotencySignals.Any(sig => l.Contains(sig, StringComparison.OrdinalIgnoreCase)));
 
             if (!hasIdempotency)
             {
@@ -91,7 +79,7 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
             if (!content.Contains("INSERT INTO", StringComparison.OrdinalIgnoreCase)) continue;
 
             // Check if this line or nearby lines have upsert protection
-            bool hasUpsert = UpsertPatterns.Any(p => content.Contains(p, StringComparison.OrdinalIgnoreCase));
+            bool hasUpsert = WellKnownPatterns.IdempotencyPatterns.UpsertPatterns.Any(p => content.Contains(p, StringComparison.OrdinalIgnoreCase));
             if (!hasUpsert)
             {
                 findings.Add(CreateFinding(

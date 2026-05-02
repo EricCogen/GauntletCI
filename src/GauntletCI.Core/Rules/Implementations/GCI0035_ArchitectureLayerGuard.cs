@@ -16,9 +16,6 @@ public class GCI0035_ArchitectureLayerGuard : RuleBase, IConfigurableRule
     public override string Id => "GCI0035";
     public override string Name => "Architecture Layer Guard";
 
-    private static readonly Regex UsingRegex =
-        new(@"^\s*using\s+([\w.]+)\s*;", RegexOptions.Compiled);
-
     private Dictionary<string, List<string>> _forbiddenImports = new();
 
     public void Configure(GauntletConfig config)
@@ -40,7 +37,7 @@ public class GCI0035_ArchitectureLayerGuard : RuleBase, IConfigurableRule
         {
             foreach (var line in file.AddedLines)
             {
-                var match = UsingRegex.Match(line.Content);
+                var match = WellKnownPatterns.ArchitecturePatterns.UsingRegex.Match(line.Content);
                 if (!match.Success) continue;
 
                 var importedNs = match.Groups[1].Value;

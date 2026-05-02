@@ -15,12 +15,6 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
     public override string Id => "GCI0021";
     public override string Name => "Data & Schema Compatibility";
 
-    private static readonly string[] SerializationAttributes =
-    [
-        "[JsonProperty", "[JsonPropertyName", "[Column(", "[DataMember",
-        "[BsonElement", "[Key]", "[ForeignKey", "[Required]", "[MaxLength"
-    ];
-
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -45,7 +39,7 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
             var content = line.Content.Trim();
             // Attributes always appear at the start of a line (after trimming).
             // Use StartsWith to avoid matching indexer syntax like dictionary[key] against [Key].
-            foreach (var attr in SerializationAttributes)
+            foreach (var attr in WellKnownPatterns.DataSchemaPatterns.SerializationAttributes)
             {
                 if (!content.StartsWith(attr, StringComparison.OrdinalIgnoreCase)) continue;
 
@@ -145,7 +139,7 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
             // Only flag members that have an explicit serialization attribute on the preceding
             // removed line: this ensures we only flag truly serialized enums (e.g. [JsonProperty("x")]).
             // Internal/API enums without serialization attributes are not a schema compat concern.
-            bool hasPrecedingSerializationAttr = SerializationAttributes.Any(a =>
+            bool hasPrecedingSerializationAttr = WellKnownPatterns.DataSchemaPatterns.SerializationAttributes.Any(a =>
                 lastRemovedInEnum.TrimStart().StartsWith(a, StringComparison.OrdinalIgnoreCase));
 
             lastRemovedInEnum = content;

@@ -14,18 +14,6 @@ public class GCI0039_ExternalServiceSafety : RuleBase
     public override string Id => "GCI0039";
     public override string Name => "External Service Safety";
 
-    private static readonly string[] HttpCallMethods =
-    [
-        ".GetAsync(", ".PostAsync(", ".PutAsync(", ".DeleteAsync(", ".SendAsync("
-    ];
-
-    // Subset used for CheckMissingCancellationToken: .DeleteAsync( is excluded because
-    // many non-HTTP SDKs (DynamoDB, CosmosDB, etc.) expose identically-named methods.
-    private static readonly string[] CtCheckHttpMethods =
-    [
-        ".GetAsync(", ".PostAsync(", ".PutAsync(", ".SendAsync("
-    ];
-
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -122,7 +110,7 @@ public class GCI0039_ExternalServiceSafety : RuleBase
             var content = line.Content;
             if (content.TrimStart().StartsWith("//")) continue;
 
-            bool hasHttpCall = CtCheckHttpMethods.Any(m => content.Contains(m));
+            bool hasHttpCall = WellKnownPatterns.ExternalServicePatterns.CtCheckHttpMethods.Any(m => content.Contains(m));
             if (!hasHttpCall) continue;
 
             // Skip if this is a static/injected client being reused (pattern: _client.GetAsync)

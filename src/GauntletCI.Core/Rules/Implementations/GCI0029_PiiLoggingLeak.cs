@@ -39,7 +39,7 @@ public class GCI0029_PiiLoggingLeak : RuleBase
                 if (trimmed.StartsWith("//") || trimmed.StartsWith("*")) continue;
 
                 bool hasLogPrefix = false;
-                foreach (var prefix in WellKnownPatterns.LogPrefixes)
+                foreach (var prefix in WellKnownPatterns.PiiDetectionPatterns.LogPrefixes)
                 {
                     if (content.Contains(prefix, StringComparison.Ordinal))
                     { hasLogPrefix = true; break; }
@@ -47,11 +47,11 @@ public class GCI0029_PiiLoggingLeak : RuleBase
                 if (!hasLogPrefix) continue;
 
                 // Skip if data is being hashed, tokenized, or otherwise transformed before logging
-                if (IsDataTransformed(content))
+                if (WellKnownPatterns.PiiDetectionPatterns.IsDataTransformed(content))
                     continue;
 
                 string? matchedTerm = null;
-                foreach (var term in WellKnownPatterns.PiiTerms)
+                foreach (var term in WellKnownPatterns.PiiDetectionPatterns.PiiTerms)
                 {
                     if (ContainsPiiTerm(content, term))
                     { matchedTerm = term; break; }
@@ -70,33 +70,6 @@ public class GCI0029_PiiLoggingLeak : RuleBase
         }
 
         return Task.FromResult(findings);
-    }
-
-    private static bool IsDataTransformed(string content)
-    {
-        // Check for common hashing, tokenization, or redaction patterns
-        var transformPatterns = new[]
-        {
-            "Hash", "hash", "SHA", "HMAC", "MD5", "SHA256",
-            "Token", "token", "anonymize", "Anonymize", "redact", "Redact",
-            "Encrypt", "encrypt", "SecureString", "Mask", "mask"
-        };
-
-        if (transformPatterns.Any(p => content.Contains(p)))
-            return true;
-
-        // Skip logging of reflection properties (Type.FullName, Assembly.FullName, etc.)
-        // These are ubiquitous in .NET code and are NOT person data
-        var reflectionPatterns = new[]
-        {
-            ".FullName", ".Name", "Type.", "Assembly.", "PropertyInfo.", "MethodInfo.",
-            "FieldInfo.", "ParameterInfo.", "Reflection."
-        };
-
-        if (reflectionPatterns.Any(p => content.Contains(p)))
-            return true;
-
-        return false;
     }
 
     private static bool ContainsPiiTerm(string content, string term)

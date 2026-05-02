@@ -34,7 +34,7 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
         return Task.FromResult(findings);
     }
 
-    private static bool IsInfrastructureFile(string path) => WellKnownPatterns.IsInfrastructureFile(path);
+    private static bool IsInfrastructureFile(string path) => WellKnownPatterns.DependencyInjectionPatterns.IsInfrastructureFile(path);
 
     private static bool IsTestFile(string path) =>
         path.Contains("test", StringComparison.OrdinalIgnoreCase) ||
@@ -47,7 +47,7 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
 
         foreach (var line in file.AddedLines)
         {
-            var matched = WellKnownPatterns.ServiceLocatorPatterns.FirstOrDefault(
+            var matched = WellKnownPatterns.DependencyInjectionPatterns.ServiceLocatorPatterns.FirstOrDefault(
                 p => line.Content.Contains(p, StringComparison.Ordinal));
 
             if (matched is null) continue;
@@ -72,11 +72,11 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
         {
             // Early exit for common exclusions
             var lineContent = line.Content;
-            if (WellKnownPatterns.DirectInstantiationExclusions.Any(e => 
+            if (WellKnownPatterns.DependencyInjectionPatterns.DirectInstantiationExclusions.Any(e => 
                 lineContent.Contains(e, StringComparison.OrdinalIgnoreCase)))
                 continue;
 
-            if (!WellKnownPatterns.DirectInstantiationRegex.IsMatch(lineContent)) continue;
+            if (!WellKnownPatterns.DependencyInjectionPatterns.DirectInstantiationRegex.IsMatch(lineContent)) continue;
 
             // Additional context guards
             var trimmed = lineContent.Trim();

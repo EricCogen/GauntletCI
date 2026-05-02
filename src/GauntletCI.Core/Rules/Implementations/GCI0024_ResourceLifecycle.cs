@@ -22,71 +22,6 @@ public class GCI0024_ResourceLifecycle : RuleBase
     public override string Id => "GCI0024";
     public override string Name => "Resource Lifecycle";
 
-    // Explicit known-type prefixes (fast path)
-    private static readonly string[] DisposableTypes =
-    [
-        "new FileStream(", "new StreamWriter(", "new StreamReader(", "new MemoryStream(",
-        "new SqlConnection(", "new SqlCommand(", "new SqlDataReader(",
-        "new HttpClient(", "new TcpClient(", "new UdpClient(", "new Socket(",
-        "new Mutex(", "new Semaphore(", "new SemaphoreSlim(",
-        "new EventWaitHandle(", "new ManualResetEvent(",
-        "new BinaryWriter(", "new BinaryReader(",
-        "new GZipStream(", "new DeflateStream(", "new CryptoStream(",
-        "new X509Certificate(", "new RSACryptoServiceProvider("
-    ];
-
-    // Suffix-based heuristic (from GCI0030): catches any type whose name ends in these.
-    // Note: "Command" is intentionally excluded; SqlCommand is covered by DisposableTypes above,
-    // and System.CommandLine.Command is not IDisposable: including the suffix causes FPs.
-    private static readonly string[] DisposableSuffixes =
-    [
-        "Stream", "Reader", "Writer", "Connection", "Client",
-        "Listener", "Channel", "Context", "Provider", "Session", "Transaction",
-        "Certificate", "Timer"
-        // Enumerator removed: custom enumerators are typically short-lived structs;
-        // IEnumerator disposal in foreach is compiler-managed.
-        // Scope removed: diagnostic/logging scopes are typically managed at higher level
-    ];
-
-    // Types whose lifecycle detection is owned by another rule. Suppress in GCI0024 to avoid
-    // double-reporting. Note: these types ARE disposable; the suppression is ownership-based,
-    // not because they are non-disposable.
-    // - HttpClient: owned by GCI0039 (External Service Safety), which enforces IHttpClientFactory.
-    private static readonly HashSet<string> GCI0039OwnedTypes = new(StringComparer.Ordinal)
-    {
-        "HttpClient",
-    };
-    // The suffix heuristic is skipped for these to avoid false positives.
-    private static readonly HashSet<string> KnownNonDisposableTypes = new(StringComparer.Ordinal)
-    {
-        // Microsoft.CodeAnalysis / Roslyn analysis context types
-        "SyntaxContext", "AnalysisContext", "SemanticContext",
-        "SyntaxNodeAnalysisContext", "OperationAnalysisContext", "CodeBlockAnalysisContext",
-        // System.CommandLine types
-        "InvocationContext",
-        // ASP.NET Core filter/action context types (not disposable on their own)
-        "HttpContext", "RouteContext", "FilterContext", "ActionContext",
-        "AuthorizationFilterContext", "ResourceExecutingContext", "ResourceExecutedContext",
-        "ResultExecutingContext", "ResultExecutedContext", "ExceptionContext",
-        // Other common non-disposable context types
-        "ValidationContext", "NavigationContext",
-        // OpenTelemetry value types
-        "PropagationContext", "ActivityContext", "SpanContext",
-        // FluentAssertions / comparison context types
-        "MemberSelectionContext", "EquivalencyValidationContext", "CreatorPropertyContext",
-        "StrategyBuilderContext", "SelectionContext",
-        // WPF/WinForms SynchronizationContext: SynchronizationContext is not IDisposable
-        "SynchronizationContext", "DispatcherSynchronizationContext",
-        "DispatcherQueueSynchronizationContext",
-        // Logging/diagnostic adapter scopes: short-lived, often used in using expressions at higher level
-        "LoggingAdapterScope", "LoggerScope", "DiagnosticScope", "ActivityScope",
-        // Enumerators: typically short-lived value types or immediately consumed
-        "Enumerator", "WhiteSpaceSegmentEnumerator", "TokenEnumerator",
-    };
-
-    private static readonly Regex NewTypeRegex =
-        new(@"new ([A-Z][A-Za-z0-9]+)\(", RegexOptions.Compiled);
-
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -120,7 +55,7 @@ public class GCI0024_ResourceLifecycle : RuleBase
             if (typeName is null) continue;
 
             // Defer to the owning rule (GCI0039) rather than double-reporting.
-            if (GCI0039OwnedTypes.Contains(typeName)) continue;
+            if (WellKnownPatterns.ResourcePatterns.OwnedByOtherRules.Contains(typeName)) continue;
 
             // Skip: `return new X(...)` or `return foo(new X(...))`: caller takes ownership.
             var trimmed = content.TrimStart();
@@ -170,23 +105,23 @@ public class GCI0024_ResourceLifecycle : RuleBase
     private static (string? TypeName, bool IsExplicit) MatchDisposableType(string content)
     {
         // Fast path: explicit known types: High confidence
-        foreach (var knownType in DisposableTypes)
+        foreach (var knownType in WellKnownPatterns.ResourcePatterns.DisposableTypes)
         {
             if (content.Contains(knownType, StringComparison.Ordinal))
                 return (knownType.Replace("new ", "").TrimEnd('('), true);
         }
 
         // Suffix heuristic: Medium confidence
-        var match = NewTypeRegex.Match(content);
+        var match = WellKnownPatterns.ResourcePatterns.NewTypeRegex.Match(content);
         if (match.Success)
         {
             var name = match.Groups[1].Value;
-            foreach (var suffix in DisposableSuffixes)
+            foreach (var suffix in WellKnownPatterns.ResourcePatterns.DisposableSuffixes)
             {
                 if (name.EndsWith(suffix, StringComparison.Ordinal))
                 {
                     // Skip types known NOT to be disposable despite having a disposable-looking suffix
-                    if (KnownNonDisposableTypes.Contains(name)) return (null, false);
+                    if (WellKnownPatterns.ResourcePatterns.KnownNonDisposableTypes.Contains(name)) return (null, false);
                     return (name, false);
                 }
             }
