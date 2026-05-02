@@ -48,26 +48,26 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 if (!HasUnsafeValueAccess(content)) continue;
 
                 // Skip comment lines: .Value in a comment is not executable code
-                if (GuardPatterns.IsCommentLine(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.IsCommentLine(content)) continue;
 
                 // Skip expression-bodied property/method declarations: the .Value access IS
                 // the declaration body (e.g. public override object? Value => _inner.Value;)
-                if (GuardPatterns.IsExpressionBodied(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.IsExpressionBodied(content)) continue;
 
                 // Skip KeyValuePair / Dictionary iteration: .Key and .Value together
                 // means this is safe dict-entry access, not a Nullable<T>.Value dereference
-                if (GuardPatterns.IsKeyValuePairAccess(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.IsKeyValuePairAccess(content)) continue;
 
                 // Skip when .Value is part of a LINQ projection (.Select(x => x.Value), etc.)
                 // LINQ projections are intentionally mapping nullable to non-nullable
-                if (GuardPatterns.IsLinqValueMapping(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.IsLinqValueMapping(content)) continue;
 
                 // Skip when .Value itself is null-checked inline or when HasValue guards it
-                if (GuardPatterns.HasValueNullCheck(content) || GuardPatterns.HasHasValueGuard(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.HasValueNullCheck(content) || WellKnownPatterns.GuardPatterns.HasHasValueGuard(content)) continue;
 
                 // Skip IOptions<T>.Value / IOptionsSnapshot<T>.Value / IOptionsMonitor<T>.Value
                 // These are DI-injected configuration wrappers, not Nullable<T>
-                if (GuardPatterns.IsIOptionsValue(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.IsIOptionsValue(content)) continue;
 
                 // NRT-aware: Skip Nullable<T>.Value when T is a non-nullable reference type in NRT context
                 // In NRT-enabled files, Nullable<string> where string is non-nullable is safe (always has value)
@@ -118,10 +118,10 @@ public class GCI0006_EdgeCaseHandling : RuleBase
 
                 // Override and sealed methods cannot change the parameter contract declared by the base
                 // class or interface: enforcing null validation here is incorrect
-                if (GuardPatterns.IsOverrideOrSealedMethod(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.IsOverrideOrSealedMethod(content)) continue;
 
                 // Abstract methods, delegate declarations, and partial stubs have no body
-                if (GuardPatterns.IsAbstractOrDelegateOrPartial(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.IsAbstractOrDelegateOrPartial(content)) continue;
 
                 // Constructors have no return type: skip them
                 // A method signature has: <accessModifier> <returnType> <name>(<params>)

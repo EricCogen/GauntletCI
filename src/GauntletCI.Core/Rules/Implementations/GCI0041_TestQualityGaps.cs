@@ -61,11 +61,10 @@ public class GCI0041_TestQualityGaps : RuleBase
     private static bool IsTestFile(DiffFile file)
     {
         var path = file.NewPath;
-        // Skip test-data directories used as test subjects by the framework itself.
+        // Skip test-data directories used as test subjects by the framework itself (not actual tests).
         if (path.Contains("testdata", StringComparison.OrdinalIgnoreCase))
             return false;
-        return path.Contains("test", StringComparison.OrdinalIgnoreCase)
-            || path.Contains("spec", StringComparison.OrdinalIgnoreCase);
+        return WellKnownPatterns.IsTestFile(path);
     }
 
     private void CheckSilencedTests(DiffFile file, List<Finding> findings)
@@ -140,9 +139,7 @@ public class GCI0041_TestQualityGaps : RuleBase
     private void CheckEmptyAssertions(DiffFile file, List<Finding> findings)
     {
         // Skip documentation/sample files that intentionally use test attributes without assertions.
-        var path = file.NewPath;
-        if (path.Contains("snippet", StringComparison.OrdinalIgnoreCase) ||
-            path.Contains("sample", StringComparison.OrdinalIgnoreCase))
+        if (WellKnownPatterns.GuardPatterns.IsDocumentationFile(file.NewPath))
             return;
 
         var addedLines = file.AddedLines.ToList();
