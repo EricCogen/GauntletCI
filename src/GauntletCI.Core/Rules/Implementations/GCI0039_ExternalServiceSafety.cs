@@ -50,6 +50,9 @@ public class GCI0039_ExternalServiceSafety : RuleBase
 
     private void CheckHttpClientInstantiation(DiffFile file, List<Finding> findings)
     {
+        // Skip gRPC files entirely - gRPC Channel initialization IS the timeout mechanism
+        if (IsGrpcRelatedFile(file.NewPath)) return;
+
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
@@ -86,6 +89,17 @@ public class GCI0039_ExternalServiceSafety : RuleBase
             || l.Content.Contains("HttpClientFactoryOptions", StringComparison.Ordinal));
 
         if (isFactoryConfig) return;
+
+        // gRPC channels manage timeouts at the channel/connection level via GrpcChannelOptions.
+        // HttpClient is typically wrapping a gRPC handler, so per-client timeout is not applicable.
+        bool usesGrpcChannel = addedLines.Any(l =>
+            l.Content.Contains("GrpcChannel", StringComparison.Ordinal)
+            || l.Content.Contains("ChannelOptions", StringComparison.Ordinal)
+            || l.Content.Contains("GrpcChannelOptions", StringComparison.Ordinal)
+            || l.Content.Contains("HttpClientHandler", StringComparison.Ordinal)
+                && addedLines.Any(hl => hl.Content.Contains("GrpcChannel", StringComparison.Ordinal)));
+
+        if (usesGrpcChannel) return;
 
         bool hasTimeoutConfig = addedLines.Any(l =>
             l.Content.Contains(".Timeout =")
@@ -169,5 +183,13 @@ public class GCI0039_ExternalServiceSafety : RuleBase
         return injectionPatterns.Any(p =>
             content.Contains(p, StringComparison.Ordinal) &&
             CtCheckHttpMethods.Any(m => content.Contains(m)));
+    }
+
+    private static bool IsGrpcRelatedFile(string path)
+    {
+        // gRPC files manage connection timeout at the channel level, not per-HttpClient
+        return path.Contains("grpc", StringComparison.OrdinalIgnoreCase)
+            || path.Contains("channel", StringComparison.OrdinalIgnoreCase)
+            || path.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase); // gRPC generated code
     }
 }

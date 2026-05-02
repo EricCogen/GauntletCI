@@ -176,4 +176,57 @@ public class GCI0039Tests
 
         Assert.Empty(findings);
     }
+
+    [Fact]
+    public async Task GrpcChannelWithHttpClient_ShouldNotFlagTimeout()
+    {
+        var raw = """
+            diff --git a/src/GrpcService/GrpcClientConfig.cs b/src/GrpcService/GrpcClientConfig.cs
+            index abc..def 100644
+            --- a/src/GrpcService/GrpcClientConfig.cs
+            +++ b/src/GrpcService/GrpcClientConfig.cs
+            @@ -1,3 +1,6 @@
+             public class GrpcClientConfig {
+            +    var channel = GrpcChannel.ForAddress("https://api.example.com", new GrpcChannelOptions { MaxReceiveMessageSize = null });
+            +    var handler = new HttpClientHandler();
+            +    var client = new HttpClient(handler);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        // Should not flag timeout because GrpcChannel is used
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("HttpClient used without explicit timeout"));
+        // But may flag direct instantiation
+        var instantiationFinding = findings.FirstOrDefault(f => f.Summary.Contains("Direct HttpClient instantiation"));
+        if (instantiationFinding != null)
+        {
+            // gRPC file, so should be skipped
+            Assert.Empty(findings);
+        }
+    }
+
+    [Fact]
+    public async Task HttpClientWithGrpcChannelOptions_ShouldNotFlagTimeout()
+    {
+        var raw = """
+            diff --git a/src/Config.cs b/src/Config.cs
+            index abc..def 100644
+            --- a/src/Config.cs
+            +++ b/src/Config.cs
+            @@ -1,3 +1,5 @@
+             public class Config {
+            +    var httpClientHandler = new HttpClientHandler();
+            +    var httpClient = new HttpClient(httpClientHandler);
+            +    var options = new GrpcChannelOptions { HttpClient = httpClient };
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        // Should not flag timeout because GrpcChannelOptions is used
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("HttpClient used without explicit timeout"));
+    }
 }
