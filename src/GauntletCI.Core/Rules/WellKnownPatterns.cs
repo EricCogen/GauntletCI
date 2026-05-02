@@ -826,6 +826,32 @@ internal static class WellKnownPatterns
     ];
 
     /// <summary>
+    /// Patterns used to detect idempotency and retry safety issues.
+    /// </summary>
+    public static class IdempotencyPatterns
+    {
+        /// <summary>
+        /// Idempotency key signals (headers, parameters, field names) indicating idempotent request handling.
+        /// Used by GCI0022 to detect HTTP POST endpoints with idempotency key support.
+        /// </summary>
+        public static readonly string[] IdempotencySignals =
+        [
+            "IdempotencyKey", "Idempotency-Key", "idempotencyKey", "idempotent",
+            "dedup", "Dedup", "RequestId", "requestId", "MessageId", "messageId"
+        ];
+
+        /// <summary>
+        /// SQL/database upsert patterns indicating conflict resolution for duplicate inserts.
+        /// Used by GCI0022 to detect raw INSERT statements without upsert guards.
+        /// </summary>
+        public static readonly string[] UpsertPatterns =
+        [
+            "ON DUPLICATE KEY", "ON CONFLICT", "INSERT OR REPLACE",
+            "INSERT OR IGNORE", "MERGE INTO", "UPSERT"
+        ];
+    }
+
+    /// <summary>
     /// Returns <c>true</c> if the given HTTP request content contains HTTP context signal patterns.
     /// Used by GCI0015 to determine whether mass-assignment and unsafe cast checks apply.
     /// </summary>
