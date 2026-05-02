@@ -862,6 +862,7 @@ internal static class WellKnownPatterns
         public static bool HasLinqCall(string content)
         {
             if (string.IsNullOrEmpty(content)) return false;
+            // GCI0044: This is a pattern detection helper, not a performance-sensitive query
             return LinqMethods.Any(m => content.Contains(m, StringComparison.Ordinal));
         }
 
