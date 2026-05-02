@@ -17,10 +17,10 @@ public class GCI0041_TestQualityGaps : RuleBase
     public override string Name => "Test Quality Gaps";
 
     private static readonly string[] SilencePatterns =
-        ["[Ignore]", "[Ignore(", "[Skip]", "[Skip(", ".Skip(", "[Fact(Skip", "[Theory(Skip"];
+        WellKnownPatterns.TestSilencePatterns;
 
     private static readonly string[] TestAttributeMarkers =
-        ["[Fact]", "[Theory]", "[Test]"];
+        WellKnownPatterns.TestAttributeMarkers;
 
     private static readonly HashSet<string> BadMethodNames = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -34,31 +34,7 @@ public class GCI0041_TestQualityGaps : RuleBase
         new(@"\b(?:public|private|protected|internal)\s+(?:async\s+)?(?:Task|void|[\w<>]+)\s+(\w+)\s*\(", RegexOptions.Compiled);
 
     private static readonly string[] AssertionKeywords =
-    [
-        // xUnit / NUnit / MSTest
-        "Assert.", "Xunit.Assert", "NUnit.Framework.Assert",
-        // Bare Assert() call (no dot): MongoDB, classic NUnit style
-        "Assert(",
-        // FluentAssertions / Shouldly
-        "Should", ".ShouldBe", ".ShouldNotBe", ".ShouldBeNull", ".ShouldNotBeNull",
-        ".Must(",
-        // NSubstitute
-        "Received(", "DidNotReceive(",
-        // Moq / FakeItEasy
-        ".Verify(", ".VerifyAll(", "MustHaveHappened", "MustNotHaveHappened",
-        // Common assertion patterns
-        "Throws<", "DoesNotThrow", "ThrowsAsync", "expect(", "Expect(",
-        "IsTrue(", "IsFalse(", "IsNull(", "IsNotNull(", "AreEqual(", "AreNotEqual(",
-        "Contains(", "IsInstanceOf",
-        // Visual comparison / image assertions (ImageSharp etc.)
-        ".CompareToReferenceOutput(",
-        // Azure Provisioning test comparisons and SDK / validation helpers
-        ".Compare(", ".ValidateAsync(", ".Lint(",
-        // Selenium / Playwright browser integration tests (ASP.NET Core E2E)
-        "Browser.",
-        // Event-driven async tests: validates via TaskCompletionSource completion
-        "TaskCompletionSource",
-    ];
+        WellKnownPatterns.TestAssertionKeywords;
 
     // Matches custom assertion helpers: AssertValid(...), VerifyResult(...), CheckState(...)
     // and methods ending in those words: ResultAssert(...), SomeVerify(...)
