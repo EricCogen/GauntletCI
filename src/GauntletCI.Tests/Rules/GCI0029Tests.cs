@@ -235,4 +235,46 @@ public class GCI0029Tests
 
         Assert.Empty(findings);
     }
+
+    [Fact]
+    public async Task AssemblyFullNameInLog_ShouldNotFlag()
+    {
+        // Assembly.FullName is a reflection property, not a person name
+        var raw = """
+            diff --git a/src/AssemblyLoader.cs b/src/AssemblyLoader.cs
+            index abc..def 100644
+            --- a/src/AssemblyLoader.cs
+            +++ b/src/AssemblyLoader.cs
+            @@ -1,3 +1,4 @@
+             public class AssemblyLoader {
+            +    _logger.LogInformation("Loaded assembly: {AssemblyName}", assembly.FullName);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public async Task PropertyInfoReflectionInLog_ShouldNotFlag()
+    {
+        // PropertyInfo reflection operations are not PII
+        var raw = """
+            diff --git a/src/ReflectionHelper.cs b/src/ReflectionHelper.cs
+            index abc..def 100644
+            --- a/src/ReflectionHelper.cs
+            +++ b/src/ReflectionHelper.cs
+            @@ -1,3 +1,4 @@
+             public class ReflectionHelper {
+            +    foreach(PropertyInfo prop in type.GetProperties()) _logger.LogDebug("Property: {PropName}", prop.Name);
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
 }
