@@ -932,6 +932,30 @@ internal static class WellKnownPatterns
     }
 
     /// <summary>
+    /// Patterns used to detect external service and HTTP client safety issues.
+    /// </summary>
+    public static class ExternalServicePatterns
+    {
+        /// <summary>
+        /// HTTP method calls (on HttpClient or HttpRequestMessage) that should have timeouts and cancellation tokens.
+        /// Used by GCI0039 to detect unsafe external service calls.
+        /// </summary>
+        public static readonly string[] HttpCallMethods =
+        [
+            ".GetAsync(", ".PostAsync(", ".PutAsync(", ".DeleteAsync(", ".SendAsync("
+        ];
+
+        /// <summary>
+        /// Subset of HTTP methods for cancellation token checking (excludes DeleteAsync which conflicts with SDK methods).
+        /// Used by GCI0039 to detect missing CancellationToken parameters on HTTP calls.
+        /// </summary>
+        public static readonly string[] CtCheckHttpMethods =
+        [
+            ".GetAsync(", ".PostAsync(", ".PutAsync(", ".SendAsync("
+        ];
+    }
+
+    /// <summary>
     /// Returns <c>true</c> if the given HTTP request content contains HTTP context signal patterns.
     /// Used by GCI0015 to determine whether mass-assignment and unsafe cast checks apply.
     /// </summary>
