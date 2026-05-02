@@ -18,38 +18,6 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
     public override string Id   => "GCI0049";
     public override string Name => "Float/Double Equality Comparison";
 
-    // Matches: == or != followed by a float/double literal (e.g. 0.0, 1.5f, 2.0d, .5F)
-    // Excludes decimal (m/M) suffixes: decimal equality is exact and not a precision pitfall.
-    // Both alternatives require at least one digit after the decimal point to prevent the
-    // regex engine from matching "1." (backtracking) when "1.0m" appears.
-    private static readonly Regex FloatLiteralOnRightRegex = new(
-        @"(?:==|!=)\s*(?:[-+]?\d*\.\d+|\d+\.\d+)[fFdD]?\b",
-        RegexOptions.Compiled);
-
-    // Matches: float/double literal on the left side of == or !=
-    private static readonly Regex FloatLiteralOnLeftRegex = new(
-        @"\b(?:[-+]?\d*\.\d+|\d+\.\d+)[fFdD]?\s*(?:==|!=)",
-        RegexOptions.Compiled);
-
-    // Matches: a (float) or (double) cast alongside == or !=
-    private static readonly Regex FloatCastWithEqualityRegex = new(
-        @"\((?:float|double)\).*(?:==|!=)|(?:==|!=).*\((?:float|double)\)",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-    // Matches: a float or double variable declaration on the same line as == or !=
-    private static readonly Regex FloatTypeWithEqualityRegex = new(
-        @"\b(?:float|double)\b.*(?:==|!=)|(?:==|!=).*\b(?:float|double)\b",
-        RegexOptions.Compiled | RegexOptions.IgnoreCase);
-
-    // Matches the safe-division guard pattern: integer zero-check before a ternary
-    // e.g. (a + b) == 0 ? 0.0 : (double)a / (a + b)
-    // In this pattern, (double)/(float) casts appear in the ternary branch, not the comparison.
-    private static readonly Regex IntegerZeroGuardRegex = new(
-        @"(?:==|!=)\s*0\s*\?", RegexOptions.Compiled);
-
-    private static bool IsGuardedIntegerZeroCheck(string content) =>
-        IntegerZeroGuardRegex.IsMatch(content);
-
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -75,12 +43,12 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
 
                 // When the line is an integer zero-guard ternary (e.g. count == 0 ? 0.0 : (double)a/b),
                 // the (double)/(float) cast and the == appear in different clauses: skip cast/type checks.
-                bool hasSafeDivGuard = IsGuardedIntegerZeroCheck(content);
+                bool hasSafeDivGuard = WellKnownPatterns.FloatingPointPatterns.IsGuardedIntegerZeroCheck(content);
 
-                bool matches = HasMatchOutsideStringLiteral(FloatLiteralOnRightRegex, content)
-                            || HasMatchOutsideStringLiteral(FloatLiteralOnLeftRegex, content)
-                            || (!hasSafeDivGuard && HasMatchOutsideStringLiteral(FloatCastWithEqualityRegex, content))
-                            || (!hasSafeDivGuard && HasMatchOutsideStringLiteral(FloatTypeWithEqualityRegex, content));
+                bool matches = HasMatchOutsideStringLiteral(WellKnownPatterns.FloatingPointPatterns.FloatLiteralOnRightRegex, content)
+                            || HasMatchOutsideStringLiteral(WellKnownPatterns.FloatingPointPatterns.FloatLiteralOnLeftRegex, content)
+                            || (!hasSafeDivGuard && HasMatchOutsideStringLiteral(WellKnownPatterns.FloatingPointPatterns.FloatCastWithEqualityRegex, content))
+                            || (!hasSafeDivGuard && HasMatchOutsideStringLiteral(WellKnownPatterns.FloatingPointPatterns.FloatTypeWithEqualityRegex, content));
 
                 if (!matches) continue;
 
@@ -104,10 +72,10 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
     private static int GetFirstOperatorIndex(string content)
     {
         int min = int.MaxValue;
-        UpdateMinOperator(FloatLiteralOnRightRegex,   content, ref min);
-        UpdateMinOperator(FloatLiteralOnLeftRegex,    content, ref min);
-        UpdateMinOperator(FloatCastWithEqualityRegex, content, ref min);
-        UpdateMinOperator(FloatTypeWithEqualityRegex, content, ref min);
+        UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatLiteralOnRightRegex,   content, ref min);
+        UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatLiteralOnLeftRegex,    content, ref min);
+        UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatCastWithEqualityRegex, content, ref min);
+        UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatTypeWithEqualityRegex, content, ref min);
         return min == int.MaxValue ? 0 : min;
     }
 
