@@ -442,4 +442,155 @@ public class GCI0006Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("null dereference"));
     }
+
+    [Fact]
+    public async Task PublicMethodWithNullCoalescingParam_ShouldNotFlag()
+    {
+        // Method parameters with default values (including null-coalescing) don't need validation
+        var raw = """
+            diff --git a/src/Parser.cs b/src/Parser.cs
+            index abc..def 100644
+            --- a/src/Parser.cs
+            +++ b/src/Parser.cs
+            @@ -1,1 +1,3 @@
+             // existing
+            +public void Parse(string? input = "default")
+            +{
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
+
+    [Fact]
+    public async Task PublicMethodWithNullCoalescingInBody_ShouldNotFlag()
+    {
+        // Null-coalescing operator (??) in method body is a valid null-handling pattern
+        var raw = """
+            diff --git a/src/Processor.cs b/src/Processor.cs
+            index abc..def 100644
+            --- a/src/Processor.cs
+            +++ b/src/Processor.cs
+            @@ -1,1 +1,3 @@
+             // existing
+            +public void Process(string? input)
+            +    var value = input ?? "default";
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
+
+    [Fact]
+    public async Task PublicMethodWithNullCoalescingAssignmentInBody_ShouldNotFlag()
+    {
+        // Null-coalescing assignment (??=) in method body is a valid null-handling pattern
+        var raw = """
+            diff --git a/src/Cache.cs b/src/Cache.cs
+            index abc..def 100644
+            --- a/src/Cache.cs
+            +++ b/src/Cache.cs
+            @@ -1,1 +1,4 @@
+             // existing
+            +public void SetDefault(string? key)
+            +{
+            +    _cache[key] ??= GetDefault();
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
+
+    [Fact]
+    public async Task PublicMethodWithoutNullHandling_ShouldStillFlag()
+    {
+        // Without any null-coalescing or default value, should flag
+        var raw = """
+            diff --git a/src/Service.cs b/src/Service.cs
+            index abc..def 100644
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -1,1 +1,3 @@
+             // existing
+            +public void Execute(string? command)
+            +{
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
+
+    [Fact]
+    public async Task NRTEnabledFileWithNonNullableParam_ShouldNotFlag()
+    {
+        // In NRT-enabled files, 'string' (not 'string?') is non-nullable, so no validation needed
+        var raw = """
+            diff --git a/src/Modern.cs b/src/Modern.cs
+            index abc..def 100644
+            --- a/src/Modern.cs
+            +++ b/src/Modern.cs
+            @@ -1,1 +1,5 @@
+             #nullable enable
+            +public void ProcessData(string input)
+            +{
+            +    Console.WriteLine(input);
+            +}
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
+
+    [Fact]
+    public async Task PublicMethodWithNullCoalescingAssignment_ShouldNotFlag()
+    {
+        // Null-coalescing assignment (??=) in method body is a valid null-handling pattern
+        var raw = """
+            diff --git a/src/Processor.cs b/src/Processor.cs
+            index abc..def 100644
+            --- a/src/Processor.cs
+            +++ b/src/Processor.cs
+            @@ -1,1 +1,3 @@
+             // existing
+            +var cache = null;
+             cache ??= new Cache();
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("null"));
+    }
+
+    [Fact]
+    public async Task InitAccessorSuggestion_IndicatesModernCSharp()
+    {
+        // Properties with init accessor suggest NRT-enabled project
+        var raw = """
+            diff --git a/src/Settings.cs b/src/Settings.cs
+            index abc..def 100644
+            --- a/src/Settings.cs
+            +++ b/src/Settings.cs
+            @@ -1,1 +1,3 @@
+            +public string Name { get; init; }
+            +public void ApplySetting(string key)
+            +{
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        // init accessors indicate modern NRT-enabled code
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("parameter(s) added"));
+    }
 }
