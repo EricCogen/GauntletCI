@@ -143,30 +143,30 @@ public class GCI0012_SecurityRisk : RuleBase
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            if (IsCommentLine(content.Trim())) continue;
+            if (WellKnownPatterns.IsCommentLine(content.Trim())) continue;
 
             // GCI0029 (PII Logging Leak) owns PII detection in log calls; skip here to avoid
             // double-reporting when a log call contains a term like 'token'.
             if (LogCallPrefixes.Any(p => content.Contains(p, StringComparison.Ordinal))) continue;
 
-            if (!HasAssignment(content)) continue;
+            if (!WellKnownPatterns.HasAssignment(content)) continue;
 
             // Only fire when the RHS is a bare string literal (e.g. = "value"), not a method
             // call whose argument happens to contain a string (e.g. Switch("ui-element-id")).
             // This prevents FPs from UI component field declarations named after token concepts.
-            var literal = ExtractDirectlyAssignedLiteral(content);
+            var literal = WellKnownPatterns.ExtractDirectlyAssignedLiteral(content);
             if (literal is null) continue;
 
             // Skip references to env var names (ALL_CAPS_UNDERSCORES): not credential values.
-            if (IsEnvVarName(literal)) continue;
+            if (WellKnownPatterns.IsEnvVarName(literal)) continue;
 
             // Skip obviously benign default values: empty strings, HTTP scheme names,
             // and other initialization placeholders that are never real credentials.
-            if (IsBenignLiteralValue(literal)) continue;
+            if (WellKnownPatterns.IsBenignLiteralValue(literal)) continue;
 
             // Check secret keyword only in the left-hand side of the assignment (the variable name),
             // not anywhere in the line: avoids false positives from type names like HtmlTokenType.
-            var eqIndex = FindAssignmentIndex(content);
+            var eqIndex = WellKnownPatterns.FindAssignmentIndex(content);
             var lhs = content[..eqIndex].ToLowerInvariant();
 
             foreach (var pattern in SecretNamePatterns)
@@ -186,99 +186,7 @@ public class GCI0012_SecurityRisk : RuleBase
         }
     }
 
-    private static bool IsCommentLine(string trimmed) =>
-        trimmed.StartsWith("//", StringComparison.Ordinal) ||
-        trimmed.StartsWith("*", StringComparison.Ordinal) ||
-        trimmed.StartsWith("#", StringComparison.Ordinal);
 
-    // An env var name is ALL_CAPS with digits and underscores (e.g. GITHUB_TOKEN, MY_API_KEY).
-    private static bool IsEnvVarName(string literal) =>
-        literal.Length > 0 && literal.All(c => char.IsUpper(c) || char.IsDigit(c) || c == '_');
-
-    // Returns true for values that look like initialization defaults, never actual secrets:
-    // empty strings, well-known HTTP auth scheme names, and C# keyword literals.
-    private static bool IsBenignLiteralValue(string value) =>
-        string.IsNullOrEmpty(value) ||
-        value.Length < 3 ||
-        value.Equals("Bearer",    StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("Basic",     StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("Token",     StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("Anonymous", StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("null",      StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("true",      StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("false",     StringComparison.OrdinalIgnoreCase);
-
-    // Returns true only if the line contains a real assignment = (not ==, !=, <=, >=, =>).
-    // Skips = signs inside string literals to avoid false positives from format strings.
-    private static bool HasAssignment(string content)
-    {
-        ArgumentNullException.ThrowIfNull(content);
-        bool inString = false;
-        for (int i = 0; i < content.Length; i++)
-        {
-            if (content[i] == '"' && (i == 0 || content[i - 1] != '\\'))
-                inString = !inString;
-            if (inString || content[i] != '=') continue;
-            char prev = i > 0 ? content[i - 1] : '\0';
-            char next = i < content.Length - 1 ? content[i + 1] : '\0';
-            if (prev is '!' or '<' or '>' or '=') continue;
-            if (next is '=' or '>') continue; // == and => (expression body / lambda)
-            return true;
-        }
-        return false;
-    }
-
-    // Returns the index of the first real assignment = in the line, skipping string literals.
-    private static int FindAssignmentIndex(string content)
-    {
-        ArgumentNullException.ThrowIfNull(content);
-        bool inString = false;
-        for (int i = 0; i < content.Length; i++)
-        {
-            if (content[i] == '"' && (i == 0 || content[i - 1] != '\\'))
-                inString = !inString;
-            if (inString || content[i] != '=') continue;
-            char prev = i > 0 ? content[i - 1] : '\0';
-            char next = i < content.Length - 1 ? content[i + 1] : '\0';
-            if (prev is '!' or '<' or '>' or '=') continue;
-            if (next is '=' or '>') continue; // == and =>
-            return i;
-        }
-        return content.Length;
-    }
-
-    // Returns the string value only when the direct RHS of an assignment is a bare string literal.
-    // Returns null if the RHS is a method call, object initializer, or anything other than a literal.
-    // This prevents FPs from patterns like: _tokenField = SomeFactory("ui-element-id")
-    // where the string argument is not a credential, just an argument to a factory method.
-    private static string? ExtractDirectlyAssignedLiteral(string content)
-    {
-        int eqIdx = FindAssignmentIndex(content);
-        if (eqIdx >= content.Length) return null;
-
-        var rhs = content[(eqIdx + 1)..].TrimStart();
-
-        // Must open with a string literal: not a method call, `new`, identifier, etc.
-        if (!rhs.StartsWith('"') &&
-            !rhs.StartsWith("@\"", StringComparison.Ordinal) &&
-            !rhs.StartsWith("$\"", StringComparison.Ordinal))
-            return null;
-
-        try
-        {
-            var wrapped = $"class __G {{ void __M() {{ var __v = {rhs.TrimEnd(';', ' ', ',')}; }} }}";
-            var tree = CSharpSyntaxTree.ParseText(wrapped);
-            return tree.GetRoot()
-                .DescendantTokens()
-                .Where(t => t.IsKind(SyntaxKind.StringLiteralToken))
-                .Select(t => t.ValueText)
-                .FirstOrDefault();
-        }
-        catch
-        {
-            return null;
-        }
-    }
 
     private void CheckInsecureDeserialization(DiffLine line, List<Finding> findings)
     {
