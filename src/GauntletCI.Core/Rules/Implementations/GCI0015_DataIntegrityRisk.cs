@@ -52,7 +52,7 @@ public class GCI0015_DataIntegrityRisk : RuleBase
         var addedLines = file.AddedLines.ToList();
 
         bool hasHttpSignal = addedLines.Any(l =>
-            WellKnownPatterns.HasHttpContextSignal(l.Content));
+            WellKnownPatterns.DataIntegrityPatterns.HasHttpContextSignal(l.Content));
 
         if (!hasHttpSignal) return;
 
@@ -93,7 +93,7 @@ public class GCI0015_DataIntegrityRisk : RuleBase
         var addedLines = file.AddedLines.ToList();
 
         bool hasHttpSignal = addedLines.Any(l =>
-            WellKnownPatterns.HasHttpContextSignal(l.Content));
+            WellKnownPatterns.DataIntegrityPatterns.HasHttpContextSignal(l.Content));
 
         if (!hasHttpSignal) return;
 
@@ -142,13 +142,13 @@ public class GCI0015_DataIntegrityRisk : RuleBase
         // Only flag unchecked numeric casts when HTTP input signals are present in the file.
         // A cast like (int)Request.Form["id"] is dangerous; (int)someInternalCounter is not.
         bool hasHttpSignal = file.AddedLines.Any(l =>
-            WellKnownPatterns.HasHttpContextSignal(l.Content));
+            WellKnownPatterns.DataIntegrityPatterns.HasHttpContextSignal(l.Content));
 
         if (!hasHttpSignal) return;
 
         foreach (var line in file.AddedLines)
         {
-            foreach (var cast in WellKnownPatterns.UncheckedCastPatterns)
+            foreach (var cast in WellKnownPatterns.DataIntegrityPatterns.UncheckedCastPatterns)
             {
                 if (!line.Content.Contains(cast, StringComparison.Ordinal)) continue;
 
@@ -165,7 +165,7 @@ public class GCI0015_DataIntegrityRisk : RuleBase
 
     private void CheckSqlIgnore(DiffLine line, List<Finding> findings)
     {
-        foreach (var pattern in WellKnownPatterns.SqlIgnorePatterns)
+        foreach (var pattern in WellKnownPatterns.DataIntegrityPatterns.SqlIgnorePatterns)
         {
             if (!line.Content.Contains(pattern, StringComparison.OrdinalIgnoreCase)) continue;
 

@@ -783,55 +783,107 @@ internal static class WellKnownPatterns
     ];
 
     /// <summary>
-    /// HTTP context signals indicating user input boundaries.
-    /// Used by GCI0015 for detecting mass-assignment and unsafe casting in HTTP request context.
+    /// Patterns used to detect data integrity risks, unsafe input handling, and conflicting data operations.
     /// </summary>
-    public static readonly string[] HttpContextSignals =
-    [
-        "Request.Form", "Request.Query", "Request.Body",
-        "HttpContext.Request", "[FromBody]", "[FromForm]", "[FromQuery]"
-    ];
+    public static class DataIntegrityPatterns
+    {
+        /// <summary>
+        /// HTTP context signals indicating user input boundaries.
+        /// Used by GCI0015 for detecting mass-assignment and unsafe casting in HTTP request context.
+        /// </summary>
+        public static readonly string[] HttpContextSignals =
+        [
+            "Request.Form", "Request.Query", "Request.Body",
+            "HttpContext.Request", "[FromBody]", "[FromForm]", "[FromQuery]"
+        ];
+
+        /// <summary>
+        /// SQL patterns that silently ignore or suppress insert/update conflicts.
+        /// Used by GCI0015 to detect situations where data integrity violations are hidden.
+        /// </summary>
+        public static readonly string[] SqlIgnorePatterns =
+        [
+            "INSERT IGNORE", "ON CONFLICT DO NOTHING", "INSERT OR IGNORE"
+        ];
+
+        /// <summary>
+        /// Numeric cast patterns that can cause silent data truncation or overflow.
+        /// Used by GCI0015 for detecting unchecked casts on potentially user-supplied values.
+        /// </summary>
+        public static readonly string[] UncheckedCastPatterns =
+        [
+            "(int)", "(long)", "(decimal)", "(float)", "(short)"
+        ];
+
+        /// <summary>
+        /// Returns true if the given content contains an HTTP context signal indicating user input.
+        /// </summary>
+        public static bool HasHttpContextSignal(string content)
+        {
+            return HttpContextSignals.Any(signal => content.Contains(signal, StringComparison.Ordinal));
+        }
+    }
 
     /// <summary>
-    /// SQL patterns that silently ignore or suppress insert/update conflicts.
-    /// Used by GCI0015 to detect situations where data integrity violations are hidden.
+    /// Patterns used to detect PII (Personally Identifiable Information) leaks in logs and transformations.
     /// </summary>
-    public static readonly string[] SqlIgnorePatterns =
-    [
-        "INSERT IGNORE", "ON CONFLICT DO NOTHING", "INSERT OR IGNORE"
-    ];
+    public static class PiiDetectionPatterns
+    {
+        /// <summary>
+        /// PII (Personally Identifiable Information) terms in variable/field names.
+        /// Used by GCI0029 to detect leaks of sensitive data in log calls.
+        /// Compound terms only (avoids false positives on "name", "fullname" which are ubiquitous).
+        /// </summary>
+        public static readonly string[] PiiTerms =
+        [
+            "email", "ssn", "socialsecurity", "phonenumber", "creditcard", "cardnumber",
+            "dateofbirth", "passport", "nationalid", "taxid", "bankaccount",
+            "dob", "birthdate", "zipcode", "postalcode", "geolocation",
+            "username", "firstname", "lastname", "displayname", "personname",
+        ];
 
-    /// <summary>
-    /// Numeric cast patterns that can cause silent data truncation or overflow.
-    /// Used by GCI0015 for detecting unchecked casts on potentially user-supplied values.
-    /// </summary>
-    public static readonly string[] UncheckedCastPatterns =
-    [
-        "(int)", "(long)", "(decimal)", "(float)", "(short)"
-    ];
+        /// <summary>
+        /// Logger method prefixes indicating logging calls.
+        /// Used by GCI0029 to detect log statements for PII leak analysis.
+        /// </summary>
+        public static readonly string[] LogPrefixes =
+        [
+            "_logger.", "logger.", "Logger.", "_log.", "log.", "Log.Information", "Log.Warning",
+            "Log.Error", "Log.Debug", "Log.Critical", "Log.Write"
+        ];
 
-    /// <summary>
-    /// PII (Personally Identifiable Information) terms in variable/field names.
-    /// Used by GCI0029 to detect leaks of sensitive data in log calls.
-    /// Compound terms only (avoids false positives on "name", "fullname" which are ubiquitous).
-    /// </summary>
-    public static readonly string[] PiiTerms =
-    [
-        "email", "ssn", "socialsecurity", "phonenumber", "creditcard", "cardnumber",
-        "dateofbirth", "passport", "nationalid", "taxid", "bankaccount",
-        "dob", "birthdate", "zipcode", "postalcode", "geolocation",
-        "username", "firstname", "lastname", "displayname", "personname",
-    ];
+        /// <summary>
+        /// Data transformation and anonymization patterns indicating safe handling of PII.
+        /// Used by GCI0029 to skip flagging data that has been hashed, encrypted, or anonymized.
+        /// </summary>
+        public static readonly string[] TransformationPatterns =
+        [
+            "Hash", "hash", "SHA", "HMAC", "MD5", "SHA256",
+            "Token", "token", "anonymize", "Anonymize", "redact", "Redact",
+            "Encrypt", "encrypt", "SecureString", "Mask", "mask"
+        ];
 
-    /// <summary>
-    /// Logger method prefixes indicating logging calls.
-    /// Used by GCI0029 to detect log statements for PII leak analysis.
-    /// </summary>
-    public static readonly string[] LogPrefixes =
-    [
-        "_logger.", "logger.", "Logger.", "_log.", "log.", "Log.Information", "Log.Warning",
-        "Log.Error", "Log.Debug", "Log.Critical", "Log.Write"
-    ];
+        /// <summary>
+        /// .NET reflection patterns indicating type inspection or metadata access.
+        /// These are ubiquitous in .NET code and are NOT person data.
+        /// Used by GCI0029 to skip flagging reflection properties that are commonly logged.
+        /// </summary>
+        public static readonly string[] ReflectionGuards =
+        [
+            ".FullName", ".Name", "Type.", "Assembly.", "PropertyInfo.", "MethodInfo.",
+            "FieldInfo.", "ParameterInfo.", "Reflection."
+        ];
+
+        /// <summary>
+        /// Returns true if content indicates the data is being transformed (hashed, encrypted, anonymized).
+        /// </summary>
+        public static bool IsDataTransformed(string content)
+        {
+            if (TransformationPatterns.Any(p => content.Contains(p))) return true;
+            if (ReflectionGuards.Any(p => content.Contains(p))) return true;
+            return false;
+        }
+    }
 
     /// <summary>
     /// Patterns used to detect idempotency and retry safety issues.
@@ -970,7 +1022,7 @@ internal static class WellKnownPatterns
     public static bool HasHttpContextSignal(string content)
     {
         if (string.IsNullOrEmpty(content)) return false;
-        return HttpContextSignals.Any(s => content.Contains(s, StringComparison.Ordinal));
+        return DataIntegrityPatterns.HasHttpContextSignal(content);
     }
 
     /// <summary>
