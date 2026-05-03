@@ -11,11 +11,22 @@ public sealed class LinearTicketProvider : ITicketProvider
     static LinearTicketProvider() => Http.DefaultRequestHeaders.UserAgent.ParseAdd("GauntletCI/2.0");
 
     public string ProviderName => "Linear";
-    public bool IsAvailable => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("LINEAR_API_KEY"));
+    public bool IsAvailable
+    {
+        get
+        {
+            var key = Environment.GetEnvironmentVariable("LINEAR_API_KEY");
+            return !string.IsNullOrEmpty(key);
+        }
+    }
 
     public async Task<TicketInfo?> FetchAsync(string issueKey, CancellationToken ct = default)
     {
-        var apiKey = Environment.GetEnvironmentVariable("LINEAR_API_KEY")!;
+        var apiKey = Environment.GetEnvironmentVariable("LINEAR_API_KEY");
+        if (string.IsNullOrEmpty(apiKey))
+        {
+            return null;  // Provider not available
+        }
         var query  = new { query = "query($id:String!){issue(id:$id){id title description url}}", variables = new { id = issueKey } };
         var body   = JsonSerializer.Serialize(query);
 

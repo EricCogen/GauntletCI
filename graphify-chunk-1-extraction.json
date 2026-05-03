@@ -1,0 +1,504 @@
+{
+  "nodes": [
+    {
+      "id": "IRule",
+      "label": "IRule Interface",
+      "file_type": "interface",
+      "source_file": "src/GauntletCI.Core/Rules/IRule.cs",
+      "source_location": "1-24",
+      "rationale": "Core contract for all rule implementations: defines async EvaluateAsync method and Id/Name properties. Auto-discovered via reflection."
+    },
+    {
+      "id": "RuleBase",
+      "label": "RuleBase Abstract Class",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/RuleBase.cs",
+      "source_location": "1-80",
+      "rationale": "Abstract base providing CreateFinding helper overloads (file-level and diff-wide findings). Eliminates boilerplate across all rule implementations."
+    },
+    {
+      "id": "GCI0001_DiffIntegrity",
+      "label": "GCI0001: Diff Integrity",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0001_DiffIntegrity.cs",
+      "source_location": "13-102",
+      "rationale": "Detects mixed scope (code+non-code) and excessive formatting churn. Uses lock-file filters and whitespace ratio heuristics. Foundational rule for PR quality."
+    },
+    {
+      "id": "GCI0003_BehavioralChangeDetection",
+      "label": "GCI0003: Behavioral Change Detection",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0003_BehavioralChangeDetection.cs",
+      "source_location": "1-100",
+      "rationale": "Detects removed logic, method signature changes, and cryptographic boundary changes. Uses context analyzer for confidence boosts (security paths, commit messages, test signals). Narrows false positives by avoiding common control-flow keywords."
+    },
+    {
+      "id": "GCI0004_BreakingChangeRisk",
+      "label": "GCI0004: Breaking Change Risk",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0004_BreakingChangeRisk.cs",
+      "source_location": "16-110",
+      "rationale": "Specialized on [Obsolete] attribute transitions. Corpus analysis showed reduction from 117 FPs; now focuses on [Obsolete] add/remove only. Guards against premature deprecation removal."
+    },
+    {
+      "id": "GCI0006_EdgeCaseHandling",
+      "label": "GCI0006: Edge Case Handling",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0006_EdgeCaseHandling.cs",
+      "source_location": "16-100",
+      "rationale": "Detects null dereferences (.Value access), missing parameter validation, and loop boundary changes. Rich guard patterns: LINQ mapping, IOptions<T>, KeyValuePair, expression-bodied members, NRT-aware Nullable<T> analysis."
+    },
+    {
+      "id": "GCI0007_ErrorHandlingIntegrity",
+      "label": "GCI0007: Error Handling Integrity",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0007_ErrorHandlingIntegrity.cs",
+      "source_location": "13-282",
+      "rationale": "Detects swallowed exceptions (empty catch bodies), removed error logs from error contexts, and throw statement removal. Uses structured log method patterns (distinct from bare keywords). Integrates Roslyn CA1031 diagnostics."
+    },
+    {
+      "id": "GCI0010_HardcodingAndConfiguration",
+      "label": "GCI0010: Hardcoding and Configuration",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0010_HardcodingAndConfiguration.cs",
+      "source_location": "17-80",
+      "rationale": "Detects hardcoded IPs, URLs, connection strings, ports, environment names. Uses regex (HardcodedUrlRegex, BareIpAddressRegex) with safe-list (docs.microsoft, github.com, example.com). Excludes credentials (deferred to GCI0012)."
+    },
+    {
+      "id": "GCI0012_SecurityRisk",
+      "label": "GCI0012: Security Risk",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0012_SecurityRisk.cs",
+      "source_location": "17-80",
+      "rationale": "Detects SQL injection, weak crypto (MD5, SHA1, DES, RC2), dangerous APIs (Assembly.Load, Activator.CreateInstance), hardcoded credentials. Owns credential detection (includes pwd, token). Boundary: skips log calls to defer to GCI0029."
+    },
+    {
+      "id": "GCI0015_DataIntegrityRisk",
+      "label": "GCI0015: Data Integrity Risk",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0015_DataIntegrityRisk.cs",
+      "source_location": "13-80",
+      "rationale": "Detects mass assignment without allowlist, unsafe HTTP input binding, unchecked casts, SQL IGNORE patterns. Uses DataIntegrityPatterns for HTTP context signal detection."
+    },
+    {
+      "id": "GCI0020_ResourceExhaustionPatterns",
+      "label": "GCI0020: Resource Exhaustion Pattern Detection",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0020_ResourceExhaustionPatterns.cs",
+      "source_location": "18-80",
+      "rationale": "Detects timeout removal, iteration limit removal, unbounded resource increases, resource cleanup removal, unbounded async operations. Uses pattern arrays from DomainSpecificPatterns (timeout, iteration, resource, async patterns)."
+    },
+    {
+      "id": "WellKnownPatterns",
+      "label": "WellKnownPatterns Facade",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/WellKnownPatterns.cs",
+      "source_location": "1-100",
+      "rationale": "Centralized facade delegating to 5 domain-specific pattern classes. Eliminates guard pattern duplication. Module-level constants: SecretNamePatterns, HighSeverityLogKeywords. Backward-compatible delegation."
+    },
+    {
+      "id": "FileContextPatterns",
+      "label": "FileContextPatterns Domain Class",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Patterns/FileContextPatterns.cs",
+      "source_location": "18-80",
+      "rationale": "Test/spec file detection (word-boundary test, PascalCase Tests/Benchmark suffixes, /spec /specs dirs), generated file detection, infrastructure file detection (Program.cs, Startup.cs). Used by all rules for false-positive suppression."
+    },
+    {
+      "id": "HttpExternalServicePatterns",
+      "label": "HttpExternalServicePatterns Domain Class",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Patterns/HttpExternalServicePatterns.cs",
+      "source_location": "18-80",
+      "rationale": "gRPC vs HTTP client framework guards. Detects IHttpClientFactory (factory-managed timeout), GrpcChannel/ChannelOptions, Polly policies. Used by GCI0039 to reduce false positives."
+    },
+    {
+      "id": "SecurityPatterns",
+      "label": "SecurityPatterns Domain Class",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Patterns/SecurityPatterns.cs",
+      "source_location": "19-80",
+      "rationale": "Credential detection helpers: isEnvVarName, isBenignLiteralValue, hasAssignment, findAssignmentIndex. Skips string literals and lambda expressions. Used by GCI0010, GCI0012."
+    },
+    {
+      "id": "NullabilityPatterns",
+      "label": "NullabilityPatterns Domain Class",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Patterns/NullabilityPatterns.cs",
+      "source_location": "18-80",
+      "rationale": "NRT (Nullable Reference Type) detection: #nullable directives, modern C# heuristics (record, init, required), regex pattern for non-nullable string params. Used by GCI0006, GCI0043."
+    },
+    {
+      "id": "DomainSpecificPatterns",
+      "label": "DomainSpecificPatterns Domain Class",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Patterns/DomainSpecificPatterns.cs",
+      "source_location": "19-100",
+      "rationale": "7 pattern domains: TimeoutPatterns, IterationLimitPatterns, ResourceLimitPatterns, ResourceCleanupPatterns, AsyncPatterns, TestSilencePatterns, TestAttributeMarkers, TestAssertionKeywords."
+    },
+    {
+      "id": "BehavioralChangeContextAnalyzer",
+      "label": "BehavioralChangeContextAnalyzer Helper",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0003_BehavioralChangeDetection.cs",
+      "source_location": "13-47",
+      "rationale": "Computes confidence boosts for behavioral changes: security-critical file paths (+0.20), security keywords in commit message (+0.15), test changes with security patterns (+0.15). Capped at +0.50."
+    }
+  ],
+  "edges": [
+    {
+      "source": "GCI0001_DiffIntegrity",
+      "target": "RuleBase",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0001_DiffIntegrity.cs"
+    },
+    {
+      "source": "GCI0003_BehavioralChangeDetection",
+      "target": "RuleBase",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0003_BehavioralChangeDetection.cs"
+    },
+    {
+      "source": "GCI0004_BreakingChangeRisk",
+      "target": "RuleBase",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0004_BreakingChangeRisk.cs"
+    },
+    {
+      "source": "GCI0006_EdgeCaseHandling",
+      "target": "RuleBase",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0006_EdgeCaseHandling.cs"
+    },
+    {
+      "source": "GCI0007_ErrorHandlingIntegrity",
+      "target": "RuleBase",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0007_ErrorHandlingIntegrity.cs"
+    },
+    {
+      "source": "GCI0010_HardcodingAndConfiguration",
+      "target": "RuleBase",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0010_HardcodingAndConfiguration.cs"
+    },
+    {
+      "source": "GCI0012_SecurityRisk",
+      "target": "RuleBase",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0012_SecurityRisk.cs"
+    },
+    {
+      "source": "GCI0015_DataIntegrityRisk",
+      "target": "RuleBase",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0015_DataIntegrityRisk.cs"
+    },
+    {
+      "source": "GCI0020_ResourceExhaustionPatterns",
+      "target": "RuleBase",
+      "relation": "inherits",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0020_ResourceExhaustionPatterns.cs"
+    },
+    {
+      "source": "RuleBase",
+      "target": "IRule",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/RuleBase.cs"
+    },
+    {
+      "source": "GCI0001_DiffIntegrity",
+      "target": "WellKnownPatterns",
+      "relation": "uses_pattern",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0001_DiffIntegrity.cs"
+    },
+    {
+      "source": "GCI0003_BehavioralChangeDetection",
+      "target": "WellKnownPatterns",
+      "relation": "uses_pattern",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0003_BehavioralChangeDetection.cs"
+    },
+    {
+      "source": "GCI0003_BehavioralChangeDetection",
+      "target": "BehavioralChangeContextAnalyzer",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0003_BehavioralChangeDetection.cs"
+    },
+    {
+      "source": "GCI0004_BreakingChangeRisk",
+      "target": "WellKnownPatterns",
+      "relation": "uses_pattern",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0004_BreakingChangeRisk.cs"
+    },
+    {
+      "source": "GCI0006_EdgeCaseHandling",
+      "target": "WellKnownPatterns",
+      "relation": "uses_pattern",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0006_EdgeCaseHandling.cs"
+    },
+    {
+      "source": "GCI0006_EdgeCaseHandling",
+      "target": "NullabilityPatterns",
+      "relation": "uses_pattern",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0006_EdgeCaseHandling.cs"
+    },
+    {
+      "source": "GCI0007_ErrorHandlingIntegrity",
+      "target": "WellKnownPatterns",
+      "relation": "uses_pattern",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0007_ErrorHandlingIntegrity.cs"
+    },
+    {
+      "source": "GCI0010_HardcodingAndConfiguration",
+      "target": "WellKnownPatterns",
+      "relation": "uses_pattern",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0010_HardcodingAndConfiguration.cs"
+    },
+    {
+      "source": "GCI0010_HardcodingAndConfiguration",
+      "target": "SecurityPatterns",
+      "relation": "uses_pattern",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0010_HardcodingAndConfiguration.cs"
+    },
+    {
+      "source": "GCI0012_SecurityRisk",
+      "target": "WellKnownPatterns",
+      "relation": "uses_pattern",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0012_SecurityRisk.cs"
+    },
+    {
+      "source": "GCI0012_SecurityRisk",
+      "target": "SecurityPatterns",
+      "relation": "uses_pattern",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0012_SecurityRisk.cs"
+    },
+    {
+      "source": "GCI0015_DataIntegrityRisk",
+      "target": "WellKnownPatterns",
+      "relation": "uses_pattern",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0015_DataIntegrityRisk.cs"
+    },
+    {
+      "source": "GCI0020_ResourceExhaustionPatterns",
+      "target": "WellKnownPatterns",
+      "relation": "uses_pattern",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0020_ResourceExhaustionPatterns.cs"
+    },
+    {
+      "source": "GCI0020_ResourceExhaustionPatterns",
+      "target": "DomainSpecificPatterns",
+      "relation": "uses_pattern",
+      "confidence": "INFERRED",
+      "confidence_score": 0.98,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0020_ResourceExhaustionPatterns.cs"
+    },
+    {
+      "source": "WellKnownPatterns",
+      "target": "FileContextPatterns",
+      "relation": "uses_pattern",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/WellKnownPatterns.cs"
+    },
+    {
+      "source": "WellKnownPatterns",
+      "target": "HttpExternalServicePatterns",
+      "relation": "uses_pattern",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/WellKnownPatterns.cs"
+    },
+    {
+      "source": "WellKnownPatterns",
+      "target": "SecurityPatterns",
+      "relation": "uses_pattern",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/WellKnownPatterns.cs"
+    },
+    {
+      "source": "WellKnownPatterns",
+      "target": "NullabilityPatterns",
+      "relation": "uses_pattern",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/WellKnownPatterns.cs"
+    },
+    {
+      "source": "WellKnownPatterns",
+      "target": "DomainSpecificPatterns",
+      "relation": "uses_pattern",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/GauntletCI.Core/Rules/WellKnownPatterns.cs"
+    },
+    {
+      "source": "GCI0001_DiffIntegrity",
+      "target": "FileContextPatterns",
+      "relation": "uses_pattern",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0001_DiffIntegrity.cs"
+    },
+    {
+      "source": "GCI0004_BreakingChangeRisk",
+      "target": "FileContextPatterns",
+      "relation": "uses_pattern",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0004_BreakingChangeRisk.cs"
+    },
+    {
+      "source": "GCI0007_ErrorHandlingIntegrity",
+      "target": "FileContextPatterns",
+      "relation": "uses_pattern",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0007_ErrorHandlingIntegrity.cs"
+    },
+    {
+      "source": "GCI0012_SecurityRisk",
+      "target": "FileContextPatterns",
+      "relation": "uses_pattern",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0012_SecurityRisk.cs"
+    },
+    {
+      "source": "GCI0015_DataIntegrityRisk",
+      "target": "FileContextPatterns",
+      "relation": "uses_pattern",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0015_DataIntegrityRisk.cs"
+    },
+    {
+      "source": "GCI0020_ResourceExhaustionPatterns",
+      "target": "FileContextPatterns",
+      "relation": "uses_pattern",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0020_ResourceExhaustionPatterns.cs"
+    },
+    {
+      "source": "BehavioralChangeContextAnalyzer",
+      "target": "FileContextPatterns",
+      "relation": "uses_pattern",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0003_BehavioralChangeDetection.cs"
+    },
+    {
+      "source": "GCI0003_BehavioralChangeDetection",
+      "target": "GCI0012_SecurityRisk",
+      "relation": "shares_data",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0003_BehavioralChangeDetection.cs"
+    },
+    {
+      "source": "GCI0007_ErrorHandlingIntegrity",
+      "target": "GCI0012_SecurityRisk",
+      "relation": "shares_data",
+      "confidence": "INFERRED",
+      "confidence_score": 0.7,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0007_ErrorHandlingIntegrity.cs"
+    },
+    {
+      "source": "GCI0010_HardcodingAndConfiguration",
+      "target": "GCI0012_SecurityRisk",
+      "relation": "shares_data",
+      "confidence": "INFERRED",
+      "confidence_score": 0.8,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0010_HardcodingAndConfiguration.cs"
+    },
+    {
+      "source": "GCI0006_EdgeCaseHandling",
+      "target": "FileContextPatterns",
+      "relation": "uses_pattern",
+      "confidence": "INFERRED",
+      "confidence_score": 0.95,
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0006_EdgeCaseHandling.cs"
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "security_rules_cluster",
+      "label": "Security Boundary Rules",
+      "members": ["GCI0010_HardcodingAndConfiguration", "GCI0012_SecurityRisk", "GCI0015_DataIntegrityRisk"],
+      "rationale": "GCI0010 detects hardcoded IPs/URLs (excludes credentials), GCI0012 owns credential detection and SQL injection, GCI0015 detects mass-assignment and unsafe input binding. Together they secure data boundaries."
+    },
+    {
+      "id": "resilience_rules_cluster",
+      "label": "Resilience and Error Handling",
+      "members": ["GCI0007_ErrorHandlingIntegrity", "GCI0020_ResourceExhaustionPatterns"],
+      "rationale": "GCI0007 detects swallowed exceptions and removed error logs (runtime visibility), GCI0020 detects timeout removal and unbounded resources (DoS prevention). Together they enforce error transparency and resource bounds."
+    },
+    {
+      "id": "nullability_safety_cluster",
+      "label": "Null-Safety and Type Safety",
+      "members": ["GCI0006_EdgeCaseHandling", "NullabilityPatterns"],
+      "rationale": "GCI0006 detects .Value dereferences without null checks using NullabilityPatterns to determine NRT context. Rich guard patterns demonstrate framework-aware null-safety analysis."
+    },
+    {
+      "id": "behavioral_change_detection_cluster",
+      "label": "Behavioral and Breaking Changes",
+      "members": ["GCI0003_BehavioralChangeDetection", "GCI0004_BreakingChangeRisk"],
+      "rationale": "GCI0003 detects removed logic and cryptographic boundary changes with context-aware confidence boosting. GCI0004 narrows on [Obsolete] transitions. Complementary: GCI0003 catches logic changes, GCI0004 catches deprecation breaks."
+    },
+    {
+      "id": "pattern_consolidation_architecture",
+      "label": "Pattern Consolidation Architecture",
+      "members": ["WellKnownPatterns", "FileContextPatterns", "HttpExternalServicePatterns", "SecurityPatterns", "NullabilityPatterns", "DomainSpecificPatterns"],
+      "rationale": "5-domain pattern architecture (files, HTTP, security, nullability, domain-specific) centralizes guard logic in WellKnownPatterns facade. Eliminates duplication: all rules converge on FileContextPatterns for test/generated file detection."
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}

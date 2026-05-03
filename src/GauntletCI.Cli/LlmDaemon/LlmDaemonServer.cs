@@ -85,19 +85,37 @@ internal static class LlmDaemonServer
             DaemonResponse resp;
             try
             {
-                var req = JsonSerializer.Deserialize<DaemonRequest>(line)!;
-                resp = req.Op switch
+                DaemonRequest? req;
+                try
                 {
-                    "ping"   => new DaemonResponse(true, "ready"),
-                    "enrich" => new DaemonResponse(true, await EnrichAsync(engine, req, ct)),
-                    _        => new DaemonResponse(false, $"Unknown op: {req.Op}")
-                };
+                    req = JsonSerializer.Deserialize<DaemonRequest>(line);
+                }
+                catch (JsonException ex)
+                {
+                    resp = new DaemonResponse(false, $"Invalid JSON: {ex.Message}");
+                    goto SendResponse;
+                }
+
+                if (req is null)
+                {
+                    resp = new DaemonResponse(false, "Deserialization resulted in null");
+                }
+                else
+                {
+                    resp = req.Op switch
+                    {
+                        "ping"   => new DaemonResponse(true, "ready"),
+                        "enrich" => new DaemonResponse(true, await EnrichAsync(engine, req, ct)),
+                        _        => new DaemonResponse(false, $"Unknown op: {req.Op}")
+                    };
+                }
             }
             catch (Exception ex)
             {
                 resp = new DaemonResponse(false, ex.Message);
             }
 
+            SendResponse:
             try { await writer.WriteLineAsync(JsonSerializer.Serialize(resp)); }
             catch (Exception) { break; }
         }

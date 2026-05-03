@@ -16,8 +16,14 @@ public sealed class GitHubIssueProvider : ITicketProvider
 
     public async Task<TicketInfo?> FetchAsync(string issueKey, CancellationToken ct = default)
     {
-        var token      = Environment.GetEnvironmentVariable("GITHUB_TOKEN")!;
-        var repository = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY")!; // owner/repo
+        var token      = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+        var repository = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
+        
+        if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(repository))
+        {
+            return null;  // Not available
+        }
+        
         // issueKey may be "#42" or "42"
         var number = issueKey.TrimStart('#');
 

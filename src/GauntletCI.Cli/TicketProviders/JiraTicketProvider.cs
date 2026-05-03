@@ -19,13 +19,20 @@ public sealed class JiraTicketProvider : ITicketProvider
 
     public async Task<TicketInfo?> FetchAsync(string issueKey, CancellationToken ct = default)
     {
-        var baseUrl = Environment.GetEnvironmentVariable("JIRA_BASE_URL")!.TrimEnd('/');
-        var token   = Environment.GetEnvironmentVariable("JIRA_API_TOKEN")!;
-        var email   = Environment.GetEnvironmentVariable("JIRA_USER_EMAIL")!;
+        var baseUrl = Environment.GetEnvironmentVariable("JIRA_BASE_URL");
+        var token   = Environment.GetEnvironmentVariable("JIRA_API_TOKEN");
+        var email   = Environment.GetEnvironmentVariable("JIRA_USER_EMAIL");
+
+        if (string.IsNullOrEmpty(baseUrl) || string.IsNullOrEmpty(token) || string.IsNullOrEmpty(email))
+        {
+            return null;  // Not available
+        }
+
         var creds   = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{email}:{token}"));
+        var cleanUrl = baseUrl.TrimEnd('/');
 
         using var req = new HttpRequestMessage(HttpMethod.Get,
-            $"{baseUrl}/rest/api/3/issue/{issueKey}?fields=summary,description");
+            $"{cleanUrl}/rest/api/3/issue/{issueKey}?fields=summary,description");
         req.Headers.Authorization = new AuthenticationHeaderValue("Basic", creds);
         req.Headers.Accept.ParseAdd("application/json");
 
