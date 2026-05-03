@@ -5,7 +5,7 @@ export function Features() {
     {
       icon: Zap,
       title: "Sub-second analysis",
-      description: "No compilation, no AST, no network. Get instant feedback on your changes before the commit is created.",
+      description: "No full build required, no network. Get instant feedback on your changes before the commit is created.",
     },
     {
       icon: Eye,
@@ -87,5 +87,6 @@ export function Features() {
     </section>
   );
 }
+
 
 
