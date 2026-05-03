@@ -11,6 +11,8 @@ namespace GauntletCI.Corpus.Labeling.Strategies;
 /// </summary>
 public sealed class DataIntegrityPatternStrategy : IInferenceStrategy
 {
+    public IReadOnlySet<string> RuleIds => new HashSet<string> { "GCI0003", "GCI0021", "GCI0024" };
+
     /// <summary>
     /// Applies GCI0003, GCI0021, GCI0024 heuristics.
     /// </summary>

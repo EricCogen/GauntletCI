@@ -12,6 +12,8 @@ namespace GauntletCI.Corpus.Labeling.Strategies;
 /// </summary>
 public sealed class EdgeCasePatternStrategy : IInferenceStrategy
 {
+    public IReadOnlySet<string> RuleIds => new HashSet<string> { "GCI0022", "GCI0035", "GCI0041", "GCI0044" };
+
     /// <summary>
     /// Applies GCI0022, GCI0035, GCI0041, GCI0044 heuristics.
     /// </summary>
