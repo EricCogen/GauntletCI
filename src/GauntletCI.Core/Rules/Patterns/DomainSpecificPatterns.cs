@@ -878,6 +878,46 @@ internal static class DomainSpecificPatterns
             "services.AddScoped", "services.AddSingleton", "services.AddTransient",
             "builder.Services", "serviceCollection.Add", "container.Register"
         ];
+
+        /// <summary>
+        /// ORM async data access patterns: raw SQL async database operations with proper ConfigureAwait.
+        /// Used by GCI0016 (Concurrency) and GCI0020 (Resource Exhaustion) to skip false positives on legitimate async ORM.
+        /// </summary>
+        public static readonly string[] OrmAsyncPatterns =
+        [
+            "ExecuteNonQueryAsync(", "ExecuteScalarAsync(", "ExecuteReaderAsync(",
+            "SqlCommand", "SqliteCommand", "SqlDataReader"
+        ];
+
+        /// <summary>
+        /// Fire-and-forget background task patterns indicating intentional non-awaited async operations.
+        /// Used by GCI0020 (Resource Exhaustion) to skip false positives on intentional background telemetry.
+        /// </summary>
+        public static readonly string[] FireAndForgetBackgroundPatterns =
+        [
+            "UploadInBackground", "UploadAsync", "Task.Run(", "ContinueWith(",
+            "Telemetry", "telemetry", "Background", "background"
+        ];
+
+        /// <summary>
+        /// Bounded synchronization collection patterns: semaphore/mutex/lock with bounded growth or scope limits.
+        /// Used by GCI0016 (Concurrency) to skip false positives on intentional synchronization for bounded resources.
+        /// </summary>
+        public static readonly string[] BoundedSynchronizationPatterns =
+        [
+            "SemaphoreSlim", "Mutex", "lock (", "WithMutex(",
+            "events.Count", "Skip("
+        ];
+
+        /// <summary>
+        /// Instance-scoped cache patterns: non-static Dictionary fields indicating bounded, scope-limited caches.
+        /// Used by GCI0020 (Resource Exhaustion) to skip false positives on intentional per-instance caches.
+        /// </summary>
+        public static readonly string[] InstanceScopedCachePatterns =
+        [
+            "private readonly Dictionary<", "private readonly Cache<",
+            "_cache", "_Cache", "Cache", "TryGetValue(", "IReadOnlyList<"
+        ];
     }
 
     // ================= Generic Helper Methods =================
