@@ -50,10 +50,10 @@ public sealed class AnthropicLlmLabeler : ILlmLabeler
             using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages");
             request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
 
-            using var response = await _http.SendAsync(request, ct);
+            using var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode) return null;
 
-            var responseJson = await response.Content.ReadAsStringAsync(ct);
+            var responseJson = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             using var doc = JsonDocument.Parse(responseJson);
             var root = doc.RootElement;
 

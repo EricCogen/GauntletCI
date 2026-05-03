@@ -22,7 +22,7 @@ public sealed class SonarCloudClient
     public async Task<string?> FindProjectKeyAsync(string owner, string repo, CancellationToken ct = default)
     {
         var conventional = $"{owner.ToLowerInvariant()}_{repo.ToLowerInvariant()}";
-        if (await ProjectExistsAsync(conventional, ct))
+        if (await ProjectExistsAsync(conventional, ct).ConfigureAwait(false))
             return conventional;
 
         // Org search fallback: some projects use non-conventional keys
@@ -33,11 +33,11 @@ public sealed class SonarCloudClient
 
         try
         {
-            using var resp = await _http.GetAsync(url, ct);
+            using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return null;
 
-            await using var stream = await resp.Content.ReadAsStreamAsync(ct);
-            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+            await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
 
             if (!doc.RootElement.TryGetProperty("components", out var components))
                 return null;
@@ -75,11 +75,11 @@ public sealed class SonarCloudClient
 
             try
             {
-                using var resp = await _http.GetAsync(url, ct);
+                using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
                 if (!resp.IsSuccessStatusCode) break;
 
-                await using var stream = await resp.Content.ReadAsStreamAsync(ct);
-                using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+                await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+                using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
 
                 if (!doc.RootElement.TryGetProperty("issues", out var issues)) break;
 
@@ -109,7 +109,7 @@ public sealed class SonarCloudClient
                 }
 
                 page++;
-                await Task.Delay(1_000, ct); // courtesy throttle for public API
+                await Task.Delay(1_000, ct).ConfigureAwait(false); // courtesy throttle for public API
             }
             catch (OperationCanceledException) { throw; }
             catch { break; }
@@ -123,7 +123,7 @@ public sealed class SonarCloudClient
         var url = $"{BaseUrl}/components/show?component={Uri.EscapeDataString(projectKey)}";
         try
         {
-            using var resp = await _http.GetAsync(url, ct);
+            using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
             return resp.IsSuccessStatusCode;
         }
         catch { return false; }

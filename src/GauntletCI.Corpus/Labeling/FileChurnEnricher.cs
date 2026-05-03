@@ -66,15 +66,15 @@ public sealed class FileChurnEnricher : IDisposable
             foreach (var file in changedFiles)
             {
                 ct.ThrowIfCancellationRequested();
-                var churn = await FetchFileChurnAsync(parts[0], parts[1], file, since90, ct);
+                var churn = await FetchFileChurnAsync(parts[0], parts[1], file, since90, ct).ConfigureAwait(false);
                 var hotspotScore = ComputeHotspotScore(churn);
 
-                await WriteFileChurnAsync(db, fixture.FixtureId, fixture.Repo, file, churn, hotspotScore, ct);
+                await WriteFileChurnAsync(db, fixture.FixtureId, fixture.Repo, file, churn, hotspotScore, ct).ConfigureAwait(false);
                 totalFilesAnalyzed++;
 
                 if (hotspotScore >= 0.7) isHotspot = true;
 
-                if (delayMs > 0) await Task.Delay(delayMs, ct);
+                if (delayMs > 0) await Task.Delay(delayMs, ct).ConfigureAwait(false);
             }
 
             processed++;
@@ -114,10 +114,10 @@ public sealed class FileChurnEnricher : IDisposable
                   $"?path={Uri.EscapeDataString(filePath)}&since={Uri.EscapeDataString(since)}&per_page=100";
         try
         {
-            using var resp = await _http.GetAsync(url, ct);
+            using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return 0;
-            await using var stream = await resp.Content.ReadAsStreamAsync(ct);
-            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+            await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
             return doc.RootElement.ValueKind == JsonValueKind.Array
                 ? doc.RootElement.GetArrayLength()
                 : 0;
@@ -142,7 +142,7 @@ public sealed class FileChurnEnricher : IDisposable
         cmd.Parameters.AddWithValue("$filePath",   filePath);
         cmd.Parameters.AddWithValue("$churn",      churn90d);
         cmd.Parameters.AddWithValue("$score",      hotspotScore);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
 

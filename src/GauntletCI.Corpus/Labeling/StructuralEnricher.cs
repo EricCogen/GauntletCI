@@ -80,9 +80,9 @@ public sealed class StructuralEnricher : IDisposable
             foreach (var file in changedFiles.Where(f => f.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)))
             {
                 ct.ThrowIfCancellationRequested();
-                var churn = await FetchFileChurnAsync(parts[0], parts[1], file, since, ct);
+                var churn = await FetchFileChurnAsync(parts[0], parts[1], file, since, ct).ConfigureAwait(false);
                 churnByFile[file] = churn;
-                if (delayMs > 0) await Task.Delay(delayMs, ct);
+                if (delayMs > 0) await Task.Delay(delayMs, ct).ConfigureAwait(false);
             }
 
             var maxChurn = churnByFile.Count > 0 ? churnByFile.Values.Max() : 0;
@@ -90,7 +90,7 @@ public sealed class StructuralEnricher : IDisposable
 
             var changedFilesJson = JsonSerializer.Serialize(changedFiles);
             await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo,
-                changedFilesJson, sensitiveFiles.Count, maxChurn, score, ct);
+                changedFilesJson, sensitiveFiles.Count, maxChurn, score, ct).ConfigureAwait(false);
 
             processed++;
 
@@ -151,11 +151,11 @@ public sealed class StructuralEnricher : IDisposable
                   $"?path={Uri.EscapeDataString(filePath)}&since={Uri.EscapeDataString(since)}&per_page=100";
         try
         {
-            using var resp = await _http.GetAsync(url, ct);
+            using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return 0;
 
-            await using var stream = await resp.Content.ReadAsStreamAsync(ct);
-            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+            await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
             return doc.RootElement.ValueKind == JsonValueKind.Array
                 ? doc.RootElement.GetArrayLength()
                 : 0;
@@ -186,7 +186,7 @@ public sealed class StructuralEnricher : IDisposable
         cmd.Parameters.AddWithValue("$sensitiveCount",  sensitiveFileCount);
         cmd.Parameters.AddWithValue("$maxChurn",        maxChurn);
         cmd.Parameters.AddWithValue("$score",           structuralRiskScore);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
 

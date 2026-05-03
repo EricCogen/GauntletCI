@@ -226,12 +226,12 @@ public sealed class SilverLabelEngine
         string fixtureId, string diffText, bool overwriteExisting = false, CancellationToken ct = default, Action<string>? log = null)
     {
         // ── Tier 1: Diff + comment heuristics ────────────────────────────────
-        var inferred = (await InferLabelsAsync(fixtureId, diffText, ct)).ToList();
+        var inferred = (await InferLabelsAsync(fixtureId, diffText, ct).ConfigureAwait(false)).ToList();
 
         IReadOnlyList<string> commentBodies = [];
         IReadOnlySet<string> commentPaths   = new HashSet<string>(StringComparer.Ordinal);
 
-        var reviewCommentsJson = await _store.TryReadReviewCommentsAsync(fixtureId, ct);
+        var reviewCommentsJson = await _store.TryReadReviewCommentsAsync(fixtureId, ct).ConfigureAwait(false);
         if (reviewCommentsJson is not null)
         {
             try
@@ -262,7 +262,7 @@ public sealed class SilverLabelEngine
         }
 
         // ── Tier 2: File-path correlation ─────────────────────────────────────
-        var actualFindings = await _store.ReadActualFindingsAsync(fixtureId, ct);
+        var actualFindings = await _store.ReadActualFindingsAsync(fixtureId, ct).ConfigureAwait(false);
 
         if (commentPaths.Count > 0)
         {
@@ -318,7 +318,7 @@ public sealed class SilverLabelEngine
                     finding.FilePath,
                     commentBodies,
                     diffSnippet,
-                    ct);
+                    ct).ConfigureAwait(false);
 
                 if (result is not null && !result.IsInconclusive)
                 {
@@ -361,7 +361,7 @@ public sealed class SilverLabelEngine
             }
         }
 
-        var existingLabels = await _store.ReadExpectedFindingsAsync(fixtureId, ct);
+        var existingLabels = await _store.ReadExpectedFindingsAsync(fixtureId, ct).ConfigureAwait(false);
 
         // When overwriting, strip stale heuristic labels for rules removed from strategies.
         if (overwriteExisting)
@@ -370,7 +370,7 @@ public sealed class SilverLabelEngine
                 .ToList();
 
         var merged = MergeLabels(existingLabels, inferred, overwriteExisting);
-        await _store.SaveExpectedFindingsAsync(fixtureId, merged, ct);
+        await _store.SaveExpectedFindingsAsync(fixtureId, merged, ct).ConfigureAwait(false);
         return merged.Count;
     }
 

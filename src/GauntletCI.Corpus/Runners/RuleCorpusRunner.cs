@@ -47,7 +47,7 @@ public sealed class RuleCorpusRunner
         LastRunId     = runId;
 
         var diff   = DiffParser.Parse(diffText);
-        var result = await RuleOrchestrator.CreateDefault(_config, repoPath: _repoPath).RunAsync(diff, null, null, cancellationToken);
+        var result = await RuleOrchestrator.CreateDefault(_config, repoPath: _repoPath).RunAsync(diff, null, null, cancellationToken).ConfigureAwait(false);
 
         var findings = result.Findings
             .Select(f => new ActualFinding
@@ -70,9 +70,9 @@ public sealed class RuleCorpusRunner
 
         var completedAt = DateTime.UtcNow;
 
-        await WriteRuleRunAsync(runId, fixtureId, startedAt, completedAt, cancellationToken);
-        await WriteActualFindingsAsync(fixtureId, runId, findings, cancellationToken);
-        await _store.SaveActualFindingsAsync(fixtureId, runId, findings, cancellationToken);
+        await WriteRuleRunAsync(runId, fixtureId, startedAt, completedAt, cancellationToken).ConfigureAwait(false);
+        await WriteActualFindingsAsync(fixtureId, runId, findings, cancellationToken).ConfigureAwait(false);
+        await _store.SaveActualFindingsAsync(fixtureId, runId, findings, cancellationToken).ConfigureAwait(false);
 
         return findings;
     }
@@ -95,7 +95,7 @@ public sealed class RuleCorpusRunner
         cmd.Parameters.AddWithValue("$completed",  completedAt.ToString("o"));
         cmd.Parameters.AddWithValue("$version",
             System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0");
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
     private async Task WriteActualFindingsAsync(
@@ -125,7 +125,7 @@ public sealed class RuleCorpusRunner
             cmd.Parameters.AddWithValue("$evidence_json",     JsonSerializer.Serialize(f.Evidence));
             cmd.Parameters.AddWithValue("$execution_time_ms", f.ExecutionTimeMs);
             cmd.Parameters.AddWithValue("$file_path",         f.FilePath ?? (object)DBNull.Value);
-            await cmd.ExecuteNonQueryAsync(ct);
+            await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
         }
     }
 }

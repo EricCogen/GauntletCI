@@ -52,7 +52,7 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
             using var reader       = new StreamReader(gzipStream);
 
             string? line;
-            while ((line = await reader.ReadLineAsync(cancellationToken)) is not null)
+            while ((line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false)) is not null)
             {
                 if (results.Count >= query.MaxCandidates)
                     break;

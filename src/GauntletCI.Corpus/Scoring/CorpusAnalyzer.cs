@@ -29,7 +29,7 @@ public class CorpusAnalyzer
         try
         {
             using var conn = new SqliteConnection($"Data Source={_dbPath};");
-            await conn.OpenAsync();
+            await conn.OpenAsync().ConfigureAwait(false);
 
             // Query: Find all corpus hits for this rule
             var cmd = conn.CreateCommand();
@@ -48,13 +48,13 @@ public class CorpusAnalyzer
                 """;
             cmd.Parameters.AddWithValue("@ruleId", ruleId);
 
-            using var reader = await cmd.ExecuteReaderAsync();
+            using var reader = await cmd.ExecuteReaderAsync().ConfigureAwait(false);
             var falsePositives = new List<CorpusFinding>();
             var truePositives = new List<CorpusFinding>();
             var falseNegatives = new List<CorpusFinding>();
             var unknowns = new List<CorpusFinding>();
 
-            while (await reader.ReadAsync())
+            while (await reader.ReadAsync().ConfigureAwait(false))
             {
                 var finding = new CorpusFinding
                 {

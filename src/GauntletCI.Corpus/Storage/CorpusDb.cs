@@ -33,15 +33,15 @@ public sealed class CorpusDb : IDisposable
     public async Task InitializeAsync(CancellationToken cancellationToken = default)
     {
         _connection = new SqliteConnection(_connectionString);
-        await _connection.OpenAsync(cancellationToken);
-        await ApplySchemaAsync(cancellationToken);
+        await _connection.OpenAsync(cancellationToken).ConfigureAwait(false);
+        await ApplySchemaAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private async Task ApplySchemaAsync(CancellationToken cancellationToken)
     {
         using var cmd = Connection.CreateCommand();
         cmd.CommandText = SchemaInitializer.Ddl;
-        await cmd.ExecuteNonQueryAsync(cancellationToken);
+        await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
         // Idempotent migrations: ALTER TABLE errors if column exists; that is harmless.
         foreach (var migration in SchemaInitializer.Migrations)
@@ -50,7 +50,7 @@ public sealed class CorpusDb : IDisposable
             {
                 using var m = Connection.CreateCommand();
                 m.CommandText = migration;
-                await m.ExecuteNonQueryAsync(cancellationToken);
+                await m.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }
         catch (Exception ex) when (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase)
                                  || ex.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase))
@@ -81,7 +81,7 @@ public sealed class CorpusDb : IDisposable
         cmd.Parameters.AddWithValue("$repo",     (object?)repo     ?? DBNull.Value);
         cmd.Parameters.AddWithValue("$code",     (object?)errorCode ?? DBNull.Value);
         cmd.Parameters.AddWithValue("$message",  message);
-        await cmd.ExecuteNonQueryAsync(cancellationToken);
+        await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 }
 

@@ -33,8 +33,8 @@ public sealed class ScoreAggregator : IScoreAggregator
     public async Task<IReadOnlyList<RuleScorecard>> ScoreAsync(
         string? ruleId = null, FixtureTier? tier = null, CancellationToken cancellationToken = default)
     {
-        var fixtures     = await _store.ListFixturesAsync(tier, cancellationToken);
-        var fixturePaths = await LoadFixturePathsAsync(cancellationToken);
+        var fixtures     = await _store.ListFixturesAsync(tier, cancellationToken).ConfigureAwait(false);
+        var fixturePaths = await LoadFixturePathsAsync(cancellationToken).ConfigureAwait(false);
 
         // Totals per tier (denominator for trigger rate)
         var totalPerTier = new Dictionary<FixtureTier, int>();
@@ -52,8 +52,8 @@ public sealed class ScoreAggregator : IScoreAggregator
             var expectedPath = Path.Combine(fixturePath, "expected.json");
             var actualPath   = Path.Combine(fixturePath, "actual.json");
 
-            var expectedFindings = await ReadJsonFileAsync<List<ExpectedFinding>>(expectedPath, cancellationToken) ?? [];
-            var actualFindings   = await ReadJsonFileAsync<List<ActualFinding>>(actualPath, cancellationToken)   ?? [];
+            var expectedFindings = await ReadJsonFileAsync<List<ExpectedFinding>>(expectedPath, cancellationToken).ConfigureAwait(false) ?? [];
+            var actualFindings   = await ReadJsonFileAsync<List<ActualFinding>>(actualPath, cancellationToken).ConfigureAwait(false)   ?? [];
 
             // Track trigger counts across ALL fixtures (not just labeled ones).
             // Count each rule at most once per fixture -- trigger rate = fraction of fixtures
@@ -79,7 +79,7 @@ public sealed class ScoreAggregator : IScoreAggregator
 
         var scorecards = new List<RuleScorecard>();
 
-        var allUsefulnessScores = await GetAllAvgUsefulnessAsync(cancellationToken);
+        var allUsefulnessScores = await GetAllAvgUsefulnessAsync(cancellationToken).ConfigureAwait(false);
 
         foreach (var key in allKeys)
         {
@@ -124,7 +124,7 @@ public sealed class ScoreAggregator : IScoreAggregator
                 Unknown:          unknown);
 
             scorecards.Add(scorecard);
-            await UpsertAggregateAsync(scorecard, cancellationToken);
+            await UpsertAggregateAsync(scorecard, cancellationToken).ConfigureAwait(false);
         }
 
         return scorecards;
@@ -137,8 +137,8 @@ public sealed class ScoreAggregator : IScoreAggregator
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
         using var cmd = _db.Connection.CreateCommand();
         cmd.CommandText = "SELECT fixture_id, path FROM fixtures";
-        using var reader = await cmd.ExecuteReaderAsync(ct);
-        while (await reader.ReadAsync(ct))
+        using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        while (await reader.ReadAsync(ct).ConfigureAwait(false))
         {
             if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
                 result[reader.GetString(0)] = reader.GetString(1);
@@ -151,8 +151,8 @@ public sealed class ScoreAggregator : IScoreAggregator
         using var cmd = _db.Connection.CreateCommand();
         cmd.CommandText = "SELECT rule_id, AVG(usefulness) FROM evaluations GROUP BY rule_id";
         var result = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
-        using var reader = await cmd.ExecuteReaderAsync(ct);
-        while (await reader.ReadAsync(ct))
+        using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        while (await reader.ReadAsync(ct).ConfigureAwait(false))
         {
             var rId = reader.GetString(0);
             var avg = reader.IsDBNull(1) ? 0.0 : reader.GetDouble(1);
@@ -166,7 +166,7 @@ public sealed class ScoreAggregator : IScoreAggregator
         using var cmd = _db.Connection.CreateCommand();
         cmd.CommandText = "SELECT AVG(usefulness) FROM evaluations WHERE rule_id = $ruleId";
         cmd.Parameters.AddWithValue("$ruleId", ruleId);
-        var result = await cmd.ExecuteScalarAsync(ct);
+        var result = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
         return result is double d ? d : 0.0;
     }
 
@@ -189,13 +189,13 @@ public sealed class ScoreAggregator : IScoreAggregator
         cmd.Parameters.AddWithValue("$precision",   sc.Precision);
         cmd.Parameters.AddWithValue("$recall",      sc.Recall);
         cmd.Parameters.AddWithValue("$usefulness",  sc.AvgUsefulness);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
     private async Task<T?> ReadJsonFileAsync<T>(string path, CancellationToken ct)
     {
         if (!File.Exists(path)) return default;
-        var json = await File.ReadAllTextAsync(path, ct);
+        var json = await File.ReadAllTextAsync(path, ct).ConfigureAwait(false);
         return JsonSerializer.Deserialize<T>(json, JsonOpts);
     }
 }

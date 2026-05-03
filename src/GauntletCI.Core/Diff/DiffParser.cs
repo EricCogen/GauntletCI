@@ -162,7 +162,7 @@ public static class DiffParser
     public static async Task<DiffContext> FromGitAsync(
         string repoPath, string commitRef, int contextLines = 10, CancellationToken ct = default)
     {
-        var (diff, message) = await RunGitAsync(repoPath, commitRef, contextLines, ct);
+        var (diff, message) = await RunGitAsync(repoPath, commitRef, contextLines, ct).ConfigureAwait(false);
         return Parse(diff, commitRef, message);
     }
 
@@ -170,7 +170,7 @@ public static class DiffParser
     public static async Task<DiffContext> FromStagedAsync(
         string repoPath, int contextLines = 10, CancellationToken ct = default)
     {
-        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff --cached -U{contextLines}", ct);
+        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff --cached -U{contextLines}", ct).ConfigureAwait(false);
         return Parse(diff, commitSha: "staged");
     }
 
@@ -178,7 +178,7 @@ public static class DiffParser
     public static async Task<DiffContext> FromUnstagedAsync(
         string repoPath, int contextLines = 10, CancellationToken ct = default)
     {
-        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff -U{contextLines}", ct);
+        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff -U{contextLines}", ct).ConfigureAwait(false);
         return Parse(diff, commitSha: "unstaged");
     }
 
@@ -186,7 +186,7 @@ public static class DiffParser
     public static async Task<DiffContext> FromAllChangesAsync(
         string repoPath, int contextLines = 10, CancellationToken ct = default)
     {
-        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff HEAD -U{contextLines}", ct);
+        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff HEAD -U{contextLines}", ct).ConfigureAwait(false);
         return Parse(diff, commitSha: "all-changes");
     }
 
@@ -214,14 +214,14 @@ public static class DiffParser
         string? message = null;
         try
         {
-            var msgResult = await RunProcessAsync("git", $"-C \"{repoPath}\" log -1 --format=%s {commitRef}", ct);
+            var msgResult = await RunProcessAsync("git", $"-C \"{repoPath}\" log -1 --format=%s {commitRef}", ct).ConfigureAwait(false);
             message = msgResult.Trim();
         }
         catch { /* non-fatal */ }
 
         // Get diff: for a single commit use commit^..commit; for a range pass as-is
         var diffArg = commitRef.Contains("..") ? commitRef : $"{commitRef}^..{commitRef}";
-        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff -U{contextLines} {diffArg}", ct);
+        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff -U{contextLines} {diffArg}", ct).ConfigureAwait(false);
         return (diff, message);
     }
 
@@ -265,15 +265,15 @@ public static class DiffParser
 
         try
         {
-            await process.WaitForExitAsync(ct);
+            await process.WaitForExitAsync(ct).ConfigureAwait(false);
         }
         finally
         {
             // Drain streams even on cancellation to release handles.
-            try { output = await stdoutTask; }
+            try { output = await stdoutTask.ConfigureAwait(false); }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
 
-            try { stderr = await stderrTask; }
+            try { stderr = await stderrTask.ConfigureAwait(false); }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
         }
 

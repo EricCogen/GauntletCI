@@ -64,14 +64,14 @@ public sealed class CodeScanningEnricher : IDisposable
             var changedFiles = ParseChangedCsFiles(diffPath);
             if (changedFiles.Count == 0) continue;
 
-            var alerts = await ResolveAlertsAsync(fixture.Repo, result, progress, ct);
+            var alerts = await ResolveAlertsAsync(fixture.Repo, result, progress, ct).ConfigureAwait(false);
             if (alerts is null) continue; // repo has no scanning
 
             int matchesThisFixture = 0;
             foreach (var alert in alerts)
             {
                 if (!changedFiles.Contains(alert.FilePath)) continue;
-                await WriteMatchAsync(db, fixture.FixtureId, alert, ct);
+                await WriteMatchAsync(db, fixture.FixtureId, alert, ct).ConfigureAwait(false);
                 matchesThisFixture++;
             }
 
@@ -115,7 +115,7 @@ public sealed class CodeScanningEnricher : IDisposable
             return cached;
 
         progress?.Invoke($"[codescanning] Fetching CodeQL alerts for {repo}...");
-        var alerts = await _client.GetAlertsAsync(repo, ct: ct);
+        var alerts = await _client.GetAlertsAsync(repo, ct: ct).ConfigureAwait(false);
 
         if (alerts.Count == 0 && !_alertCache.ContainsKey(repo))
         {
@@ -154,7 +154,7 @@ public sealed class CodeScanningEnricher : IDisposable
         cmd.Parameters.AddWithValue("$severity",  alert.Severity);
         cmd.Parameters.AddWithValue("$startLine", alert.StartLine);
         cmd.Parameters.AddWithValue("$message",   alert.Message);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
 

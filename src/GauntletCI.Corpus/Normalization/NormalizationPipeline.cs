@@ -41,15 +41,15 @@ public sealed class NormalizationPipeline
         var metadata = FixtureNormalizer.Normalize(pr, source, tier);
 
         // 1. metadata.json + notes.md template + SQLite upsert
-        await _store.SaveMetadataAsync(metadata, ct);
+        await _store.SaveMetadataAsync(metadata, ct).ConfigureAwait(false);
 
         // 2. diff.patch
-        await WriteDiffPatchAsync(metadata, pr.DiffText, ct);
+        await WriteDiffPatchAsync(metadata, pr.DiffText, ct).ConfigureAwait(false);
 
         // 3. expected.json: empty list for discovery-tier fixtures
         //    (human or heuristic labels will populate this later)
         if (metadata.Tier == FixtureTier.Discovery)
-            await _store.SaveExpectedFindingsAsync(metadata.FixtureId, [], ct);
+            await _store.SaveExpectedFindingsAsync(metadata.FixtureId, [], ct).ConfigureAwait(false);
 
         return metadata;
     }
@@ -82,21 +82,21 @@ public sealed class NormalizationPipeline
         if (!File.Exists(commentsJsonPath))
             throw new FileNotFoundException($"Raw snapshot not found: {commentsJsonPath}");
 
-        var prJson       = await File.ReadAllTextAsync(prJsonPath, ct);
-        var filesJson    = await File.ReadAllTextAsync(filesJsonPath, ct);
-        var commentsJson = await File.ReadAllTextAsync(commentsJsonPath, ct);
+        var prJson       = await File.ReadAllTextAsync(prJsonPath, ct).ConfigureAwait(false);
+        var filesJson    = await File.ReadAllTextAsync(filesJsonPath, ct).ConfigureAwait(false);
+        var commentsJson = await File.ReadAllTextAsync(commentsJsonPath, ct).ConfigureAwait(false);
         var diffText     = File.Exists(diffPatchPath)
-            ? await File.ReadAllTextAsync(diffPatchPath, ct) : "";
+            ? await File.ReadAllTextAsync(diffPatchPath, ct).ConfigureAwait(false) : "";
 
         // Preserve original hydration timestamp for idempotency
-        var originalTimestamp = await ReadExistingHydratedAtUtcAsync(fixturePath, ct);
+        var originalTimestamp = await ReadExistingHydratedAtUtcAsync(fixturePath, ct).ConfigureAwait(false);
 
         var pr = ReconstructFromRaw(
             repoOwner, repoName, prNumber,
             prJson, filesJson, commentsJson, diffText,
             originalTimestamp);
 
-        return await NormalizeAsync(pr, source: "re-normalized", tier: tier, ct: ct);
+        return await NormalizeAsync(pr, source: "re-normalized", tier: tier, ct: ct).ConfigureAwait(false);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
@@ -107,7 +107,7 @@ public sealed class NormalizationPipeline
 
         var fixturePath  = FixtureIdHelper.GetFixturePath(_store.BasePath, meta.Tier, meta.FixtureId);
         var diffPatchPath = Path.Combine(fixturePath, "diff.patch");
-        await File.WriteAllTextAsync(diffPatchPath, diffText, ct);
+        await File.WriteAllTextAsync(diffPatchPath, diffText, ct).ConfigureAwait(false);
     }
 
     private static async Task<DateTime?> ReadExistingHydratedAtUtcAsync(
@@ -118,7 +118,7 @@ public sealed class NormalizationPipeline
 
         try
         {
-            var json = await File.ReadAllTextAsync(metaPath, ct);
+            var json = await File.ReadAllTextAsync(metaPath, ct).ConfigureAwait(false);
             var meta = JsonSerializer.Deserialize<FixtureMetadata>(json, JsonOpts);
             return meta?.CreatedAtUtc;
         }

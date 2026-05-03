@@ -77,10 +77,10 @@ public sealed class IssueEnricher : IDisposable
         {
             try
             {
-                var issue = await FetchIssueAsync(issueOwner, issueRepo, issueNumber, ct);
+                var issue = await FetchIssueAsync(issueOwner, issueRepo, issueNumber, ct).ConfigureAwait(false);
                 if (issue is null) continue;
-                await UpsertIssueAsync(db, issue, ct);
-                await LinkToFixtureAsync(db, fixtureId, issue.Id, "pr-body-ref", ct);
+                await UpsertIssueAsync(db, issue, ct).ConfigureAwait(false);
+                await LinkToFixtureAsync(db, fixtureId, issue.Id, "pr-body-ref", ct).ConfigureAwait(false);
                 linked++;
             }
             catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -127,9 +127,9 @@ public sealed class IssueEnricher : IDisposable
         string owner, string repo, int number, CancellationToken ct)
     {
         var url = $"https://api.github.com/repos/{owner}/{repo}/issues/{number}";
-        using var resp = await _http.GetAsync(url, ct);
+        using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
         if (!resp.IsSuccessStatusCode) return null;
-        var json = await resp.Content.ReadAsStringAsync(ct);
+        var json = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
         var gh = JsonSerializer.Deserialize<GhIssue>(json, JsonOpts);
         if (gh is null) return null;
         // Skip if it's actually a PR (GitHub issues API returns PRs too)
@@ -171,7 +171,7 @@ public sealed class IssueEnricher : IDisposable
         cmd.Parameters.AddWithValue("$closedAt", issue.ClosedAtUtc.HasValue
             ? (object)issue.ClosedAtUtc.Value.ToString("O") : DBNull.Value);
         cmd.Parameters.AddWithValue("$url",      issue.Url);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
     private static async Task LinkToFixtureAsync(
@@ -185,6 +185,6 @@ public sealed class IssueEnricher : IDisposable
         cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
         cmd.Parameters.AddWithValue("$issueId",   issueId);
         cmd.Parameters.AddWithValue("$source",    source);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }

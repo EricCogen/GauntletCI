@@ -61,7 +61,7 @@ public sealed class TestCoverageEnricher
                 continue;
             }
 
-            var diffLines = await File.ReadAllLinesAsync(diffPath, ct);
+            var diffLines = await File.ReadAllLinesAsync(diffPath, ct).ConfigureAwait(false);
             var (prodCsCount, testCsCount) = ClassifyChangedFiles(diffLines);
 
             bool testCoverageGap = prodCsCount > 0 && testCsCount == 0;
@@ -69,7 +69,7 @@ public sealed class TestCoverageEnricher
 
             await WriteEnrichmentAsync(
                 db, fixture.FixtureId, fixture.Repo,
-                prodCsCount, testCsCount, testCoverageGap, testToProdRatio, ct);
+                prodCsCount, testCsCount, testCoverageGap, testToProdRatio, ct).ConfigureAwait(false);
 
             processed++;
 
@@ -173,7 +173,7 @@ public sealed class TestCoverageEnricher
         cmd.Parameters.AddWithValue("$testCsCount",    testCsCount);
         cmd.Parameters.AddWithValue("$testCoverageGap", testCoverageGap ? 1 : 0);
         cmd.Parameters.AddWithValue("$testToProdRatio", testToProdRatio);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
 

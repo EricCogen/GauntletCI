@@ -34,7 +34,7 @@ public sealed class Distillery
         foreach (var fact in facts)
         {
             ct.ThrowIfCancellationRequested();
-            var embedding = await _embedding.EmbedAsync(fact.Content, ct);
+            var embedding = await _embedding.EmbedAsync(fact.Content, ct).ConfigureAwait(false);
             if (embedding.Length == 0) continue;
             _store.Upsert(fact.Id, fact.Content, fact.Source, embedding);
             count++;
@@ -59,10 +59,10 @@ public sealed class Distillery
         {
             ct.ThrowIfCancellationRequested();
 
-            var fact = await ExtractFactAsync(input, ct);
+            var fact = await ExtractFactAsync(input, ct).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(fact)) continue;
 
-            var embedding = await _embedding.EmbedAsync(fact, ct);
+            var embedding = await _embedding.EmbedAsync(fact, ct).ConfigureAwait(false);
             if (embedding.Length == 0) continue;
 
             _store.Upsert(input.Id, fact, input.Source, embedding);
@@ -76,7 +76,7 @@ public sealed class Distillery
         try
         {
             var prompt = PromptTemplates.ExtractExpertFact(input.Title, input.Body);
-            return await _llm.CompleteAsync(prompt, ct);
+            return await _llm.CompleteAsync(prompt, ct).ConfigureAwait(false);
         }
         catch (Exception ex)
         {

@@ -31,7 +31,7 @@ public static class RuleOrchestratorExtensions
         try
         {
             // Enrich all findings in the pipeline at once
-            await pipeline.EnrichAsync(result.Findings, ct);
+            await pipeline.EnrichAsync(result.Findings, ct).ConfigureAwait(false);
         }
         catch (OperationCanceledException)
         {

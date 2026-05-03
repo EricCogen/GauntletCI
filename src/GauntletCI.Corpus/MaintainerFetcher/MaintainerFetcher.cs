@@ -66,13 +66,13 @@ public sealed class MaintainerFetcher : IDisposable
 
         foreach (var target in targets)
         {
-            var topLogins = await GetTopContributorLoginsAsync(target.Owner, target.Repo, ct);
+            var topLogins = await GetTopContributorLoginsAsync(target.Owner, target.Repo, ct).ConfigureAwait(false);
             if (topLogins.Count == 0) continue;
 
             foreach (var label in target.Labels)
             {
-                var prs    = await SearchItemsAsync(target.Owner, target.Repo, "pr",    label, topLogins, maxPerLabel, ct);
-                var issues = await SearchItemsAsync(target.Owner, target.Repo, "issue", label, topLogins, maxPerLabel, ct);
+                var prs    = await SearchItemsAsync(target.Owner, target.Repo, "pr",    label, topLogins, maxPerLabel, ct).ConfigureAwait(false);
+                var issues = await SearchItemsAsync(target.Owner, target.Repo, "issue", label, topLogins, maxPerLabel, ct).ConfigureAwait(false);
 
                 foreach (var rec in prs.Concat(issues))
                 {
@@ -92,7 +92,7 @@ public sealed class MaintainerFetcher : IDisposable
     {
         // GitHub returns contributors sorted by contributions desc (first page = highest)
         var url  = $"https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100&anon=0";
-        var json = await FetchWithBackoffAsync(url, ct);
+        var json = await FetchWithBackoffAsync(url, ct).ConfigureAwait(false);
         var contributors = JsonSerializer.Deserialize<List<GhContributor>>(json, JsonOpts) ?? [];
 
         var total   = contributors.Count;
@@ -114,7 +114,7 @@ public sealed class MaintainerFetcher : IDisposable
                   $"?q=repo:{owner}/{repo}+{qualifier}+label:{encodedLabel}" +
                   $"&sort=reactions&order=desc&per_page={Math.Min(max, 100)}";
 
-        var json     = await FetchWithBackoffAsync(url, ct);
+        var json     = await FetchWithBackoffAsync(url, ct).ConfigureAwait(false);
         var response = JsonSerializer.Deserialize<GhSearchResponse>(json, JsonOpts);
         if (response?.Items is null) return [];
 
@@ -149,10 +149,10 @@ public sealed class MaintainerFetcher : IDisposable
         for (int attempt = 0; ; attempt++)
         {
             using var req  = new HttpRequestMessage(HttpMethod.Get, url);
-            using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
+            using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
 
             if (resp.IsSuccessStatusCode)
-                return await resp.Content.ReadAsStringAsync(ct);
+                return await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
 
             if (!IsRateLimited(resp) || attempt >= MaxRetries)
                 resp.EnsureSuccessStatusCode();
@@ -160,7 +160,7 @@ public sealed class MaintainerFetcher : IDisposable
             var wait = GetWaitTime(resp, baseDelay);
             baseDelay = TimeSpan.FromSeconds(Math.Min(baseDelay.TotalSeconds * 2, 64));
             Console.Error.WriteLine($"[maintainer-fetcher] Rate limited (HTTP {(int)resp.StatusCode}): waiting {wait.TotalSeconds:F0}s…");
-            await Task.Delay(wait, ct);
+            await Task.Delay(wait, ct).ConfigureAwait(false);
         }
     }
 

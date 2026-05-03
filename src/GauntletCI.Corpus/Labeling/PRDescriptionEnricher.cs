@@ -55,10 +55,10 @@ public sealed class PRDescriptionEnricher : IDisposable
             var parts = fixture.Repo.Split('/', 2);
             if (parts.Length < 2) continue;
 
-            var data = await FetchPrDataAsync(parts[0], parts[1], fixture.PullRequestNumber, ct);
+            var data = await FetchPrDataAsync(parts[0], parts[1], fixture.PullRequestNumber, ct).ConfigureAwait(false);
             if (data is null) continue;
 
-            await WriteDataAsync(db, fixture.FixtureId, fixture.Repo, data, ct);
+            await WriteDataAsync(db, fixture.FixtureId, fixture.Repo, data, ct).ConfigureAwait(false);
             processed++;
 
             if (data.IsEmptyBody)    emptyBodyCount++;
@@ -69,7 +69,7 @@ public sealed class PRDescriptionEnricher : IDisposable
                 $"body={data.BodyLength}ch, linked={data.HasLinkedIssue}, wip={data.HasWipKeywords}");
 
             if (delayMs > 0)
-                await Task.Delay(delayMs, ct);
+                await Task.Delay(delayMs, ct).ConfigureAwait(false);
         }
 
         return new PRDescriptionResult(processed, emptyBodyCount, linkedIssueCount, AuthMissing: false);
@@ -81,11 +81,11 @@ public sealed class PRDescriptionEnricher : IDisposable
         var url = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}";
         try
         {
-            using var resp = await _http.GetAsync(url, ct);
+            using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return null;
 
-            await using var stream = await resp.Content.ReadAsStreamAsync(ct);
-            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+            await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
             var root = doc.RootElement;
 
             var title = root.TryGetProperty("title", out var titleEl) && titleEl.ValueKind != JsonValueKind.Null
@@ -133,7 +133,7 @@ public sealed class PRDescriptionEnricher : IDisposable
         cmd.Parameters.AddWithValue("$hasLinkedIssue", data.HasLinkedIssue ? 1 : 0);
         cmd.Parameters.AddWithValue("$hasWipKeywords", data.HasWipKeywords ? 1 : 0);
         cmd.Parameters.AddWithValue("$labelCount",     data.LabelCount);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
     // ── internal static helpers (tested directly) ─────────────────────────────

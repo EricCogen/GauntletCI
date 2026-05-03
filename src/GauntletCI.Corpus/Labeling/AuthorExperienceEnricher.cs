@@ -53,25 +53,25 @@ public sealed class AuthorExperienceEnricher : IDisposable
             var repo  = parts[1];
 
             // Step 1: get author login from PR API
-            var authorLogin = await FetchAuthorLoginAsync(owner, repo, fixture.PullRequestNumber, ct);
+            var authorLogin = await FetchAuthorLoginAsync(owner, repo, fixture.PullRequestNumber, ct).ConfigureAwait(false);
             if (string.IsNullOrEmpty(authorLogin)) continue;
 
-            await Task.Delay(150, ct);
+            await Task.Delay(150, ct).ConfigureAwait(false);
 
             // Step 2: get commit count via pagination header
-            var commitCount = await FetchCommitCountAsync(owner, repo, authorLogin, ct);
+            var commitCount = await FetchCommitCountAsync(owner, repo, authorLogin, ct).ConfigureAwait(false);
 
-            await Task.Delay(150, ct);
+            await Task.Delay(150, ct).ConfigureAwait(false);
 
             // Step 3: get contributor list (cached per repo)
-            var contributors = await GetContributorsAsync(owner, repo, ct);
+            var contributors = await GetContributorsAsync(owner, repo, ct).ConfigureAwait(false);
             var isFirstContributor = !contributors.Contains(authorLogin);
 
             var tier = ClassifyExperienceTier(commitCount);
 
             await WriteDataAsync(
                 db, fixture.FixtureId, fixture.Repo,
-                authorLogin, commitCount, isFirstContributor, tier, ct);
+                authorLogin, commitCount, isFirstContributor, tier, ct).ConfigureAwait(false);
 
             processed++;
             if (isFirstContributor) firstContributors++;
@@ -82,7 +82,7 @@ public sealed class AuthorExperienceEnricher : IDisposable
                 $"commits={commitCount}, tier={tier}, first={isFirstContributor}");
 
             if (delayMs > 0)
-                await Task.Delay(delayMs, ct);
+                await Task.Delay(delayMs, ct).ConfigureAwait(false);
         }
 
         return new AuthorExperienceResult(processed, firstContributors, lowExperienceCount, AuthMissing: false);
@@ -94,10 +94,10 @@ public sealed class AuthorExperienceEnricher : IDisposable
         var url = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}";
         try
         {
-            using var resp = await _http.GetAsync(url, ct);
+            using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return null;
-            await using var stream = await resp.Content.ReadAsStreamAsync(ct);
-            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+            await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
             var root = doc.RootElement;
             if (root.TryGetProperty("user", out var user) &&
                 user.TryGetProperty("login", out var login))
@@ -114,7 +114,7 @@ public sealed class AuthorExperienceEnricher : IDisposable
         var url = $"https://api.github.com/repos/{owner}/{repo}/commits?author={Uri.EscapeDataString(login)}&per_page=1";
         try
         {
-            using var resp = await _http.GetAsync(url, ct);
+            using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return 0;
 
             // Try to parse total from Link header
@@ -126,8 +126,8 @@ public sealed class AuthorExperienceEnricher : IDisposable
                 return Math.Min(lastPage, CommitCountCap);
 
             // No Link header - read array length (0 or 1)
-            await using var stream = await resp.Content.ReadAsStreamAsync(ct);
-            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+            await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
             if (doc.RootElement.ValueKind == JsonValueKind.Array)
                 return doc.RootElement.GetArrayLength();
             return 0;
@@ -147,11 +147,11 @@ public sealed class AuthorExperienceEnricher : IDisposable
         var url = $"https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100";
         try
         {
-            using var resp = await _http.GetAsync(url, ct);
+            using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
             if (resp.IsSuccessStatusCode)
             {
-                await using var stream = await resp.Content.ReadAsStreamAsync(ct);
-                using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+                await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+                using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
                 if (doc.RootElement.ValueKind == JsonValueKind.Array)
                 {
                     foreach (var contributor in doc.RootElement.EnumerateArray())
@@ -191,7 +191,7 @@ public sealed class AuthorExperienceEnricher : IDisposable
         cmd.Parameters.AddWithValue("$commitCount",        commitCount);
         cmd.Parameters.AddWithValue("$isFirstContributor", isFirstContributor ? 1 : 0);
         cmd.Parameters.AddWithValue("$experienceTier",     experienceTier);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
     // ── internal static helpers (tested directly) ─────────────────────────────

@@ -27,7 +27,7 @@ public sealed class RawSnapshotStore
             FixtureIdHelper.GetFixturePath(_basePath, tier, fixtureId));
 
         Directory.CreateDirectory(rawDir);
-        await File.WriteAllTextAsync(Path.Combine(rawDir, fileName), content, ct);
+        await File.WriteAllTextAsync(Path.Combine(rawDir, fileName), content, ct).ConfigureAwait(false);
     }
 
     public async Task<string?> LoadAsync(
@@ -38,6 +38,6 @@ public sealed class RawSnapshotStore
                 FixtureIdHelper.GetFixturePath(_basePath, tier, fixtureId)),
             fileName);
 
-        return File.Exists(path) ? await File.ReadAllTextAsync(path, ct) : null;
+        return File.Exists(path) ? await File.ReadAllTextAsync(path, ct).ConfigureAwait(false) : null;
     }
 }

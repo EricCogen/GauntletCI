@@ -62,14 +62,14 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
             if (parts.Length < 2) continue;
 
             var combinedText = await FetchReviewTextAsync(
-                parts[0], parts[1], fixture.PullRequestNumber, ct);
+                parts[0], parts[1], fixture.PullRequestNumber, ct).ConfigureAwait(false);
 
-            if (delayMs > 0) await Task.Delay(delayMs, ct);
+            if (delayMs > 0) await Task.Delay(delayMs, ct).ConfigureAwait(false);
 
             var matches = MatchTaxonomy(combinedText);
 
             foreach (var (ruleId, keyword, confidence) in matches)
-                await WriteMatchAsync(db, fixture.FixtureId, fixture.Repo, ruleId, keyword, confidence, ct);
+                await WriteMatchAsync(db, fixture.FixtureId, fixture.Repo, ruleId, keyword, confidence, ct).ConfigureAwait(false);
 
             processed++;
             if (matches.Count > 0)
@@ -123,9 +123,9 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
             WHERE  fixture_id = $id
             """;
         cmd.Parameters.AddWithValue("$id", fixtureId);
-        using var reader = await cmd.ExecuteReaderAsync(ct);
+        using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
         var list = new List<(string, string, double)>();
-        while (await reader.ReadAsync(ct))
+        while (await reader.ReadAsync(ct).ConfigureAwait(false))
             list.Add((reader.GetString(0), reader.GetString(1), reader.GetDouble(2)));
         return list;
     }
@@ -139,7 +139,7 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
         var commentsUrl = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}/comments?per_page=100";
         try
         {
-            using var resp = await _http.GetAsync(commentsUrl, ct);
+            using var resp = await _http.GetAsync(commentsUrl, ct).ConfigureAwait(false);
             if (resp.IsSuccessStatusCode)
             {
                 await using var stream = await resp.Content.ReadAsStreamAsync(ct);
@@ -158,17 +158,17 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
         catch (OperationCanceledException) { throw; }
         catch { /* best effort */ }
 
-        await Task.Delay(150, ct);
+        await Task.Delay(150, ct).ConfigureAwait(false);
 
         // Review bodies
         var reviewsUrl = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}/reviews?per_page=100";
         try
         {
-            using var resp = await _http.GetAsync(reviewsUrl, ct);
+            using var resp = await _http.GetAsync(reviewsUrl, ct).ConfigureAwait(false);
             if (resp.IsSuccessStatusCode)
             {
-                await using var stream = await resp.Content.ReadAsStreamAsync(ct);
-                using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+                await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+                using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
                 if (doc.RootElement.ValueKind == JsonValueKind.Array)
                 {
                     foreach (var review in doc.RootElement.EnumerateArray())
@@ -202,7 +202,7 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
         cmd.Parameters.AddWithValue("$ruleId",      ruleId);
         cmd.Parameters.AddWithValue("$keyword",     keyword);
         cmd.Parameters.AddWithValue("$confidence",  confidence);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
 
