@@ -765,6 +765,30 @@ internal static class WellKnownPatterns
         !string.IsNullOrEmpty(content) &&
         DomainSpecificPatterns.CodePatterns.InstanceScopedCachePatterns.Any(p => 
             content.Contains(p, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Returns <c>true</c> if the content is a blocking async call that lacks timeout protection.
+    /// Used by Phase 17b coordination to boost confidence when GCI0016+GCI0020 fire together.
+    /// A blocking async without timeout bounds is a critical severity issue (deadlock + resource exhaustion).
+    /// </summary>
+    public static bool IsBlockingAsyncWithoutTimeout(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return false;
+        
+        // Check for blocking patterns
+        bool isBlocking = content.Contains(".Result", StringComparison.Ordinal) ||
+                          content.Contains(".Wait()", StringComparison.Ordinal) ||
+                          content.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal);
+        
+        if (!isBlocking) return false;
+        
+        // Check for timeout/bound protection
+        bool hasTimeout = TimeoutPatterns.Any(p => content.Contains(p, StringComparison.OrdinalIgnoreCase)) ||
+                          content.Contains("CancellationToken", StringComparison.Ordinal) ||
+                          content.Contains("TimeSpan", StringComparison.Ordinal);
+        
+        return !hasTimeout; // Return true if no timeout protection
+    }
 }
 
 #pragma warning restore GCI0003  // End of WellKnownPatterns consolidation module

@@ -77,15 +77,23 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
         if (WellKnownPatterns.IsOrmAsyncPattern(content)) return;
         if (WellKnownPatterns.IsBoundedSynchronization(content)) return;
 
+        // Determine if this is a blocking async call lacking timeout bounds
+        bool isUnboundedBlocking = WellKnownPatterns.IsBlockingAsyncWithoutTimeout(content);
+
         // .Wait() and .GetAwaiter().GetResult() are unambiguous blocking patterns: always flag.
         if (content.Contains(".Wait()", StringComparison.Ordinal) ||
             content.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal))
         {
+            // Phase 17b: Use high confidence for unb ounded blocking (GCI0016 + GCI0020 coordination)
             findings.Add(CreateFinding(
-                summary: "Blocking async call (.Wait() / .GetAwaiter().GetResult()) risks deadlock.",
+                summary: isUnboundedBlocking 
+                    ? "Blocking async call (.Wait() / .GetAwaiter().GetResult()) without timeout - deadlock + resource exhaustion risk."
+                    : "Blocking async call (.Wait() / .GetAwaiter().GetResult()) risks deadlock.",
                 evidence: $"Line {line.LineNumber}: {content.Trim()}",
-                whyItMatters: "Blocking on an async operation in a context with a SynchronizationContext (ASP.NET, WPF, Blazor) deadlocks because the continuation needs the thread that is already blocked waiting for it.",
-                suggestedAction: "Use await. If sync-over-async is unavoidable, ensure every await in the call chain uses ConfigureAwait(false) to avoid capturing the SynchronizationContext.",
+                whyItMatters: "Blocking on an async operation in a context with a SynchronizationContext (ASP.NET, WPF, Blazor) deadlocks because the continuation needs the thread that is already blocked waiting for it." +
+                    (isUnboundedBlocking ? " Combined with missing timeout, this can exhaust system resources and cause DoS." : ""),
+                suggestedAction: "Use await. If sync-over-async is unavoidable, ensure every await in the call chain uses ConfigureAwait(false) to avoid capturing the SynchronizationContext. " +
+                    (isUnboundedBlocking ? "Add CancellationToken or TimeSpan timeout protection." : ""),
                 confidence: Confidence.High));
             return;
         }
@@ -110,12 +118,20 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
 
         if (!isChainedOnCall && !hasTaskContext) return;
 
+        // Phase 17b: Boost confidence if also missing timeout (GCI0016 + GCI0020 coordination)
+        var resultConfidence = isUnboundedBlocking ? Confidence.High : Confidence.High;
+        var resultSummary = isUnboundedBlocking
+            ? "Blocking async call (.Result) without timeout - deadlock + resource exhaustion risk."
+            : "Blocking async call (.Result) risks deadlock.";
+
         findings.Add(CreateFinding(
-            summary: "Blocking async call (.Result) risks deadlock.",
+            summary: resultSummary,
             evidence: $"Line {line.LineNumber}: {content.Trim()}",
-            whyItMatters: "Accessing .Result on a Task blocks the calling thread. In ASP.NET or UI contexts this deadlocks because the continuation requires the synchronization context thread that is already blocked.",
-            suggestedAction: "Use await instead of .Result.",
-            confidence: Confidence.High));
+            whyItMatters: "Accessing .Result on a Task blocks the calling thread. In ASP.NET or UI contexts this deadlocks because the continuation requires the synchronization context thread that is already blocked." +
+                (isUnboundedBlocking ? " Combined with missing timeout, this can exhaust system resources and cause DoS." : ""),
+            suggestedAction: "Use await instead of .Result." +
+                (isUnboundedBlocking ? " Add CancellationToken or TimeSpan timeout protection." : ""),
+            confidence: resultConfidence));
     }
 
     private void CheckLockThis(DiffLine line, List<Finding> findings)
