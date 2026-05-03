@@ -152,6 +152,7 @@ export default function DocsPage() {
         <h2 className="text-2xl font-semibold mb-4">Next steps</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {[
+            { href: "/docs/privacy-modes", label: "Privacy Modes", desc: "Default, Local AI, Integration, CI AI" },
             { href: "/docs/cli-reference", label: "CLI Reference", desc: "All commands and flags" },
             { href: "/docs/rules", label: "Rule Library", desc: "All detection rules" },
             { href: "/docs/configuration", label: "Configuration", desc: ".gauntletci.json reference" },
