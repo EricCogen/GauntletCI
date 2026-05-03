@@ -856,6 +856,28 @@ internal static class DomainSpecificPatterns
             "ServiceExtensions", "AuthExtensions", "Program.cs",
             "CompositionRoot", "ModuleInitializer", "AppDefaults"
         ];
+
+        /// <summary>
+        /// Internal/private API markers indicating non-public code.
+        /// Used by GCI0004 (Breaking Change) to avoid flagging internal API deprecations.
+        /// </summary>
+        public static readonly string[] InternalMarkers =
+        [
+            " internal ", "internal class", "internal interface", "internal struct",
+            "internal enum", "internal record", "private class", "private interface",
+            "namespace.*\\.Internal", "/Internal/", "InternalApi"
+        ];
+
+        /// <summary>
+        /// DI composition root patterns indicating intentional container setup code.
+        /// Used by GCI0038 (DI Safety) to avoid flagging composition root service locators.
+        /// </summary>
+        public static readonly string[] DiCompositionRootMarkers =
+        [
+            "CompositionRoot", "ConfigureServices", "AddApplicationServices",
+            "services.AddScoped", "services.AddSingleton", "services.AddTransient",
+            "builder.Services", "serviceCollection.Add", "container.Register"
+        ];
     }
 
     // ================= Generic Helper Methods =================
@@ -909,5 +931,25 @@ internal static class DomainSpecificPatterns
     {
         if (string.IsNullOrEmpty(content)) return false;
         return TestPatterns.MockObjectPatterns.Any(p => content.Contains(p, StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> if the line/path indicates internal or private API.
+    /// Used by GCI0004 (Breaking Change) to avoid flagging internal API deprecations.
+    /// </summary>
+    public static bool HasInternalMarker(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return false;
+        return CodePatterns.InternalMarkers.Any(p => content.Contains(p, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> if the line indicates DI composition root code.
+    /// Used by GCI0038 (DI Safety) to avoid flagging intentional composition patterns.
+    /// </summary>
+    public static bool IsDiCompositionRoot(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return false;
+        return CodePatterns.DiCompositionRootMarkers.Any(p => content.Contains(p, StringComparison.OrdinalIgnoreCase));
     }
 }

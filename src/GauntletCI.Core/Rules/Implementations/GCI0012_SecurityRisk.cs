@@ -70,6 +70,10 @@ public class GCI0012_SecurityRisk : RuleBase
     private void CheckSqlInjection(DiffLine line, List<Finding> findings)
     {
         var content = line.Content;
+        
+        // Skip mock objects in unit tests (even if test file guard wasn't applied)
+        if (WellKnownPatterns.HasMockPattern(content)) return;
+
         bool hasSqlKeyword = SqlKeywords.Any(k => content.Contains(k, StringComparison.OrdinalIgnoreCase));
         if (!hasSqlKeyword) return;
 
@@ -104,13 +108,18 @@ public class GCI0012_SecurityRisk : RuleBase
 
     private void CheckWeakCrypto(DiffLine line, List<Finding> findings)
     {
+        var content = line.Content;
+        
+        // Skip test code (cryptography unit tests may intentionally use weak algos for comparison)
+        if (WellKnownPatterns.HasMockPattern(content)) return;
+
         foreach (var algo in WeakCryptoAlgorithms)
         {
-            if (!line.Content.Contains(algo, StringComparison.Ordinal)) continue;
+            if (!content.Contains(algo, StringComparison.Ordinal)) continue;
 
             findings.Add(CreateFinding(
                 summary: $"Weak or deprecated cryptographic algorithm: {algo}",
-                evidence: $"Line {line.LineNumber}: {line.Content.Trim()}",
+                evidence: $"Line {line.LineNumber}: {content.Trim()}",
                 whyItMatters: "DES, RC2, and 3DES are deprecated and vulnerable to brute-force attacks.",
                 suggestedAction: "Use AES (AesGcm or Aes.Create()) with appropriate key sizes.",
                 confidence: Confidence.High));

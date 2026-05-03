@@ -713,6 +713,18 @@ internal static class WellKnownPatterns
     /// Used by GCI0047 (Naming) and GCI0032 (Exception) to avoid flagging test mocks.
     /// </summary>
     public static bool HasMockPattern(string content) => DomainSpecificPatterns.HasMockPattern(content);
+
+    /// <summary>
+    /// Returns <c>true</c> if the line/path indicates internal or private API.
+    /// Used by GCI0004 (Breaking Change) to avoid flagging internal API deprecations.
+    /// </summary>
+    public static bool HasInternalMarker(string content) => DomainSpecificPatterns.HasInternalMarker(content);
+
+    /// <summary>
+    /// Returns <c>true</c> if the line indicates DI composition root code.
+    /// Used by GCI0038 (DI Safety) to avoid flagging intentional composition patterns.
+    /// </summary>
+    public static bool IsDiCompositionRoot(string content) => DomainSpecificPatterns.IsDiCompositionRoot(content);
 }
 
 #pragma warning restore GCI0003  // End of WellKnownPatterns consolidation module

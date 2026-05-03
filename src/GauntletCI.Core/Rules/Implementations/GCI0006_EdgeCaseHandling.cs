@@ -109,7 +109,10 @@ public class GCI0006_EdgeCaseHandling : RuleBase
             // Test helpers do not need null guards: skip test files entirely
             if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
 
-            var addedLines = file.AddedLines.ToList();
+            var addedLines = file.AddedLines
+                .Where(l => !WellKnownPatterns.HasDevOnlyMarker(l.Content)) // Skip dev-only code
+                .ToList();
+            
             var fileContent = string.Join("\n", addedLines.Select(l => l.Content));
             var isNrtEnabled = WellKnownPatterns.IsNullableReferenceTypeEnabled(fileContent);
 
