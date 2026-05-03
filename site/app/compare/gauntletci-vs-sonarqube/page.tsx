@@ -7,7 +7,7 @@ import { Footer } from "@/components/footer";
 export const metadata: Metadata = {
   title: "GauntletCI vs. SonarQube: Diff Analysis vs. Whole-Repo Static Analysis",
   description:
-    "Compare GauntletCI and SonarQube. GauntletCI analyzes only what changed, runs 100% locally, and catches behavioral regressions in pre-commit. SonarQube scans the whole repo in CI.",
+    "Compare GauntletCI and SonarQube. GauntletCI analyzes only what changed, runs locally, and catches behavioral regressions in pre-commit. SonarQube scans the whole repo in CI.",
   alternates: { canonical: "/compare/gauntletci-vs-sonarqube" },
   openGraph: { images: [{ url: '/og/compare-sonarqube.png', width: 1200, height: 630 }] },
 };
@@ -31,7 +31,7 @@ const tableRows = [
   {
     scenario: "Air-gapped or strict data-residency environments",
     winner: "gauntlet",
-    note: "No code leaves the machine. No SaaS account required.",
+    note: "By default, no code leaves the machine. No SaaS account required.",
   },
   {
     scenario: "Generating compliance audit trails",

@@ -50,7 +50,7 @@ export default function CustomRulesPage() {
           <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">Custom Rules</p>
           <h1 className="text-4xl font-bold tracking-tight mb-4">Writing Custom Rules</h1>
           <p className="text-lg text-muted-foreground">
-            GauntletCI is open source. All 35 built-in rules follow the same pattern. Adding a custom rule means
+            GauntletCI is open source. All 30+ built-in rules follow the same pattern. Adding a custom rule means
             implementing one interface, placing the file in one directory, and writing tests. No registration step is needed.
           </p>
         </div>

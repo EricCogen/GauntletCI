@@ -6,7 +6,7 @@ import { Footer } from "@/components/footer";
 export const metadata: Metadata = {
   title: "GauntletCI vs Code Climate | Diff-Scoped Risk Detection vs Code Quality Metrics",
   description:
-    "Code Climate measures maintainability and technical debt across your whole codebase. GauntletCI detects behavioral regressions in only the lines that changed -- pre-commit, 100% local.",
+    "Code Climate measures maintainability and technical debt across your whole codebase. GauntletCI detects behavioral regressions in only the lines that changed -- pre-commit, runs locally.",
   alternates: { canonical: "/compare/gauntletci-vs-codeclimate" },
   openGraph: { images: [{ url: '/og/compare-codeclimate.png', width: 1200, height: 630 }] },
 };
@@ -14,11 +14,11 @@ export const metadata: Metadata = {
 const table = [
   { feature: "Primary focus",              gauntlet: "Behavioral regressions in the diff",           cc: "Maintainability, duplication, and test coverage" },
   { feature: "Analysis scope",             gauntlet: "Changed diff lines only",                      cc: "Full repository scan" },
-  { feature: "Data leaves the machine",    gauntlet: "Never -- 100% local execution",                cc: "Yes -- SaaS platform, repository connected to Code Climate" },
+  { feature: "Data leaves the machine",    gauntlet: "By default, no -- core analysis is local",     cc: "Yes -- SaaS platform, repository connected to Code Climate" },
   { feature: "When it runs",               gauntlet: "Pre-commit, before the push",                  cc: "Post-push in CI pipeline" },
   { feature: "Pre-commit speed",           gauntlet: "Under 1 second",                               cc: "Not designed for pre-commit use" },
   { feature: "Account required",           gauntlet: "No",                                           cc: "Yes -- Code Climate account and repo authorization" },
-  { feature: "Air-gap / data residency",   gauntlet: "Yes -- no network dependency",                 cc: "No -- SaaS-only" },
+  { feature: "Air-gap / data residency",   gauntlet: "Yes -- core engine requires no network",        cc: "No -- SaaS-only" },
   { feature: "False positives on old code",gauntlet: "None -- diff-scoped by design",                cc: "Yes -- reports pre-existing issues on every run" },
   { feature: "Removed logic detection",    gauntlet: "Yes -- deleted guards, handlers flagged",      cc: "No -- tracks quality metrics, not behavioral changes" },
   { feature: "API contract change detection", gauntlet: "Yes",                                       cc: "No" },
@@ -36,7 +36,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": "GauntletCI vs Code Climate: Diff-Scoped Risk Detection vs Code Quality Metrics",
-  "description": "Code Climate measures maintainability and technical debt across your whole codebase. GauntletCI detects behavioral regressions in only the lines that changed -- pre-commit, 100% local.",
+  "description": "Code Climate measures maintainability and technical debt across your whole codebase. GauntletCI detects behavioral regressions in only the lines that changed -- pre-commit, runs locally.",
   "url": "https://gauntletci.com/compare/gauntletci-vs-codeclimate",
   "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
 };

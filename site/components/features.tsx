@@ -5,7 +5,7 @@ export function Features() {
     {
       icon: Zap,
       title: "Sub-second analysis",
-      description: "No full build required, no network. Get instant feedback on your changes before the commit is created.",
+      description: "No full build required. Core analysis requires no network. Get instant feedback on your changes before the commit is created.",
     },
     {
       icon: Eye,
@@ -14,8 +14,8 @@ export function Features() {
     },
     {
       icon: Lock,
-      title: "100% local execution",
-      description: "Core analysis runs entirely on your machine by default. Auto-redaction prevents sensitive data exposure. Works air-gapped.",
+      title: "Local execution by default",
+      description: "Core analysis runs entirely on your machine by default. Auto-redaction prevents sensitive data exposure. Can run air-gapped.",
     },
     {
       icon: Server,

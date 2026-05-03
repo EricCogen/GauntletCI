@@ -29,12 +29,12 @@ const rows: ComparisonRow[] = [
     gauntlet: "yes", sonar: "no", semgrep: "partial", snyk: "no", codeql: "no", codeclimate: "no", ndepend: "no",
   },
   {
-    label: "100% local - no code leaves the machine",
-    sublabel: "No cloud upload, no SaaS account required",
+    label: "Core analysis runs locally - no code leaves by default",
+    sublabel: "No cloud upload by default, no SaaS account required",
     gauntlet: "yes", sonar: "partial", semgrep: "partial", snyk: "no", codeql: "partial", codeclimate: "no", ndepend: "yes",
   },
   {
-    label: "Air-gap / data residency friendly",
+    label: "Core engine can run air-gapped",
     gauntlet: "yes", sonar: "partial", semgrep: "partial", snyk: "no", codeql: "partial", codeclimate: "no", ndepend: "yes",
   },
   {
