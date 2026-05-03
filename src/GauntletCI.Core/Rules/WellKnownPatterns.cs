@@ -687,6 +687,32 @@ internal static class WellKnownPatterns
             return false;
         }
     }
+
+    // ================= Phase 13 Guard Delegation Methods =================
+
+    /// <summary>
+    /// Returns <c>true</c> if the content contains any MVVM framework patterns.
+    /// Used by GCI0043 (Nullability) to avoid flagging ViewModels.
+    /// </summary>
+    public static bool HasMvvmPattern(string content) => DomainSpecificPatterns.HasMvvmPattern(content);
+
+    /// <summary>
+    /// Returns <c>true</c> if the content contains dev-only markers (TODO, HACK, DEBUG).
+    /// Used by GCI0003 (Behavioral Change) to avoid flagging development-only code.
+    /// </summary>
+    public static bool HasDevOnlyMarker(string content) => DomainSpecificPatterns.HasDevOnlyMarker(content);
+
+    /// <summary>
+    /// Returns <c>true</c> if the content contains ORM or DTO mapping patterns.
+    /// Used by GCI0015 (Data Integrity) to avoid flagging ORM auto-mapping.
+    /// </summary>
+    public static bool HasMappingPattern(string content) => DomainSpecificPatterns.HasMappingPattern(content);
+
+    /// <summary>
+    /// Returns <c>true</c> if the content contains mock object creation patterns.
+    /// Used by GCI0047 (Naming) and GCI0032 (Exception) to avoid flagging test mocks.
+    /// </summary>
+    public static bool HasMockPattern(string content) => DomainSpecificPatterns.HasMockPattern(content);
 }
 
 #pragma warning restore GCI0003  // End of WellKnownPatterns consolidation module

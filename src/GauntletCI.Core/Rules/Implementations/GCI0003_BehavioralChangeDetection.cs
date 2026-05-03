@@ -119,9 +119,10 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
 
     private void CheckLogicRemovedWithoutTests(DiffContext diff, List<Finding> findings)
     {
-        // Only count logic removals from production files: skip test and generated files.
+        // Only count logic removals from production files: skip test, generated, and dev-only files.
         var filesWithRemovedLogic = diff.Files
             .Where(f => !WellKnownPatterns.IsTestFile(f.NewPath) && !WellKnownPatterns.IsGeneratedFile(f.NewPath))
+            .Where(f => !f.RemovedLines.Any(l => WellKnownPatterns.HasDevOnlyMarker(l.Content)))
             .Where(f => f.RemovedLines
                 .Any(l => !WellKnownPatterns.GuardPatterns.IsCommentLine(l.Content)
                        && LogicKeywords.Any(k => l.Content.Contains(k, StringComparison.Ordinal))))
