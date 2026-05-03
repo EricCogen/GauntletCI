@@ -1,0 +1,1169 @@
+{
+  "name": "CSharpBestPracticesRoslynMapped",
+  "version": "2.0.0",
+  "generated_utc": "2026-04-29T12:58:00Z",
+  "description": "A Roslyn-oriented C# best-practices ruleset with detection metadata, analyzer overlap, diff signals, examples, and suggested fixes.",
+  "schema": {
+    "id": "stable rule identifier",
+    "category": "high level rule category",
+    "title": "human-readable rule name",
+    "intent": "why the rule exists",
+    "guidance": "how to apply the rule",
+    "examples": "bad and good examples where useful",
+    "classification": "deterministic, diff_detectable, risk_type, severity",
+    "roslyn": "syntax kinds, symbol kinds, and analysis requirements",
+    "microsoft_analyzer_overlap": "related Microsoft analyzer rule IDs where known or closely overlapping",
+    "detection": "implementation-oriented strategy and signals",
+    "suggested_fix": "human-readable remediation"
+  },
+  "rules": [
+    {
+      "id": "BP001",
+      "category": "Naming",
+      "title": "Use PascalCase for public types and members",
+      "intent": "Keep public API names consistent with .NET naming conventions.",
+      "guidance": "Flag public classes, structs, records, interfaces, enums, methods, properties, events, and fields whose names do not follow PascalCase.",
+      "examples": {
+        "bad": "public class customerService { public void processOrder() {} }",
+        "good": "public class CustomerService { public void ProcessOrder() {} }"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "maintainability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "symbol",
+        "symbol_kinds": [
+          "NamedType",
+          "Method",
+          "Property",
+          "Event",
+          "Field"
+        ],
+        "syntax_kinds": [
+          "ClassDeclaration",
+          "StructDeclaration",
+          "RecordDeclaration",
+          "InterfaceDeclaration",
+          "EnumDeclaration",
+          "MethodDeclaration",
+          "PropertyDeclaration",
+          "EventDeclaration",
+          "FieldDeclaration"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [
+        "IDE1006"
+      ],
+      "detection": {
+        "strategy": "symbol_name_pattern",
+        "signals": [
+          "public or protected symbol",
+          "identifier does not match PascalCase"
+        ],
+        "confidence": "high"
+      },
+      "suggested_fix": "Rename the public symbol using PascalCase."
+    },
+    {
+      "id": "BP002",
+      "category": "Naming",
+      "title": "Use camelCase for parameters and local variables",
+      "intent": "Make local scope identifiers visually distinct from public API members.",
+      "guidance": "Flag parameter and local variable names that use PascalCase or unclear casing unless they are constants or intentionally named discards.",
+      "examples": {
+        "bad": "public void SaveOrder(int OrderId) { var TotalAmount = 10; }",
+        "good": "public void SaveOrder(int orderId) { var totalAmount = 10; }"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "maintainability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "syntax_and_symbol",
+        "symbol_kinds": [
+          "Parameter",
+          "Local"
+        ],
+        "syntax_kinds": [
+          "Parameter",
+          "VariableDeclarator"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [
+        "IDE1006"
+      ],
+      "detection": {
+        "strategy": "identifier_pattern",
+        "signals": [
+          "parameter identifier",
+          "local identifier",
+          "identifier does not match camelCase"
+        ],
+        "confidence": "high"
+      },
+      "suggested_fix": "Rename the parameter or local variable using camelCase."
+    },
+    {
+      "id": "BP003",
+      "category": "Naming",
+      "title": "Prefix interfaces with I",
+      "intent": "Follow established .NET interface naming conventions.",
+      "guidance": "Flag interface declarations that do not begin with a capital I followed by another capital letter.",
+      "examples": {
+        "bad": "public interface Repository { }",
+        "good": "public interface IRepository { }"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "maintainability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "syntax",
+        "syntax_kinds": [
+          "InterfaceDeclaration"
+        ],
+        "requires_semantic_model": false
+      },
+      "microsoft_analyzer_overlap": [
+        "IDE1006"
+      ],
+      "detection": {
+        "strategy": "syntax_identifier_pattern",
+        "signals": [
+          "InterfaceDeclaration",
+          "identifier missing I prefix"
+        ],
+        "confidence": "high"
+      },
+      "suggested_fix": "Rename the interface using the IName convention."
+    },
+    {
+      "id": "BP004",
+      "category": "Naming",
+      "title": "Avoid vague method names",
+      "intent": "Reduce ambiguity and make behavior easier to understand.",
+      "guidance": "Flag overly generic method names such as Process, Handle, Execute, DoWork, Run, or Manage when the method body or containing type suggests a more specific action.",
+      "examples": {
+        "bad": "void Process() { SendInvoices(); }",
+        "good": "void ProcessPendingInvoices() { SendInvoices(); }"
+      },
+      "classification": {
+        "deterministic": false,
+        "diff_detectable": true,
+        "risk_type": "maintainability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "syntax",
+        "syntax_kinds": [
+          "MethodDeclaration",
+          "LocalFunctionStatement"
+        ],
+        "requires_semantic_model": false
+      },
+      "microsoft_analyzer_overlap": [],
+      "detection": {
+        "strategy": "heuristic_name_smell",
+        "signals": [
+          "generic verb-only method name",
+          "method body calls domain-specific operations",
+          "changed or added method"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Rename the method to describe the actual operation or outcome."
+    },
+    {
+      "id": "BP005",
+      "category": "Structure",
+      "title": "Prefer early returns over deeply nested conditionals",
+      "intent": "Reduce cognitive complexity and make guard conditions explicit.",
+      "guidance": "Flag newly added or modified methods with nested if statements that could be flattened using guard clauses.",
+      "examples": {
+        "bad": "if (order != null) { if (order.IsValid) { Save(order); } }",
+        "good": "if (order == null) return;\nif (!order.IsValid) return;\nSave(order);"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "maintainability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "syntax",
+        "syntax_kinds": [
+          "IfStatement",
+          "Block",
+          "ReturnStatement"
+        ],
+        "requires_semantic_model": false
+      },
+      "microsoft_analyzer_overlap": [
+        "IDE0011"
+      ],
+      "detection": {
+        "strategy": "control_flow_shape",
+        "signals": [
+          "nested IfStatement depth >= 2",
+          "no else branch",
+          "positive condition guarding main body"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Invert guard conditions and return early where this preserves behavior."
+    },
+    {
+      "id": "BP006",
+      "category": "Structure",
+      "title": "Always use braces for control statements",
+      "intent": "Prevent bugs when future statements are added.",
+      "guidance": "Flag if, else, for, foreach, while, and using statements whose embedded statement is not a block.",
+      "examples": {
+        "bad": "if (isValid) Save();",
+        "good": "if (isValid)\n{\n    Save();\n}"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "maintainability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "syntax",
+        "syntax_kinds": [
+          "IfStatement",
+          "ElseClause",
+          "ForStatement",
+          "ForEachStatement",
+          "WhileStatement",
+          "UsingStatement",
+          "LockStatement"
+        ],
+        "requires_semantic_model": false
+      },
+      "microsoft_analyzer_overlap": [
+        "IDE0011"
+      ],
+      "detection": {
+        "strategy": "syntax_shape",
+        "signals": [
+          "embedded statement is not BlockSyntax"
+        ],
+        "confidence": "high"
+      },
+      "suggested_fix": "Wrap the embedded statement in braces."
+    },
+    {
+      "id": "BP007",
+      "category": "Structure",
+      "title": "Limit method size and responsibility",
+      "intent": "Large methods are harder to review, test, and reason about.",
+      "guidance": "Flag added or modified methods that exceed configured thresholds for statement count, line count, or control-flow complexity.",
+      "examples": {
+        "bad": null,
+        "good": null
+      },
+      "classification": {
+        "deterministic": false,
+        "diff_detectable": true,
+        "risk_type": "maintainability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "syntax",
+        "syntax_kinds": [
+          "MethodDeclaration",
+          "ConstructorDeclaration",
+          "LocalFunctionStatement"
+        ],
+        "requires_semantic_model": false
+      },
+      "microsoft_analyzer_overlap": [],
+      "detection": {
+        "strategy": "metric_threshold",
+        "signals": [
+          "method line count > configured threshold",
+          "statement count > threshold",
+          "nested control flow"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Extract smaller private methods around cohesive behavior."
+    },
+    {
+      "id": "BP008",
+      "category": "Exceptions",
+      "title": "Do not swallow exceptions silently",
+      "intent": "Silent exception handling hides failures and can cause data corruption or operational blind spots.",
+      "guidance": "Flag catch blocks with empty bodies or only comments, especially in modified code.",
+      "examples": {
+        "bad": "try { Save(); } catch (Exception) { }",
+        "good": "try { Save(); } catch (Exception ex) { logger.LogError(ex, \"Save failed\"); throw; }"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "maintainability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "syntax",
+        "syntax_kinds": [
+          "CatchClause",
+          "Block"
+        ],
+        "requires_semantic_model": false
+      },
+      "microsoft_analyzer_overlap": [
+        "CA1031"
+      ],
+      "detection": {
+        "strategy": "catch_block_content",
+        "signals": [
+          "CatchClause",
+          "empty block",
+          "no throw",
+          "no logging call"
+        ],
+        "confidence": "high"
+      },
+      "suggested_fix": "Log the exception, handle it explicitly, or rethrow it."
+    },
+    {
+      "id": "BP009",
+      "category": "Exceptions",
+      "title": "Preserve stack trace when rethrowing",
+      "intent": "Keep original failure location available for debugging.",
+      "guidance": "Flag catch blocks that rethrow using throw ex instead of throw.",
+      "examples": {
+        "bad": "catch (Exception ex) { throw ex; }",
+        "good": "catch (Exception) { throw; }"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "maintainability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "syntax",
+        "syntax_kinds": [
+          "CatchClause",
+          "ThrowStatement"
+        ],
+        "requires_semantic_model": false
+      },
+      "microsoft_analyzer_overlap": [
+        "CA2200"
+      ],
+      "detection": {
+        "strategy": "throw_expression_check",
+        "signals": [
+          "ThrowStatement has expression matching catch variable"
+        ],
+        "confidence": "high"
+      },
+      "suggested_fix": "Replace throw ex with throw."
+    },
+    {
+      "id": "BP010",
+      "category": "Exceptions",
+      "title": "Avoid catching general Exception unless justified",
+      "intent": "Broad catches often hide specific failure modes and make recovery unclear.",
+      "guidance": "Flag catch (Exception) or catch without a type when the block does not rethrow, wrap, or clearly handle the failure.",
+      "examples": {
+        "bad": "catch (Exception ex) { return false; }",
+        "good": "catch (SqlException ex) { logger.LogError(ex, \"Database save failed\"); return false; }"
+      },
+      "classification": {
+        "deterministic": false,
+        "diff_detectable": true,
+        "risk_type": "reliability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "syntax_and_symbol",
+        "syntax_kinds": [
+          "CatchDeclaration",
+          "CatchClause"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [
+        "CA1031"
+      ],
+      "detection": {
+        "strategy": "catch_type_and_behavior",
+        "signals": [
+          "catch type is System.Exception",
+          "no rethrow",
+          "no specific handling"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Catch the most specific exception type you can handle meaningfully."
+    },
+    {
+      "id": "BP011",
+      "category": "Exceptions",
+      "title": "Do not use exceptions for normal control flow",
+      "intent": "Exceptions are expensive and make expected paths harder to understand.",
+      "guidance": "Flag try/catch patterns around predictable lookup, parsing, or conversion operations where a Try* API exists.",
+      "examples": {
+        "bad": "try { value = int.Parse(input); } catch { value = 0; }",
+        "good": "if (!int.TryParse(input, out value)) { value = 0; }"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "performance",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "semantic",
+        "syntax_kinds": [
+          "TryStatement",
+          "InvocationExpression"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [],
+      "detection": {
+        "strategy": "try_parse_or_lookup_pattern",
+        "signals": [
+          "try contains Parse or dictionary indexer",
+          "catch handles expected failure",
+          "TryParse or TryGetValue alternative exists"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Use TryParse, TryGetValue, or explicit condition checks for expected cases."
+    },
+    {
+      "id": "BP012",
+      "category": "Async",
+      "title": "Avoid blocking async calls",
+      "intent": "Prevent deadlocks, thread pool starvation, and poor scalability.",
+      "guidance": "Flag .Result, .Wait(), and GetAwaiter().GetResult() on Task or ValueTask in async-capable contexts.",
+      "examples": {
+        "bad": "var result = GetDataAsync().Result;",
+        "good": "var result = await GetDataAsync();"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "maintainability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "semantic",
+        "syntax_kinds": [
+          "MemberAccessExpression",
+          "InvocationExpression"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [
+        "VSTHRD002"
+      ],
+      "detection": {
+        "strategy": "task_blocking_call",
+        "signals": [
+          "member access Result on Task",
+          "Wait invocation on Task",
+          "GetResult invocation"
+        ],
+        "confidence": "high"
+      },
+      "suggested_fix": "Await the task instead of blocking on it."
+    },
+    {
+      "id": "BP013",
+      "category": "Async",
+      "title": "Avoid async void except event handlers",
+      "intent": "Async void exceptions cannot be awaited or observed reliably.",
+      "guidance": "Flag async void methods unless they are event handlers.",
+      "examples": {
+        "bad": "public async void LoadDataAsync() { await Load(); }",
+        "good": "public async Task LoadDataAsync() { await Load(); }"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "maintainability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "syntax_and_symbol",
+        "syntax_kinds": [
+          "MethodDeclaration"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [
+        "VSTHRD100"
+      ],
+      "detection": {
+        "strategy": "method_signature",
+        "signals": [
+          "async modifier",
+          "void return type",
+          "not event handler pattern"
+        ],
+        "confidence": "high"
+      },
+      "suggested_fix": "Return Task instead of void unless the method is an event handler."
+    },
+    {
+      "id": "BP014",
+      "category": "Async",
+      "title": "Pass CancellationToken through async call chains",
+      "intent": "Allow callers to cancel long-running or I/O-bound operations.",
+      "guidance": "Flag async methods that accept CancellationToken but fail to pass it to awaited cancellable operations.",
+      "examples": {
+        "bad": "await httpClient.GetAsync(url);",
+        "good": "await httpClient.GetAsync(url, cancellationToken);"
+      },
+      "classification": {
+        "deterministic": false,
+        "diff_detectable": true,
+        "risk_type": "reliability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "semantic",
+        "syntax_kinds": [
+          "MethodDeclaration",
+          "InvocationExpression",
+          "AwaitExpression"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [
+        "CA2016"
+      ],
+      "detection": {
+        "strategy": "cancellation_token_forwarding",
+        "signals": [
+          "method has CancellationToken parameter",
+          "awaited invocation has overload with CancellationToken",
+          "token not passed"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Pass the available CancellationToken to cancellable APIs."
+    },
+    {
+      "id": "BP015",
+      "category": "Collections",
+      "title": "Prefer Any() over Count() > 0",
+      "intent": "Avoid unnecessary enumeration and express intent clearly.",
+      "guidance": "Flag Count() > 0 or Count() != 0 on IEnumerable<T> where Any() is more appropriate.",
+      "examples": {
+        "bad": "if (orders.Count() > 0) { }",
+        "good": "if (orders.Any()) { }"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "maintainability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "semantic",
+        "syntax_kinds": [
+          "BinaryExpression",
+          "InvocationExpression"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [
+        "CA1827",
+        "CA1828"
+      ],
+      "detection": {
+        "strategy": "linq_count_comparison",
+        "signals": [
+          "Enumerable.Count invocation",
+          "comparison with zero"
+        ],
+        "confidence": "high"
+      },
+      "suggested_fix": "Replace Count() > 0 with Any()."
+    },
+    {
+      "id": "BP016",
+      "category": "Collections",
+      "title": "Avoid multiple enumeration of IEnumerable",
+      "intent": "Prevent duplicated work, repeated queries, and inconsistent results.",
+      "guidance": "Flag repeated enumeration of the same IEnumerable variable in the same scope when the source is not known to be materialized.",
+      "examples": {
+        "bad": "var count = items.Count();\nvar first = items.FirstOrDefault();",
+        "good": "var list = items.ToList();\nvar count = list.Count;\nvar first = list.FirstOrDefault();"
+      },
+      "classification": {
+        "deterministic": false,
+        "diff_detectable": true,
+        "risk_type": "performance",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "semantic_and_dataflow",
+        "syntax_kinds": [
+          "InvocationExpression",
+          "ForEachStatement"
+        ],
+        "requires_semantic_model": true,
+        "requires_dataflow": true
+      },
+      "microsoft_analyzer_overlap": [
+        "CA1851"
+      ],
+      "detection": {
+        "strategy": "dataflow_enumeration_count",
+        "signals": [
+          "same IEnumerable symbol enumerated multiple times",
+          "source not ICollection/IReadOnlyCollection/List/array"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Materialize the sequence once or change the parameter type if multiple enumeration is expected."
+    },
+    {
+      "id": "BP017",
+      "category": "Performance",
+      "title": "Use StringBuilder or string.Create for repeated string construction",
+      "intent": "Avoid repeated string allocations in loops.",
+      "guidance": "Flag string concatenation inside loops when the target variable is reassigned repeatedly.",
+      "examples": {
+        "bad": "foreach (var item in items) { text += item.Name; }",
+        "good": "var sb = new StringBuilder();\nforeach (var item in items) { sb.Append(item.Name); }\nvar text = sb.ToString();"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "maintainability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "syntax_and_semantic",
+        "syntax_kinds": [
+          "ForStatement",
+          "ForEachStatement",
+          "WhileStatement",
+          "AddAssignmentExpression"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [
+        "CA1834"
+      ],
+      "detection": {
+        "strategy": "loop_string_concat",
+        "signals": [
+          "string += inside loop",
+          "string = string + value inside loop"
+        ],
+        "confidence": "high"
+      },
+      "suggested_fix": "Use StringBuilder for repeated concatenation or string.Create for advanced allocation-sensitive scenarios."
+    },
+    {
+      "id": "BP018",
+      "category": "Performance",
+      "title": "Avoid unnecessary ToList or ToArray materialization",
+      "intent": "Prevent avoidable allocations and memory pressure.",
+      "guidance": "Flag ToList or ToArray immediately followed by simple enumeration when materialization is not required.",
+      "examples": {
+        "bad": "foreach (var order in orders.ToList()) { Process(order); }",
+        "good": "foreach (var order in orders) { Process(order); }"
+      },
+      "classification": {
+        "deterministic": false,
+        "diff_detectable": true,
+        "risk_type": "performance",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "semantic",
+        "syntax_kinds": [
+          "InvocationExpression",
+          "ForEachStatement"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [],
+      "detection": {
+        "strategy": "unnecessary_materialization",
+        "signals": [
+          "ToList or ToArray invocation",
+          "result only enumerated once",
+          "no mutation requiring snapshot"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Remove ToList or ToArray unless a snapshot is required."
+    },
+    {
+      "id": "BP019",
+      "category": "Memory",
+      "title": "Dispose IDisposable instances",
+      "intent": "Release unmanaged resources and prevent leaks.",
+      "guidance": "Flag local disposable objects created with new that are not wrapped in using, using declaration, or disposed.",
+      "examples": {
+        "bad": "var stream = File.OpenRead(path);",
+        "good": "using var stream = File.OpenRead(path);"
+      },
+      "classification": {
+        "deterministic": false,
+        "diff_detectable": true,
+        "risk_type": "reliability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "semantic_and_dataflow",
+        "syntax_kinds": [
+          "ObjectCreationExpression",
+          "LocalDeclarationStatement",
+          "UsingStatement"
+        ],
+        "requires_semantic_model": true,
+        "requires_dataflow": true
+      },
+      "microsoft_analyzer_overlap": [
+        "CA2000"
+      ],
+      "detection": {
+        "strategy": "disposable_lifetime",
+        "signals": [
+          "created type implements IDisposable",
+          "not assigned to ownership-transferring API",
+          "not disposed"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Wrap the disposable object in a using statement or using declaration."
+    },
+    {
+      "id": "BP020",
+      "category": "Security",
+      "title": "Use parameterized SQL queries",
+      "intent": "Prevent SQL injection vulnerabilities.",
+      "guidance": "Flag SQL command text built using string concatenation, interpolation, or format strings with external values.",
+      "examples": {
+        "bad": "var sql = \"SELECT * FROM Users WHERE Id = \" + userId;",
+        "good": "var sql = \"SELECT * FROM Users WHERE Id = @userId\";"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "security",
+        "severity": "error"
+      },
+      "roslyn": {
+        "analysis_level": "semantic_and_taint",
+        "syntax_kinds": [
+          "AddExpression",
+          "InterpolatedStringExpression",
+          "InvocationExpression",
+          "ObjectCreationExpression"
+        ],
+        "requires_semantic_model": true,
+        "requires_taint_analysis": true
+      },
+      "microsoft_analyzer_overlap": [],
+      "detection": {
+        "strategy": "sql_string_construction",
+        "signals": [
+          "SQL keyword string",
+          "concatenation or interpolation",
+          "value from parameter/request/input"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Use DbParameter, Dapper parameters, EF Core LINQ, or another parameterized API."
+    },
+    {
+      "id": "BP021",
+      "category": "Security",
+      "title": "Do not log secrets or sensitive data",
+      "intent": "Protect credentials, tokens, PII, and regulated data.",
+      "guidance": "Flag logging calls that include suspicious names such as password, secret, token, apiKey, ssn, authorization, or raw request bodies.",
+      "examples": {
+        "bad": "logger.LogInformation(\"Token: {token}\", token);",
+        "good": "logger.LogInformation(\"Authenticated request for user {UserId}\", userId);"
+      },
+      "classification": {
+        "deterministic": false,
+        "diff_detectable": true,
+        "risk_type": "security",
+        "severity": "error"
+      },
+      "roslyn": {
+        "analysis_level": "semantic",
+        "syntax_kinds": [
+          "InvocationExpression"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [],
+      "detection": {
+        "strategy": "sensitive_logging_heuristic",
+        "signals": [
+          "ILogger invocation",
+          "argument name or message contains sensitive keyword",
+          "raw request body logged"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Remove sensitive values from logs or replace them with safe identifiers."
+    },
+    {
+      "id": "BP022",
+      "category": "API",
+      "title": "Return empty collections instead of null",
+      "intent": "Reduce null checks and prevent NullReferenceException.",
+      "guidance": "Flag methods returning collection types that explicitly return null.",
+      "examples": {
+        "bad": "return null;",
+        "good": "return Array.Empty<Order>();"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "reliability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "semantic",
+        "syntax_kinds": [
+          "ReturnStatement",
+          "MethodDeclaration"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [],
+      "detection": {
+        "strategy": "collection_return_null",
+        "signals": [
+          "method return type is collection-like",
+          "ReturnStatement null literal"
+        ],
+        "confidence": "high"
+      },
+      "suggested_fix": "Return Array.Empty<T>(), Enumerable.Empty<T>(), or an empty collection."
+    },
+    {
+      "id": "BP023",
+      "category": "API",
+      "title": "Do not expose mutable collection properties directly",
+      "intent": "Protect object invariants and avoid uncontrolled mutation.",
+      "guidance": "Flag public properties returning List<T>, Dictionary<TKey,TValue>, or mutable collection interfaces.",
+      "examples": {
+        "bad": "public List<Order> Orders { get; set; }",
+        "good": "public IReadOnlyList<Order> Orders { get; }"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "architecture",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "semantic",
+        "syntax_kinds": [
+          "PropertyDeclaration"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [],
+      "detection": {
+        "strategy": "public_mutable_collection_api",
+        "signals": [
+          "public property",
+          "type is List/Dictionary/ICollection/IList"
+        ],
+        "confidence": "high"
+      },
+      "suggested_fix": "Expose IReadOnlyList, IReadOnlyCollection, or a defensive copy."
+    },
+    {
+      "id": "BP024",
+      "category": "DependencyInjection",
+      "title": "Depend on abstractions instead of concrete infrastructure",
+      "intent": "Improve testability and reduce coupling.",
+      "guidance": "Flag constructors that directly instantiate infrastructure dependencies instead of accepting abstractions.",
+      "examples": {
+        "bad": "private readonly SqlRepository repo = new SqlRepository();",
+        "good": "public OrderService(IOrderRepository repo) { this.repo = repo; }"
+      },
+      "classification": {
+        "deterministic": false,
+        "diff_detectable": true,
+        "risk_type": "architecture",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "semantic",
+        "syntax_kinds": [
+          "ObjectCreationExpression",
+          "ConstructorDeclaration",
+          "FieldDeclaration"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [],
+      "detection": {
+        "strategy": "infrastructure_new_in_service",
+        "signals": [
+          "new concrete dependency inside service class",
+          "type name contains Repository/Client/Provider/Gateway",
+          "constructor could accept interface"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Inject an abstraction through the constructor."
+    },
+    {
+      "id": "BP025",
+      "category": "Configuration",
+      "title": "Avoid hardcoded configuration values",
+      "intent": "Allow behavior to vary by environment without code changes.",
+      "guidance": "Flag hardcoded URLs, connection strings, file paths, magic numbers, credentials, and environment names in application logic.",
+      "examples": {
+        "bad": "var url = \"https://prod-api.example.com\";",
+        "good": "var url = configuration[\"Api:BaseUrl\"];"
+      },
+      "classification": {
+        "deterministic": false,
+        "diff_detectable": true,
+        "risk_type": "configuration",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "syntax_and_semantic",
+        "syntax_kinds": [
+          "StringLiteralExpression",
+          "NumericLiteralExpression"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [],
+      "detection": {
+        "strategy": "literal_smell",
+        "signals": [
+          "URL literal",
+          "connection string shape",
+          "absolute path",
+          "secret-like literal",
+          "large unexplained numeric literal"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Move environment-specific values into configuration and validate them at startup."
+    },
+    {
+      "id": "BP026",
+      "category": "Testing",
+      "title": "Add or update tests when behavior changes",
+      "intent": "Behavioral changes should be validated by automated tests.",
+      "guidance": "For diffs that change branching, return values, exception behavior, validation, parsing, or public API behavior, flag when no related test file changed.",
+      "examples": {
+        "bad": null,
+        "good": null
+      },
+      "classification": {
+        "deterministic": false,
+        "diff_detectable": true,
+        "risk_type": "quality",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "diff_plus_syntax",
+        "syntax_kinds": [
+          "IfStatement",
+          "SwitchStatement",
+          "ReturnStatement",
+          "ThrowStatement",
+          "InvocationExpression",
+          "MethodDeclaration"
+        ],
+        "requires_semantic_model": true,
+        "requires_diff_context": true
+      },
+      "microsoft_analyzer_overlap": [],
+      "detection": {
+        "strategy": "behavioral_change_without_test_change",
+        "signals": [
+          "changed conditional",
+          "changed return expression",
+          "changed exception type",
+          "changed validation rule",
+          "no test file modified"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Add or update tests that prove the intended behavior change and protect important edge cases."
+    },
+    {
+      "id": "BP027",
+      "category": "Logging",
+      "title": "Use structured logging instead of string concatenation",
+      "intent": "Preserve queryable log fields and avoid unnecessary formatting work.",
+      "guidance": "Flag ILogger calls that concatenate strings or use interpolation instead of message templates.",
+      "examples": {
+        "bad": "logger.LogInformation(\"Order \" + orderId + \" saved\");",
+        "good": "logger.LogInformation(\"Order {OrderId} saved\", orderId);"
+      },
+      "classification": {
+        "deterministic": true,
+        "diff_detectable": true,
+        "risk_type": "observability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "semantic",
+        "syntax_kinds": [
+          "InvocationExpression",
+          "InterpolatedStringExpression",
+          "AddExpression"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [
+        "CA2254"
+      ],
+      "detection": {
+        "strategy": "ilogger_template_check",
+        "signals": [
+          "ILogger extension method",
+          "message argument is interpolated string or concatenation"
+        ],
+        "confidence": "high"
+      },
+      "suggested_fix": "Use a static message template and pass values as separate arguments."
+    },
+    {
+      "id": "BP028",
+      "category": "Nullability",
+      "title": "Avoid adding null-forgiving operators without justification",
+      "intent": "The null-forgiving operator suppresses compiler safety and can hide real null bugs.",
+      "guidance": "Flag newly added ! operators on nullable references, especially in production code.",
+      "examples": {
+        "bad": "var name = user!.Name;",
+        "good": "if (user == null) throw new ArgumentNullException(nameof(user));\nvar name = user.Name;"
+      },
+      "classification": {
+        "deterministic": false,
+        "diff_detectable": true,
+        "risk_type": "reliability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "syntax_and_semantic",
+        "syntax_kinds": [
+          "SuppressNullableWarningExpression"
+        ],
+        "requires_semantic_model": true,
+        "requires_diff_context": true
+      },
+      "microsoft_analyzer_overlap": [],
+      "detection": {
+        "strategy": "new_null_forgiving_operator",
+        "signals": [
+          "SuppressNullableWarningExpression added",
+          "no adjacent null guard"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Add an explicit null check or redesign the flow so the compiler can prove non-null."
+    },
+    {
+      "id": "BP029",
+      "category": "Nullability",
+      "title": "Validate public method arguments",
+      "intent": "Fail fast when callers pass invalid inputs.",
+      "guidance": "Flag public methods that dereference reference-type parameters without prior null validation when nullable annotations indicate they may be null.",
+      "examples": {
+        "bad": "public void Save(Order order) { repository.Save(order.Id); }",
+        "good": "public void Save(Order order) { ArgumentNullException.ThrowIfNull(order); repository.Save(order.Id); }"
+      },
+      "classification": {
+        "deterministic": false,
+        "diff_detectable": true,
+        "risk_type": "reliability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "semantic_and_controlflow",
+        "syntax_kinds": [
+          "MethodDeclaration",
+          "Parameter",
+          "MemberAccessExpression"
+        ],
+        "requires_semantic_model": true,
+        "requires_controlflow": true
+      },
+      "microsoft_analyzer_overlap": [
+        "CA1062"
+      ],
+      "detection": {
+        "strategy": "parameter_dereference_without_guard",
+        "signals": [
+          "public method",
+          "reference parameter",
+          "member access on parameter",
+          "no null guard before dereference"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Validate required reference parameters with ArgumentNullException.ThrowIfNull."
+    },
+    {
+      "id": "BP030",
+      "category": "API",
+      "title": "Avoid boolean flag parameters that change behavior",
+      "intent": "Boolean flags often hide multiple responsibilities and make call sites unclear.",
+      "guidance": "Flag methods with boolean parameters used to choose significantly different branches.",
+      "examples": {
+        "bad": "Save(order, true);",
+        "good": "SaveDraft(order);\nPublishOrder(order);"
+      },
+      "classification": {
+        "deterministic": false,
+        "diff_detectable": true,
+        "risk_type": "maintainability",
+        "severity": "warning"
+      },
+      "roslyn": {
+        "analysis_level": "syntax_and_dataflow",
+        "syntax_kinds": [
+          "MethodDeclaration",
+          "IfStatement",
+          "Parameter"
+        ],
+        "requires_semantic_model": true
+      },
+      "microsoft_analyzer_overlap": [],
+      "detection": {
+        "strategy": "boolean_parameter_branching",
+        "signals": [
+          "bool parameter",
+          "parameter used in if/switch/conditional expression",
+          "public method or complex branch"
+        ],
+        "confidence": "medium"
+      },
+      "suggested_fix": "Split into intention-revealing methods or replace the boolean with a meaningful options type."
+    }
+  ]
+}

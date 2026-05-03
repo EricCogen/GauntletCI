@@ -12,6 +12,7 @@
 // The logic remains in use; it's just been reorganized for reuse across multiple rules.
 #pragma warning disable GCI0003  // Behavioral Change Detection - consolidation, not regression
 
+using GauntletCI.Core.Diff;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -1351,11 +1352,21 @@ internal static class WellKnownPatterns
 
         /// <summary>
         /// Returns <c>true</c> if the content represents an access modifier pattern (public, private, protected, internal).
+        /// Handles lines with leading attributes (e.g. "[Obsolete] public void Method()").
         /// </summary>
         public static bool HasAccessModifier(string content)
         {
             if (string.IsNullOrEmpty(content)) return false;
             var trimmed = content.TrimStart();
+            
+            // Skip over leading attributes: [Attr], [Attr1][Attr2], etc.
+            while (trimmed.StartsWith("[", StringComparison.Ordinal))
+            {
+                var closeIdx = trimmed.IndexOf(']');
+                if (closeIdx == -1) break;
+                trimmed = trimmed[(closeIdx + 1)..].TrimStart();
+            }
+            
             return trimmed.StartsWith("public ", StringComparison.Ordinal) ||
                    trimmed.StartsWith("private ", StringComparison.Ordinal) ||
                    trimmed.StartsWith("protected ", StringComparison.Ordinal) ||
@@ -1376,13 +1387,15 @@ internal static class WellKnownPatterns
         }
 
         /// <summary>
-        /// Returns <c>true</c> if the content looks like an event handler (EventHandler parameter, += subscription).
+        /// Returns <c>true</c> if the content looks like an event handler (EventHandler, EventArgs parameter, += subscription).
         /// Used by GCI0022 to identify and skip event handler-related code.
+        /// Also used by GCI0016 to suppress async void warnings for legitimate event handlers.
         /// </summary>
         public static bool IsEventHandler(string content)
         {
             if (string.IsNullOrEmpty(content)) return false;
             return content.Contains("EventHandler", StringComparison.Ordinal) ||
+                   content.Contains("EventArgs", StringComparison.Ordinal) ||
                    content.Contains("+=", StringComparison.Ordinal) ||
                    content.Contains("-=", StringComparison.Ordinal);
         }
@@ -1436,6 +1449,102 @@ internal static class WellKnownPatterns
             return content.Contains(" abstract ", StringComparison.Ordinal) ||
                    content.Contains(" delegate ", StringComparison.Ordinal) ||
                    content.Contains(" partial ", StringComparison.Ordinal);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the file is a migration or seed data file where raw INSERT/DML is intentional.
+        /// Used by GCI0022 to skip database initialization code.
+        /// </summary>
+        public static bool IsMigrationOrSeedFile(string filePath)
+        {
+            // Migration files: EF Core migrations directory
+            if (filePath.Contains("Migrations/", StringComparison.OrdinalIgnoreCase) ||
+                filePath.Contains("\\Migrations\\", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            // Migration SQL scripts
+            if (filePath.EndsWith(".sql", StringComparison.OrdinalIgnoreCase) &&
+                (filePath.Contains("Migration", StringComparison.OrdinalIgnoreCase) ||
+                 filePath.Contains("Seed", StringComparison.OrdinalIgnoreCase) ||
+                 filePath.Contains("Setup", StringComparison.OrdinalIgnoreCase)))
+                return true;
+
+            // EF seed configurations (ModelBuilder.Entity.HasData)
+            if (filePath.Contains("SeedData", StringComparison.OrdinalIgnoreCase) ||
+                filePath.Contains("DataSeeding", StringComparison.OrdinalIgnoreCase))
+                return true;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the file is a UI/XAML context (WPF, WinUI, Blazor) where event handler patterns are benign.
+        /// Used by GCI0022 to exempt event subscriptions in UI code.
+        /// </summary>
+        public static bool IsUiEventHandler(string filePath)
+        {
+            var lower = filePath.ToLowerInvariant();
+            // XAML code-behind files
+            if (lower.EndsWith(".xaml.cs", StringComparison.OrdinalIgnoreCase)) return true;
+            // Blazor component files
+            if (lower.EndsWith(".razor.cs", StringComparison.OrdinalIgnoreCase)) return true;
+            // Common UI namespaces
+            if (lower.Contains("\\ui\\") || lower.Contains("/ui/") ||
+                lower.Contains("\\components\\") || lower.Contains("/components/") ||
+                lower.Contains("\\views\\") || lower.Contains("/views/") ||
+                lower.Contains("\\pages\\") || lower.Contains("/pages/")) return true;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the file is a documentation/snippet/sample file where test assertions are optional.
+        /// Used by GCI0041 to skip documentation examples and sample code.
+        /// </summary>
+        public static bool IsDocumentationFile(string filePath)
+        {
+            var lower = filePath.ToLowerInvariant();
+            // Snippet and example documentation
+            if (lower.Contains("snippet", StringComparison.OrdinalIgnoreCase)) return true;
+            if (lower.Contains("sample", StringComparison.OrdinalIgnoreCase)) return true;
+            if (lower.Contains("example", StringComparison.OrdinalIgnoreCase)) return true;
+            if (lower.Contains("demo", StringComparison.OrdinalIgnoreCase)) return true;
+            
+            return false;
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the line appears to be inside a static constructor (inherently idempotent).
+        /// Detects the pattern "static ClassName()" or "static()" within the preceding context.
+        /// Used by GCI0022 for event handler registration safety.
+        /// </summary>
+        public static bool IsInsideStaticConstructor(List<DiffLine> allLines, int idx)
+        {
+            int searchStart = Math.Max(0, idx - 20);
+            for (int j = idx - 1; j >= searchStart; j--)
+            {
+                var trimmed = allLines[j].Content.Trim();
+                if (!trimmed.StartsWith("static ", StringComparison.Ordinal)) continue;
+
+                var afterStatic = trimmed["static ".Length..].TrimStart();
+                // If the next token is a C# keyword that can be a return type, it's a method not a constructor
+                if (afterStatic.StartsWith("void ", StringComparison.Ordinal) ||
+                    afterStatic.StartsWith("Task", StringComparison.Ordinal) ||
+                    afterStatic.StartsWith("bool ", StringComparison.Ordinal) ||
+                    afterStatic.StartsWith("int ", StringComparison.Ordinal) ||
+                    afterStatic.StartsWith("string ", StringComparison.Ordinal) ||
+                    afterStatic.StartsWith("async ", StringComparison.Ordinal) ||
+                    afterStatic.StartsWith("readonly ", StringComparison.Ordinal) ||
+                    afterStatic.StartsWith("class ", StringComparison.Ordinal) ||
+                    afterStatic.StartsWith("IEnumerable", StringComparison.Ordinal) ||
+                    afterStatic.StartsWith("List<", StringComparison.Ordinal) ||
+                    afterStatic.StartsWith("Dictionary<", StringComparison.Ordinal))
+                    continue;
+
+                // The remainder should look like "TypeName()" - contains "()"
+                if (afterStatic.Contains("()")) return true;
+            }
+            return false;
         }
     }
 }

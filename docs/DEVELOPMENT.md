@@ -126,3 +126,84 @@ dotnet tool install --global --add-source ./nupkg GauntletCI
 ## Adding a rule
 
 See the [Contributing guide](../.github/CONTRIBUTING.md#writing-a-new-rule) for a step-by-step walkthrough.
+
+---
+
+## Adding a corpus command
+
+Corpus commands are organized into 4 factory classes. To add a new corpus subcommand:
+
+1. **Choose the appropriate factory** based on command domain:
+   - **CorpusOperationsFactory**: CRUD operations, batch operations (add-pr, normalize, list, show, status, batch-hydrate)
+   - **CorpusAnalysisFactory**: Discovery, analysis, scoring, reporting (discover, run, run-all, score, report)
+   - **CorpusLabelingFactory**: Labeling and training (label, label-all, reset-stats)
+   - **CorpusUtilityFactory**: Utilities, diagnostics, cleanup (purge, errors, rejected-repos, doctor)
+
+2. **Add a method to the factory** following the naming convention `CreateXxx()`:
+
+   ```csharp
+   public static Command CreateNewCommand()
+   {
+       var cmd = new Command("new-command", "Description of the new command");
+       
+       // Add options
+       var repoOption = new Option<string>("--repo", "Repository reference");
+       cmd.AddOption(repoOption);
+       
+       // Add handler
+       cmd.SetHandler(async (repo, ctx) => {
+           try {
+               // Implementation here
+               Console.WriteLine($"Processing {repo}");
+               await Task.CompletedTask;
+           } catch (Exception ex) {
+               ctx.ExitCode = 1;
+               Console.Error.WriteLine($"Error: {ex.Message}");
+           }
+       }, repoOption, new InvocationContextBinder());
+       
+       return cmd;
+   }
+   ```
+
+3. **Register in CorpusCommand.Create()**:
+
+   ```csharp
+   var corpus = new Command("corpus", "...");
+   
+   // Add to appropriate factory group
+   corpus.AddCommand(newFactory.CreateNewCommand());
+   ```
+
+4. **Add unit tests** to `CorpusCommandFactoriesTests.cs`:
+
+   ```csharp
+   [Fact]
+   public void NewCommandFactory_CreateNewCommand_ReturnsValidCommand()
+   {
+       var cmd = factory.CreateNewCommand();
+       
+       Assert.NotNull(cmd);
+       Assert.Equal("new-command", cmd.Name);
+       Assert.NotEmpty(cmd.Options);
+   }
+   ```
+
+5. **Add integration test** to verify CLI routing:
+
+   ```csharp
+   [Fact]
+   public void CorpusCommand_HasNewCommand()
+   {
+       var cmd = CorpusCommand.Create();
+       var subcommands = cmd.Subcommands.Select(c => c.Name).ToList();
+       
+       Assert.Contains("new-command", subcommands);
+   }
+   ```
+
+6. **Run tests** to verify:
+
+   ```bash
+   dotnet test GauntletCI.slnx --filter "CorpusCommandFactoriesTests"
+   ```

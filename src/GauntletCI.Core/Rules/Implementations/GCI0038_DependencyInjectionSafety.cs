@@ -36,9 +36,7 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
 
     private static bool IsInfrastructureFile(string path) => WellKnownPatterns.DependencyInjectionPatterns.IsInfrastructureFile(path);
 
-    private static bool IsTestFile(string path) =>
-        path.Contains("test", StringComparison.OrdinalIgnoreCase) ||
-        path.Contains("spec", StringComparison.OrdinalIgnoreCase);
+    private static bool IsTestFile(string path) => WellKnownPatterns.IsTestFile(path);
 
     private void CheckServiceLocator(DiffFile file, List<Finding> findings)
     {
