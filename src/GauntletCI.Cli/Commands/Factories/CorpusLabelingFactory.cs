@@ -220,21 +220,24 @@ public static class CorpusLabelingFactory
     }
 
     /// <summary>
-    /// Create the 'reset-stats' command: Clear fixture statistics (labels, findings) for recomputation.
-    /// Command: corpus reset-stats --fixture &lt;id&gt; | --tier &lt;tier&gt; [--dry-run] [--db] [--fixtures]
+    /// Create the 'reset-stats' command: Clear fixture statistics and analysis results for recomputation.
+    /// Wipes: fixtures stats, rule_runs, actual_findings, evaluations, aggregates, expected_findings.
+    /// Command: corpus reset-stats --fixture &lt;id&gt; | --tier &lt;tier&gt; [--dry-run] [--confirm] [--db] [--fixtures]
     /// </summary>
     public static Command CreateResetStats()
     {
         var fixtureOpt   = new Option<string?>("--fixture",  "Single fixture ID to reset (or use --tier for batch)");
         var tierOpt      = new Option<string?>("--tier",     "Tier to reset (gold|silver|discovery) (or use --fixture for single)");
         var dryRunOpt    = new Option<bool>   ("--dry-run",  () => false, "Print what would be reset without making changes");
+        var confirmOpt   = new Option<bool>   ("--confirm",  () => false, "Confirm destructive operation (required when not dry-run)");
         var dbOpt        = new Option<string> ("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var fixturesOpt  = new Option<string> ("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
 
-        var cmd = new Command("reset-stats", "Clear fixture statistics for recomputation");
+        var cmd = new Command("reset-stats", "Clear fixture statistics and analysis results for recomputation (destructive)");
         cmd.AddOption(fixtureOpt);
         cmd.AddOption(tierOpt);
         cmd.AddOption(dryRunOpt);
+        cmd.AddOption(confirmOpt);
         cmd.AddOption(dbOpt);
         cmd.AddOption(fixturesOpt);
 
@@ -243,6 +246,7 @@ public static class CorpusLabelingFactory
             var fixtureId = ctx.ParseResult.GetValueForOption(fixtureOpt);
             var tierStr   = ctx.ParseResult.GetValueForOption(tierOpt);
             var dryRun    = ctx.ParseResult.GetValueForOption(dryRunOpt);
+            var confirm   = ctx.ParseResult.GetValueForOption(confirmOpt);
             var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixtures  = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
             var ct        = ctx.GetCancellationToken();
@@ -250,6 +254,13 @@ public static class CorpusLabelingFactory
             if (string.IsNullOrEmpty(fixtureId) && string.IsNullOrEmpty(tierStr))
             {
                 Console.Error.WriteLine("[corpus] reset-stats: Specify either --fixture or --tier");
+                ctx.ExitCode = 1;
+                return;
+            }
+
+            if (!dryRun && !confirm)
+            {
+                Console.Error.WriteLine("[corpus] reset-stats: Use --confirm to perform destructive reset, or --dry-run to preview");
                 ctx.ExitCode = 1;
                 return;
             }
@@ -283,28 +294,63 @@ public static class CorpusLabelingFactory
                         toReset.AddRange(all.Select(m => m.FixtureId));
                     }
 
-                    Console.WriteLine($"[corpus] reset-stats: Clearing stats for {toReset.Count} fixture(s){(dryRun ? " (dry-run)" : "")}");
+                    Console.WriteLine($"[corpus] reset-stats: Resetting {toReset.Count} fixture(s){(dryRun ? " (dry-run)" : "")}");
+                    Console.WriteLine($"  Tables cleared: fixtures, rule_runs, actual_findings, evaluations, aggregates, expected_findings");
+
+                    var tables = new[] { "rule_runs", "actual_findings", "evaluations", "aggregates", "expected_findings" };
+                    var totalRowsAffected = 0;
 
                     foreach (var fid in toReset)
                     {
-                        using var cmd2 = db.Connection.CreateCommand();
-                        cmd2.CommandText = """
+                        foreach (var table in tables)
+                        {
+                            using var delCmd = db.Connection.CreateCommand();
+                            delCmd.CommandText = $"DELETE FROM {table} WHERE fixture_id = $id";
+                            delCmd.Parameters.AddWithValue("$id", fid);
+
+                            if (!dryRun)
+                            {
+                                var affected = await delCmd.ExecuteNonQueryAsync(ct);
+                                totalRowsAffected += affected;
+                                if (affected > 0)
+                                    Console.WriteLine($"  {fid}: cleared {affected} row(s) from {table}");
+                            }
+                            else
+                            {
+                                // Count rows that would be deleted
+                                var countCmd = db.Connection.CreateCommand();
+                                countCmd.CommandText = $"SELECT COUNT(*) FROM {table} WHERE fixture_id = $id";
+                                countCmd.Parameters.AddWithValue("$id", fid);
+                                var count = (long)(await countCmd.ExecuteScalarAsync(ct) ?? 0L);
+                                if (count > 0)
+                                    Console.WriteLine($"  {fid}: would clear {count} row(s) from {table}");
+                            }
+                        }
+
+                        // Update fixture-level stats
+                        using var fixCmd = db.Connection.CreateCommand();
+                        fixCmd.CommandText = """
                             UPDATE fixtures SET
                               label_count = 0,
                               finding_count = 0,
                               last_labeled_at = NULL
                             WHERE fixture_id = $id
                             """;
-                        cmd2.Parameters.AddWithValue("$id", fid);
+                        fixCmd.Parameters.AddWithValue("$id", fid);
 
                         if (!dryRun)
-                            await cmd2.ExecuteNonQueryAsync(ct);
-
-                        Console.WriteLine($"  {fid}");
+                        {
+                            await fixCmd.ExecuteNonQueryAsync(ct);
+                            Console.WriteLine($"  {fid}: cleared fixture-level stats");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"  {fid}: would clear fixture-level stats");
+                        }
                     }
 
                     if (!dryRun)
-                        Console.WriteLine($"[corpus] reset-stats: Stats cleared for {toReset.Count} fixture(s)");
+                        Console.WriteLine($"[corpus] reset-stats: Reset complete. {totalRowsAffected} row(s) deleted from pipeline tables.");
                     else
                         Console.WriteLine($"[corpus] reset-stats: (dry-run) No changes made");
                 }
