@@ -10,6 +10,8 @@ namespace GauntletCI.Corpus.Labeling.Strategies;
 /// </summary>
 public sealed class ExceptionHandlingPatternStrategy : IInferenceStrategy
 {
+    public IReadOnlySet<string> RuleIds => new HashSet<string> { "GCI0032", "GCI0042" };
+
     /// <summary>
     /// Applies GCI0032 heuristics: empty or comment-only catch blocks.
     /// </summary>

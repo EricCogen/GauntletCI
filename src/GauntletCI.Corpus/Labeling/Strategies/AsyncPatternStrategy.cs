@@ -9,6 +9,8 @@ namespace GauntletCI.Corpus.Labeling.Strategies;
 /// </summary>
 public sealed class AsyncPatternStrategy : IInferenceStrategy
 {
+    public IReadOnlySet<string> RuleIds => new HashSet<string> { "GCI0016" };
+
     /// <summary>
     /// Applies GCI0016 heuristics: blocking calls, async void, lock(this), Thread.Sleep.
     /// </summary>

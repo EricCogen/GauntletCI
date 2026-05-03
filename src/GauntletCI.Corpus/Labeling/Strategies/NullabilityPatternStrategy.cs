@@ -10,6 +10,8 @@ namespace GauntletCI.Corpus.Labeling.Strategies;
 /// </summary>
 public sealed class NullabilityPatternStrategy : IInferenceStrategy
 {
+    public IReadOnlySet<string> RuleIds => new HashSet<string> { "GCI0006", "GCI0043" };
+
     /// <summary>
     /// Applies GCI0006 and GCI0043 heuristics.
     /// </summary>

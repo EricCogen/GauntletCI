@@ -18,6 +18,8 @@ public sealed class SecurityPatternStrategy : IInferenceStrategy
         "credential", "private_key", "privatekey", "access_key", "auth_key"
     ];
 
+    public IReadOnlySet<string> RuleIds => new HashSet<string> { "GCI0012" };
+
     /// <summary>
     /// Applies GCI0012 heuristics: credential exposure, weak hashing, SQL injection.
     /// Only analyzes production .cs lines (not test files) to avoid false positives.
