@@ -2,13 +2,14 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using GauntletCI.Core;
 using GauntletCI.Corpus.Hydration;
 using GauntletCI.Corpus.Interfaces;
 using GauntletCI.Corpus.Models;
 
 namespace GauntletCI.Corpus.Discovery;
 
-public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider, IDisposable
+public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
 {
     private readonly HttpClient _http;
     private readonly string[] _labels;
@@ -21,13 +22,14 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider, IDisposab
             ? DefaultLabels
             : labelsFilter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
-        _http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
-        _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
-        _http.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
-        _http.DefaultRequestHeaders.Add("Authorization", $"token {token}");
+        _http = HttpClientFactory.GetGitHubClient();
+        _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
     }
 
-    public void Dispose() => _http.Dispose();
+    public void Dispose()
+    {
+        // Factory manages the HttpClient lifetime, so we don't dispose it
+    }
     public string GetProviderName() => "gh-issues";
     public bool SupportsIncrementalSync => false;
 

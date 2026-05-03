@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using GauntletCI.Core;
 
 namespace GauntletCI.Corpus.Labeling;
 
@@ -23,9 +24,12 @@ public sealed class OllamaLlmLabeler : ILlmLabeler, IDisposable
         _model    = model;
         _baseUrl  = baseUrl.TrimEnd('/');
         _endpoint = $"{_baseUrl}/v1/chat/completions";
-        _http     = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
-        _http.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/json"));
+        _http     = HttpClientFactory.GetLongTimeoutClient();
+    }
+
+    public void Dispose()
+    {
+        // Factory manages the HttpClient lifetime, so we don't dispose it
     }
 
 
@@ -205,7 +209,5 @@ public sealed class OllamaLlmLabeler : ILlmLabeler, IDisposable
             if (!string.IsNullOrWhiteSpace(line)) onLine?.Invoke(line);
         }
     }
-
-    public void Dispose() => _http.Dispose();
 }
 

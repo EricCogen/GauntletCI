@@ -2,6 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using GauntletCI.Core;
 
 namespace GauntletCI.Cli.Licensing;
 
@@ -15,7 +16,6 @@ namespace GauntletCI.Cli.Licensing;
 public static class NetworkLicenseValidator
 {
     private const string StatusEndpoint = "https://gauntletci-license-worker.patient-water-71dd.workers.dev/license/status";
-    private static readonly TimeSpan NetworkTimeout = TimeSpan.FromSeconds(3);
     private static readonly TimeSpan CacheTtl       = TimeSpan.FromHours(24);
 
     private static readonly string CachePath = Path.Combine(
@@ -43,7 +43,7 @@ public static class NetworkLicenseValidator
 
         try
         {
-            using var http = new HttpClient { Timeout = NetworkTimeout };
+            using var http = HttpClientFactory.GetGenericClient();
             http.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 

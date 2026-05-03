@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Net.Http.Headers;
 using System.Text.Json;
+using GauntletCI.Core;
 using GauntletCI.Core.Model;
 namespace GauntletCI.Cli.TicketProviders;
 
 public sealed class GitHubIssueProvider : ITicketProvider
 {
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(15) };
-    static GitHubIssueProvider() => Http.DefaultRequestHeaders.UserAgent.ParseAdd("GauntletCI/2.0");
+    private static readonly HttpClient Http = HttpClientFactory.GetGitHubClient();
 
     public string ProviderName => "GitHub";
     public bool IsAvailable =>

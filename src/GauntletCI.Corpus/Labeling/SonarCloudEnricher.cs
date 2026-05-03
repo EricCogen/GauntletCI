@@ -21,7 +21,10 @@ public sealed class SonarCloudEnricher : IDisposable
         _client = new SonarCloudClient();
     }
 
-    public void Dispose() => _client.Dispose();
+    public void Dispose()
+    {
+        // Factory manages the HttpClient lifetime, so we don't dispose it
+    }
 
     /// <summary>
     /// Enriches every fixture in <paramref name="fixtures"/> that has a <c>diff.patch</c>.

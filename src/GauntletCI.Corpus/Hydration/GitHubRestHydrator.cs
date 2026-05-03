@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
+using GauntletCI.Core;
 using GauntletCI.Corpus.Interfaces;
 using GauntletCI.Corpus.Models;
 using GauntletCI.Corpus.Normalization;
@@ -48,14 +49,8 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
     /// <param name="fixturesBasePath">Root directory where raw fixture snapshots are stored.</param>
     public static GitHubRestHydrator CreateDefault(string fixturesBasePath = "./data/fixtures")
     {
-        var token = GitHubTokenResolver.Resolve();
-        var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
-        http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
-        http.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
-        if (!string.IsNullOrEmpty(token))
-            http.DefaultRequestHeaders.Add("Authorization", $"token {token}");
-
-        return new GitHubRestHydrator(http, new RawSnapshotStore(fixturesBasePath), ownsHttpClient: true);
+        var http = HttpClientFactory.GetGitHubClient();
+        return new GitHubRestHydrator(http, new RawSnapshotStore(fixturesBasePath), ownsHttpClient: false);
     }
 
     /// <summary>

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
-using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using GauntletCI.Core;
 using GauntletCI.Corpus.Models;
 using GauntletCI.Corpus.Storage;
 
@@ -24,22 +24,12 @@ public sealed class DependabotEnricher : IDisposable
         "dependabot",
     };
 
-    private readonly HttpClient _http;
-
-    public DependabotEnricher()
+    public void Dispose()
     {
-        var token = GitHubTokenResolver.Resolve();
-
-        _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-        _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Corpus/1.0");
-        _http.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-
-        if (!string.IsNullOrEmpty(token))
-            _http.DefaultRequestHeaders.Add("Authorization", $"token {token}");
+        // Factory manages the HttpClient lifetime, so we don't dispose it
     }
 
-    public void Dispose() => _http.Dispose();
+    private readonly HttpClient _http = HttpClientFactory.GetGitHubClient();
 
     public bool IsAuthenticated =>
         _http.DefaultRequestHeaders.Contains("Authorization");

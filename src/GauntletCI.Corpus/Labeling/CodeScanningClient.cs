@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
-using System.Net.Http.Headers;
 using System.Text.Json;
+using GauntletCI.Core;
 
 namespace GauntletCI.Corpus.Labeling;
 
@@ -9,25 +9,11 @@ namespace GauntletCI.Corpus.Labeling;
 /// Requires a GITHUB_TOKEN environment variable for authenticated requests
 /// (5,000 req/hr vs 60 unauthenticated; code scanning API requires auth even for public repos).
 /// </summary>
-public sealed class CodeScanningClient : IDisposable
+public sealed class CodeScanningClient
 {
     private const string BaseUrl = "https://api.github.com";
 
-    private readonly HttpClient _http;
-
-    public CodeScanningClient()
-    {
-        var token = GitHubTokenResolver.Resolve();
-
-        _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-        _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Corpus/1.0");
-        _http.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-        if (!string.IsNullOrEmpty(token))
-            _http.DefaultRequestHeaders.Add("Authorization", $"token {token}");
-    }
-
-    public void Dispose() => _http.Dispose();
+    private readonly HttpClient _http = HttpClientFactory.GetGitHubClient();
 
     /// <summary>
     /// Returns whether this client has a GitHub token configured.

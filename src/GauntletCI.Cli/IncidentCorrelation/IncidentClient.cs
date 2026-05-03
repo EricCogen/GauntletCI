@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using GauntletCI.Core;
 using GauntletCI.Core.Model;
 
 namespace GauntletCI.Cli.IncidentCorrelation;
@@ -15,15 +16,7 @@ public record IncidentSummary(string Id, string Title, string? Description, stri
 /// </summary>
 public static class IncidentClient
 {
-    private static readonly HttpClient _http = new(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(5) })
-    {
-        Timeout = TimeSpan.FromSeconds(15),
-    };
-
-    static IncidentClient()
-    {
-        _http.DefaultRequestHeaders.UserAgent.ParseAdd("GauntletCI/2.0");
-    }
+    private static readonly HttpClient _http = HttpClientFactory.GetGenericClient();
 
     // ── Duration parsing ─────────────────────────────────────────────────────
 

@@ -1,26 +1,17 @@
 // SPDX-License-Identifier: Elastic-2.0
-using System.Net.Http.Headers;
 using System.Text.Json;
+using GauntletCI.Core;
 
 namespace GauntletCI.Corpus.Labeling;
 
 /// <summary>
 /// HTTP client for the SonarCloud public API (no authentication required for public projects).
 /// </summary>
-public sealed class SonarCloudClient : IDisposable
+public sealed class SonarCloudClient
 {
     private const string BaseUrl = "https://sonarcloud.io/api";
 
-    private readonly HttpClient _http;
-
-    public SonarCloudClient()
-    {
-        _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-        _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Corpus/1.0");
-        _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-    }
-
-    public void Dispose() => _http.Dispose();
+    private readonly HttpClient _http = HttpClientFactory.GetSonarCloudClient();
 
     /// <summary>
     /// Attempts to find the SonarCloud project key for a given GitHub owner/repo.

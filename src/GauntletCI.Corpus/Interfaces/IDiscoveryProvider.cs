@@ -3,7 +3,7 @@ using GauntletCI.Corpus.Models;
 
 namespace GauntletCI.Corpus.Interfaces;
 
-public interface IDiscoveryProvider
+public interface IDiscoveryProvider : IDisposable
 {
     string GetProviderName();
     bool SupportsIncrementalSync { get; }

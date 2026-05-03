@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using GauntletCI.Core;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
 
@@ -15,7 +16,7 @@ namespace GauntletCI.Cli.Output;
 /// </summary>
 public static class GitHubChecksWriter
 {
-    private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(15) };
+    private static readonly HttpClient _http = HttpClientFactory.GetGitHubClient();
     private static readonly JsonSerializerOptions _jsonOpts = new() { WriteIndented = false };
 
     /// <summary>Posts findings as a GitHub Checks API check run. Soft-fails on any error.</summary>

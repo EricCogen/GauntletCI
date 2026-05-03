@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using GauntletCI.Core;
 
 namespace GauntletCI.Corpus.Labeling;
 
@@ -10,7 +11,7 @@ namespace GauntletCI.Corpus.Labeling;
 /// Uses GITHUB_TOKEN for authentication: no separate API key required.
 /// Returns null on any HTTP or parse error.
 /// </summary>
-public sealed class GitHubModelsLlmLabeler : ILlmLabeler, IDisposable
+public sealed class GitHubModelsLlmLabeler : ILlmLabeler
 {
     private const string Endpoint = "https://models.inference.ai.azure.com/chat/completions";
 
@@ -20,11 +21,9 @@ public sealed class GitHubModelsLlmLabeler : ILlmLabeler, IDisposable
     public GitHubModelsLlmLabeler(string githubToken, string model = "gpt-4o-mini")
     {
         _model = model;
-        _http  = new HttpClient { Timeout = TimeSpan.FromSeconds(120) };
+        _http  = HttpClientFactory.GetLongTimeoutClient();
         _http.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", githubToken);
-        _http.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/json"));
     }
 
     public async Task<LlmLabelResult?> ClassifyAsync(
@@ -67,6 +66,4 @@ public sealed class GitHubModelsLlmLabeler : ILlmLabeler, IDisposable
         }
         catch { return null; }
     }
-
-    public void Dispose() => _http.Dispose();
 }

@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using GauntletCI.Core;
 using GauntletCI.Core.Configuration;
 
 namespace GauntletCI.Llm.Embeddings;
@@ -42,9 +43,8 @@ public sealed class OllamaEmbeddingEngine : IEmbeddingEngine, IDisposable
         }
         else
         {
-            _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-            _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
-            _ownsHttpClient = true;
+            _http = HttpClientFactory.GetLongTimeoutClient();
+            _ownsHttpClient = false;
         }
     }
 

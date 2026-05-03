@@ -2,6 +2,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using GauntletCI.Core;
 using GauntletCI.Core.Model;
 
 namespace GauntletCI.Llm;
@@ -37,9 +38,8 @@ public sealed class RemoteLlmEngine : ILlmEngine
         _apiKey             = apiKey;
         _numCtx             = numCtx;
         _maxCompleteTokens  = maxCompleteTokens;
-        _http               = new HttpClient { Timeout = RequestTimeout };
+        _http               = HttpClientFactory.GetLongTimeoutClient();
         _http.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
-        _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
     }
 
     /// <summary>Always <see langword="true"/>; reachability of the remote endpoint is not pre-checked.</summary>
