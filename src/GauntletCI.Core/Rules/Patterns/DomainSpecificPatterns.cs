@@ -312,10 +312,19 @@ internal static class DomainSpecificPatterns
         /// <summary>
         /// Types whose lifecycle detection is owned by other rules (suppress in GCI0024 to avoid double-reporting).
         /// Used by GCI0024 for disposal suppression (these are IDisposable but managed by other rules).
+        /// - GCI0039 (External Service Safety) owns HTTP/gRPC service clients
+        /// - GCI0020 (Resource Exhaustion) owns timeout/resource limit types
         /// </summary>
         public static readonly HashSet<string> OwnedByOtherRules = new(StringComparer.Ordinal)
         {
-            "HttpClient", // Owned by GCI0039 (External Service Safety)
+            // GCI0039 (External Service Safety) - HTTP and service client types
+            "HttpClient", "HttpClientHandler", "SocketsHttpHandler", "WebRequestHandler",
+            "GrpcChannel", "Channel", // gRPC channels
+            
+            // GCI0020 (Resource Exhaustion) - Timeout and resource management types
+            "Timer", "TimerCallback", "ElapsedEventHandler",
+            "CancellationTokenSource", // Token sources are lifecycle-managed
+            "ThreadPool", // Thread pool management is handled by GCI0020
         };
 
         /// <summary>
@@ -512,11 +521,28 @@ internal static class DomainSpecificPatterns
         /// Serialization and schema-mapping attributes that indicate a field is part of a wire format
         /// or persistent storage contract. Removal breaks deserialization of existing data.
         /// Used by GCI0021 to detect removed serialization attributes.
+        /// Covers: JSON serialization, ORM/EF Core mapping, data annotations, and serialization frameworks.
         /// </summary>
         public static readonly string[] SerializationAttributes =
         [
-            "[JsonProperty", "[JsonPropertyName", "[Column(", "[DataMember",
-            "[BsonElement", "[Key]", "[ForeignKey", "[Required]", "[MaxLength"
+            // JSON serialization
+            "[JsonProperty", "[JsonPropertyName", "[JsonIgnore", "[JsonRequired",
+            // ORM/EF Core field mapping
+            "[Column(", "[Table(", "[Index(", "[Unique(", "[Keyless]",
+            "[ComplexType(", "[PrimaryKey(", "[NotMapped]",
+            // Data annotations
+            "[DataMember", "[DataContract", "[EnumMember",
+            // Validation attributes (removal affects contracts)
+            "[Required]", "[MaxLength", "[MinLength", "[StringLength",
+            "[Key]", "[ForeignKey",
+            // XML serialization
+            "[XmlElement", "[XmlAttribute", "[XmlType", "[XmlRoot",
+            // NoSQL/MongoDB
+            "[BsonElement", "[BsonId", "[BsonRepresentation",
+            // Precision and scale for decimals
+            "[Precision(", "[Scale(",
+            // gRPC ProtoContract from protobuf
+            "[ProtoMember", "[ProtoContract",
         ];
     }
 
