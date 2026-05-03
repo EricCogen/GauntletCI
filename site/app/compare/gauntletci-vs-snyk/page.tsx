@@ -6,7 +6,7 @@ import { Footer } from "@/components/footer";
 export const metadata: Metadata = {
   title: "GauntletCI vs Snyk | Behavioral Risk Detection vs Vulnerability Scanning",
   description:
-    "Snyk scans dependencies and code for known vulnerabilities. GauntletCI detects behavioral regressions in the lines you changed -- pre-commit, 100% local, zero false positives on pre-existing code.",
+    "Snyk scans dependencies and code for known vulnerabilities. GauntletCI detects behavioral regressions in the lines you changed -- pre-commit, runs locally, zero false positives on pre-existing code.",
   alternates: { canonical: "/compare/gauntletci-vs-snyk" },
   openGraph: { images: [{ url: '/og/compare-snyk.png', width: 1200, height: 630 }] },
 };
@@ -14,10 +14,10 @@ export const metadata: Metadata = {
 const table = [
   { feature: "Primary focus",              gauntlet: "Behavioral regressions in the diff",          snyk: "Known vulnerabilities in dependencies and code" },
   { feature: "Analysis scope",             gauntlet: "Changed diff lines only",                     snyk: "Full dependency tree + file scan" },
-  { feature: "Data leaves the machine",    gauntlet: "Never -- 100% local execution",               snyk: "Yes -- SaaS platform, code sent to Snyk servers" },
+  { feature: "Data leaves the machine",    gauntlet: "By default, no -- core analysis is local",    snyk: "Yes -- SaaS platform, code sent to Snyk servers" },
   { feature: "Pre-commit speed",           gauntlet: "Under 1 second",                              snyk: "Seconds to minutes (network round-trip)" },
   { feature: "Account required",           gauntlet: "No -- works fully offline",                   snyk: "Yes -- Snyk account and authentication required" },
-  { feature: "Air-gap / data residency",   gauntlet: "Yes -- no network dependency",                snyk: "No -- requires Snyk cloud for most features" },
+  { feature: "Air-gap / data residency",   gauntlet: "Yes -- core engine requires no network",      snyk: "No -- requires Snyk cloud for most features" },
   { feature: "False positives on old code",gauntlet: "None -- diff-scoped by design",               snyk: "Yes -- reports pre-existing issues on every run" },
   { feature: "Removed logic detection",    gauntlet: "Yes -- flags deleted null guards, handlers",  snyk: "No -- pattern-based, cannot detect removals" },
   { feature: "API contract change detection", gauntlet: "Yes -- public surface mutations flagged",  snyk: "No -- not in scope" },

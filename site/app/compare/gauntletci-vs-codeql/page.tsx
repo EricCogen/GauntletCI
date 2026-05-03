@@ -31,7 +31,7 @@ const tableRows = [
   {
     scenario: "Air-gapped or strict data-residency environments",
     winner: "gauntlet",
-    note: "No code leaves the machine. CodeQL uploads results to GitHub Security.",
+    note: "By default, no code leaves the machine. CodeQL uploads results to GitHub Security.",
   },
   {
     scenario: "Writing custom semantic queries for a specific vulnerability class",

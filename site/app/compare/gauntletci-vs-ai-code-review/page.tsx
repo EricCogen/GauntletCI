@@ -52,7 +52,7 @@ const featureRows = [
   },
   {
     label: "Data leaves the machine",
-    gauntlet: "Never -- 100% local execution",
+    gauntlet: "By default, no -- core analysis is local",
     ai: "Yes -- code sent to cloud LLM API",
   },
   {
@@ -67,7 +67,7 @@ const featureRows = [
   },
   {
     label: "Air-gap / data residency",
-    gauntlet: "Yes -- no network dependency",
+    gauntlet: "Yes -- core engine requires no network",
     ai: "No -- requires internet and API key",
   },
   {

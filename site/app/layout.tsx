@@ -14,7 +14,7 @@ const jsonLd = {
     {
       "@type": "Offer",
       "name": "Community",
-      "description": "Local-first, forever free. Includes all detection rules, pre-commit hook, per-repo configuration, and 100% local execution.",
+      "description": "Local-first, forever free. Includes all detection rules, pre-commit hook, per-repo configuration, and core analysis runs locally by default.",
       "price": "0",
       "priceCurrency": "USD",
       "availability": "https://schema.org/InStock",
@@ -72,7 +72,7 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 export const metadata: Metadata = {
   metadataBase: new URL('https://gauntletci.com'),
   title: 'GauntletCI: Catch Breaking Changes Before They Merge',
-  description: 'Find regressions that pass tests and code review. 100% local execution. No cloud. Sub-second diff analysis for C# and .NET.',
+  description: 'Find regressions that pass tests and code review. Core analysis runs locally by default. Sub-second diff analysis for C# and .NET.',
   alternates: { canonical: '/' },
   icons: {
     icon: [
@@ -123,7 +123,7 @@ const jsonLdFaq = {
       "name": "How does GauntletCI compare to Snyk?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Snyk is primarily a dependency and container vulnerability scanner that requires cloud connectivity and a Snyk account. GauntletCI detects behavioral, structural, and security risks in first-party code changes, not dependency vulnerabilities, and runs 100% locally with no data transmitted. GauntletCI is suitable for air-gapped environments and organizations with strict data residency requirements; Snyk is not."
+        "text": "Snyk is primarily a dependency and container vulnerability scanner that requires cloud connectivity and a Snyk account. GauntletCI detects behavioral, structural, and security risks in first-party code changes, not dependency vulnerabilities, and runs locally by default with no data transmitted. GauntletCI is suitable for air-gapped environments and organizations with strict data residency requirements; Snyk is not."
       }
     },
     {
@@ -147,7 +147,7 @@ const jsonLdFaq = {
       "name": "Does GauntletCI work in air-gapped or offline environments?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. GauntletCI runs entirely on the local machine. No diff, finding, file path, or telemetry is transmitted. The optional local LLM enrichment feature (--with-llm) uses a locally hosted Ollama model, with no network call. This makes GauntletCI suitable for classified, regulated, or air-gapped environments where cloud-based analysis tools are prohibited."
+        "text": "Yes. GauntletCI's core analysis runs entirely on the local machine. No diff, finding, file path, or telemetry is transmitted by default. The optional local LLM enrichment feature (--with-llm) uses a locally hosted Ollama model, with no network call. This makes GauntletCI suitable for classified, regulated, or air-gapped environments where cloud-based analysis tools are prohibited."
       }
     },
     {

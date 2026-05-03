@@ -92,7 +92,7 @@ export function PipelineDiagram() {
         <div className="mt-10 mx-auto max-w-2xl text-center">
           <p className="text-sm text-muted-foreground">
             GauntletCI runs on the developer's machine in under a second. No full build required.
-            No network. No code leaves the machine.
+            Core analysis requires no network. By default, no code leaves the machine.
           </p>
         </div>
       </div>
