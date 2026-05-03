@@ -158,6 +158,11 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
 
     private void CheckConnectionString(DiffFile file, List<Finding> findings)
     {
+        // Phase 17a: GCI0010 ↔ GCI0021 Coordination
+        // Skip connection strings in infrastructure/migration files (GCI0021 owns schema context).
+        // Connection strings in Migrations/ or Infrastructure/ are typically test/seed data.
+        if (WellKnownPatterns.IsInfrastructureFile(file.NewPath)) return;
+
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
