@@ -293,3 +293,45 @@ The corpus pipeline ingests public pull request data for offline rule evaluation
 | `feedback` | Submit a thumbs-up/down vote on a finding |
 | `telemetry` | View or change telemetry consent |
 | `corpus` | Corpus ingestion and management |
+
+### Corpus command factory architecture
+
+The `corpus` command is decomposed into 4 focused factory classes, each responsible for a domain of commands. This pattern reduces complexity (EI-5) and clarifies ownership (EI-4).
+
+```
+CorpusCommand (Orchestrator)
+├── CorpusOperationsFactory
+│   ├── CreateAddPr()          - Add PR to corpus
+│   ├── CreateNormalize()      - Normalize corpus data
+│   ├── CreateList()           - List corpus contents
+│   ├── CreateShow()           - Display corpus details
+│   ├── CreateStatus()         - Show corpus status
+│   └── CreateBatchHydrate()   - Batch hydrate PRs
+│
+├── CorpusAnalysisFactory
+│   ├── CreateDiscover()       - Discover repositories
+│   ├── CreateRun()            - Run analysis on single PR
+│   ├── CreateRunAll()         - Batch run analysis
+│   ├── CreateScore()          - Score predictions
+│   └── CreateReport()         - Generate report
+│
+├── CorpusLabelingFactory
+│   ├── CreateLabel()          - Label single PR
+│   ├── CreateLabelAll()       - Batch label PRs
+│   └── CreateResetStats()     - Reset labeling statistics
+│
+└── CorpusUtilityFactory
+    ├── CreatePurge()          - Clean up corpus by language
+    ├── CreateErrors()         - Show error statistics
+    ├── CreateRejectedRepos()  - List rejected repositories
+    └── CreateDoctor()         - Diagnostic tool
+```
+
+Each factory implements an interface (`ICorpusOperationsFactory`, etc.) that extends the base `ICommandFactory` interface. This enables dependency injection while preserving the stateless factory pattern suitable for command builders.
+
+**Key Benefits:**
+- **Reduced Complexity:** CorpusCommand reduced from 3,154 to 1,483 LOC (53% reduction)
+- **Clear Ownership:** Each factory owns a specific domain of commands
+- **Testability:** 43 unit and integration tests cover factory behavior and CLI routing
+- **Maintainability:** Adding new corpus commands requires modification to a single focused factory
+- **Extensibility:** New factories can be added following the same pattern

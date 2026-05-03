@@ -120,14 +120,14 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
         var filesWithRemovedLogic = diff.Files
             .Where(f => !WellKnownPatterns.IsTestFile(f.NewPath) && !WellKnownPatterns.IsGeneratedFile(f.NewPath))
             .Where(f => f.RemovedLines
-                .Any(l => !GuardPatterns.IsCommentLine(l.Content)
+                .Any(l => !WellKnownPatterns.GuardPatterns.IsCommentLine(l.Content)
                        && LogicKeywords.Any(k => l.Content.Contains(k, StringComparison.Ordinal))))
             .ToList();
 
         var removedLogicLines = diff.Files
             .Where(f => !WellKnownPatterns.IsTestFile(f.NewPath) && !WellKnownPatterns.IsGeneratedFile(f.NewPath))
             .SelectMany(f => f.RemovedLines)
-            .Where(l => !GuardPatterns.IsCommentLine(l.Content)
+            .Where(l => !WellKnownPatterns.GuardPatterns.IsCommentLine(l.Content)
                      && LogicKeywords.Any(k => l.Content.Contains(k, StringComparison.Ordinal)))
             .ToList();
 
@@ -167,11 +167,11 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
 
             var removedSigs = file.RemovedLines
-                .Where(l => { var t = l.Content.TrimStart(); return GuardPatterns.HasAccessModifier(t) && l.Content.Contains('('); })
+                .Where(l => { var t = l.Content.TrimStart(); return WellKnownPatterns.GuardPatterns.HasAccessModifier(t) && l.Content.Contains('('); })
                 .ToList();
 
             var addedSigs = file.AddedLines
-                .Where(l => { var t = l.Content.TrimStart(); return GuardPatterns.HasAccessModifier(t) && l.Content.Contains('('); })
+                .Where(l => { var t = l.Content.TrimStart(); return WellKnownPatterns.GuardPatterns.HasAccessModifier(t) && l.Content.Contains('('); })
                 .ToList();
 
             var incompatible = new List<(string Name, DiffLine RemovedLine, DiffLine AddedLine)>();
