@@ -84,9 +84,25 @@ public static class SarifWriter
         if (!string.IsNullOrWhiteSpace(finding.SuggestedAction))
             message += $" Action: {finding.SuggestedAction}";
 
+        // Build properties dict for enriched fields
+        var properties = new Dictionary<string, object>();
+        
+        if (!string.IsNullOrWhiteSpace(finding.CodeSnippet))
+            properties["codeSnippet"] = finding.CodeSnippet;
+            
+        if (!string.IsNullOrWhiteSpace(finding.LlmExplanation))
+            properties["llmExplanation"] = finding.LlmExplanation;
+            
+        if (finding.ExpertContext is { } expert)
+        {
+            properties["expertContextContent"] = expert.Content;
+            properties["expertContextSource"] = expert.Source;
+            properties["expertContextScore"] = expert.Score;
+        }
+
         if (finding.FilePath is { } path && finding.Line is { } line)
         {
-            return new
+            var result = new
             {
                 ruleId = finding.RuleId,
                 message = new { text = message },
@@ -107,14 +123,52 @@ public static class SarifWriter
                     }
                 },
             };
+            
+            // Only include properties if there are enriched fields
+            if (properties.Count > 0)
+                return new
+                {
+                    ruleId = finding.RuleId,
+                    message = new { text = message },
+                    level,
+                    locations = new[]
+                    {
+                        new
+                        {
+                            physicalLocation = new
+                            {
+                                artifactLocation = new
+                                {
+                                    uri = path.Replace('\\', '/'),
+                                    uriBaseId = "%SRCROOT%",
+                                },
+                                region = new { startLine = line },
+                            }
+                        }
+                    },
+                    properties = (object)properties,
+                };
+            
+            return result;
         }
 
-        return new
+        var baseResult = new
         {
             ruleId = finding.RuleId,
             message = new { text = message },
             level,
         };
+        
+        if (properties.Count > 0)
+            return new
+            {
+                ruleId = finding.RuleId,
+                message = new { text = message },
+                level,
+                properties = (object)properties,
+            };
+
+        return baseResult;
     }
 
     private static string SanitizeName(string name) =>

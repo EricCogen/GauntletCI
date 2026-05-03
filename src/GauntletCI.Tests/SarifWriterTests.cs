@@ -175,4 +175,74 @@ public class SarifWriterTests
 
         Assert.Equal(1, rules.GetArrayLength());
     }
+
+    [Fact]
+    public void Serialize_EnrichedFinding_IncludesPropertiesInSarif()
+    {
+        var finding = new Finding
+        {
+            RuleId = "GCI0048",
+            RuleName = "Insecure Random",
+            Summary = "System.Random used",
+            Evidence = "Line 5: var r = new Random();",
+            WhyItMatters = "Predictable output",
+            SuggestedAction = "Use RandomNumberGenerator",
+            Confidence = Confidence.High,
+            Severity = RuleSeverity.Block,
+            FilePath = "src/Auth.cs",
+            Line = 5,
+            CodeSnippet = "var r = new Random();\r\nvar num = r.Next();",
+            LlmExplanation = "This uses Random which is predictable. Use RandomNumberGenerator.GetInt32() instead.",
+            ExpertContext = new ExpertFact(
+                Content: "System.Random is cryptographically insecure",
+                Source: "OWASP A06:2021 - Cryptographic Failures",
+                Score: 0.95f
+            ),
+        };
+
+        var json = SarifWriter.Serialize(BuildResult(finding));
+        var doc = JsonDocument.Parse(json);
+        var result = doc.RootElement.GetProperty("runs")[0].GetProperty("results")[0];
+
+        // Verify base properties are present
+        Assert.Equal("GCI0048", result.GetProperty("ruleId").GetString());
+        Assert.Equal("error", result.GetProperty("level").GetString());
+
+        // Verify enrichment properties are included
+        Assert.True(result.TryGetProperty("properties", out var props));
+        Assert.Equal("var r = new Random();\r\nvar num = r.Next();", 
+            props.GetProperty("codeSnippet").GetString());
+        Assert.Equal("This uses Random which is predictable. Use RandomNumberGenerator.GetInt32() instead.",
+            props.GetProperty("llmExplanation").GetString());
+        Assert.Equal("System.Random is cryptographically insecure",
+            props.GetProperty("expertContextContent").GetString());
+        Assert.Equal("OWASP A06:2021 - Cryptographic Failures",
+            props.GetProperty("expertContextSource").GetString());
+        Assert.True(props.GetProperty("expertContextScore").GetSingle() > 0.9f);
+    }
+
+    [Fact]
+    public void Serialize_FindingWithoutEnrichment_NoPropertiesInSarif()
+    {
+        var finding = new Finding
+        {
+            RuleId = "GCI0001",
+            RuleName = "Test Rule",
+            Summary = "Test",
+            Evidence = "Line 1: foo",
+            WhyItMatters = "Why",
+            SuggestedAction = "Action",
+            Confidence = Confidence.Low,
+            Severity = RuleSeverity.Info,
+            FilePath = "test.cs",
+            Line = 1,
+        };
+
+        var json = SarifWriter.Serialize(BuildResult(finding));
+        var doc = JsonDocument.Parse(json);
+        var result = doc.RootElement.GetProperty("runs")[0].GetProperty("results")[0];
+
+        // Should not have properties key if no enrichment
+        Assert.False(result.TryGetProperty("properties", out _));
+    }
 }
