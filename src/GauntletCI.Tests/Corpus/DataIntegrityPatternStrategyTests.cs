@@ -12,12 +12,14 @@ public sealed class DataIntegrityPatternStrategyTests
     [Fact]
     public void Apply_WithRemovedPublicMethodSignature_ReturnsTrueLabel()
     {
-        var context = new DiffAnalysisContext(
-            new[] { "public void DoSomething() { }" },
-            new[] { "public void DoSomething(int param) { }" },
-            new[] { "--- a/src/Program.cs" },
-            new[] { "public void DoSomething() { }" }, // production removed
-            new[] { "public void DoSomething(int param) { }" }); // production added
+        var context = new DiffAnalysisContext
+        {
+            AddedLines = new[] { "public void DoSomething(int param) { }" },
+            RemovedLines = new[] { "public void DoSomething() { }" },
+            PathLines = new[] { "--- a/src/Program.cs" },
+            ProductionAddedLines = new[] { "public void DoSomething(int param) { }" },
+            ProductionRemovedLines = new[] { "public void DoSomething() { }" },
+        };
 
         var results = _strategy.Apply("fixture1", context);
 
@@ -29,12 +31,14 @@ public sealed class DataIntegrityPatternStrategyTests
     [Fact]
     public void Apply_WithRemovedSerializationAttribute_ReturnsTrueLabel()
     {
-        var context = new DiffAnalysisContext(
-            new[] { "[JsonProperty(\"name\")] public string Name { get; set; }" },
-            new[] { "public string Name { get; set; }" },
-            new[] { "--- a/src/Model.cs" },
-            new[] { "[JsonProperty(\"name\")] public string Name { get; set; }" },
-            new[] { "public string Name { get; set; }" });
+        var context = new DiffAnalysisContext
+        {
+            AddedLines = new[] { "public string Name { get; set; }" },
+            RemovedLines = new[] { "[JsonProperty(\"name\")] public string Name { get; set; }" },
+            PathLines = new[] { "--- a/src/Model.cs" },
+            ProductionAddedLines = Array.Empty<string>(),
+            ProductionRemovedLines = new[] { "[JsonProperty(\"name\")] public string Name { get; set; }" },
+        };
 
         var results = _strategy.Apply("fixture1", context);
 
@@ -46,12 +50,14 @@ public sealed class DataIntegrityPatternStrategyTests
     [Fact]
     public void Apply_WithRemovedUsingStatement_ReturnsTrueLabel()
     {
-        var context = new DiffAnalysisContext(
-            new[] { "using (var conn = new Connection()) { }" },
-            new[] { "var conn = new Connection();" },
-            new[] { "--- a/src/Data.cs" },
-            new[] { "using (var conn = new Connection()) { }" },
-            new[] { "var conn = new Connection();" });
+        var context = new DiffAnalysisContext
+        {
+            AddedLines = new[] { "var conn = new Connection();" },
+            RemovedLines = new[] { "using (var conn = new Connection()) { }" },
+            PathLines = new[] { "--- a/src/Data.cs" },
+            ProductionAddedLines = Array.Empty<string>(),
+            ProductionRemovedLines = new[] { "using (var conn = new Connection()) { }" },
+        };
 
         var results = _strategy.Apply("fixture1", context);
 
@@ -63,12 +69,14 @@ public sealed class DataIntegrityPatternStrategyTests
     [Fact]
     public void Apply_WithRemovedEFMigrationOperation_ReturnsTrueLabel()
     {
-        var context = new DiffAnalysisContext(
-            new[] { "migrationBuilder.DropTable(\"Users\");" },
-            new string[] { },
-            new[] { "--- a/Migrations/20230101120000_Initial.cs" },
-            new[] { "migrationBuilder.DropTable(\"Users\");" },
-            new string[] { });
+        var context = new DiffAnalysisContext
+        {
+            AddedLines = Array.Empty<string>(),
+            RemovedLines = new[] { "migrationBuilder.DropColumn(name: \"LegacyField\", table: \"Users\");" },
+            PathLines = new[] { "--- a/src/Migrations/20240101_Initial.cs" },
+            ProductionAddedLines = Array.Empty<string>(),
+            ProductionRemovedLines = Array.Empty<string>(),
+        };
 
         var results = _strategy.Apply("fixture1", context);
 
@@ -80,12 +88,14 @@ public sealed class DataIntegrityPatternStrategyTests
     [Fact]
     public void Apply_WithPrivateMethodChange_DoesNotTriggerGCI0003()
     {
-        var context = new DiffAnalysisContext(
-            new[] { "private void DoSomething() { }" },
-            new[] { "private void DoSomething(int param) { }" },
-            new[] { "--- a/src/Program.cs" },
-            new string[] { },
-            new string[] { });
+        var context = new DiffAnalysisContext
+        {
+            AddedLines = new[] { "private void DoSomething(int param) { }" },
+            RemovedLines = new[] { "private void DoSomething() { }" },
+            PathLines = new[] { "--- a/src/Program.cs" },
+            ProductionAddedLines = Array.Empty<string>(),
+            ProductionRemovedLines = Array.Empty<string>(),
+        };
 
         var results = _strategy.Apply("fixture1", context);
 

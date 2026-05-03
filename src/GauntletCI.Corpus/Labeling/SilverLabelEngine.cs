@@ -3,6 +3,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using GauntletCI.Corpus.Interfaces;
+using GauntletCI.Corpus.Labeling.Strategies;
 using GauntletCI.Corpus.Models;
 using GauntletCI.Corpus.Normalization;
 
@@ -22,6 +23,7 @@ public sealed class SilverLabelEngine
 {
     private readonly IFixtureStore _store;
     private readonly ILlmLabeler _llmLabeler;
+    private readonly IReadOnlyList<IInferenceStrategy> _strategies;
 
     private static readonly JsonSerializerOptions JsonOpts = new()
     {
@@ -141,10 +143,21 @@ public sealed class SilverLabelEngine
     {
         _store = store;
         _llmLabeler = llmLabeler ?? new NullLlmLabeler();
+        
+        // Initialize strategy registry in execution order
+        _strategies = new IInferenceStrategy[]
+        {
+            new SecurityPatternStrategy(),
+            new AsyncPatternStrategy(),
+            new ExceptionHandlingPatternStrategy(),
+            new DataIntegrityPatternStrategy(),
+            new NullabilityPatternStrategy(),
+            new EdgeCasePatternStrategy(),
+        };
     }
 
     /// <summary>
-    /// Infers heuristic labels from diff text alone.
+    /// Infers heuristic labels from diff text alone using registered strategies.
     /// Returns both positive and negative labels for all rules with heuristics.
     /// </summary>
     public Task<IReadOnlyList<ExpectedFinding>> InferLabelsAsync(
@@ -157,7 +170,23 @@ public sealed class SilverLabelEngine
         var prodCsRemovedLines  = ExtractRemovedLinesFromProductionCsFiles(diffText);
         var labels       = new List<ExpectedFinding>();
 
-        ApplyDiffHeuristics(addedLines, removedLines, pathLines, prodCsLines, prodCsRemovedLines, labels, diffText);
+        // Create context for strategies to analyze
+        var context = new DiffAnalysisContext
+        {
+            AddedLines = addedLines,
+            RemovedLines = removedLines,
+            PathLines = pathLines,
+            ProductionAddedLines = prodCsLines,
+            ProductionRemovedLines = prodCsRemovedLines,
+            RawDiff = diffText,
+        };
+
+        // Execute all strategies and collect findings
+        foreach (var strategy in _strategies)
+        {
+            var findings = strategy.Apply(fixtureId, context);
+            labels.AddRange(findings);
+        }
 
         return Task.FromResult<IReadOnlyList<ExpectedFinding>>(labels);
     }

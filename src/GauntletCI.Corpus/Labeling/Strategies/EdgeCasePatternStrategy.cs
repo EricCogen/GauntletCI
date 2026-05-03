@@ -75,7 +75,7 @@ public sealed class EdgeCasePatternStrategy : IInferenceStrategy
                    t.StartsWith("public async Task Test", StringComparison.Ordinal);
         });
 
-        bool hasRemovedAssertion = context.ProductionRemovedLines.Any(l =>
+        bool hasRemovedAssertion = context.RemovedLines.Any(l =>
             l.Contains("Assert.", StringComparison.Ordinal) ||
             l.Contains("Should.", StringComparison.Ordinal) ||
             l.Contains(".ShouldBe", StringComparison.Ordinal));
