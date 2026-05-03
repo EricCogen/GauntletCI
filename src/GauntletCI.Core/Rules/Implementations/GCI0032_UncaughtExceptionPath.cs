@@ -75,6 +75,7 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
 
         // --- Pattern 2: empty or comment-only catch block (silent swallowing) ---
         var filesWithEmptyCatches = nonTestFiles
+            .Where(f => !f.AddedLines.Any(l => WellKnownPatterns.HasMockPattern(l.Content))) // Skip test mocks
             .Where(f => CountEmptyCatchesInFile(f) > 0)
             .ToList();
         

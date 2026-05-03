@@ -80,8 +80,11 @@ public class GCI0047_NamingContractAlignment : RuleBase
 
     private void CheckCrudVerbContradict(DiffFile file, List<Finding> findings)
     {
-        // Extract (verb, suffix) from removed method signatures
-        var removedMethods = ExtractVerbSuffixPairs(file.RemovedLines);
+        // Extract (verb, suffix) from removed method signatures, excluding mock patterns
+        var removedLines = file.RemovedLines
+            .Where(l => !WellKnownPatterns.HasMockPattern(l.Content))
+            .ToList();
+        var removedMethods = ExtractVerbSuffixPairs(removedLines);
         if (removedMethods.Count == 0) return;
 
         // Extract (verb, suffix) from added method signatures

@@ -58,6 +58,8 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
     {
         var matchingLines = file.AddedLines
             .Where(l => IsNullForgivingLine(l.Content))
+            // Skip MVVM pattern null-forgiving (safe in ViewModels)
+            .Where(l => !WellKnownPatterns.HasMvvmPattern(l.Content))
             // GetValueForOption(opt)! is System.CommandLine's idiomatic pattern for
             // required options: the value is always set, so the ! is safe.
             .Where(l => !l.Content.Contains("GetValueForOption(", StringComparison.Ordinal))

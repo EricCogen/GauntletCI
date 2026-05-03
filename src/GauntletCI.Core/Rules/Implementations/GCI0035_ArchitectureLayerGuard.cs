@@ -39,6 +39,9 @@ public class GCI0035_ArchitectureLayerGuard : RuleBase, IConfigurableRule
 
         foreach (var file in diff.Files)
         {
+            // Skip test fixtures and DI composition root files
+            if (file.AddedLines.Any(l => WellKnownPatterns.HasMockPattern(l.Content))) continue;
+            
             foreach (var line in file.AddedLines)
             {
                 var match = WellKnownPatterns.ArchitecturePatterns.UsingRegex.Match(line.Content);

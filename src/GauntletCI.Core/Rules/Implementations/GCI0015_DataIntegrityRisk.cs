@@ -54,6 +54,10 @@ public class GCI0015_DataIntegrityRisk : RuleBase
     {
         var addedLines = file.AddedLines.ToList();
 
+        // Skip files with ORM or DTO mapping patterns (safe auto-mapping)
+        if (file.AddedLines.Any(l => WellKnownPatterns.HasMappingPattern(l.Content)))
+            return;
+
         bool hasHttpSignal = addedLines.Any(l =>
             WellKnownPatterns.DataIntegrityPatterns.HasHttpContextSignal(l.Content));
 

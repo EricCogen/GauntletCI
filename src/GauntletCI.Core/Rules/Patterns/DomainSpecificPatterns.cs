@@ -653,6 +653,211 @@ internal static class DomainSpecificPatterns
             new(@"^\s*using\s+([\w.]+)\s*;", RegexOptions.Compiled);
     }
 
+    // ================= Framework Pattern Detection =================
+
+    /// <summary>
+    /// Patterns for detecting framework usage (MVVM, DI, HTTP frameworks, etc.)
+    /// Used by multiple secondary rules for FP reduction.
+    /// </summary>
+    public static class FrameworkPatterns
+    {
+        /// <summary>
+        /// MVVM framework patterns indicating ViewModel, data binding, or property notification code.
+        /// Used by GCI0043 (Nullability) to avoid flagging ViewModels with null-forgiving operators.
+        /// </summary>
+        public static readonly string[] MvvmPatterns =
+        [
+            "ViewModelBase", "INotifyPropertyChanged", "RaisePropertyChanged",
+            "NotifyPropertyChanged", "OnPropertyChanged", "SetProperty",
+            "PropertyChanged", "BindableBase", ".PropertyChanged",
+            "ICommand", "RelayCommand"
+        ];
+
+        /// <summary>
+        /// Dependency injection container registration patterns.
+        /// Used by GCI0035 (Architecture) to identify DI setup code that legitimately crosses layer boundaries.
+        /// </summary>
+        public static readonly string[] DiContainerPatterns =
+        [
+            "AddScoped", "AddSingleton", "AddTransient", "services.Add",
+            "Register<", "RegisterSingleton", "RegisterScoped",
+            "ConfigureServices", "GetRequiredService", "GetService<",
+            "IServiceProvider", "IServiceCollection"
+        ];
+
+        /// <summary>
+        /// HTTP/ASP.NET framework binding and mapping patterns.
+        /// Used by GCI0015 (Data Integrity) to avoid flagging framework-managed HTTP binding.
+        /// </summary>
+        public static readonly string[] HttpBindingPatterns =
+        [
+            "[Bind(", "[FromBody]", "[FromQuery]", "[FromRoute]",
+            "[ModelBinder(", "ModelBinder", "IModelBinder",
+            "BindingSource", "HttpContext", "Request.Form"
+        ];
+
+        /// <summary>
+        /// Exception handling framework patterns (log4net, Serilog, custom handlers).
+        /// Used by GCI0032 (Exception Paths) to avoid flagging framework exception handlers.
+        /// </summary>
+        public static readonly string[] ExceptionHandlingPatterns =
+        [
+            "IExceptionHandler", "ExceptionHandler", "ExceptionFilter",
+            "OnException", "ExceptionContext", "ILogger",
+            "log.Error", "logger.Error", "LogError"
+        ];
+    }
+
+    // ================= Test-Specific Patterns =================
+
+    /// <summary>
+    /// Patterns for detecting test-specific code and test infrastructure.
+    /// Used by multiple secondary rules for FP reduction in test code paths.
+    /// </summary>
+    public static class TestPatterns
+    {
+        /// <summary>
+        /// Test setup/teardown attributes that mark fixture initialization and cleanup.
+        /// Used by GCI0032 (Exception Paths) to avoid flagging test teardown exception handlers.
+        /// </summary>
+        public static readonly string[] SetupTeardownAttributes =
+        [
+            "[Setup]", "[TearDown]", "[SetUp]", "[ClassInitialize]",
+            "[ClassCleanup]", "[TestInitialize]", "[TestCleanup]",
+            "[OneTimeSetUp]", "[OneTimeTearDown]", "[BeforeEach]", "[AfterEach]",
+            "protected void SetUp", "protected void TearDown"
+        ];
+
+        /// <summary>
+        /// Mock object creation patterns (Moq, NSubstitute, etc.).
+        /// Used by GCI0032 (Exception), GCI0047 (Naming) to avoid flagging mock creation patterns.
+        /// </summary>
+        public static readonly string[] MockObjectPatterns =
+        [
+            "new Mock<", "Substitute.For<", "Create<", "Mock<",
+            "Moq.Mock", "NSubstitute", ".Setup(", ".Returns(",
+            "It.Is<", "It.IsAny<", "Arg.Any", "Arg.Is"
+        ];
+
+        /// <summary>
+        /// Test fixture and builder setup patterns used in test infrastructure.
+        /// Used by GCI0035 (Architecture) to avoid flagging test fixture setup code.
+        /// </summary>
+        public static readonly string[] TestFixturePatterns =
+        [
+            "TestFixture", "Fixture", "Builder", "WithFixture",
+            "SetupFixture", "builder.With", ".Build()", "TestBase",
+            "TestHelper", "ObjectMother", "Factory.Create"
+        ];
+
+        /// <summary>
+        /// Assertion library method calls that suggest test code.
+        /// Used by multiple rules to confirm test context.
+        /// </summary>
+        public static readonly string[] AssertionLibraryPatterns =
+        [
+            "Assert.That", "Assert.Throws", "Should().Throw", ".Should().",
+            "Verify()", "Received()", ".Throws<", "Xunit.Assert",
+            "FluentAssertions", "Shouldly", "Verify.That"
+        ];
+    }
+
+    // ================= Code Pattern Detection =================
+
+    /// <summary>
+    /// Patterns for detecting specific code constructs and markers.
+    /// Used by multiple secondary rules for semantic analysis.
+    /// </summary>
+    public static class CodePatterns
+    {
+        /// <summary>
+        /// Development-only markers indicating temporary or dev-specific code.
+        /// Used by GCI0003 (Behavioral Change) to avoid flagging dev-only logic.
+        /// </summary>
+        public static readonly string[] DevOnlyMarkers =
+        [
+            "// TODO", "// FIXME", "// HACK", "// TEMP",
+            "// DEBUG", "// DEVELOPMENT ONLY", "#if DEBUG",
+            "[Conditional(\"DEBUG\")]", "Environment.GetEnvironmentVariable(\"DEBUG\")"
+        ];
+
+        /// <summary>
+        /// Framework initialization patterns (module init, app startup).
+        /// Used by GCI0003 (Behavioral Change) to avoid flagging framework initialization code.
+        /// </summary>
+        public static readonly string[] FrameworkInitializationPatterns =
+        [
+            "builder.Services", "services.AddScoped", "Program.cs", "Startup.cs",
+            "Configure(", "UseMiddleware", "ConfigureServices", "Module.Initialize",
+            "app.UseRouting", "app.MapControllers", "endpoints.MapControllers"
+        ];
+
+        /// <summary>
+        /// ORM auto-mapping patterns (Entity Framework, Dapper, etc.).
+        /// Used by GCI0015 (Data Integrity) to avoid flagging ORM auto-mapping.
+        /// </summary>
+        public static readonly string[] OrmAutoMapPatterns =
+        [
+            ".ProjectTo<", ".Map", ".CreateMap<", "DbSet<",
+            ".FromSql(", ".SQL(", "QueryAsync", ".Include(",
+            "AutoMapper", "Dapper", ".AsTracking(", ".AsNoTracking()"
+        ];
+
+        /// <summary>
+        /// DTO and data transfer object mapping patterns (AutoMapper, Mapster, etc.).
+        /// Used by GCI0015 (Data Integrity) to avoid flagging DTO mapping.
+        /// </summary>
+        public static readonly string[] DtoMapperPatterns =
+        [
+            "Mapper.Map<", ".Map<", "CreateMap", "ForMember",
+            "AutoMapper", "Mapster", "IMapper", "IMappingEngine",
+            ".ProjectTo<", "TypeAdapter"
+        ];
+
+        /// <summary>
+        /// Retry and resilience policy patterns (Polly, Resilience Pipeline).
+        /// Used by GCI0032 (Exception Paths) to avoid flagging retry policies.
+        /// </summary>
+        public static readonly string[] RetryPolicyPatterns =
+        [
+            "Policy.Handle<", ".WaitAndRetry", ".Retry",
+            "CircuitBreaker", "Polly", ".AddPolicyHandler",
+            ".AddResilienceHandler", "ResilienceStrategy"
+        ];
+
+        /// <summary>
+        /// Builder and fluent API patterns that guarantee non-null results.
+        /// Used by GCI0043 (Nullability) to avoid flagging builder patterns.
+        /// </summary>
+        public static readonly string[] BuilderPatterns =
+        [
+            ".Build()", ".Create()", "Builder<", ".Build",
+            "FluentBuilder", ".Configure(", "options.Configure",
+            "HttpClientBuilder", "ServiceBuilder"
+        ];
+
+        /// <summary>
+        /// Explicit interface implementation patterns.
+        /// Used by GCI0047 (Naming) to avoid flagging interface implementations.
+        /// </summary>
+        public static readonly string[] InterfaceImplementationPatterns =
+        [
+            "void I", "string I", "bool I", "int I", "I.*\\..*\\(",
+            ". I", "explicit interface", "interface I"
+        ];
+
+        /// <summary>
+        /// Infrastructure and utility layer markers.
+        /// Used by GCI0035 (Architecture) to avoid flagging infrastructure code.
+        /// </summary>
+        public static readonly string[] InfrastructureMarkers =
+        [
+            "/Infrastructure/", "/Configuration/", "/Startup",
+            "ServiceExtensions", "AuthExtensions", "Program.cs",
+            "CompositionRoot", "ModuleInitializer", "AppDefaults"
+        ];
+    }
+
     // ================= Generic Helper Methods =================
 
     /// <summary>
@@ -663,5 +868,46 @@ internal static class DomainSpecificPatterns
     {
         if (string.IsNullOrEmpty(content)) return false;
         return DataIntegrityPatterns.HasHttpContextSignal(content);
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> if the content contains any dev-only markers.
+    /// Used by GCI0003 to avoid flagging development-only code changes.
+    /// </summary>
+    public static bool HasDevOnlyMarker(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return false;
+        return CodePatterns.DevOnlyMarkers.Any(m => content.Contains(m, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> if the content contains any MVVM framework patterns.
+    /// Used by GCI0043 to avoid flagging ViewModels with null-forgiving operators.
+    /// </summary>
+    public static bool HasMvvmPattern(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return false;
+        return FrameworkPatterns.MvvmPatterns.Any(p => content.Contains(p, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> if the content contains ORM or DTO mapping patterns.
+    /// Used by GCI0015 to avoid flagging ORM auto-mapping configurations.
+    /// </summary>
+    public static bool HasMappingPattern(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return false;
+        return CodePatterns.OrmAutoMapPatterns.Any(p => content.Contains(p, StringComparison.OrdinalIgnoreCase)) ||
+               CodePatterns.DtoMapperPatterns.Any(p => content.Contains(p, StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> if the content contains mock object creation patterns.
+    /// Used by GCI0047 and GCI0032 to avoid flagging test mocks and assertion helpers.
+    /// </summary>
+    public static bool HasMockPattern(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return false;
+        return TestPatterns.MockObjectPatterns.Any(p => content.Contains(p, StringComparison.Ordinal));
     }
 }
