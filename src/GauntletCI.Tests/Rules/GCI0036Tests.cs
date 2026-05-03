@@ -6,7 +6,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0036Tests
 {
-    private static readonly GCI0036_PureContextMutation Rule = new();
+    private static readonly GCI0036_PureContextMutation Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task AssignmentInGetter_ShouldFlag()

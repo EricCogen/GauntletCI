@@ -46,12 +46,32 @@ public class RuleOrchestrator
     /// <summary>Returns all rule IDs discoverable via reflection from this assembly, sorted.</summary>
     public static IReadOnlyList<string> GetAllRuleIds()
     {
+        // GCI0024 Suppression: DefaultPatternProvider is stateless and non-disposable.
+        // No resources allocated; safe to create without using statement.
+        var patternProvider = new DefaultPatternProvider();
         var ruleType = typeof(IRule);
         return typeof(RuleOrchestrator).Assembly
             .GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false } && ruleType.IsAssignableFrom(t))
-            .Select(t => (IRule)(Activator.CreateInstance(t)
-                ?? throw new InvalidOperationException($"Activator.CreateInstance returned null for {t.FullName}.")))
+            .Select(t =>
+            {
+                try
+                {
+                    // GCI0012 Suppression: Activator.CreateInstance is used only on IRule subclasses discovered via reflection.
+                    // Type filtering (isClass, !isAbstract, IAssignableFrom(IRule)) prevents injection of arbitrary types.
+                    var rule = (IRule)(Activator.CreateInstance(t, patternProvider)
+                        ?? throw new InvalidOperationException($"Activator.CreateInstance returned null for {t.FullName}."));
+                    return rule;
+                }
+                catch (MissingMethodException)
+                {
+                    // Fallback for rules without IPatternProvider constructor
+                    // GCI0012 Suppression: Same as above - type filtering applied before CreateInstance
+                    var rule = (IRule)(Activator.CreateInstance(t)
+                        ?? throw new InvalidOperationException($"Activator.CreateInstance returned null for {t.FullName}."));
+                    return rule;
+                }
+            })
             .Select(r => r.Id)
             .OrderBy(id => id)
             .ToArray();
@@ -65,6 +85,10 @@ public class RuleOrchestrator
     {
         config ??= new GauntletConfig();
         var configService = new ConfigurationService(config, repoPath);
+        
+        // GCI0024 Suppression: DefaultPatternProvider is stateless and non-disposable.
+        // No resources allocated; safe to create without using statement.
+        var patternProvider = new DefaultPatternProvider();
 
         var ruleType = typeof(IRule);
         // Discover all IRule implementations via reflection at startup;
@@ -73,9 +97,26 @@ public class RuleOrchestrator
             .GetTypes()
             .Where(t => t is { IsClass: true, IsAbstract: false }
                      && ruleType.IsAssignableFrom(t))
-            .Select(t => (IRule)(Activator.CreateInstance(t)
-                ?? throw new InvalidOperationException($"Activator.CreateInstance returned null for {t.FullName}.")))
-            .Where(r => IsRuleEnabled(r.Id, config, configService))
+            .Select(t =>
+            {
+                try
+                {
+                    // GCI0012 Suppression: Activator.CreateInstance is used only on IRule subclasses discovered via reflection.
+                    // Type filtering (isClass, !isAbstract, IAssignableFrom(IRule)) prevents injection of arbitrary types.
+                    var rule = (IRule)(Activator.CreateInstance(t, patternProvider)
+                        ?? throw new InvalidOperationException($"Activator.CreateInstance returned null for {t.FullName}."));
+                    return rule;
+                }
+                catch (MissingMethodException)
+                {
+                    // Fallback for rules without IPatternProvider constructor (backward compatibility)
+                    // GCI0012 Suppression: Same as above - type filtering applied before CreateInstance
+                    var rule = (IRule)(Activator.CreateInstance(t)
+                        ?? throw new InvalidOperationException($"Activator.CreateInstance returned null for {t.FullName}."));
+                    return rule;
+                }
+            })
+            .Where(r => r.Id != null && IsRuleEnabled(r.Id, config, configService))
             .ToList();
 
         // Wire config into rules that need it

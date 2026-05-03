@@ -12,6 +12,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0052_DependencyBotApiDrift : RuleBase
 {
+    public GCI0052_DependencyBotApiDrift(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id   => "GCI0052";
     public override string Name => "Dependency Bot API Drift";
 
@@ -89,3 +92,4 @@ public class GCI0052_DependencyBotApiDrift : RuleBase
         return Task.FromResult(findings);
     }
 }
+

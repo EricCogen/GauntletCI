@@ -13,6 +13,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0041_TestQualityGaps : RuleBase
 {
+    public GCI0041_TestQualityGaps(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0041";
     public override string Name => "Test Quality Gaps";
 
@@ -171,3 +174,4 @@ public class GCI0041_TestQualityGaps : RuleBase
             confidence: Confidence.Low));
     }
 }
+

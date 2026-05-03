@@ -16,6 +16,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0032_UncaughtExceptionPath : RuleBase
 {
+    public GCI0032_UncaughtExceptionPath(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0032";
     public override string Name => "Uncaught Exception Path";
 
@@ -186,3 +189,4 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
         return inBlock && !hasNonCommentContent;
     }
 }
+

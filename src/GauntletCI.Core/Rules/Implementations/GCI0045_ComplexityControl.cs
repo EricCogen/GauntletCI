@@ -14,6 +14,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0045_ComplexityControl : RuleBase
 {
+    public GCI0045_ComplexityControl(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0045";
     public override string Name => "Complexity Control";
 
@@ -187,3 +190,4 @@ public class GCI0045_ComplexityControl : RuleBase
     }
 
 }
+

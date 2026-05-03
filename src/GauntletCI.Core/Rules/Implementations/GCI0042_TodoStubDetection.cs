@@ -11,6 +11,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0042_TodoStubDetection : RuleBase
 {
+    public GCI0042_TodoStubDetection(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0042";
     public override string Name => "TODO/Stub Detection";
 
@@ -64,3 +67,4 @@ public class GCI0042_TodoStubDetection : RuleBase
         return Task.FromResult(findings);
     }
 }
+

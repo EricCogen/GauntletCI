@@ -7,7 +7,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0043Tests
 {
-    private static readonly GCI0043_NullabilityTypeSafety Rule = new();
+    private static readonly GCI0043_NullabilityTypeSafety Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task EmptyDiff_ShouldNotFire()

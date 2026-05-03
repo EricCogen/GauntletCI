@@ -8,7 +8,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0003Tests
 {
-    private static readonly GCI0003_BehavioralChangeDetection Rule = new();
+    private static readonly GCI0003_BehavioralChangeDetection Rule = new(new StubPatternProvider());
 
     private static AnalysisContext MakeContext(DiffContext diff) => new() { Diff = diff };
 

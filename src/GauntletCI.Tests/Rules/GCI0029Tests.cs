@@ -6,7 +6,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0029Tests
 {
-    private static readonly GCI0029_PiiLoggingLeak Rule = new();
+    private static readonly GCI0029_PiiLoggingLeak Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task EmailInLoggerCall_ShouldFlag()

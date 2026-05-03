@@ -17,7 +17,7 @@ public class SupplementalCoverageTests
     public async Task GCI0001_WhitespaceChurn_ShouldFlag()
     {
         // Build a diff with >10 total changes and >40% whitespace-only added lines
-        var rule = new GCI0001_DiffIntegrity();
+        var rule = new GCI0001_DiffIntegrity(new StubPatternProvider());
         // 12 added lines: 6 are whitespace-only (50% > 40%), total changed = 12 > 10
         var addedLines = new string[]
         {
@@ -56,7 +56,7 @@ public class SupplementalCoverageTests
     public async Task GCI0007_CatchWithMeaningfulContent_ShouldNotFlag()
     {
         // A catch block that has content (not throw/log), so hasContent=true, not swallowed
-        var rule = new GCI0007_ErrorHandlingIntegrity();
+        var rule = new GCI0007_ErrorHandlingIntegrity(new StubPatternProvider());
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -82,7 +82,7 @@ public class SupplementalCoverageTests
     public async Task GCI0010_HardcodedUrl_ShouldFlag()
     {
         // Localhost URL with port: a hardcoded service endpoint that breaks across environments.
-        var rule = new GCI0010_HardcodingAndConfiguration();
+        var rule = new GCI0010_HardcodingAndConfiguration(new StubPatternProvider());
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -104,7 +104,7 @@ public class SupplementalCoverageTests
     {
         // Public API URLs (api.example.com, docs.microsoft.com, etc.) are intentional
         // references, not environment-specific hardcoding. Rule only fires on localhost/private IPs.
-        var rule = new GCI0010_HardcodingAndConfiguration();
+        var rule = new GCI0010_HardcodingAndConfiguration(new StubPatternProvider());
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -124,7 +124,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0010_HardcodedPort_ShouldFlag()
     {
-        var rule = new GCI0010_HardcodingAndConfiguration();
+        var rule = new GCI0010_HardcodingAndConfiguration(new StubPatternProvider());
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -144,7 +144,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0010_HardcodedEnvironmentName_ShouldFlag()
     {
-        var rule = new GCI0010_HardcodingAndConfiguration();
+        var rule = new GCI0010_HardcodingAndConfiguration(new StubPatternProvider());
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -164,7 +164,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0010_CommentWithIp_ShouldNotFlag()
     {
-        var rule = new GCI0010_HardcodingAndConfiguration();
+        var rule = new GCI0010_HardcodingAndConfiguration(new StubPatternProvider());
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -186,7 +186,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0012_WeakCrypto_DES_ShouldFlag()
     {
-        var rule = new GCI0012_SecurityRisk();
+        var rule = new GCI0012_SecurityRisk(new StubPatternProvider());
         var raw = """
             diff --git a/src/Crypto.cs b/src/Crypto.cs
             index abc..def 100644
@@ -206,7 +206,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0012_DangerousApi_ProcessStart_ShouldFlag()
     {
-        var rule = new GCI0012_SecurityRisk();
+        var rule = new GCI0012_SecurityRisk(new StubPatternProvider());
         var raw = """
             diff --git a/src/Shell.cs b/src/Shell.cs
             index abc..def 100644
@@ -226,7 +226,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0012_InsecureDeserialization_ShouldFlag()
     {
-        var rule = new GCI0012_SecurityRisk();
+        var rule = new GCI0012_SecurityRisk(new StubPatternProvider());
         var raw = """
             diff --git a/src/Serializer.cs b/src/Serializer.cs
             index abc..def 100644
@@ -246,7 +246,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0012_AllowAnonymousReplacingAuthorize_ShouldFlag()
     {
-        var rule = new GCI0012_SecurityRisk();
+        var rule = new GCI0012_SecurityRisk(new StubPatternProvider());
         var raw = """
             diff --git a/src/UserController.cs b/src/UserController.cs
             index abc..def 100644
@@ -269,7 +269,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0016_LockThis_ShouldFlag()
     {
-        var rule = new GCI0016_ConcurrencyAndStateRisk();
+        var rule = new GCI0016_ConcurrencyAndStateRisk(new StubPatternProvider());
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -327,7 +327,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0006_WithStaticAnalysis_CA1062_ShouldAddFinding()
     {
-        var rule = new GCI0006_EdgeCaseHandling();
+        var rule = new GCI0006_EdgeCaseHandling(new StubPatternProvider());
         var diff = DiffParser.Parse("""
             diff --git a/src/Foo.cs b/src/Foo.cs
             index abc..def 100644
@@ -353,7 +353,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0007_WithStaticAnalysis_CA1031_ShouldAddFinding()
     {
-        var rule = new GCI0007_ErrorHandlingIntegrity();
+        var rule = new GCI0007_ErrorHandlingIntegrity(new StubPatternProvider());
         var diff = DiffParser.Parse("""
             diff --git a/src/Foo.cs b/src/Foo.cs
             index abc..def 100644
@@ -387,7 +387,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0024_WithStaticAnalysis_CA2000_And_CA1001_ShouldAddFindings()
     {
-        var rule = new GauntletCI.Core.Rules.Implementations.GCI0024_ResourceLifecycle();
+        var rule = new GauntletCI.Core.Rules.Implementations.GCI0024_ResourceLifecycle(new StubPatternProvider());
         var diff = DiffParser.Parse("""
             diff --git a/src/Foo.cs b/src/Foo.cs
             index abc..def 100644
@@ -418,7 +418,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0015_WithStaticAnalysis_CA2227_ShouldAddFinding()
     {
-        var rule = new GCI0015_DataIntegrityRisk();
+        var rule = new GCI0015_DataIntegrityRisk(new StubPatternProvider());
         var diff = DiffParser.Parse("""
             diff --git a/src/Foo.cs b/src/Foo.cs
             index abc..def 100644
@@ -444,7 +444,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0012_WithStaticAnalysis_CA2100_ShouldAddFinding()
     {
-        var rule = new GCI0012_SecurityRisk();
+        var rule = new GCI0012_SecurityRisk(new StubPatternProvider());
         var diff = DiffParser.Parse("""
             diff --git a/src/Foo.cs b/src/Foo.cs
             index abc..def 100644
@@ -470,7 +470,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0004_ObsoleteAdded_ShouldFlag()
     {
-        var rule = new GCI0004_BreakingChangeRisk();
+        var rule = new GCI0004_BreakingChangeRisk(new StubPatternProvider());
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
@@ -494,7 +494,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0003_NoLogicRemoved_ShouldNotFlag()
     {
-        var rule = new GCI0003_BehavioralChangeDetection();
+        var rule = new GCI0003_BehavioralChangeDetection(new StubPatternProvider());
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644

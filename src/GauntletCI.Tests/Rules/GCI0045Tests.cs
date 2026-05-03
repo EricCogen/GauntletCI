@@ -6,7 +6,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0045Tests
 {
-    private static readonly GCI0045_ComplexityControl Rule = new();
+    private static readonly GCI0045_ComplexityControl Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task EmptyDiff_ShouldNotFire()

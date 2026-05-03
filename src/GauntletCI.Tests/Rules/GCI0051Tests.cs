@@ -8,7 +8,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0051Tests
 {
-    private static readonly GCI0051_NumericCoercionRisks Rule = new();
+    private static readonly GCI0051_NumericCoercionRisks Rule = new(new StubPatternProvider());
 
     private static AnalysisContext MakeContext(DiffContext diff) => new() { Diff = diff };
 

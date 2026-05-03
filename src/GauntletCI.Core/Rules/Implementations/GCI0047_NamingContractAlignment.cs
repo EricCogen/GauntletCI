@@ -16,6 +16,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0047_NamingContractAlignment : RuleBase
 {
+    public GCI0047_NamingContractAlignment(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0047";
     public override string Name => "Naming/Contract Alignment";
 
@@ -176,3 +179,4 @@ public class GCI0047_NamingContractAlignment : RuleBase
         return result;
     }
 }
+

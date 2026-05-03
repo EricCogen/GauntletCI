@@ -7,7 +7,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0007Tests
 {
-    private static readonly GCI0007_ErrorHandlingIntegrity Rule = new();
+    private static readonly GCI0007_ErrorHandlingIntegrity Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task EmptyCatchBlock_ShouldFlagHigh()

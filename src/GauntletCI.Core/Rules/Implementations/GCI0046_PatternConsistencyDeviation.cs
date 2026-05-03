@@ -13,6 +13,10 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
 {
+    public GCI0046_PatternConsistencyDeviation(IPatternProvider patterns) : base(patterns)
+    {
+    }
+
     public override string Id => "GCI0046";
     public override string Name => "Pattern Consistency Deviation";
 

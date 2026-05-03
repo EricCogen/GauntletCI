@@ -53,6 +53,9 @@ internal class BehavioralChangeContextAnalyzer
 /// </summary>
 public class GCI0003_BehavioralChangeDetection : RuleBase
 {
+    public GCI0003_BehavioralChangeDetection(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0003";
     public override string Name => "Behavioral Change Detection";
 
@@ -441,3 +444,4 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
         return baseConfidence;
     }
 }
+

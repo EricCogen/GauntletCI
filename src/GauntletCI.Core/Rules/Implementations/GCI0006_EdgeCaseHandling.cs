@@ -15,6 +15,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0006_EdgeCaseHandling : RuleBase
 {
+    public GCI0006_EdgeCaseHandling(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0006";
     public override string Name => "Edge Case Handling";
 
@@ -570,3 +573,4 @@ public class GCI0006_EdgeCaseHandling : RuleBase
         return false;
     }
 }
+

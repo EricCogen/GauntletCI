@@ -7,7 +7,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0038Tests
 {
-    private static readonly GCI0038_DependencyInjectionSafety Rule = new();
+    private static readonly GCI0038_DependencyInjectionSafety Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task ServiceLocator_InNonInfrastructureFile_ShouldFlagHigh()

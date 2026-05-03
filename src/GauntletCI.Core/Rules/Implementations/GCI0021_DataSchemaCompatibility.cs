@@ -12,6 +12,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0021_DataSchemaCompatibility : RuleBase
 {
+    public GCI0021_DataSchemaCompatibility(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0021";
     public override string Name => "Data & Schema Compatibility";
 
@@ -170,3 +173,4 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
                !content.Contains('(') && !content.Contains('{');
     }
 }
+

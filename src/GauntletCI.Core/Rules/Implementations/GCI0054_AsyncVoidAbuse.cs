@@ -14,6 +14,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0054_AsyncVoidAbuse : RuleBase
 {
+    public GCI0054_AsyncVoidAbuse(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0054";
     public override string Name => "Async Void Abuse";
 
@@ -69,3 +72,4 @@ public class GCI0054_AsyncVoidAbuse : RuleBase
         }
     }
 }
+

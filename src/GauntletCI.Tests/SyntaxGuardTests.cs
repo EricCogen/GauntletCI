@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Core.Diff;
+using GauntletCI.Core.Rules;
 using GauntletCI.Core.Rules.Implementations;
 using GauntletCI.Core.StaticAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -145,7 +146,7 @@ public class SyntaxGuardTests
         });
 
         var diff = MakeDiff("src/Auth.cs", addedLine);
-        var rule = new GCI0048_InsecureRandomInSecurityContext();
+        var rule = new GCI0048_InsecureRandomInSecurityContext(new StubPatternProvider());
         var findings = await rule.EvaluateAsync(diff, syntax: ctx);
         Assert.Empty(findings);
     }
@@ -155,7 +156,7 @@ public class SyntaxGuardTests
     {
         const string addedLine = "    var token = new Random(seed).Next();";
         var diff = MakeDiff("src/Auth.cs", addedLine);
-        var rule = new GCI0048_InsecureRandomInSecurityContext();
+        var rule = new GCI0048_InsecureRandomInSecurityContext(new StubPatternProvider());
         var findings = await rule.EvaluateAsync(diff);
         Assert.NotEmpty(findings);
     }
@@ -173,7 +174,7 @@ public class SyntaxGuardTests
         });
 
         var diff = MakeDiff("src/Calc.cs", addedLine);
-        var rule = new GCI0049_FloatDoubleEqualityComparison();
+        var rule = new GCI0049_FloatDoubleEqualityComparison(new StubPatternProvider());
         var findings = await rule.EvaluateAsync(diff, syntax: ctx);
         Assert.Empty(findings);
     }
@@ -183,7 +184,7 @@ public class SyntaxGuardTests
     {
         const string addedLine = "    if (result == 0.0) throw new Exception();";
         var diff = MakeDiff("src/Calc.cs", addedLine);
-        var rule = new GCI0049_FloatDoubleEqualityComparison();
+        var rule = new GCI0049_FloatDoubleEqualityComparison(new StubPatternProvider());
         var findings = await rule.EvaluateAsync(diff);
         Assert.NotEmpty(findings);
     }

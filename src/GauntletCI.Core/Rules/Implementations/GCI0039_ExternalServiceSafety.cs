@@ -11,6 +11,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0039_ExternalServiceSafety : RuleBase
 {
+    public GCI0039_ExternalServiceSafety(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0039";
     public override string Name => "External Service Safety";
 
@@ -151,3 +154,4 @@ public class GCI0039_ExternalServiceSafety : RuleBase
         return WellKnownPatterns.IsGrpcRelatedFile(path);
     }
 }
+

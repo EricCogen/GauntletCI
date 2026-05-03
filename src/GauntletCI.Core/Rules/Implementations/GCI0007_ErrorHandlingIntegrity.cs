@@ -12,6 +12,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0007_ErrorHandlingIntegrity : RuleBase
 {
+    public GCI0007_ErrorHandlingIntegrity(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0007";
     public override string Name => "Error Handling Integrity";
 
@@ -280,3 +283,4 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
         }
     }
 }
+

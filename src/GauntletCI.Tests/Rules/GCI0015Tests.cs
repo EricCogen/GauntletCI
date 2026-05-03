@@ -6,7 +6,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0015Tests
 {
-    private static readonly GCI0015_DataIntegrityRisk Rule = new();
+    private static readonly GCI0015_DataIntegrityRisk Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task UncheckedCastInt_ShouldFlag()

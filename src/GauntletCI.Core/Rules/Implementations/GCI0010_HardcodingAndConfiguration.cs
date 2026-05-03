@@ -16,6 +16,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0010_HardcodingAndConfiguration : RuleBase
 {
+    public GCI0010_HardcodingAndConfiguration(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0010";
     public override string Name => "Hardcoding and Configuration";
 
@@ -269,3 +272,4 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         }
     }
 }
+

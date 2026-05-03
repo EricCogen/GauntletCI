@@ -7,7 +7,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0054Tests
 {
-    private static readonly GCI0054_AsyncVoidAbuse Rule = new();
+    private static readonly GCI0054_AsyncVoidAbuse Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task PublicAsyncVoidMethod_ShouldFire()

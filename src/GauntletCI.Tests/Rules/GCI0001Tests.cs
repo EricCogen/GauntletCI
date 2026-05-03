@@ -6,7 +6,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0001Tests
 {
-    private static readonly GCI0001_DiffIntegrity Rule = new();
+    private static readonly GCI0001_DiffIntegrity Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task MixedCodeAndMarkdown_ShouldFlagMixedScope()

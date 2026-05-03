@@ -12,6 +12,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0022_IdempotencyRetrySafety : RuleBase
 {
+    public GCI0022_IdempotencyRetrySafety(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0022";
     public override string Name => "Idempotency & Retry Safety";
 
@@ -141,3 +144,4 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
         }
     }
 }
+

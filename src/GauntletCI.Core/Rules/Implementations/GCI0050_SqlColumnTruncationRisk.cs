@@ -16,6 +16,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0050_SqlColumnTruncationRisk : RuleBase
 {
+    public GCI0050_SqlColumnTruncationRisk(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id   => "GCI0050";
     public override string Name => "SQL Column Truncation Risk";
 
@@ -113,3 +116,4 @@ public class GCI0050_SqlColumnTruncationRisk : RuleBase
             || lower.Contains("fluent");
     }
 }
+

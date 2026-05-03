@@ -6,7 +6,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0050Tests
 {
-    private static readonly GCI0050_SqlColumnTruncationRisk Rule = new();
+    private static readonly GCI0050_SqlColumnTruncationRisk Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task ShortNvarcharInMigration_ShouldFire()

@@ -12,6 +12,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0036_PureContextMutation : RuleBase
 {
+    public GCI0036_PureContextMutation(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0036";
     public override string Name => "Pure Context Mutation";
 
@@ -243,3 +246,4 @@ public class GCI0036_PureContextMutation : RuleBase
         return -1;
     }
 }
+

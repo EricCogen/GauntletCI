@@ -17,6 +17,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0020_ResourceExhaustionPatterns : RuleBase
 {
+    public GCI0020_ResourceExhaustionPatterns(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0020";
     public override string Name => "Resource Exhaustion Pattern Detection";
 
@@ -228,3 +231,4 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
         return name1 == name2;
     }
 }
+
