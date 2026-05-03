@@ -190,7 +190,11 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
 
             var list = new List<object>();
             foreach (var node in nodes.EnumerateArray())
-                list.Add(JsonSerializer.Deserialize<object>(node.GetRawText())!);
+            {
+                var obj = JsonSerializer.Deserialize<object>(node.GetRawText());
+                if (obj is not null)
+                    list.Add(obj);
+            }
             return list;
         }
         catch (OperationCanceledException) { throw; }
