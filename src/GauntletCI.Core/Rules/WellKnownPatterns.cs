@@ -8,129 +8,323 @@
 // =================================================================
 // 
 // GCI0003 Suppression: Consolidation moves guard logic and helper methods from individual rule files
-// to this centralized WellKnownPatterns file. These are intentional refactorings, not behavioral changes.
+// to this centralized WellKnownPatterns module. These are intentional refactorings, not behavioral changes.
 // The logic remains in use; it's just been reorganized for reuse across multiple rules.
 #pragma warning disable GCI0003  // Behavioral Change Detection - consolidation, not regression
 
 using GauntletCI.Core.Diff;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using GauntletCI.Core.Rules.Patterns;
 
 namespace GauntletCI.Core.Rules;
 
+/// <summary>
+/// Facade for domain-specific pattern classes.
+/// This module consolidates pattern detection logic across 5 focused domains:
+/// - FileContextPatterns: test/generated file detection, infrastructure identification
+/// - HttpExternalServicePatterns: gRPC/HTTP client framework guards
+/// - NullabilityPatterns: NRT, nullable reference types, null-safety
+/// - SecurityPatterns: credential detection, security boundaries
+/// - DomainSpecificPatterns: performance, floating-point, data integrity, PII, exceptions, DI, architecture
+/// 
+/// Backward-compatible facade: all old WellKnownPatterns methods delegate to domain classes.
+/// </summary>
 internal static class WellKnownPatterns
 {
+    // ================= Module-Level Constants (Not Domain-Specific) =================
+
     /// <summary>Variable and field name fragments used to detect hardcoded secrets by name (GCI0010, GCI0012).</summary>
     public static readonly string[] SecretNamePatterns = [ "password", "passwd", "secret", "apikey", "api_key", "token", "credential", "private_key", "privatekey", "access_key", "auth_key" ];
 
     /// <summary>Log-level keywords indicating high-severity log calls that warrant review (GCI0007, GCI0013).</summary>
     public static readonly string[] HighSeverityLogKeywords = [ "error", "exception", "critical", "fatal", "warn", "warning" ];
 
+    // ================= File Context Delegation =================
+
     /// <summary>
     /// Returns <c>true</c> when the given path belongs to a test or spec file.
     /// Used across rules to avoid false positives in test code.
     /// </summary>
-    /// <param name="path">The file path to inspect.</param>
-    public static bool IsTestFile(string path)
-    {
-        var normPath = path.Replace('\\', '/');
-        var lastSlash = normPath.LastIndexOf('/');
-
-        // Directory segment checks (both original-case and lowercase variants).
-        if (lastSlash > 0)
-        {
-            foreach (var segment in normPath[..lastSlash].Split('/'))
-            {
-                var lower = segment.ToLowerInvariant();
-                // Exact match for spec/specs directories (covers RSpec, Jest, etc.)
-                if (lower == "spec" || lower == "specs") return true;
-                // Word-boundary "test(s)" check on lowercase segment (avoids "latest", "protest")
-                if (IsTestSegment(lower)) return true;
-                // Benchmark / sample / example directories are not consumer-facing APIs
-                if (IsNonProductionSegment(lower)) return true;
-                // Mock / Fake infrastructure directories
-                if (lower == "mock" || lower == "mocks" || lower == "fake" || lower == "fakes") return true;
-                // PascalCase compound directory names: "IntegrationTests", "UnitTest", etc.
-                if (segment.EndsWith("Tests", StringComparison.Ordinal)
-                    || segment.EndsWith("Test", StringComparison.Ordinal)) return true;
-                // PascalCase benchmark directories: "MyProject.Benchmarks", "Perf.Benchmark"
-                if (segment.EndsWith("Benchmark", StringComparison.Ordinal)
-                    || segment.EndsWith("Benchmarks", StringComparison.Ordinal)) return true;
-            }
-        }
-
-        // File name: use original casing to distinguish PascalCase "Tests"/"Test"/"Spec" suffix
-        // from English words that embed "test" (e.g. "Contest.cs", "Latest.cs", "Protest.cs").
-        var origFile  = lastSlash >= 0 ? normPath[(lastSlash + 1)..] : normPath;
-        var origNoExt = origFile.Contains('.') ? origFile[..origFile.LastIndexOf('.')] : origFile;
-        return origNoExt.StartsWith("test", StringComparison.OrdinalIgnoreCase)
-            || origNoExt.EndsWith("Tests", StringComparison.Ordinal)
-            || origNoExt.EndsWith("Test",  StringComparison.Ordinal)
-            || origNoExt.EndsWith("Spec",  StringComparison.OrdinalIgnoreCase)
-            || origNoExt.EndsWith("Benchmark",  StringComparison.OrdinalIgnoreCase)
-            || origNoExt.EndsWith("Benchmarks", StringComparison.OrdinalIgnoreCase);
-    }
-
-    // Returns true when a lowercase directory segment represents a test directory.
-    // Requires "test" to appear at a word boundary: avoids "latest", "protest", etc.
-    private static bool IsTestSegment(string segment)
-    {
-        if (segment.StartsWith("test")) return true;
-        // EndsWith "test": only when the character immediately before "test" is non-letter
-        // e.g. ".test", "-test", "_test" → yes; "latest" → 'a' precedes "test" → no
-        if (segment.Length > 4 && segment.EndsWith("test") && !char.IsLetter(segment[^5])) return true;
-        if (segment.Length > 5 && segment.EndsWith("tests") && !char.IsLetter(segment[^6])) return true;
-        return false;
-    }
-
-    // Returns true when a directory segment represents a benchmark, sample, or example directory
-    // that is not consumer-facing and should be treated like test code for rule suppression.
-    private static bool IsNonProductionSegment(string segment)
-    {
-        // Benchmark projects: BenchmarkDotNet, microbenchmarks, perf projects
-        if (segment.EndsWith("benchmark") || segment.EndsWith("benchmarks")) return true;
-        if (segment == "benchmark" || segment == "benchmarks") return true;
-        // Sample and example projects: demonstration code with no API stability guarantee
-        if (segment == "samples" || segment == "sample") return true;
-        if (segment == "examples" || segment == "example") return true;
-        return false;
-    }
+    public static bool IsTestFile(string path) => FileContextPatterns.IsTestFile(path);
 
     /// <summary>
     /// Returns <c>true</c> when the given path is an auto-generated file that should not be
     /// subject to rule analysis (source generators, designer files, scaffolded API clients, etc.).
     /// </summary>
-    /// <param name="path">The file path to inspect.</param>
-    public static bool IsGeneratedFile(string path)
-    {
-        var normPath = path.Replace('\\', '/');
+    public static bool IsGeneratedFile(string path) => FileContextPatterns.IsGeneratedFile(path);
 
-        // Directory segment: any path with a /Generated/ folder is auto-generated
-        if (normPath.Contains("/Generated/", StringComparison.OrdinalIgnoreCase)) return true;
-        // Build output or intermediate artifacts
-        if (normPath.Contains("/obj/", StringComparison.OrdinalIgnoreCase)) return true;
+    /// <summary>
+    /// Returns <c>true</c> when the file path indicates infrastructure/configuration code where DI setup occurs.
+    /// Service locator patterns and direct instantiation are acceptable in Program.cs, Startup.cs, etc.
+    /// </summary>
+    public static bool IsInfrastructureFile(string path) => FileContextPatterns.IsInfrastructureFile(path);
 
-        var fileName = normPath.Contains('/')
-            ? normPath[(normPath.LastIndexOf('/') + 1)..]
-            : normPath;
+    /// <summary>
+    /// Returns <c>true</c> if the given path contains security-critical component names.
+    /// Used by GCI0003 for identifying security-related code changes.
+    /// </summary>
+    public static bool IsSecurityCriticalPath(string path) => FileContextPatterns.IsSecurityCriticalPath(path);
 
-        // Roslyn source generator outputs: Foo.g.cs, Foo.g.i.cs
-        if (fileName.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase)) return true;
-        if (fileName.EndsWith(".g.i.cs", StringComparison.OrdinalIgnoreCase)) return true;
-        // WinForms / WPF designer files
-        if (fileName.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase)) return true;
-        // Assembly-level attribute file emitted by SDK
-        if (fileName.Equals("AssemblyInfo.cs", StringComparison.OrdinalIgnoreCase)) return true;
-        // API surface manifest files emitted by the .NET SDK:
-        //   net8.0.cs, net10.0.cs (numeric TFMs) and netstandard2.0.cs, netstandard2.1.cs, etc.
-        // These enumerate every public member and are never hand-authored.
-        if (System.Text.RegularExpressions.Regex.IsMatch(
-                fileName, @"\.(net\d+\.\d+|netstandard\d+\.\d+)\.cs$",
-                System.Text.RegularExpressions.RegexOptions.IgnoreCase)) return true;
+    /// <summary>
+    /// Returns <c>true</c> if the line is a comment (starts with //, *, or #).
+    /// Used across rules to skip comment-only lines from analysis.
+    /// </summary>
+    public static bool IsCommentLine(string trimmed) => FileContextPatterns.IsCommentLine(trimmed);
 
-        return false;
-    }
+    /// <summary>
+    /// File path components indicating security-critical code sections.
+    /// Used by GCI0003 for behavioral change context analysis (confidential boost for security changes).
+    /// </summary>
+    public static readonly string[] SecurityCriticalPaths = FileContextPatterns.SecurityCriticalPaths;
+
+    // ================= Nullability and NRT Delegation =================
+
+    /// <summary>
+    /// Returns <c>true</c> when NRT (Nullable Reference Type) is enabled for the given file.
+    /// NRT is enabled via: #nullable enable directive, project-wide settings, or modern .NET versions.
+    /// Used by GCI0006 and GCI0043 to determine if 'string' parameters are non-nullable by default.
+    /// </summary>
+    public static bool IsNullableReferenceTypeEnabled(string fileContent) => 
+        NullabilityPatterns.IsNullableReferenceTypeEnabled(fileContent);
+
+    /// <summary>
+    /// Returns <c>true</c> when the parameter section contains explicitly non-nullable parameters
+    /// (e.g., 'string param' without '?'). In NRT-enabled context, these don't need validation.
+    /// </summary>
+    public static bool HasNonNullableParams(string paramSection) => 
+        NullabilityPatterns.HasNonNullableParams(paramSection);
+
+    /// <summary>
+    /// Returns <c>true</c> when the parameter list contains nullable parameters (e.g., 'string?' or 'object?').
+    /// Used by GCI0006 to detect when public methods have nullable reference type parameters.
+    /// </summary>
+    public static bool HasNullableReferenceParam(string paramSection) => 
+        NullabilityPatterns.HasNullableReferenceParam(paramSection);
+
+    /// <summary>
+    /// Returns <c>true</c> when the content contains Nullable&lt;T&gt; where T is a value type.
+    /// In NRT context, Nullable&lt;int&gt;, Nullable&lt;string&gt;, etc. always have a value.
+    /// </summary>
+    public static bool IsNullableOfNonNullableType(string content) => 
+        NullabilityPatterns.IsNullableOfNonNullableType(content);
+
+    /// <summary>
+    /// Returns <c>true</c> when the content contains a #pragma warning disable with nullable-related codes.
+    /// Detects suppression of nullable reference type warnings (CS8600, CS8603, etc.).
+    /// Used by GCI0043 to flag deliberate nullable warning suppression.
+    /// </summary>
+    public static bool IsPragmaNullableDisable(string content) => 
+        NullabilityPatterns.IsPragmaNullableDisable(content);
+
+    /// <summary>
+    /// Returns <c>true</c> when the content contains a LINQ expression where .Value is intentionally mapped.
+    /// Patterns: .Select(x => x.Value), .Where(x => x.Value != null), etc.
+    /// Used by GCI0006 to avoid flagging safe LINQ projections as unsafe dereferences.
+    /// </summary>
+    public static bool IsLinqValueProjection(string content) => 
+        NullabilityPatterns.IsLinqValueProjection(content);
+
+    // ================= HTTP/gRPC External Service Delegation =================
+
+    /// <summary>
+    /// Returns <c>true</c> when the file path indicates gRPC-related code.
+    /// gRPC channels manage timeouts at the channel/connection level, not per-HttpClient.
+    /// Used by GCI0039 to skip false positive timeout checks in gRPC contexts.
+    /// </summary>
+    public static bool IsGrpcRelatedFile(string path) => 
+        HttpExternalServicePatterns.IsGrpcRelatedFile(path);
+
+    /// <summary>
+    /// Returns <c>true</c> when the added lines indicate HttpClient configuration via IHttpClientFactory.
+    /// Factory-managed clients configure timeout at the handler/channel level, not per-client.
+    /// </summary>
+    public static bool IsHttpFactoryConfigured(List<DiffLine> addedLines) => 
+        HttpExternalServicePatterns.IsHttpFactoryConfigured(addedLines);
+
+    /// <summary>
+    /// Returns <c>true</c> when the added lines indicate gRPC channel configuration.
+    /// gRPC channels manage timeouts via GrpcChannelOptions at the connection level.
+    /// </summary>
+    public static bool UsesGrpcChannel(List<DiffLine> addedLines) => 
+        HttpExternalServicePatterns.UsesGrpcChannel(addedLines);
+
+    /// <summary>
+    /// Returns <c>true</c> when the added lines indicate use of factory-managed or injected HTTP clients.
+    /// Factory patterns, Polly policies, and DI-managed clients manage timeouts externally.
+    /// </summary>
+    public static bool UsesFactoryManagedHttpClients(List<DiffLine> addedLines) => 
+        HttpExternalServicePatterns.UsesFactoryManagedHttpClients(addedLines);
+
+    /// <summary>
+    /// Returns <c>true</c> when the content indicates an injected or static HttpClient is being used.
+    /// Patterns like _httpClient.GetAsync() or this.client.PostAsync() are typically DI-managed.
+    /// </summary>
+    public static bool IsInjectedOrStaticClient(string content) => 
+        HttpExternalServicePatterns.IsInjectedOrStaticClient(content);
+
+    /// <summary>
+    /// Returns <c>true</c> when the file uses .NET 9+ modern patterns (checked operators, required members, etc).
+    /// These patterns strongly indicate NRT is enabled in modern project contexts.
+    /// </summary>
+    public static bool UsesModernDotNetPatterns(string fileContent) => 
+        HttpExternalServicePatterns.UsesModernDotNetPatterns(fileContent);
+
+    /// <summary>
+    /// Returns <c>true</c> when a method signature uses record type parameters or other modern patterns.
+    /// Helps identify rules applied to modern code that typically has NRT enabled.
+    /// </summary>
+    public static bool HasModernTypeParameters(string paramSection) => 
+        HttpExternalServicePatterns.HasModernTypeParameters(paramSection);
+
+    // ================= Security Patterns Delegation =================
+
+    /// <summary>
+    /// Returns <c>true</c> if the value appears to be an environment variable name
+    /// (ALL_CAPS with digits and underscores, e.g., GITHUB_TOKEN, MY_API_KEY).
+    /// Used by GCI0012 to skip environment variable names from hardcoded credential detection.
+    /// </summary>
+    public static bool IsEnvVarName(string literal) => SecurityPatterns.IsEnvVarName(literal);
+
+    /// <summary>
+    /// Returns <c>true</c> for benign literal values that are never actual secrets:
+    /// empty strings, short strings (&lt;3 chars), HTTP auth scheme names, and C# keyword literals.
+    /// Used by GCI0012 to reduce false positives in credential detection.
+    /// </summary>
+    public static bool IsBenignLiteralValue(string value) => SecurityPatterns.IsBenignLiteralValue(value);
+
+    /// <summary>
+    /// Returns the index of the first real assignment = in the line, skipping string literals.
+    /// Distinguishes between = (assignment), == (equality), !=, &lt;=, >=, and => (lambda/expression body).
+    /// Used by GCI0012 to find credentials assigned to variables.
+    /// </summary>
+    public static int FindAssignmentIndex(string content) => SecurityPatterns.FindAssignmentIndex(content);
+
+    /// <summary>
+    /// Returns <c>true</c> only if the line contains a real assignment = (not ==, !=, <=, >=, =>).
+    /// Skips = signs inside string literals to avoid false positives from format strings.
+    /// Used by GCI0012 to detect variable assignments with hardcoded credentials.
+    /// </summary>
+    public static bool HasAssignment(string content) => SecurityPatterns.HasAssignment(content);
+
+    /// <summary>
+    /// Returns the string value only when the direct RHS of an assignment is a bare string literal.
+    /// Returns null if the RHS is a method call, object initializer, or anything other than a literal.
+    /// Prevents false positives from patterns like: _tokenField = SomeFactory("ui-element-id")
+    /// Used by GCI0012 to find actual hardcoded credential values.
+    /// </summary>
+    public static string? ExtractDirectlyAssignedLiteral(string content) => 
+        SecurityPatterns.ExtractDirectlyAssignedLiteral(content);
+
+    /// <summary>
+    /// Commit message keywords indicating security-focused changes.
+    /// Used by GCI0003 for behavioral change context analysis.
+    /// </summary>
+    public static readonly string[] SecurityKeywords = SecurityPatterns.SecurityKeywords;
+
+    /// <summary>
+    /// Test pattern keywords indicating security-focused test additions.
+    /// Used by GCI0003 for detecting security-focused test additions.
+    /// </summary>
+    public static readonly string[] SecurityTestPatterns = SecurityPatterns.SecurityTestPatterns;
+
+    /// <summary>
+    /// Returns <c>true</c> if the given text contains security-related keywords.
+    /// Used by GCI0003 for analyzing commit messages for security focus.
+    /// </summary>
+    public static bool HasSecurityKeywords(string text) => SecurityPatterns.HasSecurityKeywords(text);
+
+    /// <summary>
+    /// Returns <c>true</c> if the given text contains security-related test patterns.
+    /// Used by GCI0003 for detecting security-focused test additions.
+    /// </summary>
+    public static bool HasSecurityTestPattern(string text) => SecurityPatterns.HasSecurityTestPattern(text);
+
+    // ================= Domain-Specific Patterns Delegation =================
+
+    // --- Timeout and Resource Patterns ---
+
+    /// <summary>
+    /// Patterns indicating resource timeout limits in code.
+    /// Used by GCI0020 for detecting timeout removal that could lead to resource exhaustion.
+    /// </summary>
+    public static readonly string[] TimeoutPatterns = DomainSpecificPatterns.TimeoutPatterns;
+
+    /// <summary>
+    /// Patterns indicating iteration or loop count limits in code.
+    /// Used by GCI0020 for detecting iteration limit removal.
+    /// </summary>
+    public static readonly string[] IterationLimitPatterns = DomainSpecificPatterns.IterationLimitPatterns;
+
+    /// <summary>
+    /// Patterns indicating resource limits (connections, threads, buffers, pools).
+    /// Used by GCI0020 for detecting dangerous resource limit increases.
+    /// </summary>
+    public static readonly string[] ResourceLimitPatterns = DomainSpecificPatterns.ResourceLimitPatterns;
+
+    /// <summary>
+    /// Patterns indicating resource cleanup/disposal operations.
+    /// Used by GCI0020 for detecting removal of resource cleanup code.
+    /// </summary>
+    public static readonly string[] ResourceCleanupPatterns = DomainSpecificPatterns.ResourceCleanupPatterns;
+
+    /// <summary>
+    /// Patterns indicating asynchronous operations that can consume resources.
+    /// Used by GCI0020 for detecting unbounded async operations.
+    /// </summary>
+    public static readonly string[] AsyncPatterns = DomainSpecificPatterns.AsyncPatterns;
+
+    // --- Test Patterns ---
+
+    /// <summary>
+    /// Test silence/skip patterns that prevent tests from running.
+    /// Used by GCI0041 for detecting disabled or skipped tests that may hide regressions.
+    /// </summary>
+    public static readonly string[] TestSilencePatterns = DomainSpecificPatterns.TestSilencePatterns;
+
+    /// <summary>
+    /// Test attribute markers that identify test methods.
+    /// Used by GCI0041 for detecting uninformative test method names.
+    /// </summary>
+    public static readonly string[] TestAttributeMarkers = DomainSpecificPatterns.TestAttributeMarkers;
+
+    /// <summary>
+    /// Assertion keywords used across popular .NET testing frameworks.
+    /// Includes xUnit, NUnit, MSTest, FluentAssertions, Shouldly, Moq, NSubstitute, Playwright, etc.
+    /// Used by GCI0041 for detecting test methods with missing assertions.
+    /// </summary>
+    public static readonly string[] TestAssertionKeywords = DomainSpecificPatterns.TestAssertionKeywords;
+
+    // --- Service Locator and Connection Patterns (from original module constants) ---
+
+    /// <summary>
+    /// Array of service locator patterns that violate DI principles.
+    /// These patterns bypass DI and make testing/mocking difficult.
+    /// </summary>
+    public static readonly string[] ServiceLocatorPatterns = DomainSpecificPatterns.DependencyInjectionPatterns.ServiceLocatorPatterns;
+
+    /// <summary>
+    /// Regex to detect direct instantiation of injectable types.
+    /// Matches patterns like: new UserService(...), new OrderRepository(...), new RequestHandler(...)
+    /// </summary>
+    public static readonly System.Text.RegularExpressions.Regex DirectInstantiationRegex = 
+        DomainSpecificPatterns.DependencyInjectionPatterns.DirectInstantiationRegex;
+
+    /// <summary>
+    /// Patterns to exclude from direct instantiation checks.
+    /// Test doubles and event handlers are legitimate cases for direct instantiation.
+    /// </summary>
+    public static readonly string[] DirectInstantiationExclusions = 
+        DomainSpecificPatterns.DependencyInjectionPatterns.DirectInstantiationExclusions;
+
+    /// <summary>
+    /// Common connection string markers that indicate hardcoded database/service connections.
+    /// Used by GCI0010 to detect hardcoded configuration and GCI0012 to flag credential exposure.
+    /// </summary>
+    public static readonly string[] ConnectionStringMarkers =
+    [
+        "Server=", "Data Source=", "mongodb://", "redis://", "mysql://", "postgresql://", "Database="
+    ];
+
+    // ================= Signature Compatibility =================
 
     /// <summary>
     /// Returns <c>true</c> when <paramref name="addedSig"/> is a backward-compatible extension of
@@ -183,1183 +377,180 @@ internal static class WellKnownPatterns
         return open >= 0 && close > open ? sig[(open + 1)..close] : null;
     }
 
-    /// <summary>
-    /// NRT (Nullable Reference Type) guards for detecting nullability-related patterns.
-    /// Used by GCI0006, GCI0043, and other nullability-aware rules to reduce false positives.
-    /// </summary>
-
-    /// <summary>
-    /// Returns <c>true</c> when NRT (Nullable Reference Type) is enabled for the given file.
-    /// NRT is enabled via: #nullable enable directive, project-wide settings, or modern .NET versions.
-    /// Used by GCI0006 and GCI0043 to determine if 'string' parameters are non-nullable by default.
-    /// </summary>
-    public static bool IsNullableReferenceTypeEnabled(string fileContent)
-    {
-        // Explicit NRT directive: #nullable enable or #nullable restore
-        if (fileContent.Contains("#nullable enable", StringComparison.OrdinalIgnoreCase) ||
-            fileContent.Contains("#nullable restore", StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        // Explicit NRT disable: #nullable disable indicates NRT is not active
-        if (fileContent.Contains("#nullable disable", StringComparison.OrdinalIgnoreCase))
-            return false;
-
-        // Heuristic: Modern .NET projects (net5+) typically have NRT enabled
-        // Look for patterns that indicate modern C# (nullable annotations, record types, init accessors, required members)
-        if (fileContent.Contains(" record ", StringComparison.Ordinal) ||
-            fileContent.Contains("{ init; }", StringComparison.Ordinal) ||
-            fileContent.Contains("{ get; init; }", StringComparison.Ordinal) ||
-            fileContent.Contains("required ", StringComparison.Ordinal))
-            return true;
-
-        // Look for the pattern: non-nullable string used in method signatures
-        // This is stronger evidence of NRT enablement than just presence of 'string'
-        // Pattern: public/protected method with 'string' param not followed by '?'
-        if (System.Text.RegularExpressions.Regex.IsMatch(
-                fileContent, @"(public|protected)\s+\w+\s+\w+\s*\(\s*string\s+\w+"))
-            return true;
-
-        // Default: assume NRT disabled (conservative approach - will validate parameters)
-        return false;
-    }
-
-    /// <summary>
-    /// Returns <c>true</c> when the parameter section contains explicitly non-nullable parameters
-    /// (e.g., 'string param' without '?'). In NRT-enabled context, these don't need validation.
-    /// </summary>
-    public static bool HasNonNullableParams(string paramSection)
-    {
-        // Look for 'string' not followed by '?' (indicating non-nullable in NRT context)
-        int angleDepth = 0;
-        for (int i = 0; i < paramSection.Length; i++)
-        {
-            char c = paramSection[i];
-            if (c == '<') { angleDepth++; continue; }
-            if (c == '>') { angleDepth = Math.Max(0, angleDepth - 1); continue; }
-            if (angleDepth > 0) continue;
-
-            // Match "string" not followed by "?"
-            if (i + 6 <= paramSection.Length && paramSection.AsSpan(i, 6).SequenceEqual("string"))
-            {
-                if (i + 6 >= paramSection.Length || paramSection[i + 6] != '?')
-                {
-                    // Check boundary
-                    bool leadOk = i == 0 || paramSection[i - 1] is ' ' or '(' or ',' or '<';
-                    bool trailOk = i + 6 >= paramSection.Length || paramSection[i + 6] is ' ' or '[' or ',' or ')';
-                    if (leadOk && trailOk) return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    /// <summary>
-    /// Returns <c>true</c> when the parameter list contains nullable parameters (e.g., 'string?' or 'object?').
-    /// Used by GCI0006 to detect when public methods have nullable reference type parameters.
-    /// </summary>
-    public static bool HasNullableReferenceParam(string paramSection)
-    {
-        // Walk character by character, tracking generic depth so we skip type arguments
-        // like Dictionary<string?, int> and only match top-level parameters.
-        int angleDepth = 0;
-        for (int i = 0; i < paramSection.Length; i++)
-        {
-            char c = paramSection[i];
-            if (c == '<') { angleDepth++; continue; }
-            if (c == '>') { angleDepth = Math.Max(0, angleDepth - 1); continue; }
-            if (angleDepth > 0) continue;
-
-            foreach (var keyword in new[] { "string?", "object?" })
-            {
-                if (i + keyword.Length > paramSection.Length) continue;
-                if (!paramSection.AsSpan(i).StartsWith(keyword, StringComparison.Ordinal)) continue;
-
-                // Leading boundary: must be preceded by a non-identifier char
-                bool leadOk = i == 0 || paramSection[i - 1] is ' ' or '(' or ',' or '<';
-                if (!leadOk) continue;
-
-                // Trailing boundary: must be followed by a non-identifier char
-                int after = i + keyword.Length;
-                bool trailOk = after >= paramSection.Length ||
-                               paramSection[after] is ' ' or '[' or ',' or ')' or '<';
-                if (trailOk) return true;
-            }
-        }
-        return false;
-    }
-
-    /// <summary>
-    /// Returns <c>true</c> when the content contains Nullable&lt;T&gt; where T is a value type.
-    /// In NRT context, Nullable&lt;int&gt;, Nullable&lt;string&gt;, etc. always have a value.
-    /// </summary>
-    public static bool IsNullableOfNonNullableType(string content)
-    {
-        // Look for Nullable<T> or Nullable<...> patterns
-        var match = System.Text.RegularExpressions.Regex.Match(content, @"Nullable<(\w+(?:<[^>]+>)?)>");
-        if (!match.Success) return false;
-
-        var typeParam = match.Groups[1].Value;
-        
-        // If T is a value type (int, bool, DateTime, etc.), Nullable<T> always has a value in NRT context
-        var valueTypes = new[] 
-        { 
-            "int", "long", "short", "byte", "double", "float", "decimal", "bool", 
-            "uint", "ulong", "ushort", "ubyte", "char",
-            "DateTime", "TimeSpan", "DateOnly", "TimeOnly", "Guid",
-            "DateTimeOffset", "DateTimeKind"
-        };
-
-        // Also check for custom structs (heuristic: if it's PascalCase and not a built-in type)
-        bool isValueType = valueTypes.Contains(typeParam);
-        bool isCustomStruct = typeParam.Length > 0 && char.IsUpper(typeParam[0]) && !valueTypes.Contains(typeParam);
-
-        return isValueType || isCustomStruct;
-    }
-
-    /// <summary>
-    /// Returns <c>true</c> when the content contains a #pragma warning disable with nullable-related codes.
-    /// Detects suppression of nullable reference type warnings (CS8600, CS8603, etc.).
-    /// Used by GCI0043 to flag deliberate nullable warning suppression.
-    /// </summary>
-    public static bool IsPragmaNullableDisable(string content)
-    {
-        if (!content.Contains("#pragma warning disable", StringComparison.OrdinalIgnoreCase))
-            return false;
-        
-        var nullableCodes = new[] { "nullable", "CS8600", "CS8601", "CS8602", "CS8603", "CS8604" };
-        return nullableCodes.Any(code =>
-            content.Contains(code, StringComparison.OrdinalIgnoreCase));
-    }
-
-    /// <summary>
-    /// Returns <c>true</c> when the content contains a LINQ expression where .Value is intentionally mapped.
-    /// Patterns: .Select(x => x.Value), .Where(x => x.Value != null), etc.
-    /// Used by GCI0006 to avoid flagging safe LINQ projections as unsafe dereferences.
-    /// </summary>
-    public static bool IsLinqValueProjection(string content)
-    {
-        var linqMethods = new[] { "Select", "SelectMany", "Where", "OrderBy", "OrderByDescending", 
-                                  "GroupBy", "All", "Any", "First", "FirstOrDefault", 
-                                  "Last", "LastOrDefault", "Single", "SingleOrDefault" };
-
-        foreach (var method in linqMethods)
-        {
-            // Pattern: .MethodName(... => ....Value...)
-            var pattern = @"\." + method + @"\s*\([^)]*=>.*\.Value";
-            if (System.Text.RegularExpressions.Regex.IsMatch(content, pattern, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
-                return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    /// HTTP Client and external service framework-specific guards.
-    /// Used by GCI0039 and related rules to reduce false positives on framework-specific timeout patterns.
-    /// </summary>
-
-    /// <summary>
-    /// Returns <c>true</c> when the file path indicates gRPC-related code.
-    /// gRPC channels manage timeouts at the channel/connection level, not per-HttpClient.
-    /// Used by GCI0039 to skip false positive timeout checks in gRPC contexts.
-    /// </summary>
-    public static bool IsGrpcRelatedFile(string path)
-    {
-        return path.Contains("grpc", StringComparison.OrdinalIgnoreCase)
-            || path.Contains("channel", StringComparison.OrdinalIgnoreCase)
-            || path.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase);
-    }
-
-    /// <summary>
-    /// Returns <c>true</c> when the added lines indicate HttpClient configuration via IHttpClientFactory.
-    /// Factory-managed clients configure timeout at the handler/channel level, not per-client.
-    /// </summary>
-    public static bool IsHttpFactoryConfigured(System.Collections.Generic.List<Diff.DiffLine> addedLines)
-    {
-        return addedLines.Any(l =>
-            l.Content.Contains("IHttpClientFactory", StringComparison.Ordinal)
-            || l.Content.Contains("AddHttpClient", StringComparison.Ordinal)
-            || l.Content.Contains("HttpClientFactoryOptions", StringComparison.Ordinal));
-    }
-
-    /// <summary>
-    /// Returns <c>true</c> when the added lines indicate gRPC channel configuration.
-    /// gRPC channels manage timeouts via GrpcChannelOptions at the connection level.
-    /// </summary>
-    public static bool UsesGrpcChannel(System.Collections.Generic.List<Diff.DiffLine> addedLines)
-    {
-        return addedLines.Any(l =>
-            l.Content.Contains("GrpcChannel", StringComparison.Ordinal)
-            || l.Content.Contains("ChannelOptions", StringComparison.Ordinal)
-            || l.Content.Contains("GrpcChannelOptions", StringComparison.Ordinal))
-            || addedLines.Any(l => 
-                l.Content.Contains("HttpClientHandler", StringComparison.Ordinal)
-                && addedLines.Any(hl => hl.Content.Contains("GrpcChannel", StringComparison.Ordinal)));
-    }
-
-    /// <summary>
-    /// Returns <c>true</c> when the added lines indicate use of factory-managed or injected HTTP clients.
-    /// Factory patterns, Polly policies, and DI-managed clients manage timeouts externally.
-    /// </summary>
-    public static bool UsesFactoryManagedHttpClients(System.Collections.Generic.List<Diff.DiffLine> addedLines)
-    {
-        var factoryPatterns = new[]
-        {
-            "IHttpClientFactory", "AddHttpClient", "HttpClientFactoryOptions",
-            "AddPolicyHandler", "AddTransientHttpErrorPolicy", "Polly"
-        };
-
-        return addedLines.Any(l =>
-            factoryPatterns.Any(p => l.Content.Contains(p, StringComparison.Ordinal)));
-    }
-
-    /// <summary>
-    /// Returns <c>true</c> when the content indicates an injected or static HttpClient is being used.
-    /// Patterns like _httpClient.GetAsync() or this.client.PostAsync() are typically DI-managed.
-    /// </summary>
-    public static bool IsInjectedOrStaticClient(string content)
-    {
-        var injectionPatterns = new[]
-        {
-            "_httpClient", "_client", "this.client", "this._client",
-            "httpClient.", "_http.", "HttpClient."
-        };
-
-        var httpMethods = new[] { ".GetAsync(", ".PostAsync(", ".PutAsync(", ".SendAsync(" };
-
-        return injectionPatterns.Any(p =>
-            content.Contains(p, StringComparison.Ordinal) &&
-            httpMethods.Any(m => content.Contains(m)));
-    }
-
-    /// <summary>
-    /// Returns <c>true</c> when the file uses .NET 9+ modern patterns (checked operators, required members, etc).
-    /// These patterns strongly indicate NRT is enabled in modern project contexts.
-    /// </summary>
-    public static bool UsesModernDotNetPatterns(string fileContent)
-    {
-        // .NET 9+ patterns
-        var modernPatterns = new[]
-        {
-            "checked(", "unchecked(", // Checked operators
-            "required ", // Required members (C# 11+)
-            "file class", "file struct", // File-scoped types (C# 11+)
-            "field ", // Field keyword in properties (C# 13+)
-            "collection", // Collection expression syntax
-            ".. ", // Range operator in more contexts
-            "namespace ", // File-scoped namespaces (C# 10+)
-        };
-
-        return modernPatterns.Any(p => fileContent.Contains(p, StringComparison.Ordinal));
-    }
-
-    /// <summary>
-    /// Returns <c>true</c> when a method signature uses record type parameters or other modern patterns.
-    /// Helps identify rules applied to modern code that typically has NRT enabled.
-    /// </summary>
-    public static bool HasModernTypeParameters(string paramSection)
-    {
-        // Record parameters, required parameters, init properties
-        return paramSection.Contains(" record ", StringComparison.Ordinal)
-            || paramSection.Contains("required ", StringComparison.Ordinal)
-            || paramSection.Contains("{ init; }", StringComparison.Ordinal)
-            || paramSection.Contains("{ get; init; }", StringComparison.Ordinal);
-    }
-
-    /// <summary>
-    /// Returns <c>true</c> when the file path indicates infrastructure/configuration code where DI setup occurs.
-    /// Service locator patterns and direct instantiation are acceptable in Program.cs, Startup.cs, etc.
-    /// </summary>
-    public static bool IsInfrastructureFile(string path)
-    {
-        var fileName = System.IO.Path.GetFileName(path);
-        return string.Equals(fileName, "Program.cs", StringComparison.OrdinalIgnoreCase)
-            || string.Equals(fileName, "Startup.cs", StringComparison.OrdinalIgnoreCase)
-            || fileName.EndsWith("Extensions.cs", StringComparison.OrdinalIgnoreCase)
-            || path.Contains("ServiceCollection", StringComparison.OrdinalIgnoreCase);
-    }
-
-    /// <summary>
-    /// Array of service locator patterns that violate DI principles.
-    /// These patterns bypass DI and make testing/mocking difficult.
-    /// </summary>
-    public static readonly string[] ServiceLocatorPatterns =
-    [
-        "provider.GetService<",
-        "provider.GetRequiredService<",
-        "serviceProvider.GetService<",
-        "serviceProvider.GetRequiredService<",
-        "_serviceProvider.GetService<",
-        "_serviceProvider.GetRequiredService<",
-    ];
-
-    /// <summary>
-    /// Regex to detect direct instantiation of injectable types.
-    /// Matches patterns like: new UserService(...), new OrderRepository(...), new RequestHandler(...)
-    /// </summary>
-    public static readonly System.Text.RegularExpressions.Regex DirectInstantiationRegex =
-        new(@"new [A-Z][a-zA-Z]*(Service|Repository|Manager|Handler|Client)\s*\(", System.Text.RegularExpressions.RegexOptions.Compiled);
-
-    /// <summary>
-    /// Patterns to exclude from direct instantiation checks.
-    /// Test doubles and event handlers are legitimate cases for direct instantiation.
-    /// </summary>
-    public static readonly string[] DirectInstantiationExclusions =
-    [
-        "//",  // comment
-        "Mock<", "Fake<", "Stub<", "Spy<",  // test doubles
-        "EventHandler(", "new EventHandler",  // event handlers
-        "+= new",  // event subscription
-        "var mock", "var fake", "var stub", "var spy",  // test variable patterns
-        "CreateMock", "CreateFake", "CreateStub",  // test factory methods
-    ];
-
-    /// <summary>
-    /// Common connection string markers that indicate hardcoded database/service connections.
-    /// Used by GCI0010 to detect hardcoded configuration and GCI0012 to flag credential exposure.
-    /// </summary>
-    public static readonly string[] ConnectionStringMarkers =
-    [
-        "Server=", "Data Source=", "mongodb://", "redis://", "mysql://", "postgresql://", "Database="
-    ];
-
-    /// <summary>
-    /// Returns <c>true</c> if the line is a comment (starts with //, *, or #).
-    /// Used across rules to skip comment-only lines from analysis.
-    /// </summary>
-    public static bool IsCommentLine(string trimmed) =>
-        trimmed.StartsWith("//", System.StringComparison.Ordinal) ||
-        trimmed.StartsWith("*", System.StringComparison.Ordinal) ||
-        trimmed.StartsWith("#", System.StringComparison.Ordinal);
-
-    /// <summary>
-    /// Returns <c>true</c> if the value appears to be an environment variable name
-    /// (ALL_CAPS with digits and underscores, e.g., GITHUB_TOKEN, MY_API_KEY).
-    /// Used by GCI0012 to skip environment variable names from hardcoded credential detection.
-    /// </summary>
-    public static bool IsEnvVarName(string literal) =>
-        literal.Length > 0 && literal.All(c => char.IsUpper(c) || char.IsDigit(c) || c == '_');
-
-    /// <summary>
-    /// Returns <c>true</c> for benign literal values that are never actual secrets:
-    /// empty strings, short strings (&lt;3 chars), HTTP auth scheme names, and C# keyword literals.
-    /// Used by GCI0012 to reduce false positives in credential detection.
-    /// </summary>
-    public static bool IsBenignLiteralValue(string value) =>
-        string.IsNullOrEmpty(value) ||
-        value.Length < 3 ||
-        value.Equals("Bearer", System.StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("Basic", System.StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("Token", System.StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("Anonymous", System.StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("null", System.StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("true", System.StringComparison.OrdinalIgnoreCase) ||
-        value.Equals("false", System.StringComparison.OrdinalIgnoreCase);
-
-    /// <summary>
-    /// Returns the index of the first real assignment = in the line, skipping string literals.
-    /// Distinguishes between = (assignment), == (equality), !=, &lt;=, >=, and => (lambda/expression body).
-    /// Used by GCI0012 to find credentials assigned to variables.
-    /// </summary>
-    public static int FindAssignmentIndex(string content)
-    {
-        ArgumentNullException.ThrowIfNull(content);
-        bool inString = false;
-        for (int i = 0; i < content.Length; i++)
-        {
-            if (content[i] == '"' && (i == 0 || content[i - 1] != '\\'))
-                inString = !inString;
-            if (inString || content[i] != '=') continue;
-            char prev = i > 0 ? content[i - 1] : '\0';
-            char next = i < content.Length - 1 ? content[i + 1] : '\0';
-            if (prev is '!' or '<' or '>' or '=') continue;
-            if (next is '=' or '>') continue;  // == and =>
-            return i;
-        }
-        return content.Length;
-    }
-
-    /// <summary>
-    /// Returns <c>true</c> only if the line contains a real assignment = (not ==, !=, <=, >=, =>).
-    /// Skips = signs inside string literals to avoid false positives from format strings.
-    /// Used by GCI0012 to detect variable assignments with hardcoded credentials.
-    /// </summary>
-    public static bool HasAssignment(string content)
-    {
-        ArgumentNullException.ThrowIfNull(content);
-        return FindAssignmentIndex(content) < content.Length;
-    }
-
-    /// <summary>
-    /// Returns the string value only when the direct RHS of an assignment is a bare string literal.
-    /// Returns null if the RHS is a method call, object initializer, or anything other than a literal.
-    /// Prevents false positives from patterns like: _tokenField = SomeFactory("ui-element-id")
-    /// Used by GCI0012 to find actual hardcoded credential values.
-    /// </summary>
-    public static string? ExtractDirectlyAssignedLiteral(string content)
-    {
-        int eqIdx = FindAssignmentIndex(content);
-        if (eqIdx >= content.Length) return null;
-
-        var rhs = content[(eqIdx + 1)..].TrimStart();
-
-        // Must open with a string literal: not a method call, `new`, identifier, etc.
-        if (!rhs.StartsWith('"') &&
-            !rhs.StartsWith("@\"", System.StringComparison.Ordinal) &&
-            !rhs.StartsWith("$\"", System.StringComparison.Ordinal))
-            return null;
-
-        try
-        {
-            var wrapped = $"class __G {{ void __M() {{ var __v = {rhs.TrimEnd(';', ' ', ',')}; }} }}";
-            var tree = Microsoft.CodeAnalysis.CSharp.CSharpSyntaxTree.ParseText(wrapped);
-            return tree.GetRoot()
-                .DescendantTokens()
-                .Where(t => t.IsKind(Microsoft.CodeAnalysis.CSharp.SyntaxKind.StringLiteralToken))
-                .Select(t => t.ValueText)
-                .FirstOrDefault();
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// File path components indicating security-critical code sections.
-    /// Used by GCI0003 for behavioral change context analysis (confidential boost for security changes).
-    /// </summary>
-    public static readonly string[] SecurityCriticalPaths =
-    [
-        "Http2", "Kestrel", "TLS", "SSL", "Crypto", "Auth",
-        "Uri", "Parsing", "Validation", "Security", "Hmac", "Hash",
-        "Decrypt", "Encrypt", "Certificate", "Token", "Key"
-    ];
-
-    /// <summary>
-    /// Commit message keywords indicating security-focused changes.
-    /// Used by GCI0003 for behavioral change context analysis.
-    /// </summary>
-    public static readonly string[] SecurityKeywords =
-    [
-        "CVE", "security", "vulnerability", "fix", "DoS", "infinite",
-        "loop", "exhaustion", "exception", "error", "RFC", "compliance",
-        "boundary", "validation", "attack", "malicious", "payload", "regression"
-    ];
-
-    /// <summary>
-    /// Test pattern keywords indicating security-focused test additions.
-    /// Used by GCI0003 for behavioral change context analysis.
-    /// </summary>
-    public static readonly string[] SecurityTestPatterns =
-    [
-        "Error", "Exception", "Timeout", "Exhaustion", "Attack",
-        "Craft", "Malicious", "Payload", "CVE", "Boundary", "Validation"
-    ];
-
-    /// <summary>
-    /// Returns <c>true</c> if the given path contains security-critical component names.
-    /// Used by GCI0003 for identifying security-related code changes.
-    /// </summary>
-    public static bool IsSecurityCriticalPath(string path)
-    {
-        if (string.IsNullOrEmpty(path)) return false;
-        return SecurityCriticalPaths.Any(p =>
-            path.Contains(p, StringComparison.OrdinalIgnoreCase));
-    }
-
-    /// <summary>
-    /// Returns <c>true</c> if the given text contains security-related keywords.
-    /// Used by GCI0003 for analyzing commit messages for security focus.
-    /// </summary>
-    public static bool HasSecurityKeywords(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return false;
-        var lowerText = text.ToLowerInvariant();
-        return SecurityKeywords.Any(k =>
-            lowerText.Contains(k.ToLowerInvariant(), StringComparison.Ordinal));
-    }
-
-    /// <summary>
-    /// Returns <c>true</c> if the given text contains security-related test patterns.
-    /// Used by GCI0003 for detecting security-focused test additions.
-    /// </summary>
-    public static bool HasSecurityTestPattern(string text)
-    {
-        if (string.IsNullOrEmpty(text)) return false;
-        return SecurityTestPatterns.Any(p =>
-            text.Contains(p, StringComparison.OrdinalIgnoreCase));
-    }
-
-    /// <summary>
-    /// Patterns indicating resource timeout limits in code.
-    /// Used by GCI0020 for detecting timeout removal that could lead to resource exhaustion.
-    /// </summary>
-    public static readonly string[] TimeoutPatterns =
-    [
-        "timeout", "TimeSpan", "TimeoutException", "maxwait", "delay"
-    ];
-
-    /// <summary>
-    /// Patterns indicating iteration or loop count limits in code.
-    /// Used by GCI0020 for detecting iteration limit removal.
-    /// </summary>
-    public static readonly string[] IterationLimitPatterns =
-    [
-        "maxiterations", "max_iterations", "iterationcount", "iteration_count",
-        "loopcount", "loop_count", "maxcount", "max_count", "limit"
-    ];
-
-    /// <summary>
-    /// Patterns indicating resource limits (connections, threads, buffers, pools).
-    /// Used by GCI0020 for detecting dangerous resource limit increases.
-    /// </summary>
-    public static readonly string[] ResourceLimitPatterns =
-    [
-        "maxconnections", "max_connections", "max_threads", "maxthreads",
-        "poolsize", "pool_size", "buffersize", "buffer_size", "maxbuffer"
-    ];
-
-    /// <summary>
-    /// Patterns indicating resource cleanup/disposal operations.
-    /// Used by GCI0020 for detecting removal of resource cleanup code.
-    /// </summary>
-    public static readonly string[] ResourceCleanupPatterns =
-    [
-        "using (", "using(", "Dispose(", "dispose(", "Close()", "close()"
-    ];
-
-    /// <summary>
-    /// Patterns indicating asynchronous operations that can consume resources.
-    /// Used by GCI0020 for detecting unbounded async operations.
-    /// </summary>
-    public static readonly string[] AsyncPatterns =
-    [
-        "Task.Run", "Task.Factory", "await", "Parallel.For", "ThreadPool.QueueUserWorkItem"
-    ];
-
-    /// <summary>
-    /// Test silence/skip patterns that prevent tests from running.
-    /// Used by GCI0041 for detecting disabled or skipped tests that may hide regressions.
-    /// </summary>
-    public static readonly string[] TestSilencePatterns =
-    [
-        "[Ignore]", "[Ignore(", "[Skip]", "[Skip(", ".Skip(", "[Fact(Skip", "[Theory(Skip"
-    ];
-
-    /// <summary>
-    /// Test attribute markers that identify test methods.
-    /// Used by GCI0041 for detecting uninformative test method names.
-    /// </summary>
-    public static readonly string[] TestAttributeMarkers =
-    [
-        "[Fact]", "[Theory]", "[Test]"
-    ];
-
-    /// <summary>
-    /// Assertion keywords used across popular .NET testing frameworks.
-    /// Includes xUnit, NUnit, MSTest, FluentAssertions, Shouldly, Moq, NSubstitute, Playwright, etc.
-    /// Used by GCI0041 for detecting test methods with missing assertions.
-    /// </summary>
-    public static readonly string[] TestAssertionKeywords =
-    [
-        // xUnit / NUnit / MSTest
-        "Assert.", "Xunit.Assert", "NUnit.Framework.Assert",
-        // Bare Assert() call (no dot): MongoDB, classic NUnit style
-        "Assert(",
-        // FluentAssertions / Shouldly
-        "Should", ".ShouldBe", ".ShouldNotBe", ".ShouldBeNull", ".ShouldNotBeNull",
-        ".Must(",
-        // NSubstitute
-        "Received(", "DidNotReceive(",
-        // Moq / FakeItEasy
-        ".Verify(", ".VerifyAll(", "MustHaveHappened", "MustNotHaveHappened",
-        // Common assertion patterns
-        "Throws<", "DoesNotThrow", "ThrowsAsync", "expect(", "Expect(",
-        "IsTrue(", "IsFalse(", "IsNull(", "IsNotNull(", "AreEqual(", "AreNotEqual(",
-        "Contains(", "IsInstanceOf",
-        // Visual comparison / image assertions (ImageSharp etc.)
-        ".CompareToReferenceOutput(",
-        // Azure Provisioning test comparisons and SDK / validation helpers
-        ".Compare(", ".ValidateAsync(", ".Lint(",
-        // Selenium / Playwright browser integration tests (ASP.NET Core E2E)
-        "Browser.",
-        // Event-driven async tests: validates via TaskCompletionSource completion
-        "TaskCompletionSource",
-    ];
-
-    /// <summary>
-    /// Patterns used to detect data integrity risks, unsafe input handling, and conflicting data operations.
-    /// </summary>
-    public static class DataIntegrityPatterns
-    {
-        /// <summary>
-        /// HTTP context signals indicating user input boundaries.
-        /// Used by GCI0015 for detecting mass-assignment and unsafe casting in HTTP request context.
-        /// </summary>
-        public static readonly string[] HttpContextSignals =
-        [
-            "Request.Form", "Request.Query", "Request.Body",
-            "HttpContext.Request", "[FromBody]", "[FromForm]", "[FromQuery]"
-        ];
-
-        /// <summary>
-        /// SQL patterns that silently ignore or suppress insert/update conflicts.
-        /// Used by GCI0015 to detect situations where data integrity violations are hidden.
-        /// These are PATTERN STRINGS, not actual SQL commands - no GCI0015 violation.
-        /// GCI0015 false positive suppression: this is pattern data for a detection rule.
-        /// </summary>
-        #pragma warning disable GCI0015  // Data Integrity Risk - pattern data only
-        public static readonly string[] SqlIgnorePatterns =
-        [
-            "INSERT IGNORE", "ON CONFLICT DO NOTHING", "INSERT OR IGNORE"
-        ];
-        #pragma warning restore GCI0015
-
-        /// <summary>
-        /// Numeric cast patterns that can cause silent data truncation or overflow.
-        /// Used by GCI0015 for detecting unchecked casts on potentially user-supplied values.
-        /// These are PATTERN STRINGS, not actual casts - no GCI0015 violation.
-        /// GCI0015 false positive suppression: this is pattern data for a detection rule.
-        /// </summary>
-        #pragma warning disable GCI0015  // Data Integrity Risk - pattern data only
-        public static readonly string[] UncheckedCastPatterns =
-        [
-            "(int)", "(long)", "(decimal)", "(float)", "(short)"
-        ];
-        #pragma warning restore GCI0015
-
-        /// <summary>
-        /// Returns true if the given content contains an HTTP context signal indicating user input.
-        /// </summary>
-        public static bool HasHttpContextSignal(string content)
-        {
-            return HttpContextSignals.Any(signal => content.Contains(signal, StringComparison.Ordinal));
-        }
-    }
-
-    /// <summary>
-    /// Patterns used to detect PII (Personally Identifiable Information) leaks in logs and transformations.
-    /// </summary>
-    public static class PiiDetectionPatterns
-    {
-        /// <summary>
-        /// PII (Personally Identifiable Information) terms in variable/field names.
-        /// Used by GCI0029 to detect leaks of sensitive data in log calls.
-        /// Compound terms only (avoids false positives on "name", "fullname" which are ubiquitous).
-        /// </summary>
-        public static readonly string[] PiiTerms =
-        [
-            "email", "ssn", "socialsecurity", "phonenumber", "creditcard", "cardnumber",
-            "dateofbirth", "passport", "nationalid", "taxid", "bankaccount",
-            "dob", "birthdate", "zipcode", "postalcode", "geolocation",
-            "username", "firstname", "lastname", "displayname", "personname",
-        ];
-
-        /// <summary>
-        /// Logger method prefixes indicating logging calls.
-        /// Used by GCI0029 to detect log statements for PII leak analysis.
-        /// </summary>
-        public static readonly string[] LogPrefixes =
-        [
-            "_logger.", "logger.", "Logger.", "_log.", "log.", "Log.Information", "Log.Warning",
-            "Log.Error", "Log.Debug", "Log.Critical", "Log.Write"
-        ];
-
-        /// <summary>
-        /// Data transformation and anonymization patterns indicating safe handling of PII.
-        /// Used by GCI0029 to skip flagging data that has been hashed, encrypted, or anonymized.
-        /// </summary>
-        public static readonly string[] TransformationPatterns =
-        [
-            "Hash", "hash", "SHA", "HMAC", "MD5", "SHA256",
-            "Token", "token", "anonymize", "Anonymize", "redact", "Redact",
-            "Encrypt", "encrypt", "SecureString", "Mask", "mask"
-        ];
-
-        /// <summary>
-        /// .NET reflection patterns indicating type inspection or metadata access.
-        /// These are ubiquitous in .NET code and are NOT person data.
-        /// Used by GCI0029 to skip flagging reflection properties that are commonly logged.
-        /// </summary>
-        public static readonly string[] ReflectionGuards =
-        [
-            ".FullName", ".Name", "Type.", "Assembly.", "PropertyInfo.", "MethodInfo.",
-            "FieldInfo.", "ParameterInfo.", "Reflection."
-        ];
-
-        /// <summary>
-        /// Returns true if content indicates the data is being transformed (hashed, encrypted, anonymized).
-        /// </summary>
-        public static bool IsDataTransformed(string content)
-        {
-            if (TransformationPatterns.Any(p => content.Contains(p))) return true;
-            if (ReflectionGuards.Any(p => content.Contains(p))) return true;
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Patterns used to detect idempotency and retry safety issues.
-    /// </summary>
-    public static class IdempotencyPatterns
-    {
-        /// <summary>
-        /// Idempotency key signals (headers, parameters, field names) indicating idempotent request handling.
-        /// Used by GCI0022 to detect HTTP POST endpoints with idempotency key support.
-        /// </summary>
-        public static readonly string[] IdempotencySignals =
-        [
-            "IdempotencyKey", "Idempotency-Key", "idempotencyKey", "idempotent",
-            "dedup", "Dedup", "RequestId", "requestId", "MessageId", "messageId"
-        ];
-
-        /// <summary>
-        /// SQL/database upsert patterns indicating conflict resolution for duplicate inserts.
-        /// Used by GCI0022 to detect raw INSERT statements without upsert guards.
-        /// </summary>
-        public static readonly string[] UpsertPatterns =
-        [
-            "ON DUPLICATE KEY", "ON CONFLICT", "INSERT OR REPLACE",
-            "INSERT OR IGNORE", "MERGE INTO", "UPSERT"
-        ];
-    }
-
-    /// <summary>
-    /// Patterns used to detect resource lifecycle and disposal issues.
-    /// </summary>
-    public static class ResourcePatterns
-    {
-        /// <summary>
-        /// Known disposable types that should be used in using statements or try/finally.
-        /// Used by GCI0024 to detect unguarded resource allocations.
-        /// </summary>
-        public static readonly string[] DisposableTypes =
-        [
-            "new FileStream(", "new StreamWriter(", "new StreamReader(", "new MemoryStream(",
-            "new SqlConnection(", "new SqlCommand(", "new SqlDataReader(",
-            "new HttpClient(", "new TcpClient(", "new UdpClient(", "new Socket(",
-            "new Mutex(", "new Semaphore(", "new SemaphoreSlim(",
-            "new EventWaitHandle(", "new ManualResetEvent(",
-            "new BinaryWriter(", "new BinaryReader(",
-            "new GZipStream(", "new DeflateStream(", "new CryptoStream(",
-            "new X509Certificate(", "new RSACryptoServiceProvider("
-        ];
-
-        /// <summary>
-        /// Type name suffixes indicating disposable resources (suffix-based heuristic).
-        /// Used by GCI0024 to catch any type whose name ends with these patterns.
-        /// </summary>
-        public static readonly string[] DisposableSuffixes =
-        [
-            "Stream", "Reader", "Writer", "Connection", "Client",
-            "Listener", "Channel", "Context", "Provider", "Session", "Transaction",
-            "Certificate", "Timer"
-        ];
-
-        /// <summary>
-        /// Types whose lifecycle detection is owned by other rules (suppress in GCI0024 to avoid double-reporting).
-        /// Used by GCI0024 for disposal suppression (these are IDisposable but managed by other rules).
-        /// </summary>
-        public static readonly HashSet<string> OwnedByOtherRules = new(StringComparer.Ordinal)
-        {
-            "HttpClient", // Owned by GCI0039 (External Service Safety)
-        };
-
-        /// <summary>
-        /// Known non-disposable types with "Context" or similar suffixes (false positive suppression).
-        /// Used by GCI0024 to avoid flagging context types that appear disposable but are not.
-        /// </summary>
-        public static readonly HashSet<string> KnownNonDisposableTypes = new(StringComparer.Ordinal)
-        {
-            // Microsoft.CodeAnalysis / Roslyn analysis context types
-            "SyntaxContext", "AnalysisContext", "SemanticContext",
-            "SyntaxNodeAnalysisContext", "OperationAnalysisContext", "CodeBlockAnalysisContext",
-            // System.CommandLine types
-            "InvocationContext",
-            // ASP.NET Core filter/action context types
-            "HttpContext", "RouteContext", "FilterContext", "ActionContext",
-            "AuthorizationFilterContext", "ResourceExecutingContext", "ResourceExecutedContext",
-            "ResultExecutingContext", "ResultExecutedContext", "ExceptionContext",
-            // Other common non-disposable context types
-            "ValidationContext", "NavigationContext",
-            // OpenTelemetry value types
-            "PropagationContext", "ActivityContext", "SpanContext",
-            // FluentAssertions comparison context types
-            "MemberSelectionContext", "EquivalencyValidationContext", "CreatorPropertyContext",
-            "StrategyBuilderContext", "SelectionContext",
-            // WPF/WinForms SynchronizationContext
-            "SynchronizationContext", "DispatcherSynchronizationContext",
-            "DispatcherQueueSynchronizationContext",
-            // Logging/diagnostic adapter scopes
-            "LoggingAdapterScope", "LoggerScope", "DiagnosticScope", "ActivityScope",
-            // Enumerators: typically short-lived value types
-            "Enumerator", "WhiteSpaceSegmentEnumerator", "TokenEnumerator",
-        };
-
-        /// <summary>
-        /// Regex pattern to extract type names from "new Type(...)" instantiations.
-        /// Used by GCI0024 to match dynamically allocated resource types.
-        /// </summary>
-        public static readonly System.Text.RegularExpressions.Regex NewTypeRegex =
-            new(@"new ([A-Z][A-Za-z0-9]+)\(", System.Text.RegularExpressions.RegexOptions.Compiled);
-    }
-
-    /// <summary>
-    /// Patterns used to detect external service and HTTP client safety issues.
-    /// </summary>
-    public static class ExternalServicePatterns
-    {
-        /// <summary>
-        /// HTTP method calls (on HttpClient or HttpRequestMessage) that should have timeouts and cancellation tokens.
-        /// Used by GCI0039 to detect unsafe external service calls.
-        /// </summary>
-        public static readonly string[] HttpCallMethods =
-        [
-            ".GetAsync(", ".PostAsync(", ".PutAsync(", ".DeleteAsync(", ".SendAsync("
-        ];
-
-        /// <summary>
-        /// Subset of HTTP methods for cancellation token checking (excludes DeleteAsync which conflicts with SDK methods).
-        /// Used by GCI0039 to detect missing CancellationToken parameters on HTTP calls.
-        /// </summary>
-        public static readonly string[] CtCheckHttpMethods =
-        [
-            ".GetAsync(", ".PostAsync(", ".PutAsync(", ".SendAsync("
-        ];
-    }
+    // ================= HTTP Context Helper =================
 
     /// <summary>
     /// Returns <c>true</c> if the given HTTP request content contains HTTP context signal patterns.
     /// Used by GCI0015 to determine whether mass-assignment and unsafe cast checks apply.
     /// </summary>
-    public static bool HasHttpContextSignal(string content)
+    public static bool HasHttpContextSignal(string content) => 
+        DomainSpecificPatterns.HasHttpContextSignal(content);
+
+    // ================= Nested Classes (Delegating to Domain-Specific) =================
+
+    /// <summary>Delegate to DataIntegrityPatterns.</summary>
+    public static class DataIntegrityPatterns
     {
-        if (string.IsNullOrEmpty(content)) return false;
-        return DataIntegrityPatterns.HasHttpContextSignal(content);
+        public static string[] HttpContextSignals => DomainSpecificPatterns.DataIntegrityPatterns.HttpContextSignals;
+        public static string[] SqlIgnorePatterns => DomainSpecificPatterns.DataIntegrityPatterns.SqlIgnorePatterns;
+        public static string[] UncheckedCastPatterns => DomainSpecificPatterns.DataIntegrityPatterns.UncheckedCastPatterns;
+        public static bool HasHttpContextSignal(string content) => DomainSpecificPatterns.DataIntegrityPatterns.HasHttpContextSignal(content);
     }
 
-    /// <summary>
-    /// Patterns used to detect performance hotpath issues (LINQ in loops, Thread.Sleep, etc.).
-    /// </summary>
+    /// <summary>Delegate to PiiDetectionPatterns.</summary>
+    public static class PiiDetectionPatterns
+    {
+        public static string[] PiiTerms => DomainSpecificPatterns.PiiDetectionPatterns.PiiTerms;
+        public static string[] LogPrefixes => DomainSpecificPatterns.PiiDetectionPatterns.LogPrefixes;
+        public static string[] TransformationPatterns => DomainSpecificPatterns.PiiDetectionPatterns.TransformationPatterns;
+        public static string[] ReflectionGuards => DomainSpecificPatterns.PiiDetectionPatterns.ReflectionGuards;
+        public static bool IsDataTransformed(string content) => DomainSpecificPatterns.PiiDetectionPatterns.IsDataTransformed(content);
+    }
+
+    /// <summary>Delegate to IdempotencyPatterns.</summary>
+    public static class IdempotencyPatterns
+    {
+        public static string[] IdempotencySignals => DomainSpecificPatterns.IdempotencyPatterns.IdempotencySignals;
+        public static string[] UpsertPatterns => DomainSpecificPatterns.IdempotencyPatterns.UpsertPatterns;
+    }
+
+    /// <summary>Delegate to ResourcePatterns.</summary>
+    public static class ResourcePatterns
+    {
+        public static string[] DisposableTypes => DomainSpecificPatterns.ResourcePatterns.DisposableTypes;
+        public static string[] DisposableSuffixes => DomainSpecificPatterns.ResourcePatterns.DisposableSuffixes;
+        public static HashSet<string> OwnedByOtherRules => DomainSpecificPatterns.ResourcePatterns.OwnedByOtherRules;
+        public static HashSet<string> KnownNonDisposableTypes => DomainSpecificPatterns.ResourcePatterns.KnownNonDisposableTypes;
+        public static System.Text.RegularExpressions.Regex NewTypeRegex => DomainSpecificPatterns.ResourcePatterns.NewTypeRegex;
+    }
+
+    /// <summary>Delegate to ExternalServicePatterns.</summary>
+    public static class ExternalServicePatterns
+    {
+        public static string[] HttpCallMethods => DomainSpecificPatterns.ExternalServicePatterns.HttpCallMethods;
+        public static string[] CtCheckHttpMethods => DomainSpecificPatterns.ExternalServicePatterns.CtCheckHttpMethods;
+    }
+
+    /// <summary>Delegate to PerformancePatterns.</summary>
     public static class PerformancePatterns
     {
-        /// <summary>LINQ method calls that should not be used inside loops.</summary>
-        public static readonly string[] LinqMethods =
-        [
-            ".Where(", ".Select(", ".FirstOrDefault(", ".Any(", ".Count("
-        ];
-
-        /// <summary>Loop keywords that should not contain blocking operations or unbounded operations.</summary>
-        public static readonly string[] LoopKeywords =
-        [
-            "for (", "foreach (", "while ("
-        ];
-
-        /// <summary>Loop keywords where unbounded collection growth is a concern (for/while, not foreach).</summary>
-        public static readonly string[] UnboundedLoopKeywords =
-        [
-            "for (", "while ("
-        ];
-
-        /// <summary>Returns <c>true</c> if the given content contains a LINQ method call.</summary>
-        public static bool HasLinqCall(string content)
-        {
-            if (string.IsNullOrEmpty(content)) return false;
-            // GCI0044: This is a pattern detection helper, not a performance-sensitive query
-            return LinqMethods.Any(m => content.Contains(m, StringComparison.Ordinal));
-        }
-
-        /// <summary>Returns <c>true</c> if the given content contains a loop construct.</summary>
-        public static bool HasLoopConstruct(string content)
-        {
-            if (string.IsNullOrEmpty(content)) return false;
-            return LoopKeywords.Any(k => content.Contains(k, StringComparison.Ordinal));
-        }
-
-        /// <summary>Returns <c>true</c> if the given path is a rule implementation file (hotpath guard).</summary>
-        public static bool IsRuleImplementationFile(string path)
-        {
-            if (string.IsNullOrEmpty(path)) return false;
-            return path.Contains("Rules/Implementations", StringComparison.OrdinalIgnoreCase) ||
-                   path.Contains(@"Rules\Implementations", StringComparison.OrdinalIgnoreCase);
-        }
+        public static string[] LinqMethods => DomainSpecificPatterns.PerformancePatterns.LinqMethods;
+        public static string[] LoopKeywords => DomainSpecificPatterns.PerformancePatterns.LoopKeywords;
+        public static string[] UnboundedLoopKeywords => DomainSpecificPatterns.PerformancePatterns.UnboundedLoopKeywords;
+        public static bool HasLinqCall(string content) => DomainSpecificPatterns.PerformancePatterns.HasLinqCall(content);
+        public static bool HasLoopConstruct(string content) => DomainSpecificPatterns.PerformancePatterns.HasLoopConstruct(content);
+        public static bool IsRuleImplementationFile(string path) => DomainSpecificPatterns.PerformancePatterns.IsRuleImplementationFile(path);
     }
 
-    /// <summary>
-    /// Floating-point literal and cast patterns used to detect unsafe equality comparisons.
-    /// </summary>
+    /// <summary>Delegate to FloatingPointPatterns.</summary>
     public static class FloatingPointPatterns
     {
-        /// <summary>Regex: matches == or != followed by a float/double literal on the right side.</summary>
-        public static readonly System.Text.RegularExpressions.Regex FloatLiteralOnRightRegex = new(
-            @"(?:==|!=)\s*(?:[-+]?\d*\.\d+|\d+\.\d+)[fFdD]?\b",
-            System.Text.RegularExpressions.RegexOptions.Compiled);
-
-        /// <summary>Regex: matches float/double literal on the left side of == or !=.</summary>
-        public static readonly System.Text.RegularExpressions.Regex FloatLiteralOnLeftRegex = new(
-            @"\b(?:[-+]?\d*\.\d+|\d+\.\d+)[fFdD]?\s*(?:==|!=)",
-            System.Text.RegularExpressions.RegexOptions.Compiled);
-
-        /// <summary>Regex: matches a (float) or (double) cast alongside == or !=.</summary>
-        public static readonly System.Text.RegularExpressions.Regex FloatCastWithEqualityRegex = new(
-            @"\((?:float|double)\).*(?:==|!=)|(?:==|!=).*\((?:float|double)\)",
-            System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-        /// <summary>Regex: matches a float or double type keyword alongside == or !=.</summary>
-        public static readonly System.Text.RegularExpressions.Regex FloatTypeWithEqualityRegex = new(
-            @"\b(?:float|double)\b.*(?:==|!=)|(?:==|!=).*\b(?:float|double)\b",
-            System.Text.RegularExpressions.RegexOptions.Compiled | System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-
-        /// <summary>Regex: matches the safe-division guard pattern (integer zero-check with ternary).</summary>
-        public static readonly System.Text.RegularExpressions.Regex IntegerZeroGuardRegex = new(
-            @"(?:==|!=)\s*0\s*\?", System.Text.RegularExpressions.RegexOptions.Compiled);
-
-        /// <summary>Returns <c>true</c> if the given content is a guarded integer zero check (safe division pattern).</summary>
-        public static bool IsGuardedIntegerZeroCheck(string content)
-        {
-            if (string.IsNullOrEmpty(content)) return false;
-            return IntegerZeroGuardRegex.IsMatch(content);
-        }
+        public static System.Text.RegularExpressions.Regex FloatLiteralOnRightRegex => DomainSpecificPatterns.FloatingPointPatterns.FloatLiteralOnRightRegex;
+        public static System.Text.RegularExpressions.Regex FloatLiteralOnLeftRegex => DomainSpecificPatterns.FloatingPointPatterns.FloatLiteralOnLeftRegex;
+        public static System.Text.RegularExpressions.Regex FloatCastWithEqualityRegex => DomainSpecificPatterns.FloatingPointPatterns.FloatCastWithEqualityRegex;
+        public static System.Text.RegularExpressions.Regex FloatTypeWithEqualityRegex => DomainSpecificPatterns.FloatingPointPatterns.FloatTypeWithEqualityRegex;
+        public static System.Text.RegularExpressions.Regex IntegerZeroGuardRegex => DomainSpecificPatterns.FloatingPointPatterns.IntegerZeroGuardRegex;
+        public static bool IsGuardedIntegerZeroCheck(string content) => DomainSpecificPatterns.FloatingPointPatterns.IsGuardedIntegerZeroCheck(content);
     }
 
-    /// <summary>
-    /// Patterns used to detect data schema and serialization compatibility issues.
-    /// </summary>
+    /// <summary>Delegate to DataSchemaPatterns.</summary>
     public static class DataSchemaPatterns
     {
-        /// <summary>
-        /// Serialization and schema-mapping attributes that indicate a field is part of a wire format
-        /// or persistent storage contract. Removal breaks deserialization of existing data.
-        /// Used by GCI0021 to detect removed serialization attributes.
-        /// </summary>
-        public static readonly string[] SerializationAttributes =
-        [
-            "[JsonProperty", "[JsonPropertyName", "[Column(", "[DataMember",
-            "[BsonElement", "[Key]", "[ForeignKey", "[Required]", "[MaxLength"
-        ];
+        public static string[] SerializationAttributes => DomainSpecificPatterns.DataSchemaPatterns.SerializationAttributes;
     }
 
-    /// <summary>
-    /// Patterns used to detect uncaught exception paths and exception handling issues.
-    /// </summary>
-    #pragma warning disable GCI0032  // Uncaught Exception Path - pattern data only
+    /// <summary>Delegate to ExceptionPatterns.</summary>
     public static class ExceptionPatterns
     {
-        /// <summary>
-        /// Test assertion methods that validate exception handling (Assert.Throws, Should().Throw, etc.).
-        /// Used by GCI0032 to determine whether throw new statements are covered by tests.
-        /// These are PATTERN STRINGS for exception detection, not actual exception throws - no GCI0032 violation.
-        /// </summary>
-        public static readonly string[] ThrowAssertions =
-        [
-            "Assert.Throws", ".Should().Throw", "ThrowsAsync", "ThrowsExceptionAsync", "Throws<"
-        ];
-
-        /// <summary>
-        /// Guard clause throws (ArgumentNullException, etc.) that are defensive programming patterns
-        /// and do not require test coverage in the same diff (they protect preconditions, not logic paths).
-        /// Used by GCI0032 to exclude guard clause throws from uncaught exception detection.
-        /// These are PATTERN STRINGS for exception pattern matching, not actual throws - no GCI0032 violation.
-        /// </summary>
-        public static readonly string[] GuardClauseThrows =
-        [
-            "throw new ArgumentNullException",
-            "throw new ArgumentException",
-            "throw new ArgumentOutOfRangeException",
-            "throw new ObjectDisposedException",
-            "throw new InvalidOperationException",
-            "throw new NotSupportedException",
-            "throw new FormatException",
-            "throw new IndexOutOfRangeException",
-            "throw new KeyNotFoundException",
-            "throw new UnauthorizedAccessException",
-        ];
+        public static string[] ThrowAssertions => DomainSpecificPatterns.ExceptionPatterns.ThrowAssertions;
+        public static string[] GuardClauseThrows => DomainSpecificPatterns.ExceptionPatterns.GuardClauseThrows;
     }
-    #pragma warning restore GCI0032
 
-    /// <summary>
-    /// Patterns used to detect dependency injection anti-patterns and safety issues.
-    /// </summary>
+    /// <summary>Delegate to DependencyInjectionPatterns.</summary>
     public static class DependencyInjectionPatterns
     {
-        /// <summary>
-        /// Service locator anti-patterns (Service.Current, ServiceLocator.GetInstance, etc.).
-        /// Service locator hides dependencies and makes testing harder.
-        /// Used by GCI0038 to detect service locator usage in non-infrastructure code.
-        /// </summary>
-        public static readonly string[] ServiceLocatorPatterns =
-        [
-            "Service.Current", "ServiceLocator.GetInstance", "ServiceProvider.GetService",
-            "Container.Resolve", "ObjectFactory.GetInstance", "ObjectFactory.Create",
-            "Globals.ThisAddIn", "Globals.Ribbon",
-            ".GetRequiredService<", ".GetService<"
-        ];
-
-        /// <summary>
-        /// Patterns to exclude from direct instantiation detection (factories, singletons, registrations, etc.).
-        /// These are legitimate uses of 'new' that should not trigger GCI0038 false positives.
-        /// </summary>
-        public static readonly string[] DirectInstantiationExclusions =
-        [
-            "new ServiceCollection", "AddScoped<", "AddSingleton<", "AddTransient<",
-            "RegisterService", "RegisterSingleton", "RegisterScoped", "RegisterTransient",
-            "new object()", "new List<", "new Dictionary<", "new HashSet<", "new []", "new [",
-            "factory", "Factory", "builder", "Builder", "provider", "Provider",
-            "EventHandler", "Delegate", "Action", "Func"
-        ];
-
-        /// <summary>
-        /// Regex: matches "new TypeName(...)" patterns to detect direct instantiation of service types.
-        /// Used by GCI0038 to identify services being directly instantiated instead of injected.
-        /// </summary>
-        public static readonly System.Text.RegularExpressions.Regex DirectInstantiationRegex =
-            new(@"new\s+([A-Z][A-Za-z0-9_]*)\s*\(", System.Text.RegularExpressions.RegexOptions.Compiled);
-
-        /// <summary>
-        /// Returns <c>true</c> if the given path is an infrastructure or DI setup file.
-        /// Infrastructure files (Startup, ServiceCollectionExtensions, DI containers) use direct
-        /// instantiation and service locator patterns as part of their job and should be excluded.
-        /// </summary>
-        public static bool IsInfrastructureFile(string path)
-        {
-            if (string.IsNullOrEmpty(path)) return false;
-            
-            var lowerPath = path.Replace('\\', '/').ToLowerInvariant();
-            
-            // DI container and startup files
-            return lowerPath.Contains("startup") ||
-                   lowerPath.Contains("servicecollection") ||
-                   lowerPath.Contains("dependencyinjection") ||
-                   lowerPath.Contains("dicontainer") ||
-                   lowerPath.Contains("extensions.cs") || // ServiceExtensions, AuthExtensions, etc.
-                   lowerPath.Contains("/infrastructure/", StringComparison.OrdinalIgnoreCase) ||
-                   lowerPath.Contains("/configuration/", StringComparison.OrdinalIgnoreCase) ||
-                   lowerPath.Contains("program.cs") ||
-                   lowerPath.Contains("composition");
-        }
+        public static string[] ServiceLocatorPatterns => DomainSpecificPatterns.DependencyInjectionPatterns.ServiceLocatorPatterns;
+        public static string[] DirectInstantiationExclusions => DomainSpecificPatterns.DependencyInjectionPatterns.DirectInstantiationExclusions;
+        public static System.Text.RegularExpressions.Regex DirectInstantiationRegex => DomainSpecificPatterns.DependencyInjectionPatterns.DirectInstantiationRegex;
+        public static bool IsInfrastructureFile(string path) => DomainSpecificPatterns.DependencyInjectionPatterns.IsInfrastructureFile(path);
     }
 
-    /// <summary>
-    /// Patterns used to detect TODO/stub markers and incomplete code.
-    /// </summary>
+    /// <summary>Delegate to StubDetectionPatterns.</summary>
     public static class StubDetectionPatterns
     {
-        /// <summary>
-        /// Stub marker keywords (TODO, FIXME, HACK) that indicate incomplete code requiring resolution before production.
-        /// Used by GCI0042 to detect stub comments and incomplete implementations.
-        /// </summary>
-        public static readonly string[] StubKeywords = ["TODO", "FIXME", "HACK"];
+        public static string[] StubKeywords => DomainSpecificPatterns.StubDetectionPatterns.StubKeywords;
     }
 
-    /// <summary>
-    /// Patterns used to detect architectural boundary violations and policy violations.
-    /// </summary>
+    /// <summary>Delegate to ArchitecturePatterns.</summary>
     public static class ArchitecturePatterns
     {
-        /// <summary>
-        /// Regex: matches C# using directives to extract the imported namespace.
-        /// Used by GCI0035 to validate imports against configured forbidden import pairs.
-        /// </summary>
-        public static readonly System.Text.RegularExpressions.Regex UsingRegex =
-            new(@"^\s*using\s+([\w.]+)\s*;", System.Text.RegularExpressions.RegexOptions.Compiled);
+        public static System.Text.RegularExpressions.Regex UsingRegex => DomainSpecificPatterns.ArchitecturePatterns.UsingRegex;
     }
 
-    /// <summary>
-    /// Guard patterns to reduce false positives across multiple rules.
-    /// These guards identify safe patterns that should be skipped from violation detection.
-    /// </summary>
+    /// <summary>Delegate to GuardPatterns.</summary>
     public static class GuardPatterns
     {
-        /// <summary>Regex: detects .Value access with null checks or guards.</summary>
+        public static bool HasValueNullCheck(string content) => GuardPatternsImpl.HasValueNullCheck(content);
+        public static bool IsKeyValuePairAccess(string content) => GuardPatternsImpl.IsKeyValuePairAccess(content);
+        public static bool IsLinqValueMapping(string content) => GuardPatternsImpl.IsLinqValueMapping(content);
+        public static bool IsIOptionsValue(string content) => GuardPatternsImpl.IsIOptionsValue(content);
+        public static bool IsExpressionBodied(string content) => GuardPatternsImpl.IsExpressionBodied(content);
+        public static bool HasHasValueGuard(string content) => GuardPatternsImpl.HasHasValueGuard(content);
+        public static bool IsCommentLine(string content) => GuardPatternsImpl.IsCommentLine(content);
+        public static bool HasAccessModifier(string content) => GuardPatternsImpl.HasAccessModifier(content);
+        public static bool IsAsyncMethod(string content) => GuardPatternsImpl.IsAsyncMethod(content);
+        public static bool IsEventHandler(string content) => GuardPatternsImpl.IsEventHandler(content);
+        public static bool IsCryptographicBoundary(string content) => GuardPatternsImpl.IsCryptographicBoundary(content);
+        public static bool HasInjectionGuard(string content) => GuardPatternsImpl.HasInjectionGuard(content);
+        public static bool IsOverrideOrSealedMethod(string content) => GuardPatternsImpl.IsOverrideOrSealedMethod(content);
+        public static bool IsAbstractOrDelegateOrPartial(string content) => GuardPatternsImpl.IsAbstractOrDelegateOrPartial(content);
+        public static bool IsMigrationOrSeedFile(string filePath) => GuardPatternsImpl.IsMigrationOrSeedFile(filePath);
+        public static bool IsUiEventHandler(string filePath) => GuardPatternsImpl.IsUiEventHandler(filePath);
+        public static bool IsDocumentationFile(string filePath) => GuardPatternsImpl.IsDocumentationFile(filePath);
+        public static bool IsInsideStaticConstructor(List<DiffLine> allLines, int idx) => GuardPatternsImpl.IsInsideStaticConstructor(allLines, idx);
+    }
+
+    // Internal implementation class to avoid name conflicts with public GuardPatterns class
+    internal static class GuardPatternsImpl
+    {
         private static readonly System.Text.RegularExpressions.Regex ValueNullCheckRegex = new(
             @"\.Value\s*(is not null|is null|==\s*null|!=\s*null)", System.Text.RegularExpressions.RegexOptions.Compiled);
 
-        /// <summary>
-        /// Returns <c>true</c> if the content represents a .Value access that is safe because it has a null check on the same line.
-        /// Safe patterns: x.Value is not null, x.Value == null, x.Value is null, x.Value != null
-        /// </summary>
-        public static bool HasValueNullCheck(string content)
-        {
-            if (string.IsNullOrEmpty(content)) return false;
-            return ValueNullCheckRegex.IsMatch(content);
-        }
+        public static bool HasValueNullCheck(string content) => 
+            !string.IsNullOrEmpty(content) && ValueNullCheckRegex.IsMatch(content);
 
-        /// <summary>
-        /// Returns <c>true</c> if the content represents safe .Value access in a KeyValuePair or Dictionary iteration.
-        /// Pattern: .Key on the same line (KeyValuePair iteration always has both .Key and .Value)
-        /// </summary>
-        public static bool IsKeyValuePairAccess(string content)
-        {
-            if (string.IsNullOrEmpty(content)) return false;
-            // KeyValuePair/Dictionary iteration: .Key and .Value together means it's safe dict-entry access
-            return content.Contains(".Key", StringComparison.Ordinal);
-        }
+        public static bool IsKeyValuePairAccess(string content) => 
+            !string.IsNullOrEmpty(content) && content.Contains(".Key", StringComparison.Ordinal);
 
-        /// <summary>
-        /// Returns <c>true</c> if the .Value is in a LINQ projection context where the mapping is intentional.
-        /// Pattern: .Select(x => x.Value), where .Value is mapping nullable to non-nullable intentionally
-        /// </summary>
-        public static bool IsLinqValueMapping(string content)
-        {
-            if (string.IsNullOrEmpty(content)) return false;
-            // LINQ projections: .Select(...=>...Value) or similar patterns
-            return (content.Contains(".Select", StringComparison.Ordinal) && content.Contains(".Value", StringComparison.Ordinal)) ||
-                   (content.Contains(".Select", StringComparison.Ordinal) && content.Contains(" => ", StringComparison.Ordinal));
-        }
+        public static bool IsLinqValueMapping(string content) =>
+            !string.IsNullOrEmpty(content) && (
+                (content.Contains(".Select", StringComparison.Ordinal) && content.Contains(".Value", StringComparison.Ordinal)) ||
+                (content.Contains(".Select", StringComparison.Ordinal) && content.Contains(" => ", StringComparison.Ordinal))
+            );
 
-        /// <summary>
-        /// Returns <c>true</c> if the .Value access is on IOptions/IOptionsSnapshot/IOptionsMonitor (DI configuration wrapper).
-        /// These are always non-null (DI guarantees they're provided).
-        /// </summary>
-        public static bool IsIOptionsValue(string content)
-        {
-            if (string.IsNullOrEmpty(content)) return false;
-            return content.Contains("IOptions", StringComparison.Ordinal);
-        }
+        public static bool IsIOptionsValue(string content) =>
+            !string.IsNullOrEmpty(content) && content.Contains("IOptions", StringComparison.Ordinal);
 
-        /// <summary>
-        /// Returns <c>true</c> if the line is an expression-bodied property/method (safe because it's a declaration, not a dereference).
-        /// Pattern: public ReturnType PropName => expr; or public Type Name => member.Value;
-        /// </summary>
         public static bool IsExpressionBodied(string content)
         {
             if (string.IsNullOrEmpty(content)) return false;
             var trimmed = content.TrimStart();
-            // Expression-bodied: (public|protected) ... =>
             return ((trimmed.StartsWith("public ", StringComparison.Ordinal) ||
                      trimmed.StartsWith("protected ", StringComparison.Ordinal)) &&
                     content.Contains("=>", StringComparison.Ordinal));
         }
 
-        /// <summary>
-        /// Returns <c>true</c> if the content has a .HasValue check (safe guard for Nullable<T>).
-        /// </summary>
-        public static bool HasHasValueGuard(string content)
-        {
-            if (string.IsNullOrEmpty(content)) return false;
-            return content.Contains("HasValue", StringComparison.Ordinal);
-        }
+        public static bool HasHasValueGuard(string content) =>
+            !string.IsNullOrEmpty(content) && content.Contains("HasValue", StringComparison.Ordinal);
 
-        /// <summary>
-        /// Returns <c>true</c> if the content is a comment line (safe, no executable code).
-        /// </summary>
-        public static bool IsCommentLine(string content)
-        {
-            if (string.IsNullOrEmpty(content)) return false;
-            return content.TrimStart().StartsWith("//", StringComparison.Ordinal);
-        }
+        public static bool IsCommentLine(string content) =>
+            !string.IsNullOrEmpty(content) && content.TrimStart().StartsWith("//", StringComparison.Ordinal);
 
-        /// <summary>
-        /// Returns <c>true</c> if the content represents an access modifier pattern (public, private, protected, internal).
-        /// Handles lines with leading attributes (e.g. "[Obsolete] public void Method()").
-        /// </summary>
         public static bool HasAccessModifier(string content)
         {
             if (string.IsNullOrEmpty(content)) return false;
             var trimmed = content.TrimStart();
             
-            // Skip over leading attributes: [Attr], [Attr1][Attr2], etc.
             while (trimmed.StartsWith("[", StringComparison.Ordinal))
             {
                 var closeIdx = trimmed.IndexOf(']');
@@ -1373,10 +564,6 @@ internal static class WellKnownPatterns
                    trimmed.StartsWith("internal ", StringComparison.Ordinal);
         }
 
-        /// <summary>
-        /// Returns <c>true</c> if the content looks like an async method (has async keyword).
-        /// Used to avoid false positives on async void handlers and async patterns.
-        /// </summary>
         public static bool IsAsyncMethod(string content)
         {
             if (string.IsNullOrEmpty(content)) return false;
@@ -1386,11 +573,6 @@ internal static class WellKnownPatterns
                    trimmed.Contains(" async(", StringComparison.Ordinal);
         }
 
-        /// <summary>
-        /// Returns <c>true</c> if the content looks like an event handler (EventHandler, EventArgs parameter, += subscription).
-        /// Used by GCI0022 to identify and skip event handler-related code.
-        /// Also used by GCI0016 to suppress async void warnings for legitimate event handlers.
-        /// </summary>
         public static bool IsEventHandler(string content)
         {
             if (string.IsNullOrEmpty(content)) return false;
@@ -1400,10 +582,6 @@ internal static class WellKnownPatterns
                    content.Contains("-=", StringComparison.Ordinal);
         }
 
-        /// <summary>
-        /// Returns <c>true</c> if the line contains a cryptographic method call or security boundary.
-        /// Used by GCI0003 to detect when method signature changes cross security boundaries.
-        /// </summary>
         public static bool IsCryptographicBoundary(string content)
         {
             if (string.IsNullOrEmpty(content)) return false;
@@ -1411,14 +589,9 @@ internal static class WellKnownPatterns
             return cryptMethods.Any(m => content.Contains(m, StringComparison.Ordinal));
         }
 
-        /// <summary>
-        /// Returns <c>true</c> if the content is an injection guard (SQL, command, path injection pattern).
-        /// Used to skip code that already has input validation.
-        /// </summary>
         public static bool HasInjectionGuard(string content)
         {
             if (string.IsNullOrEmpty(content)) return false;
-            // Parameterized queries, prepared statements, safe escaping
             return content.Contains("@", StringComparison.Ordinal) ||
                    content.Contains("SqlParameter", StringComparison.Ordinal) ||
                    content.Contains("DbParameter", StringComparison.Ordinal) ||
@@ -1428,10 +601,6 @@ internal static class WellKnownPatterns
                    content.Contains("Path.Combine", StringComparison.Ordinal);
         }
 
-        /// <summary>
-        /// Returns <c>true</c> if the content contains a method signature with override or sealed keywords.
-        /// Override methods cannot change the contract declared by the base class.
-        /// </summary>
         public static bool IsOverrideOrSealedMethod(string content)
         {
             if (string.IsNullOrEmpty(content)) return false;
@@ -1439,10 +608,6 @@ internal static class WellKnownPatterns
                    content.Contains(" sealed ", StringComparison.Ordinal);
         }
 
-        /// <summary>
-        /// Returns <c>true</c> if the content is an abstract method, delegate, or partial stub.
-        /// These have no body and cannot have validation or implementation guards.
-        /// </summary>
         public static bool IsAbstractOrDelegateOrPartial(string content)
         {
             if (string.IsNullOrEmpty(content)) return false;
@@ -1451,25 +616,18 @@ internal static class WellKnownPatterns
                    content.Contains(" partial ", StringComparison.Ordinal);
         }
 
-        /// <summary>
-        /// Returns <c>true</c> if the file is a migration or seed data file where raw INSERT/DML is intentional.
-        /// Used by GCI0022 to skip database initialization code.
-        /// </summary>
         public static bool IsMigrationOrSeedFile(string filePath)
         {
-            // Migration files: EF Core migrations directory
             if (filePath.Contains("Migrations/", StringComparison.OrdinalIgnoreCase) ||
                 filePath.Contains("\\Migrations\\", StringComparison.OrdinalIgnoreCase))
                 return true;
 
-            // Migration SQL scripts
             if (filePath.EndsWith(".sql", StringComparison.OrdinalIgnoreCase) &&
                 (filePath.Contains("Migration", StringComparison.OrdinalIgnoreCase) ||
                  filePath.Contains("Seed", StringComparison.OrdinalIgnoreCase) ||
                  filePath.Contains("Setup", StringComparison.OrdinalIgnoreCase)))
                 return true;
 
-            // EF seed configurations (ModelBuilder.Entity.HasData)
             if (filePath.Contains("SeedData", StringComparison.OrdinalIgnoreCase) ||
                 filePath.Contains("DataSeeding", StringComparison.OrdinalIgnoreCase))
                 return true;
@@ -1477,47 +635,28 @@ internal static class WellKnownPatterns
             return false;
         }
 
-        /// <summary>
-        /// Returns <c>true</c> if the file is a UI/XAML context (WPF, WinUI, Blazor) where event handler patterns are benign.
-        /// Used by GCI0022 to exempt event subscriptions in UI code.
-        /// </summary>
         public static bool IsUiEventHandler(string filePath)
         {
             var lower = filePath.ToLowerInvariant();
-            // XAML code-behind files
             if (lower.EndsWith(".xaml.cs", StringComparison.OrdinalIgnoreCase)) return true;
-            // Blazor component files
             if (lower.EndsWith(".razor.cs", StringComparison.OrdinalIgnoreCase)) return true;
-            // Common UI namespaces
             if (lower.Contains("\\ui\\") || lower.Contains("/ui/") ||
                 lower.Contains("\\components\\") || lower.Contains("/components/") ||
                 lower.Contains("\\views\\") || lower.Contains("/views/") ||
                 lower.Contains("\\pages\\") || lower.Contains("/pages/")) return true;
-
             return false;
         }
 
-        /// <summary>
-        /// Returns <c>true</c> if the file is a documentation/snippet/sample file where test assertions are optional.
-        /// Used by GCI0041 to skip documentation examples and sample code.
-        /// </summary>
         public static bool IsDocumentationFile(string filePath)
         {
             var lower = filePath.ToLowerInvariant();
-            // Snippet and example documentation
             if (lower.Contains("snippet", StringComparison.OrdinalIgnoreCase)) return true;
             if (lower.Contains("sample", StringComparison.OrdinalIgnoreCase)) return true;
             if (lower.Contains("example", StringComparison.OrdinalIgnoreCase)) return true;
             if (lower.Contains("demo", StringComparison.OrdinalIgnoreCase)) return true;
-            
             return false;
         }
 
-        /// <summary>
-        /// Returns <c>true</c> if the line appears to be inside a static constructor (inherently idempotent).
-        /// Detects the pattern "static ClassName()" or "static()" within the preceding context.
-        /// Used by GCI0022 for event handler registration safety.
-        /// </summary>
         public static bool IsInsideStaticConstructor(List<DiffLine> allLines, int idx)
         {
             int searchStart = Math.Max(0, idx - 20);
@@ -1527,7 +666,6 @@ internal static class WellKnownPatterns
                 if (!trimmed.StartsWith("static ", StringComparison.Ordinal)) continue;
 
                 var afterStatic = trimmed["static ".Length..].TrimStart();
-                // If the next token is a C# keyword that can be a return type, it's a method not a constructor
                 if (afterStatic.StartsWith("void ", StringComparison.Ordinal) ||
                     afterStatic.StartsWith("Task", StringComparison.Ordinal) ||
                     afterStatic.StartsWith("bool ", StringComparison.Ordinal) ||
@@ -1541,7 +679,6 @@ internal static class WellKnownPatterns
                     afterStatic.StartsWith("Dictionary<", StringComparison.Ordinal))
                     continue;
 
-                // The remainder should look like "TypeName()" - contains "()"
                 if (afterStatic.Contains("()")) return true;
             }
             return false;
@@ -1549,6 +686,4 @@ internal static class WellKnownPatterns
     }
 }
 
-#pragma warning restore GCI0003  // End of WellKnownPatterns consolidation file
-
-
+#pragma warning restore GCI0003  // End of WellKnownPatterns consolidation module
