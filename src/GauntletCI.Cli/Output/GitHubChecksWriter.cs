@@ -113,15 +113,18 @@ public static class GitHubChecksWriter
             .Take(50)
             .Select(g =>
             {
+                var filePath = g.FilePath ?? throw new InvalidOperationException("FilePath must not be null in annotation.");
+                var lineNumber = g.PrimaryLine!.Value;  // Safe: already checked HasValue in Where clause
+                
                 var lineLabel = g.Lines.Count > 1
                     ? $" (lines {string.Join(", ", g.Lines)})"
                     : string.Empty;
                 var rawDetails = BuildRawDetails(g);
                 return (object)new
                 {
-                    path             = g.FilePath!,
-                    start_line       = g.PrimaryLine!.Value,
-                    end_line         = g.PrimaryLine!.Value,
+                    path             = filePath,
+                    start_line       = lineNumber,
+                    end_line         = lineNumber,
                     annotation_level = ToAnnotationLevel(g.Severity),
                     title            = $"{g.RuleId}: {g.RuleName}{lineLabel}",
                     message          = g.Summary,

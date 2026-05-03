@@ -75,7 +75,9 @@ public static class GitHubAnnotationWriter
             sb.Append("%0A").Append("Action: ").Append(Sanitize(group.SuggestedAction));
 
         if (!string.IsNullOrWhiteSpace(group.LlmExplanation))
-            sb.Append("%0A").Append("LLM: ").Append(Sanitize(group.LlmExplanation!));
+        {
+            sb.Append("%0A").Append("LLM: ").Append(Sanitize(group.LlmExplanation));
+        }
 
         if (group.ExpertContext is { } ctx)
             sb.Append("%0A").Append("Expert: ")
@@ -95,7 +97,9 @@ public static class GitHubAnnotationWriter
         sb.Append(Sanitize(finding.Summary));
 
         if (!string.IsNullOrWhiteSpace(finding.LlmExplanation))
-            sb.Append($" | LLM: {Sanitize(finding.LlmExplanation!)}");
+        {
+            sb.Append($" | LLM: {Sanitize(finding.LlmExplanation)}");
+        }
 
         if (finding.ExpertContext is { } ctx)
             sb.Append($" | Expert: {Sanitize(ctx.Content)} ({Sanitize(ctx.Source)})");

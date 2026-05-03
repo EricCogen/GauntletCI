@@ -103,12 +103,15 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
                 var sw = Stopwatch.StartNew();
                 try
                 {
-                    var sequences = _tokenizer!.Encode(prompt);
-                    using var generatorParams = new GeneratorParams(_model!);
+                    var tokenizer = _tokenizer ?? throw new InvalidOperationException("Tokenizer must not be null after TryEnsureLoaded.");
+                    var model = _model ?? throw new InvalidOperationException("Model must not be null after TryEnsureLoaded.");
+                    
+                    var sequences = tokenizer.Encode(prompt);
+                    using var generatorParams = new GeneratorParams(model);
                     generatorParams.SetSearchOption("max_length", MaxOutputTokens);
                     generatorParams.SetSearchOption("do_sample", false);
 
-                    using var generator = new Generator(_model!, generatorParams);
+                    using var generator = new Generator(model, generatorParams);
                     generator.AppendTokenSequences(sequences);
                     var sb = new StringBuilder();
 
@@ -119,7 +122,8 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
                         if (generator.IsDone()) break;
 
                         var token = generator.GetNextTokens()[0];
-                        sb.Append(_tokenizerStream!.Decode(token));
+                        var tokenizerStream = _tokenizerStream ?? throw new InvalidOperationException("TokenizerStream must not be null after TryEnsureLoaded.");
+                        sb.Append(tokenizerStream.Decode(token));
 
                         if (sw.ElapsedMilliseconds > _maxInferenceMs)
                         {
