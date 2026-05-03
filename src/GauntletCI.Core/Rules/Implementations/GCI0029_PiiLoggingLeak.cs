@@ -53,7 +53,8 @@ public class GCI0029_PiiLoggingLeak : RuleBase
                 if (!hasLogPrefix) continue;
 
                 // Skip if data is being hashed, tokenized, or otherwise transformed before logging
-                if (WellKnownPatterns.PiiDetectionPatterns.IsDataTransformed(content))
+                // Use IsDataTransformedWithBoundary for precision (avoids "myToken" false positives)
+                if (WellKnownPatterns.IsDataTransformedWithBoundary(content))
                     continue;
 
                 string? matchedTerm = null;
