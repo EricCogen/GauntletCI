@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Net.Http.Headers;
 using System.Text.Json;
+using GauntletCI.Core;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
 
@@ -12,7 +13,7 @@ namespace GauntletCI.Cli.Output;
 /// </summary>
 public static class CoverageCorrelator
 {
-    private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(15) };
+    private static readonly HttpClient _http = HttpClientFactory.GetCodecovClient();
 
     /// <summary>
     /// Fetches Codecov commit coverage and annotates Block findings whose files have zero coverage.

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
-using System.Net.Http.Headers;
 using System.Text.Json;
+using GauntletCI.Core;
 using GauntletCI.Corpus.Models;
 using GauntletCI.Corpus.Storage;
 
@@ -16,25 +16,17 @@ public sealed class AuthorExperienceEnricher : IDisposable
 {
     private const int CommitCountCap = 1000;
 
-    private readonly HttpClient _http;
+    private readonly HttpClient _http = HttpClientFactory.GetGitHubClient();
     // In-memory cache: repo -> set of contributor logins
     private readonly Dictionary<string, HashSet<string>> _contributorCache =
         new(StringComparer.OrdinalIgnoreCase);
 
-    public AuthorExperienceEnricher()
-    {
-        var token = GitHubTokenResolver.Resolve();
-        _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-        _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Corpus/1.0");
-        _http.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-        if (!string.IsNullOrEmpty(token))
-            _http.DefaultRequestHeaders.Add("Authorization", $"token {token}");
-    }
-
-    public void Dispose() => _http.Dispose();
-
     public bool IsAuthenticated => _http.DefaultRequestHeaders.Contains("Authorization");
+
+    public void Dispose()
+    {
+        // Factory manages the HttpClient lifetime, so we don't dispose it
+    }
 
     public async Task<AuthorExperienceResult> EnrichAsync(
         IEnumerable<FixtureMetadata> fixtures,

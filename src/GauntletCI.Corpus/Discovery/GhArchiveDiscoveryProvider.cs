@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.IO.Compression;
 using System.Text.Json;
+using GauntletCI.Core;
 using GauntletCI.Corpus.Interfaces;
 using GauntletCI.Corpus.Models;
 
@@ -8,11 +9,16 @@ namespace GauntletCI.Corpus.Discovery;
 
 public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
 {
-    private static readonly HttpClient _http = new();
+    private static readonly HttpClient _http = HttpClientFactory.GetGitHubClient();
 
     public string GetProviderName() => "gh-archive";
 
     public bool SupportsIncrementalSync => false;
+
+    public void Dispose()
+    {
+        // Factory manages the HttpClient lifetime, so we don't dispose it
+    }
 
     public async Task<IReadOnlyList<PullRequestCandidate>> SearchCandidatesAsync(
         DiscoveryQuery query, CancellationToken cancellationToken = default)

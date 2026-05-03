@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
-using System.Net.Http.Headers;
 using System.Text.Json;
+using GauntletCI.Core;
 using GauntletCI.Corpus.Models;
 using GauntletCI.Corpus.Storage;
 
@@ -30,22 +30,14 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
         (["schema change", "migration", "db schema", "database schema", "column removed"],              "GCI0021", 0.70),
     ];
 
-    private readonly HttpClient _http;
-
-    public ReviewCommentNlpEnricher()
-    {
-        var token = GitHubTokenResolver.Resolve();
-        _http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
-        _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Corpus/1.0");
-        _http.DefaultRequestHeaders.Accept.Add(
-            new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-        if (!string.IsNullOrEmpty(token))
-            _http.DefaultRequestHeaders.Add("Authorization", $"token {token}");
-    }
-
-    public void Dispose() => _http.Dispose();
+    private readonly HttpClient _http = HttpClientFactory.GetGitHubClient();
 
     public bool IsAuthenticated => _http.DefaultRequestHeaders.Contains("Authorization");
+
+    public void Dispose()
+    {
+        // Factory manages the HttpClient lifetime, so we don't dispose it
+    }
 
     public async Task<NlpEnrichmentResult> EnrichAsync(
         IReadOnlyList<FixtureMetadata> fixtures,

@@ -2,13 +2,13 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using GauntletCI.Core;
 using GauntletCI.Core.Model;
 namespace GauntletCI.Cli.TicketProviders;
 
 public sealed class JiraTicketProvider : ITicketProvider
 {
-    private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(15) };
-    static JiraTicketProvider() => Http.DefaultRequestHeaders.UserAgent.ParseAdd("GauntletCI/2.0");
+    private static readonly HttpClient Http = HttpClientFactory.GetGenericClient();
 
     public string ProviderName => "Jira";
 

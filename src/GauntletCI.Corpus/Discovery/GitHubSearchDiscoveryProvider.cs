@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Net.Http.Headers;
 using System.Text.Json;
+using GauntletCI.Core;
 using GauntletCI.Corpus.Interfaces;
 using GauntletCI.Corpus.Models;
 
 namespace GauntletCI.Corpus.Discovery;
 
-public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider, IDisposable
+public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
 {
     private const int ThrottleThreshold = 5;
 
@@ -23,14 +24,15 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider, IDisposa
         if (string.IsNullOrWhiteSpace(githubToken))
             throw new InvalidOperationException("GITHUB_TOKEN is required for gh-search provider");
 
-        _http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
+        _http = HttpClientFactory.GetGitHubClient();
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", githubToken);
-        _http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Corpus/1.0");
-        _http.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
         _errorCallback = errorCallback;
     }
 
-    public void Dispose() => _http.Dispose();
+    public void Dispose()
+    {
+        // Factory manages the HttpClient lifetime, so we don't dispose it
+    }
 
     public string GetProviderName() => "gh-search";
 

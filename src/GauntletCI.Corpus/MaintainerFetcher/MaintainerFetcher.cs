@@ -2,6 +2,7 @@
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using GauntletCI.Core;
 
 namespace GauntletCI.Corpus.MaintainerFetcher;
 
@@ -37,13 +38,8 @@ public sealed class MaintainerFetcher : IDisposable
     /// </summary>
     public static MaintainerFetcher CreateDefault()
     {
-        var token = GitHubTokenResolver.Resolve();
-        var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
-        http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
-        http.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
-        if (!string.IsNullOrEmpty(token))
-            http.DefaultRequestHeaders.Add("Authorization", $"token {token}");
-        return new MaintainerFetcher(http, ownsHttpClient: true);
+        var http = HttpClientFactory.GetGitHubClient();
+        return new MaintainerFetcher(http, ownsHttpClient: false);
     }
 
     /// <summary>Disposes the HTTP client when this instance owns it.</summary>

@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using GauntletCI.Core;
 
 namespace GauntletCI.Corpus.Labeling;
 
@@ -9,7 +10,7 @@ namespace GauntletCI.Corpus.Labeling;
 /// Calls the Anthropic Messages API to classify a rule finding as true/false positive.
 /// Returns null on any HTTP or parse error.
 /// </summary>
-public sealed class AnthropicLlmLabeler : ILlmLabeler, IDisposable
+public sealed class AnthropicLlmLabeler : ILlmLabeler
 {
     private readonly HttpClient _http;
     private readonly string     _model;
@@ -19,10 +20,8 @@ public sealed class AnthropicLlmLabeler : ILlmLabeler, IDisposable
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new ArgumentException("Anthropic API key must not be empty.", nameof(apiKey));
         _model = model;
-        _http  = new HttpClient { Timeout = TimeSpan.FromSeconds(120) };
+        _http  = HttpClientFactory.GetAnthropicClient();
         _http.DefaultRequestHeaders.Add("x-api-key", apiKey);
-        _http.DefaultRequestHeaders.Add("anthropic-version", "2023-06-01");
-        _http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
     }
 
     public async Task<LlmLabelResult?> ClassifyAsync(
@@ -66,6 +65,4 @@ public sealed class AnthropicLlmLabeler : ILlmLabeler, IDisposable
         }
         catch { return null; }
     }
-
-    public void Dispose() => _http.Dispose();
 }
