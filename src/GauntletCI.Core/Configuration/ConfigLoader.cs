@@ -34,9 +34,19 @@ public static class ConfigLoader
             var json = File.ReadAllText(path);
             return JsonSerializer.Deserialize<GauntletConfig>(json, JsonOptions) ?? new GauntletConfig();
         }
-        catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
+        catch (JsonException ex)
         {
-            Console.Error.WriteLine("[GauntletCI] Warning: could not parse .gauntletci.json: using defaults.");
+            Console.Error.WriteLine($"[GauntletCI] Warning: failed to parse .gauntletci.json (JSON error at line {ex.LineNumber}, position {ex.BytePositionInLine}): {ex.Message}");
+            return new GauntletConfig();
+        }
+        catch (IOException ex)
+        {
+            Console.Error.WriteLine($"[GauntletCI] Warning: failed to read .gauntletci.json (I/O error): {ex.Message}");
+            return new GauntletConfig();
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Console.Error.WriteLine($"[GauntletCI] Warning: access denied reading .gauntletci.json (permission error): {ex.Message}");
             return new GauntletConfig();
         }
     }
