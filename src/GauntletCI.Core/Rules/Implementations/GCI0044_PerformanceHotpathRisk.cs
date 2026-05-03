@@ -36,6 +36,9 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
 
     private void CheckThreadSleep(DiffFile file, List<Finding> findings)
     {
+        // Skip infrastructure/profiling code that may intentionally use Thread.Sleep
+        if (WellKnownPatterns.DependencyInjectionPatterns.IsInfrastructureFile(file.NewPath)) return;
+
         foreach (var line in file.AddedLines)
         {
             if (!line.Content.Contains("Thread.Sleep(", StringComparison.Ordinal)) continue;
