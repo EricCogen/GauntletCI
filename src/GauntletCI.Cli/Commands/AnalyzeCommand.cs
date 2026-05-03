@@ -5,6 +5,7 @@ using System.Text.Json;
 using GauntletCI.Cli.Analysis;
 using GauntletCI.Cli.Audit;
 using GauntletCI.Cli.Baseline;
+using GauntletCI.Cli.Enrichment;
 using GauntletCI.Cli.LlmDaemon;
 using GauntletCI.Cli.Output;
 using GauntletCI.Cli.Presentation;
@@ -241,6 +242,18 @@ public static class AnalyzeCommand
                 var staticAnalysis = await StaticAnalysisRunner.RunAsync(diff, repoPath, ct);
 
                 var result = await orchestrator.RunAsync(diff, staticAnalysis, ignoreList: ignoreList);
+
+                // Enrichment pipeline: automatically enrich findings with code snippets, expert context, etc.
+                try
+                {
+                    var enrichmentPipeline = EnrichmentPipelineFactory.CreateDefault(llmEngine: null);
+                    result = await result.EnrichAsync(enrichmentPipeline);
+                }
+                catch (Exception ex)
+                {
+                    // Enrichment failures should not break analysis - log and continue
+                    Console.Error.WriteLine($"[enrichment] Pipeline failed: {ex.Message}");
+                }
 
                 // Baseline delta mode: suppress findings whose fingerprint is in the baseline.
                 int suppressedByBaseline = 0;
