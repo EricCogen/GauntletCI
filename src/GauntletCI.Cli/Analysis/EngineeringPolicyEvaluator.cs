@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using System.Collections.Immutable;
 using System.Text.Json;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
@@ -15,21 +16,29 @@ internal static class EngineeringPolicyEvaluator
     // LLM input cap default: overridden by EngineeringPolicyConfig.MaxDiffChars.
     // At ~4 chars/token this is ~3000 tokens, well within a 16K context window.
 
-    private static readonly HashSet<string> CanonicalRuleIds =
+    /// <summary>
+    /// Thread-Safe: Immutable collection of canonical rule IDs.
+    /// Safe for concurrent read access from multiple threads.
+    /// </summary>
+    private static readonly ImmutableHashSet<string> CanonicalRuleIds = ImmutableHashSet.CreateRange(
     [
         "EP_SCOPE", "EP_CONTRACTS", "EP_OBSERVABILITY",
         "EP_FAILURE", "EP_TESTING", "EP_CORRECTNESS"
-    ];
+    ]);
 
-    private static readonly Dictionary<string, string> CanonicalRuleNames = new()
+    /// <summary>
+    /// Thread-Safe: Immutable collection of rule name mappings.
+    /// Safe for concurrent read access from multiple threads.
+    /// </summary>
+    private static readonly ImmutableDictionary<string, string> CanonicalRuleNames = ImmutableDictionary.CreateRange(new[]
     {
-        ["EP_SCOPE"]         = "Scope and Containment",
-        ["EP_CONTRACTS"]     = "Contracts and Compatibility",
-        ["EP_OBSERVABILITY"] = "Observability and Diagnosability",
-        ["EP_FAILURE"]       = "Failure Handling",
-        ["EP_TESTING"]       = "Testing and Verification",
-        ["EP_CORRECTNESS"]   = "Correctness and Intent",
-    };
+        new KeyValuePair<string, string>("EP_SCOPE", "Scope and Containment"),
+        new KeyValuePair<string, string>("EP_CONTRACTS", "Contracts and Compatibility"),
+        new KeyValuePair<string, string>("EP_OBSERVABILITY", "Observability and Diagnosability"),
+        new KeyValuePair<string, string>("EP_FAILURE", "Failure Handling"),
+        new KeyValuePair<string, string>("EP_TESTING", "Testing and Verification"),
+        new KeyValuePair<string, string>("EP_CORRECTNESS", "Correctness and Intent"),
+    });
 
     /// <summary>
     /// Evaluates the diff against the policy file at <paramref name="policyPath"/> using the provided LLM.

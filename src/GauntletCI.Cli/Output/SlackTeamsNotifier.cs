@@ -11,9 +11,18 @@ namespace GauntletCI.Cli.Output;
 /// <summary>
 /// Posts Block-severity findings to Slack and/or Microsoft Teams via incoming webhooks.
 /// Soft-fails on missing webhooks or API errors.
+/// 
+/// Thread-Safe: Static HttpClient is thread-safe and managed by HttpClientFactory.
+/// The factory uses Lazy&lt;T&gt; with ExecutionAndPublication semantics, ensuring
+/// single-threaded initialization and safe concurrent access.
 /// </summary>
 public static class SlackTeamsNotifier
 {
+    /// <summary>
+    /// Shared HTTP client for all notification requests.
+    /// Thread-safe: managed by HttpClientFactory with lazy initialization.
+    /// Do NOT dispose; client is managed by the factory.
+    /// </summary>
     private static readonly HttpClient _http = HttpClientFactory.GetGenericClient();
 
     /// <summary>
