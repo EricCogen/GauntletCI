@@ -39,10 +39,34 @@ public sealed class RoundRobinLlmLabeler : ILlmLabeler, IDisposable
         if (_endpoints.Count == 0)
             throw new ArgumentException("At least one labeler is required.", nameof(endpoints));
 
-        _disposables = _endpoints
-            .Select(state => state.Endpoint.Labeler)
-            .OfType<IDisposable>()
-            .ToArray();
+        var disposableLabelersCount = 0;
+        var nonDisposableLabelersCount = 0;
+        var disposables = new List<IDisposable>();
+
+        foreach (var state in _endpoints)
+        {
+            if (state.Endpoint.Labeler is IDisposable disposable)
+            {
+                disposables.Add(disposable);
+                disposableLabelersCount++;
+            }
+            else
+            {
+                nonDisposableLabelersCount++;
+            }
+        }
+
+        if (nonDisposableLabelersCount > 0)
+        {
+            var nonDisposableNames = _endpoints
+                .Where(ep => ep.Endpoint.Labeler is not IDisposable)
+                .Select(ep => ep.Endpoint.Name)
+                .ToList();
+
+            Console.Error.WriteLine($"[GauntletCI] Warning: {nonDisposableLabelersCount} labeler(s) do not implement IDisposable and may leak resources: {string.Join(", ", nonDisposableNames)}");
+        }
+
+        _disposables = disposables.ToArray();
 
         _failureThreshold = failureThreshold;
         _cooldown = cooldown ?? TimeSpan.FromMinutes(1);
