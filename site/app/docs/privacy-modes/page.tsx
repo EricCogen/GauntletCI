@@ -49,7 +49,7 @@ export default function PrivacyModesPage() {
                 <div>
                   <p className="font-semibold text-foreground mb-1">✓ What's enabled:</p>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li>30+ built-in behavioral risk rules</li>
+                    <li>30+ built-in deterministic rules (GCI0001-GCI0037)</li>
                     <li>Diff-based change detection</li>
                     <li>Local AST analysis (Roslyn syntax trees)</li>
                     <li>Pre-commit hook integration</li>
@@ -102,7 +102,8 @@ export default function PrivacyModesPage() {
                 <div>
                   <p className="font-semibold text-foreground mb-1">✓ What's added:</p>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li>LLM explanations for findings (optional)</li>
+                    <li>LLM explanations for built-in findings (optional enrichment)</li>
+                    <li>Experimental engineering policy rules (LLM-evaluated, optional)</li>
                     <li>Offline ONNX models (e.g., Phi-4 Mini, Llama 2)</li>
                     <li>Model runs on your local GPU/CPU</li>
                     <li>No network calls required for inference</li>
@@ -317,6 +318,17 @@ integrations:
         {/* Decision Guide */}
         <section className="space-y-4">
           <h2 className="text-2xl font-semibold">Choosing Your Mode</h2>
+          
+          <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-4 mb-4">
+            <p className="text-sm font-semibold text-cyan-400 mb-2">📋 Rule Types</p>
+            <p className="text-sm text-muted-foreground mb-2">
+              <strong>Built-in rules (30+ deterministic):</strong> Run without any LLM. Results are identical across runs. Always enabled.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              <strong>Experimental policy rules (optional):</strong> Defined in markdown, evaluated via LLM. Opt-in via <code className="bg-muted px-1 rounded text-xs">experimental.engineeringPolicy</code>.
+            </p>
+          </div>
+          
           <div className="space-y-3">
             <div className="border-l-2 border-cyan-400 pl-4">
               <p className="font-semibold mb-1">🔒 Highest privacy + simplicity</p>
