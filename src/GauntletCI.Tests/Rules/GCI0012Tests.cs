@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Core.Diff;
+using GauntletCI.Core.Rules;
 using GauntletCI.Core.Rules.Implementations;
 
 namespace GauntletCI.Tests.Rules;
 
 public class GCI0012Tests
 {
-    private static readonly GCI0012_SecurityRisk Rule = new(new StubPatternProvider());
+    private static readonly GCI0012_SecurityRisk Rule = new(new DefaultPatternProvider());
 
     private static DiffContext MakeDiff(string addedLine) =>
         DiffParser.Parse($"""
