@@ -43,6 +43,7 @@ const rows: ComparisonRow[] = [
   },
   {
     label: "GitHub inline PR comments",
+    sublabel: "Requires Teams tier",
     gauntlet: "yes", sonar: "yes", semgrep: "yes", snyk: "yes", codeql: "yes", codeclimate: "yes", ndepend: "partial",
   },
   {
@@ -67,7 +68,7 @@ const rows: ComparisonRow[] = [
   },
   {
     label: "MCP server (AI assistant integration)",
-    sublabel: "Copilot, Cursor, and other AI tools call GauntletCI directly",
+    sublabel: "Pro tier: Copilot, Cursor, and other AI tools call GauntletCI directly",
     gauntlet: "yes", sonar: "no", semgrep: "no", snyk: "no", codeql: "no", codeclimate: "no", ndepend: "no",
   },
   {

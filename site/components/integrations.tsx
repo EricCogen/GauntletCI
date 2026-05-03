@@ -5,7 +5,7 @@ const groups = [
     label: "CI / CD",
     items: [
       { name: "GitHub Actions", logo: "/logos/github.svg",  description: "Drop-in composite action for pull request analysis. Fails the check, posts inline annotations." },
-      { name: "GitHub Checks",  logo: "/logos/github.svg",  description: "--github-checks posts findings as native Checks on the PR head commit." },
+      { name: "GitHub Checks",  logo: "/logos/github.svg",  description: "Teams tier: --github-checks posts findings as native Checks on the PR head commit." },
       { name: "Docker",         logo: "/logos/docker.svg",  description: "Official runtime image for self-hosted runners and air-gapped pipelines." },
     ],
   },
@@ -39,7 +39,7 @@ const groups = [
     ],
   },
   {
-    label: "AI Assistants (MCP)",
+    label: "AI Assistants (MCP - Pro tier)",
     items: [
       { name: "Claude",         logo: "/logos/anthropic.svg", description: "gauntletci mcp serve exposes analyze and audit as callable tools." },
       { name: "Cursor",         logo: "/logos/cursor.svg",    description: "Ask Cursor to run GauntletCI on the current diff from inside the IDE." },

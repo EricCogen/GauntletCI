@@ -591,6 +591,70 @@ export const rules: Rule[] = [
     },
     relatedIds: ["GCI0052", "GCI0010"],
   },
+  {
+    id: "GCI0020",
+    name: "Resource Exhaustion Pattern Detection",
+    severity: "Block",
+    categorySlug: "security",
+    description:
+      "Detects patterns that lead to resource exhaustion vulnerabilities: timeout removal, iteration limit removal, resource limit increases, cleanup removal, and unbounded async operations.",
+    whyExists:
+      "Resource exhaustion attacks rely on removing the safeguards that bound resource use. Timeouts, iteration limits, and cleanup code are the first things an attacker removes. Catching their removal stops denial-of-service attacks before deployment.",
+    example: {
+      language: "csharp",
+      bad: "  try { await ProcessAsync(order); }\n- catch (TimeoutException) { }\n  // OR\n- using var conn = new SqlConnection(cs);",
+      good: "  try { await ProcessAsync(order, TimeSpan.FromSeconds(30)); }\n+ catch (TimeoutException ex) { _logger.LogError(ex); throw; }",
+    },
+    relatedIds: ["GCI0024", "GCI0007"],
+  },
+  {
+    id: "GCI0051",
+    name: "Numeric Coercion Risks",
+    severity: "Warn",
+    categorySlug: "data",
+    description:
+      "Detects implicit numeric conversions that risk truncation, overflow, or loss of precision. Flags unchecked downcasts, float-to-int conversions, and assignments from large types to small types.",
+    whyExists:
+      "Numeric truncation is silent. An int cast from a long value that exceeds Int32.MaxValue wraps around without warning. Precision loss in float-to-int conversions causes calculations to diverge. checked{} throws on overflow, making the failure visible.",
+    example: {
+      language: "csharp",
+      bad: "+ int size = collection.Length;  // Length is long, could truncate\n+ int ratio = (int)(totalRatio * 100);  // float to int precision loss",
+      good: "+ int size = checked((int)collection.Length);  // throws on overflow\n+ decimal ratio = (decimal)totalRatio * 100;  // use decimal for precision",
+    },
+    relatedIds: ["GCI0049", "GCI0015"],
+  },
+  {
+    id: "GCI0054",
+    name: "Async Void Abuse",
+    severity: "Warn",
+    categorySlug: "concurrency",
+    description:
+      "Detects public async methods that return void instead of Task, which prevents callers from awaiting and catching exceptions.",
+    whyExists:
+      "async void is a fire-and-forget antipattern. Any exception thrown crashes the synchronization context rather than propagating to the caller. Use async void only in event handlers where Task return is impossible.",
+    example: {
+      language: "csharp",
+      bad: "+ public async void SaveUserAsync(User user) { await _repo.SaveAsync(user); }",
+      good: "+ public async Task SaveUserAsync(User user) { await _repo.SaveAsync(user); }\n+ // Only use async void for OnClick, OnChange, event handlers, etc.",
+    },
+    relatedIds: ["GCI0016", "GCI0007"],
+  },
+  {
+    id: "GCI0055",
+    name: "Method Signature Change Risk",
+    severity: "Block",
+    categorySlug: "behavior",
+    description:
+      "Detects breaking method signature changes: removed parameters, new required parameters without defaults, or return type changes in public methods.",
+    whyExists:
+      "Public method signatures are contracts. Removing a parameter, adding a required one, or changing the return type breaks every caller. These changes demand deprecation cycles, not silent breaking changes.",
+    example: {
+      language: "csharp",
+      bad: "- public Task<User> GetUser(int id) { }\n+ public Task<User> GetUser(Guid id) { }\n+ // OR\n- public void ProcessOrder(Order order) { }\n+ public void ProcessOrder(Order order, ProcessOptions options) { }  // no default",
+      good: "  [Obsolete(\"Use GetUserAsync(Guid)\")]\n  public Task<User> GetUser(int id) => GetUserAsync(new Guid(id.ToString()));\n+ public Task<User> GetUserAsync(Guid id) { }\n+ // OR\n+ public void ProcessOrder(Order order, ProcessOptions options = null) { }  // default provided",
+    },
+    relatedIds: ["GCI0004", "GCI0046"],
+  },
 ];
 
 export function getRule(id: string): Rule | undefined {

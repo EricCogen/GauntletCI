@@ -34,7 +34,7 @@ export function Features() {
     },
     {
       icon: BrainCircuit,
-      title: "MCP server",
+      title: "MCP server (Pro tier)",
       description: "Expose GauntletCI as a tool to Claude, Cursor, GitHub Copilot, and Windsurf. Ask your AI assistant about risk.",
     },
     {
@@ -44,7 +44,7 @@ export function Features() {
     },
     {
       icon: CheckCircle2,
-      title: "GitHub Checks integration",
+      title: "GitHub Checks integration (Teams tier)",
       description: "Post findings as GitHub Checks with inline annotations on the exact diff lines that triggered them.",
     },
     {
