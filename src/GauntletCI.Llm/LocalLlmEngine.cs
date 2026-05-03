@@ -95,57 +95,66 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
 
         Interlocked.Increment(ref _promptsUsed);
 
+        // Verify resources are loaded (non-blocking check, no lock needed outside inference)
+        if (_tokenizer == null || _model == null || _tokenizerStream == null)
+            return string.Empty;
+
         return await Task.Run(() =>
         {
             ct.ThrowIfCancellationRequested();
+            // Only lock during critical initialization, not throughout inference
             lock (_lock)
             {
+                // Double-check after acquiring lock
+                if (_tokenizer == null || _model == null || _tokenizerStream == null)
+                    return string.Empty;
+            }
+            
+            try
+            {
                 var sw = Stopwatch.StartNew();
-                try
+                var tokenizer = _tokenizer!;
+                var model = _model!;
+                var tokenizerStream = _tokenizerStream!;
+                
+                var sequences = tokenizer.Encode(prompt);
+                using var generatorParams = new GeneratorParams(model);
+                generatorParams.SetSearchOption("max_length", MaxOutputTokens);
+                generatorParams.SetSearchOption("do_sample", false);
+
+                using var generator = new Generator(model, generatorParams);
+                generator.AppendTokenSequences(sequences);
+                var sb = new StringBuilder();
+
+                while (!generator.IsDone())
                 {
-                    var tokenizer = _tokenizer ?? throw new InvalidOperationException("Tokenizer must not be null after TryEnsureLoaded.");
-                    var model = _model ?? throw new InvalidOperationException("Model must not be null after TryEnsureLoaded.");
+                    ct.ThrowIfCancellationRequested();
+                    generator.GenerateNextToken();
+                    if (generator.IsDone()) break;
+
+                    var tokens = generator.GetNextTokens();
+                    if (tokens.Length == 0) break;
                     
-                    var sequences = tokenizer.Encode(prompt);
-                    using var generatorParams = new GeneratorParams(model);
-                    generatorParams.SetSearchOption("max_length", MaxOutputTokens);
-                    generatorParams.SetSearchOption("do_sample", false);
+                    var token = tokens[0];
+                    sb.Append(tokenizerStream.Decode(token));
 
-                    using var generator = new Generator(model, generatorParams);
-                    generator.AppendTokenSequences(sequences);
-                    var sb = new StringBuilder();
-
-                    while (!generator.IsDone())
+                    if (sw.ElapsedMilliseconds > _maxInferenceMs)
                     {
-                        ct.ThrowIfCancellationRequested();
-                        generator.GenerateNextToken();
-                        if (generator.IsDone()) break;
-
-                        var tokens = generator.GetNextTokens();
-                        if (tokens.Length == 0) break;
-                        
-                        var token = tokens[0];
-                        var tokenizerStream = _tokenizerStream ?? throw new InvalidOperationException("TokenizerStream must not be null after TryEnsureLoaded.");
-                        sb.Append(tokenizerStream.Decode(token));
-
-                        if (sw.ElapsedMilliseconds > _maxInferenceMs)
-                        {
-                            Console.Error.WriteLine($"[GauntletCI] LLM inference exceeded {_maxInferenceMs}ms limit. Truncating.");
-                            break;
-                        }
+                        Console.Error.WriteLine($"[GauntletCI] LLM inference exceeded {_maxInferenceMs}ms limit. Truncating.");
+                        break;
                     }
+                }
 
-                    return sb.ToString().Trim();
-                }
-                catch (OperationCanceledException)
-                {
-                    return string.Empty;
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine($"[GauntletCI] LLM inference error: {ex.Message}");
-                    return string.Empty;
-                }
+                return sb.ToString().Trim();
+            }
+            catch (OperationCanceledException)
+            {
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"[GauntletCI] LLM inference error: {ex.Message}");
+                return string.Empty;
             }
         }, ct);
     }
