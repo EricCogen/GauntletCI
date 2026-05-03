@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
+using GauntletCI.Core.Domain;
 using GauntletCI.Core.Model;
+using GauntletCI.Core.Serialization;
 
 namespace GauntletCI.Core.Rules;
 
@@ -34,10 +36,12 @@ public abstract class RuleBase : IRule
         string evidence,
         string whyItMatters,
         string suggestedAction,
-        Confidence confidence) =>
-        new()
+        Confidence confidence)
+    {
+        var ruleId = RuleIdentifier.TryParse(Id, out var parsed) ? parsed.ToString() : Id;
+        return new()
         {
-            RuleId = Id,
+            RuleId = ruleId,
             RuleName = Name,
             Summary = summary,
             Evidence = evidence,
@@ -45,6 +49,7 @@ public abstract class RuleBase : IRule
             SuggestedAction = suggestedAction,
             Confidence = confidence
         };
+    }
 
     /// <summary>
     /// Creates a finding attributed to a specific file and optional line within that file.
@@ -64,10 +69,12 @@ public abstract class RuleBase : IRule
         string whyItMatters,
         string suggestedAction,
         Confidence confidence,
-        DiffLine? line = null) =>
-        new()
+        DiffLine? line = null)
+    {
+        var ruleId = RuleIdentifier.TryParse(Id, out var parsed) ? parsed.ToString() : Id;
+        return new()
         {
-            RuleId          = Id,
+            RuleId          = ruleId,
             RuleName        = Name,
             Summary         = summary,
             Evidence        = evidence,
@@ -77,4 +84,5 @@ public abstract class RuleBase : IRule
             FilePath        = file.NewPath,
             Line            = (line?.LineNumber > 0) ? line.LineNumber : null,
         };
+    }
 }
