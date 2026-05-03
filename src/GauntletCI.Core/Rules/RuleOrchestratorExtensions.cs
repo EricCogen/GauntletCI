@@ -17,8 +17,8 @@ public static class RuleOrchestratorExtensions
     /// <param name="pipeline">The enrichment pipeline to apply.</param>
     /// <param name="ct">Cancellation token.</param>
     /// <returns>The same EvaluationResult with findings enriched in-place.</returns>
-    public static async Task<EvaluationResult> EnrichAsync(
-        this EvaluationResult result,
+    public static async Task<EvaluationResult?> EnrichAsync(
+        this EvaluationResult? result,
         EnrichmentPipeline pipeline,
         CancellationToken ct = default)
     {

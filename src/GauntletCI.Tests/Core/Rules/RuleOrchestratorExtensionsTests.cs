@@ -44,7 +44,7 @@ public class RuleOrchestratorExtensionsTests
         var enriched = await result.EnrichAsync(pipeline);
 
         Assert.Same(result, enriched);
-        Assert.Null(enriched.Findings);
+        Assert.Null(enriched?.Findings);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public class RuleOrchestratorExtensionsTests
         var enriched = await result.EnrichAsync(pipeline);
 
         Assert.Same(result, enriched);
-        Assert.Empty(enriched.Findings);
+        Assert.Empty(enriched?.Findings ?? new List<Finding>());
     }
 
     [Fact]
@@ -106,7 +106,8 @@ public class RuleOrchestratorExtensionsTests
         var enriched = await result.EnrichAsync(pipeline);
 
         Assert.Same(result, enriched);
-        Assert.Equal(2, enriched.Findings.Count);
+        Assert.NotNull(enriched);
+        Assert.Equal(2, enriched.Findings!.Count);
         Assert.Equal("code1", enriched.Findings[0].CodeSnippet);
         Assert.Equal("code2", enriched.Findings[1].CodeSnippet);
     }
