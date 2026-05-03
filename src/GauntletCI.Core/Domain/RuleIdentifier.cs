@@ -83,11 +83,11 @@ public readonly record struct RuleIdentifier : IEquatable<RuleIdentifier>, IComp
     /// <summary>Gets the hash code for this RuleIdentifier.</summary>
     public override int GetHashCode() => Value.GetHashCode();
 
+    /// <summary>Implicitly converts a string to a RuleIdentifier.</summary>
+    public static implicit operator RuleIdentifier(string value) => Parse(value);
+
     /// <summary>Implicitly converts a RuleIdentifier to its string value.</summary>
     public static implicit operator string(RuleIdentifier id) => id.Value;
-
-    /// <summary>Explicitly converts a string to a RuleIdentifier.</summary>
-    public static explicit operator RuleIdentifier(string value) => Parse(value);
 
     /// <summary>Determines whether a string is a valid RuleIdentifier format.</summary>
     public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value) && RuleIdPattern.IsMatch(value);
