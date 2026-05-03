@@ -32,7 +32,7 @@ public static class SlackTeamsNotifier
         var repo  = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
         var sha   = Environment.GetEnvironmentVariable("GITHUB_SHA");
         var prNum = ResolvePrNumber();
-        var shortSha = sha?.Length >= 8 ? sha[..8] : sha;
+        var shortSha = !string.IsNullOrEmpty(sha) && sha.Length >= 8 ? sha[..8] : sha ?? "unknown";
 
         if (slackUrl is not null)
         {

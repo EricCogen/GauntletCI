@@ -86,7 +86,12 @@ public static class GitHubPrReviewWriter
         {
             // refs/pull/42/merge → ["refs", "pull", "42", "merge"]
             var parts = ghRef.Split('/');
-            if (parts.Length >= 4 && parts[1] == "pull" && int.TryParse(parts[2], out var prN) && prN > 0)
+            if (parts.Length == 4 && 
+                parts[0] == "refs" && 
+                parts[1] == "pull" && 
+                int.TryParse(parts[2], out var prN) && 
+                prN > 0 &&
+                parts[3] == "merge")
                 return prN;
         }
 

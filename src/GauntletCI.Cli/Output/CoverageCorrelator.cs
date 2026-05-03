@@ -31,7 +31,7 @@ public static class CoverageCorrelator
             return;
 
         var repoParts = githubRepo.Split('/');
-        if (repoParts.Length < 2)
+        if (repoParts.Length != 2 || string.IsNullOrWhiteSpace(repoParts[0]) || string.IsNullOrWhiteSpace(repoParts[1]))
             return;
 
         var owner = repoParts[0];
@@ -84,6 +84,10 @@ public static class CoverageCorrelator
         {
             using var doc  = JsonDocument.Parse(json);
             var root       = doc.RootElement;
+            
+            if (root.ValueKind == JsonValueKind.Undefined || root.ValueKind == JsonValueKind.Null)
+                return null;
+            
             var result     = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
 
             if (!root.TryGetProperty("files", out var filesEl)
