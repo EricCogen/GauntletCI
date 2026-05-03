@@ -9,6 +9,24 @@
 
 ---
 
+## ⚡ Copilot Session Initialization
+
+When starting a Copilot session with this repository, the system automatically initializes:
+
+1. **Two Rule Systems** — Engineering Standards (~/.gauntletci/rules/ENGINEERING_STANDARDS.md) vs GCI Rules (C# analyzer code)
+2. **Startup Context** — Loads session facts from ~/.gauntletci/session-init.sql
+3. **Graphify** — Runs in background (/graphify . --update) for codebase knowledge graph
+4. **Todos** — Loads active work items from ~/.gauntletci/copilot/todos.db
+
+**Files referenced:**
+- `~/.gauntletci/SESSION_GREETING.txt` — Startup greeting
+- `~/.gauntletci/COPILOT_SESSION_INIT.md` — Initialization instructions  
+- `~/.gauntletci/rules/STARTUP.md` — Detailed startup guide
+
+No manual explanation needed. See `~/.gauntletci/rules/STARTUP.md` for detailed reference.
+
+---
+
 **Your tests passed. Your PR was approved.
 Your change still broke production.**
 
