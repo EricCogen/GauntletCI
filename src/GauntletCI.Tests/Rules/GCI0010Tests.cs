@@ -6,7 +6,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0010Tests
 {
-    private static readonly GCI0010_HardcodingAndConfiguration Rule = new();
+    private static readonly GCI0010_HardcodingAndConfiguration Rule = new(new StubPatternProvider());
 
     private static DiffContext MakeDiff(string addedLine) =>
         DiffParser.Parse($"""

@@ -14,6 +14,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0043_NullabilityTypeSafety : RuleBase
 {
+    public GCI0043_NullabilityTypeSafety(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0043";
     public override string Name => "Nullability and Type Safety";
 
@@ -169,3 +172,4 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
         return quoteCount % 2 != 0;
     }
 }
+

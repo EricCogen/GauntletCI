@@ -6,7 +6,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0016Tests
 {
-    private static readonly GCI0016_ConcurrencyAndStateRisk Rule = new();
+    private static readonly GCI0016_ConcurrencyAndStateRisk Rule = new(new StubPatternProvider());
 
     private static DiffContext MakeDiff(string addedLine, string path = "src/Service.cs") =>
         DiffParser.Parse($"""

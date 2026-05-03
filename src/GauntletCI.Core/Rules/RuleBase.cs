@@ -10,9 +10,25 @@ namespace GauntletCI.Core.Rules;
 /// <summary>
 /// Base class for all GauntletCI rules. Provides shared <see cref="CreateFinding"/> helpers
 /// so concrete rules do not need to repeat boilerplate property assignments.
+/// Injected with <see cref="IPatternProvider"/> for decoupled pattern detection logic.
 /// </summary>
 public abstract class RuleBase : IRule
 {
+    /// <summary>
+    /// Pattern detection service, injected via dependency injection.
+    /// Provides access to all pattern registries without tight coupling to WellKnownPatterns.
+    /// </summary>
+    protected IPatternProvider Patterns { get; }
+
+    /// <summary>
+    /// Initializes a new instance of RuleBase with an injected pattern provider.
+    /// </summary>
+    /// <param name="patterns">The pattern provider service.</param>
+    protected RuleBase(IPatternProvider patterns)
+    {
+        Patterns = patterns ?? throw new ArgumentNullException(nameof(patterns));
+    }
+
     /// <inheritdoc/>
     public abstract string Id { get; }
     /// <inheritdoc/>

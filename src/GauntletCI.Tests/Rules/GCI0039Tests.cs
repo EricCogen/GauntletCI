@@ -7,7 +7,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0039Tests
 {
-    private static readonly GCI0039_ExternalServiceSafety Rule = new();
+    private static readonly GCI0039_ExternalServiceSafety Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task NewHttpClient_InProductionCode_ShouldFlagHigh()

@@ -7,7 +7,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0055Tests
 {
-    private static readonly GCI0055_MethodSignatureChange Rule = new();
+    private static readonly GCI0055_MethodSignatureChange Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task MethodReturnTypeChanged_ShouldFire()

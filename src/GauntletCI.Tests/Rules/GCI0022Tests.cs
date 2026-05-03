@@ -6,7 +6,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0022Tests
 {
-    private static readonly GCI0022_IdempotencyRetrySafety Rule = new();
+    private static readonly GCI0022_IdempotencyRetrySafety Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task HttpPostWithoutIdempotencyKey_ShouldFlag()

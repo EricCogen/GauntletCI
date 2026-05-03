@@ -7,7 +7,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0047Tests
 {
-    private static readonly GCI0047_NamingContractAlignment Rule = new();
+    private static readonly GCI0047_NamingContractAlignment Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task EmptyDiff_ShouldNotFire()

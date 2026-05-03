@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
+using GauntletCI.Core.Rules;
 using GauntletCI.Core.Rules.Implementations;
 
 namespace GauntletCI.Tests.Rules;
@@ -12,7 +13,7 @@ public class GCI0035Tests
 
     private static GCI0035_ArchitectureLayerGuard CreateRule(Dictionary<string, List<string>> imports)
     {
-        var rule = new GCI0035_ArchitectureLayerGuard();
+        var rule = new GCI0035_ArchitectureLayerGuard(new StubPatternProvider());
         rule.Configure(new GauntletConfig { ForbiddenImports = imports });
         return rule;
     }
@@ -95,7 +96,7 @@ public class GCI0035Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var rule = new GCI0035_ArchitectureLayerGuard();
+        var rule = new GCI0035_ArchitectureLayerGuard(new StubPatternProvider());
         rule.Configure(new GauntletConfig { ForbiddenImports = null });
         var findings = await rule.EvaluateAsync(diff, null);
 

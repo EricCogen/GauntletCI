@@ -6,7 +6,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0049Tests
 {
-    private static readonly GCI0049_FloatDoubleEqualityComparison Rule = new();
+    private static readonly GCI0049_FloatDoubleEqualityComparison Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task DoubleEqualityWithLiteral_ShouldFire()

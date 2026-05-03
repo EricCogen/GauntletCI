@@ -13,6 +13,10 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0035_ArchitectureLayerGuard : RuleBase, IConfigurableRule
 {
+    public GCI0035_ArchitectureLayerGuard(IPatternProvider patterns) : base(patterns)
+    {
+    }
+
     public override string Id => "GCI0035";
     public override string Name => "Architecture Layer Guard";
 

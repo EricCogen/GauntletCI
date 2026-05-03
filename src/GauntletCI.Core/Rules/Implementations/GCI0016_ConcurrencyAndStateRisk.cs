@@ -18,6 +18,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0016_ConcurrencyAndStateRisk : RuleBase
 {
+    public GCI0016_ConcurrencyAndStateRisk(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0016";
     public override string Name => "Async Concurrency Risk";
 
@@ -133,3 +136,4 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
             confidence: Confidence.Medium));
     }
 }
+

@@ -12,6 +12,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0053_LockfileChangedWithoutSource : RuleBase
 {
+    public GCI0053_LockfileChangedWithoutSource(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id   => "GCI0053";
     public override string Name => "Lockfile Changed Without Source Review";
 
@@ -77,3 +80,4 @@ public class GCI0053_LockfileChangedWithoutSource : RuleBase
         return LockfileExtensions.Contains(Path.GetExtension(path));
     }
 }
+

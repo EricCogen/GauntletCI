@@ -15,6 +15,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0004_BreakingChangeRisk : RuleBase
 {
+    public GCI0004_BreakingChangeRisk(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0004";
     public override string Name => "Breaking Change Risk";
 
@@ -108,3 +111,4 @@ public class GCI0004_BreakingChangeRisk : RuleBase
         return preview + (list.Count > 3 ? $" (+{list.Count - 3} more files)" : "");
     }
 }
+

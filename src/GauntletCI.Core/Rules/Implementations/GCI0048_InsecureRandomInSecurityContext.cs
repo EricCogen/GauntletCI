@@ -17,6 +17,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0048_InsecureRandomInSecurityContext : RuleBase
 {
+    public GCI0048_InsecureRandomInSecurityContext(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id   => "GCI0048";
     public override string Name => "Insecure Random in Security Context";
 
@@ -97,3 +100,4 @@ public class GCI0048_InsecureRandomInSecurityContext : RuleBase
         return Task.FromResult(findings);
     }
 }
+

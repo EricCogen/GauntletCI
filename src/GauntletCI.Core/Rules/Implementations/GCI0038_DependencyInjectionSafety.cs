@@ -13,6 +13,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0038_DependencyInjectionSafety : RuleBase
 {
+    public GCI0038_DependencyInjectionSafety(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0038";
     public override string Name => "Dependency Injection Safety";
 
@@ -126,3 +129,4 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
             confidence: Confidence.Medium));
     }
 }
+

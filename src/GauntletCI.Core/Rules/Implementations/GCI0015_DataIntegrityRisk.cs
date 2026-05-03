@@ -12,6 +12,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0015_DataIntegrityRisk : RuleBase
 {
+    public GCI0015_DataIntegrityRisk(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0015";
     public override string Name => "Data Integrity Risk";
 
@@ -201,3 +204,4 @@ public class GCI0015_DataIntegrityRisk : RuleBase
         }
     }
 }
+

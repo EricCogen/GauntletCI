@@ -14,6 +14,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0029_PiiLoggingLeak : RuleBase
 {
+    public GCI0029_PiiLoggingLeak(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0029";
     public override string Name => "PII Entity Logging Leak";
 
@@ -91,3 +94,4 @@ public class GCI0029_PiiLoggingLeak : RuleBase
 
     private static bool IsWordChar(char c) => char.IsLetterOrDigit(c) || c == '_';
 }
+

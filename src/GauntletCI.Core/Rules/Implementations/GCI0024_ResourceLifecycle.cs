@@ -19,6 +19,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0024_ResourceLifecycle : RuleBase
 {
+    public GCI0024_ResourceLifecycle(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0024";
     public override string Name => "Resource Lifecycle";
 
@@ -163,3 +166,4 @@ public class GCI0024_ResourceLifecycle : RuleBase
         }
     }
 }
+

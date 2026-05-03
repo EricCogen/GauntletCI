@@ -6,7 +6,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0024Tests
 {
-    private static readonly GCI0024_ResourceLifecycle Rule = new();
+    private static readonly GCI0024_ResourceLifecycle Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task FileStreamWithoutUsing_ShouldFlag()

@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
+using GauntletCI.Core.Rules;
 using GauntletCI.Core.Rules.Implementations;
 
 namespace GauntletCI.Tests;
 
 public class DependencyRuleTests
 {
-    private static readonly GCI0052_DependencyBotApiDrift Rule52 = new();
-    private static readonly GCI0053_LockfileChangedWithoutSource Rule53 = new();
+    private static readonly GCI0052_DependencyBotApiDrift Rule52 = new(new StubPatternProvider());
+    private static readonly GCI0053_LockfileChangedWithoutSource Rule53 = new(new StubPatternProvider());
 
     private static DiffContext MakeDiff(params DiffFile[] files) =>
         new() { Files = [.. files] };

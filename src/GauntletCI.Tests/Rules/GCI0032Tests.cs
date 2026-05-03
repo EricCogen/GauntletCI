@@ -6,7 +6,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0032Tests
 {
-    private static readonly GCI0032_UncaughtExceptionPath Rule = new();
+    private static readonly GCI0032_UncaughtExceptionPath Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task ThrowNewWithoutTestEvidence_ShouldFlag()

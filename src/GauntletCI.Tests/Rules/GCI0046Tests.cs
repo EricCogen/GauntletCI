@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Core.Diff;
+using GauntletCI.Core.Rules;
 using GauntletCI.Core.Rules.Implementations;
 
 namespace GauntletCI.Tests.Rules;
 
 public class GCI0046Tests
 {
-    private static readonly GCI0046_PatternConsistencyDeviation Rule = new();
+    private static readonly GCI0046_PatternConsistencyDeviation Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task ServiceLocatorCall_ShouldFire()
@@ -168,7 +169,7 @@ public class GCI0046Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var rule = new GCI0046_PatternConsistencyDeviation();
+        var rule = new GCI0046_PatternConsistencyDeviation(new StubPatternProvider());
         rule.Configure(new GauntletCI.Core.Configuration.GauntletConfig
         {
             PatternConsistency = new GauntletCI.Core.Configuration.PatternConsistencyConfig

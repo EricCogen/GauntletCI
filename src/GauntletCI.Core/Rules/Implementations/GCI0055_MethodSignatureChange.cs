@@ -13,6 +13,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0055_MethodSignatureChange : RuleBase
 {
+    public GCI0055_MethodSignatureChange(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0055";
     public override string Name => "Method Signature Change Risk";
 
@@ -162,3 +165,4 @@ public class GCI0055_MethodSignatureChange : RuleBase
         public bool HasDefault { get; set; }
     }
 }
+

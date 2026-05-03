@@ -7,7 +7,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0006Tests
 {
-    private static readonly GCI0006_EdgeCaseHandling Rule = new();
+    private static readonly GCI0006_EdgeCaseHandling Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task ValueAccessWithoutNullGuard_ShouldFlag()

@@ -8,7 +8,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0020Tests
 {
-    private static readonly GCI0020_ResourceExhaustionPatterns Rule = new();
+    private static readonly GCI0020_ResourceExhaustionPatterns Rule = new(new StubPatternProvider());
 
     private static AnalysisContext MakeContext(DiffContext diff) => new() { Diff = diff };
 

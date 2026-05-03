@@ -15,6 +15,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0049_FloatDoubleEqualityComparison : RuleBase
 {
+    public GCI0049_FloatDoubleEqualityComparison(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id   => "GCI0049";
     public override string Name => "Float/Double Equality Comparison";
 
@@ -190,4 +193,5 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
     }
 
 }
+
 

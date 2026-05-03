@@ -13,6 +13,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0051_NumericCoercionRisks : RuleBase
 {
+    public GCI0051_NumericCoercionRisks(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0051";
     public override string Name => "Numeric Coercion Risks";
 
@@ -132,3 +135,4 @@ public class GCI0051_NumericCoercionRisks : RuleBase
         }
     }
 }
+

@@ -6,7 +6,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0042Tests
 {
-    private static readonly GCI0042_TodoStubDetection Rule = new();
+    private static readonly GCI0042_TodoStubDetection Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task EmptyDiff_ShouldNotFire()

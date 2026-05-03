@@ -11,6 +11,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0044_PerformanceHotpathRisk : RuleBase
 {
+    public GCI0044_PerformanceHotpathRisk(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0044";
     public override string Name => "Performance Hotpath Risk";
 
@@ -138,3 +141,4 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
         }
     }
 }
+

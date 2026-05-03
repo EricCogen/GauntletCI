@@ -56,6 +56,13 @@ GCI0006:src/GauntletCI.Cli/Output/GitHubChecksWriter.cs
 GCI0006:src/GauntletCI.Cli/Output/GitHubPrReviewWriter.cs
 GCI0006:src/GauntletCI.Core/Model/FindingGrouper.cs
 
+# RuleOrchestrator uses Activator.CreateInstance with type filtering to safely
+# discover and instantiate IRule implementations via reflection. Type validation
+# (isClass, !isAbstract, IAssignableFrom(IRule)) prevents injection attacks.
+# DefaultPatternProvider is stateless and non-disposable; safe without using.
+GCI0012:src/GauntletCI.Core/Rules/RuleOrchestrator.cs
+GCI0024:src/GauntletCI.Core/Rules/RuleOrchestrator.cs
+
 # Grouped-findings refactor (v2.0.2) reshapes the internal writer surface
 # (BuildReviewBody, GitHubChecksWriter helpers). These are not part of the
 # public NuGet API; the changes are intentional for the new GitHub

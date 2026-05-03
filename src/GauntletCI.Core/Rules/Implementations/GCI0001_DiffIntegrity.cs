@@ -12,6 +12,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0001_DiffIntegrity : RuleBase
 {
+    public GCI0001_DiffIntegrity(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0001";
     public override string Name => "Diff Integrity";
 
@@ -99,3 +102,4 @@ public class GCI0001_DiffIntegrity : RuleBase
 
 
 }
+

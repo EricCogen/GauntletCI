@@ -7,7 +7,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0004Tests
 {
-    private static readonly GCI0004_BreakingChangeRisk Rule = new();
+    private static readonly GCI0004_BreakingChangeRisk Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task ObsoleteAttributeAdded_ShouldFlag()

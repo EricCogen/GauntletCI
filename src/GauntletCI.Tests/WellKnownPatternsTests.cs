@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Core.Diff;
+using GauntletCI.Core.Rules;
 using GauntletCI.Core.Rules.Implementations;
 
 namespace GauntletCI.Tests;
@@ -12,7 +13,7 @@ namespace GauntletCI.Tests;
 /// </summary>
 public class WellKnownPatternsTests
 {
-    private static readonly GCI0048_InsecureRandomInSecurityContext Rule = new();
+    private static readonly GCI0048_InsecureRandomInSecurityContext Rule = new(new DefaultPatternProvider());
 
     // Helper: a diff that would fire GCI0048 (new Random near "token")
     private static string MakeDiff(string filePath) => $$"""

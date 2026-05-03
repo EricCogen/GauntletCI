@@ -16,6 +16,9 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// </summary>
 public class GCI0012_SecurityRisk : RuleBase
 {
+    public GCI0012_SecurityRisk(IPatternProvider patterns) : base(patterns)
+    {
+    }
     public override string Id => "GCI0012";
     public override string Name => "Security Risk";
 
@@ -248,3 +251,4 @@ public class GCI0012_SecurityRisk : RuleBase
         }
     }
 }
+

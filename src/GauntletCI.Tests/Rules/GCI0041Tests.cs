@@ -7,7 +7,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0041Tests
 {
-    private static readonly GCI0041_TestQualityGaps Rule = new();
+    private static readonly GCI0041_TestQualityGaps Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task FactSkipInTestFile_ShouldFlagMedium()

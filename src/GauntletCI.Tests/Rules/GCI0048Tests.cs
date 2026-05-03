@@ -6,7 +6,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0048Tests
 {
-    private static readonly GCI0048_InsecureRandomInSecurityContext Rule = new();
+    private static readonly GCI0048_InsecureRandomInSecurityContext Rule = new(new StubPatternProvider());
 
     [Fact]
     public async Task NewRandomNearToken_ShouldFire()

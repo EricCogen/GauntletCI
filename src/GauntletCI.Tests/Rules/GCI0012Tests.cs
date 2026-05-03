@@ -6,7 +6,7 @@ namespace GauntletCI.Tests.Rules;
 
 public class GCI0012Tests
 {
-    private static readonly GCI0012_SecurityRisk Rule = new();
+    private static readonly GCI0012_SecurityRisk Rule = new(new StubPatternProvider());
 
     private static DiffContext MakeDiff(string addedLine) =>
         DiffParser.Parse($"""
