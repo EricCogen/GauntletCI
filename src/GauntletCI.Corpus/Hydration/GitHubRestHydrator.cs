@@ -99,12 +99,12 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
         var commentsTask = GetJsonListAsync<GhReviewComment>($"{base_}/comments", ct);
         var commitsTask  = GetJsonListAsync<GhCommit>($"{base_}/commits", ct);
 
-        await Task.WhenAll(prTask, filesTask, commentsTask, commitsTask);
+        await Task.WhenAll(prTask, filesTask, commentsTask, commitsTask).ConfigureAwait(false);
 
-        var pr       = prTask.Result;
-        var ghFiles  = filesTask.Result;
-        var ghComments = commentsTask.Result;
-        var ghCommits  = commitsTask.Result;
+        var pr         = await prTask.ConfigureAwait(false);
+        var ghFiles    = await filesTask.ConfigureAwait(false);
+        var ghComments = await commentsTask.ConfigureAwait(false);
+        var ghCommits  = await commitsTask.ConfigureAwait(false);
 
         // Diff requires a separate Accept header: serial request
         var diffText = await GetDiffAsync(base_, ct);
