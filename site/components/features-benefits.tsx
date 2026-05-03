@@ -13,13 +13,13 @@ const items = [
   {
     icon: ShieldAlert,
     feature: "Deterministic Change-Risk Detection",
-    what: "20+ rules analyze the exact lines added or removed in a diff, not the whole file. Each rule targets a specific class of risk: removed logic without tests, breaking API changes, hardcoded secrets, unsafe casts, missing null guards, and more.",
+    what: "30+ rules analyze the exact lines added or removed in a diff, not the whole file. Each rule targets a specific class of risk: removed logic without tests, breaking API changes, hardcoded secrets, unsafe casts, missing null guards, and more.",
     benefit: "A second opinion on every commit that focuses entirely on what changed and why it might fail in production, catching the things that look fine in review but break at runtime.",
   },
   {
     icon: Timer,
     feature: "Sub-Second Feedback in the Developer Loop",
-    what: "Installs as a pre-commit hook with `gauntletci init`. Before every commit, it runs on the staged diff. No compilation, no AST build, no network call.",
+    what: "Installs as a pre-commit hook with `gauntletci init`. Before every commit, it runs on the staged diff. No full build required, no network call.",
     benefit: "Developers catch their own risky changes before they leave the machine, when the fix costs nothing and the context is freshest. Fast enough that it doesn't change how people work.",
   },
   {

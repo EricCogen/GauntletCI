@@ -10,7 +10,7 @@ interface OutputLine {
 const lines: OutputLine[] = [
   { type: "cmd",      text: "$ gauntletci analyze --staged" },
   { type: "blank",    text: "" },
-  { type: "dim",      text: "  GauntletCI v2.1.0, 20+ rules, diff-scoped" },
+  { type: "dim",      text: "  GauntletCI v2.1.0, 30+ rules, diff-scoped" },
   { type: "blank",    text: "" },
   { type: "critical", text: "  [BLOCK]  GCI0004  Breaking change in public API", annotation: 1 },
   { type: "dim",      text: "           OrderService.cs:142: ProcessPayment(decimal amount, string currency)" },

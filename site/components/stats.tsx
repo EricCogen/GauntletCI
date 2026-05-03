@@ -5,7 +5,7 @@ const stats = [
     icon: Zap,
     value: "<1s",
     label: "Analysis time",
-    sub: "No compilation. No network.",
+    sub: "No full build required. No network.",
     color: "text-cyan-400",
     bg: "bg-cyan-500/10",
   },
@@ -68,4 +68,5 @@ export function Stats() {
     </section>
   );
 }
+
 
