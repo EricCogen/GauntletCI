@@ -17,9 +17,13 @@ public static class TelemetryUploader
     /// Fire-and-forget: upload pending events in the background.
     /// Call without await from the CLI to avoid blocking.
     /// </summary>
-    /// <returns>A detached <see cref="Task"/>: the caller must not await it; all exceptions are suppressed.</returns>
+    /// <returns>A detached <see cref="Task"/>: the caller must not await it; exceptions are logged.</returns>
     public static void UploadInBackground() =>
-        Task.Run(UploadAsync).ContinueWith(_ => { }); // swallow all exceptions
+        Task.Run(UploadAsync).ContinueWith(t =>
+        {
+            if (t.IsFaulted)
+                Console.Error.WriteLine($"[GauntletCI] Background telemetry upload failed: {t.Exception?.InnerException?.Message}");
+        });
 
     /// <summary>
     /// Fetches pending events from the local queue, posts them to the telemetry endpoint,

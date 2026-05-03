@@ -18,6 +18,7 @@ public static class SlackTeamsNotifier
 
     /// <summary>
     /// Sends notifications to Slack and/or Teams when Block-severity findings exist.
+    /// Notifications are sent in parallel when both URLs are configured.
     /// </summary>
     public static async Task NotifyAsync(
         EvaluationResult result,
@@ -33,43 +34,67 @@ public static class SlackTeamsNotifier
         var sha   = Environment.GetEnvironmentVariable("GITHUB_SHA");
         var prNum = ResolvePrNumber();
         var shortSha = !string.IsNullOrEmpty(sha) && sha.Length >= 8 ? sha[..8] : sha ?? "unknown";
+        var prNumStr = prNum?.ToString(); // Convert int? to string?
 
+        var tasks = new List<Task>();
+        
         if (slackUrl is not null)
+            tasks.Add(SendSlackNotificationAsync(result, repo, prNumStr, shortSha, slackUrl, ct));
+        
+        if (teamsUrl is not null)
+            tasks.Add(SendTeamsNotificationAsync(result, repo, prNumStr, shortSha, teamsUrl, ct));
+        
+        // Send notifications in parallel (both at once if both URLs exist)
+        await Task.WhenAll(tasks);
+    }
+
+    private static async Task SendSlackNotificationAsync(
+        EvaluationResult result, 
+        string? repo, 
+        string? prNum, 
+        string shortSha, 
+        string slackUrl,
+        CancellationToken ct)
+    {
+        try
         {
-            try
+            var payload = BuildSlackPayload(result, repo, prNum, shortSha);
+            var content = new StringContent(payload, Encoding.UTF8, "application/json");
+            using var response = await _http.PostAsync(slackUrl, content, ct);
+            if (!response.IsSuccessStatusCode)
             {
-                var payload = BuildSlackPayload(result, repo, prNum, shortSha);
-                var content = new StringContent(payload, Encoding.UTF8, "application/json");
-                using var response = await _http.PostAsync(slackUrl, content, ct);
-                if (!response.IsSuccessStatusCode)
-                {
-                    var body = await response.Content.ReadAsStringAsync(ct);
-                    Console.Error.WriteLine($"[GauntletCI] Slack notification failed: {response.StatusCode}: {body}");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"[GauntletCI] Slack notification error: {ex.Message}");
+                var body = await response.Content.ReadAsStringAsync(ct);
+                Console.Error.WriteLine($"[GauntletCI] Slack notification failed: {response.StatusCode}: {body}");
             }
         }
-
-        if (teamsUrl is not null)
+        catch (Exception ex)
         {
-            try
+            Console.Error.WriteLine($"[GauntletCI] Slack notification error: {ex.Message}");
+        }
+    }
+
+    private static async Task SendTeamsNotificationAsync(
+        EvaluationResult result, 
+        string? repo, 
+        string? prNum, 
+        string shortSha, 
+        string teamsUrl,
+        CancellationToken ct)
+    {
+        try
+        {
+            var payload = BuildTeamsPayload(result, repo, prNum, shortSha);
+            var content = new StringContent(payload, Encoding.UTF8, "application/json");
+            using var response = await _http.PostAsync(teamsUrl, content, ct);
+            if (!response.IsSuccessStatusCode)
             {
-                var payload = BuildTeamsPayload(result, repo, prNum, shortSha);
-                var content = new StringContent(payload, Encoding.UTF8, "application/json");
-                using var response = await _http.PostAsync(teamsUrl, content, ct);
-                if (!response.IsSuccessStatusCode)
-                {
-                    var body = await response.Content.ReadAsStringAsync(ct);
-                    Console.Error.WriteLine($"[GauntletCI] Teams notification failed: {response.StatusCode}: {body}");
-                }
+                var body = await response.Content.ReadAsStringAsync(ct);
+                Console.Error.WriteLine($"[GauntletCI] Teams notification failed: {response.StatusCode}: {body}");
             }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"[GauntletCI] Teams notification error: {ex.Message}");
-            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[GauntletCI] Teams notification error: {ex.Message}");
         }
     }
 
