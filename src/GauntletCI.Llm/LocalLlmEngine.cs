@@ -121,7 +121,10 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
                         generator.GenerateNextToken();
                         if (generator.IsDone()) break;
 
-                        var token = generator.GetNextTokens()[0];
+                        var tokens = generator.GetNextTokens();
+                        if (tokens.Length == 0) break;
+                        
+                        var token = tokens[0];
                         var tokenizerStream = _tokenizerStream ?? throw new InvalidOperationException("TokenizerStream must not be null after TryEnsureLoaded.");
                         sb.Append(tokenizerStream.Decode(token));
 

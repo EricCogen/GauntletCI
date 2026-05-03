@@ -96,10 +96,20 @@ public static class DiffParser
             var hunkMatch = HunkHeader.Match(line);
             if (hunkMatch.Success)
             {
+                var oldStartLineStr = hunkMatch.Groups[1].Value;
+                var newStartLineStr = hunkMatch.Groups[2].Value;
+                
+                if (!int.TryParse(oldStartLineStr, out var oldStartLine) || 
+                    !int.TryParse(newStartLineStr, out var newStartLine))
+                {
+                    // Malformed hunk header - skip this hunk
+                    continue;
+                }
+                
                 currentHunk = new DiffHunk
                 {
-                    OldStartLine = int.Parse(hunkMatch.Groups[1].Value),
-                    NewStartLine = int.Parse(hunkMatch.Groups[2].Value)
+                    OldStartLine = oldStartLine,
+                    NewStartLine = newStartLine
                 };
                 currentFile.Hunks.Add(currentHunk);
                 oldLine = currentHunk.OldStartLine;

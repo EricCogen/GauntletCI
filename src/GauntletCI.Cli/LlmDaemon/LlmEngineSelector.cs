@@ -38,11 +38,18 @@ internal static class LlmEngineSelector
         var ollamaUrl = config.Corpus.OllamaEndpoints.FirstOrDefault(e => e.Enabled)?.Url;
         if (!string.IsNullOrWhiteSpace(ollamaUrl))
         {
-            var model    = config.Llm?.Model ?? LlmDefaults.OllamaModel;
             var endpoint = ollamaUrl.TrimEnd('/') + "/v1/chat/completions";
-            var numCtx   = config.Llm?.NumCtx ?? 16_384;
-            var maxTok   = config.Llm?.MaxCompleteTokens ?? 2_048;
-            return new RemoteLlmEngine(endpoint, model, apiKey: "ollama", numCtx, maxTok);
+            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out _))
+            {
+                Console.Error.WriteLine($"[GauntletCI] Invalid Ollama URL: {endpoint}. Skipping Ollama engine.");
+            }
+            else
+            {
+                var model    = config.Llm?.Model ?? LlmDefaults.OllamaModel;
+                var numCtx   = config.Llm?.NumCtx ?? 16_384;
+                var maxTok   = config.Llm?.MaxCompleteTokens ?? 2_048;
+                return new RemoteLlmEngine(endpoint, model, apiKey: "ollama", numCtx, maxTok);
+            }
         }
 
         // Local dev: try daemon first, then fall back to direct load
