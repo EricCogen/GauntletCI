@@ -44,6 +44,7 @@ public class GCI0004_BreakingChangeRisk : RuleBase
             if (WellKnownPatterns.IsGeneratedFile(file.NewPath ?? file.OldPath ?? "")) continue;
 
             var obsoleteAdded = file.AddedLines
+                .Where(l => !WellKnownPatterns.HasInternalMarker(l.Content)) // Skip internal/private APIs
                 .Where(l => l.Content.Contains("[Obsolete", StringComparison.OrdinalIgnoreCase))
                 .ToList();
 

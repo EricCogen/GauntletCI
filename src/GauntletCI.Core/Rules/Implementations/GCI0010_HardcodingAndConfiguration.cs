@@ -73,6 +73,10 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
 
     private void CheckIpAddress(DiffFile file, List<Finding> findings)
     {
+        // Skip test and infrastructure files - they often have hardcoded localhost/test IPs
+        if (WellKnownPatterns.IsTestFile(file.NewPath)) return;
+        if (WellKnownPatterns.DependencyInjectionPatterns.IsInfrastructureFile(file.NewPath)) return;
+
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
@@ -119,6 +123,10 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
 
     private void CheckHardcodedUrl(DiffFile file, List<Finding> findings)
     {
+        // Skip test and infrastructure files - they often have hardcoded localhost URLs
+        if (WellKnownPatterns.IsTestFile(file.NewPath)) return;
+        if (WellKnownPatterns.DependencyInjectionPatterns.IsInfrastructureFile(file.NewPath)) return;
+
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;

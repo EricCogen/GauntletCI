@@ -71,8 +71,15 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
 
         foreach (var line in file.AddedLines)
         {
-            // Early exit for common exclusions
             var lineContent = line.Content;
+            
+            // Skip test mock objects
+            if (WellKnownPatterns.HasMockPattern(lineContent)) continue;
+            
+            // Skip if this is in a DI composition root (factory, service registration)
+            if (WellKnownPatterns.IsDiCompositionRoot(lineContent)) continue;
+
+            // Early exit for common exclusions
             if (WellKnownPatterns.DependencyInjectionPatterns.DirectInstantiationExclusions.Any(e => 
                 lineContent.Contains(e, StringComparison.OrdinalIgnoreCase)))
                 continue;
