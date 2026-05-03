@@ -53,6 +53,9 @@ public class GCI0024_ResourceLifecycle : RuleBase
             var line = allLines[i];
             if (line.Kind != DiffLineKind.Added) continue;
             var content = line.Content;
+            
+            // Skip mock/fake resources in test code (even if test file guard was bypassed)
+            if (WellKnownPatterns.HasMockPattern(content)) continue;
 
             var (typeName, isExplicit) = MatchDisposableType(content);
             if (typeName is null) continue;

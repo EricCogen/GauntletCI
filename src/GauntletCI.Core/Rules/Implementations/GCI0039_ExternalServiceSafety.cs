@@ -48,6 +48,10 @@ public class GCI0039_ExternalServiceSafety : RuleBase
         {
             var content = line.Content;
             if (content.TrimStart().StartsWith("//")) continue;
+            
+            // Skip mock HTTP clients in test code
+            if (WellKnownPatterns.HasMockPattern(content)) continue;
+            
             if (!content.Contains("new HttpClient(")) continue;
 
             findings.Add(CreateFinding(

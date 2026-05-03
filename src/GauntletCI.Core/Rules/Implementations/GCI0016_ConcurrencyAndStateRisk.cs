@@ -69,6 +69,9 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
     private void CheckBlockingAsyncCall(DiffLine line, List<Finding> findings)
     {
         var content = line.Content;
+        
+        // Skip dev-only code (test utilities, profiling, temporary debug)
+        if (WellKnownPatterns.HasDevOnlyMarker(content)) return;
 
         // .Wait() and .GetAwaiter().GetResult() are unambiguous blocking patterns: always flag.
         if (content.Contains(".Wait()", StringComparison.Ordinal) ||
