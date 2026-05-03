@@ -26,7 +26,7 @@ const table = [
   { feature: "Local LLM enrichment",       gauntlet: "Built-in ONNX, fully offline",                snyk: "No" },
   { feature: "Baseline delta mode",        gauntlet: "Yes -- suppress pre-existing findings",       snyk: "No" },
   { feature: "Free tier",                  gauntlet: "All rules, no account",                       snyk: "Limited -- account required, rate-limited" },
-  { feature: "MCP server",                 gauntlet: "Yes -- AI assistants call GauntletCI directly", snyk: "No" },
+  { feature: "MCP server",                 gauntlet: "Yes (Pro tier) -- AI assistants call GauntletCI directly", snyk: "No" },
   { feature: "Custom rules",               gauntlet: "Yes -- implement IRule in C#",                  snyk: "No -- rules are fixed" },
 ];
 
