@@ -85,11 +85,11 @@ public readonly record struct CodeFilePath : IEquatable<CodeFilePath>, IComparab
     /// <summary>Gets the hash code for this CodeFilePath.</summary>
     public override int GetHashCode() => Value.GetHashCode();
 
+    /// <summary>Implicitly converts a string to a CodeFilePath.</summary>
+    public static implicit operator CodeFilePath(string value) => new(value);
+
     /// <summary>Implicitly converts a CodeFilePath to its string value.</summary>
     public static implicit operator string(CodeFilePath path) => path.Value;
-
-    /// <summary>Explicitly converts a string to a CodeFilePath.</summary>
-    public static explicit operator CodeFilePath(string value) => Parse(value);
 
     /// <summary>Determines whether a string is a valid CodeFilePath (non-empty).</summary>
     public static bool IsValid(string? value) => !string.IsNullOrWhiteSpace(value);
