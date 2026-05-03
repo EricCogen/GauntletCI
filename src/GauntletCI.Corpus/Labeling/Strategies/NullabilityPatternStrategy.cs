@@ -49,16 +49,26 @@ public sealed class NullabilityPatternStrategy : IInferenceStrategy
 
         // GCI0043 -- Nullable reference types and null-forgiving operators
         bool hasNullForgivingOperator = context.AddedLines.Any(l =>
-            l.Contains("!", StringComparison.Ordinal) && 
-            (l.Contains(".!", StringComparison.Ordinal) ||  // ?.!
-             l.Contains(")!", StringComparison.Ordinal) ||  // )!
-             l.Contains(";!", StringComparison.Ordinal))); // ;!
+        {
+            if (l.TrimStart().StartsWith("//"))
+                return false;
+            // Null-forgiving operator is just ! by itself after an expression
+            // Pattern: it's typically after ) or an identifier
+            return l.Contains(")!", StringComparison.Ordinal) ||  // method call!
+                   l.Contains("!;", StringComparison.Ordinal) ||  // var x = expr!;
+                   l.Contains("!,", StringComparison.Ordinal) ||  // in argument list
+                   l.Contains("!.", StringComparison.Ordinal);    // chained property!.Property
+        });
 
         bool hasRemovedNullForgiving = context.ProductionRemovedLines.Any(l =>
-            l.Contains("!", StringComparison.Ordinal) &&
-            (l.Contains(".!", StringComparison.Ordinal) ||
-             l.Contains(")!", StringComparison.Ordinal) ||
-             l.Contains(";!", StringComparison.Ordinal)));
+        {
+            if (l.TrimStart().StartsWith("//"))
+                return false;
+            return l.Contains(")!", StringComparison.Ordinal) ||
+                   l.Contains("!;", StringComparison.Ordinal) ||
+                   l.Contains("!,", StringComparison.Ordinal) ||
+                   l.Contains("!.", StringComparison.Ordinal);
+        });
 
         bool hasPragmaNullableDisable = context.AddedLines.Any(l =>
             l.Contains("#pragma warning disable nullable", StringComparison.OrdinalIgnoreCase) ||

@@ -55,8 +55,9 @@ public sealed class DataIntegrityPatternStrategy : IInferenceStrategy
                    t.StartsWith("[Column",          StringComparison.OrdinalIgnoreCase);
         });
 
-        // EF migration: check if removed lines from migration files contain actual schema operations
-        bool hasMigrationModified = IsMigrationFileModified(context.PathLines, context.ProductionRemovedLines);
+        // EF migration: check if removed lines (not just production) contain actual schema operations
+        // This is important because Migrations/ path is NOT included in ProductionRemovedLines
+        bool hasMigrationModified = IsMigrationFileModified(context.PathLines, context.RemovedLines);
 
         if (hasRemovedSerializationAttr || hasMigrationModified)
         {
@@ -126,7 +127,7 @@ public sealed class DataIntegrityPatternStrategy : IInferenceStrategy
 
     /// <summary>
     /// Check if a file path is an EF Core migration file.
-    /// Migration files follow the pattern: Migrations/YYYYMMDDHHmmss_Description.cs
+    /// Migration files follow the pattern: Migrations/YYYYMMDDHHmmss_Description.cs or Migrations/YYYYMMDD_Description.cs
     /// </summary>
     private static bool IsEfMigrationCsFile(string filePath)
     {
@@ -140,14 +141,21 @@ public sealed class DataIntegrityPatternStrategy : IInferenceStrategy
             !pathNormalized.Contains("\\Migrations\\", StringComparison.OrdinalIgnoreCase))
             return false;
 
-        // Migration files have timestamp prefix: YYYYMMDDHHMMSS_Name.cs
+        // Migration files have timestamp prefix: either YYYYMMDDHHMMSS_Name.cs or YYYYMMDD_Name.cs
         var fileName = pathNormalized.Contains('/')
             ? pathNormalized[(pathNormalized.LastIndexOf('/') + 1)..]
             : pathNormalized[(pathNormalized.LastIndexOf('\\') + 1)..];
 
-        // Check timestamp pattern: 14 digits followed by underscore
-        return fileName.Length > 15 &&
-               fileName[0..14].All(char.IsDigit) &&
-               fileName[14] == '_';
+        // Check if filename starts with 8 or 14 digits followed by underscore
+        if (fileName.Length < 10)
+            return false;
+            
+        if (fileName[8] == '_' && fileName[0..8].All(char.IsDigit))
+            return true;  // YYYYMMDD_Name.cs format
+            
+        if (fileName.Length > 15 && fileName[14] == '_' && fileName[0..14].All(char.IsDigit))
+            return true;  // YYYYMMDDHHMMSS_Name.cs format
+            
+        return false;
     }
 }

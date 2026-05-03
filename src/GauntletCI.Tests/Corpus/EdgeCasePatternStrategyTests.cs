@@ -12,12 +12,14 @@ public sealed class EdgeCasePatternStrategyTests
     [Fact]
     public void Apply_WithRemovedIdempotencyKey_ReturnsTrueLabel()
     {
-        var context = new DiffAnalysisContext(
-            new[] { "var idempotencyKey = request.Headers[\"Idempotency-Key\"];" },
-            new[] { "var requestId = request.Id;" },
-            new[] { "--- a/src/Handlers/PaymentHandler.cs" },
-            new[] { "var idempotencyKey = request.Headers[\"Idempotency-Key\"];" },
-            new[] { });
+        var context = new DiffAnalysisContext
+        {
+            AddedLines = new[] { "var requestId = request.Id;" },
+            RemovedLines = new[] { "var idempotencyKey = request.Headers[\"Idempotency-Key\"];" },
+            PathLines = new[] { "--- a/src/Handlers/PaymentHandler.cs" },
+            ProductionAddedLines = Array.Empty<string>(),
+            ProductionRemovedLines = new[] { "var idempotencyKey = request.Headers[\"Idempotency-Key\"];" },
+        };
 
         var results = _strategy.Apply("fixture1", context);
 
@@ -29,12 +31,14 @@ public sealed class EdgeCasePatternStrategyTests
     [Fact]
     public void Apply_WithCrossLayerDependency_ReturnsTrueLabel()
     {
-        var context = new DiffAnalysisContext(
-            new string[] { },
-            new[] { "var repository = new UserRepository(); // UI calling Repository directly" },
-            new[] { "--- a/src/UI/Controller.cs" },
-            new string[] { },
-            new[] { });
+        var context = new DiffAnalysisContext
+        {
+            AddedLines = new[] { "var repository = new UserRepository(); // UI calling Repository directly" },
+            RemovedLines = Array.Empty<string>(),
+            PathLines = new[] { "--- a/src/UI/Controller.cs" },
+            ProductionAddedLines = Array.Empty<string>(),
+            ProductionRemovedLines = Array.Empty<string>(),
+        };
 
         var results = _strategy.Apply("fixture1", context);
 
@@ -46,12 +50,14 @@ public sealed class EdgeCasePatternStrategyTests
     [Fact]
     public void Apply_WithRemovedTestMethod_ReturnsTrueLabel()
     {
-        var context = new DiffAnalysisContext(
-            new[] { "[Fact]" , "public void Test_ShouldDoSomething() { }" },
-            new string[] { },
-            new[] { "--- a/tests/UnitTests.cs" },
-            new string[] { },
-            new string[] { });
+        var context = new DiffAnalysisContext
+        {
+            AddedLines = Array.Empty<string>(),
+            RemovedLines = new[] { "[Fact]", "public void Test_ShouldDoSomething() { }" },
+            PathLines = new[] { "--- a/tests/UnitTests.cs" },
+            ProductionAddedLines = Array.Empty<string>(),
+            ProductionRemovedLines = Array.Empty<string>(),
+        };
 
         var results = _strategy.Apply("fixture1", context);
 
@@ -63,12 +69,14 @@ public sealed class EdgeCasePatternStrategyTests
     [Fact]
     public void Apply_WithRemovedAssertion_ReturnsTrueLabel()
     {
-        var context = new DiffAnalysisContext(
-            new[] { "Assert.True(result.IsSuccess);" },
-            new[] { "var result = RunTest();" },
-            new[] { "--- a/tests/UnitTests.cs" },
-            new[] { "Assert.True(result.IsSuccess);" },
-            new[] { });
+        var context = new DiffAnalysisContext
+        {
+            AddedLines = new[] { "var result = RunTest();" },
+            RemovedLines = new[] { "Assert.True(result.IsSuccess);" },
+            PathLines = new[] { "--- a/tests/UnitTests.cs" },
+            ProductionAddedLines = Array.Empty<string>(),
+            ProductionRemovedLines = Array.Empty<string>(),
+        };
 
         var results = _strategy.Apply("fixture1", context);
 
@@ -80,12 +88,14 @@ public sealed class EdgeCasePatternStrategyTests
     [Fact]
     public void Apply_WithLinqInLoop_ReturnsTrueLabel()
     {
-        var context = new DiffAnalysisContext(
-            new string[] { },
-            new[] { "for (int i = 0; i < items.Count; i++)" , "var found = items.Where(x => x.Id == id).FirstOrDefault();" },
-            new[] { "--- a/src/Processor.cs" },
-            new string[] { },
-            new[] { });
+        var context = new DiffAnalysisContext
+        {
+            AddedLines = new[] { "for (int i = 0; i < items.Count; i++)", "var found = items.Where(x => x.Id == id).FirstOrDefault();" },
+            RemovedLines = Array.Empty<string>(),
+            PathLines = new[] { "--- a/src/Processor.cs" },
+            ProductionAddedLines = Array.Empty<string>(),
+            ProductionRemovedLines = Array.Empty<string>(),
+        };
 
         var results = _strategy.Apply("fixture1", context);
 
@@ -97,12 +107,14 @@ public sealed class EdgeCasePatternStrategyTests
     [Fact]
     public void Apply_WithAllocationInHotPath_ReturnsTrueLabel()
     {
-        var context = new DiffAnalysisContext(
-            new string[] { },
-            new[] { "new Dictionary<string, object>()" },
-            new[] { "--- a/src/RequestHandler.cs" },
-            new string[] { },
-            new[] { "new Dictionary<string, object>()" });
+        var context = new DiffAnalysisContext
+        {
+            AddedLines = new[] { "new Dictionary<string, object>()" },
+            RemovedLines = Array.Empty<string>(),
+            PathLines = new[] { "--- a/src/RequestHandler.cs" },
+            ProductionAddedLines = Array.Empty<string>(),
+            ProductionRemovedLines = Array.Empty<string>(),
+        };
 
         var results = _strategy.Apply("fixture1", context);
 
@@ -114,12 +126,14 @@ public sealed class EdgeCasePatternStrategyTests
     [Fact]
     public void Apply_WithRemovedUpsertPattern_ReturnsTrueLabel()
     {
-        var context = new DiffAnalysisContext(
-            new[] { "INSERT OR IGNORE INTO users (id, name) VALUES (?, ?);" },
-            new[] { "INSERT INTO users (id, name) VALUES (?, ?);" },
-            new[] { "--- a/src/Repository.cs" },
-            new[] { "INSERT OR IGNORE INTO users (id, name) VALUES (?, ?);" },
-            new[] { });
+        var context = new DiffAnalysisContext
+        {
+            AddedLines = new[] { "INSERT INTO users (id, name) VALUES (?, ?);" },
+            RemovedLines = new[] { "INSERT OR IGNORE INTO users (id, name) VALUES (?, ?);" },
+            PathLines = new[] { "--- a/src/Repository.cs" },
+            ProductionAddedLines = Array.Empty<string>(),
+            ProductionRemovedLines = new[] { "INSERT OR IGNORE INTO users (id, name) VALUES (?, ?);" },
+        };
 
         var results = _strategy.Apply("fixture1", context);
 
@@ -131,12 +145,14 @@ public sealed class EdgeCasePatternStrategyTests
     [Fact]
     public void Apply_WithCommentedCode_DoesNotTriggerLayerViolation()
     {
-        var context = new DiffAnalysisContext(
-            new string[] { },
-            new[] { "// var repo = new Repository(); // Database access in Controller" },
-            new[] { "--- a/src/Controller.cs" },
-            new string[] { },
-            new[] { });
+        var context = new DiffAnalysisContext
+        {
+            AddedLines = new[] { "// var repo = new Repository(); // Database access in Controller" },
+            RemovedLines = Array.Empty<string>(),
+            PathLines = new[] { "--- a/src/Controller.cs" },
+            ProductionAddedLines = Array.Empty<string>(),
+            ProductionRemovedLines = Array.Empty<string>(),
+        };
 
         var results = _strategy.Apply("fixture1", context);
 
