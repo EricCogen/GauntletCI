@@ -82,6 +82,10 @@ public class GCI0039_ExternalServiceSafety : RuleBase
         if (WellKnownPatterns.UsesGrpcChannel(addedLines))
             return;
 
+        // Skip if Polly resilience policies already handle timeouts
+        if (HasPollyTimeoutPolicy(addedLines))
+            return;
+
         bool hasTimeoutConfig = addedLines.Any(l =>
             l.Content.Contains(".Timeout =")
             || l.Content.Contains("TimeoutPolicy")
@@ -120,6 +124,10 @@ public class GCI0039_ExternalServiceSafety : RuleBase
             if (IsInjectedOrStaticClient(content))
                 continue;
 
+            // Skip fire-and-forget patterns (intentional ignoring of async result)
+            if (IsFireAndForgetPattern(content))
+                continue;
+
             bool hasCancellationToken =
                 content.Contains("cancellationToken")
                 || content.Contains("CancellationToken")
@@ -137,6 +145,25 @@ public class GCI0039_ExternalServiceSafety : RuleBase
                     line: line));
             }
         }
+    }
+
+    /// <summary>
+    /// Returns true if the code contains Polly resilience patterns that manage timeouts.
+    /// </summary>
+    private static bool HasPollyTimeoutPolicy(List<DiffLine> addedLines)
+    {
+        return WellKnownPatterns.ExternalServicePatterns.PollyPatterns.Any(pattern =>
+            addedLines.Any(l => l.Content.Contains(pattern, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    /// <summary>
+    /// Returns true if this line is a fire-and-forget async pattern where CancellationToken isn't needed.
+    /// Examples: "_ = await GetAsync()" or ".FireAndForget()"
+    /// </summary>
+    private static bool IsFireAndForgetPattern(string content)
+    {
+        return WellKnownPatterns.ExternalServicePatterns.FireAndForgetPatterns.Any(pattern =>
+            content.Contains(pattern, StringComparison.OrdinalIgnoreCase));
     }
 
     private static bool UsesFactoryManagedClients(List<DiffLine> addedLines)

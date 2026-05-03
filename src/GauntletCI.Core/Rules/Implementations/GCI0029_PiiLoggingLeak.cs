@@ -41,6 +41,9 @@ public class GCI0029_PiiLoggingLeak : RuleBase
                 // Skip comment lines entirely (// or *)
                 if (trimmed.StartsWith("//") || trimmed.StartsWith("*")) continue;
 
+                // Skip field/property definitions (declarations without assignment in log context)
+                if (IsFieldOrPropertyDefinition(content)) continue;
+
                 bool hasLogPrefix = false;
                 foreach (var prefix in WellKnownPatterns.PiiDetectionPatterns.LogPrefixes)
                 {
@@ -73,6 +76,30 @@ public class GCI0029_PiiLoggingLeak : RuleBase
         }
 
         return Task.FromResult(findings);
+    }
+
+    /// <summary>
+    /// Returns true if this line is a field or property definition (not a log assignment).
+    /// Examples:
+    ///   "public string email { get; set; }"  - definition, skip
+    ///   "private string username;"            - definition, skip
+    ///   "logger.LogInformation(user.email)"   - log call, analyze
+    /// </summary>
+    private static bool IsFieldOrPropertyDefinition(string content)
+    {
+        // If it contains property getter/setter syntax, it's a property definition
+        if (content.Contains('{') && content.Contains("get;") && !content.Contains("_logger") && !content.Contains("logger"))
+            return true;
+
+        // If it's just a field declaration ending with semicolon (no logger, no assignment)
+        if (content.EndsWith(';') && 
+            !content.Contains("_logger") && !content.Contains("logger") &&
+            !content.Contains(" = ") &&
+            (content.Contains("public ") || content.Contains("private ") || content.Contains("protected "))&&
+            !content.Contains("("))  // not a method call
+            return true;
+
+        return false;
     }
 
     private static bool ContainsPiiTerm(string content, string term)

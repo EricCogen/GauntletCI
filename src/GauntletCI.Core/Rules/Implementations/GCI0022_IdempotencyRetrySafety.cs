@@ -36,6 +36,10 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
 
     private void CheckHttpPostWithoutIdempotency(DiffFile file, List<Finding> findings)
     {
+        // Skip test files - test endpoints don't need production-level idempotency
+        if (WellKnownPatterns.IsTestFile(file.NewPath))
+            return;
+
         var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
 
         for (int i = 0; i < allLines.Count; i++)
@@ -81,6 +85,13 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
             var content = line.Content;
             if (!content.Contains("INSERT INTO", StringComparison.OrdinalIgnoreCase)) continue;
 
+            // Skip benign INSERT patterns that don't need upsert protection:
+            // - SELECT INTO (copying data structure)
+            // - INSERT ... DEFAULT (schema-only, no actual data)
+            if (content.Contains("SELECT", StringComparison.OrdinalIgnoreCase) ||
+                content.Contains("DEFAULT", StringComparison.OrdinalIgnoreCase))
+                continue;
+
             // Check if this line or nearby lines have upsert protection
             bool hasUpsert = WellKnownPatterns.IdempotencyPatterns.UpsertPatterns.Any(p => content.Contains(p, StringComparison.OrdinalIgnoreCase));
             if (!hasUpsert)
@@ -119,6 +130,10 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
             // Exempt if in UI/XAML context (WPF, WinUI events are often attached once per control lifecycle)
             if (WellKnownPatterns.GuardPatterns.IsUiEventHandler(file.NewPath)) continue;
 
+            // Exempt MVVM View/ViewModel files - event subscriptions in these files are typically
+            // done in constructor or initialization, which runs once per instance
+            if (IsMvvmComponentFile(file.NewPath)) continue;
+
             // Look for deduplication guard nearby (unsubscribe or bool guard)
             int start = Math.Max(0, i - 5);
             int end = Math.Min(allLines.Count, i + 10);
@@ -128,7 +143,8 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
                 l.Contains(" -= ") ||
                 l.Contains("_subscribed", StringComparison.Ordinal) ||
                 l.Contains("_registered", StringComparison.Ordinal) ||
-                l.Contains("_attached", StringComparison.Ordinal));
+                l.Contains("_attached", StringComparison.Ordinal) ||
+                l.Contains("_initialized", StringComparison.Ordinal));
 
             if (!hasDedup)
             {
@@ -142,6 +158,18 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
                     line: line));
             }
         }
+    }
+
+    /// <summary>
+    /// Returns true if the file is a MVVM View or ViewModel component.
+    /// These files typically initialize event handlers in constructors which run once per instance.
+    /// </summary>
+    private static bool IsMvvmComponentFile(string path)
+    {
+        return path.Contains("ViewModel", StringComparison.OrdinalIgnoreCase) ||
+               path.EndsWith("View.cs", StringComparison.OrdinalIgnoreCase) ||
+               path.EndsWith("Presenter.cs", StringComparison.OrdinalIgnoreCase) ||
+               path.Contains(".xaml.cs", StringComparison.OrdinalIgnoreCase);
     }
 }
 
