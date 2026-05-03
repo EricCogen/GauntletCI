@@ -14,6 +14,7 @@ using GauntletCI.Corpus.Runners;
 using GauntletCI.Corpus.Scoring;
 using GauntletCI.Corpus.Storage;
 using GauntletCI.Core.Configuration;
+using GauntletCI.Cli.Commands.Factories;
 using Microsoft.Data.Sqlite;
 
 namespace GauntletCI.Cli.Commands;
@@ -22,6 +23,12 @@ public static class CorpusCommand
 {
     public static Command Create()
     {
+        // Initialize factory implementations for DI
+        ICorpusOperationsFactory opsFactory = new CorpusOperationsFactoryImpl();
+        ICorpusAnalysisFactory analysisFactory = new CorpusAnalysisFactoryImpl();
+        ICorpusLabelingFactory labelingFactory = new CorpusLabelingFactoryImpl();
+        ICorpusUtilityFactory utilityFactory = new CorpusUtilityFactoryImpl();
+
         var corpus = new Command("corpus", """
             Manage the GauntletCI fixture corpus.
 
@@ -33,24 +40,32 @@ public static class CorpusCommand
               5. corpus score
               6. corpus report
             """);
-        corpus.AddCommand(CreateAddPr());
-        corpus.AddCommand(CreateNormalize());
-        corpus.AddCommand(CreateList());
-        corpus.AddCommand(CreateShow());
-        corpus.AddCommand(CreateStatus());
-        corpus.AddCommand(CreateBatchHydrate());
-        corpus.AddCommand(CreateDiscover());
-        corpus.AddCommand(CreateRun());
-        corpus.AddCommand(CreateRunAll());
-        corpus.AddCommand(CreateScore());
-        corpus.AddCommand(CreateReport());
-        corpus.AddCommand(CreateLabel());
-        corpus.AddCommand(CreateLabelAll());
-        corpus.AddCommand(CreateResetStats());
-        corpus.AddCommand(CreatePurge());
-        corpus.AddCommand(CreateErrors());
-        corpus.AddCommand(CreateRejectedRepos());
-        corpus.AddCommand(CreateDoctor());
+        
+        // Operations commands
+        corpus.AddCommand(opsFactory.CreateAddPr());
+        corpus.AddCommand(opsFactory.CreateNormalize());
+        corpus.AddCommand(opsFactory.CreateList());
+        corpus.AddCommand(opsFactory.CreateShow());
+        corpus.AddCommand(opsFactory.CreateStatus());
+        corpus.AddCommand(opsFactory.CreateBatchHydrate());
+        
+        // Analysis commands
+        corpus.AddCommand(analysisFactory.CreateDiscover());
+        corpus.AddCommand(analysisFactory.CreateRun());
+        corpus.AddCommand(analysisFactory.CreateRunAll());
+        corpus.AddCommand(analysisFactory.CreateScore());
+        corpus.AddCommand(analysisFactory.CreateReport());
+        
+        // Labeling commands
+        corpus.AddCommand(labelingFactory.CreateLabel());
+        corpus.AddCommand(labelingFactory.CreateLabelAll());
+        corpus.AddCommand(labelingFactory.CreateResetStats());
+        
+        // Utility commands
+        corpus.AddCommand(utilityFactory.CreatePurge());
+        corpus.AddCommand(utilityFactory.CreateErrors());
+        corpus.AddCommand(utilityFactory.CreateRejectedRepos());
+        corpus.AddCommand(utilityFactory.CreateDoctor());
 
         var issues = new Command("issues", "GitHub Issues corpus operations");
         issues.AddCommand(CreateIssueSearch());
