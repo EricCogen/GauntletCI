@@ -212,7 +212,7 @@ public static class ConsoleReporter
         if (!string.IsNullOrWhiteSpace(group.CodeSnippet))
         {
             AnsiConsole.MarkupLine("[grey]  Snippet  :[/]");
-            foreach (var line in group.CodeSnippet!.Split('\n'))
+            foreach (var line in group.CodeSnippet.Split('\n'))
                 AnsiConsole.MarkupLine($"[grey]    {Markup.Escape(line)}[/]");
         }
 

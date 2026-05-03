@@ -285,12 +285,18 @@ public static class GitHubPrReviewWriter
             CommitId = sha,
             Body     = bodyText,
             Event    = "COMMENT",
-            Comments = [.. inlineGroups.Select(g => new ReviewComment
+            Comments = [.. inlineGroups.Select(g =>
             {
-                Path = g.FilePath!,
-                Line = g.PrimaryLine!.Value,
-                Side = "RIGHT",
-                Body = BuildCommentBody(g),
+                var filePath = g.FilePath ?? throw new InvalidOperationException("FilePath must not be null for inline review comments.");
+                var lineNumber = g.PrimaryLine!.Value;  // Safe: already checked HasValue in Where clause
+                
+                return new ReviewComment
+                {
+                    Path = filePath,
+                    Line = lineNumber,
+                    Side = "RIGHT",
+                    Body = BuildCommentBody(g),
+                };
             })],
         };
 

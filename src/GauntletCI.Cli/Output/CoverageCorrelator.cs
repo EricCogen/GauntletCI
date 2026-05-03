@@ -63,7 +63,8 @@ public static class CoverageCorrelator
 
             foreach (var finding in blockFindings)
             {
-                if (fileCoverageMap.TryGetValue(finding.FilePath!, out var cov) && cov == 0.0)
+                var filePath = finding.FilePath ?? throw new InvalidOperationException("FilePath must not be null in block findings that passed the filter.");
+                if (fileCoverageMap.TryGetValue(filePath, out var cov) && cov == 0.0)
                     finding.CoverageNote = "⚠️ No test coverage detected for this file (Codecov).";
             }
         }
