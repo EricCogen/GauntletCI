@@ -24,7 +24,7 @@ const table = [
   { feature: "Baseline delta mode",    gauntlet: "Yes - suppress pre-existing issues", semgrep: "No" },
   { feature: "CI gate + inline comments", gauntlet: "Yes (Teams tier)",                semgrep: "Yes (paid)" },
   { feature: "Free tier",              gauntlet: "All 30+ rules, no account",          semgrep: "Limited free, account required" },
-  { feature: "MCP server",             gauntlet: "Yes -- AI assistants call GauntletCI directly", semgrep: "No" },
+  { feature: "MCP server",             gauntlet: "Yes (Pro tier) -- AI assistants call GauntletCI directly", semgrep: "No" },
   { feature: "Custom rules",           gauntlet: "Yes -- implement IRule in C#, no YAML", semgrep: "Yes -- YAML patterns (required for all rules)" },
 ];
 

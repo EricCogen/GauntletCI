@@ -92,7 +92,7 @@ const featureRows = [
   },
   {
     label: "MCP server integration",
-    gauntlet: "Yes -- AI tools call GauntletCI directly",
+    gauntlet: "Yes (Pro tier) -- AI tools call GauntletCI directly",
     ai: "N/A",
   },
   {
