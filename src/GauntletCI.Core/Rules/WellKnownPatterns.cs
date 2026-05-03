@@ -774,20 +774,84 @@ internal static class WellKnownPatterns
     public static bool IsBlockingAsyncWithoutTimeout(string content)
     {
         if (string.IsNullOrEmpty(content)) return false;
-        
+
         // Check for blocking patterns
         bool isBlocking = content.Contains(".Result", StringComparison.Ordinal) ||
                           content.Contains(".Wait()", StringComparison.Ordinal) ||
                           content.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal);
-        
+
         if (!isBlocking) return false;
-        
+
         // Check for timeout/bound protection
         bool hasTimeout = TimeoutPatterns.Any(p => content.Contains(p, StringComparison.OrdinalIgnoreCase)) ||
                           content.Contains("CancellationToken", StringComparison.Ordinal) ||
                           content.Contains("TimeSpan", StringComparison.Ordinal);
-        
+
         return !hasTimeout; // Return true if no timeout protection
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> if content indicates data is being transformed (hashed, encrypted, anonymized, tokenized).
+    /// More precise than DomainSpecificPatterns.IsDataTransformed(): requires word boundaries or method call context
+    /// to avoid false positives like "myToken" matching "Token".
+    /// Used by GCI0029 (PII logging) coordination to reduce false positives.
+    /// </summary>
+    public static bool IsDataTransformedWithBoundary(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return false;
+
+        // Precise transformation patterns with word boundaries or method context
+        string[] patterns = new[]
+        {
+            "Hash(",    // Hash(), HashCode, etc.
+            ".Hash",    // .HashCode, .SHA256, etc.
+            "Encrypt(", // Encrypt(), Decrypt()
+            ".Encrypt",
+            "Decrypt",
+            "Hmac(",
+            ".Hmac",
+            "SHA256",
+            "SHA1",
+            "MD5",
+            "Tokenize(",      // Method call, not variable name
+            ".Tokenize",
+            "Anonymize(",
+            ".Anonymize",
+            "Redact(",
+            ".Redact",
+            "Mask(",
+            ".Mask",
+            "SecureString",
+            "Obfuscate(",
+            ".Obfuscate"
+        };
+
+        foreach (var pattern in patterns)
+        {
+            if (content.Contains(pattern, StringComparison.OrdinalIgnoreCase))
+                return true;
+        }
+
+        // Reflection guards (from DomainSpecificPatterns)
+        string[] reflectionGuards = new[]
+        {
+            ".FullName", ".Name", "Type.", "Assembly.", "PropertyInfo.", "MethodInfo.",
+            "FieldInfo.", "ParameterInfo.", "Reflection.",
+            "GetType(", "typeof(", "GetProperties", "GetFields", "GetMethods",
+            "MemberInfo", "CustomAttributes", "GetCustomAttributes",
+            "MethodBase", "ConstructorInfo", "EventInfo",
+            "LogLevel", "LogEventInfo", "LogEventLevel", "EventId",
+            "SerializationContext", "DeserializationContext", "JsonSerializerContext",
+            "JsonPropertyInfo", "TypeInfo", "MethodHandle"
+        };
+
+        foreach (var guard in reflectionGuards)
+        {
+            if (content.Contains(guard, StringComparison.Ordinal))
+                return true;
+        }
+
+        return false;
     }
 }
 
