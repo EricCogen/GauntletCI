@@ -52,6 +52,9 @@ public class GCI0039_ExternalServiceSafety : RuleBase
             // Skip mock HTTP clients in test code
             if (WellKnownPatterns.HasMockPattern(content)) continue;
             
+            // Phase 16 Guard: ORM async patterns
+            if (WellKnownPatterns.IsOrmAsyncPattern(content)) continue;
+            
             if (!content.Contains("new HttpClient(")) continue;
 
             findings.Add(CreateFinding(

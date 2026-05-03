@@ -197,6 +197,10 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
                     !addedLine.Content.Contains("Task.Factory", StringComparison.Ordinal))
                     continue;
 
+                // Phase 16 Guards: fire-and-forget background tasks and instance-scoped caches
+                if (WellKnownPatterns.IsIntentionalBackgroundTask(addedLine.Content)) continue;
+                if (WellKnownPatterns.IsInstanceScopedCache(addedLine.Content)) continue;
+
                 // Flag any new Task.Run/Factory as potential unbounded concurrency
                 findings.Add(CreateFinding(
                     file,

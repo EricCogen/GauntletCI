@@ -73,6 +73,10 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
         // Skip dev-only code (test utilities, profiling, temporary debug)
         if (WellKnownPatterns.HasDevOnlyMarker(content)) return;
 
+        // Phase 16 Guards: ORM async patterns and bounded synchronization
+        if (WellKnownPatterns.IsOrmAsyncPattern(content)) return;
+        if (WellKnownPatterns.IsBoundedSynchronization(content)) return;
+
         // .Wait() and .GetAwaiter().GetResult() are unambiguous blocking patterns: always flag.
         if (content.Contains(".Wait()", StringComparison.Ordinal) ||
             content.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal))

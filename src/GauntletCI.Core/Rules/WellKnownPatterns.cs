@@ -725,6 +725,46 @@ internal static class WellKnownPatterns
     /// Used by GCI0038 (DI Safety) to avoid flagging intentional composition patterns.
     /// </summary>
     public static bool IsDiCompositionRoot(string content) => DomainSpecificPatterns.IsDiCompositionRoot(content);
+
+    /// <summary>
+    /// Returns <c>true</c> if the content indicates an ORM async database call with proper ConfigureAwait.
+    /// Used by GCI0016 and GCI0020 to suppress false positives on legitimate async ORM patterns.
+    /// </summary>
+    public static bool IsOrmAsyncPattern(string content) =>
+        !string.IsNullOrEmpty(content) &&
+        DomainSpecificPatterns.CodePatterns.OrmAsyncPatterns.Any(p => 
+            content.Contains(p, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Returns <c>true</c> if the content indicates a fire-and-forget background task (intentional, CLI scope).
+    /// Used by GCI0020 to suppress false positives on telemetry upload and GPU inference patterns.
+    /// </summary>
+    public static bool IsIntentionalBackgroundTask(string content) =>
+        !string.IsNullOrEmpty(content) &&
+        (content.Contains("UploadInBackground", StringComparison.OrdinalIgnoreCase) ||
+         content.Contains("UploadAsync", StringComparison.OrdinalIgnoreCase) ||
+         (content.Contains("Task.Run", StringComparison.OrdinalIgnoreCase) && 
+          content.Contains("ContinueWith", StringComparison.OrdinalIgnoreCase)) ||
+         (content.Contains("Telemetry", StringComparison.OrdinalIgnoreCase) && 
+          content.Contains("Task.Run", StringComparison.OrdinalIgnoreCase)));
+
+    /// <summary>
+    /// Returns <c>true</c> if the content indicates bounded synchronization (semaphore/mutex/lock with bounds).
+    /// Used by GCI0016 to suppress false positives on intentional synchronization for bounded resources.
+    /// </summary>
+    public static bool IsBoundedSynchronization(string content) =>
+        !string.IsNullOrEmpty(content) &&
+        DomainSpecificPatterns.CodePatterns.BoundedSynchronizationPatterns.Any(p => 
+            content.Contains(p, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// Returns <c>true</c> if the content indicates an instance-scoped cache (non-static Dictionary field).
+    /// Used by GCI0020 to suppress false positives on intentional per-instance caches with bounded growth.
+    /// </summary>
+    public static bool IsInstanceScopedCache(string content) =>
+        !string.IsNullOrEmpty(content) &&
+        DomainSpecificPatterns.CodePatterns.InstanceScopedCachePatterns.Any(p => 
+            content.Contains(p, StringComparison.OrdinalIgnoreCase));
 }
 
 #pragma warning restore GCI0003  // End of WellKnownPatterns consolidation module
