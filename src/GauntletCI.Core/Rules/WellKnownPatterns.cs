@@ -429,6 +429,9 @@ internal static class WellKnownPatterns
     {
         public static string[] HttpCallMethods => DomainSpecificPatterns.ExternalServicePatterns.HttpCallMethods;
         public static string[] CtCheckHttpMethods => DomainSpecificPatterns.ExternalServicePatterns.CtCheckHttpMethods;
+        public static string[] PollyPatterns => DomainSpecificPatterns.ExternalServicePatterns.PollyPatterns;
+        public static string[] FactoryConfigPatterns => DomainSpecificPatterns.ExternalServicePatterns.FactoryConfigPatterns;
+        public static string[] FireAndForgetPatterns => DomainSpecificPatterns.ExternalServicePatterns.FireAndForgetPatterns;
     }
 
     /// <summary>Delegate to PerformancePatterns.</summary>

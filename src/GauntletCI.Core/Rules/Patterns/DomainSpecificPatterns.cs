@@ -220,7 +220,16 @@ internal static class DomainSpecificPatterns
         public static readonly string[] ReflectionGuards =
         [
             ".FullName", ".Name", "Type.", "Assembly.", "PropertyInfo.", "MethodInfo.",
-            "FieldInfo.", "ParameterInfo.", "Reflection."
+            "FieldInfo.", "ParameterInfo.", "Reflection.",
+            // Additional reflection patterns
+            "GetType(", "typeof(", "GetProperties", "GetFields", "GetMethods",
+            "MemberInfo", "CustomAttributes", "GetCustomAttributes",
+            "MethodBase", "ConstructorInfo", "EventInfo",
+            // Logging metadata types
+            "LogLevel", "LogEventInfo", "LogEventLevel", "EventId",
+            // Serialization/deserialization contexts
+            "SerializationContext", "DeserializationContext", "JsonSerializerContext",
+            "JsonPropertyInfo", "TypeInfo", "MethodHandle"
         ];
 
         /// <summary>
@@ -248,7 +257,11 @@ internal static class DomainSpecificPatterns
         public static readonly string[] IdempotencySignals =
         [
             "IdempotencyKey", "Idempotency-Key", "idempotencyKey", "idempotent",
-            "dedup", "Dedup", "RequestId", "requestId", "MessageId", "messageId"
+            "dedup", "Dedup", "RequestId", "requestId", "MessageId", "messageId",
+            // Additional patterns for common retry frameworks
+            "duplicateCheck", "checkDuplicate", "DuplicateKey", "duplicate_key",
+            "uniqueRequest", "UniqueRequest", "uniqueId", "UniqueId",
+            "idempotencyMode", "RequestHash", "request_hash", "traceId"
         ];
 
         /// <summary>
@@ -367,6 +380,36 @@ internal static class DomainSpecificPatterns
         public static readonly string[] CtCheckHttpMethods =
         [
             ".GetAsync(", ".PostAsync(", ".PutAsync(", ".SendAsync("
+        ];
+
+        /// <summary>
+        /// Polly resilience patterns that indicate retry/timeout policies are already in place.
+        /// Used by GCI0039 to skip flagging HTTP calls when Polly policies manage timeouts.
+        /// </summary>
+        public static readonly string[] PollyPatterns =
+        [
+            ".WaitAndRetry", ".CircuitBreaker", ".Timeout", "TimeoutPolicy",
+            "PolicyBuilder", ".AddPolicyHandler", "AddResilienceHandler"
+        ];
+
+        /// <summary>
+        /// HttpClientFactory configuration patterns indicating managed HTTP clients with centralized timeout configuration.
+        /// Used by GCI0039 to skip timeout checks on factory-configured clients.
+        /// </summary>
+        public static readonly string[] FactoryConfigPatterns =
+        [
+            "AddHttpClient", "IHttpClientFactory", "CreateClient", "typed client",
+            "ConfigureHttpClient", "AddHttpMessageHandler"
+        ];
+
+        /// <summary>
+        /// Fire-and-forget async patterns where cancellation tokens are not applicable.
+        /// Used by GCI0039 to skip CancellationToken requirements on intentional fire-and-forget operations.
+        /// </summary>
+        public static readonly string[] FireAndForgetPatterns =
+        [
+            "_ =", ".FireAndForget", "#pragma warning disable",
+            ".Forget(", "// fire and forget"
         ];
     }
 
