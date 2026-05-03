@@ -84,6 +84,12 @@ internal static class LlmEngineSelector
                 "The built-in ONNX engine is not available in CI. A remote OpenAI-compatible endpoint is required.",
                 "Set 'llm.ciEndpoint' to your remote LLM URL (e.g. https://api.openai.com/v1/chat/completions).");
 
+        if (string.IsNullOrWhiteSpace(llmCfg.CiApiKeyEnv))
+            return WarnAndSkip(
+                "--with-llm was passed but 'llm.ciApiKeyEnv' is not set in .gauntletci.json.",
+                "A remote LLM endpoint is configured but the API key env var name is not configured.",
+                "Set 'llm.ciApiKeyEnv' in .gauntletci.json to the name of the environment variable containing the API key.");
+
         var apiKey = Environment.GetEnvironmentVariable(llmCfg.CiApiKeyEnv);
         if (string.IsNullOrWhiteSpace(apiKey))
             return WarnAndSkip(

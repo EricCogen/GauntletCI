@@ -34,7 +34,11 @@ public sealed class LinearTicketProvider : ITicketProvider
         {
             Content = new StringContent(body, Encoding.UTF8, "application/json")
         };
-        req.Headers.Authorization = new AuthenticationHeaderValue(apiKey);
+        
+        if (string.IsNullOrWhiteSpace(apiKey))
+            return null;  // Defensive: apiKey cleared after earlier check
+            
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
         using var resp = await Http.SendAsync(req, ct);
         if (!resp.IsSuccessStatusCode) return null;
