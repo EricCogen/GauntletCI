@@ -3,6 +3,7 @@ using System.IO.Pipes;
 using System.Text.Json;
 using GauntletCI.Core.Model;
 using GauntletCI.Llm;
+using Microsoft.Extensions.Logging;
 
 namespace GauntletCI.Cli.LlmDaemon;
 
@@ -66,7 +67,12 @@ internal static class LlmDaemonServer
         catch (OperationCanceledException) { }
         finally
         {
-            try { File.Delete(pidPath); } catch (Exception) { }
+            try { File.Delete(pidPath); }
+            catch (Exception ex)
+            {
+                // Log but don't rethrow: cleanup is best-effort and shouldn't crash the daemon
+                System.Diagnostics.Debug.WriteLine($"LlmDaemonServer: Failed to delete pid file at {pidPath}: {ex.Message}");
+            }
         }
     }
 
@@ -79,7 +85,11 @@ internal static class LlmDaemonServer
         {
             string? line;
             try { line = await reader.ReadLineAsync(ct); }
-            catch (Exception) { break; }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"LlmDaemonServer: Read error: {ex.Message}");
+                break;
+            }
             if (line is null) break;
 
             DaemonResponse resp;
@@ -117,7 +127,11 @@ internal static class LlmDaemonServer
 
             SendResponse:
             try { await writer.WriteLineAsync(JsonSerializer.Serialize(resp)); }
-            catch (Exception) { break; }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"LlmDaemonServer: Write error: {ex.Message}");
+                break;
+            }
         }
     }
 
