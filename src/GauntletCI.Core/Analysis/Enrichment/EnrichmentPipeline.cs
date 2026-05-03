@@ -82,7 +82,7 @@ public class EnrichmentPipeline
             {
                 try
                 {
-                    var enriched = await enricher.EnrichAsync(finding, ct);
+                    var enriched = await enricher.EnrichAsync(finding, ct).ConfigureAwait(false);
                     if (enriched) successCount++;
                     else skipCount++;
                 }

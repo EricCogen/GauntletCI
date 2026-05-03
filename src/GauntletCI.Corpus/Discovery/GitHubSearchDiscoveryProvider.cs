@@ -57,7 +57,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
                 break;
 
             // Pre-flight: verify repo is accessible, not archived, not renamed
-            var skip = await PreflightRepoAsync(repoSpec, query.MinStars, cancellationToken);
+            var skip = await PreflightRepoAsync(repoSpec, query.MinStars, cancellationToken).ConfigureAwait(false);
             if (skip is not null)
             {
                 Console.Error.WriteLine($"[gh-search] Skipping {repoSpec}: {skip}");
@@ -74,7 +74,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
 
             try
             {
-                await FetchPageAsync(url, query, seen, results, repoLimit, cancellationToken, _errorCallback);
+                await FetchPageAsync(url, query, seen, results, repoLimit, cancellationToken, _errorCallback).ConfigureAwait(false);
             }
             catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity
                                                || ex.StatusCode == System.Net.HttpStatusCode.NotFound
@@ -105,11 +105,11 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         CancellationToken cancellationToken,
         Action<string?, int?, string>? errorCallback = null)
     {
-        using var response = await _http.GetAsync(url, cancellationToken);
+        using var response = await _http.GetAsync(url, cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
-            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
             var code = (int)response.StatusCode;
             var classification = ClassifyHttpError(response, body);
             Console.Error.WriteLine($"[gh-search] {classification} for {url}");
@@ -145,12 +145,12 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
                 Console.Error.WriteLine($"[gh-search] Throttling: {remaining} search requests left. Sleeping {sleepMs / 1000}s until reset...");
                 errorCallback?.Invoke(null, null, $"[gh-search] Throttled: {remaining} remaining, sleeping {sleepMs / 1000}s");
                 ThrottleCount++;
-                await Task.Delay(sleepMs, cancellationToken);
+                await Task.Delay(sleepMs, cancellationToken).ConfigureAwait(false);
             }
         }
 
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (!doc.RootElement.TryGetProperty("items", out var items))
             return;
@@ -193,7 +193,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         var url = $"https://api.github.com/repos/{repoSpec}";
         try
         {
-            using var response = await _http.GetAsync(url, cancellationToken);
+            using var response = await _http.GetAsync(url, cancellationToken).ConfigureAwait(false);
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 return "repo not found (deleted, private, or never existed)";
@@ -205,8 +205,8 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
             if (!response.IsSuccessStatusCode)
                 return $"HTTP {(int)response.StatusCode} from repo metadata endpoint";
 
-            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
+            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
             var root = doc.RootElement;
 
             // Archived check

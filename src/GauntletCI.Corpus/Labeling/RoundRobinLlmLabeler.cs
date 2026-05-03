@@ -106,7 +106,7 @@ public sealed class RoundRobinLlmLabeler : ILlmLabeler, IDisposable
                 filePath,
                 reviewCommentBodies,
                 diffSnippet,
-                ct);
+                ct).ConfigureAwait(false);
 
             if (result is not null)
             {

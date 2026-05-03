@@ -152,7 +152,7 @@ public class RuleOrchestrator
             int findingsBefore = allFindings.Count;
             try
             {
-                var findings = await rule.EvaluateAsync(context, ruleCts.Token);
+                var findings = await rule.EvaluateAsync(context, ruleCts.Token).ConfigureAwait(false);
                 foreach (var f in findings) f.Severity = severity;
                 allFindings.AddRange(findings);
                 if (findings.Count > 0) outcome = RuleOutcome.Triggered;

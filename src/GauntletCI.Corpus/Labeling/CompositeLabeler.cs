@@ -83,11 +83,11 @@ public sealed class CompositeLabeler
         {
             ct.ThrowIfCancellationRequested();
 
-            var signals    = await ReadSignalsAsync(db, fixture.FixtureId, ct);
+            var signals    = await ReadSignalsAsync(db, fixture.FixtureId, ct).ConfigureAwait(false);
             var label      = ClassifyLabel(signals);
             var confidence = ComputeConfidence(signals, label);
 
-            await WriteCompositeLabelAsync(db, fixture.FixtureId, label, confidence, signals, ct);
+            await WriteCompositeLabelAsync(db, fixture.FixtureId, label, confidence, signals, ct).ConfigureAwait(false);
             result.FixturesLabeled++;
 
             IncrementBucket(result, label);
@@ -96,11 +96,11 @@ public sealed class CompositeLabeler
                 progress?.Invoke($"[composite] {fixture.FixtureId}: {label} (conf={confidence:F2})");
 
             if (updateExpectedFindings && label != LabelInsufficientData)
-                await UpdateExpectedFindingsAsync(db, fixture.FixtureId, label, confidence, ct);
+                await UpdateExpectedFindingsAsync(db, fixture.FixtureId, label, confidence, ct).ConfigureAwait(false);
 
             // EF migration always warrants a GCI0021 expected finding regardless of composite label
             if (updateExpectedFindings && signals.HasEfMigrationData && signals.MigrationDetected)
-                await WriteEfMigrationFindingAsync(db, fixture.FixtureId, signals.MigrationConfidence, ct);
+                await WriteEfMigrationFindingAsync(db, fixture.FixtureId, signals.MigrationConfidence, ct).ConfigureAwait(false);
         }
 
         return result;
@@ -231,21 +231,21 @@ public sealed class CompositeLabeler
         {
             cmd.CommandText = "SELECT COUNT(*) FROM sonar_matches WHERE fixture_id = $id";
             cmd.Parameters.AddWithValue("$id", fixtureId);
-            s.SonarMatchCount = Convert.ToInt32(await cmd.ExecuteScalarAsync(ct) ?? 0);
+            s.SonarMatchCount = Convert.ToInt32(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false) ?? 0);
         }
 
         using (var cmd = db.Connection.CreateCommand())
         {
             cmd.CommandText = "SELECT COUNT(*) FROM code_scanning_matches WHERE fixture_id = $id";
             cmd.Parameters.AddWithValue("$id", fixtureId);
-            s.CodeQlMatchCount = Convert.ToInt32(await cmd.ExecuteScalarAsync(ct) ?? 0);
+            s.CodeQlMatchCount = Convert.ToInt32(await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false) ?? 0);
         }
 
         using (var cmd = db.Connection.CreateCommand())
         {
             cmd.CommandText = "SELECT is_dependabot FROM dependabot_matches WHERE fixture_id = $id";
             cmd.Parameters.AddWithValue("$id", fixtureId);
-            var val = await cmd.ExecuteScalarAsync(ct);
+            var val = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
             s.HasDependabotData = val is not null;
             s.IsDependabot      = val is not null && Convert.ToInt32(val) == 1;
         }
@@ -258,8 +258,8 @@ public sealed class CompositeLabeler
                 WHERE  fixture_id = $id
                 """;
             cmd.Parameters.AddWithValue("$id", fixtureId);
-            using var reader = await cmd.ExecuteReaderAsync(ct);
-            if (await reader.ReadAsync(ct))
+            using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
+            if (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
                 s.SocialSignalScore   = reader.GetDouble(0);
                 s.ReviewTimeMinutes   = reader.GetDouble(1);
@@ -276,7 +276,7 @@ public sealed class CompositeLabeler
                 WHERE  fixture_id = $id
                 """;
             cmd.Parameters.AddWithValue("$id", fixtureId);
-            var val = await cmd.ExecuteScalarAsync(ct);
+            var val = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
             if (val is not null)
             {
                 s.HasSemgrepData      = true;
@@ -292,8 +292,8 @@ public sealed class CompositeLabeler
                 WHERE  fixture_id = $id
                 """;
             cmd.Parameters.AddWithValue("$id", fixtureId);
-            using var reader = await cmd.ExecuteReaderAsync(ct);
-            if (await reader.ReadAsync(ct))
+            using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
+            if (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
                 s.HasStructuralData   = true;
                 s.HasSensitivePath    = reader.GetInt32(0) > 0;
@@ -305,7 +305,7 @@ public sealed class CompositeLabeler
         {
             cmd.CommandText = "SELECT advisory_count FROM nuget_advisory_enrichments WHERE fixture_id = $id";
             cmd.Parameters.AddWithValue("$id", fixtureId);
-            var val = await cmd.ExecuteScalarAsync(ct);
+            var val = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
             if (val is not null)
             {
                 s.HasNuGetAdvisoryData = true;
@@ -321,7 +321,7 @@ public sealed class CompositeLabeler
                 WHERE  fixture_id = $id
                 """;
             cmd.Parameters.AddWithValue("$id", fixtureId);
-            var val = await cmd.ExecuteScalarAsync(ct);
+            var val = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
             if (val is not null)
             {
                 s.HasChurnData    = true;
@@ -333,8 +333,8 @@ public sealed class CompositeLabeler
         {
             cmd.CommandText = "SELECT matched_rule_id FROM review_comment_nlp_enrichments WHERE fixture_id = $id";
             cmd.Parameters.AddWithValue("$id", fixtureId);
-            using var reader = await cmd.ExecuteReaderAsync(ct);
-            while (await reader.ReadAsync(ct))
+            using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
+            while (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
                 s.NlpMatchedRuleIds.Add(reader.GetString(0));
                 s.HasNlpData = true;
@@ -349,8 +349,8 @@ public sealed class CompositeLabeler
                 WHERE  fixture_id = $id
                 """;
             cmd.Parameters.AddWithValue("$id", fixtureId);
-            using var reader = await cmd.ExecuteReaderAsync(ct);
-            if (await reader.ReadAsync(ct))
+            using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
+            if (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
                 s.HasTestCoverageData = true;
                 s.TestCoverageGap     = reader.GetInt32(0) == 1;
@@ -366,8 +366,8 @@ public sealed class CompositeLabeler
                 WHERE  fixture_id = $id
                 """;
             cmd.Parameters.AddWithValue("$id", fixtureId);
-            using var reader = await cmd.ExecuteReaderAsync(ct);
-            if (await reader.ReadAsync(ct))
+            using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
+            if (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
                 s.HasEntropyData    = true;
                 s.NormalizedEntropy = reader.GetDouble(0);
@@ -383,8 +383,8 @@ public sealed class CompositeLabeler
                 WHERE  fixture_id = $id
                 """;
             cmd.Parameters.AddWithValue("$id", fixtureId);
-            using var reader = await cmd.ExecuteReaderAsync(ct);
-            if (await reader.ReadAsync(ct))
+            using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
+            if (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
                 s.HasEfMigrationData  = true;
                 s.MigrationDetected   = reader.GetInt32(0) == 1;
@@ -400,8 +400,8 @@ public sealed class CompositeLabeler
                 WHERE  fixture_id = $id
                 """;
             cmd.Parameters.AddWithValue("$id", fixtureId);
-            using var reader = await cmd.ExecuteReaderAsync(ct);
-            if (await reader.ReadAsync(ct))
+            using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
+            if (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
                 s.HasPrDescriptionData = true;
                 s.IsEmptyPrBody        = reader.GetInt32(0) == 1;
@@ -418,8 +418,8 @@ public sealed class CompositeLabeler
                 WHERE  fixture_id = $id
                 """;
             cmd.Parameters.AddWithValue("$id", fixtureId);
-            using var reader = await cmd.ExecuteReaderAsync(ct);
-            if (await reader.ReadAsync(ct))
+            using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
+            if (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
                 s.HasAuthorData        = true;
                 s.IsFirstContributor   = reader.GetInt32(0) == 1;
@@ -470,7 +470,7 @@ public sealed class CompositeLabeler
         cmd.Parameters.AddWithValue("$label",   label);
         cmd.Parameters.AddWithValue("$conf",    confidence);
         cmd.Parameters.AddWithValue("$signals", signalsJson);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
     private static async Task UpdateExpectedFindingsAsync(
@@ -494,7 +494,7 @@ public sealed class CompositeLabeler
             cmd.Parameters.AddWithValue("$ruleId",    ruleId);
             cmd.Parameters.AddWithValue("$conf",      confidence);
             cmd.Parameters.AddWithValue("$reason",    reason);
-            await cmd.ExecuteNonQueryAsync(ct);
+            await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
         }
     }
 
@@ -515,7 +515,7 @@ public sealed class CompositeLabeler
         cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
         cmd.Parameters.AddWithValue("$conf",      confidence);
         cmd.Parameters.AddWithValue("$reason",    reason);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
     // ── internal signal bag ───────────────────────────────────────────────────

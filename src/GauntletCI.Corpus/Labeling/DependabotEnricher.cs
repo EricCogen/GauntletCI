@@ -61,13 +61,13 @@ public sealed class DependabotEnricher : IDisposable
             var parts = fixture.Repo.Split('/', 2);
             if (parts.Length < 2) continue;
 
-            var prInfo = await FetchPrInfoAsync(parts[0], parts[1], fixture.PullRequestNumber, ct);
+            var prInfo = await FetchPrInfoAsync(parts[0], parts[1], fixture.PullRequestNumber, ct).ConfigureAwait(false);
             if (prInfo is null) continue;
 
             var (isDependabot, prTitle, authorLogin) = prInfo.Value;
 
             await WriteMatchAsync(db, fixture.FixtureId, fixture.Repo, fixture.PullRequestNumber,
-                isDependabot, prTitle, authorLogin, ct);
+                isDependabot, prTitle, authorLogin, ct).ConfigureAwait(false);
 
             result.FixturesProcessed++;
 
@@ -79,7 +79,7 @@ public sealed class DependabotEnricher : IDisposable
             }
 
             if (delayMs > 0)
-                await Task.Delay(delayMs, ct);
+                await Task.Delay(delayMs, ct).ConfigureAwait(false);
         }
 
         return result;
@@ -91,11 +91,11 @@ public sealed class DependabotEnricher : IDisposable
         var url = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}";
         try
         {
-            using var resp = await _http.GetAsync(url, ct);
+            using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return null;
 
-            await using var stream = await resp.Content.ReadAsStreamAsync(ct);
-            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+            await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
             var root = doc.RootElement;
 
             var title = root.TryGetProperty("title", out var titleEl)
@@ -134,7 +134,7 @@ public sealed class DependabotEnricher : IDisposable
         cmd.Parameters.AddWithValue("$isDependabot", isDependabot ? 1 : 0);
         cmd.Parameters.AddWithValue("$title",        prTitle);
         cmd.Parameters.AddWithValue("$login",        authorLogin);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
 

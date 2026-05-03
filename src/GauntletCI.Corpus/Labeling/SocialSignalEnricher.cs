@@ -52,10 +52,10 @@ public sealed class SocialSignalEnricher : IDisposable
             var parts = fixture.Repo.Split('/', 2);
             if (parts.Length < 2) continue;
 
-            var signals = await FetchSignalsAsync(parts[0], parts[1], fixture.PullRequestNumber, ct);
+            var signals = await FetchSignalsAsync(parts[0], parts[1], fixture.PullRequestNumber, ct).ConfigureAwait(false);
             if (signals is null) continue;
 
-            await WriteSignalsAsync(db, fixture.FixtureId, fixture.Repo, fixture.PullRequestNumber, signals, ct);
+            await WriteSignalsAsync(db, fixture.FixtureId, fixture.Repo, fixture.PullRequestNumber, signals, ct).ConfigureAwait(false);
             result.FixturesProcessed++;
 
             if (signals.SocialSignalScore < 0.3)
@@ -69,7 +69,7 @@ public sealed class SocialSignalEnricher : IDisposable
             }
 
             if (delayMs > 0)
-                await Task.Delay(delayMs, ct);
+                await Task.Delay(delayMs, ct).ConfigureAwait(false);
         }
 
         return result;
@@ -84,11 +84,11 @@ public sealed class SocialSignalEnricher : IDisposable
         var prUrl = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}";
         try
         {
-            using var prResp = await _http.GetAsync(prUrl, ct);
+            using var prResp = await _http.GetAsync(prUrl, ct).ConfigureAwait(false);
             if (!prResp.IsSuccessStatusCode) return null;
 
-            await using var stream = await prResp.Content.ReadAsStreamAsync(ct);
-            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+            await using var stream = await prResp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
             var root = doc.RootElement;
 
             if (root.TryGetProperty("created_at", out var ca) && ca.ValueKind != JsonValueKind.Null)
@@ -104,7 +104,7 @@ public sealed class SocialSignalEnricher : IDisposable
         catch (OperationCanceledException) { throw; }
         catch { return null; }
 
-        await Task.Delay(150, ct);
+        await Task.Delay(150, ct).ConfigureAwait(false);
 
         var reviewsUrl = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}/reviews?per_page=100";
         int reviewCount = 0, botReviewCount = 0;
@@ -112,11 +112,11 @@ public sealed class SocialSignalEnricher : IDisposable
 
         try
         {
-            using var revResp = await _http.GetAsync(reviewsUrl, ct);
+            using var revResp = await _http.GetAsync(reviewsUrl, ct).ConfigureAwait(false);
             if (revResp.IsSuccessStatusCode)
             {
-                await using var stream = await revResp.Content.ReadAsStreamAsync(ct);
-                using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+                await using var stream = await revResp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+                using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
 
                 if (doc.RootElement.ValueKind == JsonValueKind.Array)
                 {
@@ -198,7 +198,7 @@ public sealed class SocialSignalEnricher : IDisposable
         cmd.Parameters.AddWithValue("$commentCount",  signals.ReviewCommentCount);
         cmd.Parameters.AddWithValue("$isBotMerged",   signals.IsBotMerged ? 1 : 0);
         cmd.Parameters.AddWithValue("$score",         signals.SocialSignalScore);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
     private sealed record SocialSignalData

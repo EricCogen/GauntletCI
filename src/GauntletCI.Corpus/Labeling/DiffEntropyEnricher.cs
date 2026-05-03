@@ -36,10 +36,10 @@ public sealed class DiffEntropyEnricher
                 continue;
             }
 
-            var diffLines = await File.ReadAllLinesAsync(diffPath, ct);
+            var diffLines = await File.ReadAllLinesAsync(diffPath, ct).ConfigureAwait(false);
             var metrics   = ComputeMetrics(diffLines);
 
-            await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo, metrics, ct);
+            await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo, metrics, ct).ConfigureAwait(false);
 
             processed++;
 
@@ -186,7 +186,7 @@ public sealed class DiffEntropyEnricher
         cmd.Parameters.AddWithValue("$totalLines",   m.TotalLinesChanged);
         cmd.Parameters.AddWithValue("$entropy",      m.ChangeEntropy);
         cmd.Parameters.AddWithValue("$normEntropy",  m.NormalizedEntropy);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
 

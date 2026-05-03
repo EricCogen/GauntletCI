@@ -69,20 +69,20 @@ public class ModelDownloader
             var url = BaseUrl + file;
             progress?.Report($"  ↓ {file} ...");
 
-            using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct);
+            using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
 
             await using var fs = File.Create(dest);
-            await using var stream = await response.Content.ReadAsStreamAsync(ct);
+            await using var stream = await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
 
             var totalBytes = response.Content.Headers.ContentLength ?? -1;
             var buffer = new byte[81920];
             long downloaded = 0;
             int read;
 
-            while ((read = await stream.ReadAsync(buffer, ct)) > 0)
+            while ((read = await stream.ReadAsync(buffer, ct).ConfigureAwait(false)) > 0)
             {
-                await fs.WriteAsync(buffer.AsMemory(0, read), ct);
+                await fs.WriteAsync(buffer.AsMemory(0, read), ct).ConfigureAwait(false);
                 downloaded += read;
                 if (totalBytes > 0 && downloaded % (10 * 1024 * 1024) == 0)
                 {

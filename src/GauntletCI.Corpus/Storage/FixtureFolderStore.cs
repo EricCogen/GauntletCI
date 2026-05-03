@@ -39,9 +39,9 @@ public sealed class FixtureFolderStore : IFixtureStore
         var fixturePath = EnsureFixtureDir(metadata.Tier, metadata.FixtureId);
         var metaPath    = Path.Combine(fixturePath, "metadata.json");
 
-        await File.WriteAllTextAsync(metaPath, JsonSerializer.Serialize(metadata, JsonOpts), ct);
+        await File.WriteAllTextAsync(metaPath, JsonSerializer.Serialize(metadata, JsonOpts), ct).ConfigureAwait(false);
         EnsureNotesTemplate(fixturePath, metadata);
-        await UpsertFixtureSqliteAsync(metadata, fixturePath, ct);
+        await UpsertFixtureSqliteAsync(metadata, fixturePath, ct).ConfigureAwait(false);
     }
 
     public async Task<FixtureMetadata?> GetMetadataAsync(string fixtureId, CancellationToken ct = default)
@@ -52,7 +52,7 @@ public sealed class FixtureFolderStore : IFixtureStore
             var path = Path.Combine(FixtureIdHelper.GetFixturePath(_basePath, tier, fixtureId), "metadata.json");
             if (!File.Exists(path)) continue;
 
-            var json = await File.ReadAllTextAsync(path, ct);
+            var json = await File.ReadAllTextAsync(path, ct).ConfigureAwait(false);
             return JsonSerializer.Deserialize<FixtureMetadata>(json, JsonOpts);
         }
         return null;
@@ -65,7 +65,7 @@ public sealed class FixtureFolderStore : IFixtureStore
             ?? throw new InvalidOperationException($"Fixture '{fixtureId}' not found. Call SaveMetadataAsync first.");
 
         var expectedPath = Path.Combine(fixturePath, "expected.json");
-        await File.WriteAllTextAsync(expectedPath, JsonSerializer.Serialize(findings, JsonOpts), ct);
+        await File.WriteAllTextAsync(expectedPath, JsonSerializer.Serialize(findings, JsonOpts), ct).ConfigureAwait(false);
     }
 
     public async Task SaveActualFindingsAsync(
@@ -76,11 +76,11 @@ public sealed class FixtureFolderStore : IFixtureStore
 
         // Actual findings are stored per run so prior runs aren't overwritten.
         var actualPath = Path.Combine(fixturePath, $"actual.{runId}.json");
-        await File.WriteAllTextAsync(actualPath, JsonSerializer.Serialize(findings, JsonOpts), ct);
+        await File.WriteAllTextAsync(actualPath, JsonSerializer.Serialize(findings, JsonOpts), ct).ConfigureAwait(false);
 
         // Also write/overwrite the canonical actual.json with the latest run.
         var latestPath = Path.Combine(fixturePath, "actual.json");
-        await File.WriteAllTextAsync(latestPath, JsonSerializer.Serialize(findings, JsonOpts), ct);
+        await File.WriteAllTextAsync(latestPath, JsonSerializer.Serialize(findings, JsonOpts), ct).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<FixtureMetadata>> ListFixturesAsync(
@@ -99,8 +99,8 @@ public sealed class FixtureFolderStore : IFixtureStore
         }
 
         var paths = new List<string>();
-        using var reader = await cmd.ExecuteReaderAsync(ct);
-        while (await reader.ReadAsync(ct))
+        using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        while (await reader.ReadAsync(ct).ConfigureAwait(false))
         {
             if (!reader.IsDBNull(0))
                 paths.Add(reader.GetString(0));
@@ -111,7 +111,7 @@ public sealed class FixtureFolderStore : IFixtureStore
         {
             var metaPath = Path.Combine(path, "metadata.json");
             if (!File.Exists(metaPath)) continue;
-            var json = await File.ReadAllTextAsync(metaPath, ct);
+            var json = await File.ReadAllTextAsync(metaPath, ct).ConfigureAwait(false);
             var m = JsonSerializer.Deserialize<FixtureMetadata>(json, JsonOpts);
             if (m is not null) results.Add(m);
         }
@@ -129,7 +129,7 @@ public sealed class FixtureFolderStore : IFixtureStore
 
         try
         {
-            var json = await File.ReadAllTextAsync(expectedPath, ct);
+            var json = await File.ReadAllTextAsync(expectedPath, ct).ConfigureAwait(false);
             return JsonSerializer.Deserialize<List<ExpectedFinding>>(json, JsonOpts) ?? [];
         }
         catch (JsonException)
@@ -149,7 +149,7 @@ public sealed class FixtureFolderStore : IFixtureStore
 
         try
         {
-            var json = await File.ReadAllTextAsync(actualPath, ct);
+            var json = await File.ReadAllTextAsync(actualPath, ct).ConfigureAwait(false);
             return JsonSerializer.Deserialize<List<ActualFinding>>(json, JsonOpts) ?? [];
         }
         catch (JsonException)
@@ -167,7 +167,7 @@ public sealed class FixtureFolderStore : IFixtureStore
         var reviewPath = Path.Combine(fixturePath, "raw", "review-comments.json");
         if (!File.Exists(reviewPath)) return null;
 
-        return await File.ReadAllTextAsync(reviewPath, ct);
+        return await File.ReadAllTextAsync(reviewPath, ct).ConfigureAwait(false);
     }
 
 
@@ -250,6 +250,6 @@ public sealed class FixtureFolderStore : IFixtureStore
         cmd.Parameters.AddWithValue("$source", meta.Source);
         cmd.Parameters.AddWithValue("$created_at_utc", meta.CreatedAtUtc.ToString("o"));
 
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }

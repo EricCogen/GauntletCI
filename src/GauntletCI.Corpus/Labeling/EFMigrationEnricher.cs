@@ -54,10 +54,10 @@ public sealed class EFMigrationEnricher
                 continue;
             }
 
-            var diffLines = await File.ReadAllLinesAsync(diffPath, ct);
+            var diffLines = await File.ReadAllLinesAsync(diffPath, ct).ConfigureAwait(false);
             var signals   = Detect(diffLines);
 
-            await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo, signals, ct);
+            await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo, signals, ct).ConfigureAwait(false);
 
             processed++;
 
@@ -217,7 +217,7 @@ public sealed class EFMigrationEnricher
         cmd.Parameters.AddWithValue("$efContent",    s.HasEfContent      ? 1 : 0);
         cmd.Parameters.AddWithValue("$ddlContent",   s.HasDdlContent     ? 1 : 0);
         cmd.Parameters.AddWithValue("$confidence",   s.MigrationConfidence);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
 

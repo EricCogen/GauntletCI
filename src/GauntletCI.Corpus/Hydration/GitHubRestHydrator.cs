@@ -69,7 +69,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
             PullRequestNumber = prNumber,
             Url = url,
         };
-        return await HydrateAsync(candidate, ct);
+        return await HydrateAsync(candidate, ct).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -102,7 +102,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
         var ghCommits  = await commitsTask.ConfigureAwait(false);
 
         // Diff requires a separate Accept header: serial request
-        var diffText = await GetDiffAsync(base_, ct);
+        var diffText = await GetDiffAsync(base_, ct).ConfigureAwait(false);
 
         // Persist raw snapshots
         var rawPrJson       = JsonSerializer.Serialize(pr, JsonOpts);
@@ -112,7 +112,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
         await Task.WhenAll(
             _rawStore.SaveAsync(FixtureTier.Discovery, fixtureId, "pr.json", rawPrJson, ct),
             _rawStore.SaveAsync(FixtureTier.Discovery, fixtureId, "files.json", rawFilesJson, ct),
-            _rawStore.SaveAsync(FixtureTier.Discovery, fixtureId, "review-comments.json", rawCommentsJson, ct));
+            _rawStore.SaveAsync(FixtureTier.Discovery, fixtureId, "review-comments.json", rawCommentsJson, ct)).ConfigureAwait(false);
 
         // Map to domain models
         var changedFiles = ghFiles.Select(f => new ChangedFile
@@ -166,7 +166,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
     public async Task<string?> GetPermanentRepoRejectReasonAsync(
         string owner, string repo, CancellationToken ct = default)
     {
-        using var response = await _http.GetAsync($"https://api.github.com/repos/{owner}/{repo}", ct);
+        using var response = await _http.GetAsync($"https://api.github.com/repos/{owner}/{repo}", ct).ConfigureAwait(false);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
             return "repo not found (deleted, private, or never existed)";
@@ -180,8 +180,8 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
         if (!response.IsSuccessStatusCode)
             return null;
 
-        await using var stream = await response.Content.ReadAsStreamAsync(ct);
-        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+        await using var stream = await response.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+        using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
         var root = doc.RootElement;
 
         if (root.TryGetProperty("archived", out var archivedEl) && archivedEl.GetBoolean())
@@ -204,7 +204,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
 
     private async Task<T> GetJsonAsync<T>(string url, CancellationToken ct)
     {
-        var json = await FetchWithBackoffAsync(() => new HttpRequestMessage(HttpMethod.Get, url), ct);
+        var json = await FetchWithBackoffAsync(() => new HttpRequestMessage(HttpMethod.Get, url), ct).ConfigureAwait(false);
         return JsonSerializer.Deserialize<T>(json, JsonOpts)
             ?? throw new InvalidOperationException($"Null response from {url}");
     }
@@ -212,7 +212,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
     private async Task<List<T>> GetJsonListAsync<T>(string url, CancellationToken ct)
     {
         var pagedUrl = url.Contains('?') ? $"{url}&per_page=100" : $"{url}?per_page=100";
-        var json = await FetchWithBackoffAsync(() => new HttpRequestMessage(HttpMethod.Get, pagedUrl), ct);
+        var json = await FetchWithBackoffAsync(() => new HttpRequestMessage(HttpMethod.Get, pagedUrl), ct).ConfigureAwait(false);
         return JsonSerializer.Deserialize<List<T>>(json, JsonOpts) ?? [];
     }
 
@@ -238,10 +238,10 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
         for (int attempt = 0; ; attempt++)
         {
             using var req  = requestFactory();
-            using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct);
+            using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
 
             if (resp.IsSuccessStatusCode)
-                return await resp.Content.ReadAsStringAsync(ct);
+                return await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
 
             if (!IsRateLimited(resp) || attempt >= MaxRetries)
                 resp.EnsureSuccessStatusCode(); // throws HttpRequestException
@@ -253,7 +253,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
                 $"[corpus] Rate limit (HTTP {(int)resp.StatusCode}): attempt {attempt + 1}/{MaxRetries}, " +
                 $"waiting {waitTime.TotalSeconds:F0}s before retry…");
 
-            await Task.Delay(waitTime, ct);
+            await Task.Delay(waitTime, ct).ConfigureAwait(false);
         }
     }
 

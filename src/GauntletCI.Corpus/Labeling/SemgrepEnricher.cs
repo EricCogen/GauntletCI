@@ -52,7 +52,7 @@ public sealed class SemgrepEnricher
             {
                 // Write a 0-finding row so CompositeLabeler knows it was checked
                 await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo,
-                    0, null, null, null, ct);
+                    0, null, null, null, ct).ConfigureAwait(false);
                 processed++;
                 continue;
             }
@@ -61,7 +61,7 @@ public sealed class SemgrepEnricher
             if (addedByFile.Count == 0)
             {
                 await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo,
-                    0, null, null, null, ct);
+                    0, null, null, null, ct).ConfigureAwait(false);
                 processed++;
                 continue;
             }
@@ -75,14 +75,14 @@ public sealed class SemgrepEnricher
                 {
                     var safeFileName = SanitizeFileName(filePath);
                     var tempFile = Path.Combine(tempDir, safeFileName);
-                    await File.WriteAllLinesAsync(tempFile, lines, ct);
+                    await File.WriteAllLinesAsync(tempFile, lines, ct).ConfigureAwait(false);
                 }
 
                 var (findingCount, rulesFired, highestSeverity, findingsJson) =
-                    await RunSemgrepAsync(tempDir, ct);
+                    await RunSemgrepAsync(tempDir, ct).ConfigureAwait(false);
 
                 await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo,
-                    findingCount, rulesFired, highestSeverity, findingsJson, ct);
+                    findingCount, rulesFired, highestSeverity, findingsJson, ct).ConfigureAwait(false);
 
                 processed++;
                 totalFindings += findingCount;
@@ -157,8 +157,8 @@ public sealed class SemgrepEnricher
         {
             using var proc = Process.Start(psi)
                 ?? throw new InvalidOperationException("Failed to start semgrep process.");
-            stdout = await proc.StandardOutput.ReadToEndAsync(ct);
-            await proc.WaitForExitAsync(ct);
+            stdout = await proc.StandardOutput.ReadToEndAsync(ct).ConfigureAwait(false);
+            await proc.WaitForExitAsync(ct).ConfigureAwait(false);
         }
         catch (OperationCanceledException) { throw; }
         catch
@@ -277,7 +277,7 @@ public sealed class SemgrepEnricher
         cmd.Parameters.AddWithValue("$rulesFired",       (object?)rulesFired       ?? DBNull.Value);
         cmd.Parameters.AddWithValue("$highestSeverity",  (object?)highestSeverity  ?? DBNull.Value);
         cmd.Parameters.AddWithValue("$findingsJson",     (object?)findingsJson     ?? DBNull.Value);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
 

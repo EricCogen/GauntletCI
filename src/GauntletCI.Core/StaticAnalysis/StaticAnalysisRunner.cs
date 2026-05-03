@@ -60,7 +60,7 @@ public static class StaticAnalysisRunner
             string sourceCode;
             try
             {
-                sourceCode = await File.ReadAllTextAsync(absolutePath, ct);
+                sourceCode = await File.ReadAllTextAsync(absolutePath, ct).ConfigureAwait(false);
             }
             catch (IOException)
             {
@@ -69,7 +69,7 @@ public static class StaticAnalysisRunner
 
             var changedLines = file.AddedLines.Select(l => l.LineNumber).ToList();
             var (result, tree) = await Analyzer.AnalyzeFileAsync(
-                absolutePath, sourceCode, changedLines.Count > 0 ? changedLines : null, ct);
+                absolutePath, sourceCode, changedLines.Count > 0 ? changedLines : null, ct).ConfigureAwait(false);
 
             if (result.Success)
             {

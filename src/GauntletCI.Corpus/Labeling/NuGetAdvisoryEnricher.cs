@@ -60,7 +60,7 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
 
             if (!File.Exists(diffPath))
             {
-                await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo, 0, 0, null, "[]", ct);
+                await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo, 0, 0, null, "[]", ct).ConfigureAwait(false);
                 continue;
             }
 
@@ -68,7 +68,7 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
 
             if (packages.Count == 0)
             {
-                await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo, 0, 0, null, "[]", ct);
+                await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo, 0, 0, null, "[]", ct).ConfigureAwait(false);
                 processed++;
                 continue;
             }
@@ -79,9 +79,9 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
             foreach (var pkg in packages)
             {
                 ct.ThrowIfCancellationRequested();
-                var nodes = await QueryAdvisoriesAsync(pkg, ct);
+                var nodes = await QueryAdvisoriesAsync(pkg, ct).ConfigureAwait(false);
                 advisories.AddRange(nodes);
-                if (delayMs > 0) await Task.Delay(delayMs, ct);
+                if (delayMs > 0) await Task.Delay(delayMs, ct).ConfigureAwait(false);
             }
 
             // Determine highest severity
@@ -97,7 +97,7 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
 
             var advisoriesJson = JsonSerializer.Serialize(advisories);
             await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo,
-                packages.Count, advisories.Count, highestSeverity, advisoriesJson, ct);
+                packages.Count, advisories.Count, highestSeverity, advisoriesJson, ct).ConfigureAwait(false);
 
             processed++;
             if (advisories.Count > 0)
@@ -169,11 +169,11 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
 
         try
         {
-            using var resp = await _http.PostAsync("https://api.github.com/graphql", content, ct);
+            using var resp = await _http.PostAsync("https://api.github.com/graphql", content, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return [];
 
-            await using var stream = await resp.Content.ReadAsStreamAsync(ct);
-            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+            await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+            using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
 
             if (!doc.RootElement.TryGetProperty("data", out var data)) return [];
             if (!data.TryGetProperty("securityVulnerabilities", out var sv)) return [];
@@ -227,7 +227,7 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
         cmd.Parameters.AddWithValue("$advisoryCount",    advisoryCount);
         cmd.Parameters.AddWithValue("$highestSeverity",  (object?)highestSeverity ?? DBNull.Value);
         cmd.Parameters.AddWithValue("$advisoriesJson",   advisoriesJson);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
 

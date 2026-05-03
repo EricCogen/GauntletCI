@@ -51,14 +51,14 @@ public sealed class RemoteLlmEngine : ILlmEngine
         var prompt = PromptTemplates.EnrichFinding(
             finding.RuleId, finding.RuleName, finding.Summary, finding.Evidence);
 
-        return await CallAsync(prompt, systemPrompt: null, MaxEnrichTokens, ct);
+        return await CallAsync(prompt, systemPrompt: null, MaxEnrichTokens, ct).ConfigureAwait(false);
     }
 
     /// <summary>Builds a summarization prompt from all finding summaries and forwards it to the remote model.</summary>
     public async Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct = default)
     {
         var prompt = PromptTemplates.SummarizeReport(findings.Select(f => f.Summary));
-        return await CallAsync(prompt, systemPrompt: null, MaxEnrichTokens, ct);
+        return await CallAsync(prompt, systemPrompt: null, MaxEnrichTokens, ct).ConfigureAwait(false);
     }
 
     /// <summary>Forwards a pre-built prompt directly to the remote model and returns its completion.</summary>
@@ -87,10 +87,10 @@ public sealed class RemoteLlmEngine : ILlmEngine
 
         try
         {
-            using var resp = await _http.PostAsJsonAsync(_endpoint, body, ct);
+            using var resp = await _http.PostAsJsonAsync(_endpoint, body, ct).ConfigureAwait(false);
             resp.EnsureSuccessStatusCode();
 
-            var json = await resp.Content.ReadAsStringAsync(ct);
+            var json = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             using var doc = JsonDocument.Parse(json);
             return doc.RootElement
                 .GetProperty("choices")[0]

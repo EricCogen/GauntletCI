@@ -50,7 +50,7 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
         var searchUrl = $"https://api.github.com/search/issues?q={q}&sort=comments&per_page={Math.Min(limit, 100)}&page=1";
         Console.WriteLine($"[corpus/issues] Searching: {searchUrl}");
 
-        var issueResults = await GetJsonAsync<GhIssueSearchResult>(searchUrl, cancellationToken);
+        var issueResults = await GetJsonAsync<GhIssueSearchResult>(searchUrl, cancellationToken).ConfigureAwait(false);
         var candidates = new List<PullRequestCandidate>();
         var seen = new HashSet<string>();
 
@@ -68,7 +68,7 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
                 continue;
 
             // Find the PR that closed this issue via timeline
-            var pr = await FindClosingPrAsync(owner, repo!, issueNumber, cancellationToken);
+            var pr = await FindClosingPrAsync(owner, repo!, issueNumber, cancellationToken).ConfigureAwait(false);
             if (pr is null) continue;
 
             var candidateId = $"{owner}/{repo}#{pr.Value}";
@@ -101,10 +101,10 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
             req.Headers.Accept.Clear();
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.mockingbird-preview+json"));
 
-            using var resp = await _http.SendAsync(req, ct);
+            using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return null;
 
-            var json = await resp.Content.ReadAsStringAsync(ct);
+            var json = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             var events = JsonSerializer.Deserialize<List<GhTimelineEvent>>(json, JsonOpts) ?? [];
 
             foreach (var ev in events)
@@ -132,11 +132,11 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
 
         for (int attempt = 0; ; attempt++)
         {
-            using var resp = await _http.GetAsync(url, ct);
+            using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
 
             if (resp.IsSuccessStatusCode)
             {
-                var json = await resp.Content.ReadAsStringAsync(ct);
+                var json = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
                 return JsonSerializer.Deserialize<T>(json, JsonOpts)
                     ?? throw new InvalidOperationException($"Null response from {url}");
             }
@@ -151,7 +151,7 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
                 $"[corpus/issues] Rate limit (HTTP {(int)resp.StatusCode}): " +
                 $"attempt {attempt + 1}/{MaxRetries}, waiting {waitTime.TotalSeconds:F0}s…");
 
-            await Task.Delay(waitTime, ct);
+            await Task.Delay(waitTime, ct).ConfigureAwait(false);
         }
     }
 

@@ -45,7 +45,7 @@ public sealed class CodeScanningClient
 
             try
             {
-                using var resp = await _http.GetAsync(url, ct);
+                using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
 
                 // 404 = code scanning not enabled; 403 = token lacks security_events scope
                 if (resp.StatusCode == System.Net.HttpStatusCode.NotFound ||
@@ -54,8 +54,8 @@ public sealed class CodeScanningClient
 
                 if (!resp.IsSuccessStatusCode) break;
 
-                await using var stream = await resp.Content.ReadAsStreamAsync(ct);
-                using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct);
+                await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
+                using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
 
                 if (doc.RootElement.ValueKind != JsonValueKind.Array) break;
 
@@ -72,7 +72,7 @@ public sealed class CodeScanningClient
 
                 if (countThisPage < 100) break; // last page
                 page++;
-                await Task.Delay(100, ct); // polite delay - well within 5k/hr rate limit
+                await Task.Delay(100, ct).ConfigureAwait(false); // polite delay - well within 5k/hr rate limit
             }
             catch (OperationCanceledException) { throw; }
             catch { break; }

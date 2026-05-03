@@ -61,7 +61,7 @@ public sealed class OllamaLlmLabeler : ILlmLabeler, IDisposable
     {
         try
         {
-            using var resp = await _http.GetAsync($"{_baseUrl}/api/tags", ct);
+            using var resp = await _http.GetAsync($"{_baseUrl}/api/tags", ct).ConfigureAwait(false);
             return resp.IsSuccessStatusCode;
         }
         catch { return false; }
@@ -88,8 +88,8 @@ public sealed class OllamaLlmLabeler : ILlmLabeler, IDisposable
         var deadline = DateTime.UtcNow.AddSeconds(timeoutSeconds);
         while (DateTime.UtcNow < deadline)
         {
-            await Task.Delay(1000, ct);
-            if (await IsServerRunningAsync(ct)) return true;
+            await Task.Delay(1000, ct).ConfigureAwait(false);
+            if (await IsServerRunningAsync(ct).ConfigureAwait(false)) return true;
         }
         return false;
     }
@@ -99,10 +99,10 @@ public sealed class OllamaLlmLabeler : ILlmLabeler, IDisposable
     {
         try
         {
-            using var resp = await _http.GetAsync($"{_baseUrl}/api/tags", ct);
+            using var resp = await _http.GetAsync($"{_baseUrl}/api/tags", ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return false;
 
-            var json = await resp.Content.ReadAsStringAsync(ct);
+            var json = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             using var doc = JsonDocument.Parse(json);
 
             if (!doc.RootElement.TryGetProperty("models", out var models)) return false;
@@ -142,8 +142,8 @@ public sealed class OllamaLlmLabeler : ILlmLabeler, IDisposable
             var stdoutTask = ReadLinesAsync(proc.StandardOutput, onProgress, ct);
             var stderrTask = ReadLinesAsync(proc.StandardError,  onProgress, ct);
 
-            await Task.WhenAll(stdoutTask, stderrTask);
-            await proc.WaitForExitAsync(ct);
+            await Task.WhenAll(stdoutTask, stderrTask).ConfigureAwait(false);
+            await proc.WaitForExitAsync(ct).ConfigureAwait(false);
             return proc.ExitCode == 0;
         }
         catch { return false; }
@@ -180,10 +180,10 @@ public sealed class OllamaLlmLabeler : ILlmLabeler, IDisposable
             using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint);
             request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
 
-            using var response = await _http.SendAsync(request, ct);
+            using var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode) return null;
 
-            var responseJson = await response.Content.ReadAsStringAsync(ct);
+            var responseJson = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             using var doc = JsonDocument.Parse(responseJson);
 
             if (!doc.RootElement.TryGetProperty("choices", out var choices)) return null;
@@ -204,7 +204,7 @@ public sealed class OllamaLlmLabeler : ILlmLabeler, IDisposable
     {
         while (!ct.IsCancellationRequested)
         {
-            var line = await reader.ReadLineAsync(ct);
+            var line = await reader.ReadLineAsync(ct).ConfigureAwait(false);
             if (line is null) break;
             if (!string.IsNullOrWhiteSpace(line)) onLine?.Invoke(line);
         }

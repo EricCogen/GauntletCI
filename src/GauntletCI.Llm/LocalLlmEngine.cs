@@ -65,7 +65,7 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
     {
         var prompt = PromptTemplates.EnrichFindingConstrained(
             finding.RuleId, finding.RuleName, finding.Summary, finding.Evidence);
-        return await RunInferenceAsync(prompt, ct);
+        return await RunInferenceAsync(prompt, ct).ConfigureAwait(false);
     }
 
     /// <summary>Builds a summarization prompt from all finding summaries and runs local ONNX inference.</summary>
@@ -73,7 +73,7 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
     {
         var summaries = findings.Select(f => f.Summary);
         var prompt = PromptTemplates.SummarizeReport(summaries);
-        return await RunInferenceAsync(prompt, ct);
+        return await RunInferenceAsync(prompt, ct).ConfigureAwait(false);
     }
 
     /// <summary>Forwards a pre-built prompt directly to the local ONNX model and returns its completion.</summary>

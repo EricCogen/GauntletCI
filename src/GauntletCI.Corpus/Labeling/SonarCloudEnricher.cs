@@ -56,16 +56,16 @@ public sealed class SonarCloudEnricher : IDisposable
             var changedFiles = ParseChangedCsFiles(diffPath);
             if (changedFiles.Count == 0) continue;
 
-            var projectKey = await ResolveProjectKeyAsync(fixture.Repo, progress, ct);
+            var projectKey = await ResolveProjectKeyAsync(fixture.Repo, progress, ct).ConfigureAwait(false);
             if (projectKey is null) continue;
 
-            var issues = await ResolveIssuesAsync(projectKey, progress, ct);
+            var issues = await ResolveIssuesAsync(projectKey, progress, ct).ConfigureAwait(false);
 
             int matchesThisFixture = 0;
             foreach (var issue in issues)
             {
                 if (!changedFiles.Contains(issue.FilePath)) continue;
-                await WriteMatchAsync(db, fixture.FixtureId, issue, ct);
+                await WriteMatchAsync(db, fixture.FixtureId, issue, ct).ConfigureAwait(false);
                 matchesThisFixture++;
             }
 
@@ -119,7 +119,7 @@ public sealed class SonarCloudEnricher : IDisposable
         }
 
         progress?.Invoke($"[sonarcloud] Discovering project for {repo}...");
-        var key = await _client.FindProjectKeyAsync(parts[0], parts[1], ct);
+        var key = await _client.FindProjectKeyAsync(parts[0], parts[1], ct).ConfigureAwait(false);
         _projectKeyCache[repo] = key;
 
         if (key is null)
@@ -137,7 +137,7 @@ public sealed class SonarCloudEnricher : IDisposable
             return cached;
 
         progress?.Invoke($"[sonarcloud] Fetching issues for {projectKey}...");
-        var issues = await _client.GetIssuesAsync(projectKey, ct);
+        var issues = await _client.GetIssuesAsync(projectKey, ct).ConfigureAwait(false);
         _issuesCache[projectKey] = issues;
         progress?.Invoke($"[sonarcloud] {issues.Count} open BUG/VULNERABILITY issue(s) for {projectKey}");
 
@@ -160,7 +160,7 @@ public sealed class SonarCloudEnricher : IDisposable
         cmd.Parameters.AddWithValue("$severity",   issue.Severity);
         cmd.Parameters.AddWithValue("$type",       issue.Type);
         cmd.Parameters.AddWithValue("$message",    issue.Message);
-        await cmd.ExecuteNonQueryAsync(ct);
+        await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
 
