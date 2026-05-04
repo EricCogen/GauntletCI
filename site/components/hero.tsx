@@ -64,20 +64,16 @@ export function Hero() {
             </div>
           </div>
 
-          <div className="mt-10 flex flex-col sm:flex-row items-center gap-4">
-            <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-5 py-3 font-mono text-sm select-all">
-              <span className="text-cyan-400">$</span>
-              <span className="text-foreground">dotnet tool install -g GauntletCI</span>
-            </div>
-            <Button variant="outline" size="lg" asChild>
-              <Link href="/detections">
-                See real detections
+          <div className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Button size="lg" asChild className="bg-cyan-500 hover:bg-cyan-600 text-black font-semibold">
+              <Link href="#pricing">
+                Install Now
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
-            <Button variant="ghost" size="lg" asChild>
-              <Link href="/docs/rules">
-                Rule library
+            <Button variant="outline" size="lg" asChild>
+              <Link href="/docs">
+                Explore Docs
               </Link>
             </Button>
           </div>

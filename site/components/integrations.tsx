@@ -1,4 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 const groups = [
   {
@@ -96,6 +99,15 @@ export function Integrations() {
               </ul>
             </div>
           ))}
+        </div>
+
+        <div className="mt-12 flex justify-center">
+          <Button size="lg" asChild className="bg-cyan-500 hover:bg-cyan-600 text-black font-semibold">
+            <Link href="/docs/integrations">
+              Explore Integration Docs
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </Button>
         </div>
       </div>
     </section>

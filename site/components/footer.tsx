@@ -143,15 +143,17 @@ export function Footer() {
               </Link>
             </div>
           </div>
-          <Link
-            href="https://github.com/ericcogen/gauntletci"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Github className="h-4 w-4" />
-            <span>Star on GitHub</span>
-          </Link>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <Link
+              href="https://github.com/ericcogen/gauntletci"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-cyan-500/50 bg-cyan-500/10 text-sm font-semibold text-cyan-400 hover:bg-cyan-500/20 transition-colors"
+            >
+              <Github className="h-4 w-4" />
+              <span>⭐ Star on GitHub</span>
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
