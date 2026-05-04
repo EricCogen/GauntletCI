@@ -47,9 +47,10 @@ export function ArticleList({ articles }: { articles: Article[] }) {
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  {/* Pushpin: circle head with pointed shaft below */}
-                  <circle cx="12" cy="6" r="4" />
-                  <path d="M10 10h4v8l-2 4-2-4v-8z" />
+                  {/* Pushpin: circle head with shaft */}
+                  <circle cx="12" cy="8" r="3.5" />
+                  <rect x="10.5" y="11" width="3" height="9" />
+                  <polygon points="12,20 10,22 14,22" />
                 </svg>
               </div>
             )}
