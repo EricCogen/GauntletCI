@@ -157,7 +157,7 @@ export default function AboutPage() {
           </section>
 
           <section className="mt-16 rounded-xl border border-border bg-gradient-to-r from-cyan-500/5 to-blue-500/5 p-8 text-center">
-            <h2 className="text-2xl font-bold mb-3">Ready to prevent your own 2 a.m. pages?</h2>
+            <h2 className="text-2xl font-bold mb-3">Ready to prevent your own 2 a.m. alerts?</h2>
             <p className="text-muted-foreground mb-6">
               GauntletCI runs in under 2 minutes from install to first audit. No setup. No account. No compromise.
             </p>

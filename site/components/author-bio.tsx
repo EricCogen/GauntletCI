@@ -19,7 +19,7 @@ export function AuthorBio({ variant = "short" }: Props) {
           <p>
             I spent twenty years writing .NET in production. Payments, internal
             platforms, line-of-business systems where a green build did not stop
-            a 2 a.m. page.
+            a 2 a.m. alert.
           </p>
           <p>
             The bugs that hurt me were rarely the ones tests caught. They were
