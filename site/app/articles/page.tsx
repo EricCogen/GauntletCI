@@ -22,6 +22,14 @@ const jsonLd = {
 // Newest articles first: add new entries at the bottom, display is reversed
 const articles = [
   {
+    href: "/can-ai-code-review-be-deterministic",
+    title: "Can AI Code Review Tools Ever Be Deterministic?",
+    description:
+      "Exploring determinism vs. probabilistic judgment in code review. Why repeatable engineering evidence matters more than helpful suggestions.",
+    tags: ["AI", "Code Review", "Determinism"],
+    readTime: "12 min read",
+  },
+  {
     href: "/why-code-review-misses-bugs",
     title: "Why Code Review Misses Bugs",
     description:
