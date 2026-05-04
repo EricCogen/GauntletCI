@@ -89,6 +89,11 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
+        url: '/favicon.ico?v=1',
+        sizes: '32x32',
+        type: 'image/x-icon',
+      },
+      {
         url: '/icon-light-32x32.png',
         media: '(prefers-color-scheme: light)',
       },

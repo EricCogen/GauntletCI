@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && npx pagefind --site out",
+    "build": "node scripts/gen-favicon.mjs && next build && npx pagefind --site out",
     "gen-og": "node scripts/gen-og-images.mjs",
     "gen-inline": "node scripts/gen-inline-images.mjs",
     "gen-diagrams": "node scripts/gen-article-diagrams.mjs",
