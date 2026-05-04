@@ -25,7 +25,7 @@ export function Footer() {
               </p>
             </div>
             
-            <div className="grid grid-cols-2 gap-8 sm:gap-16">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-16">
               <div>
                 <h3 className="text-sm font-semibold mb-4">Product</h3>
                 <ul className="space-y-3">
@@ -64,6 +64,11 @@ export function Footer() {
                       Case Studies
                     </Link>
                   </li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold mb-4">Community</h3>
+                <ul className="space-y-3">
                   <li>
                     <Link
                       href="https://github.com/EricCogen/GauntletCI-Demo/pulls"
@@ -80,13 +85,18 @@ export function Footer() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/releases" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                      Releases
-                    </Link>
-                  </li>
-                  <li>
                     <Link href="https://github.com/ericcogen/gauntletci/issues" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                       Issues
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold mb-4">More</h3>
+                <ul className="space-y-3">
+                  <li>
+                    <Link href="/releases" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                      Releases
                     </Link>
                   </li>
                 </ul>
