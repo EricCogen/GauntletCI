@@ -3,6 +3,9 @@ import Link from "next/link";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { AuthorBio } from "@/components/author-bio";
+import { Button } from "@/components/ui/button";
+import { ArrowRight, AlertCircle, Target, Zap } from "lucide-react";
+import { addUtmParams } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "About Eric Cogen | Founder of GauntletCI",
@@ -45,65 +48,125 @@ export default function AboutPage() {
             &larr; Back home
           </Link>
 
-          <h1 className="mt-6 text-4xl font-bold tracking-tight">About</h1>
-          <p className="mt-3 text-lg text-muted-foreground">
-            Why GauntletCI exists, and who built it.
-          </p>
+          <div className="mt-10 mb-12">
+            <h1 className="text-5xl font-bold tracking-tight">Built on scar tissue.</h1>
+            <p className="mt-4 text-xl text-muted-foreground max-w-2xl leading-relaxed">
+              Twenty years of production failures taught one engineer that the bugs that hurt most aren't caught by tests or code review. They're caught by knowing what to look for.
+            </p>
+          </div>
 
           <AuthorBio variant="long" />
 
-          <section className="mt-12">
-            <h2 className="text-2xl font-bold tracking-tight mb-4">
+          <section className="mt-16">
+            <h2 className="text-3xl font-bold tracking-tight mb-8">
+              Why this matters
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="rounded-lg border border-border bg-card/30 p-6">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="h-5 w-5 text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-2">Tests aren't enough</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Green builds ship broken code all the time. Tests verify happy paths, not assumptions.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-card/30 p-6">
+                <div className="flex items-start gap-3">
+                  <Target className="h-5 w-5 text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-2">Code review misses them</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Humans reviewing diffs at scale catch syntax, not semantics. And not always syntax either.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="rounded-lg border border-border bg-card/30 p-6">
+                <div className="flex items-start gap-3">
+                  <Zap className="h-5 w-5 text-cyan-400 mt-1 flex-shrink-0" />
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-2">Machines catch patterns</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Deterministic rules don't get tired, distracted, or skip the boring checks. They never do.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="mt-16">
+            <h2 className="text-3xl font-bold tracking-tight mb-8">
               Where to go next
             </h2>
-            <ul className="space-y-3 text-sm">
+            <ul className="space-y-4 text-sm">
               <li>
                 <Link
                   href="/docs/rules"
-                  className="text-cyan-400 hover:underline"
+                  className="text-cyan-400 hover:underline font-semibold flex items-center gap-2"
                 >
                   Browse the 30 deterministic rules
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
-                <span className="text-muted-foreground">
-                  {" "}-- every rule maps to a real production failure.
-                </span>
+                <p className="text-muted-foreground text-xs mt-1">
+                  Every rule maps to a real production failure. See what GauntletCI catches.
+                </p>
               </li>
               <li>
                 <Link
                   href="/why-tests-miss-bugs"
-                  className="text-cyan-400 hover:underline"
+                  className="text-cyan-400 hover:underline font-semibold flex items-center gap-2"
                 >
                   Why tests miss bugs
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
-                <span className="text-muted-foreground">
-                  {" "}-- the six categories of risk that escape green builds.
-                </span>
+                <p className="text-muted-foreground text-xs mt-1">
+                  The six categories of risk that escape even comprehensive test suites and CI systems.
+                </p>
               </li>
               <li>
                 <Link
                   href="/why-code-review-misses-bugs"
-                  className="text-cyan-400 hover:underline"
+                  className="text-cyan-400 hover:underline font-semibold flex items-center gap-2"
                 >
                   Why code review misses bugs
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
-                <span className="text-muted-foreground">
-                  {" "}-- the human limits of diff review at scale.
-                </span>
+                <p className="text-muted-foreground text-xs mt-1">
+                  The cognitive limits of human diff review at scale, and why bots matter.
+                </p>
               </li>
               <li>
                 <Link
                   href="https://github.com/EricCogen/GauntletCI/blob/main/STORY.md"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-cyan-400 hover:underline"
+                  className="text-cyan-400 hover:underline font-semibold flex items-center gap-2"
                 >
                   The original STORY.md
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
-                <span className="text-muted-foreground">
-                  {" "}-- the long-form scar tissue narrative on GitHub.
-                </span>
+                <p className="text-muted-foreground text-xs mt-1">
+                  The long-form narrative on GitHub. Real bugs, real postmortems, real scar tissue.
+                </p>
               </li>
             </ul>
+          </section>
+
+          <section className="mt-16 rounded-xl border border-border bg-gradient-to-r from-cyan-500/5 to-blue-500/5 p-8 text-center">
+            <h2 className="text-2xl font-bold mb-3">Ready to prevent your own 2 a.m. pages?</h2>
+            <p className="text-muted-foreground mb-6">
+              GauntletCI runs in under 2 minutes from install to first audit. No setup. No account. No compromise.
+            </p>
+            <Button size="lg" asChild className="bg-cyan-500 hover:bg-cyan-600 text-black font-semibold">
+              <Link href={addUtmParams("/#quickstart", "about", "cta_button", "install_now")}>
+                Get Started Now
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
           </section>
         </div>
       </main>
