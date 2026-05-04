@@ -4,7 +4,7 @@ const pillars = [
   {
     icon: ServerOff,
     title: "No Source Code Uploads",
-    body: "Analysis runs entirely on your local hardware or within your private CI/CD runners. Your source code never touches an external server.",
+    body: "Core analysis runs entirely on your local hardware or within your private CI/CD runners. By default, source code and findings stay private.",
   },
   {
     icon: BrainCircuit,
@@ -14,7 +14,7 @@ const pillars = [
   {
     icon: Lock,
     title: "Deterministic Core",
-    body: "The blocking engine is pure Roslyn, no probabilistic guesses. Every finding is reproducible, auditable, and explainable.",
+    body: "Built-in detection is pure Roslyn-based analysis. Every finding is reproducible, auditable, and explainable. No probabilistic guesses.",
   },
 ];
 
@@ -35,11 +35,11 @@ export function SecurityPrivacy() {
                 <span className="text-cyan-400">Privacy-Always.</span>
               </h2>
               <p className="mt-5 text-lg text-muted-foreground text-pretty">
-                GauntletCI runs entirely on your own hardware—no code uploads, no external services. This local-first architecture makes it the only behavioral auditor built for air-gapped, data-residency, and zero-trust networks. Perfect for high-security environments, regulated industries, and teams that never compromise on code privacy.
+                GauntletCI's core analysis runs on your own hardware. By default, no code is uploaded and no network is required. This makes it ideal for air-gapped, data-residency, and zero-trust networks. Optional integrations only transmit data to services you configure.
               </p>
               <div className="mt-6 inline-flex items-center gap-2 text-sm text-emerald-400 font-medium">
                 <ShieldCheck className="h-4 w-4" />
-                Designed to be trusted in air-gapped, HIPAA-adjacent, and SOC 2 environments
+                Works in air-gapped, HIPAA-adjacent, and SOC 2 environments
               </div>
             </div>
 

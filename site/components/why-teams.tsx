@@ -12,9 +12,9 @@ const reasons = [
     stat: "Pre-PR, not post-PR",
   },
   {
-    title: "Nothing leaves the machine",
-    body: "No code is sent to any server. No account required. Runs entirely on the developer's machine. Meets data residency and air-gap requirements out of the box.",
-    stat: "100% local execution",
+    title: "Nothing leaves the machine by default",
+    body: "Core analysis does not send code to external servers. No account required. Runs entirely on your developer machine. Meets data residency and air-gap requirements. Optional integrations only transmit configured data.",
+    stat: "Core analysis is local",
   },
   {
     title: "Signal without noise",
