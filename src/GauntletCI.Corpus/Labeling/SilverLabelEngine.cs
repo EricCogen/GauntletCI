@@ -56,8 +56,8 @@ public sealed class SilverLabelEngine
             "GCI0006", "Review comment mentions null/nullable concern", 0.6),
         (["breaking change", "backwards compat", "backward compat", "semver", "api break"],
             "GCI0004", "Review comment mentions breaking change", 0.65),
-        ([".result", ".wait()", "async", "blocking", "deadlock", "configureawait"],
-            "GCI0016", "Review comment mentions async/blocking concern", 0.65),
+        ([".result", ".wait()", "async", "blocking", "deadlock", "configureawait", "socket", "thread pool", "concurrency", "cpu bound"],
+            "GCI0016", "Review comment mentions async/blocking concern or concurrent execution model", 0.65),
         (["hardcoded", "hard-coded", "magic string", "magic number"],
             "GCI0010", "Review comment mentions hardcoded value or magic number/string", 0.6),
         (["exception", "catch", "swallowing", "ignored exception"],
@@ -65,6 +65,8 @@ public sealed class SilverLabelEngine
         // Note: "thread safe / concurrent / lock" keywords intentionally removed from GCI0016.
         // GCI0016 scope is async execution model violations only (dropped static mutable field
         // check). Thread-safety review comments signal concerns the rule no longer detects.
+        // Async domain expansion: Added "socket", "thread pool", "concurrency", "cpu bound" keywords
+        // to improve detection of async execution model violations and related resource issues.
         (["secret", "password", "credential", "api key", "api_key"],
             "GCI0012", "Review comment mentions credential/secret concern", 0.75),
         (["idempotent", "idempotency", "idempotency key", "duplicate request", "retry safe", "insert duplicate", "upsert"],
@@ -293,6 +295,9 @@ public sealed class SilverLabelEngine
                 }
             }
         }
+
+        // ── Phase 21 Coordination: Async Execution Model ─────────────────────
+        ApplyAsyncExecutionCoordination(inferred);
 
         // ── Tier 3: LLM fallback for uncertain findings ───────────────────────
         var positiveRuleIdsAfterTier12 = inferred
@@ -1882,5 +1887,80 @@ public sealed class SilverLabelEngine
         }
 
         return merged.Values.ToList();
+    }
+
+    /// <summary>
+    /// Phase 21 Rule Coordination: When async violations (GCI0016) are detected,
+    /// boost confidence on related HttpClient (GCI0039) and GC pressure (GCI0044) labels
+    /// to reflect the increased risk of cascading performance and resource issues.
+    /// </summary>
+    private void ApplyAsyncExecutionCoordination(List<ExpectedFinding> labels)
+    {
+        // If GCI0016 (async violation) fires, check if GCI0039 or GCI0044 are present
+        var hasGci0016 = labels.Any(l => l.RuleId == "GCI0016" && l.ShouldTrigger);
+        
+        if (!hasGci0016)
+            return;
+
+        // Boost confidence on GCI0039 (HttpClient safety) - blocking calls + HttpClient = socket exhaustion risk
+        var gci0039Index = labels.FindIndex(l => l.RuleId == "GCI0039");
+        if (gci0039Index >= 0)
+        {
+            var gci0039 = labels[gci0039Index];
+            if (gci0039.ShouldTrigger)
+            {
+                // Already triggered - boost confidence from 0.65 to 0.80 to reflect coordination
+                if (gci0039.ExpectedConfidence < 0.80)
+                {
+                    labels[gci0039Index] = new ExpectedFinding
+                    {
+                        RuleId = gci0039.RuleId,
+                        ShouldTrigger = gci0039.ShouldTrigger,
+                        ExpectedConfidence = 0.80,
+                        Reason = $"[coordination] {gci0039.Reason} + GCI0016 async violation increases risk",
+                        LabelSource = gci0039.LabelSource,
+                        IsInconclusive = gci0039.IsInconclusive,
+                    };
+                }
+            }
+            else
+            {
+                // Negative label present - raise confidence floor to trigger if blocking call + potential HttpClient issue
+                // Change to positive with coordination signal
+                labels[gci0039Index] = new ExpectedFinding
+                {
+                    RuleId = gci0039.RuleId,
+                    ShouldTrigger = true,
+                    ExpectedConfidence = 0.70,
+                    Reason = "[coordination] GCI0016 async violation may correlate with HttpClient resource issues",
+                    LabelSource = LabelSource.Heuristic,
+                    IsInconclusive = false,
+                };
+            }
+        }
+
+        // Boost confidence on GCI0044 (GC pressure) - blocking calls during allocation = worse GC impact
+        var gci0044Index = labels.FindIndex(l => l.RuleId == "GCI0044");
+        if (gci0044Index >= 0)
+        {
+            var gci0044 = labels[gci0044Index];
+            if (gci0044.ShouldTrigger)
+            {
+                // Already triggered - boost confidence from 0.60 to 0.75 to reflect coordination
+                if (gci0044.ExpectedConfidence < 0.75)
+                {
+                    labels[gci0044Index] = new ExpectedFinding
+                    {
+                        RuleId = gci0044.RuleId,
+                        ShouldTrigger = gci0044.ShouldTrigger,
+                        ExpectedConfidence = 0.75,
+                        Reason = $"[coordination] {gci0044.Reason} + GCI0016 async violation increases GC risk",
+                        LabelSource = gci0044.LabelSource,
+                        IsInconclusive = gci0044.IsInconclusive,
+                    };
+                }
+            }
+            // For negative labels, keep as-is for now but coordination logic is in place
+        }
     }
 }
