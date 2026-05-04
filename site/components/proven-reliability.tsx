@@ -108,7 +108,7 @@ export function ProvenReliability() {
               </div>
               <div className="px-5 py-3 border-t border-border">
                 <Link href={s.link} className="text-xs text-muted-foreground/50 hover:text-cyan-400 transition-colors">
-                  See annotated detection examples &rarr;
+                  See annotated detection examples →
                 </Link>
               </div>
             </div>
@@ -117,15 +117,15 @@ export function ProvenReliability() {
 
         <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4 text-sm text-muted-foreground">
           <Link href="/detections" className="text-cyan-400 hover:text-cyan-300 transition-colors">
-            See annotated detection examples &rarr;
+            See annotated detection examples →
           </Link>
           <span className="hidden sm:inline text-muted-foreground/30">&bull;</span>
           <Link href="/benchmark" className="text-cyan-400 hover:text-cyan-300 transition-colors">
-            View benchmark results &rarr;
+            View benchmark results →
           </Link>
           <span className="hidden sm:inline text-muted-foreground/30">&bull;</span>
           <Link href="/releases" className="text-cyan-400 hover:text-cyan-300 transition-colors">
-            Version history &rarr;
+            Version history →
           </Link>
         </div>
       </div>

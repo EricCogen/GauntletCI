@@ -17,32 +17,17 @@ export function AuthorBio({ variant = "short" }: Props) {
         </h2>
         <div className="space-y-4 text-sm leading-relaxed text-muted-foreground">
           <p>
-            I spent twenty years writing .NET in production. Payments, internal
-            platforms, line-of-business systems where a green build did not stop
-            a 2 a.m. page.
+            Twenty years in .NET production. Payments systems, internal platforms, critical line-of-business applications—the kind where a 2 a.m. alert wasn't an emergency, it was a regular Tuesday.
           </p>
           <p>
-            The bugs that hurt me were rarely the ones tests caught. They were
-            the assumptions I did not know I was making. A guard clause removed
-            in a "cleanup" PR. A method renamed from <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">Delete</code> to{" "}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">Get</code> that still deleted. A{" "}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">{"catch {}"}</code> swallowed under cover of a 200-line reformat.
-            None of these failed code review. None of them failed CI. They
-            failed customers.
+            I learned something painful: the bugs that destroy production aren't the ones your tests catch. They're the invisible assumptions. A guard clause removed in a "cleanup" PR. A method renamed from <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">Delete</code> to{" "}
+            <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">Get</code> that still deleted everything. An empty <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">{"catch {}"}</code> buried in a 200-line reformat. Every single one passed code review. Every single one passed CI. Every single one failed your customers.
           </p>
           <p>
-            After enough postmortems, I started writing down the checks I was
-            running by hand on every diff. Look for removed lines. Look for
-            signature changes without test changes. Look for new{" "}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">throw new</code> without a matching{" "}
-            <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs">Assert.Throws</code>. The list grew. It became a habit. The
-            habit became a tool.
+            After too many postmortems, I started keeping a list. The checks I ran by hand before every diff. Look for removed guard clauses. Look for deleted lines. Look for signature changes with no corresponding test changes. Look for new exceptions without matching assertions. Watch for renames that might swap semantics. Check for silent failures hiding in error handling. The list kept growing. It became a habit. The habit became an obsession. The obsession became a tool.
           </p>
           <p>
-            GauntletCI is that tool. Thirty deterministic rules, every one tied
-            to a production failure I either caused or shipped through. It runs
-            locally in under a second, on every diff, before code review even
-            starts.
+            GauntletCI is that tool. Thirty deterministic rules, every one hardened by a real production failure I either caused or shipped. It runs locally in under a second—before code review, before CI, before your team's judgment can get tired. The rules don't sleep. The rules don't skip the boring checks. The rules catch what you can't see coming.
           </p>
         </div>
         <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
