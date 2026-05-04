@@ -1,200 +1,82 @@
-# Why I Built GauntletCI
+### Why I Built GauntletCI
 
-## The 20 Rules I Wrote to Stop Failing
+**GauntletCI is a diff-first verification tool for C#/.NET teams. It identifies risky behavioral changes and weak validation, the specific categories of mistakes that pass tests and code reviews but still break production.**
 
-### 1. The New Job
-
-I got the offer. Thirty percent more than I was making. A fresh start. A chance to prove to them, to myself that I was the senior engineer my resume said I was.
-
-I walked in determined to make the best of it.
-
-Within months, the same patterns followed me.
-
-Not the same bugs. The same *shape* of failure. Subtle things. Things that passed review. Things that passed tests. Things that only surfaced later, quietly, in production.
-
-And here's what I couldn't shake: most of my failures started with **unthought assumptions**.
-
-Not the kind where I said, *"I'll just assume this works."* The kind I didn't even know I was making. I was subconsciously making assumptions. I thought I understood the ticket. I assumed the acceptance criteria covered the edge case. I assumed the existing code worked the way I remembered. I assumed the test actually tested what I thought it did.
-
-These assumptions were invisible to me. They were the water I was swimming in.
-
-I couldn't figure out *how* to get myself past this plateau of mediocrity.
+**Linters ask whether code follows rules. Test suites ask whether known expectations still pass. GauntletCI asks a different question: *did this change introduce behavior that has not been properly validated?***
 
 ---
 
-### 2. The Spiral
+### 1. The Pattern of Failure
+I got the offer, it was thirty percent more than I was making and a chance to prove I was the senior engineer my resume said I was. I walked in determined to make the best of it, but within weeks the same patterns followed me. It wasn't the same bugs; it was the same *shape of failure*, things that passed review and passed tests but then failed loudly in production.
 
-It wasn't one catastrophic mistake. It was a pattern I didn't understand and couldn't break.
+I realized most of my failures started with **unthought assumptions.** I'm not talking about the assumptions you ignore out of hubris; I'm talking about the ones you don't even know you're making.
 
-I lost confidence. I started using self-deprecating humor to deflect - laughing at myself before anyone else could. *"Classic me. Ship it and pray."*
-
-The humor wore thin.
-
-Eventually, management pulled me aside. Not to fire me. To ask what was going on.
-
-I didn't have a good answer.
-
-I just knew I was letting myself down. Letting my family down. Feeling like an idiot to the people I wanted to impress.
+I started to notice that many of my mistakes were just the **quiet autocomplete of an overloaded engineering brain**, the silent, pre-conscious fill-in-the-blank of a mind conserving its scarce cycles. For me, that pattern was tied to how my own particular wiring manages cognitive load, but the engineering problem is universal: under pressure, every developer relies on mental shortcuts. These invisible background processes create the exact kind of engineering risk that traditional reviews rarely catch. That realization forced me to stop treating the problem as a matter of personal discipline and start treating it as a system design problem.
 
 ---
 
-### 3. The Conversation That Changed Things
+### 2. The Logic Audit
+I began using LLMs as an adversarial sounding board, not to write code for me, but to stress-test my reasoning and help me identify the cognitive blind spots I was missing. At first, I wasn't trying to build a company; I was trying to build a mirror for my own reasoning.
 
-I sat down with an AI. Not for code. For help.
+The first rule I formalized wasn't technical: **Make sure I don't embarrass myself.** Then: **Check my work.** Then: **Does this code accomplish my goals?** (A reminder to stop auditing the syntax and start auditing the intent). And then the big one, written for those invisible skips at the **"Point of Performance"**:
 
-I asked pointed, uncomfortable questions:
+> **Does this code actually accomplish what the ticket intended? Am I really understanding the intent?**
 
-- *"How do I stop making the same mistakes?"*
-- *"How do I catch the assumptions I don't even know I'm making?"*
-- *"How do I make sure my tests actually test what I think they do?"*
-
-The first rule I wrote wasn't technical. It was:
-
-> **Make sure I don't embarrass myself.**
-
-I added another:
-
-> **Check my work.**
-
-Then, for the AI I was increasingly relying on:
-
-> **Check your work.**
-
-And then - this was the big one, I wrote a rule specifically for those unthought assumptions:
-
-> **Does this code actually accomplish what the ticket intended? Am I really understanding the intent of the ticket?**
-
-Not *"Does it run?"* Not *"Does it match the spec I skimmed?"* But: *If the person who wrote that Jira ticket looked at my PR, would they say, "Yes, that's exactly what I meant"?*
-
-That rule forced me to surface the assumptions I didn't know I'd made.
-
-I fed those rules into GitHub Copilot for revisions, streamlining, core truths. I added more as I found the gaps. I kept refining them, over many back-and-forth conversations, until I had a list I could rely on.
+Not *"Does it run?"* but: *If the person who wrote that Jira ticket looked at my PR, would they say, "Yes, that's exactly what I meant"?* That process forced me to surface the gaps I didn't know were there.
 
 ---
 
-### 4. The 20 Rules
-Over time, those questions became a checklist I could run every time I touched code:
+### 3. The 20 Rules (The Survival Checklist)
+Over time, those checks became my original, unpolished checklist. These weren't style guides; they were **scar tissue**.
 
-1. Refresh git - keep current changes
-2. Refresh working memory
-3. Check my work
-4. Check your work
-5. Do I need to add/remove/update tests?
-6. Run all tests
-7. Do the tests actually test everything?
-8. Does this code accomplish my goals?
-9. Is this production ready?
-10. Will this embarrass me?
-11. Did I introduce breaking changes?
-12. Did I unintentionally change behavior?
-13. Are edge cases handled?
-14. Is error handling correct?
-15. Did I add unnecessary complexity?
-16. Is this consistent with existing patterns?
-17. Did I introduce performance risks?
-18. Did I introduce security risks?
-19. Did I hardcode anything I shouldn't?
-20. Is this observable/debuggable?
-
-These weren't style guides. They were scar tissue.
+*   **1–4: Context Integrity.** Refresh git, refresh working memory, and audit both my logic and the AI's logic.
+*   **5–7: Validation.** Do I need to update tests? Do the tests actually test the *intent*, or just the syntax?
+*   **8–10: The Pride Check.** Is this production-ready? Embarrassment is the earliest warning system, will this change flag it?
+*   **11–20: Behavioral Risk.** The secret sauce, checking side effects, consistency, and observability. Did I unintentionally change a behavior?
 
 ---
 
-### 5. The First Attempt: PreCommitGuard
+### 4. The Build: From Failure to GauntletCI
+My first attempt was called **PreCommitGuard.** I turned my checklist into a proof of concept, but when I ran a brutal assessment on the design, I realized the architecture was too brittle to scale. It was just an **AI wrapper for a checklist and it worked great for me**, but a codebase filled with chaos would have torn it apart.
 
-I turned those twenty rules into a proof of concept called **PreCommitGuard**. I was excited. I thought I had something real.
+I realized that while AI has come a long way in two years, it is inherently probabilistic, not deterministic. Even with sophisticated guardrails, an LLM may fail to follow your rules consistently, it can hallucinate, skip steps, or simply "forget" a constraint in a complex diff. If you are building a tool to catch unthought assumptions, you cannot build it on a foundation that makes assumptions of its own.
 
-So I did what you do when you're serious: I asked the hard questions. I showed the idea to Gemini. I showed it to DeepSeek. I showed it to ChatGPT and I asked those tools for honest brutal feedback with no fluff.
+I decided to step away from the IDE to let my mind wander, and I started ideating on a tool for fiction writers and D&D players, a consistency engine to help them track backstories, ideologies, and histories. While mapping out how a character's history should logically dictate their future actions, the lightbulb finally went off: both projects were trying to solve the same fundamental problem. They were both attempts to **externalize judgment.** That failure forced me to rebuild the idea from the ground up.
 
-The feedback was clear: the approach I had taken was likely untenable. The architecture wouldn't scale. The methodology wasn't sound.
-
-I was forced to kill the idea.
-
----
-
-### 6. The Detour
-
-And then, because I didn't know what else to do, I started ideating on something completely different. A tool for game enthusiasts. Dungeons & Dragons players. Fiction writers. Something to help build rich backstories for tertiary characters, complete with ideologies, pathologies, histories, genealogy.
-
-It was interesting. But while I was building it, I found myself asking a deeper question:
-
-> *What do all of these ideas actually have in common?*
-
-The answer surprised me.
-
-Both projects were attempts to **externalize judgment**. One was about catching my own unthought assumptions in code. The other was about systematizing the creative instincts of a writer. Underneath the surface, they were the same problem: *Can we make intuition repeatable? Can we reduce "feel" to structure?*
+One was about catching skips in code, and the other was about systematizing creative instincts. It taught me that if you want to catch invisible mistakes, you can't rely on your own brain to find them, you need a deterministic system that doesn't share your blind spots.
 
 ---
 
-### 7. The Return
+### 5. The Pessimistic Verifier
+I returned to the rebuild with a different approach. I moved away from simple checks and built a **Pessimistic Verifier**, a spellcheck for behavioral intent.
 
-That realization sent me back to PreCommitGuard. I knew there was something there - not because I thought it was a clever idea, but because I had **lived proof**. The twenty rules had worked for me, better than expected. They were a proven methodology born from my own failures.
+**GauntletCI is not an AI code reviewer and it is not a style checker.** It is a pessimistic verification system for risky diffs. Its job is to ask whether a change altered behavior, weakened validation, missed an edge case, or introduced risk that ordinary review can easily overlook.
 
-So I forced myself to iterate. To rebuild. To find the architecture that would survive the scrutiny that killed the first version.
-
-That iteration became **GauntletCI**.
-
----
-
-### 8. From 20 Rules to a System
-
-GauntletCI is the tool I needed during that spiral.
-
-Not a linter. Not a style checker.
-
-A **Pessimistic Verifier**.
-
-A system that assumes I've missed something - and checks anyway.
-
-The 20 rules evolved. They became structured. They became deterministic Roslyn analyzers. They became a corpus of real-world .NET failure modes. They became a local AI that can explain *why* something is risky without sending my code to a cloud I don't control.
-
-But the core remains the same:
-
-> **Fewer "I should have caught that" moments.**
+It is built on structured, **deterministic Roslyn analyzers** that run locally on your machine, with an optional AI layer designed solely to translate those technical risks into plain English so the findings are accessible to everyone on the team. You push a commit; it flags the behavior change you didn't mean to make before anyone sees the PR.
 
 ---
 
-### 9. Who This Is For
+### 6. Who This Is For
+GauntletCI is built for experienced engineers who already know how to write code, but still know the feeling of missing something they should have caught. It is also built for teams that have learned the hard way that green tests, passing reviews, and clean style checks do not always mean a change is safe.
 
-This isn't for junior developers.
-
-This is for experienced engineers who:
-
-- Have hit a plateau they can't see past
-- Have felt their confidence erode for reasons they can't articulate
-- Have died a little inside at every standup
-- Have stared at a production incident and thought: *"I knew better."*
-
-This is for the part of you that's tired of relying on memory, discipline, and hope.
+This is for the part of engineering that still depends too much on memory, discipline, and hope.
 
 ---
 
-### 10. What I've Learned
+### 7. Final Note
+Experience doesn't eliminate mistakes; it changes their shape.
 
-Experience doesn't eliminate mistakes. It changes their shape.
+The most dangerous bugs are not always the ones you don't understand; they are the **cognitive skips**, the subtle, nagging doubts you almost investigated but let slide. The gap between what you meant to build and what you actually built is filled with these hidden assumptions and validation gaps.
 
-The most dangerous bugs aren't the ones you don't understand.
-
-They're the ones you **almost noticed... but didn't.**
-
-The gap between what you *meant* to build and what you *actually* built is filled with unthought assumptions.
-
-GauntletCI is my answer to that moment.
-
-Not perfection. Just fewer 2 AM calls. Fewer quiet walks to the parking lot. Fewer jokes that aren't really jokes. Fewer unthought assumptions.
+GauntletCI is my answer to that gap.
 
 ---
 
-### 11. Final Note
+### **Follow the Build**
+GauntletCI is in active development. If this problem feels familiar, follow the build, inspect the technical docs, or join the alpha. The goal is simple: fewer risky changes reaching production because nobody had a system designed to catch them.
 
-If you've read this far, you probably recognize something in these words.
+*   **GitHub:** [GauntletCI Organization]
+*   **X (Twitter):** [@GauntletCI_BCRV]
+*   **The Manifesto:** [GauntletCI.com]
 
-You're not alone.
-
-And you're not a bad engineer.
-
-You just need a better system.
-
-That's what I'm building.
-
-*- Eric I Cogen, maintainer of GauntletCI*
+*- Eric I. Cogen, Founder of GauntletCI*
