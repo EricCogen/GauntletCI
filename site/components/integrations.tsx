@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { addUtmParams } from "@/lib/utils";
 
 const groups = [
   {
@@ -103,7 +104,7 @@ export function Integrations() {
 
         <div className="mt-12 flex justify-center">
           <Button size="lg" asChild className="bg-cyan-500 hover:bg-cyan-600 text-black font-semibold">
-            <Link href="/docs/integrations">
+            <Link href={addUtmParams("/docs/integrations", "integrations", "cta_button", "explore_docs")}>
               Explore Integration Docs
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

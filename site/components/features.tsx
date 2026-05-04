@@ -1,6 +1,7 @@
 import { Zap, Lock, Target, Server, Eye, Shield, Container, BrainCircuit, FileCode2, CheckCircle2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { addUtmParams } from "@/lib/utils";
 
 export function Features() {
   const features = [
@@ -88,7 +89,7 @@ export function Features() {
 
         <div className="mt-12 flex justify-center">
           <Button size="lg" asChild className="bg-cyan-500 hover:bg-cyan-600 text-black font-semibold">
-            <Link href="#pricing">
+            <Link href={addUtmParams("#pricing", "features", "cta_button", "free_trial")}>
               Start Your Free Trial
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>

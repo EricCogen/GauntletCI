@@ -1,5 +1,7 @@
 import Link from "next/link";
-import { Check, Minus, AlertCircle } from "lucide-react";
+import { Check, Minus, AlertCircle, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { addUtmParams } from "@/lib/utils";
 
 type CellValue = "yes" | "no" | "partial";
 
@@ -188,11 +190,22 @@ export function Comparison() {
         </div>
 
         {/* AI code review link */}
-        <div className="mt-6 text-center text-sm text-muted-foreground">
-          Not seeing your tool?{" "}
-          <Link href="/compare/gauntletci-vs-ai-code-review" className="text-cyan-400 hover:text-cyan-300 transition-colors underline underline-offset-2">
-            Compare vs AI code review tools
-          </Link>
+        <div className="mt-10 text-center space-y-6">
+          <div className="text-sm text-muted-foreground">
+            Not seeing your tool?{" "}
+            <Link href="/compare/gauntletci-vs-ai-code-review" className="text-cyan-400 hover:text-cyan-300 transition-colors underline underline-offset-2">
+              Compare vs AI code review tools
+            </Link>
+          </div>
+          
+          <div className="flex justify-center">
+            <Button size="lg" asChild className="bg-cyan-500 hover:bg-cyan-600 text-black font-semibold">
+              <Link href={addUtmParams("#pricing", "comparison", "cta_button", "try_free")}>
+                Try GauntletCI Free
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     </section>
