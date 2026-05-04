@@ -1,4 +1,5 @@
-﻿import type { Metadata } from "next";
+import type { Metadata } from "next";
+import JsonLd from "@/components/json-ld";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { ArticleList } from "./ArticleList";
@@ -73,10 +74,7 @@ const articles = [
 export default function ArticlesPage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
       <div className="min-h-screen">
         <Header />
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import JsonLd from "@/components/json-ld";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 
@@ -18,7 +19,9 @@ const jsonLd = {
   description:
     "GauntletCI catches a bare catch {} block in StackExchange.Redis PR#2995 that silently drops all exceptions in the message dispatch loop. Rule GCI0007.",
   url: "https://gauntletci.com/case-studies/stackexchange-redis-swallowed-exception",
+  author: { "@type": "Organization", name: "GauntletCI" },
   publisher: { "@type": "Organization", name: "GauntletCI", url: "https://gauntletci.com" },
+  datePublished: "2025-05-03"
 };
 
 const lineColor: Record<string, string> = {
@@ -68,10 +71,7 @@ const finding = [
 export default function StackExchangeRedisSwallowedExceptionPage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLd data={jsonLd} />
       <Header />
       <main className="min-h-screen bg-background pt-24">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 space-y-16">
