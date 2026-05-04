@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description:
     "Exploring the difference between helpful AI review and trustworthy engineering controls. Why determinism matters more than you think.",
   alternates: { canonical: "/can-ai-code-review-be-deterministic" },
-  openGraph: { images: [{ url: '/og/determinism-ai-review.png', width: 1200, height: 630 }] },
+  openGraph: { images: [{ url: 'https://gauntletci.com/og/can-ai-code-review-be-deterministic.png', width: 1200, height: 630 }] },
   authors: [{ name: "Eric Cogen" }],
 };
 
