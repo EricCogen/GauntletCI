@@ -25,7 +25,7 @@ export function QuickStart() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-balance">
-            Get started in 5 minutes
+            Less than 2 minutes from install to audit
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
             Install the tool, run it on your current changes, and see up to 3 high-signal findings. 
