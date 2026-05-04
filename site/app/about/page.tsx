@@ -139,21 +139,25 @@ export default function AboutPage() {
                   The cognitive limits of human diff review at scale, and why bots matter.
                 </p>
               </li>
-              <li>
-                <Link
-                  href="https://github.com/EricCogen/GauntletCI/blob/main/STORY.md"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-cyan-400 hover:underline font-semibold flex items-center gap-2"
-                >
-                  The original STORY.md
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-                <p className="text-muted-foreground text-xs mt-1">
-                  The long-form narrative on GitHub. Real bugs, real postmortems, real scar tissue.
-                </p>
-              </li>
             </ul>
+          </section>
+
+          <section className="mt-16 rounded-lg border border-cyan-500/20 bg-gradient-to-r from-cyan-500/5 to-transparent p-8">
+            <h2 className="text-2xl font-bold mb-4">
+              The full story
+            </h2>
+            <p className="text-muted-foreground mb-6 leading-relaxed">
+              Want the real narrative? Twenty years of production disasters, every escalation call at midnight, each alert that didn't fire, the bugs that slipped through code review, the fixes that introduced regressions. This is the origin story—not the polished pitch, but the actual scars that demanded a solution. Every rule in GauntletCI came from something that broke. Read how.
+            </p>
+            <Link
+              href="https://github.com/EricCogen/GauntletCI/blob/main/STORY.md"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-400 hover:underline font-semibold flex items-center gap-2 w-fit"
+            >
+              Read STORY.md on GitHub
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
           </section>
 
            <section className="mt-16 rounded-xl border border-border bg-gradient-to-r from-cyan-500/5 to-blue-500/5 p-8 text-center">
