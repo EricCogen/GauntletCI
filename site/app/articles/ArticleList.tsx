@@ -38,21 +38,7 @@ export function ArticleList({ articles }: { articles: Article[] }) {
             href={article.href}
             className="group block rounded-xl border border-border bg-card/30 hover:bg-card/60 hover:border-cyan-500/30 transition-all p-6 relative"
           >
-            {/* Pin icon in top-right */}
-            {article.pinned && (
-              <div className="absolute top-4 right-4 text-cyan-400">
-                <svg
-                  className="w-5 h-5"
-                  fill="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  {/* Actual pushpin - large rounded head with sharp needle point */}
-                  <circle cx="12" cy="7" r="5.5" />
-                  <path d="M 11.5 12.5 L 10 22 L 12 22 L 14 22 L 12.5 12.5 Z" />
-                </svg>
-              </div>
-            )}
+            {/* Pin indicator - removed */}
 
             <div className="flex flex-wrap items-center gap-2 mb-3">
               {article.tags.map((tag) => (
