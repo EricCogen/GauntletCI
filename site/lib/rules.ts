@@ -167,7 +167,7 @@ export const rules: Rule[] = [
     description:
       "Detects potential null dereferences and missing validation in added code.",
     whyExists:
-      "Most production NullReferenceExceptions come from added code that assumes non-null inputs without guarding for them. The cost of one guard clause is a few characters; the cost of a missing one is a 2 a.m. page.",
+      "Most production NullReferenceExceptions come from added code that assumes non-null inputs without guarding for them. The cost of one guard clause is a few characters; the cost of a missing one is a 2 a.m. alert.",
     example: {
       language: "csharp",
       bad: "+ public string FormatName(User user) => user.FirstName + \" \" + user.LastName;",
