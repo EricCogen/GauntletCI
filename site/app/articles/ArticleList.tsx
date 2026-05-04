@@ -47,8 +47,10 @@ export function ArticleList({ articles }: { articles: Article[] }) {
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  {/* Thumbtack/Pushpin - wide circular head with thin shaft */}
-                  <path d="M12 1c2.761 0 5 2.239 5 5 0 1.822-.995 3.413-2.474 4.272.341.508.474 1.145.474 1.728v8.5c0 1.381-1.119 2.5-2.5 2.5s-2.5-1.119-2.5-2.5v-8.5c0-.583.133-1.22.474-1.728-1.479-.859-2.474-2.45-2.474-4.272 0-2.761 2.239-5 5-5z"/>
+                  {/* Classic pushpin - ellipse head, shaft, pointed tip */}
+                  <ellipse cx="12" cy="4" rx="3" ry="2.5" />
+                  <rect x="11" y="6.5" width="2" height="10" />
+                  <polygon points="12,16.5 10,20 14,20" />
                 </svg>
               </div>
             )}
