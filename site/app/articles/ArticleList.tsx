@@ -47,7 +47,8 @@ export function ArticleList({ articles }: { articles: Article[] }) {
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  <path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2z" />
+                  {/* Pushpin icon - classic style */}
+                  <path d="M7 15a1 1 0 100-2 1 1 0 000 2zm10-7a1 1 0 11-2 0 1 1 0 012 0zM5.255 10.746a1 1 0 010 1.414l-3.536 3.536a2 2 0 102.828 2.828l3.536-3.536a1 1 0 001.415-1.414l-3.536-3.536a1 1 0 00-1.414 0zm11-4a1 1 0 00-1.414 0L9.172 12.414a1 1 0 101.414 1.414l5.669-5.668a1 1 0 000-1.414z" />
                 </svg>
               </div>
             )}
