@@ -91,6 +91,9 @@ graphify-out/
 !docs/PHASE_12_RULE_REFINEMENT_PLAN.md
 !docs/PHASE_12B_RULE_REFINEMENTS.md
 !docs/DEPLOYMENT_v2.2.2.md
+!RELEASE_NOTES_v2.3.0-phase17-coordinations.md
+!RELEASE_NOTES_v2.4.0-phase21-coordinations.md
+!DEPLOYMENT_CHECKLIST_v2.4.0.md
 !docs/case-studies/gci0054-async-void-abuse.md
 !docs/case-studies/gci0055-method-signature-change.md
 !docs/case-studies/README.md
