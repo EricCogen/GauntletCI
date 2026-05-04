@@ -49,7 +49,8 @@ export default function AboutPage() {
           </Link>
 
           <div className="mt-10 mb-12">
-            <h1 className="text-5xl font-bold tracking-tight">Built on scar tissue.</h1>
+            <h1 className="text-5xl font-bold tracking-tight">About</h1>
+            <h2 className="text-3xl font-semibold tracking-tight mt-6 mb-4">Built on scar tissue.</h2>
             <p className="mt-4 text-xl text-muted-foreground max-w-2xl leading-relaxed">
               Twenty years of watching production fail taught me something that no testing framework ever could: the bugs that destroy systems aren't the ones tests catch. They're the ones no one thought to look for. The assumptions hiding in plain sight.
             </p>
