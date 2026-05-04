@@ -7,7 +7,7 @@ import { Footer } from "@/components/footer";
 export const metadata: Metadata = {
   title: "GauntletCI vs. SonarQube: Diff Analysis vs. Whole-Repo Static Analysis",
   description:
-    "Compare GauntletCI and SonarQube. GauntletCI analyzes only what changed, runs locally, and catches behavioral regressions in pre-commit. SonarQube scans the whole repo in CI.",
+    "Compare GauntletCI and SonarQube. GauntletCI analyzes only what changed, runs locally by default, and catches behavioral regressions in pre-commit. SonarQube scans the whole repo in CI.",
   alternates: { canonical: "/compare/gauntletci-vs-sonarqube" },
   openGraph: { images: [{ url: '/og/compare-sonarqube.png', width: 1200, height: 630 }] },
 };
@@ -57,13 +57,13 @@ const tableRows = [
 
 const featureRows = [
   { label: "Diff-scoped analysis (changed lines only)", gauntlet: "yes" as const, sonar: "no" as const },
-  { label: "100% local execution, no code upload", gauntlet: "yes" as const, sonar: "partial" as const },
+  { label: "Core analysis: local, no code upload by default", gauntlet: "yes" as const, sonar: "partial" as const },
   { label: "Pre-commit (before push) feedback", gauntlet: "yes" as const, sonar: "no" as const },
-  { label: "Air-gap / data residency friendly", gauntlet: "yes" as const, sonar: "partial" as const },
+  { label: "Air-gap / data residency friendly (core engine)", gauntlet: "yes" as const, sonar: "partial" as const },
   { label: "C#/.NET behavioral rule set", gauntlet: "yes" as const, sonar: "partial" as const },
   { label: "Whole-repo scan across all languages", gauntlet: "no" as const, sonar: "yes" as const },
   { label: "Quality gate enforcement in CI", gauntlet: "partial" as const, sonar: "yes" as const },
-  { label: "GitHub inline PR comments", gauntlet: "yes" as const, sonar: "yes" as const },
+  { label: "GitHub inline PR comments", gauntlet: "yes (Teams tier)" as const, sonar: "yes" as const },
   { label: "Baseline delta mode (suppress existing findings)", gauntlet: "yes" as const, sonar: "partial" as const },
   { label: "Local LLM enrichment (no API key)", gauntlet: "yes" as const, sonar: "no" as const },
   { label: "Free tier with full rule set", gauntlet: "yes" as const, sonar: "partial" as const },
@@ -85,7 +85,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": "GauntletCI vs. SonarQube: Diff Analysis vs. Whole-Repo Static Analysis",
-  "description": "Compare GauntletCI and SonarQube. GauntletCI analyzes only what changed, runs 100% locally, and catches behavioral regressions in pre-commit.",
+  "description": "Compare GauntletCI and SonarQube. GauntletCI analyzes only what changed, runs locally by default, and catches behavioral regressions in pre-commit.",
   "url": "https://gauntletci.com/compare/gauntletci-vs-sonarqube",
   "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
 };
@@ -181,8 +181,8 @@ export default function VsSonarQubePage() {
                 body: "GauntletCI only looks at the lines that changed. It never scans your whole repo. This makes it fast enough to run pre-commit and precise enough to avoid alert fatigue from pre-existing issues.",
               },
               {
-                title: "100% local execution",
-                body: "No code is uploaded anywhere. No SaaS account, no cloud tenant, no API key required. Runs entirely in-process on the developer machine or CI runner.",
+                title: "Core analysis: local, no code upload by default",
+                body: "Core analysis does not upload code to external services. No SaaS account, no cloud tenant, no API key required for default operation. Optional integrations only transmit configured data.",
               },
               {
                 title: "Behavioral risk focus",

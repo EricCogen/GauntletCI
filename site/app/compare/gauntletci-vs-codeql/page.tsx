@@ -57,14 +57,14 @@ const tableRows = [
 
 const featureRows = [
   { label: "Diff-scoped analysis (changed lines only)", gauntlet: "yes" as const, codeql: "no" as const },
-  { label: "100% local execution, no code upload", gauntlet: "yes" as const, codeql: "partial" as const },
+  { label: "Core analysis: local, no code upload by default", gauntlet: "yes" as const, codeql: "partial" as const },
   { label: "Pre-commit (before push) feedback", gauntlet: "yes" as const, codeql: "no" as const },
-  { label: "Air-gap / data residency friendly", gauntlet: "yes" as const, codeql: "no" as const },
+  { label: "Air-gap / data residency friendly (core engine)", gauntlet: "yes" as const, codeql: "no" as const },
   { label: "Sub-second analysis time", gauntlet: "yes" as const, codeql: "no" as const },
   { label: "Security variant / CVE detection", gauntlet: "no" as const, codeql: "yes" as const },
   { label: "Custom query language (QL)", gauntlet: "no" as const, codeql: "yes" as const },
   { label: "GitHub Security tab integration", gauntlet: "partial" as const, codeql: "yes" as const },
-  { label: "GitHub inline PR comments", gauntlet: "yes" as const, codeql: "yes" as const },
+  { label: "GitHub inline PR comments", gauntlet: "yes (Teams tier)" as const, codeql: "yes" as const },
   { label: "Behavioral regression rule set (C#/.NET)", gauntlet: "yes" as const, codeql: "partial" as const },
   { label: "Baseline delta mode (suppress existing findings)", gauntlet: "yes" as const, codeql: "no" as const },
   { label: "Local LLM enrichment (no API key)", gauntlet: "yes" as const, codeql: "no" as const },
