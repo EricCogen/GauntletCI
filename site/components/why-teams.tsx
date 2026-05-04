@@ -54,7 +54,7 @@ export function WhyTeams() {
             href="/detections"
             className="inline-flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
           >
-            See what it catches in real codebases &rarr;
+            See what it catches in real codebases →
           </Link>
         </div>
       </div>

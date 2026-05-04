@@ -60,7 +60,7 @@ export default function PricingPage() {
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 pb-4">
           <Link href="/" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">
-            &larr; Back to home
+            ← Back to home
           </Link>
           <h1 className="mt-6 text-4xl sm:text-5xl font-bold tracking-tight text-balance">
             Simple, transparent pricing

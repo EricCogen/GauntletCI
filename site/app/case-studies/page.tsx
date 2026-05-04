@@ -143,7 +143,7 @@ export default function CaseStudiesPage() {
                 </div>
 
                 <p className="mt-4 text-xs text-cyan-400/70 group-hover:text-cyan-400 transition-colors">
-                  Read case study &rarr;
+                  Read case study →
                 </p>
               </Link>
             ))}

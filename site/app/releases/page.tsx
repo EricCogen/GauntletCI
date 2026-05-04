@@ -26,7 +26,7 @@ export default function ReleasesPage() {
       <main className="min-h-screen bg-background pt-24">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-12">
           <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
-            &larr; Back home
+            ← Back home
           </Link>
 
           <h1 className="mt-6 text-4xl font-bold tracking-tight">Releases</h1>
@@ -73,7 +73,7 @@ export default function ReleasesPage() {
                       rel="noopener noreferrer"
                       className="text-xs text-muted-foreground hover:text-foreground"
                     >
-                      diff &rarr;
+                      diff →
                     </Link>
                   )}
                 </div>
@@ -102,7 +102,7 @@ export default function ReleasesPage() {
                                     ? { target: "_blank", rel: "noopener noreferrer" }
                                     : {})}
                                 >
-                                  View &rarr;
+                                  View →
                                 </Link>
                               </span>
                             ) : (

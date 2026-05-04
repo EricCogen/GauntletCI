@@ -79,7 +79,7 @@ export default function NUnitThreadSleepAsyncPage() {
                 href="/case-studies"
                 className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors"
               >
-                &larr; All case studies
+                ← All case studies
               </Link>
             </div>
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-balance">
@@ -95,7 +95,7 @@ export default function NUnitThreadSleepAsyncPage() {
                 rel="noopener noreferrer"
                 className="font-mono text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
               >
-                PR#5192 &nearr;
+                PR#5192 ↗
               </a>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -218,7 +218,7 @@ export default function NUnitThreadSleepAsyncPage() {
               href="/case-studies"
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-card/80 transition-colors"
             >
-              &larr; All case studies
+              ← All case studies
             </Link>
             <Link
               href="/docs"
