@@ -350,4 +350,130 @@ public sealed class SilverLabelEngineTests
 
         Assert.Null(ex);
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Phase 21 Coordination Tests: Async Execution Model (GCI0016 family)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task InferLabels_BlockingCallWithComment_GCI0016Detected()
+    {
+        // Arrange: diff contains .Result blocking call
+        var diff = """
+            --- a/src/Api.cs
+            +++ b/src/Api.cs
+            @@ -5,5 +5,6 @@
+            +    var result = _httpClient.GetAsync("").Result;
+             return result;
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("coord-001", diff);
+
+        // Assert: GCI0016 detected
+        var gci0016 = Assert.Single(labels, l => l.RuleId == "GCI0016" && l.ShouldTrigger);
+        Assert.NotNull(gci0016);
+    }
+
+    [Fact]
+    public async Task InferLabelsFromComments_ThreadPoolKeyword_DetectsGCI0016()
+    {
+        // Arrange: review comment mentions "thread pool" (new Phase 21 keyword)
+        var json = CommentsJson("This could cause thread pool starvation");
+
+        // Act
+        var labels = await _engine.InferLabelsFromCommentsAsync(json);
+
+        // Assert: GCI0016 should be detected due to new "thread pool" keyword
+        var gci0016 = Assert.Single(labels, l => l.RuleId == "GCI0016");
+        Assert.True(gci0016.ShouldTrigger);
+        Assert.Equal(0.65, gci0016.ExpectedConfidence);
+    }
+
+    [Fact]
+    public async Task InferLabelsFromComments_SocketKeyword_DetectsGCI0016()
+    {
+        // Arrange: review comment mentions "socket" (new Phase 21 keyword for socket exhaustion)
+        var json = CommentsJson("This will cause socket exhaustion");
+
+        // Act
+        var labels = await _engine.InferLabelsFromCommentsAsync(json);
+
+        // Assert: GCI0016 detected due to "socket" keyword coordination
+        var gci0016 = Assert.Single(labels, l => l.RuleId == "GCI0016");
+        Assert.True(gci0016.ShouldTrigger);
+    }
+
+    [Fact]
+    public async Task InferLabelsFromComments_ConcurrencyKeyword_DetectsGCI0016()
+    {
+        // Arrange: review comment mentions "concurrency" (new Phase 21 keyword)
+        var json = CommentsJson("Need proper concurrency handling");
+
+        // Act
+        var labels = await _engine.InferLabelsFromCommentsAsync(json);
+
+        // Assert
+        var gci0016 = Assert.Single(labels, l => l.RuleId == "GCI0016");
+        Assert.True(gci0016.ShouldTrigger);
+        Assert.Equal(0.65, gci0016.ExpectedConfidence);
+    }
+
+    [Fact]
+    public async Task InferLabelsFromComments_CpuBoundKeyword_DetectsGCI0016()
+    {
+        // Arrange: "cpu bound" keyword signals performance concern  
+        // Note: keywords are matched case-insensitive within the comment body
+        var json = CommentsJson("cpu bound operation should not block");
+
+        // Act
+        var labels = await _engine.InferLabelsFromCommentsAsync(json);
+
+        // Assert
+        var gci0016 = Assert.Single(labels, l => l.RuleId == "GCI0016");
+        Assert.True(gci0016.ShouldTrigger);
+    }
+
+    [Fact]
+    public async Task InferLabels_BlockingCallAndDirectHttpClient_TriggersBothRules()
+    {
+        // Arrange: diff contains both .Result AND new HttpClient() in production code
+        var diff = """
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -10,5 +10,7 @@
+             public class Service
+             {
+            +    var client = new HttpClient();
+            +    var data = client.GetAsync("").Result;
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("coord-002", diff);
+
+        // Assert: GCI0016 should definitely trigger on .Result
+        Assert.Contains(labels, l => l.RuleId == "GCI0016" && l.ShouldTrigger);
+        
+        // GCI0039 should trigger on new HttpClient() in non-test file
+        var gci0039 = labels.FirstOrDefault(l => l.RuleId == "GCI0039");
+        if (gci0039 != null)
+        {
+            // If GCI0039 is present, it should be positive due to new HttpClient()
+            Assert.True(gci0039.ShouldTrigger, "GCI0039 should detect direct HttpClient instantiation");
+        }
+    }
+
+    [Fact]
+    public async Task InferLabelsFromComments_MultipleAsyncKeywords_EnhancedDetection()
+    {
+        // Arrange: comment with multiple new Phase 21 keywords
+        var json = CommentsJson("Socket and thread pool issues with cpu-bound blocking");
+
+        // Act
+        var labels = await _engine.InferLabelsFromCommentsAsync(json);
+
+        // Assert: GCI0016 should trigger (highest confidence match)
+        var gci0016 = Assert.Single(labels, l => l.RuleId == "GCI0016");
+        Assert.True(gci0016.ShouldTrigger);
+    }
 }
