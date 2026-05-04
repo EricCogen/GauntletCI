@@ -101,6 +101,12 @@ const pages = [
     category: 'Docs',
     sub: 'Installation, configuration, rules, and CLI reference.',
   },
+  {
+    slug: 'can-ai-code-review-be-deterministic',
+    title: 'Can AI Code Review\nBe Deterministic?',
+    category: 'Article',
+    sub: 'Determinism vs probabilistic judgment in code review.',
+  },
 ];
 
 function escapeXml(str) {
