@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Github, Twitter, Linkedin, MessageSquare } from "lucide-react";
+import { addUtmParams } from "@/lib/utils";
 
 export function Footer() {
   return (
@@ -145,7 +146,7 @@ export function Footer() {
           </div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <Link
-              href="https://github.com/ericcogen/gauntletci"
+              href={addUtmParams("https://github.com/ericcogen/gauntletci", "footer", "cta_button", "github_star")}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-cyan-500/50 bg-cyan-500/10 text-sm font-semibold text-cyan-400 hover:bg-cyan-500/20 transition-colors"

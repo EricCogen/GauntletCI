@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield } from "lucide-react";
+import { addUtmParams } from "@/lib/utils";
 
 export function Hero() {
   return (
@@ -66,13 +67,13 @@ export function Hero() {
 
           <div className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" asChild className="bg-cyan-500 hover:bg-cyan-600 text-black font-semibold">
-              <Link href="#pricing">
+              <Link href={addUtmParams("#pricing", "hero", "cta_button", "install_now")}>
                 Install Now
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
             <Button variant="outline" size="lg" asChild>
-              <Link href="/docs">
+              <Link href={addUtmParams("/docs", "hero", "cta_button", "explore_docs")}>
                 Explore Docs
               </Link>
             </Button>

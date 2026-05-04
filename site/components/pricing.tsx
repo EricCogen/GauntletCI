@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Check, Minus, Key } from "lucide-react";
+import { addUtmParams } from "@/lib/utils";
 
 type CellValue = "check" | "none" | "license";
 
@@ -150,22 +151,22 @@ export function Pricing({ standalone = false }: { standalone?: boolean }) {
           <div className="grid grid-cols-[2fr_1fr_1fr_1fr_1fr] bg-card/50 border-t-2 border-t-border">
             <div className="px-5 py-4" />
             <div className="px-3 py-4 flex items-center justify-center">
-              <a href="#quickstart" className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition-colors">
+              <a href={addUtmParams("#quickstart", "pricing", "cta_button", "community_getstarted")} className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition-colors">
                 Get Started
               </a>
             </div>
             <div className="px-3 py-4 flex items-center justify-center">
-              <a href={STRIPE_LINKS.pro} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition-colors">
+              <a href={addUtmParams(STRIPE_LINKS.pro, "pricing", "cta_button", "pro_freetrial")} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 transition-colors">
                 Start Free Trial
               </a>
             </div>
             <div className="px-3 py-4 flex items-center justify-center">
-              <a href={STRIPE_LINKS.teams} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
+              <a href={addUtmParams(STRIPE_LINKS.teams, "pricing", "cta_button", "teams_buy")} target="_blank" rel="noopener noreferrer" className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
                 Buy Teams
               </a>
             </div>
             <div className="px-3 py-4 flex items-center justify-center">
-              <a href={STRIPE_LINKS.enterprise} className="text-xs font-semibold text-purple-400 hover:text-purple-300 transition-colors">
+              <a href={addUtmParams(STRIPE_LINKS.enterprise, "pricing", "cta_button", "enterprise_contact")} className="text-xs font-semibold text-purple-400 hover:text-purple-300 transition-colors">
                 Contact Sales
               </a>
             </div>

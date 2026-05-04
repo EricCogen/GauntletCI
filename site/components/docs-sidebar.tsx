@@ -2,6 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { addUtmParams } from "@/lib/utils";
 
 const coreItems = [
   { href: "/docs", label: "Getting Started" },
@@ -61,6 +64,15 @@ export function DocsSidebar() {
             {item.label}
           </Link>
         ))}
+
+        <div className="mt-8 pt-6 border-t border-border">
+          <Button size="sm" asChild className="w-full bg-cyan-500 hover:bg-cyan-600 text-black font-semibold text-xs">
+            <Link href={addUtmParams("/#quickstart", "docs_sidebar", "cta_button", "install_now")} className="flex items-center justify-center gap-1.5">
+              <Download className="h-3.5 w-3.5" />
+              Install Now
+            </Link>
+          </Button>
+        </div>
       </nav>
     </aside>
   );
