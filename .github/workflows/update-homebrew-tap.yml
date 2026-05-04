@@ -31,7 +31,7 @@ jobs:
           echo "linux_x64=$(sha "gauntletci-linux-x64-${VERSION}.tar.gz")"  >> "$GITHUB_OUTPUT"
 
       - name: Checkout tap repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: EricCogen/homebrew-gauntletci
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
