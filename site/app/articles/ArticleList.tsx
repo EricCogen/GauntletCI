@@ -47,10 +47,8 @@ export function ArticleList({ articles }: { articles: Article[] }) {
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  {/* Pushpin: circle head with shaft */}
-                  <circle cx="12" cy="8" r="3.5" />
-                  <rect x="10.5" y="11" width="3" height="9" />
-                  <polygon points="12,20 10,22 14,22" />
+                  {/* Thumbtack/Pushpin - wide circular head with thin shaft */}
+                  <path d="M12 1c2.761 0 5 2.239 5 5 0 1.822-.995 3.413-2.474 4.272.341.508.474 1.145.474 1.728v8.5c0 1.381-1.119 2.5-2.5 2.5s-2.5-1.119-2.5-2.5v-8.5c0-.583.133-1.22.474-1.728-1.479-.859-2.474-2.45-2.474-4.272 0-2.761 2.239-5 5-5z"/>
                 </svg>
               </div>
             )}
