@@ -28,6 +28,7 @@ const articles = [
       "Exploring determinism vs. probabilistic judgment in code review. Why repeatable engineering evidence matters more than helpful suggestions.",
     tags: ["AI", "Code Review", "Determinism"],
     readTime: "12 min read",
+    pinned: true,
   },
   {
     href: "/why-code-review-misses-bugs",

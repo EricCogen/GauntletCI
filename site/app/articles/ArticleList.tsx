@@ -11,13 +11,23 @@ type Article = {
   description: string;
   tags: string[];
   readTime: string;
+  pinned?: boolean;
 };
 
 export function ArticleList({ articles }: { articles: Article[] }) {
+  // Sort: pinned first, then by order
+  const sortedArticles = React.useMemo(() => {
+    return [...articles].sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return articles.indexOf(a) - articles.indexOf(b);
+    });
+  }, [articles]);
+
   const [page, setPage] = React.useState(1);
-  const totalPages = Math.ceil(articles.length / PAGE_SIZE);
+  const totalPages = Math.ceil(sortedArticles.length / PAGE_SIZE);
   const start = (page - 1) * PAGE_SIZE;
-  const visible = articles.slice(start, start + PAGE_SIZE);
+  const visible = sortedArticles.slice(start, start + PAGE_SIZE);
 
   return (
     <>
@@ -26,8 +36,22 @@ export function ArticleList({ articles }: { articles: Article[] }) {
           <Link
             key={article.href}
             href={article.href}
-            className="group block rounded-xl border border-border bg-card/30 hover:bg-card/60 hover:border-cyan-500/30 transition-all p-6"
+            className="group block rounded-xl border border-border bg-card/30 hover:bg-card/60 hover:border-cyan-500/30 transition-all p-6 relative"
           >
+            {/* Pin icon in top-right */}
+            {article.pinned && (
+              <div className="absolute top-4 right-4 text-cyan-400">
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5.951-1.429 5.951 1.429a1 1 0 001.169-1.409l-7-14z" />
+                </svg>
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center gap-2 mb-3">
               {article.tags.map((tag) => (
                 <span
@@ -41,7 +65,7 @@ export function ArticleList({ articles }: { articles: Article[] }) {
                 {article.readTime}
               </span>
             </div>
-            <h2 className="text-xl font-semibold text-foreground group-hover:text-cyan-400 transition-colors mb-2">
+            <h2 className="text-xl font-semibold text-foreground group-hover:text-cyan-400 transition-colors mb-2 pr-8">
               {article.title}
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed">
