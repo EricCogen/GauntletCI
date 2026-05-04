@@ -47,10 +47,9 @@ export function ArticleList({ articles }: { articles: Article[] }) {
                   viewBox="0 0 24 24"
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  {/* Classic pushpin - ellipse head, shaft, pointed tip */}
-                  <ellipse cx="12" cy="4" rx="3" ry="2.5" />
-                  <rect x="11" y="6.5" width="2" height="10" />
-                  <polygon points="12,16.5 10,20 14,20" />
+                  {/* Actual pushpin - large rounded head with sharp needle point */}
+                  <circle cx="12" cy="7" r="5.5" />
+                  <path d="M 11.5 12.5 L 10 22 L 12 22 L 14 22 L 12.5 12.5 Z" />
                 </svg>
               </div>
             )}
