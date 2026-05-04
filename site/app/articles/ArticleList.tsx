@@ -48,7 +48,7 @@ export function ArticleList({ articles }: { articles: Article[] }) {
               {article.description}
             </p>
             <p className="mt-4 text-xs text-cyan-400/70 group-hover:text-cyan-400 transition-colors">
-              Read article &rarr;
+              Read article →
             </p>
           </Link>
         ))}
@@ -61,7 +61,7 @@ export function ArticleList({ articles }: { articles: Article[] }) {
             disabled={page === 1}
             className="px-4 py-2 text-sm font-medium rounded-lg border border-border bg-card/30 hover:bg-card/60 hover:border-cyan-500/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            &larr; Previous
+            ← Previous
           </button>
           <span className="text-sm text-muted-foreground">
             Page {page} of {totalPages}
@@ -71,7 +71,7 @@ export function ArticleList({ articles }: { articles: Article[] }) {
             disabled={page === totalPages}
             className="px-4 py-2 text-sm font-medium rounded-lg border border-border bg-card/30 hover:bg-card/60 hover:border-cyan-500/30 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
           >
-            Next &rarr;
+            Next →
           </button>
         </div>
       )}

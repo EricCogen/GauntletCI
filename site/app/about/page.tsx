@@ -45,7 +45,7 @@ export default function AboutPage() {
             href="/"
             className="text-sm text-muted-foreground hover:text-foreground"
           >
-            &larr; Back home
+            ← Back home
           </Link>
 
           <div className="mt-10 mb-12">
