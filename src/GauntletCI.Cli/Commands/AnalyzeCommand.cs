@@ -254,6 +254,14 @@ public static class AnalyzeCommand
                     // Enrichment failures should not break analysis - log and continue
                     Console.Error.WriteLine($"[enrichment] Pipeline failed: {ex.Message}");
                 }
+                
+                // Ensure result is not null (it shouldn't be, but satisfy the compiler)
+                if (result == null)
+                {
+                    Console.Error.WriteLine("[error] Analysis returned no results. Aborting.");
+                    ctx.ExitCode = 1;
+                    return;
+                }
 
                 // Baseline delta mode: suppress findings whose fingerprint is in the baseline.
                 int suppressedByBaseline = 0;
