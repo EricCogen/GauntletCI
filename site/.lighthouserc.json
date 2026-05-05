@@ -3,9 +3,13 @@
     "collect": {
       "staticDistDir": "./out",
       "url": [
-        "http://localhost/",
-        "http://localhost/about/",
-        "http://localhost/releases/"
+        "/",
+        "/about/",
+        "/articles/",
+        "/docs/",
+        "/pricing/",
+        "/articles/why-tests-miss-bugs/",
+        "/articles/case-studies/"
       ],
       "numberOfRuns": 1
     },
