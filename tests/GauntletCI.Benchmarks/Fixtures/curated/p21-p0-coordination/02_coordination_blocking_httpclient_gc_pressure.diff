@@ -1,0 +1,24 @@
+--- a/src/Services/BatchDataFetcher.cs
++++ b/src/Services/BatchDataFetcher.cs
+@@ -15,6 +15,22 @@ public class BatchDataFetcher
+     {
+         _httpClient = httpClient;
+     }
++
++    public List<string> FetchBatchRemoteData(List<string> urls)
++    {
++        var results = new List<string>();
++        // GCI0044: Loop with List.Add (unbounded growth)
++        foreach (var url in urls)
++        {
++            // GCI0039: New HttpClient in loop without timeout
++            var client = new HttpClient();
++            // GCI0016: Blocking call on async Task inside loop
++            var response = client.GetAsync(url).Result;
++            results.Add(response.Content.ReadAsStringAsync().Result);
++        }
++        return results;
++    }
+     
+     public async Task<List<string>> GetJsonDataBatchAsync(List<string> urls)
+     {
