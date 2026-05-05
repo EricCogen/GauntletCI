@@ -1,5 +1,5 @@
 # GauntletCI
-<div><img src="GauntletCI.png" alt="GauntletCI Logo" width="200" align="right"/></div>
+<div><img src="assets/images/GauntletCI.png" alt="GauntletCI Logo" width="200" align="right"/></div>
 
 [![GauntletCI](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/EricCogen/db3979f1a5d69ce37d425b73bdcf4ada/raw/gauntletci-badge.json)](https://github.com/EricCogen/GauntletCI)
 [![GitHub last commit](https://img.shields.io/github/last-commit/EricCogen/GauntletCI)](https://github.com/EricCogen/GauntletCI/commits/main)
@@ -377,6 +377,18 @@ LLM integration enhances explanation only.
 * No code leaves your machine
 * Auto-redaction prevents sensitive data exposure
 * Telemetry is optional and anonymous
+
+---
+
+## 📚 Documentation & Links
+
+* **[Documentation Hub](docs/)** - Full documentation index
+* **[Contributing Guide](docs/contributing.md)** - How to contribute
+* **[Project Information](docs/project/)** - Charter, history, governance
+* **[Security Policy](docs/security.md)** - Vulnerability reporting
+* **[Support](docs/support.md)** - Getting help
+* **[Release Notes](RELEASE_NOTES_v2.4.0-phase21-coordinations.md)** - Current version
+* **[Deployment Guide](DEPLOYMENT_CHECKLIST_v2.4.0.md)** - Deployment instructions
 
 ---
 
