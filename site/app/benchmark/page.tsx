@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "The Silver Benchmark | GauntletCI Detection Accuracy",
@@ -686,6 +687,9 @@ export default function BenchmarkPage() {
       <Header />
       <main className="min-h-screen bg-background pt-24">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 space-y-16">
+
+          {/* Breadcrumbs */}
+          <Breadcrumbs />
 
           {/* 1. Hero */}
           <div className="space-y-5 border-b border-border pb-12">

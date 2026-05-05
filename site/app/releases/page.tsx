@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { parseChangelog } from "@/lib/parseChangelog";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Releases | GauntletCI",
@@ -25,9 +26,7 @@ export default function ReleasesPage() {
       <Header />
       <main className="min-h-screen bg-background pt-24">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-12">
-          <Link href="/" className="text-sm text-muted-foreground hover:text-foreground">
-            ← Back home
-          </Link>
+          <Breadcrumbs />
 
           <h1 className="mt-6 text-4xl font-bold tracking-tight">Releases</h1>
           <p className="mt-3 text-lg text-muted-foreground">

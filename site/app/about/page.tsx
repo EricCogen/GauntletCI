@@ -6,6 +6,7 @@ import { AuthorBio } from "@/components/author-bio";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, AlertCircle, Target, Zap } from "lucide-react";
 import { addUtmParams } from "@/lib/utils";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "About Eric Cogen | Founder of GauntletCI",
@@ -41,12 +42,7 @@ export default function AboutPage() {
       <Header />
       <main className="min-h-screen bg-background pt-24">
         <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-12">
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground"
-          >
-            ← Back home
-          </Link>
+          <Breadcrumbs />
 
           <div className="mt-10 mb-12">
             <h1 className="text-5xl font-bold tracking-tight">About</h1>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Header } from "@/components/header";
 import { Pricing } from "@/components/pricing";
 import { Footer } from "@/components/footer";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Pricing | GauntletCI -- Free to start, pay when your team needs it",
@@ -59,9 +60,7 @@ export default function PricingPage() {
         <Header />
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-16 pb-4">
-          <Link href="/" className="text-sm text-muted-foreground hover:text-cyan-400 transition-colors">
-            ← Back to home
-          </Link>
+          <Breadcrumbs />
           <h1 className="mt-6 text-4xl sm:text-5xl font-bold tracking-tight text-balance">
             Simple, transparent pricing
           </h1>
