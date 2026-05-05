@@ -1,0 +1,48 @@
+diff --git a/src/ReportService.cs b/src/ReportService.cs
+index 6a7b8c9..7f9e8a10 100644
+--- a/src/ReportService.cs
++++ b/src/ReportService.cs
+@@ -1,28 +1,38 @@
+ using System;
+ using System.Data.SqlClient;
+ using Microsoft.AspNetCore.Mvc;
+ 
+ [ApiController]
+ [Route("api/reports")]
+ public class ReportController : ControllerBase
+ {
+     private string _connString = "Server=.;Database=reports";
+ 
+     [HttpGet("export")]
+     public async Task<IActionResult> ExportReport([FromQuery] ExportRequest req)
+     {
+-        using (var conn = new SqlConnection(_connString))
++        // GCI0024: SqlDataReader obtained without using() or disposal guarantee
++        var conn = new SqlConnection(_connString);
+         {
+             conn.Open();
+             
+             var cmd = conn.CreateCommand();
+             cmd.CommandText = "SELECT * FROM ReportData WHERE Threshold > @threshold";
+             
+-            int threshold = checked((int)req.Threshold);
++            // GCI0015: Unchecked cast from query parameter
++            // Typical report data uses large numbers (millions of rows)
++            // If user provides value > int.MaxValue → silent overflow
++            // Query returns wrong subset of data OR SQL injection potential
++            int threshold = (int)req.Threshold;  // Unchecked cast
+             
+             cmd.Parameters.AddWithValue("@threshold", threshold);
+             
+-            using (var reader = cmd.ExecuteReader())
++            // GCI0024: SqlDataReader not disposed
++            var reader = cmd.ExecuteReader();  // Not in using statement!
+             {
+                 while (reader.Read())
+                 {
++                    // If threshold overflowed, reading wrong rows
++                    // Reader still open → connection held
++                    // Never explicitly closed
+                     // ... process row ...
+                 }
+             }

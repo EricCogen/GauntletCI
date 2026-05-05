@@ -1,0 +1,38 @@
+diff --git a/src/FileDownloadService.cs b/src/FileDownloadService.cs
+index 2a3b4c5..6d7e8f9 100644
+--- a/src/FileDownloadService.cs
++++ b/src/FileDownloadService.cs
+@@ -1,22 +1,28 @@
+ using System.IO;
+ using Microsoft.AspNetCore.Mvc;
+ 
+ [ApiController]
+ [Route("api/files")]
+ public class FileController : ControllerBase
+ {
+     [HttpPost("download")]
+     public async Task DownloadChunk(int fileId, [FromQuery] long offset)
+     {
+-        using (var file = File.OpenRead($"/storage/{fileId}.bin"))
++        // GCI0024: FileStream opened without disposal guarantee
++        var file = File.OpenRead($"/storage/{fileId}.bin");
+         {
+             // GCI0015: Unchecked cast from user-supplied data
+             // If file is 5GB (5,368,709,120 bytes) and offset > int.MaxValue
+             // Silent integer overflow occurs in unchecked context
+-            int offsetInt = checked((int)offset);
++            int offsetInt = (int)offset;  // Unchecked cast - overflow possible
+             
+             file.Seek(offsetInt, SeekOrigin.Begin);  // Seeks to WRONG position due to overflow
+             
+             byte[] buffer = new byte[1024 * 1024];  // 1MB buffer
+             int bytesRead = file.Read(buffer, 0, buffer.Length);
+             
+             await Response.Body.WriteAsync(buffer, 0, bytesRead);
++            
++            // Bug: If overflow occurs, seeks to negative position or wrong location
++            // Result: File handle never closed, stream not disposed
++            // Under load: File handle exhaustion → all subsequent file operations fail
+         }
+     }
+ }

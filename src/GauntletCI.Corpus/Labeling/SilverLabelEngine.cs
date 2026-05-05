@@ -302,6 +302,9 @@ public sealed class SilverLabelEngine
         // ── Phase 21 Coordination: Exception Handling ──────────────────────────
         ApplyExceptionHandlingCoordination(inferred);
 
+        // ── Phase 21 Coordination: Resource Management ──────────────────────────
+        ApplyResourceManagementCoordination(inferred);
+
         // ── Tier 3: LLM fallback for uncertain findings ───────────────────────
         var positiveRuleIdsAfterTier12 = inferred
             .Where(l => l.ShouldTrigger)
@@ -2059,6 +2062,63 @@ public sealed class SilverLabelEngine
                         Reason = "[coordination] Exception swallowing in async context (GCI0016) loses all error information",
                         LabelSource = gci0032.LabelSource,
                         IsInconclusive = gci0032.IsInconclusive,
+                    };
+                }
+            }
+        }
+    }
+
+    private void ApplyResourceManagementCoordination(List<ExpectedFinding> labels)
+    {
+        // ── Coordination Pattern: Resource Lifecycle + Data Integrity ───────────
+        // When GCI0024 (resource leak) + GCI0015 (data integrity) both fire,
+        // it signals compound risk: resource not disposed DURING data corruption.
+        // Result: cascading failure where either makes the other worse.
+        //
+        // Examples:
+        // - SqlConnection not disposed + unchecked cast = pool exhaustion + wrong data
+        // - FileStream not disposed + integer overflow = handle leak + wrong file position
+        // - DbContext not disposed + mass assignment = connection pressure + privilege escalation
+
+        var hasGci0024 = labels.Any(l => l.RuleId == "GCI0024" && l.ShouldTrigger);
+        var hasGci0015 = labels.Any(l => l.RuleId == "GCI0015" && l.ShouldTrigger);
+
+        if (hasGci0024 && hasGci0015)
+        {
+            // Boost GCI0024 (resource lifecycle) - resource leak confirmed by concurrent data corruption
+            var gci0024Index = labels.FindIndex(l => l.RuleId == "GCI0024");
+            if (gci0024Index >= 0)
+            {
+                var gci0024 = labels[gci0024Index];
+                if (gci0024.ExpectedConfidence < 0.80)
+                {
+                    labels[gci0024Index] = new ExpectedFinding
+                    {
+                        RuleId = gci0024.RuleId,
+                        ShouldTrigger = gci0024.ShouldTrigger,
+                        ExpectedConfidence = 0.80,
+                        Reason = "[coordination] Resource leak + GCI0015 data integrity risk = cascading failure. Resource not disposed during data corruption.",
+                        LabelSource = gci0024.LabelSource,
+                        IsInconclusive = gci0024.IsInconclusive,
+                    };
+                }
+            }
+
+            // Boost GCI0015 (data integrity) - data corruption confirmed by concurrent resource leak
+            var gci0015Index = labels.FindIndex(l => l.RuleId == "GCI0015");
+            if (gci0015Index >= 0)
+            {
+                var gci0015 = labels[gci0015Index];
+                if (gci0015.ExpectedConfidence < 0.75)
+                {
+                    labels[gci0015Index] = new ExpectedFinding
+                    {
+                        RuleId = gci0015.RuleId,
+                        ShouldTrigger = gci0015.ShouldTrigger,
+                        ExpectedConfidence = 0.75,
+                        Reason = "[coordination] Data integrity risk + GCI0024 resource leak = compound risk. Data corruption occurs while resource remains open.",
+                        LabelSource = gci0015.LabelSource,
+                        IsInconclusive = gci0015.IsInconclusive,
                     };
                 }
             }

@@ -1,0 +1,119 @@
+{
+  "phase": "21.2",
+  "coordination_pattern": "Resource Management",
+  "description": "Cross-rule coordination for resource lifecycle + data integrity anti-patterns (GCI0024 ↔ GCI0015). When resource leaks coincide with data corruption risks, compound risk triggers confidence boosts.",
+  "fixtures": [
+    {
+      "id": "p21-p2-01",
+      "name": "Connection Pool Exhaustion + Over-Posting",
+      "file": "01_coordination_connection_pool_over_posting.diff",
+      "description": "SqlConnection not disposed + mass field assignment from request. Result: Connection leak triggers pool exhaustion + attacker gains privilege escalation via over-posting.",
+      "mapped_gci_rules": ["GCI0024", "GCI0015"],
+      "expected_outcome": "fire",
+      "coordination_pattern": "Resource leak + data injection = cascade failure",
+      "confidence_boost": {
+        "GCI0024": "0.65 → 0.80 (+23%)",
+        "GCI0015": "0.60 → 0.75 (+25%)"
+      },
+      "compound_risk": "Connection pool exhaustion compounded by privilege escalation attack"
+    },
+    {
+      "id": "p21-p2-02",
+      "name": "File Handle Leak + Integer Overflow",
+      "file": "02_coordination_file_handle_leak_overflow.diff",
+      "description": "FileStream opened without disposal + unchecked cast on file offset. Result: Integer overflow causes wrong file position + handle leak causes OS resource exhaustion.",
+      "mapped_gci_rules": ["GCI0024", "GCI0015"],
+      "expected_outcome": "fire",
+      "coordination_pattern": "Resource leak + bounds violation = data corruption + resource exhaustion",
+      "confidence_boost": {
+        "GCI0024": "0.65 → 0.80 (+23%)",
+        "GCI0015": "0.60 → 0.75 (+25%)"
+      },
+      "compound_risk": "File handle exhaustion prevents all subsequent I/O operations; corrupted offset reads wrong data"
+    },
+    {
+      "id": "p21-p2-03",
+      "name": "Transaction Abort + Unchecked Cast",
+      "file": "03_coordination_transaction_abort_cast.diff",
+      "description": "ITransaction never disposed + unchecked cast corrupts WHERE clause. Result: Wrong customer's records modified + transaction locks held indefinitely.",
+      "mapped_gci_rules": ["GCI0024", "GCI0015"],
+      "expected_outcome": "fire",
+      "coordination_pattern": "Resource (transaction) not disposed + data corruption in query = deadlock + data loss",
+      "confidence_boost": {
+        "GCI0024": "0.65 → 0.80 (+23%)",
+        "GCI0015": "0.60 → 0.75 (+25%)"
+      },
+      "compound_risk": "Cascading deadlock + data integrity violation affecting multiple customers"
+    },
+    {
+      "id": "p21-p2-04",
+      "name": "Bulk Import Connection Leak + Mass Assignment",
+      "file": "04_coordination_bulk_import_connection_leak.diff",
+      "description": "SqlConnection created in loop and never disposed + three-field mass assignment. Result: N connections leak under load (N×[connection leak] + [privilege escalation]).",
+      "mapped_gci_rules": ["GCI0024", "GCI0015"],
+      "expected_outcome": "fire",
+      "coordination_pattern": "Resource leak in loop + mass assignment = DoS + data injection",
+      "confidence_boost": {
+        "GCI0024": "0.65 → 0.80 (+23%)",
+        "GCI0015": "0.60 → 0.75 (+25%)"
+      },
+      "compound_risk": "Amplified leak (per-record) + attacker can inject fraudulent approved/creator fields"
+    },
+    {
+      "id": "p21-p2-05",
+      "name": "DbContext Leak + Mass Assignment to Account",
+      "file": "05_coordination_context_leak_mass_assign.diff",
+      "description": "DbContext never disposed + four-field mass assignment including IsEnterprise flag. Result: Context leak under concurrent load + attacker creates fraudulent enterprise accounts.",
+      "mapped_gci_rules": ["GCI0024", "GCI0015"],
+      "expected_outcome": "fire",
+      "coordination_pattern": "Resource (context) leak + privilege escalation = infrastructure collapse + security breach",
+      "confidence_boost": {
+        "GCI0024": "0.65 → 0.80 (+23%)",
+        "GCI0015": "0.60 → 0.75 (+25%)"
+      },
+      "compound_risk": "Memory pressure + connection pool exhaustion triggered by fraudulent account creation"
+    },
+    {
+      "id": "p21-p2-06",
+      "name": "SqlDataReader Not Disposed + Cast Bounds Violation",
+      "file": "06_coordination_reader_close_cast_bounds.diff",
+      "description": "SqlDataReader never disposed + unchecked cast on threshold parameter. Result: Reader holds connection open indefinitely + query returns wrong data subset due to overflow.",
+      "mapped_gci_rules": ["GCI0024", "GCI0015"],
+      "expected_outcome": "fire",
+      "coordination_pattern": "Resource (reader) not disposed + query bounds violation = data corruption + connection leak",
+      "confidence_boost": {
+        "GCI0024": "0.65 → 0.80 (+23%)",
+        "GCI0015": "0.60 → 0.75 (+25%)"
+      },
+      "compound_risk": "Connection held open + wrong report data returned to user + repeated queries exhaust pool"
+    }
+  ],
+  "coordination_rules": [
+    {
+      "name": "Resource Lifecycle + Data Integrity Coordination",
+      "primary_rule": "GCI0024",
+      "secondary_rule": "GCI0015",
+      "condition": "When both GCI0024 and GCI0015 fire in same method or file scope",
+      "action": "Boost GCI0024 confidence 0.65→0.80 (+23%), GCI0015 confidence 0.60→0.75 (+25%)",
+      "rationale": "Resource not disposed + data corruption = compound failure. Resource leak causes cascading failures when data is already corrupted. Connection/context/stream leak prevents cleanup paths.",
+      "implementation_location": "SilverLabelEngine.ApplyResourceManagementCoordination()",
+      "fixtures_testing": ["p21-p2-01", "p21-p2-02", "p21-p2-03", "p21-p2-04", "p21-p2-05", "p21-p2-06"],
+      "scope_detection": "File-level heuristics: both findings in same method or same control flow block",
+      "scope_trade_off": "Conservative: method-level avoids false positives, may miss cross-method scenarios"
+    }
+  ],
+  "expected_impact": {
+    "false_positive_reduction": "5-8%",
+    "cumulative_with_p0_p1": "20-30%",
+    "rules_involved": 2,
+    "new_fixtures": 6,
+    "estimated_implementation_time": "8-10 hours",
+    "complexity_level": "High (scope detection is non-trivial)"
+  },
+  "known_challenges": [
+    "Scope detection: Must determine if GCI0024 and GCI0015 operate on same resource",
+    "Heuristics trade-off: Variable name matching (fast, imperfect) vs control flow analysis (expensive)",
+    "False positive risk: File-level may be too broad, method-level may be too narrow",
+    "Implementation: Harder than P0/P1 due to semantic connection requirement"
+  ]
+}

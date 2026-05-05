@@ -1,0 +1,49 @@
+diff --git a/src/AccountController.cs b/src/AccountController.cs
+index 5e6f8a9..9b0c8a10 100644
+--- a/src/AccountController.cs
++++ b/src/AccountController.cs
+@@ -1,31 +1,41 @@
+ using System;
+ using System.Data.Entity;
+ using Microsoft.AspNetCore.Mvc;
+ 
+ [ApiController]
+ [Route("api/accounts")]
+ public class AccountController : ControllerBase
+ {
+     private DbContext _dbContext;
+ 
+     [HttpPost("create")]
+     public async Task CreateAccount([FromBody] AccountCreateRequest req)
+     {
+         // GCI0024: DbContext not disposed (resource leak)
+         var ctx = new DbContext();
+-        
++
+         var account = new Account
+         {
+             Name = req.Name,
+             Email = req.Email,
+-            Tier = AccountTier.Free  // Hardcoded
++            // GCI0015: Mass assignment without model binding restrictions
++            Tier = (AccountTier)req.Tier,       // 1st assignment - user controlled
++            BillingCycleDay = req.BillingDay,   // 2nd - user controlled
++            DiscountCode = req.DiscountCode,    // 3rd - user controlled (now > 2)
++            IsEnterprise = req.IsEnterprise,    // 4th - attacker sets to true
++            MaxUsers = req.MaxUsers,            // 5th - attacker increases limit
+         };
+-        
++
+         ctx.Accounts.Add(account);
+         
+         await ctx.SaveChangesAsync();
+         
+         // ❌ BUG: DbContext never disposed
++        // Resource (database connection context) left open
++        // Under concurrent load with thousands of requests:
++        // (1) Contexts accumulate in memory
++        // (2) Connection pool exhausted
++        // (3) Attacker has set IsEnterprise=true + high MaxUsers limit
++        // (4) Result: Infrastructure collapse + fraudulent account creation
+     }
+ }
