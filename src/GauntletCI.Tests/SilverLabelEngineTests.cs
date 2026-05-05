@@ -518,4 +518,126 @@ public sealed class SilverLabelEngineTests
         var gci0029 = labels.FirstOrDefault(l => l.RuleId == "GCI0029");
         Assert.NotNull(gci0029);
     }
+
+    // --- Phase 23.0 GCI0016 Enhancement Tests ---
+
+    [Fact]
+    public async Task InferLabels_FireAndForgetPattern_DoesNotEmitGCI0016()
+    {
+        // Arrange: fire-and-forget pattern with _ = assignment
+        var diff = """
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -10,3 +10,4 @@
+             public class Service
+             {
+            +    _ = ProcessInBackgroundAsync();  // fire-and-forget, intentional
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("p23-fireandforget", diff);
+
+        // Assert: GCI0016 should NOT trigger (fire-and-forget is legitimate)
+        Assert.DoesNotContain(labels, l => l.RuleId == "GCI0016" && l.ShouldTrigger);
+    }
+
+    [Fact]
+    public async Task InferLabels_ConfigureAwaitFalse_IsValidPattern()
+    {
+        // Arrange: ConfigureAwait(false) is a best practice, not a violation
+        var diff = """
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -10,3 +10,5 @@
+             public class Service
+             {
+            +    var result = GetAsync()
+            +        .ConfigureAwait(false);
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("p23-configurewait", diff);
+
+        // Assert: GCI0016 should NOT trigger (ConfigureAwait is best practice)
+        Assert.DoesNotContain(labels, l => l.RuleId == "GCI0016" && l.ShouldTrigger);
+    }
+
+    [Fact]
+    public async Task InferLabels_TaskRunExplicitDelegation_DoesNotEmitGCI0016()
+    {
+        // Arrange: Task.Run is explicit delegation to thread pool
+        var diff = """
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -10,3 +10,4 @@
+             public class Service
+             {
+            +    Task.Run(() => LongRunningOperation());
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("p23-taskrun", diff);
+
+        // Assert: GCI0016 should NOT trigger (Task.Run is explicit, intentional)
+        Assert.DoesNotContain(labels, l => l.RuleId == "GCI0016" && l.ShouldTrigger);
+    }
+
+    [Fact]
+    public async Task InferLabels_StartupBlockingCode_SkipsGCI0016()
+    {
+        // Arrange: blocking call in startup context (acceptable)
+        var diff = """
+            --- a/Program.cs
+            +++ b/Program.cs
+            @@ -10,3 +10,4 @@
+             // startup initialization
+            +    Task.WaitAll(initTasks);  // startup: blocking acceptable
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("p23-startup", diff);
+
+        // Assert: GCI0016 should NOT trigger (startup context is legitimate)
+        Assert.DoesNotContain(labels, l => l.RuleId == "GCI0016" && l.ShouldTrigger);
+    }
+
+    [Fact]
+    public async Task InferLabels_IntentionalCommentMarker_SkipsGCI0016()
+    {
+        // Arrange: blocking call with "intentional" comment
+        var diff = """
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -10,3 +10,4 @@
+             public class Service
+             {
+            +    var result = asyncOp.Result; // intentional fire-and-forget pattern
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("p23-intentional", diff);
+
+        // Assert: GCI0016 should NOT trigger (intentional marker present)
+        Assert.DoesNotContain(labels, l => l.RuleId == "GCI0016" && l.ShouldTrigger);
+    }
+
+    [Fact]
+    public async Task InferLabels_BlankingAsyncCallStillDetected()
+    {
+        // Arrange: blocking call without legitimate pattern markers
+        var diff = """
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -10,3 +10,4 @@
+             public async Task ProcessAsync()
+             {
+            +    var result = GetDataAsync().Result;
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("p23-violation", diff);
+
+        // Assert: GCI0016 SHOULD still trigger (no legitimate pattern marker)
+        Assert.Contains(labels, l => l.RuleId == "GCI0016" && l.ShouldTrigger);
+    }
 }

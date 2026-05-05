@@ -73,6 +73,9 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
         // Skip dev-only code (test utilities, profiling, temporary debug)
         if (WellKnownPatterns.HasDevOnlyMarker(content)) return;
 
+        // Phase 23.0 Enhancement: Skip legitimate async patterns
+        if (IsLegitimateAsyncPattern(content)) return;
+
         // Phase 16 Guards: ORM async patterns and bounded synchronization
         if (WellKnownPatterns.IsOrmAsyncPattern(content)) return;
         if (WellKnownPatterns.IsBoundedSynchronization(content)) return;
@@ -157,6 +160,45 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
             whyItMatters: "Thread.Sleep blocks the underlying OS thread for the duration of the sleep. In async services this wastes a thread pool thread and degrades throughput under load.",
             suggestedAction: "Replace Thread.Sleep() with await Task.Delay() to yield the thread during the wait.",
             confidence: Confidence.Medium));
+    }
+
+    /// <summary>
+    /// Phase 23.0 Enhancement: Identifies legitimate async patterns that should not trigger GCI0016.
+    /// Examples: fire-and-forget patterns, startup/initialization code, explicit delegation.
+    /// </summary>
+    private static bool IsLegitimateAsyncPattern(string content)
+    {
+        if (string.IsNullOrEmpty(content)) return false;
+
+        // Fire-and-forget pattern: _ = Task, _ = MethodAsync()
+        if (content.Contains("_ =", StringComparison.Ordinal) && 
+            (content.Contains("Task", StringComparison.Ordinal) ||
+             content.Contains("Async(", StringComparison.OrdinalIgnoreCase)))
+            return true;
+
+        // ConfigureAwait(false) - best practice, not a violation
+        if (content.Contains("ConfigureAwait(false)", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Explicit delegation patterns: Task.Run, ThreadPool.QueueUserWorkItem
+        if (content.Contains("Task.Run(", StringComparison.OrdinalIgnoreCase) ||
+            content.Contains("ThreadPool.QueueUserWorkItem", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Startup/initialization code context markers
+        if (content.Contains("startup", StringComparison.OrdinalIgnoreCase) ||
+            content.Contains("initialization", StringComparison.OrdinalIgnoreCase) ||
+            content.Contains("Program.cs", StringComparison.OrdinalIgnoreCase) ||
+            content.Contains("Startup.cs", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Intentional comment markers
+        if (content.Contains("intentional", StringComparison.OrdinalIgnoreCase) ||
+            content.Contains("fire-and-forget", StringComparison.OrdinalIgnoreCase) ||
+            content.Contains("by design", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
     }
 }
 
