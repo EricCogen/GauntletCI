@@ -629,7 +629,7 @@ export default function DetectBreakingChangesPage() {
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Link
-                href="/case-studies/efcore-breaking-api-removal"
+                href="/articles/case-studies/efcore-breaking-api-removal"
                 className="block rounded-xl border border-border bg-card p-4 hover:border-cyan-500/40 hover:bg-card/80 transition-colors"
               >
                 <div className="flex items-center gap-2 mb-2">
@@ -644,7 +644,7 @@ export default function DetectBreakingChangesPage() {
                 </p>
               </Link>
               <Link
-                href="/case-studies/newtonsoft-json-assignment-in-getter"
+                href="/articles/case-studies/newtonsoft-json-assignment-in-getter"
                 className="block rounded-xl border border-border bg-card p-4 hover:border-cyan-500/40 hover:bg-card/80 transition-colors"
               >
                 <div className="flex items-center gap-2 mb-2">
@@ -678,11 +678,13 @@ export default function DetectBreakingChangesPage() {
           </div>
 
           <RulesApplied ids={["GCI0004", "GCI0021", "GCI0047", "GCI0052"]} />
-          <AuthorBio variant="short" />
+          <AuthorBio variant="long" />
         </div>
       </main>
       <Footer />
     </>
   );
 }
+
+
 

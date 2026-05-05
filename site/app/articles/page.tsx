@@ -71,7 +71,7 @@ const articles = [
     readTime: "18 min read",
   },
   {
-    href: "/case-studies",
+    href: "/articles/case-studies",
     title: "OSS Case Studies",
     description:
       "Five real .NET open-source pull requests where GauntletCI flags swallowed exceptions, broken APIs, concurrency bugs, and hardcoded configuration before they reach production.",

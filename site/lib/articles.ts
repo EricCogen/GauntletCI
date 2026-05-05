@@ -68,7 +68,7 @@ export type CaseStudy = {
 export const caseStudies: CaseStudy[] = [
   {
     slug: "stackexchange-redis-swallowed-exception",
-    href: "/case-studies/stackexchange-redis-swallowed-exception",
+    href: "/articles/case-studies/stackexchange-redis-swallowed-exception",
     repo: "StackExchange/StackExchange.Redis",
     pr: "PR#2995",
     title: "Swallowed Exception in StackExchange.Redis",
@@ -78,7 +78,7 @@ export const caseStudies: CaseStudy[] = [
   },
   {
     slug: "newtonsoft-json-assignment-in-getter",
-    href: "/case-studies/newtonsoft-json-assignment-in-getter",
+    href: "/articles/case-studies/newtonsoft-json-assignment-in-getter",
     repo: "JamesNK/Newtonsoft.Json",
     pr: "PR#1950",
     title: "Assignment in Getter - Newtonsoft.Json",
@@ -88,7 +88,7 @@ export const caseStudies: CaseStudy[] = [
   },
   {
     slug: "efcore-breaking-api-removal",
-    href: "/case-studies/efcore-breaking-api-removal",
+    href: "/articles/case-studies/efcore-breaking-api-removal",
     repo: "dotnet/efcore",
     pr: "PR#38024",
     title: "Breaking API Removal in EF Core",
@@ -98,7 +98,7 @@ export const caseStudies: CaseStudy[] = [
   },
   {
     slug: "nunit-thread-sleep-async",
-    href: "/case-studies/nunit-thread-sleep-async",
+    href: "/articles/case-studies/nunit-thread-sleep-async",
     repo: "nunit/nunit",
     pr: "PR#5192",
     title: "Thread.Sleep in Async Context - NUnit",
@@ -108,7 +108,7 @@ export const caseStudies: CaseStudy[] = [
   },
   {
     slug: "azuread-hardcoded-authority",
-    href: "/case-studies/azuread-hardcoded-authority",
+    href: "/articles/case-studies/azuread-hardcoded-authority",
     repo: "AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
     pr: "PR#3410",
     title: "Hardcoded Authority URL - Azure AD",
