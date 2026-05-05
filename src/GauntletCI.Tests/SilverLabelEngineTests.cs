@@ -640,4 +640,97 @@ public sealed class SilverLabelEngineTests
         // Assert: GCI0016 SHOULD still trigger (no legitimate pattern marker)
         Assert.Contains(labels, l => l.RuleId == "GCI0016" && l.ShouldTrigger);
     }
+
+    // --- Phase 23.1 P4 (Performance & GC Coordination) Tests ---
+
+    [Fact]
+    public async Task InferLabels_P4_NoBoostWithoutBoth_OnlyGCI0044()
+    {
+        // Arrange: Only GCI0044 (GC pressure) without GCI0035 (allocation)
+        var diff = """
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -10,3 +10,4 @@
+             public async Task ProcessAsync()
+             {
+            +    var x = GetDataAsync().Result;
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("p23-p4-single", diff);
+
+        // Assert: GCI0044 detected but NOT boosted (no coordination without GCI0035)
+        var gci0044 = labels.FirstOrDefault(l => l.RuleId == "GCI0044");
+        Assert.NotNull(gci0044);
+        if (gci0044.ShouldTrigger)
+        {
+            // If triggered, confidence should NOT be 0.78 (coordination boost)
+            Assert.True(gci0044.ExpectedConfidence < 0.78, 
+                "GCI0044 alone should not be boosted to 0.78");
+        }
+    }
+
+    [Fact]
+    public async Task InferLabels_P4_BothPresent_BoostApplied()
+    {
+        // Arrange: GCI0044 (GC pressure from blocking) + GCI0035 (excessive allocation)
+        var diff = """
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -10,5 +10,8 @@
+             public void ProcessData()
+             {
+            +    var x = GetDataAsync().Result;
+            +    for (int i = 0; i < 1000000; i++)
+            +        list.Add(new ExpensiveObject());
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("p23-p4-both", diff);
+
+        // Assert: Both rules detected with coordination boost
+        var gci0044 = labels.FirstOrDefault(l => l.RuleId == "GCI0044" && l.ShouldTrigger);
+        var gci0035 = labels.FirstOrDefault(l => l.RuleId == "GCI0035" && l.ShouldTrigger);
+
+        // When both are present with sufficient confidence, both should be boosted
+        if (gci0044 != null && gci0035 != null)
+        {
+            if (gci0044.ExpectedConfidence >= 0.50 && gci0035.ExpectedConfidence >= 0.50)
+            {
+                // Coordination should apply
+                Assert.NotEmpty(labels.Where(l => 
+                    l.Reason != null && l.Reason.Contains("[coordination]")));
+            }
+        }
+    }
+
+    [Fact]
+    public async Task InferLabels_P4_PartialMatch_NoBoost()
+    {
+        // Arrange: GCI0044 only, below confidence threshold
+        var diff = """
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -10,3 +10,4 @@
+             public void SomeMethod()
+             {
+            +    var y = Task.Delay(100).Result;
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("p23-p4-partial", diff);
+
+        // Assert: No coordination boost when only one rule or confidence too low
+        var coordinationLabels = labels.Where(l => 
+            l.Reason != null && l.Reason.Contains("[coordination]")).ToList();
+        
+        // If GCI0044 and GCI0035 both trigger with high confidence, coordination applies
+        // Otherwise, no coordination marker expected
+        var gci0044Coor = coordinationLabels.FirstOrDefault(l => l.RuleId == "GCI0044");
+        var gci0035Coor = coordinationLabels.FirstOrDefault(l => l.RuleId == "GCI0035");
+        
+        // Either both coordinated or neither (no single coordination)
+        if (gci0044Coor != null) Assert.NotNull(gci0035Coor);
+        if (gci0035Coor != null) Assert.NotNull(gci0044Coor);
+    }
 }

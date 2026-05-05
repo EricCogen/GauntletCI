@@ -308,6 +308,9 @@ public sealed class SilverLabelEngine
         // ── Phase 21 Coordination: Data Security ──────────────────────────────
         ApplyDataSecurityCoordination(inferred);
 
+        // ── Phase 23 Coordination: Performance & GC ───────────────────────────
+        ApplyPhase23P4PerformanceCoordination(inferred);
+
         // ── Tier 3: LLM fallback for uncertain findings ───────────────────────
         var positiveRuleIdsAfterTier12 = inferred
             .Where(l => l.ShouldTrigger)
@@ -2227,6 +2230,57 @@ public sealed class SilverLabelEngine
                         IsInconclusive = gci0015.IsInconclusive,
                     };
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Phase 23.1 P4 (Performance & GC) Coordination: Detects GC pressure patterns.
+    /// When GCI0044 (GC pressure from blocking) and GCI0035 (excessive allocation) co-occur,
+    /// boost both to reflect compound performance risk.
+    /// </summary>
+    private static void ApplyPhase23P4PerformanceCoordination(List<ExpectedFinding> labels)
+    {
+        // Find GCI0044 (GC pressure from blocking calls)
+        var gci0044Index = labels.FindIndex(l => l.RuleId == "GCI0044");
+        var gci0044 = gci0044Index >= 0 ? labels[gci0044Index] : null;
+
+        // Find GCI0035 (excessive allocation / large collections)
+        var gci0035Index = labels.FindIndex(l => l.RuleId == "GCI0035");
+        var gci0035 = gci0035Index >= 0 ? labels[gci0035Index] : null;
+
+        // Both rules detected with sufficient confidence: compound risk
+        if (gci0044?.ShouldTrigger == true && gci0044.ExpectedConfidence >= 0.50 &&
+            gci0035?.ShouldTrigger == true && gci0035.ExpectedConfidence >= 0.50)
+        {
+            // Boost GCI0044: blocking calls increase GC pressure under memory load
+            // From 0.60 → 0.78 (+30% boost for compound risk)
+            if (gci0044Index >= 0 && gci0044.ExpectedConfidence < 0.78)
+            {
+                labels[gci0044Index] = new ExpectedFinding
+                {
+                    RuleId = gci0044.RuleId,
+                    ShouldTrigger = gci0044.ShouldTrigger,
+                    ExpectedConfidence = 0.78,
+                    Reason = "[coordination] GCI0044 GC pressure + GCI0035 excessive allocation = performance cliff. Blocking calls + memory load = Gen2 stalls.",
+                    LabelSource = gci0044.LabelSource,
+                    IsInconclusive = gci0044.IsInconclusive,
+                };
+            }
+
+            // Boost GCI0035: allocation pressure compounds blocking/GC issues
+            // From 0.65 → 0.85 (+31% boost for compound risk)
+            if (gci0035Index >= 0 && gci0035.ExpectedConfidence < 0.85)
+            {
+                labels[gci0035Index] = new ExpectedFinding
+                {
+                    RuleId = gci0035.RuleId,
+                    ShouldTrigger = gci0035.ShouldTrigger,
+                    ExpectedConfidence = 0.85,
+                    Reason = "[coordination] GCI0035 excessive allocation + GCI0044 GC pressure = memory stalls. Large collections + blocking calls trigger Gen2 collections.",
+                    LabelSource = gci0035.LabelSource,
+                    IsInconclusive = gci0035.IsInconclusive,
+                };
             }
         }
     }
