@@ -1,0 +1,48 @@
+diff --git a/src/UserService.cs b/src/UserService.cs
+index 1a2b3c4..5d6e7f8 100644
+--- a/src/UserService.cs
++++ b/src/UserService.cs
+@@ -1,20 +1,35 @@
+ using System.Data.SqlClient;
+ using Microsoft.AspNetCore.Mvc;
+ 
+ [ApiController]
+ [Route("api/users")]
+ public class UserController : ControllerBase
+ {
+     private readonly string _connString = "Server=.;Database=users";
+ 
+     [HttpPost("{id}/update")]
+     public async Task UpdateUser(int id, [FromForm] UserUpdateRequest req)
+     {
+-        // Previous implementation: properly disposed
+-        using (var conn = new SqlConnection(_connString))
++        // GCI0024: SqlConnection created but never disposed
++        var conn = new SqlConnection(_connString);
+         {
+             conn.Open();
+             
++            // GCI0015: Mass assignment from request without validation
++            var user = new User 
++            { 
++                Id = id,
++                Name = req.Name,        // ✓ Intended field
++                Email = req.Email,      // ✓ Intended field
++                Role = req.Role,        // ✗ NOT INTENDED - attacker can set via over-posting
++                IsAdmin = req.IsAdmin,  // ✗ NOT INTENDED - privilege escalation vector
++                DepartmentId = req.DepartmentId  // ✗ NOT INTENDED - data injection vector
++            };
++
+             var cmd = conn.CreateCommand();
+-            cmd.CommandText = "UPDATE Users SET Name=@name, Email=@email WHERE Id=@id";
+-            cmd.Parameters.AddWithValue("@name", req.Name);
+-            cmd.Parameters.AddWithValue("@email", req.Email);
++            cmd.CommandText = "UPDATE Users SET Name=@name, Email=@email, Role=@role, IsAdmin=@admin, DepartmentId=@dept WHERE Id=@id";
++            cmd.Parameters.AddWithValue("@name", user.Name);
++            cmd.Parameters.AddWithValue("@email", user.Email);
++            cmd.Parameters.AddWithValue("@role", user.Role);
++            cmd.Parameters.AddWithValue("@admin", user.IsAdmin);
++            cmd.Parameters.AddWithValue("@dept", user.DepartmentId);
+             cmd.Parameters.AddWithValue("@id", id);
+             
+             await cmd.ExecuteNonQueryAsync();

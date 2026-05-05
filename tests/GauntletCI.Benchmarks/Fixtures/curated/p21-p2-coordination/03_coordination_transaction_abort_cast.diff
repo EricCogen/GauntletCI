@@ -1,0 +1,52 @@
+diff --git a/src/OrderService.cs b/src/OrderService.cs
+index 3c4d5e6..7f9e8a10 100644
+--- a/src/OrderService.cs
++++ b/src/OrderService.cs
+@@ -1,26 +1,35 @@
+ using System;
+ using System.Data;
+ using System.Linq;
+ using Microsoft.AspNetCore.Mvc;
+ 
+ [ApiController]
+ [Route("api/orders")]
+ public class OrderController : ControllerBase
+ {
+     [HttpPost("ship")]
+     public async Task ShipOrder([FromForm] ShipRequest request)
+     {
+-        // Previous: using statement ensured disposal
+-        using (ITransaction txn = _db.BeginTransaction())
++        // GCI0024: ITransaction created but never explicitly committed/rolled back
++        // Transaction remains open, holding row locks
++        ITransaction txn = _db.BeginTransaction();
+         {
+             try
+             {
+-                int customerId = request.CustomerId;  // Validated elsewhere
++                // GCI0015: Unchecked cast on user input without bounds checking
++                // If attacker sends CustomerId = "2147483648" (int.MaxValue + 1)
++                // Silent overflow → negative number or wrapped value
++                int customerId = (int)request.CustomerId;  // Unchecked cast
+                 
+                 // Query now operates on WRONG customer due to overflow
+                 var orders = _db.Orders
+                     .Where(o => o.CustomerId == customerId)
+                     .ToList();
+                 
+                 foreach (var order in orders)
+                 {
++                    // Attacker's shipment gets marked as shipped for wrong customer
++                    // Real customer's orders never ship
+                     _db.ShipOrder(order.Id);
+                 }
+             }
+             finally
+             {
+-                txn.Commit();
++                // BUG: No Commit() or Rollback() call
++                // Transaction never closes, locks held indefinitely
++                // Other requests trying to access same customer → BLOCKED
+             }
+         }
+     }
