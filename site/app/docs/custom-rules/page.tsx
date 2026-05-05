@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { softwareApplicationSchema, buildFaqSchema } from "@/lib/schemas";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Custom Rules | GauntletCI Docs",
@@ -46,6 +47,7 @@ export default function CustomRulesPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <div className="space-y-10">
 
+        <Breadcrumbs />
         <div>
           <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">Custom Rules</p>
           <h1 className="text-4xl font-bold tracking-tight mb-4">Writing Custom Rules</h1>
