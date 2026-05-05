@@ -37,6 +37,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>gauntletci</AssemblyName>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>gauntletci</ToolCommandName>
     <PackageId>GauntletCI</PackageId>

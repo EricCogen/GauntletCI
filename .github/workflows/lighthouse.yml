@@ -40,4 +40,4 @@ jobs:
           configPath: ./site/.lighthouserc.json
           uploadArtifacts: true
           temporaryPublicStorage: true
-          staticDistDir: ./site/out
+          staticDistDir: ./out
