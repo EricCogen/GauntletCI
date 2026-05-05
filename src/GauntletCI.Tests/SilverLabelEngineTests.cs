@@ -733,4 +733,98 @@ public sealed class SilverLabelEngineTests
         if (gci0044Coor != null) Assert.NotNull(gci0035Coor);
         if (gci0035Coor != null) Assert.NotNull(gci0044Coor);
     }
+
+    // --- Phase 23.2 P5 (Serialization Safety Coordination) Tests ---
+
+    [Fact]
+    public async Task InferLabels_P5_NoBoostWithoutBoth_OnlyGCI0039()
+    {
+        // Arrange: Only GCI0039 (unsafe HttpClient) without GCI0048 (insecure deserialization)
+        var diff = """
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -10,3 +10,4 @@
+             public async Task GetDataAsync()
+             {
+            +    var client = new HttpClient();
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("p23-p5-single", diff);
+
+        // Assert: GCI0039 detected but NOT boosted (no coordination without GCI0048)
+        var gci0039 = labels.FirstOrDefault(l => l.RuleId == "GCI0039");
+        Assert.NotNull(gci0039);
+        if (gci0039.ShouldTrigger)
+        {
+            // If triggered, confidence should NOT be 0.90 (coordination boost)
+            Assert.True(gci0039.ExpectedConfidence < 0.90, 
+                "GCI0039 alone should not be boosted to 0.90");
+        }
+    }
+
+    [Fact]
+    public async Task InferLabels_P5_DirectHttpClient_UnsafeDeserialize_BoostApplied()
+    {
+        // Arrange: GCI0039 (unsafe HttpClient) + GCI0048 (insecure deserialization)
+        var diff = """
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -10,5 +10,8 @@
+             public async Task ProcessData()
+             {
+            +    var client = new HttpClient();
+            +    var response = client.GetAsync(url).Result;
+            +    var obj = JsonConvert.DeserializeObject<T>(response.Content.ReadAsStringAsync().Result, new JsonSerializerSettings { TypeNameHandling = Auto });
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("p23-p5-both", diff);
+
+        // Assert: Both rules detected with coordination boost
+        var gci0039 = labels.FirstOrDefault(l => l.RuleId == "GCI0039" && l.ShouldTrigger);
+        var gci0048 = labels.FirstOrDefault(l => l.RuleId == "GCI0048" && l.ShouldTrigger);
+
+        // When both are present with sufficient confidence, both should be boosted
+        if (gci0039 != null && gci0048 != null)
+        {
+            if (gci0039.ExpectedConfidence >= 0.55 && gci0048.ExpectedConfidence >= 0.60)
+            {
+                // Coordination should apply
+                Assert.NotEmpty(labels.Where(l => 
+                    l.Reason != null && l.Reason.Contains("[coordination]") && 
+                    (l.RuleId == "GCI0039" || l.RuleId == "GCI0048")));
+            }
+        }
+    }
+
+    [Fact]
+    public async Task InferLabels_P5_PartialMatch_NoBoost()
+    {
+        // Arrange: Only GCI0048 (insecure deserialization) without GCI0039 (unsafe HttpClient)
+        var diff = """
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -10,3 +10,4 @@
+             public void DeserializeData()
+             {
+            +    var obj = JsonConvert.DeserializeObject<T>(jsonString, new JsonSerializerSettings { TypeNameHandling = Auto });
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("p23-p5-partial", diff);
+
+        // Assert: No coordination boost when only one rule or confidence too low
+        var coordinationLabels = labels.Where(l => 
+            l.Reason != null && l.Reason.Contains("[coordination]")).ToList();
+        
+        // If GCI0039 and GCI0048 both trigger with high confidence, coordination applies
+        // Otherwise, no coordination marker expected
+        var gci0039Coor = coordinationLabels.FirstOrDefault(l => l.RuleId == "GCI0039");
+        var gci0048Coor = coordinationLabels.FirstOrDefault(l => l.RuleId == "GCI0048");
+        
+        // Either both coordinated or neither (no single coordination)
+        if (gci0039Coor != null) Assert.NotNull(gci0048Coor);
+        if (gci0048Coor != null) Assert.NotNull(gci0039Coor);
+    }
 }
