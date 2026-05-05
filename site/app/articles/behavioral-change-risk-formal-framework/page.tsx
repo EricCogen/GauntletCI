@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "Behavioral Change Risk: A Formal Framework for Validation Gaps in Evolving Software",
   description:
     "A formal definition of Behavioral Change Risk (BCR) and Behavioral Change Risk Validation (BCRV): the methodology for detecting validation gaps introduced by code changes before they reach production.",
-  alternates: { canonical: "/behavioral-change-risk-formal-framework" },
+  alternates: { canonical: "/articles/behavioral-change-risk-formal-framework" },
   openGraph: { images: [{ url: "/og/why-tests-miss-bugs.png", width: 1200, height: 630 }] },
 };
 
@@ -19,7 +19,7 @@ const jsonLd = {
   headline: "Behavioral Change Risk: A Formal Framework for Validation Gaps in Evolving Software",
   description:
     "Formal definition of Behavioral Change Risk (BCR) and Behavioral Change Risk Validation (BCRV), a diff-centric methodology for detecting validation gaps introduced by code changes.",
-  url: "https://gauntletci.com/behavioral-change-risk-formal-framework",
+  url: "https://gauntletci.com/articles/behavioral-change-risk-formal-framework",
   author: { "@type": "Person", name: "Eric Cogen" },
   publisher: { "@type": "Organization", name: "GauntletCI", url: "https://gauntletci.com" },
 };
