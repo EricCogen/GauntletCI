@@ -314,6 +314,9 @@ public sealed class SilverLabelEngine
         // ── Phase 23 Coordination: Serialization Safety ─────────────────────
         ApplyPhase23P5SerializationCoordination(inferred);
 
+        // ── Phase 23 Coordination: Dependency Injection ─────────────────────
+        ApplyPhase23P6DependencyInjectionCoordination(inferred);
+
         // ── Tier 3: LLM fallback for uncertain findings ───────────────────────
         var positiveRuleIdsAfterTier12 = inferred
             .Where(l => l.ShouldTrigger)
@@ -2334,6 +2337,57 @@ public sealed class SilverLabelEngine
                     Reason = "[coordination] GCI0048 insecure deserialization + GCI0039 unsafe HttpClient = RCE. Unvalidated remote data deserialized with TypeNameHandling enabled.",
                     LabelSource = gci0048.LabelSource,
                     IsInconclusive = gci0048.IsInconclusive,
+                };
+            }
+        }
+    }
+
+    /// <summary>
+    /// Phase 23.3 P6 (Dependency Injection) Coordination: Detects service locator + async scope issues.
+    /// When GCI0045 (service locator) and GCI0016 (async violations) co-occur,
+    /// boost both to reflect compound risk of scope mismatch causing deadlocks in DI container.
+    /// </summary>
+    private static void ApplyPhase23P6DependencyInjectionCoordination(List<ExpectedFinding> labels)
+    {
+        // Find GCI0045 (service locator anti-pattern)
+        var gci0045Index = labels.FindIndex(l => l.RuleId == "GCI0045");
+        var gci0045 = gci0045Index >= 0 ? labels[gci0045Index] : null;
+
+        // Find GCI0016 (async violations / blocking calls in async context)
+        var gci0016Index = labels.FindIndex(l => l.RuleId == "GCI0016");
+        var gci0016 = gci0016Index >= 0 ? labels[gci0016Index] : null;
+
+        // Both rules detected with sufficient confidence: scope mismatch risk
+        if (gci0045?.ShouldTrigger == true && gci0045.ExpectedConfidence >= 0.60 &&
+            gci0016?.ShouldTrigger == true && gci0016.ExpectedConfidence >= 0.55)
+        {
+            // Boost GCI0045: service locator in async context increases scope risk
+            // From 0.60 → 0.82 (+37% boost for deadlock risk)
+            if (gci0045Index >= 0 && gci0045.ExpectedConfidence < 0.82)
+            {
+                labels[gci0045Index] = new ExpectedFinding
+                {
+                    RuleId = gci0045.RuleId,
+                    ShouldTrigger = gci0045.ShouldTrigger,
+                    ExpectedConfidence = 0.82,
+                    Reason = "[coordination] GCI0045 service locator + GCI0016 async violations = deadlock. Scope mismatch when service locator used in async context.",
+                    LabelSource = gci0045.LabelSource,
+                    IsInconclusive = gci0045.IsInconclusive,
+                };
+            }
+
+            // Boost GCI0016: blocking calls in async context with service locator
+            // From 0.65 → 0.88 (+35% boost for scope-related deadlock)
+            if (gci0016Index >= 0 && gci0016.ExpectedConfidence < 0.88)
+            {
+                labels[gci0016Index] = new ExpectedFinding
+                {
+                    RuleId = gci0016.RuleId,
+                    ShouldTrigger = gci0016.ShouldTrigger,
+                    ExpectedConfidence = 0.88,
+                    Reason = "[coordination] GCI0016 blocking async + GCI0045 service locator = deadlock. Blocking calls on scoped service obtained from locator.",
+                    LabelSource = gci0016.LabelSource,
+                    IsInconclusive = gci0016.IsInconclusive,
                 };
             }
         }
