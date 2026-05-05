@@ -94,11 +94,14 @@ graphify-out/
 !RELEASE_NOTES_v2.3.0-phase17-coordinations.md
 !RELEASE_NOTES_v2.4.0-phase21-coordinations.md
 !DEPLOYMENT_CHECKLIST_v2.4.0.md
+!DEPLOYMENT_CHECKLIST_v2.7.0.md
 !docs/release-notes/
 !docs/release-notes/*.md
 !docs/archived/
 !docs/archived/*.md
 !docs/architecture/adr-0004-phase-21-coordinations.md
+!docs/architecture/adr-0005-phase-23-heuristics-and-coordinations.md
+!docs/architecture/coordination-platform-reference.md
 !docs/phase-23-plan.md
 !docs/phase-24-plan.md
 !docs/operations/phase-21-monitoring.md
