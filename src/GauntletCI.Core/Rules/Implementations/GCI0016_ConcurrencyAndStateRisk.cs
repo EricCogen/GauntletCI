@@ -181,7 +181,10 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
             return true;
 
         // Explicit delegation patterns: Task.Run, ThreadPool.QueueUserWorkItem
-        if (content.Contains("Task.Run(", StringComparison.OrdinalIgnoreCase) ||
+        // BUT: Task.Run().Result or Task.Run().Wait() are NOT legitimate - they block
+        if (((content.Contains("Task.Run(", StringComparison.OrdinalIgnoreCase) &&
+              !content.Contains(".Result", StringComparison.OrdinalIgnoreCase) &&
+              !content.Contains(".Wait(", StringComparison.OrdinalIgnoreCase))) ||
             content.Contains("ThreadPool.QueueUserWorkItem", StringComparison.OrdinalIgnoreCase))
             return true;
 
