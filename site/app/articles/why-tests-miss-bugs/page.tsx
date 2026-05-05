@@ -645,11 +645,12 @@ export default function WhyTestsMissBugsPage() {
           </div>
 
           <RulesApplied ids={["GCI0003", "GCI0006", "GCI0032", "GCI0041"]} />
-          <AuthorBio variant="short" />
+          <AuthorBio variant="long" />
         </div>
       </main>
       <Footer />
     </>
   );
 }
+
 

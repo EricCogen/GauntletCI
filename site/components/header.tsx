@@ -70,7 +70,7 @@ export function Header() {
                       Quick Start
                     </Link>
                     <Link
-                      href="/case-studies"
+                      href="/articles/case-studies"
                       className="block px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                       onClick={() => setProductOpen(false)}
                     >
@@ -141,7 +141,7 @@ export function Header() {
             <Link href="/#quickstart" className="text-sm text-muted-foreground hover:text-foreground pl-2" onClick={() => setMobileMenuOpen(false)}>
               Quick Start
             </Link>
-            <Link href="/case-studies" className="text-sm text-muted-foreground hover:text-foreground pl-2" onClick={() => setMobileMenuOpen(false)}>
+            <Link href="/articles/case-studies" className="text-sm text-muted-foreground hover:text-foreground pl-2" onClick={() => setMobileMenuOpen(false)}>
               Case Studies
             </Link>
             <Link href="/benchmark" className="text-sm text-muted-foreground hover:text-foreground pl-2" onClick={() => setMobileMenuOpen(false)}>
@@ -183,3 +183,4 @@ export function Header() {
     </header>
   );
 }
+

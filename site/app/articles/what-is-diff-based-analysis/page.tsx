@@ -628,11 +628,12 @@ export default function WhatIsDiffBasedAnalysisPage() {
           </div>
 
           <RulesApplied ids={["GCI0001", "GCI0003", "GCI0004"]} />
-          <AuthorBio variant="short" />
+          <AuthorBio variant="long" />
         </div>
       </main>
       <Footer />
     </>
   );
 }
+
 

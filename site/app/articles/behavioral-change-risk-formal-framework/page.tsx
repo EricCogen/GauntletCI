@@ -837,7 +837,7 @@ export default function BCRFormalFrameworkPage() {
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               <Link
-                href="/case-studies/stackexchange-redis-swallowed-exception"
+                href="/articles/case-studies/stackexchange-redis-swallowed-exception"
                 className="block rounded-xl border border-border bg-card p-4 hover:border-cyan-500/40 hover:bg-card/80 transition-colors"
               >
                 <div className="flex items-center gap-2 mb-2">
@@ -852,7 +852,7 @@ export default function BCRFormalFrameworkPage() {
                 </p>
               </Link>
               <Link
-                href="/case-studies/nunit-thread-sleep-async"
+                href="/articles/case-studies/nunit-thread-sleep-async"
                 className="block rounded-xl border border-border bg-card p-4 hover:border-cyan-500/40 hover:bg-card/80 transition-colors"
               >
                 <div className="flex items-center gap-2 mb-2">
@@ -892,11 +892,13 @@ export default function BCRFormalFrameworkPage() {
           </div>
 
           <RulesApplied ids={["GCI0003", "GCI0036", "GCI0016", "GCI0007"]} />
-          <AuthorBio variant="short" />
+          <AuthorBio variant="long" />
         </div>
       </main>
       <Footer />
     </>
   );
 }
+
+
 

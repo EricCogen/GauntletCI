@@ -509,11 +509,12 @@ export default function WhyCodeReviewMissesBugsPage() {
           </div>
 
           <RulesApplied ids={["GCI0001", "GCI0003", "GCI0036", "GCI0046"]} />
-          <AuthorBio variant="short" />
+          <AuthorBio variant="long" />
         </div>
       </main>
       <Footer />
     </>
   );
 }
+
 
