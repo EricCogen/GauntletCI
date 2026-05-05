@@ -1,0 +1,18 @@
+--- a/Client.cs
++++ b/Client.cs
+@@ -5,15 +5,15 @@
+ 
+ public class UserClient
+ {
+     public void ProcessUser(string id)
+     {
+         try
+         {
+-            var user = _service.FetchUserAsync(id).Result;
++            var user = _service.GetUserSyncV2(id);
+             _logger.Log(user.Name);
+         }
+-        catch { }
++        catch { /* Empty catch - new method throws different exception type */ }
+     }
+ }

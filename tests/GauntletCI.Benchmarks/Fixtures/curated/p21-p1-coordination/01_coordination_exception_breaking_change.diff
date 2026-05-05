@@ -1,0 +1,14 @@
+--- a/Service.cs
++++ b/Service.cs
+@@ -10,12 +10,3 @@
+ public class DataService
+ {
+-    public async Task<User> FetchUserAsync(string id)
+-    {
+-        var response = await _api.GetAsync($"/users/{id}");
+-        var user = JsonConvert.DeserializeObject<User>(await response.Content.ReadAsStringAsync());
+-        return user;
+-    }
+-
+-    public List<User> GetAll() => _cache.Values.ToList();
+ }

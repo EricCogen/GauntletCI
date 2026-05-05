@@ -1,0 +1,114 @@
+{
+  "phase": "21.1",
+  "coordination_pattern": "Exception Handling",
+  "description": "Cross-rule coordination for exception handling anti-patterns (GCI0032, GCI0003, GCI0016)",
+  "fixtures": [
+    {
+      "id": "p21-p1-01",
+      "name": "Exception + Breaking Change (Method Removed)",
+      "file": "01_coordination_exception_breaking_change.diff",
+      "description": "Method removed in v2.0, callers have empty catch that can't handle new API",
+      "mapped_gci_rules": ["GCI0003", "GCI0032"],
+      "expected_outcome": "fire",
+      "coordination_pattern": "Breaking change + exception swallowing = compound risk",
+      "confidence_boost": {
+        "GCI0003": "0.70 → 0.85 (+21%)",
+        "GCI0032": "0.60 → 0.75 (+25%)"
+      }
+    },
+    {
+      "id": "p21-p1-02",
+      "name": "Exception + Signature Change",
+      "file": "02_coordination_exception_signature_change.diff",
+      "description": "Method signature changed, old exception handler won't catch new exception type",
+      "mapped_gci_rules": ["GCI0003", "GCI0032"],
+      "expected_outcome": "fire",
+      "coordination_pattern": "API change + incomplete error handling = upgrade risk",
+      "confidence_boost": {
+        "GCI0003": "0.70 → 0.85 (+21%)",
+        "GCI0032": "0.60 → 0.75 (+25%)"
+      }
+    },
+    {
+      "id": "p21-p1-03",
+      "name": "Exception + Type Change",
+      "file": "03_coordination_exception_type_change.diff",
+      "description": "Exception type changed between versions, catch block catches wrong type",
+      "mapped_gci_rules": ["GCI0003", "GCI0032"],
+      "expected_outcome": "fire",
+      "coordination_pattern": "Breaking change: exception type migration without catch update",
+      "confidence_boost": {
+        "GCI0003": "0.70 → 0.85 (+21%)",
+        "GCI0032": "0.60 → 0.75 (+25%)"
+      }
+    },
+    {
+      "id": "p21-p1-04",
+      "name": "Async + Empty Catch",
+      "file": "04_coordination_async_empty_catch.diff",
+      "description": "Async method with empty catch block, loses context and errors",
+      "mapped_gci_rules": ["GCI0016", "GCI0032"],
+      "expected_outcome": "fire",
+      "coordination_pattern": "Async context + exception swallowing = silent failures",
+      "confidence_boost": {
+        "GCI0016": "0.75 → 0.88 (+17%)",
+        "GCI0032": "0.60 → 0.78 (+30%)"
+      }
+    },
+    {
+      "id": "p21-p1-05",
+      "name": "Task.Result Blocking + Exception Swallow",
+      "file": "05_coordination_task_result_swallow.diff",
+      "description": "Blocking async call with .Result inside loop + empty catch = thread pool starvation + lost errors",
+      "mapped_gci_rules": ["GCI0016", "GCI0032"],
+      "expected_outcome": "fire",
+      "coordination_pattern": "Async violation + exception swallowing = deadlock + debugging nightmare",
+      "confidence_boost": {
+        "GCI0016": "0.75 → 0.88 (+17%)",
+        "GCI0032": "0.60 → 0.78 (+30%)"
+      }
+    },
+    {
+      "id": "p21-p1-06",
+      "name": "Async Void + Empty Catch",
+      "file": "06_coordination_async_void_exception.diff",
+      "description": "Async void fire-and-forget method with empty catch - exceptions are completely lost",
+      "mapped_gci_rules": ["GCI0016", "GCI0032"],
+      "expected_outcome": "fire",
+      "coordination_pattern": "Async void (already problematic) + exception swallowing = undebuggable",
+      "confidence_boost": {
+        "GCI0016": "0.75 → 0.88 (+17%)",
+        "GCI0032": "0.60 → 0.78 (+30%)"
+      }
+    }
+  ],
+  "coordination_rules": [
+    {
+      "name": "Exception + Breaking Change Coordination",
+      "primary_rule": "GCI0003",
+      "secondary_rule": "GCI0032",
+      "condition": "When both GCI0003 and GCI0032 fire in same diff",
+      "action": "Boost GCI0003 confidence 0.70→0.85 (+21%), GCI0032 confidence 0.60→0.75 (+25%)",
+      "rationale": "Breaking changes + incomplete exception handling = compound risk. Callers upgrading will fail in unpredictable ways.",
+      "implementation_location": "SilverLabelEngine.ApplyExceptionHandlingCoordination()",
+      "fixtures_testing": ["p21-p1-01", "p21-p1-02", "p21-p1-03"]
+    },
+    {
+      "name": "Async + Exception Swallowing Coordination",
+      "primary_rule": "GCI0016",
+      "secondary_rule": "GCI0032",
+      "condition": "When both GCI0016 and GCI0032 fire in same diff",
+      "action": "Boost GCI0016 confidence 0.75→0.88 (+17%), GCI0032 confidence 0.60→0.78 (+30%)",
+      "rationale": "Async context loss + silent failures = dangerous combination. Thread pool starvation + lost error context = undebuggable.",
+      "implementation_location": "SilverLabelEngine.ApplyExceptionHandlingCoordination()",
+      "fixtures_testing": ["p21-p1-04", "p21-p1-05", "p21-p1-06"]
+    }
+  ],
+  "expected_impact": {
+    "false_positive_reduction": "6-10%",
+    "cumulative_with_p0": "14-22%",
+    "rules_involved": 5,
+    "new_fixtures": 6,
+    "estimated_implementation_time": "7-9 hours"
+  }
+}

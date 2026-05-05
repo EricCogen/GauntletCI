@@ -1,0 +1,19 @@
+--- a/AsyncClient.cs
++++ b/AsyncClient.cs
+@@ -5,16 +5,16 @@
+ 
+ public class AsyncClient
+ {
+     public async Task FetchDataAsync()
+     {
+         try
+         {
+-            var response = await _http.GetAsync(url).ConfigureAwait(false);
++            var response = await _http.GetAsync(url).ConfigureAwait(false);  // Async context
+             var data = await response.Content.ReadAsStringAsync();
+             _cache[url] = data;
+         }
+-        catch { }
++        catch { /* Empty catch in async context */ }
+     }
+ }

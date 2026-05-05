@@ -299,6 +299,9 @@ public sealed class SilverLabelEngine
         // ── Phase 21 Coordination: Async Execution Model ─────────────────────
         ApplyAsyncExecutionCoordination(inferred);
 
+        // ── Phase 21 Coordination: Exception Handling ──────────────────────────
+        ApplyExceptionHandlingCoordination(inferred);
+
         // ── Tier 3: LLM fallback for uncertain findings ───────────────────────
         var positiveRuleIdsAfterTier12 = inferred
             .Where(l => l.ShouldTrigger)
@@ -1961,6 +1964,104 @@ public sealed class SilverLabelEngine
                 }
             }
             // For negative labels, keep as-is for now but coordination logic is in place
+        }
+    }
+
+    private void ApplyExceptionHandlingCoordination(List<ExpectedFinding> labels)
+    {
+        // ── Coordination Pattern 1: Exception Swallowing + Breaking Changes ──
+        // When GCI0032 (exception swallowing) + GCI0003 (breaking change) both fire,
+        // it signals compound risk: callers will fail AND won't have proper error handling.
+        
+        var hasGci0032 = labels.Any(l => l.RuleId == "GCI0032" && l.ShouldTrigger);
+        var hasGci0003 = labels.Any(l => l.RuleId == "GCI0003" && l.ShouldTrigger);
+
+        if (hasGci0032 && hasGci0003)
+        {
+            // Boost GCI0003 (breaking change) - breaking change with poor exception handling is worse
+            var gci0003Index = labels.FindIndex(l => l.RuleId == "GCI0003");
+            if (gci0003Index >= 0)
+            {
+                var gci0003 = labels[gci0003Index];
+                if (gci0003.ExpectedConfidence < 0.85)
+                {
+                    labels[gci0003Index] = new ExpectedFinding
+                    {
+                        RuleId = gci0003.RuleId,
+                        ShouldTrigger = gci0003.ShouldTrigger,
+                        ExpectedConfidence = 0.85,
+                        Reason = "[coordination] Breaking change + GCI0032 exception swallowing = upgrade risk for callers",
+                        LabelSource = gci0003.LabelSource,
+                        IsInconclusive = gci0003.IsInconclusive,
+                    };
+                }
+            }
+
+            // Boost GCI0032 (exception swallowing) - more serious when breaking change occurs
+            var gci0032Index = labels.FindIndex(l => l.RuleId == "GCI0032");
+            if (gci0032Index >= 0)
+            {
+                var gci0032 = labels[gci0032Index];
+                if (gci0032.ExpectedConfidence < 0.75)
+                {
+                    labels[gci0032Index] = new ExpectedFinding
+                    {
+                        RuleId = gci0032.RuleId,
+                        ShouldTrigger = gci0032.ShouldTrigger,
+                        ExpectedConfidence = 0.75,
+                        Reason = "[coordination] Exception swallowing + GCI0003 breaking change = callers can't handle upgrade",
+                        LabelSource = gci0032.LabelSource,
+                        IsInconclusive = gci0032.IsInconclusive,
+                    };
+                }
+            }
+        }
+
+        // ── Coordination Pattern 2: Exception Swallowing + Async Violations ───
+        // When GCI0032 (exception swallowing) + GCI0016 (async violation) both fire,
+        // it signals dangerous combination: async context loss + silent failures.
+
+        var hasGci0016 = labels.Any(l => l.RuleId == "GCI0016" && l.ShouldTrigger);
+
+        if (hasGci0032 && hasGci0016)
+        {
+            // Boost GCI0016 (async violation) - async violation with exception swallowing is worse
+            var gci0016Index = labels.FindIndex(l => l.RuleId == "GCI0016");
+            if (gci0016Index >= 0)
+            {
+                var gci0016 = labels[gci0016Index];
+                if (gci0016.ExpectedConfidence < 0.88)
+                {
+                    labels[gci0016Index] = new ExpectedFinding
+                    {
+                        RuleId = gci0016.RuleId,
+                        ShouldTrigger = gci0016.ShouldTrigger,
+                        ExpectedConfidence = 0.88,
+                        Reason = "[coordination] Async violation + GCI0032 exception swallowing = undebuggable silent failures",
+                        LabelSource = gci0016.LabelSource,
+                        IsInconclusive = gci0016.IsInconclusive,
+                    };
+                }
+            }
+
+            // Boost GCI0032 (exception swallowing) - more serious when async violation occurs
+            var gci0032Index = labels.FindIndex(l => l.RuleId == "GCI0032");
+            if (gci0032Index >= 0)
+            {
+                var gci0032 = labels[gci0032Index];
+                if (gci0032.ExpectedConfidence < 0.78)
+                {
+                    labels[gci0032Index] = new ExpectedFinding
+                    {
+                        RuleId = gci0032.RuleId,
+                        ShouldTrigger = gci0032.ShouldTrigger,
+                        ExpectedConfidence = 0.78,
+                        Reason = "[coordination] Exception swallowing in async context (GCI0016) loses all error information",
+                        LabelSource = gci0032.LabelSource,
+                        IsInconclusive = gci0032.IsInconclusive,
+                    };
+                }
+            }
         }
     }
 }

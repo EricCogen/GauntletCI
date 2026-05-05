@@ -1,0 +1,18 @@
+--- a/EventHandler.cs
++++ b/EventHandler.cs
+@@ -5,16 +5,16 @@
+ 
+ public class EventHandler
+ {
+     public async void OnDataReceived(string data)  // Async void - fire and forget
+     {
+         try
+         {
+-            await _processor.ProcessAsync(data);
++            await _processor.ProcessAsync(data);  // Can throw
+             _logger.Log("Success");
+         }
+-        catch { }
++        catch { /* Empty catch in async void - exceptions are lost */ }
+     }
+ }
