@@ -100,6 +100,7 @@ graphify-out/
 !docs/archived/*.md
 !docs/architecture/adr-0004-phase-21-coordinations.md
 !docs/phase-23-plan.md
+!docs/phase-24-plan.md
 !docs/operations/phase-21-monitoring.md
 !docs/operations/phase-21-metrics.md
 !docs/operations/coordination-runbook.md
