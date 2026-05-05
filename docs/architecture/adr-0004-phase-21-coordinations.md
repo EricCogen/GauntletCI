@@ -113,6 +113,29 @@ if (GCI0024 fires AND GCI0015 fires):
 
 ---
 
+#### P3: Data Security & Integrity Coordination
+
+**Rules:** GCI0015 (data integrity) ↔ GCI0029 (PII exposure) + GCI0012 (hardcoded credentials)
+
+**Scenario Pattern 1:** Data validation failure + PII exposure → privacy breach
+
+**Scenario Pattern 2:** Hardcoded secrets + unvalidated writes → credential leak + privilege escalation
+
+**Boost Logic:**
+```
+if (GCI0015 fires AND GCI0029 fires with confidence ≥ 0.50):
+    boost GCI0015 from 0.60 → 0.88 (+47%)
+    boost GCI0029 from 0.55 → 0.82 (+49%)
+
+if (GCI0012 fires AND GCI0015 fires with confidence ≥ 0.50):
+    boost GCI0012 from 0.70 → 0.90 (+29%)
+    boost GCI0015 from 0.60 → 0.86 (+43%)
+```
+
+**Expected impact:** 4-6% FP reduction (cumulative 25-36% with P0+P1+P2) | **Test fixtures:** 2 | **Status:** ✅ v2.7.0
+
+---
+
 ## Key Design Decisions
 
 ### 1. Conservative Boosting
@@ -178,14 +201,18 @@ Each has 6-9 fixtures covering both rules firing together, separately, and edge 
 
 ## Extensibility
 
-### Planned: Phase 21.3 P3 (Post-Stabilization)
-- GCI0015 (data integrity) ↔ GCI0048 (security boundaries)
-- Expected: 7-12% additional reduction
+### Completed: Phase 21 (P0-P3)
+- ✅ P0: Async execution (v2.4.0) — 8-12% FP reduction
+- ✅ P1: Exception handling (v2.5.0) — 6-10% additional reduction
+- ✅ P2: Resource management (v2.6.0) — 5-8% additional reduction  
+- ✅ P3: Data security (v2.7.0) — 4-6% additional reduction
+- **Cumulative:** 25-36% FP reduction
 
 ### Future: Phase 22+
 - Performance patterns (GCI0044 ↔ GCI0035)
 - Concurrency patterns (GCI0016 ↔ GCI0038)
 - System-level patterns (distributed tracing)
+- Serialization safety (GCI0039 ↔ GCI0048)
 
 ---
 
@@ -193,10 +220,10 @@ Each has 6-9 fixtures covering both rules firing together, separately, and edge 
 
 | Metric | Target | Status |
 |--------|--------|--------|
-| Phase 21 FP reduction | 20-30% | 🔄 Deployed |
+| Phase 21 FP reduction | 25-36% | ✅ Deployed (P0-P3) |
 | Regressions | 0 | ✅ 0 detected |
-| Test coverage | 100% | ✅ 1,500/1,500 |
-| Build quality | 0 errors | ✅ 0 errors |
+| Test coverage | 100% | ✅ 1,494/1,494 |
+| Build quality | 0 errors, 0 warnings | ✅ Clean |
 
 ---
 
