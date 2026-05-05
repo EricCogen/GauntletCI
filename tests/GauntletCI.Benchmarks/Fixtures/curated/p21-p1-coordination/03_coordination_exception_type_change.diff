@@ -1,0 +1,16 @@
+--- a/Processor.cs
++++ b/Processor.cs
+@@ -8,11 +8,11 @@
+ public class Processor
+ {
+     public void Handle(string data)
+     {
+         try
+         {
+-            var result = _handler.Process(data);  // Old signature: throws IOException
++            var result = _handler.ProcessV2(data);  // New signature: throws ProcessingException
+         }
+-        catch (IOException) { }
++        catch (IOException) { /* Wrong exception type - won't catch ProcessingException */ }
+     }
+ }

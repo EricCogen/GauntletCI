@@ -1,0 +1,19 @@
+--- a/BlockingAsyncClient.cs
++++ b/BlockingAsyncClient.cs
+@@ -5,16 +5,16 @@
+ 
+ public class BlockingAsyncClient
+ {
+     public void SyncWrapper()
+     {
+         try
+         {
+-            var result = _http.GetAsync(url).Result;  // Blocking on async - kills thread pool
++            var result = _http.GetAsync(url).Result;  // Blocking call
+             var data = result.Content.ReadAsStringAsync().Result;
+             _cache[url] = data;
+         }
+-        catch { }
++        catch { /* Empty catch - blocks thread AND swallows errors */ }
+     }
+ }
