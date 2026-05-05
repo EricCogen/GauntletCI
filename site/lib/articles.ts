@@ -9,7 +9,7 @@ export type Article = {
 export const articles: Article[] = [
   {
     slug: "why-tests-miss-bugs",
-    href: "/why-tests-miss-bugs",
+    href: "/articles/why-tests-miss-bugs",
     title: "Why Tests Miss Bugs",
     description:
       "Tests pass but bugs still reach production. The categories of risk that escape test suites and why a green build is not the same as safe code.",
@@ -17,7 +17,7 @@ export const articles: Article[] = [
   },
   {
     slug: "why-code-review-misses-bugs",
-    href: "/why-code-review-misses-bugs",
+    href: "/articles/why-code-review-misses-bugs",
     title: "Why Code Review Misses Bugs",
     description:
       "Code review catches style and obvious logic errors. It routinely misses behavioral drift, contract changes, and implicit assumptions.",
@@ -25,7 +25,7 @@ export const articles: Article[] = [
   },
   {
     slug: "detect-breaking-changes-before-merge",
-    href: "/detect-breaking-changes-before-merge",
+    href: "/articles/detect-breaking-changes-before-merge",
     title: "Detect Breaking Changes Before Merge",
     description:
       "How to catch removed public APIs, signature changes, and serialization breaks at commit time instead of in downstream consumers.",
@@ -33,7 +33,7 @@ export const articles: Article[] = [
   },
   {
     slug: "behavioral-change-risk-formal-framework",
-    href: "/behavioral-change-risk-formal-framework",
+    href: "/articles/behavioral-change-risk-formal-framework",
     title: "A Formal Framework for Behavioral Change Risk",
     description:
       "A structured taxonomy for behavioral, contract, concurrency, and side-effect risk in code diffs.",
@@ -41,7 +41,7 @@ export const articles: Article[] = [
   },
   {
     slug: "what-is-diff-based-analysis",
-    href: "/what-is-diff-based-analysis",
+    href: "/articles/what-is-diff-based-analysis",
     title: "What Is Diff-Based Analysis?",
     description:
       "Diff-based analysis evaluates only what changed in a commit. Why that scope is the right unit of risk for pre-commit checks.",

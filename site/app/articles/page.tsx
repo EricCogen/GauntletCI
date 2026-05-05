@@ -22,7 +22,7 @@ const jsonLd = {
 // Newest articles first: add new entries at the bottom, display is reversed
 const articles = [
   {
-    href: "/can-ai-code-review-be-deterministic",
+    href: "/articles/can-ai-code-review-be-deterministic",
     title: "Can AI Code Review Tools Ever Be Deterministic?",
     description:
       "Exploring determinism vs. probabilistic judgment in code review. Why repeatable engineering evidence matters more than helpful suggestions.",
@@ -31,7 +31,7 @@ const articles = [
     pinned: true,
   },
   {
-    href: "/why-code-review-misses-bugs",
+    href: "/articles/why-code-review-misses-bugs",
     title: "Why Code Review Misses Bugs",
     description:
       "Code review catches style and obvious logic errors. It routinely misses behavioral drift, contract changes, and implicit assumptions -- not because reviewers are careless, but because diffs hide what was removed.",
@@ -39,7 +39,7 @@ const articles = [
     readTime: "6 min read",
   },
   {
-    href: "/why-tests-miss-bugs",
+    href: "/articles/why-tests-miss-bugs",
     title: "Why Tests Miss Bugs",
     description:
       "Tests pass but bugs still reach production. Learn the categories of risk that escape test suites and why a green build is not the same as safe code.",
@@ -47,7 +47,7 @@ const articles = [
     readTime: "7 min read",
   },
   {
-    href: "/what-is-diff-based-analysis",
+    href: "/articles/what-is-diff-based-analysis",
     title: "What Is Diff-Based Analysis?",
     description:
       "Diff-based analysis examines only the lines you changed, not the entire codebase. This approach is faster, more precise, and more actionable than full-codebase scanning -- and it catches a different class of bugs.",
@@ -55,7 +55,7 @@ const articles = [
     readTime: "5 min read",
   },
   {
-    href: "/detect-breaking-changes-before-merge",
+    href: "/articles/detect-breaking-changes-before-merge",
     title: "Detect Breaking Changes Before Merge",
     description:
       "Breaking changes in .NET code are often invisible at compile time. Learn the patterns that break callers at runtime -- removed null guards, enum member removal, serialization contract changes -- and how to catch them pre-commit.",
@@ -63,7 +63,7 @@ const articles = [
     readTime: "8 min read",
   },
   {
-    href: "/behavioral-change-risk-formal-framework",
+    href: "/articles/behavioral-change-risk-formal-framework",
     title: "Behavioral Change Risk: A Formal Framework",
     description:
       "A formal definition of Behavioral Change Risk (BCR) and the Behavioral Change Risk Validation (BCRV) methodology. Formalizes the validation gap that exists whenever a code change expands the behavior space beyond what any test is positioned to see.",
