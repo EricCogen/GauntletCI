@@ -490,4 +490,32 @@ public sealed class SilverLabelEngineTests
         var gci0032 = labels.FirstOrDefault(l => l.RuleId == "GCI0032");
         Assert.NotNull(gci0032);
     }
+
+    [Fact]
+    public async Task InferLabelsFromComments_DataIntegrity_DetectsGCI0015()
+    {
+        // Arrange: review comment with data integrity keyword
+        var json = CommentsJson("This has SQL IGNORE pattern which bypasses data constraints");
+
+        // Act
+        var labels = await _engine.InferLabelsFromCommentsAsync(json);
+
+        // Assert: GCI0015 should be detected via data integrity keywords
+        var gci0015 = labels.FirstOrDefault(l => l.RuleId == "GCI0015");
+        Assert.NotNull(gci0015);
+    }
+
+    [Fact]
+    public async Task InferLabelsFromComments_PIInLogging_DetectsGCI0029()
+    {
+        // Arrange: review comment with PII keyword
+        var json = CommentsJson("This logs personal data which violates GDPR");
+
+        // Act
+        var labels = await _engine.InferLabelsFromCommentsAsync(json);
+
+        // Assert: GCI0029 should be detected via PII keywords
+        var gci0029 = labels.FirstOrDefault(l => l.RuleId == "GCI0029");
+        Assert.NotNull(gci0029);
+    }
 }

@@ -305,6 +305,9 @@ public sealed class SilverLabelEngine
         // ── Phase 21 Coordination: Resource Management ──────────────────────────
         ApplyResourceManagementCoordination(inferred);
 
+        // ── Phase 21 Coordination: Data Security ──────────────────────────────
+        ApplyDataSecurityCoordination(inferred);
+
         // ── Tier 3: LLM fallback for uncertain findings ───────────────────────
         var positiveRuleIdsAfterTier12 = inferred
             .Where(l => l.ShouldTrigger)
@@ -2117,6 +2120,109 @@ public sealed class SilverLabelEngine
                         ShouldTrigger = gci0015.ShouldTrigger,
                         ExpectedConfidence = 0.75,
                         Reason = "[coordination] Data integrity risk + GCI0024 resource leak = compound risk. Data corruption occurs while resource remains open.",
+                        LabelSource = gci0015.LabelSource,
+                        IsInconclusive = gci0015.IsInconclusive,
+                    };
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Phase 21.3 P3 (Data Security) Coordination: Detects sensitive data exposure patterns.
+    /// When GCI0015 (unvalidated data write) + GCI0029 (PII in logging) both fire,
+    /// it signals GDPR risk: unvalidated data + sensitive exposure = critical compliance violation.
+    /// </summary>
+    private void ApplyDataSecurityCoordination(List<ExpectedFinding> labels)
+    {
+        // ── Coordination Pattern 1: Unvalidated Write + PII Exposure ──
+        // When GCI0015 (data integrity) + GCI0029 (PII in logs) both fire,
+        // it's a critical security violation: unvalidated data flows into logging.
+
+        var hasGci0015 = labels.Any(l => l.RuleId == "GCI0015" && l.ShouldTrigger);
+        var hasGci0029 = labels.Any(l => l.RuleId == "GCI0029" && l.ShouldTrigger);
+
+        if (hasGci0015 && hasGci0029)
+        {
+            // Boost GCI0015 (data integrity) - unvalidated data + PII = critical violation
+            var gci0015Index = labels.FindIndex(l => l.RuleId == "GCI0015");
+            if (gci0015Index >= 0)
+            {
+                var gci0015 = labels[gci0015Index];
+                if (gci0015.ExpectedConfidence < 0.88)
+                {
+                    labels[gci0015Index] = new ExpectedFinding
+                    {
+                        RuleId = gci0015.RuleId,
+                        ShouldTrigger = gci0015.ShouldTrigger,
+                        ExpectedConfidence = 0.88,
+                        Reason = "[coordination] Unvalidated write + GCI0029 PII exposure = GDPR compliance risk. Sensitive data flows without validation.",
+                        LabelSource = gci0015.LabelSource,
+                        IsInconclusive = gci0015.IsInconclusive,
+                    };
+                }
+            }
+
+            // Boost GCI0029 (PII in logs) - more serious when data is unvalidated
+            var gci0029Index = labels.FindIndex(l => l.RuleId == "GCI0029");
+            if (gci0029Index >= 0)
+            {
+                var gci0029 = labels[gci0029Index];
+                if (gci0029.ExpectedConfidence < 0.82)
+                {
+                    labels[gci0029Index] = new ExpectedFinding
+                    {
+                        RuleId = gci0029.RuleId,
+                        ShouldTrigger = gci0029.ShouldTrigger,
+                        ExpectedConfidence = 0.82,
+                        Reason = "[coordination] PII in logs + GCI0015 unvalidated write = data leakage. Sensitive data exposed without validation layer.",
+                        LabelSource = gci0029.LabelSource,
+                        IsInconclusive = gci0029.IsInconclusive,
+                    };
+                }
+            }
+        }
+
+        // ── Coordination Pattern 2: Credentials + Data Integrity ──
+        // When GCI0012 (hardcoded secrets) + GCI0015 (data integrity) both fire,
+        // it's a severe security failure: credentials stored in unvalidated data path.
+
+        var hasGci0012 = labels.Any(l => l.RuleId == "GCI0012" && l.ShouldTrigger);
+
+        if (hasGci0012 && hasGci0015)
+        {
+            // Boost GCI0012 (secrets) - hardcoded credential in unvalidated data context is critical
+            var gci0012Index = labels.FindIndex(l => l.RuleId == "GCI0012");
+            if (gci0012Index >= 0)
+            {
+                var gci0012 = labels[gci0012Index];
+                if (gci0012.ExpectedConfidence < 0.90)
+                {
+                    labels[gci0012Index] = new ExpectedFinding
+                    {
+                        RuleId = gci0012.RuleId,
+                        ShouldTrigger = gci0012.ShouldTrigger,
+                        ExpectedConfidence = 0.90,
+                        Reason = "[coordination] Hardcoded credential + GCI0015 unvalidated write = critical exposure. Secrets in unvalidated data flow.",
+                        LabelSource = gci0012.LabelSource,
+                        IsInconclusive = gci0012.IsInconclusive,
+                    };
+                }
+            }
+
+            // Boost GCI0015 (data integrity) - data integrity failure with exposed secrets
+            var gci0015Index2 = labels.FindIndex(l => l.RuleId == "GCI0015");
+            if (gci0015Index2 >= 0)
+            {
+                var gci0015 = labels[gci0015Index2];
+                if (gci0015.ExpectedConfidence < 0.86)
+                {
+                    labels[gci0015Index2] = new ExpectedFinding
+                    {
+                        RuleId = gci0015.RuleId,
+                        ShouldTrigger = gci0015.ShouldTrigger,
+                        ExpectedConfidence = 0.86,
+                        Reason = "[coordination] Data integrity failure + GCI0012 hardcoded credentials = credential exposure. Secrets stored in unvalidated path.",
                         LabelSource = gci0015.LabelSource,
                         IsInconclusive = gci0015.IsInconclusive,
                     };
