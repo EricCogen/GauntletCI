@@ -137,10 +137,10 @@ export default function WhyTestsMissBugsPage() {
               <time className="text-sm text-muted-foreground" dateTime="2026-04-20">April 20, 2026</time>
             </div>
             <nav className="flex items-center justify-between pt-2 text-sm border-t border-border/50">
-              <Link href="/why-code-review-misses-bugs" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
+              <Link href="/articles/why-code-review-misses-bugs" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
                 <span aria-hidden="true">‹</span> Why Code Review Misses Bugs
               </Link>
-              <Link href="/what-is-diff-based-analysis" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
+              <Link href="/articles/what-is-diff-based-analysis" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
                 What Is Diff-Based Analysis? <span aria-hidden="true">›</span>
               </Link>
             </nav>
@@ -382,7 +382,7 @@ export default function WhyTestsMissBugsPage() {
               reports success. The only reliable way to detect this class of regression at commit time is to
               analyze the diff itself, recognizing that a guard clause was removed, and flag it for review
               before the change is pushed. See{" "}
-              <Link href="/what-is-diff-based-analysis" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">
+              <Link href="/articles/what-is-diff-based-analysis" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">
                 what is diff-based analysis
               </Link>{" "}
               for a deeper explanation of why analyzing the change, rather than the test results, is the
@@ -432,7 +432,7 @@ export default function WhyTestsMissBugsPage() {
               valuable and worth adopting alongside unit tests. The takeaway is that input-space testing and
               change-space analysis are complementary strategies that cover different classes of risk.
               Input-space testing catches what unusual inputs reveal.{" "}
-              <Link href="/what-is-diff-based-analysis" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">Diff-based structural analysis</Link>{" "}
+              <Link href="/articles/what-is-diff-based-analysis" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">Diff-based structural analysis</Link>{" "}
               catches what the structure of the change itself reveals. Neither one makes the other redundant.
             </p>
           </section>
@@ -499,7 +499,7 @@ export default function WhyTestsMissBugsPage() {
               correctness will verify that the changed lines look right. They will not necessarily notice
               that a critical line was removed, or that a guard clause protecting a side effect no longer
               appears. See{" "}
-              <Link href="/why-code-review-misses-bugs" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">
+              <Link href="/articles/why-code-review-misses-bugs" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">
                 why code review misses bugs
               </Link>{" "}
               for the parallel analysis of how human review exhibits the same systematic blind spots as
@@ -637,7 +637,7 @@ export default function WhyTestsMissBugsPage() {
               See the detection rules
             </Link>
             <Link
-              href="/why-code-review-misses-bugs"
+              href="/articles/why-code-review-misses-bugs"
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-card/80 transition-colors"
             >
               Why code review also misses bugs
@@ -652,3 +652,4 @@ export default function WhyTestsMissBugsPage() {
     </>
   );
 }
+

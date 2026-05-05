@@ -273,28 +273,28 @@ export default function DeterminismArticlePage() {
             <h3 className="text-lg font-bold mb-6">Related Reading</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Link
-                href="/why-code-review-misses-bugs"
+                href="/articles/why-code-review-misses-bugs"
                 className="p-4 rounded-lg border border-border hover:border-cyan-400/50 hover:bg-cyan-400/5 transition-all"
               >
                 <h4 className="font-semibold text-foreground mb-1">Why Code Review Misses Bugs</h4>
                 <p className="text-sm text-muted-foreground">Seven structural blind spots that let regressions slip through peer review.</p>
               </Link>
               <Link
-                href="/why-tests-miss-bugs"
+                href="/articles/why-tests-miss-bugs"
                 className="p-4 rounded-lg border border-border hover:border-cyan-400/50 hover:bg-cyan-400/5 transition-all"
               >
                 <h4 className="font-semibold text-foreground mb-1">Why Tests Miss Bugs</h4>
                 <p className="text-sm text-muted-foreground">The categories of risk that escape test suites even at high coverage.</p>
               </Link>
               <Link
-                href="/what-is-diff-based-analysis"
+                href="/articles/what-is-diff-based-analysis"
                 className="p-4 rounded-lg border border-border hover:border-cyan-400/50 hover:bg-cyan-400/5 transition-all"
               >
                 <h4 className="font-semibold text-foreground mb-1">What Is Diff-Based Analysis?</h4>
                 <p className="text-sm text-muted-foreground">Why analyzing only changed lines catches a different class of bugs.</p>
               </Link>
               <Link
-                href="/behavioral-change-risk-formal-framework"
+                href="/articles/behavioral-change-risk-formal-framework"
                 className="p-4 rounded-lg border border-border hover:border-cyan-400/50 hover:bg-cyan-400/5 transition-all"
               >
                 <h4 className="font-semibold text-foreground mb-1">Behavioral Change Risk Framework</h4>
@@ -314,3 +314,4 @@ export default function DeterminismArticlePage() {
     </>
   );
 }
+

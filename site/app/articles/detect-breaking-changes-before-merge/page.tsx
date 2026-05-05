@@ -107,7 +107,7 @@ export default function DetectBreakingChangesPage() {
               <time className="text-sm text-muted-foreground" dateTime="2026-04-20">April 20, 2026</time>
             </div>
             <nav className="flex items-center justify-between pt-2 text-sm border-t border-border/50">
-              <Link href="/what-is-diff-based-analysis" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
+              <Link href="/articles/what-is-diff-based-analysis" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
                 <span aria-hidden="true">‹</span> What Is Diff-Based Analysis?
               </Link>
               <span />
@@ -377,7 +377,7 @@ export default function DetectBreakingChangesPage() {
             </p>
             <p className="text-muted-foreground leading-relaxed">
               This is the core insight behind{" "}
-              <Link href="/what-is-diff-based-analysis" className="text-cyan-400 underline underline-offset-2 hover:text-cyan-300">
+              <Link href="/articles/what-is-diff-based-analysis" className="text-cyan-400 underline underline-offset-2 hover:text-cyan-300">
                 diff-based analysis
               </Link>
               : by analyzing exactly the lines that are about to change, GauntletCI identifies
@@ -392,7 +392,7 @@ export default function DetectBreakingChangesPage() {
               The patterns below represent the structural changes that most commonly cause
               runtime failures across .NET applications. Each pattern can be introduced by a
               well-intentioned commit (a refactor, a cleanup, a schema update) that passes{" "}
-              <Link href="/why-tests-miss-bugs" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">all automated tests</Link>{" "}
+              <Link href="/articles/why-tests-miss-bugs" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">all automated tests</Link>{" "}
               because the test suite was written against the post-change
               codebase and does not exercise the consumer boundary at the binary level.
             </p>
@@ -480,7 +480,7 @@ export default function DetectBreakingChangesPage() {
               A breaking change caught in the diff before the commit costs a single edit. The
               same breaking change caught in production costs an incident, a rollback, and an
               investigation.{" "}
-              <Link href="/why-code-review-misses-bugs" className="text-cyan-400 underline underline-offset-2 hover:text-cyan-300">
+              <Link href="/articles/why-code-review-misses-bugs" className="text-cyan-400 underline underline-offset-2 hover:text-cyan-300">
                 Why code review misses bugs
               </Link>{" "}
               explores this cost curve in more detail.
@@ -685,3 +685,4 @@ export default function DetectBreakingChangesPage() {
     </>
   );
 }
+

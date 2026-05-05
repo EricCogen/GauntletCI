@@ -60,10 +60,10 @@ export default function WhatIsDiffBasedAnalysisPage() {
               <time className="text-sm text-muted-foreground" dateTime="2026-04-20">April 20, 2026</time>
             </div>
             <nav className="flex items-center justify-between pt-2 text-sm border-t border-border/50">
-              <Link href="/why-tests-miss-bugs" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
+              <Link href="/articles/why-tests-miss-bugs" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
                 <span aria-hidden="true">‹</span> Why Tests Miss Bugs
               </Link>
-              <Link href="/detect-breaking-changes-before-merge" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
+              <Link href="/articles/detect-breaking-changes-before-merge" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
                 Detect Breaking Changes Before Merge <span aria-hidden="true">›</span>
               </Link>
             </nav>
@@ -99,7 +99,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
             <p className="text-muted-foreground leading-relaxed">
               The example below shows a single-line deletion. A guard clause that validated the
               method input has been removed: a category of change that{" "}
-              <Link href="/why-code-review-misses-bugs" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">code review consistently misses</Link>{" "}
+              <Link href="/articles/why-code-review-misses-bugs" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">code review consistently misses</Link>{" "}
               for structural reasons. A full-codebase scanner may or may not surface this
               depending on whether it has a rule for missing input validation. A diff-based scanner
               surfaces it immediately because it can see the deletion (the removed line) and
@@ -224,7 +224,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
               receive, the tool becomes part of their normal workflow. They do not develop the
               habit of dismissing findings without reading them. This means that when a genuinely
               critical finding appears (a removed authentication check, a hardcoded secret, a
-              <Link href="/detect-breaking-changes-before-merge" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">broken serialization contract</Link>) it gets the same attention every other finding
+              <Link href="/articles/detect-breaking-changes-before-merge" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">broken serialization contract</Link>) it gets the same attention every other finding
               receives, rather than being lost in a backlog of noise.
             </p>
           </section>
@@ -468,7 +468,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
               Code review, even when thorough, is a probabilistic gate. Reviewers miss things,
               especially behavioral regressions introduced by deletions rather than additions.
               See{" "}
-              <Link href="/why-code-review-misses-bugs" className="text-cyan-400 underline underline-offset-2 hover:text-cyan-300 transition-colors">
+              <Link href="/articles/why-code-review-misses-bugs" className="text-cyan-400 underline underline-offset-2 hover:text-cyan-300 transition-colors">
                 why code review misses bugs
               </Link>{" "}
               for a detailed treatment of the systematic blind spots in human review. Diff-based
@@ -479,7 +479,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
             <p className="text-muted-foreground leading-relaxed">
               For teams concerned specifically about API contract breaks, serialization regressions,
               and removed overloads, see{" "}
-              <Link href="/detect-breaking-changes-before-merge" className="text-cyan-400 underline underline-offset-2 hover:text-cyan-300 transition-colors">
+              <Link href="/articles/detect-breaking-changes-before-merge" className="text-cyan-400 underline underline-offset-2 hover:text-cyan-300 transition-colors">
                 detecting breaking changes before merge
               </Link>.
               That article covers how diff-based rules identify breaking changes in public
@@ -515,7 +515,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
             <h2 className="text-2xl font-bold tracking-tight">Related topics</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <Link
-                href="/why-code-review-misses-bugs"
+                href="/articles/why-code-review-misses-bugs"
                 className="group rounded-xl border border-border bg-card p-5 hover:border-cyan-500/40 transition-colors"
               >
                 <p className="text-sm font-semibold group-hover:text-cyan-400 transition-colors">
@@ -528,7 +528,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
                 </p>
               </Link>
               <Link
-                href="/detect-breaking-changes-before-merge"
+                href="/articles/detect-breaking-changes-before-merge"
                 className="group rounded-xl border border-border bg-card p-5 hover:border-cyan-500/40 transition-colors"
               >
                 <p className="text-sm font-semibold group-hover:text-cyan-400 transition-colors">
@@ -614,13 +614,13 @@ export default function WhatIsDiffBasedAnalysisPage() {
               Try GauntletCI free
             </Link>
             <Link
-              href="/detect-breaking-changes-before-merge"
+              href="/articles/detect-breaking-changes-before-merge"
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-card/80 transition-colors"
             >
               Detect breaking changes
             </Link>
             <Link
-              href="/why-code-review-misses-bugs"
+              href="/articles/why-code-review-misses-bugs"
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-card/80 transition-colors"
             >
               Why code review misses bugs
@@ -635,3 +635,4 @@ export default function WhatIsDiffBasedAnalysisPage() {
     </>
   );
 }
+

@@ -62,7 +62,7 @@ export default function BCRFormalFrameworkPage() {
               <time className="text-sm text-muted-foreground" dateTime="2026-04-21">April 21, 2026</time>
             </div>
             <nav className="flex items-center justify-between pt-2 text-sm border-t border-border/50">
-              <Link href="/detect-breaking-changes-before-merge" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
+              <Link href="/articles/detect-breaking-changes-before-merge" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
                 <span aria-hidden="true">‹</span> Detect Breaking Changes Before Merge
               </Link>
               <Link href="/articles" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
@@ -878,13 +878,13 @@ export default function BCRFormalFrameworkPage() {
               Try GauntletCI free
             </Link>
             <Link
-              href="/why-tests-miss-bugs"
+              href="/articles/why-tests-miss-bugs"
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-card/80 transition-colors"
             >
               Why tests miss bugs →
             </Link>
             <Link
-              href="/what-is-diff-based-analysis"
+              href="/articles/what-is-diff-based-analysis"
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-card/80 transition-colors"
             >
               What is diff-based analysis? →
@@ -899,3 +899,4 @@ export default function BCRFormalFrameworkPage() {
     </>
   );
 }
+

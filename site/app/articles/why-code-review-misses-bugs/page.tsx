@@ -47,7 +47,7 @@ const blindSpots = [
   },
   {
     title: "Test coverage gaps are not visible in the diff",
-    body: <>A reviewer can see that new code was added, but cannot easily determine whether the existing test suite exercises the new or changed code paths in a meaningful way. Coverage tools exist, but they are rarely consulted during review, and they measure line coverage rather than behavioral coverage of the specific delta introduced by the PR. A reviewer approving a change that adds a new error handling branch has no fast way to verify whether a test exercises that branch specifically, whether existing tests happen to hit it incidentally, or whether the behavior is entirely untested. This blind spot compounds the structural gap described in more detail in <Link href="/why-tests-miss-bugs" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">why tests miss bugs</Link>; the two mechanisms that were supposed to catch regressions have overlapping blind spots, not complementary ones.</>,
+    body: <>A reviewer can see that new code was added, but cannot easily determine whether the existing test suite exercises the new or changed code paths in a meaningful way. Coverage tools exist, but they are rarely consulted during review, and they measure line coverage rather than behavioral coverage of the specific delta introduced by the PR. A reviewer approving a change that adds a new error handling branch has no fast way to verify whether a test exercises that branch specifically, whether existing tests happen to hit it incidentally, or whether the behavior is entirely untested. This blind spot compounds the structural gap described in more detail in <Link href="/articles/why-tests-miss-bugs" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">why tests miss bugs</Link>; the two mechanisms that were supposed to catch regressions have overlapping blind spots, not complementary ones.</>,
     example: "A new branch is added to handle HTTP 429 responses from a downstream service. It looks correct on review. No test covers it specifically. The upstream service starts returning 429 three months later and the new handler throws because a variable was not initialized in that code path.",
   },
   {
@@ -98,7 +98,7 @@ export default function WhyCodeReviewMissesBugsPage() {
             </div>
             <nav className="flex items-center justify-between pt-2 text-sm border-t border-border/50">
               <span />
-              <Link href="/why-tests-miss-bugs" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
+              <Link href="/articles/why-tests-miss-bugs" className="flex items-center gap-1 text-muted-foreground hover:text-cyan-400 transition-colors">
                 Why Tests Miss Bugs <span aria-hidden="true">›</span>
               </Link>
             </nav>
@@ -183,7 +183,7 @@ export default function WhyCodeReviewMissesBugsPage() {
               Behavioral drift, contract changes, and removed safety checks are structural
               properties of a diff. Detecting them requires rule-based analysis of what was
               removed, not the holistic comprehension that humans do well. This is the gap{" "}
-              <Link href="/what-is-diff-based-analysis" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">automated pre-commit analysis</Link>{" "}
+              <Link href="/articles/what-is-diff-based-analysis" className="text-cyan-400 hover:text-cyan-300 underline underline-offset-2">automated pre-commit analysis</Link>{" "}
               closes.
             </p>
           </section>
@@ -419,7 +419,7 @@ export default function WhyCodeReviewMissesBugsPage() {
             <h3 className="font-semibold text-foreground">Related reading</h3>
             <div className="space-y-3">
               <div>
-                <Link href="/why-tests-miss-bugs" className="text-sm font-medium text-cyan-400 hover:text-cyan-300 transition-colors">
+                <Link href="/articles/why-tests-miss-bugs" className="text-sm font-medium text-cyan-400 hover:text-cyan-300 transition-colors">
                   Why tests miss bugs
                 </Link>
                 <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
@@ -428,7 +428,7 @@ export default function WhyCodeReviewMissesBugsPage() {
                 </p>
               </div>
               <div className="border-t border-border pt-3">
-                <Link href="/what-is-diff-based-analysis" className="text-sm font-medium text-cyan-400 hover:text-cyan-300 transition-colors">
+                <Link href="/articles/what-is-diff-based-analysis" className="text-sm font-medium text-cyan-400 hover:text-cyan-300 transition-colors">
                   What is diff-based analysis?
                 </Link>
                 <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
@@ -495,13 +495,13 @@ export default function WhyCodeReviewMissesBugsPage() {
               Try GauntletCI free
             </Link>
             <Link
-              href="/why-tests-miss-bugs"
+              href="/articles/why-tests-miss-bugs"
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-card/80 transition-colors"
             >
               Also: Why tests miss bugs
             </Link>
             <Link
-              href="/what-is-diff-based-analysis"
+              href="/articles/what-is-diff-based-analysis"
               className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-6 py-3 text-sm font-semibold hover:bg-card/80 transition-colors"
             >
               How diff analysis works
@@ -516,3 +516,4 @@ export default function WhyCodeReviewMissesBugsPage() {
     </>
   );
 }
+
