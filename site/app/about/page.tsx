@@ -118,7 +118,7 @@ export default function AboutPage() {
               </li>
               <li>
                 <Link
-                  href="/why-tests-miss-bugs"
+                  href="/articles/why-tests-miss-bugs"
                   className="text-cyan-400 hover:underline font-semibold flex items-center gap-2"
                 >
                   Why tests miss bugs
@@ -130,7 +130,7 @@ export default function AboutPage() {
               </li>
               <li>
                 <Link
-                  href="/why-code-review-misses-bugs"
+                  href="/articles/why-code-review-misses-bugs"
                   className="text-cyan-400 hover:underline font-semibold flex items-center gap-2"
                 >
                   Why code review misses bugs
