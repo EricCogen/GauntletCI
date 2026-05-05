@@ -720,7 +720,7 @@ export default function BCRFormalFrameworkPage() {
                 {[
                   "Empirical measurement of BCR prevalence in industrial codebases.",
                   "Development of lightweight static analysis rules to flag high-BCR change patterns.",
-                  "Integration of flaky test signal analysis into BCRV workflows.",
+                  "Evaluation of BCRV effectiveness in controlled industrial studies with instrumented team workflows.",
                 ].map((item) => (
                   <li key={item} className="flex gap-2">
                     <span className="text-cyan-400 shrink-0">: </span>
@@ -737,7 +737,7 @@ export default function BCRFormalFrameworkPage() {
 
             <h3 className="text-xl font-semibold tracking-tight">Internal Validity</h3>
             <p className="text-muted-foreground leading-relaxed">
-              The primary threat to internal validity is interpretation bias in the BCR taxonomy. The six change
+              The primary threat to internal validity is interpretation bias in the BCR taxonomy. The five change
               categories in §4 were derived from pattern analysis and practitioner judgment rather than a
               systematic fault taxonomy study. Categories may overlap, under-specify, or conflate distinct
               phenomena. Additionally, the corpus findings reported in §6 are produced by an automated rule engine
