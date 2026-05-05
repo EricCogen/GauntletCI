@@ -476,4 +476,18 @@ public sealed class SilverLabelEngineTests
         var gci0016 = Assert.Single(labels, l => l.RuleId == "GCI0016");
         Assert.True(gci0016.ShouldTrigger);
     }
+
+    [Fact]
+    public async Task InferLabelsFromComments_ExceptionSwallowing_DetectsGCI0032()
+    {
+        // Arrange: review comment about exception swallowing
+        var json = CommentsJson("This code swallows exceptions silently");
+
+        // Act
+        var labels = await _engine.InferLabelsFromCommentsAsync(json);
+
+        // Assert: GCI0032 should be detected via heuristic keywords
+        var gci0032 = labels.FirstOrDefault(l => l.RuleId == "GCI0032");
+        Assert.NotNull(gci0032);
+    }
 }
