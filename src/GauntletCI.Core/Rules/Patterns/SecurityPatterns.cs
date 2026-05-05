@@ -101,7 +101,9 @@ internal static class SecurityPatterns
             var tree = CSharpSyntaxTree.ParseText(wrapped);
             return tree.GetRoot()
                 .DescendantTokens()
+#pragma warning disable RS1034 // Prefer IsKind (not available in this context)
                 .Where(t => t.Kind() == SyntaxKind.StringLiteralToken)
+#pragma warning restore RS1034
                 .Select(t => t.ValueText)
                 .FirstOrDefault();
         }
