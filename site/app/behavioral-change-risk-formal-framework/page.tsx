@@ -80,7 +80,7 @@ export default function BCRFormalFrameworkPage() {
                 changes. A passing test suite is widely interpreted as a signal of correctness. However, a growing body
                 of empirical research demonstrates that test suites are structurally incapable of detecting specific
                 classes of behavioral modification. This gap, wherein a code change alters runtime behavior without
-                triggering a test failure, represents a distinct and under-researched category of software risk.
+                triggering a test failure, points to a distinct practical risk category that has not been named or operationalized clearly in day-to-day CI practice.
               </p>
               <p>
                 This article defines <strong className="text-foreground">Behavioral Change Risk (BCR)</strong> and
@@ -229,9 +229,9 @@ export default function BCRFormalFrameworkPage() {
                   <span className="shrink-0 font-mono text-cyan-400">2.</span>
                   <span>
                     <code className="bg-background/60 px-2 py-0.5 rounded font-mono text-xs">
-                      ΔB ∉ V(T, C + ΔC)
+                      ΔB is not exercised and asserted by T against C + ΔC
                     </code>
-                    : the altered behavior is not covered by the test suite.
+                    : the behavioral delta introduced by the change is not validated by the test suite.
                   </span>
                 </li>
               </ol>
@@ -242,7 +242,7 @@ export default function BCRFormalFrameworkPage() {
 
               <p className="text-sm text-muted-foreground/70 italic leading-relaxed">
                 <span className="font-semibold">More formally</span>:<br />
-                  For a given system, behavior B is a function of code C. Any non-zero change ΔC introduces behavioral divergence potential such that B(C + ΔC) ≠ B(C).
+                  Let ΔB = B(C + ΔC) − B(C), representing the observable behavioral delta introduced by the change. Any non-trivial code change may introduce behavioral divergence. BCR exists only when the change produces an observable behavioral delta and that delta is not represented by the validated behavior space of the test suite.
               </p>
             </div>
             <p className="text-muted-foreground leading-relaxed">
@@ -253,11 +253,7 @@ export default function BCRFormalFrameworkPage() {
               test suite.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              This definition distinguishes BCR from a traditional software defect. A <em>bug</em> is code that
-              violates a stated requirement; it is detectable because a test or specification can be written to catch
-              it. BCR is categorically different: the code may behave exactly as the developer intended, and yet
-              introduce behavioral change that no existing test is positioned to observe. It is not a failure of
-              implementation. It is a <strong>validation gap</strong>.
+              BCR is not necessarily a defect at the moment it is introduced. It is a validation gap around behavioral change. Some BCR instances will be intentional and acceptable; others will later manifest as defects. The distinguishing feature is not whether the behavior is wrong, but whether the behavioral delta has been explicitly validated.
             </p>
             <div className="rounded-lg border border-border bg-card/50 p-5 space-y-2">
               <p className="text-sm font-semibold text-foreground">Scope boundary</p>
