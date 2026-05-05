@@ -265,12 +265,13 @@ export default function BCRFormalFrameworkPage() {
                 BCR as defined here is bounded to changes in functional, observable behavior detectable in principle
                 by a correctly written test oracle. It explicitly excludes:{" "}
                 <strong>performance regressions</strong> (changes in execution speed, memory, or throughput that do
-                not alter observable outputs);{" "}
+                not alter observable outputs); and{" "}
                 <strong>security vulnerabilities</strong> (weaknesses requiring threat-model analysis beyond
-                behavioral assertion); and{" "}
-                <strong>concurrency hazards</strong> (race conditions, deadlocks, and non-deterministic interleavings
-                outside the scope of a functional test oracle). BCR addresses the specific gap between what a change
-                does and what the test suite is positioned to see.
+                behavioral assertion). BCR includes changes to concurrency models and async/await semantics that 
+                produce observable behavioral divergence (such as blocking the thread pool or altering callback 
+                execution order), as these are detectable through functional test oracles and violate caller 
+                assumptions. BCR addresses the specific gap between what a change does and what the test suite is 
+                positioned to see.
               </p>
             </div>
           </section>
@@ -319,11 +320,7 @@ export default function BCRFormalFrameworkPage() {
                       desc: "The rules governing state machine transitions are updated, but only the happy path is tested.",
                       ex: "Removing a validation check before state advancement",
                     },
-                    {
-                      cat: "Configuration Drift",
-                      desc: "A change relies on an environment variable or setting that is absent in production.",
-                      ex: "Adding a feature flag that defaults to false in tests but true in staging",
-                    },
+
                   ].map((row) => (
                     <tr key={row.cat} className="bg-card/20 hover:bg-card/40 transition-colors">
                       <td className="px-4 py-3 font-medium text-foreground align-top">{row.cat}</td>
@@ -622,8 +619,8 @@ export default function BCRFormalFrameworkPage() {
             <h3 className="text-xl font-semibold tracking-tight pt-4">7.3 Tooling Considerations</h3>
             <p className="text-muted-foreground leading-relaxed">
               While BCRV is a human-centric methodology, tooling can assist in flagging high-risk change patterns.
-              A prototype implementation, <strong>GauntletCI</strong>, was developed to explore the feasibility of
-              automated BCR detection. The prototype analyzes code diffs to identify structural patterns associated
+              A reference implementation, <strong>GauntletCI</strong>, was developed to explore the feasibility of
+              automated BCR detection. The implementation analyzes code diffs to identify structural patterns associated
               with BCR categories.
             </p>
             <p className="text-muted-foreground leading-relaxed">
