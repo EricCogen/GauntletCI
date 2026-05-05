@@ -1,0 +1,50 @@
+{
+  "mapped_gci_rules": [
+    "GCI0016",
+    "GCI0039",
+    "GCI0044"
+  ],
+  "description": "Phase 21.0 P0: Async Execution Model Coordination - Combined detection of blocking calls, HttpClient misuse, and performance hotpath risks",
+  "fixtures": [
+    {
+      "id": "p21-p0-01",
+      "diff_file": "01_coordination_async_blocking_httpclient.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI0016",
+        "GCI0039"
+      ],
+      "notes": "Coordination case: Blocking call (.Result) on Task returned from HttpClient.GetAsync(). Both GCI0016 (blocking) and GCI0039 (HttpClient) should fire with boosted confidence due to coordination.",
+      "origin": "synthetic",
+      "source_url": "https://github.com/EricCogen/GauntletCI"
+    },
+    {
+      "id": "p21-p0-02",
+      "diff_file": "02_coordination_blocking_httpclient_gc_pressure.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI0016",
+        "GCI0039",
+        "GCI0044"
+      ],
+      "notes": "Coordination case: All three rules fire together - blocking HttpClient call INSIDE a loop. GCI0016 (blocking), GCI0039 (HttpClient), and GCI0044 (loop). Cross-rule confidence boost applies to all pairs.",
+      "origin": "synthetic",
+      "source_url": "https://github.com/EricCogen/GauntletCI"
+    },
+    {
+      "id": "p21-p0-03",
+      "diff_file": "03_coordination_thread_sleep_concurrent.diff",
+      "category": "true-positive",
+      "expected_outcome": "fire",
+      "expected_gci_rules": [
+        "GCI0016",
+        "GCI0044"
+      ],
+      "notes": "Coordination case: Thread.Sleep inside async context alongside blocking operations. GCI0044 (Thread.Sleep) and GCI0016 (blocking in async) should be boosted due to coordination.",
+      "origin": "synthetic",
+      "source_url": "https://github.com/EricCogen/GauntletCI"
+    }
+  ]
+}

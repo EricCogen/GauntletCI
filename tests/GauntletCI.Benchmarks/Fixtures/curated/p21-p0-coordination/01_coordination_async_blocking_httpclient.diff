@@ -1,0 +1,17 @@
+--- a/src/Services/DataFetcher.cs
++++ b/src/Services/DataFetcher.cs
+@@ -10,6 +10,14 @@ public class DataFetcher
+     {
+         _httpClient = httpClient;
+     }
++
++    public string FetchRemoteData(string url)
++    {
++        // GCI0016: Blocking call on async Task
++        // GCI0039: New HttpClient instantiation without timeout
++        var task = new HttpClient().GetAsync(url);
++        return task.Result.Content.ReadAsStringAsync().Result;
++    }
+     
+     public async Task<string> GetJsonDataAsync(string url)
+     {

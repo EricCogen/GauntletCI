@@ -1,0 +1,21 @@
+--- a/src/Services/AsyncWorker.cs
++++ b/src/Services/AsyncWorker.cs
+@@ -8,6 +8,19 @@ namespace MyApp.Services;
+ public class AsyncWorker
+ {
++    public async Task ProcessConcurrentlyWithDelay()
++    {
++        var tasks = new List<Task>();
++        // GCI0016: Blocking operation (Thread.Sleep) mixed with async
++        // GCI0044: Thread.Sleep in concurrent context
++        for (int i = 0; i < 10; i++)
++        {
++            Thread.Sleep(100);  // GCI0044: Thread.Sleep blocks async execution
++            tasks.Add(Task.Run(() => DoWorkAsync()));
++        }
++        await Task.WhenAll(tasks);
++    }
++
+     public async Task DoWorkAsync()
+     {
+         await Task.Delay(50);
