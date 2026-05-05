@@ -8,7 +8,7 @@ import { AuthorBio } from "@/components/author-bio";
 export const metadata: Metadata = {
   title: "Why Tests Miss Bugs | The Green Build Fallacy",
   description:
-    "Tests pass but bugs still reach production. Learn the 6 categories of structural risk that escape test suites, why code coverage is a misleading proxy, and why a green build is not the same as safe code.",
+    "Tests pass but bugs still reach production. Learn the 7 categories of structural risk that escape test suites, why code coverage is a misleading proxy, and why a green build is not the same as safe code.",
   alternates: { canonical: "/articles/why-tests-miss-bugs" },
   openGraph: { images: [{ url: '/og/why-tests-miss-bugs.png', width: 1200, height: 630 }] },
 };
@@ -95,13 +95,13 @@ public async Task GenerateInvoiceAsync_ValidOrder_CreatesInvoiceAndSendsEmail()
 // WHY IT PASSES: The test covers only the happy path with a populated order.
 // The guard that was removed handled empty orders -- a path no existing test covered.
 // After the refactor, empty orders now trigger invoice creation, email delivery,
-// and audit logging. GauntletCI flags the removed guard clause (GCI0010).`;
+// and audit logging. GauntletCI flags the removed guard clause (GCI0003).`;
 
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Article",
   "headline": "Why Tests Miss Bugs",
-  "description": "Tests pass but bugs still reach production. Learn the 6 categories of structural risk that escape test suites and why a green build is not the same as safe code.",
+  "description": "Tests pass but bugs still reach production. Learn the 7 categories of structural risk that escape test suites and why a green build is not the same as safe code.",
   "url": "https://gauntletci.com/articles/why-tests-miss-bugs",
   "publisher": { "@type": "Organization", "name": "GauntletCI", "url": "https://gauntletci.com" },
 };

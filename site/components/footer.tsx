@@ -61,7 +61,7 @@ export function Footer() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/articles/case-studies" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                    <Link href="/case-studies" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                       Case Studies
                     </Link>
                   </li>
@@ -160,4 +160,5 @@ export function Footer() {
     </footer>
   );
 }
+
 

@@ -16,7 +16,7 @@ export function AuthorBio({ variant = "short" }: Props) {
           Eric Cogen -- Founder, GauntletCI
         </p>
         <p className="text-sm leading-relaxed text-muted-foreground mb-3">
-          Twenty years as a senior technical consultant and software engineer focused on application modernization, cloud-native architecture, and AI-driven software systems. He has more than two decades of experience building and modernizing enterprise platforms across .NET, C#, SQL Server, AWS, serverless architecture, microservices, CI/CD, and distributed systems. His recent work includes leading AWS-based media processing platforms, reducing transcription costs through self-hosted Whisper pipelines, and applying AI and machine learning to classification, enrichment, and semantic search workflows.
+          Eric Cogen is a senior .NET engineer with twenty years in production. He has shipped payments systems, internal platforms, and critical line-of-business applications — the kind where a 2 a.m. alert wasn't an emergency, it was a regular Tuesday. GauntletCI is the pre-commit checklist he wishes he had run before every commit.
         </p>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
           <Link

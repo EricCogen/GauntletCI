@@ -6,7 +6,7 @@ import { softwareApplicationSchema, buildFaqSchema } from "@/lib/schemas";
 export const metadata: Metadata = {
   title: "Rule Library | GauntletCI Docs",
   description:
-    "30+ deterministic rules for detecting behavioral regressions, security risks, breaking changes, and code quality issues in C# and .NET pull request diffs.",
+    "34 deterministic rules — and growing — for detecting behavioral regressions, security risks, breaking changes, and code quality issues in C# and .NET pull request diffs.",
   alternates: { canonical: "/docs/rules" },
 };
 
@@ -17,7 +17,7 @@ const jsonLd = {
   "@type": "ItemList",
   name: "GauntletCI Detection Rules",
   description:
-    "30+ deterministic rules for detecting behavioral regressions, security risks, breaking changes, and code quality issues in C# .NET diffs.",
+    "34 deterministic rules — and growing — for detecting behavioral regressions, security risks, breaking changes, and code quality issues in C# .NET diffs.",
   url: "https://gauntletci.com/docs/rules",
   numberOfItems: totalRules,
   itemListElement: rules.map((rule, idx) => ({
@@ -88,7 +88,7 @@ export default function RulesPage() {
             Rule Library
           </p>
           <h1 className="text-4xl font-bold tracking-tight mb-4">
-            {totalRules} deterministic detection rules
+            {totalRules} deterministic detection rules — and growing
           </h1>
           <p className="text-lg text-muted-foreground">
             Every rule targets a specific class of behavioral, security, or

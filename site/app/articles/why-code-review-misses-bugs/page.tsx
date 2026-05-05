@@ -258,10 +258,10 @@ export default function WhyCodeReviewMissesBugsPage() {
               </div>
               <div className="border-t border-border px-5 py-3 bg-red-500/5 space-y-1.5">
                 <p className="text-xs text-red-400">
-                  GCI0001: Removed guard clause -- ArgumentOutOfRangeException on id &lt;= 0 is no longer thrown. Negative ids now reach the database layer.
+                  GCI0003: Removed guard clause -- ArgumentOutOfRangeException on id &lt;= 0 is no longer thrown. Negative ids now reach the database layer.
                 </p>
                 <p className="text-xs text-red-400">
-                  GCI0014: Exception type changed from NotFoundException to ArgumentNullException. Callers catching NotFoundException will not catch this path.
+                  GCI0007: Exception type changed from NotFoundException to ArgumentNullException. Callers catching NotFoundException will not catch this path.
                 </p>
               </div>
             </div>
