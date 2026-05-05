@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { softwareApplicationSchema, buildFaqSchema } from "@/lib/schemas";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Getting Started | GauntletCI Docs",
@@ -48,6 +49,7 @@ export default function DocsPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApplicationSchema) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       <div className="space-y-10">
+      <Breadcrumbs />
       <div>
         <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">Documentation</p>
         <h1 className="text-4xl font-bold tracking-tight mb-4">Getting Started</h1>

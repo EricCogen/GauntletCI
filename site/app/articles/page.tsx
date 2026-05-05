@@ -3,6 +3,7 @@ import JsonLd from "@/components/json-ld";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { ArticleList } from "./ArticleList";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Articles | GauntletCI -- .NET Change Risk and Code Review",
@@ -88,6 +89,7 @@ export default function ArticlesPage() {
         <Header />
 
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 pt-28 pb-20">
+          <Breadcrumbs />
           <div className="mb-12">
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-balance">
               Articles

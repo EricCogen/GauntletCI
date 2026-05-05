@@ -5,6 +5,7 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { RulesApplied } from "@/components/rules-applied";
 import { AuthorBio } from "@/components/author-bio";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "OSS Case Studies | GauntletCI Catches Real Bugs",
@@ -83,6 +84,9 @@ export default function CaseStudiesPage() {
       <Header />
       <main className="min-h-screen bg-background pt-24">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 space-y-16">
+
+          {/* Breadcrumbs */}
+          <Breadcrumbs />
 
           {/* Hero */}
           <div className="space-y-5 border-b border-border pb-12">
