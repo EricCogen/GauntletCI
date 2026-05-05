@@ -1,8 +1,11 @@
-# Phase 21 Coordination Debugging & Tuning Runbook
+# Multi-Phase Coordination Debugging & Tuning Runbook
 
 **Purpose:** Operational guide for debugging false positives, tuning coordination parameters, and validating new coordination patterns  
-**Audience:** DevOps, SRE, Engineers adding new coordinations (Phase 22+)  
-**Scope:** Phase 21 coordinations (P0-P3) + template for future phases
+**Audience:** DevOps, SRE, Engineers adding new coordinations  
+**Scope:** Phase 21 (P0-P3) + Phase 23 (P4-P6) + template for future phases  
+**Phases Covered:**
+- Phase 21 (P0-P3): Async, Exception Handling, Resource Management, Data Security
+- Phase 23 (P4-P6): Performance & GC, Serialization Safety, DI & Async
 
 ---
 
@@ -12,8 +15,9 @@
 2. [Common Issues & Fixes](#common-issues--fixes)
 3. [Tuning Confidence Boosts](#tuning-confidence-boosts)
 4. [Testing New Coordinations](#testing-new-coordinations)
-5. [Logging & Monitoring](#logging--monitoring)
-6. [Rollback Procedure](#rollback-procedure)
+5. [Phase 23 Specific Guidance](#phase-23-specific-guidance)
+6. [Logging & Monitoring](#logging--monitoring)
+7. [Rollback Procedure](#rollback-procedure)
 
 ---
 
@@ -377,6 +381,119 @@ Assert.That(watch.ElapsedMilliseconds, Is.LessThan(1));
 
 ---
 
+## Phase 23 Specific Guidance
+
+### Phase 23.0: GCI0016 Heuristic Improvements
+
+**Monitoring GCI0016 improvements:**
+
+After Phase 23.0 deployment, baseline GCI0016 confidence should shift higher:
+
+```bash
+# Before Phase 23.0 (baseline)
+grep "GCI0016" logs/gci-pre-23.log | grep -o "confidence: [0-9.]*" | sort | uniq -c
+# Expected: peak at 0.35-0.45 confidence (noisy)
+
+# After Phase 23.0 (improved)
+grep "GCI0016" logs/gci-post-23.log | grep -o "confidence: [0-9.]*" | sort | uniq -c
+# Expected: peak at 0.55-0.65 confidence (cleaner)
+```
+
+**Key improvements in Phase 23.0:**
+- Task.Run() now distinguished from Task.Run().Result (blocking guard added)
+- Fire-and-forget patterns (with explicit markers) no longer trigger
+- Startup context patterns filtered out
+- ConfigureAwait(false) patterns treated as legitimate
+
+### Phase 23 Coordinations (P4-P6)
+
+#### P4 Performance & GC Coordination
+
+**When to suspect P4 is under-triggering:**
+```bash
+# Check if both GCI0044 and GCI0035 are firing
+grep "GCI0044\|GCI0035" logs/gci-analysis.log | head -20
+
+# If both appear but coordination isn't applying:
+grep "P4-Coordination" logs/gci-analysis.log | wc -l
+# Expected: 1-5 per day on typical codebase
+```
+
+**Tuning P4:**
+```
+If P4 not triggering enough (< 1 per week):
+  1. Lower threshold from 0.50 to 0.45 (more sensitive)
+  2. Check if GCI0044 or GCI0035 baseline is weak (< 0.40)
+  
+If P4 over-triggering (> 10 per day):
+  1. Raise threshold from 0.50 to 0.60 (more selective)
+  2. Add line-proximity check (both within 5 lines of each other)
+```
+
+#### P5 Serialization Safety Coordination
+
+**When to suspect P5 is under-triggering:**
+```bash
+# P5 is the highest-priority coordination (security)
+# Should trigger on all RCE-vulnerable patterns
+
+grep "P5-Coordination" logs/gci-analysis.log | wc -l
+# Expected: 2-8 per day on typical codebase (higher than P4)
+```
+
+**Tuning P5:**
+```
+If P5 not triggering:
+  1. Verify GCI0039 and GCI0048 baseline confidence is reasonable (≥0.55, ≥0.60)
+  2. P5 has higher thresholds than P4 intentionally (security-critical)
+  3. Check scope: both must be on HTTP client instantiation path
+  
+If P5 over-triggering (> 15 per day):
+  1. Raise thresholds: GCI0039 ≥0.60, GCI0048 ≥0.70
+  2. Validate scope detection (currently FirstOrDefault on same finding)
+```
+
+#### P6 Dependency Injection & Async Coordination
+
+**When to suspect P6 is under-triggering:**
+```bash
+# P6 depends on improved GCI0016 from Phase 23.0
+# Make sure Phase 23.0 is deployed first
+
+grep "P6-Coordination" logs/gci-analysis.log | wc -l
+# Expected: 1-4 per day (rarer than P4/P5, depends on service locator usage)
+
+# If low: check if GCI0016 baseline improved after Phase 23.0
+grep "GCI0016" logs/gci-post-23.log | grep -o "confidence: [0-9.]*" | stats
+```
+
+**Tuning P6:**
+```
+P6 requires GCI0016 baseline confidence ≥0.55 to activate
+  - If GCI0016 baseline is weak: improve Phase 23.0 heuristics
+  - If GCI0016 strong but P6 not triggering: lower threshold to 0.50
+
+P6 interacts with Phase 23.0 heuristics:
+  - Task.Run() blocking guard: May reduce false GCI0016 findings
+  - Fire-and-forget marker: May filter out legitimate async patterns
+  - Result: Fewer low-confidence GCI0016 findings, higher precision P6
+```
+
+### Phase 21 vs Phase 23 Interactions
+
+**Important:** Phase 23 coordinations are independent of Phase 21:
+
+```
+Phase 21 (P0-P3): First four coordinations deployed
+Phase 23 (P4-P6): Three new coordinations, independent scope
+```
+
+- P4, P5, P6 do NOT interact with P0, P1, P2, P3
+- P6 depends on GCI0016 heuristics (Phase 23.0), not Phase 21 coordination
+- You can rollback Phase 23 without affecting Phase 21
+
+---
+
 ## Logging & Monitoring
 
 ### Enable Coordination Logs
@@ -434,12 +551,24 @@ grep -i "error\|exception" logs/gci-analysis.log | grep -i "coordination"
 ### Metrics to Export
 
 ```
-# Prometheus-style metrics
-gauntletci_coordination_activations_total{phase="p0|p1|p2"} 
+# Prometheus-style metrics - Phase 21 coordinations
+gauntletci_coordination_activations_total{phase="p0|p1|p2|p3"} 
 gauntletci_coordination_boost_applied{rule_id="GCI0024"} 0.80
 gauntletci_coordination_confidence_delta{rule_id="GCI0024"} 0.15
 gauntletci_false_positive_rate 0.25
 gauntletci_coordination_skipped{reason="low_confidence"} 15
+
+# Phase 23 specific metrics
+gauntletci_coordination_activations_total{phase="p4|p5|p6"}
+gauntletci_gci0016_baseline_confidence_after_23_0   0.60 (improved from 0.40)
+gauntletci_phase_23_heuristic_improvement_pct      +5-8
+gauntletci_coordination_performance_gc_boost{rule="GCI0044"}  0.30
+gauntletci_coordination_serialization_boost{rule="GCI0048"}   0.42
+gauntletci_coordination_di_async_boost{rule="GCI0045"}        0.37
+
+# Cumulative impact (Phase 21 + 23)
+gauntletci_cumulative_fp_reduction_pct  39-60 (target)
+gauntletci_total_coordinations_deployed 7 (P0-P3, P4-P6)
 ```
 
 ---
@@ -453,60 +582,78 @@ gauntletci_coordination_skipped{reason="low_confidence"} 15
 ```bash
 cd /path/to/GauntletCI
 
-# 1. Identify problematic commit
-git log --oneline | grep -i "coordination\|phase"
-# Output: 4b2b52f cleanup: phase-21-p3-coordination
+# Option 1: Full rollback (Phase 21 + 23)
+# Keep neither Phase 21 nor Phase 23 coordinations
+git revert <phase-21-commit> <phase-23-commit> --no-edit
+git push
 
-# 2. Revert commit
-git revert 4b2b52f --no-edit
+# Option 2: Rollback Phase 23 only (keep Phase 21)
+git revert <phase-23-commit> --no-edit
+git push
 
-# 3. Verify revert
-git log -1 --oneline
+# Option 3: Rollback Phase 23.0 heuristics only (keep P4-P6 coordinations)
+# Edit GCI0016_ConcurrencyAndStateRisk.cs, revert heuristic changes
+git commit -am "ops: rollback Phase 23.0 GCI0016 heuristics"
+git push
 
 # 4. Run tests to confirm no new failures
 dotnet test -q
 
-# 5. Push
-git push origin main
-
-# 6. Deploy v2.x.0-pre (without latest coordination)
-gh release create v2.x.0-pre --draft
+# 5. Deploy v2.x.0-hotfix (without problematic phase)
+gh release create v2.x.0-hotfix --draft
 ```
 
-### Partial Rollback (Keep P0-P1, Remove P2)
+### Partial Rollback (Keep P0-P3, Remove P4)
 
-If only P2 (Phase 21.2) is problematic:
+If only P4 coordination is problematic:
 
 ```bash
 # Edit SilverLabelEngine.cs
-# Remove line: inferred = ApplyResourceManagementCoordination(inferred);
-git commit -am "ops: disable P2-coordination while investigating"
+# Remove/comment line: inferred = ApplyPhase23P4PerformanceCoordination(inferred);
+git commit -am "ops: disable P4-coordination while investigating"
 git push
 ```
 
-### Full Rollback (Keep P0 only)
+### Granular Rollback Matrix
 
-```bash
-# Revert all coordinations except P0
-# In SilverLabelEngine.cs, remove:
-#   - inferred = ApplyExceptionHandlingCoordination(inferred);
-#   - inferred = ApplyResourceManagementCoordination(inferred);
-#   - inferred = ApplyDataSecurityCoordination(inferred);
-# Keep:
-#   - inferred = ApplyAsyncExecutionCoordination(inferred);
+| Scenario | Action | FP Impact |
+|----------|--------|-----------|
+| P6 alone breaks | Comment P6 call | -6% (keep P0-P5) |
+| P5 alone breaks | Comment P5 call | -5% (keep P0-P4, P6) |
+| P4 alone breaks | Comment P4 call | -3% (keep P0-P3, P5-P6) |
+| Phase 23.0 breaks P6 | Revert Phase 23.0 heuristics | Keep P0-P3, P4-P5 (no P6) |
+| All Phase 23 breaks | Revert Phase 23 commit | Revert to Phase 21 (25-36% FP reduction) |
+| All coordinations break | Revert P0-P3 + P4-P6 | Baseline (40-50% FP) |
 
-git commit -am "ops: rollback to P0-coordination only"
-git push
-```
+### Rollback Time
 
-**Rollback time:** 2-5 minutes  
-**Impact:** FP reduction drops from 25-36% → 8-12% (P0 only)
+| Scenario | Time | Impact |
+|----------|------|--------|
+| Full revert | 2-5 minutes | Immediate deploy |
+| Partial (one coordination) | 2-3 minutes | FP reduction drops ~3-6% |
+| Heuristic revert | 1-2 minutes | P6 may not activate, but P4-P5 remain |
+| Code fix + re-deploy | 15-30 minutes | If issue is fixable, redeploy with fix |
 
 ---
 
 ## Contact & Escalation
 
-- **Coordination Questions:** See ADR-0004: `docs/architecture/adr-0004-phase-21-coordinations.md`
+- **Phase 21 Questions:** See `docs/architecture/adr-0004-phase-21-coordinations.md`
+- **Phase 23 Questions:** See `docs/architecture/adr-0005-phase-23-heuristics-and-coordinations.md`
 - **Monitoring Issues:** See `docs/operations/phase-21-monitoring.md`
-- **Phase 22+ Coordinations:** Follow this runbook as template
+- **Phase 24+ Coordinations:** Follow this runbook as template
 - **Critical Alert:** Initiate rollback → post-mortem within 1 hour
+
+### Phase 23 Escalation Checklist
+
+If Phase 23 coordination causes issues:
+
+```
+[ ] Check FP rate increased > 40% (vs 25-36% baseline)
+[ ] Check logs for P4/P5/P6-Coordination messages
+[ ] Verify Phase 23.0 heuristics deployed correctly
+[ ] Run rollback test (disable one coordination at a time)
+[ ] Measure impact (which coordination caused regression?)
+[ ] Initiate rollback if FP increase > 10%
+[ ] Document finding in post-mortem for Phase 24 planning
+```

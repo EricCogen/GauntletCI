@@ -1,0 +1,1059 @@
+{
+  "nodes": [
+    {
+      "id": "StubPatternProvider",
+      "label": "StubPatternProvider",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/StubPatternProvider.cs",
+      "source_location": "L13",
+      "entity_type": "class"
+    },
+    {
+      "id": "SupplementalCoverageTests",
+      "label": "SupplementalCoverageTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/SupplementalCoverageTests.cs",
+      "source_location": "L12",
+      "entity_type": "class"
+    },
+    {
+      "id": "SyntaxGuardTests",
+      "label": "SyntaxGuardTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/SyntaxGuardTests.cs",
+      "source_location": "L12",
+      "entity_type": "class"
+    },
+    {
+      "id": "TelemetryCollectorTests",
+      "label": "TelemetryCollectorTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/TelemetryCollectorTests.cs",
+      "source_location": "L19",
+      "entity_type": "class"
+    },
+    {
+      "id": "TelemetryConsentTests",
+      "label": "TelemetryConsentTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/TelemetryConsentTests.cs",
+      "source_location": "L14",
+      "entity_type": "class"
+    },
+    {
+      "id": "TelemetryDbTests",
+      "label": "TelemetryDbTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/TelemetryDbTests.cs",
+      "source_location": "L7",
+      "entity_type": "class"
+    },
+    {
+      "id": "TelemetryHasherTests",
+      "label": "TelemetryHasherTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/TelemetryHasherTests.cs",
+      "source_location": "L6",
+      "entity_type": "class"
+    },
+    {
+      "id": "TelemetryUploaderTests",
+      "label": "TelemetryUploaderTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/TelemetryUploaderTests.cs",
+      "source_location": "L12",
+      "entity_type": "class"
+    },
+    {
+      "id": "TicketResolverTests",
+      "label": "TicketResolverTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/TicketProviderTests.cs",
+      "source_location": "L7",
+      "entity_type": "class"
+    },
+    {
+      "id": "GCI0038TimeoutGuardTests",
+      "label": "GCI0038TimeoutGuardTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/TimeoutGuardTests.cs",
+      "source_location": "L10",
+      "entity_type": "class"
+    },
+    {
+      "id": "GCI0038NoEchoLogsTests",
+      "label": "GCI0038NoEchoLogsTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/TimeoutGuardTests.cs",
+      "source_location": "L77",
+      "entity_type": "class"
+    },
+    {
+      "id": "TraceCommandTests",
+      "label": "TraceCommandTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/TraceCommandTests.cs",
+      "source_location": "L8",
+      "entity_type": "class"
+    },
+    {
+      "id": "VectorStoreTests",
+      "label": "VectorStoreTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/VectorStoreTests.cs",
+      "source_location": "L10",
+      "entity_type": "class"
+    },
+    {
+      "id": "WellKnownPatternsTests",
+      "label": "WellKnownPatternsTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/WellKnownPatternsTests.cs",
+      "source_location": "L14",
+      "entity_type": "class"
+    },
+    {
+      "id": "EnrichmentPipelineFactoryTests",
+      "label": "EnrichmentPipelineFactoryTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/Cli/Enrichment/EnrichmentPipelineFactoryTests.cs",
+      "source_location": "L10",
+      "entity_type": "class"
+    },
+    {
+      "id": "ExpertKnowledgeEnricherTests",
+      "label": "ExpertKnowledgeEnricherTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/Cli/Enrichment/Stages/ExpertKnowledgeEnricherTests.cs",
+      "source_location": "L10",
+      "entity_type": "class"
+    },
+    {
+      "id": "EnrichmentPipelineTests",
+      "label": "EnrichmentPipelineTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/Core/Analysis/Enrichment/EnrichmentPipelineTests.cs",
+      "source_location": "L10",
+      "entity_type": "class"
+    },
+    {
+      "id": "EnricherImplementationTests",
+      "label": "EnricherImplementationTests",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/Core/Analysis/Enrichment/Stages/EnricherImplementationTests.cs",
+      "source_location": "L11",
+      "entity_type": "class"
+    },
+    {
+      "id": "ThrowingRule",
+      "label": "ThrowingRule",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/SupplementalCoverageTests.cs",
+      "source_location": "L314",
+      "entity_type": "class"
+    },
+    {
+      "id": "SlowRule",
+      "label": "SlowRule",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/TimeoutGuardTests.cs",
+      "source_location": "L63",
+      "entity_type": "class"
+    },
+    {
+      "id": "TestLlmEngine",
+      "label": "TestLlmEngine",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/Cli/Enrichment/EnrichmentPipelineFactoryTests.cs",
+      "source_location": "L12",
+      "entity_type": "class"
+    },
+    {
+      "id": "TestEnricher",
+      "label": "TestEnricher",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/Core/Analysis/Enrichment/EnrichmentPipelineTests.cs",
+      "source_location": "L12",
+      "entity_type": "class"
+    },
+    {
+      "id": "FakeEmbedHandler",
+      "label": "FakeEmbedHandler",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/VectorStoreTests.cs",
+      "source_location": "L264",
+      "entity_type": "class"
+    },
+    {
+      "id": "ErrorHandler",
+      "label": "ErrorHandler",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Tests/VectorStoreTests.cs",
+      "source_location": "L273",
+      "entity_type": "class"
+    },
+    {
+      "id": "GCI0001_DiffIntegrity",
+      "label": "GCI0001_DiffIntegrity",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0001_DiffIntegrity.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "GCI0003_BehavioralChangeDetection",
+      "label": "GCI0003_BehavioralChangeDetection",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0003_BehavioralChangeDetection.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "GCI0004_BreakingChangeRisk",
+      "label": "GCI0004_BreakingChangeRisk",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0004_BreakingChangeRisk.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "GCI0006_EdgeCaseHandling",
+      "label": "GCI0006_EdgeCaseHandling",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0006_EdgeCaseHandling.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "GCI0007_ErrorHandlingIntegrity",
+      "label": "GCI0007_ErrorHandlingIntegrity",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0007_ErrorHandlingIntegrity.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "GCI0010_HardcodingAndConfiguration",
+      "label": "GCI0010_HardcodingAndConfiguration",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0010_HardcodingAndConfiguration.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "GCI0012_SecurityRisk",
+      "label": "GCI0012_SecurityRisk",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0012_SecurityRisk.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "GCI0015_DataIntegrityRisk",
+      "label": "GCI0015_DataIntegrityRisk",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0015_DataIntegrityRisk.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "GCI0016_ConcurrencyAndStateRisk",
+      "label": "GCI0016_ConcurrencyAndStateRisk",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0016_ConcurrencyAndStateRisk.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "GCI0024_ResourceLifecycle",
+      "label": "GCI0024_ResourceLifecycle",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0024_ResourceLifecycle.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "GCI0048_InsecureRandomInSecurityContext",
+      "label": "GCI0048_InsecureRandomInSecurityContext",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0048_InsecureRandomInSecurityContext.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "GCI0049_FloatDoubleEqualityComparison",
+      "label": "GCI0049_FloatDoubleEqualityComparison",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0049_FloatDoubleEqualityComparison.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "RuleOrchestrator",
+      "label": "RuleOrchestrator",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/RuleOrchestrator.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "DiffParser",
+      "label": "DiffParser",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/DiffParser.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "DiffContext",
+      "label": "DiffContext",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/DiffContext.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "SyntaxGuard",
+      "label": "SyntaxGuard",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/SyntaxGuard.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "SyntaxContext",
+      "label": "SyntaxContext",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/SyntaxContext.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "TelemetryCollector",
+      "label": "TelemetryCollector",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/TelemetryCollector.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "TelemetryConsent",
+      "label": "TelemetryConsent",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/TelemetryConsent.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "TelemetryDb",
+      "label": "TelemetryDb",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/TelemetryDb.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "TelemetryHasher",
+      "label": "TelemetryHasher",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/TelemetryHasher.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "TelemetryUploader",
+      "label": "TelemetryUploader",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/TelemetryUploader.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "TicketResolver",
+      "label": "TicketResolver",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/TicketResolver.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "VectorStore",
+      "label": "VectorStore",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/VectorStore.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "IncidentClient",
+      "label": "IncidentClient",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/IncidentClient.cs",
+      "source_location": "L1",
+      "entity_type": "interface"
+    },
+    {
+      "id": "ConsoleReporter",
+      "label": "ConsoleReporter",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/ConsoleReporter.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "EnrichmentPipeline",
+      "label": "EnrichmentPipeline",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/EnrichmentPipeline.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "EnrichmentPipelineFactory",
+      "label": "EnrichmentPipelineFactory",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/EnrichmentPipelineFactory.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "CodeSnippetEnricher",
+      "label": "CodeSnippetEnricher",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/CodeSnippetEnricher.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "ExpertKnowledgeEnricher",
+      "label": "ExpertKnowledgeEnricher",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/ExpertKnowledgeEnricher.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    },
+    {
+      "id": "IPatternProvider",
+      "label": "IPatternProvider",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/IPatternProvider.cs",
+      "source_location": "L1",
+      "entity_type": "interface"
+    },
+    {
+      "id": "DefaultPatternProvider",
+      "label": "DefaultPatternProvider",
+      "file_type": "code",
+      "source_file": "src/GauntletCI.Core/DefaultPatternProvider.cs",
+      "source_location": "L1",
+      "entity_type": "class"
+    }
+  ],
+  "edges": [
+    {
+      "source": "SupplementalCoverageTests",
+      "target": "GCI0001_DiffIntegrity",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L20"
+    },
+    {
+      "source": "SupplementalCoverageTests",
+      "target": "GCI0003_BehavioralChangeDetection",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L497"
+    },
+    {
+      "source": "SupplementalCoverageTests",
+      "target": "GCI0004_BreakingChangeRisk",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L473"
+    },
+    {
+      "source": "SupplementalCoverageTests",
+      "target": "GCI0006_EdgeCaseHandling",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L330"
+    },
+    {
+      "source": "SupplementalCoverageTests",
+      "target": "GCI0007_ErrorHandlingIntegrity",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L59"
+    },
+    {
+      "source": "SupplementalCoverageTests",
+      "target": "GCI0010_HardcodingAndConfiguration",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L85"
+    },
+    {
+      "source": "SupplementalCoverageTests",
+      "target": "GCI0012_SecurityRisk",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L189"
+    },
+    {
+      "source": "SupplementalCoverageTests",
+      "target": "GCI0015_DataIntegrityRisk",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L421"
+    },
+    {
+      "source": "SupplementalCoverageTests",
+      "target": "GCI0024_ResourceLifecycle",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L390"
+    },
+    {
+      "source": "SupplementalCoverageTests",
+      "target": "GCI0016_ConcurrencyAndStateRisk",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L272"
+    },
+    {
+      "source": "SupplementalCoverageTests",
+      "target": "RuleOrchestrator",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L296"
+    },
+    {
+      "source": "SupplementalCoverageTests",
+      "target": "DiffParser",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L47"
+    },
+    {
+      "source": "SupplementalCoverageTests",
+      "target": "StubPatternProvider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L20"
+    },
+    {
+      "source": "SyntaxGuardTests",
+      "target": "SyntaxGuard",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L20"
+    },
+    {
+      "source": "SyntaxGuardTests",
+      "target": "SyntaxContext",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L111"
+    },
+    {
+      "source": "SyntaxGuardTests",
+      "target": "GCI0048_InsecureRandomInSecurityContext",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L149"
+    },
+    {
+      "source": "SyntaxGuardTests",
+      "target": "GCI0049_FloatDoubleEqualityComparison",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L177"
+    },
+    {
+      "source": "SyntaxGuardTests",
+      "target": "DiffParser",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L148"
+    },
+    {
+      "source": "TelemetryCollectorTests",
+      "target": "TelemetryCollector",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L46"
+    },
+    {
+      "source": "TelemetryConsentTests",
+      "target": "TelemetryConsent",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L101"
+    },
+    {
+      "source": "TelemetryDbTests",
+      "target": "TelemetryDb",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L42"
+    },
+    {
+      "source": "TelemetryHasherTests",
+      "target": "TelemetryHasher",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L11"
+    },
+    {
+      "source": "TelemetryUploaderTests",
+      "target": "TelemetryUploader",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L23"
+    },
+    {
+      "source": "TelemetryUploaderTests",
+      "target": "TelemetryConsent",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L21"
+    },
+    {
+      "source": "TicketResolverTests",
+      "target": "TicketResolver",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L16"
+    },
+    {
+      "source": "GCI0038TimeoutGuardTests",
+      "target": "RuleOrchestrator",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L26"
+    },
+    {
+      "source": "GCI0038TimeoutGuardTests",
+      "target": "SlowRule",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L25"
+    },
+    {
+      "source": "GCI0038NoEchoLogsTests",
+      "target": "ConsoleReporter",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L86"
+    },
+    {
+      "source": "TraceCommandTests",
+      "target": "IncidentClient",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L43"
+    },
+    {
+      "source": "VectorStoreTests",
+      "target": "VectorStore",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L18"
+    },
+    {
+      "source": "WellKnownPatternsTests",
+      "target": "GCI0048_InsecureRandomInSecurityContext",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L16"
+    },
+    {
+      "source": "EnrichmentPipelineFactoryTests",
+      "target": "EnrichmentPipelineFactory",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L40"
+    },
+    {
+      "source": "EnrichmentPipelineFactoryTests",
+      "target": "TestLlmEngine",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L12"
+    },
+    {
+      "source": "ExpertKnowledgeEnricherTests",
+      "target": "ExpertKnowledgeEnricher",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L21"
+    },
+    {
+      "source": "EnrichmentPipelineTests",
+      "target": "EnrichmentPipeline",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L48"
+    },
+    {
+      "source": "EnrichmentPipelineTests",
+      "target": "TestEnricher",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L12"
+    },
+    {
+      "source": "EnricherImplementationTests",
+      "target": "CodeSnippetEnricher",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": "L16"
+    },
+    {
+      "source": "RuleOrchestrator",
+      "target": "IPatternProvider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "GCI0001_DiffIntegrity",
+      "target": "IPatternProvider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "GCI0003_BehavioralChangeDetection",
+      "target": "IPatternProvider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "GCI0004_BreakingChangeRisk",
+      "target": "IPatternProvider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "GCI0006_EdgeCaseHandling",
+      "target": "IPatternProvider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "GCI0007_ErrorHandlingIntegrity",
+      "target": "IPatternProvider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "GCI0010_HardcodingAndConfiguration",
+      "target": "IPatternProvider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "GCI0012_SecurityRisk",
+      "target": "IPatternProvider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "GCI0015_DataIntegrityRisk",
+      "target": "IPatternProvider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "GCI0016_ConcurrencyAndStateRisk",
+      "target": "IPatternProvider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "GCI0024_ResourceLifecycle",
+      "target": "IPatternProvider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "GCI0048_InsecureRandomInSecurityContext",
+      "target": "IPatternProvider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "GCI0049_FloatDoubleEqualityComparison",
+      "target": "IPatternProvider",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "SyntaxGuard",
+      "target": "DiffContext",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "SyntaxContext",
+      "target": "DiffContext",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.8,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "EnrichmentPipeline",
+      "target": "CodeSnippetEnricher",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.9,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "EnrichmentPipeline",
+      "target": "ExpertKnowledgeEnricher",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.9,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "EnrichmentPipelineFactory",
+      "target": "EnrichmentPipeline",
+      "relation": "calls",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "TelemetryUploader",
+      "target": "TelemetryConsent",
+      "relation": "references",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "DefaultPatternProvider",
+      "target": "IPatternProvider",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    },
+    {
+      "source": "StubPatternProvider",
+      "target": "IPatternProvider",
+      "relation": "implements",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "",
+      "source_location": ""
+    }
+  ],
+  "hyperedges": [
+    {
+      "id": "telemetry_tests",
+      "label": "Telemetry Testing Suite",
+      "nodes": [
+        "TelemetryCollectorTests",
+        "TelemetryConsentTests",
+        "TelemetryDbTests",
+        "TelemetryHasherTests",
+        "TelemetryUploaderTests"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.85,
+      "source_file": "src/GauntletCI.Tests/"
+    },
+    {
+      "id": "rule_test_coverage",
+      "label": "Rule Implementation Coverage",
+      "nodes": [
+        "SupplementalCoverageTests",
+        "GCI0001_DiffIntegrity",
+        "GCI0003_BehavioralChangeDetection",
+        "GCI0004_BreakingChangeRisk",
+        "GCI0006_EdgeCaseHandling",
+        "GCI0007_ErrorHandlingIntegrity",
+        "GCI0010_HardcodingAndConfiguration",
+        "GCI0012_SecurityRisk"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.9,
+      "source_file": "src/GauntletCI.Tests/"
+    },
+    {
+      "id": "syntax_analysis_testing",
+      "label": "Syntax Analysis Testing",
+      "nodes": [
+        "SyntaxGuardTests",
+        "SyntaxGuard",
+        "SyntaxContext",
+        "GCI0048_InsecureRandomInSecurityContext",
+        "GCI0049_FloatDoubleEqualityComparison"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.95,
+      "source_file": "src/GauntletCI.Tests/"
+    },
+    {
+      "id": "enrichment_pipeline_testing",
+      "label": "Enrichment Pipeline Testing",
+      "nodes": [
+        "EnrichmentPipelineFactoryTests",
+        "ExpertKnowledgeEnricherTests",
+        "EnrichmentPipelineTests",
+        "EnricherImplementationTests",
+        "EnrichmentPipeline",
+        "CodeSnippetEnricher",
+        "ExpertKnowledgeEnricher"
+      ],
+      "relation": "participate_in",
+      "confidence": "EXTRACTED",
+      "confidence_score": 0.9,
+      "source_file": "src/GauntletCI.Tests/"
+    },
+    {
+      "id": "incident_tracking_testing",
+      "label": "Incident Tracking & Analysis",
+      "nodes": [
+        "TraceCommandTests",
+        "TicketResolverTests",
+        "IncidentClient",
+        "TicketResolver"
+      ],
+      "relation": "participate_in",
+      "confidence": "INFERRED",
+      "confidence_score": 0.75,
+      "source_file": "src/GauntletCI.Tests/"
+    }
+  ],
+  "input_tokens": 0,
+  "output_tokens": 0
+}
