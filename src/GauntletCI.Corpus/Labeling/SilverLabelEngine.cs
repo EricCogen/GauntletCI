@@ -311,6 +311,9 @@ public sealed class SilverLabelEngine
         // ── Phase 23 Coordination: Performance & GC ───────────────────────────
         ApplyPhase23P4PerformanceCoordination(inferred);
 
+        // ── Phase 23 Coordination: Serialization Safety ─────────────────────
+        ApplyPhase23P5SerializationCoordination(inferred);
+
         // ── Tier 3: LLM fallback for uncertain findings ───────────────────────
         var positiveRuleIdsAfterTier12 = inferred
             .Where(l => l.ShouldTrigger)
@@ -2280,6 +2283,57 @@ public sealed class SilverLabelEngine
                     Reason = "[coordination] GCI0035 excessive allocation + GCI0044 GC pressure = memory stalls. Large collections + blocking calls trigger Gen2 collections.",
                     LabelSource = gci0035.LabelSource,
                     IsInconclusive = gci0035.IsInconclusive,
+                };
+            }
+        }
+    }
+
+    /// <summary>
+    /// Phase 23.2 P5 (Serialization Safety) Coordination: Detects unsafe deserialization patterns.
+    /// When GCI0039 (unsafe HttpClient) and GCI0048 (insecure serialization) co-occur,
+    /// boost both to reflect compound security risk (unvalidated external input + unsafe deserialization = RCE).
+    /// </summary>
+    private static void ApplyPhase23P5SerializationCoordination(List<ExpectedFinding> labels)
+    {
+        // Find GCI0039 (unsafe HttpClient without factory or timeouts)
+        var gci0039Index = labels.FindIndex(l => l.RuleId == "GCI0039");
+        var gci0039 = gci0039Index >= 0 ? labels[gci0039Index] : null;
+
+        // Find GCI0048 (insecure deserialization with TypeNameHandling)
+        var gci0048Index = labels.FindIndex(l => l.RuleId == "GCI0048");
+        var gci0048 = gci0048Index >= 0 ? labels[gci0048Index] : null;
+
+        // Both rules detected with sufficient confidence: compound security risk
+        if (gci0039?.ShouldTrigger == true && gci0039.ExpectedConfidence >= 0.55 &&
+            gci0048?.ShouldTrigger == true && gci0048.ExpectedConfidence >= 0.60)
+        {
+            // Boost GCI0039: unsafe HTTP client compounds deserialization risk
+            // From 0.70 → 0.90 (+29% boost for remote code execution risk)
+            if (gci0039Index >= 0 && gci0039.ExpectedConfidence < 0.90)
+            {
+                labels[gci0039Index] = new ExpectedFinding
+                {
+                    RuleId = gci0039.RuleId,
+                    ShouldTrigger = gci0039.ShouldTrigger,
+                    ExpectedConfidence = 0.90,
+                    Reason = "[coordination] GCI0039 unsafe HttpClient + GCI0048 insecure deserialization = RCE risk. Untrusted external data flows directly to unsafe deserialization.",
+                    LabelSource = gci0039.LabelSource,
+                    IsInconclusive = gci0039.IsInconclusive,
+                };
+            }
+
+            // Boost GCI0048: unsafe deserialization from unvalidated sources
+            // From 0.65 → 0.92 (+42% boost for critical security risk)
+            if (gci0048Index >= 0 && gci0048.ExpectedConfidence < 0.92)
+            {
+                labels[gci0048Index] = new ExpectedFinding
+                {
+                    RuleId = gci0048.RuleId,
+                    ShouldTrigger = gci0048.ShouldTrigger,
+                    ExpectedConfidence = 0.92,
+                    Reason = "[coordination] GCI0048 insecure deserialization + GCI0039 unsafe HttpClient = RCE. Unvalidated remote data deserialized with TypeNameHandling enabled.",
+                    LabelSource = gci0048.LabelSource,
+                    IsInconclusive = gci0048.IsInconclusive,
                 };
             }
         }
