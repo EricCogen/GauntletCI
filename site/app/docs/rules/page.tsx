@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { categories, rules, rulesByCategory, type Rule } from "@/lib/rules";
 import { softwareApplicationSchema, buildFaqSchema } from "@/lib/schemas";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Rule Library | GauntletCI Docs",
@@ -83,6 +84,7 @@ export default function RulesPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
       <div className="space-y-10">
+        <Breadcrumbs />
         <div>
           <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-3">
             Rule Library

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 
 export const metadata: Metadata = {
   title: "Privacy Modes | GauntletCI Docs",
@@ -22,6 +23,7 @@ export default function PrivacyModesPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <div className="space-y-10">
+        <Breadcrumbs />
         <div>
           <p className="text-sm font-semibold text-cyan-400 uppercase tracking-widest mb-2">Architecture</p>
           <h1 className="text-4xl font-bold tracking-tight mb-4">Privacy Modes</h1>
