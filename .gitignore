@@ -94,6 +94,14 @@ graphify-out/
 !RELEASE_NOTES_v2.3.0-phase17-coordinations.md
 !RELEASE_NOTES_v2.4.0-phase21-coordinations.md
 !DEPLOYMENT_CHECKLIST_v2.4.0.md
+!docs/release-notes/
+!docs/release-notes/*.md
+!docs/archived/
+!docs/archived/*.md
+!docs/architecture/adr-0004-phase-21-coordinations.md
+!docs/operations/phase-21-monitoring.md
+!docs/troubleshooting/phase-21-tuning.md
+!docs/DOCUMENTATION.md
 !docs/case-studies/gci0054-async-void-abuse.md
 !docs/case-studies/gci0055-method-signature-change.md
 !docs/case-studies/README.md
