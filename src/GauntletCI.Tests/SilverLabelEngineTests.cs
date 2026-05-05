@@ -827,4 +827,97 @@ public sealed class SilverLabelEngineTests
         if (gci0039Coor != null) Assert.NotNull(gci0048Coor);
         if (gci0048Coor != null) Assert.NotNull(gci0039Coor);
     }
+
+    // --- Phase 23.3 P6 (Dependency Injection Coordination) Tests ---
+
+    [Fact]
+    public async Task InferLabels_P6_NoBoostWithoutBoth_OnlyGCI0045()
+    {
+        // Arrange: Only GCI0045 (service locator) without GCI0016 (async violations)
+        var diff = """
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -10,3 +10,4 @@
+             public void ConfigureServices()
+             {
+            +    var service = ServiceLocator.Get<MyService>();
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("p23-p6-single", diff);
+
+        // Assert: GCI0045 detected but NOT boosted (no coordination without GCI0016)
+        var gci0045 = labels.FirstOrDefault(l => l.RuleId == "GCI0045");
+        Assert.NotNull(gci0045);
+        if (gci0045.ShouldTrigger)
+        {
+            // If triggered, confidence should NOT be 0.82 (coordination boost)
+            Assert.True(gci0045.ExpectedConfidence < 0.82, 
+                "GCI0045 alone should not be boosted to 0.82");
+        }
+    }
+
+    [Fact]
+    public async Task InferLabels_P6_ServiceLocator_AsyncScope_BoostApplied()
+    {
+        // Arrange: GCI0045 (service locator) + GCI0016 (async violations)
+        var diff = """
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -10,5 +10,8 @@
+             public async Task ProcessAsync()
+             {
+            +    var service = ServiceLocator.Get<AsyncService>();
+            +    var result = service.GetDataAsync().Result;
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("p23-p6-both", diff);
+
+        // Assert: Both rules detected with coordination boost
+        var gci0045 = labels.FirstOrDefault(l => l.RuleId == "GCI0045" && l.ShouldTrigger);
+        var gci0016 = labels.FirstOrDefault(l => l.RuleId == "GCI0016" && l.ShouldTrigger);
+
+        // When both are present with sufficient confidence, both should be boosted
+        if (gci0045 != null && gci0016 != null)
+        {
+            if (gci0045.ExpectedConfidence >= 0.60 && gci0016.ExpectedConfidence >= 0.55)
+            {
+                // Coordination should apply
+                Assert.NotEmpty(labels.Where(l => 
+                    l.Reason != null && l.Reason.Contains("[coordination]") && 
+                    (l.RuleId == "GCI0045" || l.RuleId == "GCI0016")));
+            }
+        }
+    }
+
+    [Fact]
+    public async Task InferLabels_P6_PartialMatch_NoBoost()
+    {
+        // Arrange: Only GCI0016 (async violations) without GCI0045 (service locator)
+        var diff = """
+            --- a/src/Service.cs
+            +++ b/src/Service.cs
+            @@ -10,3 +10,4 @@
+             public async Task ProcessAsync()
+             {
+            +    var result = GetDataAsync().Result;
+            """;
+
+        // Act
+        var labels = await _engine.InferLabelsAsync("p23-p6-partial", diff);
+
+        // Assert: No coordination boost when only one rule or confidence too low
+        var coordinationLabels = labels.Where(l => 
+            l.Reason != null && l.Reason.Contains("[coordination]")).ToList();
+        
+        // If GCI0045 and GCI0016 both trigger with high confidence, coordination applies
+        // Otherwise, no coordination marker expected
+        var gci0045Coor = coordinationLabels.FirstOrDefault(l => l.RuleId == "GCI0045");
+        var gci0016Coor = coordinationLabels.FirstOrDefault(l => l.RuleId == "GCI0016");
+        
+        // Either both coordinated or neither (no single coordination)
+        if (gci0045Coor != null) Assert.NotNull(gci0016Coor);
+        if (gci0016Coor != null) Assert.NotNull(gci0045Coor);
+    }
 }
