@@ -430,28 +430,5 @@ internal static class SchemaInitializer
             fetched_at_utc          TEXT NOT NULL DEFAULT (datetime('now'))
         )
         """,
-        """
-        CREATE TABLE IF NOT EXISTS cve_to_findings (
-             id                      INTEGER PRIMARY KEY AUTOINCREMENT,
-             cve_id                  TEXT NOT NULL,
-             cvss_score              REAL,
-             cwe_id                  TEXT,
-             affected_package        TEXT,
-             vulnerable_version      TEXT,
-             fixture_id              TEXT NOT NULL REFERENCES fixtures(fixture_id),
-             repository              TEXT NOT NULL,
-             finding_rule_id         TEXT NOT NULL,
-             finding_id              TEXT REFERENCES actual_findings(id),
-             finding_confidence      REAL DEFAULT 0.0,
-             gci_detected_exploit    INTEGER DEFAULT 0,
-             gci_missed_exploit      INTEGER DEFAULT 0,
-             detected_by_dependabot  INTEGER DEFAULT 0,
-             detected_by_codeql      INTEGER DEFAULT 0,
-             detected_by_semgrep     INTEGER DEFAULT 0,
-             detected_by_gci         INTEGER DEFAULT 0,
-             mapped_at_utc           TEXT NOT NULL DEFAULT (datetime('now')),
-             UNIQUE(cve_id, fixture_id, finding_rule_id)
-         )
-        """,
     ];
 }
