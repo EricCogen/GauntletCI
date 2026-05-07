@@ -17,109 +17,47 @@ Code review confirms intent.
 
 **Neither validates what your change actually does.**
 
-GauntletCI detects **Behavioral Change Risk** in pull request diffs, identifying logic shifts,
-missing validations, and hidden regressions that pass tests and code review.
+GauntletCI detects **Behavioral Change Risk** in pull request diffs: logic shifts, missing validations, and hidden regressions that compile cleanly, pass every test, and survive code review.
 
 ---
 
-## 🚀 What is GauntletCI?
+## What is GauntletCI?
 
-**GauntletCI** is a pre-commit, diff-first change-risk detection tool.
+GauntletCI is a diff-first, merge-time **Behavioral Change Risk** detector for .NET.
 
-It analyzes what changed in your code and flags **unverified behavioral changes**
-before they reach code review.
+It analyzes what changed, not the full codebase, and flags changes whose behavioral impact is unverified before they reach production.
 
-* ⚡ Sub-second analysis: no compilation, no AST, no network
-* 🔒 Runs locally: no code leaves your machine
-* 🎯 High-signal output: designed to surface up to 3 findings per run
+- Sub-second analysis: no compilation, no network calls
+- Runs locally: no code leaves your machine
+- Fully deterministic: every finding is reproducible, every time
+- High-signal output: designed to surface up to 3 findings per run
 
 It answers one question:
 
 > Did this change introduce behavior that is not properly validated?
 
-GauntletCI detects **Behavioral Change Risk**: unverified behavior changes introduced by a diff.
-
 ---
 
-## ⏱ What you get in 5 minutes
+## The Missing Layer
 
-* Install the tool
-* Run it on your current changes
-* See up to 3 high-signal findings (or none)
+Modern pipelines are strong. But each layer answers a different question:
 
-No setup required.
+| Layer | Question it answers |
+| --- | --- |
+| Static analysis | Is this code well-formed? |
+| Security scanning | Does this code contain known vulnerabilities? |
+| Tests | Does this code match expected behavior? |
+| Code review | Does this change match intended behavior? |
 
----
+**None of them ask: is the behavioral impact of this change verified?**
 
-## 🎬 See it live
+GauntletCI is that layer.
 
-Want to see GauntletCI catch real bugs in real PRs before installing anything?
-
-The **[GauntletCI-Demo](https://github.com/EricCogen/GauntletCI-Demo)** repo
-is a realistic ASP.NET Core OrderService with **6 always-open scenario PRs**.
-Each PR makes a plausible multi-file change with a single risky line buried
-inside. GauntletCI runs on every PR: open one and read the workflow output:
-
-| PR | Scenario | Expected verdict |
-| --- | --- | --- |
-| 01 | Safe typo fix | ✅ clean: no findings |
-| 02 | Silent `catch { }` around payment call | ❌ GCI0007 Error Handling Integrity |
-| 03 | Hardcoded API key in `Program.cs` | ❌ GCI0012 Secret Hygiene |
-| 04 | `CancellationToken` dropped from `IPaymentClient` | ❌ GCI0004 Public API Contract |
-| 05 | Customer email logged in `LogInformation` | ❌ GCI0029 PII Logging Leak |
-| 06 | Static counter mutated without sync | ❌ GCI0016 Concurrency Safety |
-
-**[→ Browse the live demo PRs](https://github.com/EricCogen/GauntletCI-Demo/pulls)**
-
-Want to drive it yourself? **[Fork or clone GauntletCI-Demo](https://github.com/EricCogen/GauntletCI-Demo#run-it-yourself-recommended)**
-and run the scenarios on your own copy; the demo repo's README has a one-click
-fork-and-run path plus a local-CLI walkthrough.
-
----
-
-## 📖 Why This Exists
-
-Tests and code review do not reliably validate behavioral changes.
-
-Even experienced developers miss things in diffs.
-
-Not because they lack skill, but because diffs are deceptive.
-
-A small change can silently alter behavior:
-
-* A null check changes execution flow
-* A guard clause introduces new exceptions
-* A method signature changes without test updates
-* A dependency call is modified without validation
-* A conditional branch shifts logic
-
-These are not syntax errors.
-They are **behavior changes**, and they regularly slip through code review.
-
----
-
-## The Missing Layer: Change Validation
-
-Modern development pipelines have strong tooling, but each layer answers a different question:
-
-- Static analysis checks code quality
-- Security tools check vulnerabilities
-- Tests verify expected behavior
-- Code review checks intent
-
-**None of them validate the behavioral impact of a change.**
-
-GauntletCI introduces a new layer: **Behavioral Change Risk detection**
-
-It focuses only on the delta between versions and asks:
-
-> Is this change safe?
+It does not replace static analysis, security scanning, tests, or code review. It closes the gap none of them cover.
 
 ---
 
 ## The Change That Looked Safe
-
-A single line was removed from a production service:
 
 ```diff
  public async Task<Order> CreateOrderAsync(CreateOrderRequest request)
@@ -134,8 +72,7 @@ A single line was removed from a production service:
 - Tests passed
 - PR approved ("cleaned up redundant null check")
 
-Callers relying on the early `ArgumentNullException` now receive a `NullReferenceException`
-deeper in the call stack, with no context. The change shipped.
+Callers relying on the early `ArgumentNullException` now receive a `NullReferenceException` deeper in the call stack with no context. The change shipped.
 
 GauntletCI flagged it before the commit was created:
 
@@ -145,26 +82,11 @@ longer thrown on null input. Callers relying on this contract will see
 NullReferenceException deeper in the call stack.
 ```
 
-This is Behavioral Change Risk: a change that compiles, passes tests, and passes review --
-but alters runtime behavior in a way none of those checks can see.
+This is Behavioral Change Risk: a change that compiles, passes tests, and passes review, but alters runtime behavior in a way none of those checks can see.
 
 ---
 
-## 🏆 Proven Reliability
-
-GauntletCI rules have been validated against real-world pull requests:
-
-| Project                 | What GauntletCI Caught                     |
-| ----------------------- | ------------------------------------------ |
-| **dotnet/efcore**       | O(n²) performance risk (LINQ in loops)     |
-| **StackExchange.Redis** | Context mutation in property getter        |
-| **Dapper**              | Null-forgiving operator misuse             |
-| **SharpCompress**       | Numeric overflow risk                      |
-| **AngleSharp**          | Enum member removal breaking serialization |
-
----
-
-## ⚡ Quick Start
+## Quick Start
 
 ```bash
 dotnet tool install -g GauntletCI
@@ -173,94 +95,64 @@ dotnet tool install -g GauntletCI
 gauntletci analyze --staged
 ```
 
----
-
-## 🧪 What you see on first run
-
-![GauntletCI terminal demo](docs/assets/gauntletci-terminal-demo.gif)
-
-> Running against [StackExchange.Redis PR#2995](https://github.com/StackExchange/StackExchange.Redis/pull/2995) - GauntletCI flags a swallowed exception in production connection handling.
-> GIF recorded with [ScreenToGif](https://github.com/NickeManarin/ScreenToGif) (open source)
-
-Typical output includes **up to 3 high-signal findings**.
+Five minutes from install to first finding. No configuration required.
 
 ---
 
-## 🔇 Designed for high signal
+## See It Live
 
-GauntletCI avoids noise by design:
+Want to see GauntletCI catch real bugs in real PRs before installing anything?
 
-* Diff-only analysis (only what changed)
-* No style or formatting checks
-* Focused on behavioral risk only
-* Baseline suppression for legacy code
+The **[GauntletCI-Demo](https://github.com/EricCogen/GauntletCI-Demo)** repo is a realistic ASP.NET Core OrderService with **6 always-open scenario PRs**. Each PR makes a plausible multi-file change with a single risky line buried inside. GauntletCI runs on every PR: open one and read the workflow output:
 
----
+| PR | Scenario | Expected verdict |
+| --- | --- | --- |
+| 01 | Safe typo fix | ✅ clean: no findings |
+| 02 | Silent `catch { }` around payment call | ❌ GCI0007 Error Handling Integrity |
+| 03 | Hardcoded API key in `Program.cs` | ❌ GCI0012 Secret Hygiene |
+| 04 | `CancellationToken` dropped from `IPaymentClient` | ❌ GCI0004 Public API Contract |
+| 05 | Customer email logged in `LogInformation` | ❌ GCI0029 PII Logging Leak |
+| 06 | Static counter mutated without sync | ❌ GCI0016 Concurrency Safety |
 
-## 📊 Baseline Delta Mode
-
-Introduce GauntletCI into any codebase without noise:
-
-```bash
-gauntletci baseline create
-gauntletci analyze --staged
-```
-
-Only **new risks introduced by the current change** are shown.
+**[→ Browse the live demo PRs](https://github.com/EricCogen/GauntletCI-Demo/pulls)**
 
 ---
 
-## 🚀 What it detects
+## What it detects
 
-### Behavior & Contract Safety
+GauntletCI ships with detection rules organized across 8 production risk tiers. The rule set is actively maintained: rules are added, refined, and occasionally retired as the engine matures.
 
-* Behavior changes without tests
-* API and serialization changes
+### Tier 1: Structural & Scope Integrity
+Changes that contaminate a diff with unrelated concerns, making behavioral review unreliable.
 
-### Data & State Integrity
+### Tier 2: Behavioral & Correctness Risk
+Control-flow removals without test coverage. Method signature changes without contract updates. These are the changes most likely to produce silent regressions.
 
-* Numeric truncation / overflow risks
-* State mutation issues
+### Tier 3: Security & Compliance
+Hardcoded secrets and infrastructure values. SQL injection patterns. Deprecated cryptography. PII written to log output.
 
-### Async & Resource Safety
+### Tier 4: Resource & Concurrency Safety
+Async deadlocks. Disposable leaks. Missing idempotency guarantees on retry-eligible endpoints. Unsafe shared state.
 
-* Blocking async calls
-* Disposable leaks
+### Tier 5: Observability & Failure Handling
+Swallowed exceptions. Removed error-level logging from error-handling paths. Silent failures that remove production visibility.
 
-### Security & Privacy
+### Tier 6: Evidence & Test Completeness
+New exception-throwing paths with no corresponding throw-assertion test coverage. Changes where the risk exists but no test evidence supports it.
 
-* SQL injection risks
-* Hardcoded secrets
-* PII exposure (auto-redacted)
+### Tier 7: Architecture & Structural Contracts
+Forbidden layer dependency violations. State mutation inside property getters, silent bugs in caching layers and serializers.
 
-### Observability & Failure Handling
+### Tier 8: Dependency & Integration Safety
+Service locator anti-patterns. Direct HttpClient instantiation bypassing the connection pool. HTTP calls missing cancellation tokens. Test methods without assertions.
 
-* Missing logging
-* Silent failures
-
----
-
-## 📏 Detection Coverage
-
-GauntletCI includes **30 built-in detection rules** across:
-
-* Behavior & Contracts
-* Security
-* Data Integrity
-* Async & Concurrency
-* Observability
-* Architecture
-* Test Quality
-
-Rule IDs range from GCI0001-GCI0050. Rule IDs are non-contiguous because the rule set evolved over time: some early rules were retired, merged, or replaced as the engine matured. The gaps reflect that history. Existing rule IDs are never renumbered so that baseline fingerprints and suppression annotations remain stable across upgrades.
+Rule IDs are non-contiguous (GCI0001-GCI0050). The gaps reflect rules that were retired, merged, or replaced as the engine matured. Existing rule IDs are never renumbered so that baseline fingerprints and suppression annotations remain stable across upgrades.
 
 ---
 
 ## Add GauntletCI to GitHub Actions
 
-Start in advisory mode first so your team can review findings before blocking merges.
-
-Create `.github/workflows/gauntletci.yml`:
+Start in advisory mode first so your team can review findings before blocking merges:
 
 ```yaml
 name: GauntletCI
@@ -286,9 +178,9 @@ jobs:
           inline-comments: "true"
 ```
 
-Once the signal quality is tuned for your repo, change `fail-on-findings` to `"true"` to block risky changes.
+Once signal quality is tuned for your repo, change `fail-on-findings` to `"true"` to block risky merges.
 
-## GitHub Action inputs
+### GitHub Action inputs
 
 | Input | Default | Description |
 | --- | --- | --- |
@@ -302,88 +194,91 @@ Once the signal quality is tuned for your repo, change `fail-on-findings` to `"t
 
 ---
 
-## ⚡ Most common usage
+## Baseline Delta Mode
+
+Introducing GauntletCI into an existing codebase with legacy issues? Create a baseline first:
 
 ```bash
+gauntletci baseline create
 gauntletci analyze --staged
-gauntletci analyze --commit <sha>
 ```
 
----
-
-## ❌ What it is not
-
-* Not a linter
-* Not a static analysis replacement
-* Not a test runner
-* Not a formatter
-
-GauntletCI focuses only on **change-risk**, not general code quality.
+Only **new risks introduced by the current change** are shown. Legacy findings are suppressed until you choose to address them.
 
 ---
 
-## ⚠️ When no findings are detected
+## On Determinism
 
-* No change-risk signals were identified
-* This does not guarantee correctness
-* It indicates no high-confidence risks were found
+Every GauntletCI finding is produced by a deterministic rule. The same diff produces the same findings every time. There is no model inference in the detection path.
+
+This is a deliberate architectural choice. A gate that blocks merges must be predictable. Non-deterministic blocking destroys CI trust.
+
+Optional LLM integration (via Ollama, runs locally) adds plain-English explanation to findings after detection. It does not change what is flagged or why. All analysis runs locally: no code leaves your machine.
 
 ---
 
 ## What to do with a finding
 
-A GauntletCI finding is not a claim that the code is definitely broken.
+A GauntletCI finding is not a claim that code is definitely broken. It is a signal that behavioral impact is unverified.
 
 Treat it as a review prompt:
 
-1. Confirm whether the behavior changed.
+1. Confirm whether the behavior actually changed.
 2. Check whether tests or validation cover the changed path.
 3. Add validation, update tests, or document why the change is intentional.
 4. Suppress only when the risk is understood and accepted.
 
 ---
 
-## 🤖 Local LLM Integration (Optional)
+## What GauntletCI is not
 
-LLM integration enhances explanation only.
+- Not a linter
+- Not a static analysis replacement
+- Not a test runner
+- Not a formatter
+- Not a general code quality tool
 
-* All detection logic is deterministic
-* Runs locally via Ollama
-* No data leaves your machine
-
----
-
-## 🔒 Privacy
-
-* All analysis runs locally
-* No code leaves your machine
-* Auto-redaction prevents sensitive data exposure
-* Telemetry is optional and anonymous
+GauntletCI has one job: detect unverified **Behavioral Change Risk** in the diff.
 
 ---
 
-## 📚 Documentation & Links
+## When no findings are detected
 
-* **[Documentation Hub](docs/)** - Full documentation index
-* **[Contributing Guide](docs/contributing.md)** - How to contribute
-* **[Project Information](docs/project/)** - Charter, history, governance
-* **[Security Policy](docs/security.md)** - Vulnerability reporting
-* **[Support](docs/support.md)** - Getting help
-* **[Release Notes](RELEASE_NOTES_v2.4.0-phase21-coordinations.md)** - Current version
-* **[Deployment Guide](DEPLOYMENT_CHECKLIST_v2.4.0.md)** - Deployment instructions
+No Behavioral Change Risk signals were identified in the diff. This does not guarantee correctness: it means no high-confidence risks were found by the current rule set.
 
 ---
 
-## 🤝 Community
+## Privacy
+
+- All analysis runs locally
+- No code leaves your machine
+- Auto-redaction prevents sensitive data in finding output
+- Telemetry is opt-in
+
+---
+
+## Documentation & Links
+
+- **[Documentation Hub](docs/)** - Full documentation index
+- **[Contributing Guide](docs/contributing.md)** - How to contribute
+- **[Project Information](docs/project/)** - Charter, history, governance
+- **[Security Policy](docs/security.md)** - Vulnerability reporting
+- **[Support](docs/support.md)** - Getting help
+- **[Release Notes](RELEASE_NOTES_v2.4.0-phase21-coordinations.md)** - Current version
+- **[Deployment Guide](DEPLOYMENT_CHECKLIST_v2.4.0.md)** - Deployment instructions
+
+---
+
+## Community
 
 Questions? Ideas? Found a false positive?
 
-* **Twitter**: [@GauntletCI_BCRV](https://twitter.com/GauntletCI_BCRV) - announcements and updates
-* **GitHub Issues**: [Report bugs or request features](https://github.com/EricCogen/GauntletCI/issues)
-* **GitHub Discussions**: [Ask questions and share ideas](https://github.com/EricCogen/GauntletCI/discussions)
+- **Twitter**: [@GauntletCI_BCRV](https://twitter.com/GauntletCI_BCRV) - announcements and updates
+- **GitHub Issues**: [Report bugs or request features](https://github.com/EricCogen/GauntletCI/issues)
+- **GitHub Discussions**: [Ask questions and share ideas](https://github.com/EricCogen/GauntletCI/discussions)
 
 ---
 
-## 📄 License
+## License
 
 Elastic License 2.0
