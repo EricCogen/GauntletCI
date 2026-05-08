@@ -15,7 +15,8 @@
         "/articles/detect-breaking-changes-before-merge/",
         "/articles/can-ai-code-review-be-deterministic/",
         "/articles/behavioral-change-risk-formal-framework/",
-        "/articles/case-studies/"
+        "/articles/case-studies/",
+        "/articles/jellyfin-pr-16062-post-mortem/"
       ],
       "numberOfRuns": 1
     },
