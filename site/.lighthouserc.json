@@ -5,9 +5,17 @@
       "url": [
         "/",
         "/about/",
+        "/articles/",
         "/docs/",
         "/pricing/",
-        "/benchmark/"
+        "/benchmark/",
+        "/articles/why-tests-miss-bugs/",
+        "/articles/why-code-review-misses-bugs/",
+        "/articles/what-is-diff-based-analysis/",
+        "/articles/detect-breaking-changes-before-merge/",
+        "/articles/can-ai-code-review-be-deterministic/",
+        "/articles/behavioral-change-risk-formal-framework/",
+        "/articles/case-studies/"
       ],
       "numberOfRuns": 1
     },
