@@ -79,6 +79,14 @@ const articles = [
     tags: ["Case Studies", "Real Bugs"],
     readTime: "5 min read",
   },
+  {
+    href: "/articles/jellyfin-pr-16062-post-mortem",
+    title: "Jellyfin PR #16062 Post-Mortem: 129 Findings Across 13 Rules",
+    description:
+      "Detailed analysis of GauntletCI findings from Jellyfin PR #16062. Documents all detected issues across behavioral drift, dependency concerns, and code quality metrics.",
+    tags: ["Case Study", "Analysis", "Real Bugs"],
+    readTime: "8 min read",
+  },
 ];
 
 export default function ArticlesPage() {
