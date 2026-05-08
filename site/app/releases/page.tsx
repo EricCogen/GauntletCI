@@ -117,12 +117,17 @@ export default function ReleasesPage() {
             ))}
           </div>
 
-          <div className="mt-16 pt-8 border-t border-border">
+          <div className="mt-16 pt-8 border-t border-border space-y-4">
             <p className="text-sm text-muted-foreground">
               Install the latest version:{" "}
               <code className="text-foreground/80 bg-muted px-1.5 py-0.5 rounded text-xs">
                 dotnet tool install -g GauntletCI
               </code>
+            </p>
+            <p className="text-sm">
+              <Link href="/" className="text-cyan-400 hover:text-cyan-300">
+                ← Back to home
+              </Link>
             </p>
           </div>
         </div>
