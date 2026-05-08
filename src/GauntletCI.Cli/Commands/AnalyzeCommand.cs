@@ -38,7 +38,7 @@ public static class AnalyzeCommand
         var outputOption = new Option<string>(
             "--output",
             () => "text",
-            "Output format: text, json, or sarif");
+            "Output format: text, json, html, or sarif. Can also be a filename (e.g., report.html) to infer format and save to file");
         var noLlmFlag = new Option<bool>("--no-llm", "Disable LLM enrichment (deprecated: LLM is now opt-in via --with-llm)") { IsHidden = true };
         var withLlmFlag = new Option<bool>("--with-llm", "Enable LLM enrichment of High-confidence findings (requires 'gauntletci model download', adds latency)");
         var asciiFlag = new Option<bool>("--ascii", "Use ASCII-only output (for terminals without Unicode support)");
@@ -125,6 +125,17 @@ public static class AnalyzeCommand
             var notifyTeams   = ctx.ParseResult.GetValueForOption(notifyTeamsOption);
             var ct = ctx.GetCancellationToken();
 
+            // Infer output format from filename if needed (e.g., --output report.html -> html format, save to file)
+            string? outputFile = null;
+            if (!string.IsNullOrEmpty(output) && output.Contains('.') && 
+                (output.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ||
+                 output.EndsWith(".html", StringComparison.OrdinalIgnoreCase) ||
+                 output.EndsWith(".sarif", StringComparison.OrdinalIgnoreCase)))
+            {
+                outputFile = output;
+                output = Path.GetExtension(output).TrimStart('.').ToLowerInvariant();
+            }
+
             // Enforce single diff source
             int sourceCount = (diffFile is not null ? 1 : 0)
                             + (commit    is not null ? 1 : 0)
@@ -146,9 +157,10 @@ public static class AnalyzeCommand
             }
 
             if (prCommentSuggest && ("json".Equals(output, StringComparison.OrdinalIgnoreCase)
+                || "html".Equals(output, StringComparison.OrdinalIgnoreCase)
                 || "sarif".Equals(output, StringComparison.OrdinalIgnoreCase)))
             {
-                Console.Error.WriteLine("[GauntletCI] Error: --pr-comment-suggest cannot be combined with --output json (produces invalid output). Use --output text or omit --output.");
+                Console.Error.WriteLine("[GauntletCI] Error: --pr-comment-suggest cannot be combined with --output json/html/sarif (produces invalid output). Use --output text or omit --output.");
                 ctx.ExitCode = 1;
                 return;
             }
@@ -302,8 +314,9 @@ public static class AnalyzeCommand
                 using ILlmEngine llm = await LlmEngineSelector.ResolveAsync(config, withLlm && !noLlm);
 
                 var isJsonOutput  = (output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase);
+                var isHtmlOutput  = (output ?? "text").Equals("html", StringComparison.OrdinalIgnoreCase);
                 var isSarifOutput = (output ?? "text").Equals("sarif", StringComparison.OrdinalIgnoreCase);
-                var showSpinner   = llm.IsAvailable && !isJsonOutput && !isSarifOutput && !Console.IsOutputRedirected;
+                var showSpinner   = llm.IsAvailable && !isJsonOutput && !isHtmlOutput && !isSarifOutput && !Console.IsOutputRedirected;
 
                 async Task RunLlmStepsAsync(Action<string>? setStatus = null)
                 {
@@ -373,40 +386,89 @@ public static class AnalyzeCommand
 
                 sw.Stop();
 
-                if (isSarifOutput)
+                // If outputFile is specified, redirect output to that file
+                TextWriter? fileWriter = null;
+                try
                 {
-                    SarifWriter.Write(result);
-                }
-                else if ((output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase))
-                {
-                    // Always emit a consistent schema regardless of baseline suppression.
-                    // RuleMetrics FindingCount is recomputed from remaining (non-suppressed) findings.
-                    var jsonResult = new
+                    if (outputFile is not null)
                     {
-                        result.CommitSha,
-                        result.HasFindings,
-                        result.Findings,
-                        result.RulesEvaluated,
-                        RuleMetrics = result.RuleMetrics.Select(m => new
+                        // Ensure directory exists
+                        var outputDir = Path.GetDirectoryName(outputFile);
+                        if (!string.IsNullOrEmpty(outputDir) && !Directory.Exists(outputDir))
                         {
-                            m.RuleId,
-                            m.DurationMs,
-                            m.Outcome,
-                            FindingCount = result.Findings.Count(f => f.RuleId == m.RuleId),
-                        }).ToList(),
-                        result.FileStatistics,
-                        SuppressedByBaseline = suppressedByBaseline,
-                    };
-                    var json = JsonSerializer.Serialize(jsonResult, new JsonSerializerOptions { WriteIndented = true });
-                    Console.WriteLine(json);
+                            Directory.CreateDirectory(outputDir);
+                        }
+                        
+                        fileWriter = new StreamWriter(File.Create(outputFile), System.Text.Encoding.UTF8);
+                        // Temporarily replace Console.Out
+                        var originalOut = Console.Out;
+                        Console.SetOut(fileWriter);
+                    }
+
+                    if (isSarifOutput)
+                    {
+                        SarifWriter.Write(result);
+                    }
+                    else if (isHtmlOutput)
+                    {
+                        HtmlWriter.Write(result);
+                    }
+                    else if ((output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Always emit a consistent schema regardless of baseline suppression.
+                        // RuleMetrics FindingCount is recomputed from remaining (non-suppressed) findings.
+                        var jsonResult = new
+                        {
+                            result.CommitSha,
+                            result.HasFindings,
+                            Findings = result.Findings.Select(f => new
+                            {
+                                f.RuleId,
+                                f.RuleName,
+                                f.Summary,
+                                f.Evidence,
+                                f.WhyItMatters,
+                                f.SuggestedAction,
+                                Confidence = NormalizeConfidence(f.Confidence),
+                                f.Severity,
+                                f.FilePath,
+                                f.Line,
+                                f.CodeSnippet,
+                            }).ToList(),
+                            result.RulesEvaluated,
+                            RuleMetrics = result.RuleMetrics.Select(m => new
+                            {
+                                m.RuleId,
+                                m.DurationMs,
+                                m.Outcome,
+                                FindingCount = result.Findings.Count(f => f.RuleId == m.RuleId),
+                            }).ToList(),
+                            result.FileStatistics,
+                            SuppressedByBaseline = suppressedByBaseline,
+                        };
+                        var json = JsonSerializer.Serialize(jsonResult, new JsonSerializerOptions { WriteIndented = true });
+                        Console.WriteLine(json);
+                    }
+                    else
+                    {
+                        var minSeverity = verbose
+                            ? GauntletCI.Core.Model.RuleSeverity.Info
+                            : ParseMinSeverity(severityStr);
+                        var sensitivity = ParseSensitivity(sensitivityStr);
+                        ConsoleReporter.Report(result, ascii, minSeverity, suppressedByBaseline, diff, showContext, sw.Elapsed, sensitivity);
+                    }
                 }
-                else
+                finally
                 {
-                    var minSeverity = verbose
-                        ? GauntletCI.Core.Model.RuleSeverity.Info
-                        : ParseMinSeverity(severityStr);
-                    var sensitivity = ParseSensitivity(sensitivityStr);
-                    ConsoleReporter.Report(result, ascii, minSeverity, suppressedByBaseline, diff, showContext, sw.Elapsed, sensitivity);
+                    if (fileWriter is not null)
+                    {
+                        Console.SetOut(TextWriter.Null); // Restore before disposing
+                        fileWriter.Dispose();
+                        if (outputFile is not null)
+                        {
+                            Console.Error.WriteLine($"[GauntletCI] Report saved to: {Path.GetFullPath(outputFile)}");
+                        }
+                    }
                 }
 
                 if (prCommentSuggest)
@@ -534,5 +596,16 @@ public static class AnalyzeCommand
         {
             return null;
         }
+    }
+
+    private static double NormalizeConfidence(Confidence confidence)
+    {
+        return confidence switch
+        {
+            Confidence.Low => 0.33,
+            Confidence.Medium => 0.66,
+            Confidence.High => 0.95,
+            _ => 0.0,
+        };
     }
 }

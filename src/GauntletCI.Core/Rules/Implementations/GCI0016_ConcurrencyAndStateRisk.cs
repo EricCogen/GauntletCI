@@ -84,8 +84,12 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
         bool isUnboundedBlocking = WellKnownPatterns.IsBlockingAsyncWithoutTimeout(content);
 
         // .Wait() and .GetAwaiter().GetResult() are unambiguous blocking patterns: always flag.
-        if (content.Contains(".Wait()", StringComparison.Ordinal) ||
-            content.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal))
+        // Also detect when .ConfigureAwait(...) is chained between the task and .GetAwaiter()
+        bool hasWait = content.Contains(".Wait()", StringComparison.Ordinal);
+        bool hasGetAwaiterGetResult = content.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal) ||
+                                      System.Text.RegularExpressions.Regex.IsMatch(content, @"\.ConfigureAwait\s*\([^)]*\)\s*\.GetAwaiter\s*\(\s*\)\s*\.GetResult\s*\(\s*\)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        
+        if (hasWait || hasGetAwaiterGetResult)
         {
             // Phase 17b: Use high confidence for unb ounded blocking (GCI0016 + GCI0020 coordination)
             findings.Add(CreateFinding(
@@ -176,8 +180,11 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
              content.Contains("Async(", StringComparison.OrdinalIgnoreCase)))
             return true;
 
-        // ConfigureAwait(false) - best practice, not a violation
-        if (content.Contains("ConfigureAwait(false)", StringComparison.OrdinalIgnoreCase))
+        // ConfigureAwait(false) alone is best practice, but still a violation if followed by .GetAwaiter().GetResult() or .Wait()
+        if (content.Contains("ConfigureAwait(false)", StringComparison.OrdinalIgnoreCase) &&
+            !content.Contains(".GetAwaiter().GetResult()", StringComparison.OrdinalIgnoreCase) &&
+            !content.Contains(".Wait()", StringComparison.OrdinalIgnoreCase) &&
+            !System.Text.RegularExpressions.Regex.IsMatch(content, @"\.ConfigureAwait\s*\([^)]*\)\s*\.GetAwaiter\s*\(\s*\)\s*\.GetResult\s*\(\s*\)", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
             return true;
 
         // Explicit delegation patterns: Task.Run, ThreadPool.QueueUserWorkItem
