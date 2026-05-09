@@ -146,6 +146,9 @@ docs/benchmarks/
 /data/*
 !data/corpus-fixtures.csv
 
+# BenchmarkDotNet artifacts
+BenchmarkDotNet.Artifacts/
+
 
 
 # Node / Cloudflare Worker

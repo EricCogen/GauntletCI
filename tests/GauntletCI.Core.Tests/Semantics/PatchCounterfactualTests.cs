@@ -187,7 +187,7 @@ public class PatchCounterfactualGeneratorTests
         var result = PatchCounterfactualGenerator.GenerateCounterfactuals(operations, transformations, patchModel);
 
         // Assert
-        Assert.NotEmpty(result.All);
+        Assert.True(result.All.Any());
     }
 
     [Fact]
@@ -204,7 +204,7 @@ public class PatchCounterfactualGeneratorTests
         var result = PatchCounterfactualGenerator.GenerateCounterfactuals(operations, transformations, patchModel);
 
         // Assert
-        Assert.NotEmpty(result.All);
+        Assert.True(result.All.Any());
     }
 
     [Fact]
@@ -221,7 +221,7 @@ public class PatchCounterfactualGeneratorTests
         var result = PatchCounterfactualGenerator.GenerateCounterfactuals(operations, transformations, patchModel);
 
         // Assert
-        Assert.NotEmpty(result.All);
+        Assert.True(result.All.Any());
     }
 
     [Fact]
@@ -238,7 +238,7 @@ public class PatchCounterfactualGeneratorTests
         var result = PatchCounterfactualGenerator.GenerateCounterfactuals(operations, transformations, patchModel);
 
         // Assert
-        Assert.NotEmpty(result.All);
+        Assert.True(result.All.Any());
     }
 
     [Fact]
@@ -278,7 +278,7 @@ public class PatchCounterfactualGeneratorTests
         var result = PatchCounterfactualGenerator.GenerateCounterfactuals(operations, transformations, patchModel);
 
         // Assert
-        Assert.NotEmpty(result.All);
+        Assert.True(result.All.Any());
     }
 
     [Fact]
@@ -299,7 +299,7 @@ public class PatchCounterfactualGeneratorTests
         var result = PatchCounterfactualGenerator.GenerateCounterfactuals(operations, transformations, patchModel);
 
         // Assert
-        Assert.NotEmpty(result.All);
+        Assert.True(result.All.Any());
     }
 
     [Fact]
@@ -316,7 +316,7 @@ public class PatchCounterfactualGeneratorTests
         var result = PatchCounterfactualGenerator.GenerateCounterfactuals(operations, transformations, patchModel);
 
         // Assert
-        Assert.NotEmpty(result.All);
+        Assert.True(result.All.Any());
     }
 
     [Fact]
