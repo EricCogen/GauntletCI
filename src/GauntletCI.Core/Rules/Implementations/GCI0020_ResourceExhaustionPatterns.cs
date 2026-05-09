@@ -44,26 +44,21 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
         foreach (var file in diff.Files)
         {
             if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath))
-            {
                 continue;
-            }
 
             // Look for removed timeout-related lines
             var removedTimeouts = file.RemovedLines
-                .Where(l => WellKnownPatterns.TimeoutPatterns.Any(p =>
+                .Where(l => WellKnownPatterns.TimeoutPatterns.Any(p => 
                     l.Content.Contains(p, StringComparison.OrdinalIgnoreCase) &&
-                    (l.Content.Contains("=", StringComparison.Ordinal) ||
+                    (l.Content.Contains("=", StringComparison.Ordinal) || 
                      l.Content.Contains("(", StringComparison.Ordinal))))
                 .ToList();
 
-            if (removedTimeouts.Count == 0)
-            {
-                continue;
-            }
+            if (removedTimeouts.Count == 0) continue;
 
             // Check if timeout is replaced with MaxValue or removed without replacement
             var hasTimeoutInAdded = file.AddedLines
-                .Any(l => WellKnownPatterns.TimeoutPatterns.Any(p =>
+                .Any(l => WellKnownPatterns.TimeoutPatterns.Any(p => 
                     l.Content.Contains(p, StringComparison.OrdinalIgnoreCase)));
 
             if (!hasTimeoutInAdded)
@@ -87,19 +82,14 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
         foreach (var file in diff.Files)
         {
             if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath))
-            {
                 continue;
-            }
 
             var removedLimits = file.RemovedLines
                 .Where(l => WellKnownPatterns.IterationLimitPatterns.Any(p =>
                     l.Content.Contains(p, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
 
-            if (removedLimits.Count == 0)
-            {
-                continue;
-            }
+            if (removedLimits.Count == 0) continue;
 
             var hasIterationLimitInAdded = file.AddedLines
                 .Any(l => WellKnownPatterns.IterationLimitPatterns.Any(p =>
@@ -126,23 +116,15 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
         foreach (var file in diff.Files)
         {
             if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath))
-            {
                 continue;
-            }
 
             foreach (var removedLine in file.RemovedLines)
             {
                 // Match patterns like "MAX_CONNECTIONS = 1000"
-                if (!RemovalHasResourceAllocation(removedLine))
-                {
-                    continue;
-                }
+                if (!RemovalHasResourceAllocation(removedLine)) continue;
 
                 var oldValue = ExtractNumericValue(removedLine.Content);
-                if (oldValue < 100)
-                {
-                    continue; // Only flag significant increases
-                }
+                if (oldValue < 100) continue; // Only flag significant increases
 
                 // Find corresponding added line
                 var addedLine = file.AddedLines
@@ -171,19 +153,14 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
         foreach (var file in diff.Files)
         {
             if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath))
-            {
                 continue;
-            }
 
             var removedCleanup = file.RemovedLines
                 .Where(l => WellKnownPatterns.ResourceCleanupPatterns.Any(p =>
                     l.Content.Contains(p, StringComparison.Ordinal)))
                 .ToList();
 
-            if (removedCleanup.Count == 0)
-            {
-                continue;
-            }
+            if (removedCleanup.Count == 0) continue;
 
             // Check if cleanup is added back in a different form
             var hasCleanupInAdded = file.AddedLines
@@ -211,29 +188,18 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
         foreach (var file in diff.Files)
         {
             if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath))
-            {
                 continue;
-            }
 
             foreach (var addedLine in file.AddedLines)
             {
                 // Look for Task.Run or Task.Factory patterns being added
                 if (!addedLine.Content.Contains("Task.Run", StringComparison.Ordinal) &&
                     !addedLine.Content.Contains("Task.Factory", StringComparison.Ordinal))
-                {
                     continue;
-                }
 
                 // Phase 16 Guards: fire-and-forget background tasks and instance-scoped caches
-                if (WellKnownPatterns.IsIntentionalBackgroundTask(addedLine.Content))
-                {
-                    continue;
-                }
-
-                if (WellKnownPatterns.IsInstanceScopedCache(addedLine.Content))
-                {
-                    continue;
-                }
+                if (WellKnownPatterns.IsIntentionalBackgroundTask(addedLine.Content)) continue;
+                if (WellKnownPatterns.IsInstanceScopedCache(addedLine.Content)) continue;
 
                 // Flag any new Task.Run/Factory as potential unbounded concurrency
                 findings.Add(CreateFinding(

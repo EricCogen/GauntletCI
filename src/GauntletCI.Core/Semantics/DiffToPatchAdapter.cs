@@ -67,19 +67,13 @@ public static class DiffToPatchAdapter
     private static PatchFileChangeKind DeterminePatchFileChangeKind(Diff.DiffFile diffFile)
     {
         if (diffFile.IsAdded)
-        {
             return PatchFileChangeKind.Added;
-        }
 
         if (diffFile.IsDeleted)
-        {
             return PatchFileChangeKind.Deleted;
-        }
 
         if (diffFile.IsRenamed)
-        {
             return PatchFileChangeKind.Renamed;
-        }
 
         return PatchFileChangeKind.Modified;
     }
@@ -91,15 +85,11 @@ public static class DiffToPatchAdapter
     private static string? ExtractFileExtension(string? filePath)
     {
         if (string.IsNullOrWhiteSpace(filePath))
-        {
             return null;
-        }
 
         var lastDot = filePath.LastIndexOf('.');
         if (lastDot <= 0 || lastDot == filePath.Length - 1)
-        {
             return null;
-        }
 
         return filePath[lastDot..].ToLowerInvariant();
     }
@@ -111,9 +101,7 @@ public static class DiffToPatchAdapter
     private static (bool isTestFile, bool isProductionFile) ClassifyFile(string? filePath, string? extension)
     {
         if (string.IsNullOrWhiteSpace(filePath))
-        {
             return (false, false);
-        }
 
         var lowerPath = filePath.ToLowerInvariant();
 

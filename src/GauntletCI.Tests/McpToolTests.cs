@@ -131,9 +131,7 @@ public class McpToolTests
         {
             // NullLlmEngine produces no enrichment: llmExplanation should be absent or null
             if (f.TryGetProperty("llmExplanation", out var expl))
-            {
                 Assert.Equal(JsonValueKind.Null, expl.ValueKind);
-            }
         }
     }
 
@@ -211,9 +209,7 @@ public class McpToolTests
 
         // If the diff produces zero High findings, enrichment should not be invoked
         if (highCount == 0)
-        {
             Assert.Equal(0, countingEngine.CallCount);
-        }
     }
 
     [Fact]
@@ -269,9 +265,7 @@ public class McpToolTests
             => Task.FromResult(response);
         public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
             => Task.FromResult(response);
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 
     private sealed class CountingLlmEngine : ILlmEngine
@@ -287,9 +281,7 @@ public class McpToolTests
             => Task.FromResult("ok");
         public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
             => Task.FromResult("ok");
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 
     private sealed class ThrowingLlmEngine : ILlmEngine
@@ -301,9 +293,7 @@ public class McpToolTests
             => throw new InvalidOperationException("Simulated LLM failure");
         public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
             => throw new InvalidOperationException("Simulated LLM failure");
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 
     [Fact]

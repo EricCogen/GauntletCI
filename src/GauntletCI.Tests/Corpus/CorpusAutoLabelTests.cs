@@ -24,9 +24,9 @@ public sealed class CorpusAutoLabelTests
             string? reviewCommentsJson = null,
             IReadOnlyList<ExpectedFinding>? existingLabels = null)
         {
-            _actualFindings = actualFindings ?? [];
+            _actualFindings    = actualFindings    ?? [];
             _reviewCommentsJson = reviewCommentsJson;
-            _existingLabels = existingLabels ?? [];
+            _existingLabels    = existingLabels    ?? [];
         }
 
         public Task<IReadOnlyList<ActualFinding>> ReadActualFindingsAsync(
@@ -81,7 +81,7 @@ public sealed class CorpusAutoLabelTests
         // Review comment references the same path
         const string reviewJson = """[{"body": "Please review this code", "path": "Foo/Bar.cs"}]""";
 
-        var store = new FakeFixtureStore(actualFindings, reviewJson);
+        var store  = new FakeFixtureStore(actualFindings, reviewJson);
         var engine = new SilverLabelEngine(store, new NullLlmLabeler());
 
         // Act: benign diff that doesn't trigger any Tier 1 heuristic for GCI0006
@@ -101,7 +101,7 @@ public sealed class CorpusAutoLabelTests
         };
         const string reviewJson = """[{"body": "Check this", "path": "src/my.cs"}]""";
 
-        var store = new FakeFixtureStore(actualFindings, reviewJson);
+        var store  = new FakeFixtureStore(actualFindings, reviewJson);
         var engine = new SilverLabelEngine(store, new NullLlmLabeler());
 
         await engine.ApplyToFixtureAsync("test-fixture", "");
@@ -119,7 +119,7 @@ public sealed class CorpusAutoLabelTests
         };
         const string reviewJson = """[{"body": "Check this", "path": "src/my.cs"}]""";
 
-        var store = new FakeFixtureStore(actualFindings, reviewJson);
+        var store  = new FakeFixtureStore(actualFindings, reviewJson);
         var engine = new SilverLabelEngine(store, new NullLlmLabeler());
 
         await engine.ApplyToFixtureAsync("test-fixture", "");
@@ -147,7 +147,7 @@ public sealed class CorpusAutoLabelTests
             """;
         const string reviewJson = """[{"body": "Check this", "path": "Foo/Bar.cs"}]""";
 
-        var store = new FakeFixtureStore(actualFindings, reviewJson);
+        var store  = new FakeFixtureStore(actualFindings, reviewJson);
         var engine = new SilverLabelEngine(store, new NullLlmLabeler());
 
         await engine.ApplyToFixtureAsync("test-fixture", diff);
@@ -190,7 +190,7 @@ public sealed class CorpusAutoLabelTests
             new() { RuleId = "GCI0004", DidTrigger = true, FilePath = "Src/PublicApi.cs", Message = "Breaking change risk" },
         };
 
-        var store = new FakeFixtureStore(actualFindings);
+        var store  = new FakeFixtureStore(actualFindings);
         var engine = new SilverLabelEngine(store, new NullLlmLabeler());
         var sw = new StringWriter();
         var original = Console.Out;
@@ -235,8 +235,8 @@ public sealed class CorpusAutoLabelTests
 
         // LLM says it's a TP: should be ignored because HumanReview is gold
         var llmLabeler = new FakeLlmLabeler(new LlmLabelResult(true, 0.9, "Looks risky"));
-        var store = new FakeFixtureStore(actualFindings, null, existingLabels);
-        var engine = new SilverLabelEngine(store, llmLabeler);
+        var store      = new FakeFixtureStore(actualFindings, null, existingLabels);
+        var engine     = new SilverLabelEngine(store, llmLabeler);
 
         await engine.ApplyToFixtureAsync("test-fixture", "");
 
@@ -256,8 +256,8 @@ public sealed class CorpusAutoLabelTests
         };
 
         var llmLabeler = new FakeLlmLabeler(new LlmLabelResult(true, 0.8, "Clearly risky pattern"));
-        var store = new FakeFixtureStore(actualFindings);
-        var engine = new SilverLabelEngine(store, llmLabeler);
+        var store      = new FakeFixtureStore(actualFindings);
+        var engine     = new SilverLabelEngine(store, llmLabeler);
 
         // Benign diff: no Tier 1 signal for GCI0006
         await engine.ApplyToFixtureAsync("test-fixture", "--- a/x.cs\n+++ b/x.cs\n@@ -1 +1 @@\n+public class X {}");
@@ -280,8 +280,8 @@ public sealed class CorpusAutoLabelTests
 
         var inconclusiveResult = new LlmLabelResult(true, 0.3, "Not sure", IsInconclusive: true);
         var llmLabeler = new FakeLlmLabeler(inconclusiveResult);
-        var store = new FakeFixtureStore(actualFindings);
-        var engine = new SilverLabelEngine(store, llmLabeler);
+        var store      = new FakeFixtureStore(actualFindings);
+        var engine     = new SilverLabelEngine(store, llmLabeler);
 
         await engine.ApplyToFixtureAsync("test-fixture", "");
 

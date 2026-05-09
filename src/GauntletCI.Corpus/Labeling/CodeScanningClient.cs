@@ -50,22 +50,14 @@ public sealed class CodeScanningClient
                 // 404 = code scanning not enabled; 403 = token lacks security_events scope
                 if (resp.StatusCode == System.Net.HttpStatusCode.NotFound ||
                     resp.StatusCode == System.Net.HttpStatusCode.Forbidden)
-                {
                     break;
-                }
 
-                if (!resp.IsSuccessStatusCode)
-                {
-                    break;
-                }
+                if (!resp.IsSuccessStatusCode) break;
 
                 await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
                 using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
 
-                if (doc.RootElement.ValueKind != JsonValueKind.Array)
-                {
-                    break;
-                }
+                if (doc.RootElement.ValueKind != JsonValueKind.Array) break;
 
                 int countThisPage = 0;
                 foreach (var alert in doc.RootElement.EnumerateArray())
@@ -78,11 +70,7 @@ public sealed class CodeScanningClient
                     }
                 }
 
-                if (countThisPage < 100)
-                {
-                    break; // last page
-                }
-
+                if (countThisPage < 100) break; // last page
                 page++;
                 await Task.Delay(100, ct).ConfigureAwait(false); // polite delay - well within 5k/hr rate limit
             }
@@ -96,54 +84,35 @@ public sealed class CodeScanningClient
     private static CodeScanningAlert? MapAlert(JsonElement alert, string repo)
     {
         // most_recent_instance.location.path
-        if (!alert.TryGetProperty("most_recent_instance", out var instance))
-        {
-            return null;
-        }
-
-        if (!instance.TryGetProperty("location", out var location))
-        {
-            return null;
-        }
-
-        if (!location.TryGetProperty("path", out var pathEl))
-        {
-            return null;
-        }
-
+        if (!alert.TryGetProperty("most_recent_instance", out var instance)) return null;
+        if (!instance.TryGetProperty("location", out var location)) return null;
+        if (!location.TryGetProperty("path", out var pathEl)) return null;
         var filePath = pathEl.GetString() ?? "";
-        if (string.IsNullOrEmpty(filePath))
-        {
-            return null;
-        }
+        if (string.IsNullOrEmpty(filePath)) return null;
 
-        alert.TryGetProperty("rule", out var rule);
-        alert.TryGetProperty("tool", out var tool);
+        alert.TryGetProperty("rule",  out var rule);
+        alert.TryGetProperty("tool",  out var tool);
         alert.TryGetProperty("state", out var stateEl);
 
         var startLine = 0;
         if (location.TryGetProperty("start_line", out var slEl))
-        {
             startLine = slEl.ValueKind == JsonValueKind.Number ? slEl.GetInt32() : 0;
-        }
 
         var message = "";
         if (instance.TryGetProperty("message", out var msgObj) &&
             msgObj.TryGetProperty("text", out var msgText))
-        {
             message = msgText.GetString() ?? "";
-        }
 
         return new CodeScanningAlert
         {
-            Repo = repo,
-            FilePath = filePath,
-            RuleId = rule.ValueKind != JsonValueKind.Undefined && rule.TryGetProperty("id", out var rid) ? rid.GetString() ?? "" : "",
-            RuleName = rule.ValueKind != JsonValueKind.Undefined && rule.TryGetProperty("name", out var rn) ? rn.GetString() ?? "" : "",
-            Severity = rule.ValueKind != JsonValueKind.Undefined && rule.TryGetProperty("severity", out var sv) ? sv.GetString() ?? "" : "",
-            State = stateEl.ValueKind != JsonValueKind.Undefined ? stateEl.GetString() ?? "" : "",
-            ToolName = tool.ValueKind != JsonValueKind.Undefined && tool.TryGetProperty("name", out var tn) ? tn.GetString() ?? "" : "",
-            Message = message,
+            Repo      = repo,
+            FilePath  = filePath,
+            RuleId    = rule.ValueKind != JsonValueKind.Undefined && rule.TryGetProperty("id",   out var rid)  ? rid.GetString()  ?? "" : "",
+            RuleName  = rule.ValueKind != JsonValueKind.Undefined && rule.TryGetProperty("name", out var rn)   ? rn.GetString()   ?? "" : "",
+            Severity  = rule.ValueKind != JsonValueKind.Undefined && rule.TryGetProperty("severity", out var sv) ? sv.GetString() ?? "" : "",
+            State     = stateEl.ValueKind != JsonValueKind.Undefined ? stateEl.GetString() ?? "" : "",
+            ToolName  = tool.ValueKind != JsonValueKind.Undefined && tool.TryGetProperty("name", out var tn)  ? tn.GetString()   ?? "" : "",
+            Message   = message,
             StartLine = startLine,
         };
     }

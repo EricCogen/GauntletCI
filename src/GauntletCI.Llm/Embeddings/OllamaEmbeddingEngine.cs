@@ -34,7 +34,7 @@ public sealed class OllamaEmbeddingEngine : IEmbeddingEngine, IDisposable
         string baseUrl = "http://localhost:11434",
         HttpClient? http = null)
     {
-        _model = model;
+        _model    = model;
         _endpoint = baseUrl.TrimEnd('/') + "/api/embeddings";
         if (http is not null)
         {
@@ -53,35 +53,21 @@ public sealed class OllamaEmbeddingEngine : IEmbeddingEngine, IDisposable
     /// <param name="ct">Token used to cancel the HTTP request.</param>
     public async Task<float[]> EmbedAsync(string text, CancellationToken ct = default)
     {
-        var body = JsonSerializer.Serialize(new
-        {
-            model = _model,
-            prompt = text
-        });
-        using var content = new StringContent(body, Encoding.UTF8, "application/json");
+        var body = JsonSerializer.Serialize(new { model = _model, prompt = text });
+        using var content  = new StringContent(body, Encoding.UTF8, "application/json");
         using var response = await _http.PostAsync(_endpoint, content, ct).ConfigureAwait(false);
         response.EnsureSuccessStatusCode();
 
-        var json = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+        var json   = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
         var result = JsonSerializer.Deserialize<OllamaEmbeddingResponse>(json, JsonOpts);
         return result?.Embedding ?? [];
     }
 
     /// <summary>Disposes the <see cref="HttpClient"/> when this instance owns it.</summary>
-    public void Dispose()
-    {
-        if (_ownsHttpClient)
-        {
-            _http.Dispose();
-        }
-    }
+    public void Dispose() { if (_ownsHttpClient) _http.Dispose(); }
 
     private sealed class OllamaEmbeddingResponse
     {
-        [JsonPropertyName("embedding")]
-        public float[]? Embedding
-        {
-            get; init;
-        }
+        [JsonPropertyName("embedding")] public float[]? Embedding { get; init; }
     }
 }

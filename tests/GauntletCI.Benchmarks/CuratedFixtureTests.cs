@@ -19,17 +19,12 @@ public class CuratedFixtureTests
     public static IEnumerable<object[]> AllFixtures()
     {
         if (!Directory.Exists(FixturesRoot))
-        {
             yield break;
-        }
 
         foreach (var dir in Directory.GetDirectories(FixturesRoot).OrderBy(d => d))
         {
             var manifestPath = Path.Combine(dir, "manifest.json");
-            if (!File.Exists(manifestPath))
-            {
-                continue;
-            }
+            if (!File.Exists(manifestPath)) continue;
 
             FixtureManifest manifest;
             try
@@ -42,11 +37,7 @@ public class CuratedFixtureTests
             foreach (var entry in manifest.Fixtures)
             {
                 var diffPath = Path.Combine(dir, entry.DiffFile);
-                if (!File.Exists(diffPath))
-                {
-                    continue;
-                }
-
+                if (!File.Exists(diffPath)) continue;
                 yield return [entry.Id, diffPath, entry];
             }
         }
@@ -57,17 +48,10 @@ public class CuratedFixtureTests
 
     private static string NormalizeRuleId(string id)
     {
-        if (RuleIdRemap.TryGetValue(id, out var remapped))
-        {
-            return remapped;
-        }
-
+        if (RuleIdRemap.TryGetValue(id, out var remapped)) return remapped;
         if (id.StartsWith("GCI", StringComparison.OrdinalIgnoreCase) &&
             int.TryParse(id[3..], out int n))
-        {
             return $"GCI{n:D4}";
-        }
-
         return id;
     }
 
@@ -87,32 +71,24 @@ public class CuratedFixtureTests
         if (entry.ExpectedOutcome == "fire")
         {
             if (expectedIds.Count > 0)
-            {
                 Assert.True(
                     expectedIds.Any(id => firedRuleIds.Contains(id)),
                     $"[{fixtureId}] Expected one of [{string.Join(", ", expectedIds)}] to fire but got: [{string.Join(", ", firedRuleIds)}]");
-            }
             else
-            {
                 Assert.True(
                     result.HasFindings,
                     $"[{fixtureId}] Expected at least one finding but engine returned none.");
-            }
         }
         else if (entry.ExpectedOutcome == "do-not-fire")
         {
             if (expectedIds.Count > 0)
-            {
                 Assert.False(
                     expectedIds.Any(id => firedRuleIds.Contains(id)),
                     $"[{fixtureId}] Expected none of [{string.Join(", ", expectedIds)}] to fire but got: [{string.Join(", ", firedRuleIds)}]");
-            }
             else
-            {
                 Assert.False(
                     result.HasFindings,
                     $"[{fixtureId}] Expected no findings but engine returned: [{string.Join(", ", firedRuleIds)}]");
-            }
         }
         // edge-case entries are not asserted: they're for observation only
     }

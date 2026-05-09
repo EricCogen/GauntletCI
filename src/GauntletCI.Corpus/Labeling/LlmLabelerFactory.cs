@@ -18,12 +18,12 @@ public static class LlmLabelerFactory
     {
         return provider.ToLowerInvariant() switch
         {
-            "ollama" => CreateOllama(model, baseUrl),
-            "anthropic" => CreateAnthropic(model),
-            "github-models" => CreateGitHubModels(model),
-            "github" => CreateGitHubModels(model),
+            "ollama"         => CreateOllama(model, baseUrl),
+            "anthropic"      => CreateAnthropic(model),
+            "github-models"  => CreateGitHubModels(model),
+            "github"         => CreateGitHubModels(model),
             "none" or "null" => new NullLlmLabeler(),
-            _ => new NullLlmLabeler(),
+            _                => new NullLlmLabeler(),
         };
     }
 
@@ -46,11 +46,7 @@ public static class LlmLabelerFactory
     private static ILlmLabeler CreateAnthropic(string? model)
     {
         var apiKey = Environment.GetEnvironmentVariable("ANTHROPIC_API_KEY");
-        if (string.IsNullOrEmpty(apiKey))
-        {
-            return new NullLlmLabeler();
-        }
-
+        if (string.IsNullOrEmpty(apiKey)) return new NullLlmLabeler();
         var m = model ?? "claude-haiku-4-5";
         return new AnthropicLlmLabeler(apiKey, m);
     }
@@ -58,11 +54,7 @@ public static class LlmLabelerFactory
     private static ILlmLabeler CreateGitHubModels(string? model)
     {
         var token = GitHubTokenResolver.Resolve();
-        if (string.IsNullOrEmpty(token))
-        {
-            return new NullLlmLabeler();
-        }
-
+        if (string.IsNullOrEmpty(token)) return new NullLlmLabeler();
         var m = model ?? "gpt-4o-mini";
         return new GitHubModelsLlmLabeler(token, m);
     }

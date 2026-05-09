@@ -29,12 +29,10 @@ public static class LicenseCommand
         {
             var offline = ctx.ParseResult.GetValueForOption(offlineFlag);
             if (offline)
-            {
                 Environment.SetEnvironmentVariable("GAUNTLETCI_OFFLINE", "1");
-            }
 
             const string EnvVar = "GAUNTLETCI_LICENSE";
-            var license = LicenseService.Load(EnvVar);
+            var license  = LicenseService.Load(EnvVar);
             var rawToken = LicenseService.ReadRawToken(EnvVar);
 
             AnsiConsole.MarkupLine("[bold cyan]GauntletCI License[/]");
@@ -43,34 +41,26 @@ public static class LicenseCommand
 
             var tierColor = license.Tier switch
             {
-                LicenseTier.Community => "dim",
-                LicenseTier.Pro => "cyan",
-                LicenseTier.Teams => "green",
+                LicenseTier.Community  => "dim",
+                LicenseTier.Pro        => "cyan",
+                LicenseTier.Teams      => "green",
                 LicenseTier.Enterprise => "yellow",
-                _ => "dim",
+                _                      => "dim",
             };
 
             AnsiConsole.MarkupLine($"  Tier    : [{tierColor}]{license.Tier}[/]");
             AnsiConsole.MarkupLine($"  Valid   : {(license.IsValid ? "[green]Yes[/]" : "[red]No[/]")}");
 
             if (license.Email is not null)
-            {
                 AnsiConsole.MarkupLine($"  Email   : {Markup.Escape(license.Email)}");
-            }
 
             if (license.ExpiresAt.HasValue)
-            {
                 AnsiConsole.MarkupLine($"  Expires : {license.ExpiresAt.Value:yyyy-MM-dd}");
-            }
             else if (license.IsValid && license.Tier > LicenseTier.Community)
-            {
                 AnsiConsole.MarkupLine("  Expires : [dim]never[/]");
-            }
 
             if (license.Error is not null)
-            {
                 AnsiConsole.MarkupLine($"  [yellow]Notice  : {Markup.Escape(license.Error)}[/]");
-            }
 
             // Remote subscription check for paid tiers.
             if (license.IsValid && license.Tier > LicenseTier.Community && rawToken is not null)
@@ -80,13 +70,9 @@ public static class LicenseCommand
                     rawToken, ctx.GetCancellationToken());
 
                 if (netValid)
-                {
                     AnsiConsole.MarkupLine("  Subscription: [green]Active[/]");
-                }
                 else
-                {
                     AnsiConsole.MarkupLine($"  Subscription: [red]Inactive[/] ({Markup.Escape(reason ?? "cancelled")})");
-                }
             }
 
             AnsiConsole.WriteLine();

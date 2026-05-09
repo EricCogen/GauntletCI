@@ -43,11 +43,7 @@ internal static class FloatingPointPatterns
     /// <summary>Returns <c>true</c> if the given content is a guarded integer zero check (safe division pattern).</summary>
     public static bool IsGuardedIntegerZeroCheck(string content)
     {
-        if (string.IsNullOrEmpty(content))
-        {
-            return false;
-        }
-
+        if (string.IsNullOrEmpty(content)) return false;
         return IntegerZeroGuardRegex.IsMatch(content);
     }
 }

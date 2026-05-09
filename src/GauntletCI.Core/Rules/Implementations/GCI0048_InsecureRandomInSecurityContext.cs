@@ -20,7 +20,7 @@ public class GCI0048_InsecureRandomInSecurityContext : RuleBase
     public GCI0048_InsecureRandomInSecurityContext(IPatternProvider patterns) : base(patterns)
     {
     }
-    public override string Id => "GCI0048";
+    public override string Id   => "GCI0048";
     public override string Name => "Insecure Random in Security Context";
 
     private static readonly Regex NewRandomRegex = new(
@@ -51,37 +51,26 @@ public class GCI0048_InsecureRandomInSecurityContext : RuleBase
 
         foreach (var file in context.Diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
 
             var addedLines = file.AddedLines.ToList();
             for (int i = 0; i < addedLines.Count; i++)
             {
                 var line = addedLines[i];
                 var match = NewRandomRegex.Match(line.Content);
-                if (!match.Success)
-                {
-                    continue;
-                }
+                if (!match.Success) continue;
 
                 // Syntax guard: suppress if the match position is inside a comment or string literal.
                 if (context.Syntax?.IsInCommentOrStringLiteral(file.NewPath, line.LineNumber, match.Index) == true)
-                {
                     continue;
-                }
 
                 // Lightweight fallback for raw-diff analysis (no syntax tree):
                 // suppress when the match falls after a // comment marker on the same line.
-                if (IsAfterLineComment(line.Content, match.Index))
-                {
-                    continue;
-                }
+                if (IsAfterLineComment(line.Content, match.Index)) continue;
 
                 // Check ±5 surrounding added lines for security-sensitive identifiers
                 int start = Math.Max(0, i - 5);
-                int end = Math.Min(addedLines.Count - 1, i + 5);
+                int end   = Math.Min(addedLines.Count - 1, i + 5);
 
                 bool nearSecurityTerm = false;
                 for (int j = start; j <= end && !nearSecurityTerm; j++)
@@ -89,18 +78,11 @@ public class GCI0048_InsecureRandomInSecurityContext : RuleBase
                     var content = addedLines[j].Content.ToLowerInvariant();
                     foreach (var term in SecurityTerms)
                     {
-                        if (content.Contains(term))
-                        {
-                            nearSecurityTerm = true;
-                            break;
-                        }
+                        if (content.Contains(term)) { nearSecurityTerm = true; break; }
                     }
                 }
 
-                if (!nearSecurityTerm)
-                {
-                    continue;
-                }
+                if (!nearSecurityTerm) continue;
 
                 findings.Add(CreateFinding(
                     file,

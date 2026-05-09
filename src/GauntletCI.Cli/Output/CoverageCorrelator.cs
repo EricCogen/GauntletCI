@@ -22,24 +22,20 @@ public static class CoverageCorrelator
     public static async Task AnnotateAsync(EvaluationResult result, CancellationToken ct = default)
     {
         var codecovToken = Environment.GetEnvironmentVariable("CODECOV_TOKEN");
-        var githubRepo = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
-        var githubSha = Environment.GetEnvironmentVariable("GITHUB_SHA");
+        var githubRepo   = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
+        var githubSha    = Environment.GetEnvironmentVariable("GITHUB_SHA");
 
         if (string.IsNullOrEmpty(codecovToken)
             || string.IsNullOrEmpty(githubRepo)
             || string.IsNullOrEmpty(githubSha))
-        {
             return;
-        }
 
         var repoParts = githubRepo.Split('/');
         if (repoParts.Length != 2 || string.IsNullOrWhiteSpace(repoParts[0]) || string.IsNullOrWhiteSpace(repoParts[1]))
-        {
             return;
-        }
 
         var owner = repoParts[0];
-        var repo = repoParts[1];
+        var repo  = repoParts[1];
 
         try
         {
@@ -51,9 +47,7 @@ public static class CoverageCorrelator
 
             using var response = await _http.SendAsync(request, ct);
             if (!response.IsSuccessStatusCode)
-            {
                 return;
-            }
 
             var json = await response.Content.ReadAsStringAsync(ct);
             var fileCoverageMap = ParseCoverageResponse(json);
@@ -61,9 +55,7 @@ public static class CoverageCorrelator
             // Skip annotation entirely when the coverage map could not be parsed : 
             // we must not flag files as zero-coverage based on missing data.
             if (fileCoverageMap is null)
-            {
                 return;
-            }
 
             var blockFindings = result.Findings
                 .Where(f => f.Severity == RuleSeverity.Block && !string.IsNullOrEmpty(f.FilePath))
@@ -73,9 +65,7 @@ public static class CoverageCorrelator
             {
                 var filePath = finding.FilePath ?? throw new InvalidOperationException("FilePath must not be null in block findings that passed the filter.");
                 if (fileCoverageMap.TryGetValue(filePath, out var cov) && cov == 0.0)
-                {
                     finding.CoverageNote = "⚠️ No test coverage detected for this file (Codecov).";
-                }
             }
         }
         catch (Exception ex)
@@ -92,30 +82,24 @@ public static class CoverageCorrelator
     {
         try
         {
-            using var doc = JsonDocument.Parse(json);
-            var root = doc.RootElement;
-
+            using var doc  = JsonDocument.Parse(json);
+            var root       = doc.RootElement;
+            
             if (root.ValueKind == JsonValueKind.Undefined || root.ValueKind == JsonValueKind.Null)
-            {
                 return null;
-            }
-
-            var result = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+            
+            var result     = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
 
             if (!root.TryGetProperty("files", out var filesEl)
                 || filesEl.ValueKind != JsonValueKind.Array)
-            {
                 return null;
-            }
 
             foreach (var file in filesEl.EnumerateArray())
             {
                 if (!file.TryGetProperty("name", out var nameEl))
-                {
                     continue;
-                }
 
-                var name = nameEl.GetString() ?? string.Empty;
+                var name   = nameEl.GetString() ?? string.Empty;
                 double cov = 0.0;
 
                 if (file.TryGetProperty("totals", out var totals)

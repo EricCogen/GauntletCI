@@ -43,104 +43,59 @@ public class GCI0024_ResourceLifecycle : RuleBase
 
     private void CheckUnguardedDisposables(DiffFile file, List<Finding> findings)
     {
-        if (WellKnownPatterns.IsTestFile(file.NewPath))
-        {
-            return;
-        }
-
-        if (WellKnownPatterns.IsGeneratedFile(file.NewPath))
-        {
-            return;
-        }
+        if (WellKnownPatterns.IsTestFile(file.NewPath)) return;
+        if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) return;
 
         var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
 
         for (int i = 0; i < allLines.Count; i++)
         {
             var line = allLines[i];
-            if (line.Kind != DiffLineKind.Added)
-            {
-                continue;
-            }
-
+            if (line.Kind != DiffLineKind.Added) continue;
             var content = line.Content;
-
+            
             // Skip mock/fake resources in test code (even if test file guard was bypassed)
-            if (WellKnownPatterns.HasMockPattern(content))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.HasMockPattern(content)) continue;
 
             var (typeName, isExplicit) = MatchDisposableType(content);
-            if (typeName is null)
-            {
-                continue;
-            }
+            if (typeName is null) continue;
 
             // Defer to the owning rule (GCI0039) rather than double-reporting.
-            if (WellKnownPatterns.ResourcePatterns.OwnedByOtherRules.Contains(typeName))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.ResourcePatterns.OwnedByOtherRules.Contains(typeName)) continue;
 
             // Skip: `return new X(...)` or `return foo(new X(...))`: caller takes ownership.
             var trimmed = content.TrimStart();
-            if (trimmed.StartsWith("return ", StringComparison.Ordinal))
-            {
-                continue;
-            }
+            if (trimmed.StartsWith("return ", StringComparison.Ordinal)) continue;
 
             // Skip: `new X(...)` inside a method/constructor call argument: the callee takes
             // ownership (e.g. services.AddSingleton(new X()), collection.Add(new X())).
             // Detect by counting unmatched `(` before the `new` keyword: if opens > closes,
             // we are inside a parameter list.
-            if (IsInsideMethodCallArg(content, typeName))
-            {
-                continue;
-            }
+            if (IsInsideMethodCallArg(content, typeName)) continue;
 
             // Skip: `static readonly X = new X()`: process-lifetime singletons are never disposed
             // by design; flagging them produces only noise with no actionable fix.
-            if (content.Contains("static ", StringComparison.Ordinal))
-            {
-                continue;
-            }
+            if (content.Contains("static ", StringComparison.Ordinal)) continue;
 
-            if (content.Contains("using ", StringComparison.Ordinal))
-            {
-                continue;
-            }
+            if (content.Contains("using ", StringComparison.Ordinal)) continue;
 
             bool prevHasUsing = false;
             for (int j = i - 1; j >= Math.Max(0, i - 3); j--)
             {
                 var prev = allLines[j].Content.Trim();
-                if (string.IsNullOrWhiteSpace(prev))
-                {
-                    continue;
-                }
-
+                if (string.IsNullOrWhiteSpace(prev)) continue;
                 if (prev.StartsWith("using ") || prev.StartsWith("await using "))
-                {
-                    prevHasUsing = true;
-                    break;
-                }
+                { prevHasUsing = true; break; }
                 break;
             }
-            if (prevHasUsing)
-            {
-                continue;
-            }
+            if (prevHasUsing) continue;
 
             int winStart = Math.Max(0, i - 2);
             int winEnd = Math.Min(allLines.Count, i + 20);
             bool hasDispose = allLines[winStart..winEnd].Any(l =>
                 l.Content.Contains(".Dispose()", StringComparison.Ordinal) ||
                 l.Content.Contains("finally", StringComparison.Ordinal));
-            if (hasDispose)
-            {
-                continue;
-            }
+            if (hasDispose) continue;
 
             findings.Add(CreateFinding(
                 file,
@@ -159,9 +114,7 @@ public class GCI0024_ResourceLifecycle : RuleBase
         foreach (var knownType in WellKnownPatterns.ResourcePatterns.DisposableTypes)
         {
             if (content.Contains(knownType, StringComparison.Ordinal))
-            {
                 return (knownType.Replace("new ", "").TrimEnd('('), true);
-            }
         }
 
         // Suffix heuristic: Medium confidence
@@ -174,11 +127,7 @@ public class GCI0024_ResourceLifecycle : RuleBase
                 if (name.EndsWith(suffix, StringComparison.Ordinal))
                 {
                     // Skip types known NOT to be disposable despite having a disposable-looking suffix
-                    if (WellKnownPatterns.ResourcePatterns.KnownNonDisposableTypes.Contains(name))
-                    {
-                        return (null, false);
-                    }
-
+                    if (WellKnownPatterns.ResourcePatterns.KnownNonDisposableTypes.Contains(name)) return (null, false);
                     return (name, false);
                 }
             }
@@ -194,35 +143,17 @@ public class GCI0024_ResourceLifecycle : RuleBase
     {
         var needle = "new " + typeName;
         int idx = content.IndexOf(needle, StringComparison.Ordinal);
-        if (idx <= 0)
-        {
-            return false;
-        }
-
+        if (idx <= 0) return false;
         var before = content[..idx];
-        int opens = 0;
+        int opens  = 0;
         int closes = 0;
-        foreach (char c in before)
-        {
-            if (c == '(')
-            {
-                opens++;
-            }
-            else if (c == ')')
-            {
-                closes++;
-            }
-        }
+        foreach (char c in before) { if (c == '(') opens++; else if (c == ')') closes++; }
         return opens > closes;
     }
 
     private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)
     {
-        if (staticAnalysis is null)
-        {
-            return;
-        }
-
+        if (staticAnalysis is null) return;
         foreach (var diag in staticAnalysis.Diagnostics.Where(d => d.Id is "CA2000" or "CA1001" or "CA2213"))
         {
             findings.Add(new Finding

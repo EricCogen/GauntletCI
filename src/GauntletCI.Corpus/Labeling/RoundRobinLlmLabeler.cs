@@ -14,14 +14,8 @@ public sealed class RoundRobinLlmLabeler : ILlmLabeler, IDisposable
     {
         public LlmEndpoint Endpoint { get; } = endpoint;
         public object SyncRoot { get; } = new();
-        public int ConsecutiveFailures
-        {
-            get; set;
-        }
-        public DateTime DisabledUntilUtc
-        {
-            get; set;
-        }
+        public int ConsecutiveFailures { get; set; }
+        public DateTime DisabledUntilUtc { get; set; }
     }
 
     private readonly IReadOnlyList<EndpointState> _endpoints;
@@ -36,18 +30,14 @@ public sealed class RoundRobinLlmLabeler : ILlmLabeler, IDisposable
         TimeSpan? cooldown = null)
     {
         if (failureThreshold < 1)
-        {
             throw new ArgumentOutOfRangeException(nameof(failureThreshold), "Failure threshold must be at least 1.");
-        }
 
         _endpoints = (endpoints ?? throw new ArgumentNullException(nameof(endpoints)))
             .Select(endpoint => new EndpointState(endpoint))
             .ToArray();
 
         if (_endpoints.Count == 0)
-        {
             throw new ArgumentException("At least one labeler is required.", nameof(endpoints));
-        }
 
         var disposableLabelersCount = 0;
         var nonDisposableLabelersCount = 0;
@@ -106,9 +96,7 @@ public sealed class RoundRobinLlmLabeler : ILlmLabeler, IDisposable
             var endpointIndex = (startIndex + offset) % _endpoints.Count;
             var state = _endpoints[endpointIndex];
             if (!IsAvailable(state, DateTime.UtcNow))
-            {
                 continue;
-            }
 
             attemptedHealthyEndpoint = true;
             var result = await state.Endpoint.Labeler.ClassifyAsync(
@@ -166,9 +154,7 @@ public sealed class RoundRobinLlmLabeler : ILlmLabeler, IDisposable
         {
             state.ConsecutiveFailures++;
             if (state.ConsecutiveFailures < _failureThreshold || state.DisabledUntilUtc > DateTime.UtcNow)
-            {
                 return false;
-            }
 
             state.DisabledUntilUtc = DateTime.UtcNow.Add(_cooldown);
             // Reset so the endpoint gets a full failure window after cooldown expires.
@@ -189,8 +175,6 @@ public sealed class RoundRobinLlmLabeler : ILlmLabeler, IDisposable
     public void Dispose()
     {
         foreach (var disposable in _disposables)
-        {
             disposable.Dispose();
-        }
     }
 }

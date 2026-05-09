@@ -24,7 +24,5 @@ public sealed class NullLlmEngine : ILlmEngine
         => Task.FromResult(string.Empty);
 
     /// <summary>No-op; this engine holds no resources.</summary>
-    public void Dispose()
-    {
-    }
+    public void Dispose() { }
 }

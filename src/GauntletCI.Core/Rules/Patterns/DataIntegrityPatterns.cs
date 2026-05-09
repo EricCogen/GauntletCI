@@ -30,12 +30,12 @@ internal static class DataIntegrityPatterns
     /// These are PATTERN STRINGS, not actual SQL commands - no GCI0015 violation.
     /// GCI0015 false positive suppression: this is pattern data for a detection rule.
     /// </summary>
-#pragma warning disable GCI0015  // Data Integrity Risk - pattern data only
+    #pragma warning disable GCI0015  // Data Integrity Risk - pattern data only
     public static readonly string[] SqlIgnorePatterns =
     [
         "INSERT IGNORE", "ON CONFLICT DO NOTHING", "INSERT OR IGNORE"
     ];
-#pragma warning restore GCI0015
+    #pragma warning restore GCI0015
 
     /// <summary>
     /// Numeric cast patterns that can cause silent data truncation or overflow.
@@ -43,12 +43,12 @@ internal static class DataIntegrityPatterns
     /// These are PATTERN STRINGS, not actual casts - no GCI0015 violation.
     /// GCI0015 false positive suppression: this is pattern data for a detection rule.
     /// </summary>
-#pragma warning disable GCI0015  // Data Integrity Risk - pattern data only
+    #pragma warning disable GCI0015  // Data Integrity Risk - pattern data only
     public static readonly string[] UncheckedCastPatterns =
     [
         "(int)", "(long)", "(decimal)", "(float)", "(short)"
     ];
-#pragma warning restore GCI0015
+    #pragma warning restore GCI0015
 
     /// <summary>
     /// Returns true if the given content contains an HTTP context signal indicating user input.

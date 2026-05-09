@@ -22,9 +22,7 @@ public static class TelemetryUploader
         Task.Run(UploadAsync).ContinueWith(t =>
         {
             if (t.IsFaulted)
-            {
                 Console.Error.WriteLine($"[GauntletCI] Background telemetry upload failed: {t.Exception?.InnerException?.Message}");
-            }
         });
 
     /// <summary>
@@ -35,31 +33,20 @@ public static class TelemetryUploader
     {
         try
         {
-            if (TelemetryConsent.GetMode() != TelemetryMode.Shared)
-            {
-                return;
-            }
+            if (TelemetryConsent.GetMode() != TelemetryMode.Shared) return;
 
             var pending = await TelemetryStore.GetPendingAsync();
-            if (pending.Count == 0)
-            {
-                return;
-            }
+            if (pending.Count == 0) return;
 
             using var http = HttpClientFactory.GetGenericClient();
             http.DefaultRequestHeaders.Add("X-GauntletCI-Version",
                 System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0");
 
-            var payload = new
-            {
-                events = pending
-            };
+            var payload = new { events = pending };
             var response = await http.PostAsJsonAsync(Endpoint, payload);
 
             if (response.IsSuccessStatusCode)
-            {
                 await TelemetryStore.MarkSentAsync(pending.Select(e => e.EventId));
-            }
         }
         catch { /* upload failures are always silent */ }
     }

@@ -31,8 +31,8 @@ public static class IgnoreCommand
         cmd.SetHandler((context) =>
         {
             var ruleId = context.ParseResult.GetValueForArgument(ruleIdArg);
-            var path = context.ParseResult.GetValueForOption(pathOption);
-            var repo = context.ParseResult.GetValueForOption(repoOption)!;
+            var path   = context.ParseResult.GetValueForOption(pathOption);
+            var repo   = context.ParseResult.GetValueForOption(repoOption)!;
             try
             {
                 var normalizedId = ruleId.ToUpperInvariant();

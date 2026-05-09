@@ -59,25 +59,17 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
             ct.ThrowIfCancellationRequested();
 
             var parts = fixture.Repo.Split('/', 2);
-            if (parts.Length < 2)
-            {
-                continue;
-            }
+            if (parts.Length < 2) continue;
 
             var combinedText = await FetchReviewTextAsync(
                 parts[0], parts[1], fixture.PullRequestNumber, ct).ConfigureAwait(false);
 
-            if (delayMs > 0)
-            {
-                await Task.Delay(delayMs, ct).ConfigureAwait(false);
-            }
+            if (delayMs > 0) await Task.Delay(delayMs, ct).ConfigureAwait(false);
 
             var matches = MatchTaxonomy(combinedText);
 
             foreach (var (ruleId, keyword, confidence) in matches)
-            {
                 await WriteMatchAsync(db, fixture.FixtureId, fixture.Repo, ruleId, keyword, confidence, ct).ConfigureAwait(false);
-            }
 
             processed++;
             if (matches.Count > 0)
@@ -97,10 +89,7 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
     public static IReadOnlyList<(string RuleId, string MatchedKeyword, double Confidence)> MatchTaxonomy(
         string reviewText)
     {
-        if (string.IsNullOrWhiteSpace(reviewText))
-        {
-            return [];
-        }
+        if (string.IsNullOrWhiteSpace(reviewText)) return [];
 
         var lower = reviewText.ToLowerInvariant();
         var results = new Dictionary<string, (string RuleId, string MatchedKeyword, double Confidence)>(
@@ -114,10 +103,7 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
                 {
                     // One match per rule ID - use the first matching keyword
                     if (!results.ContainsKey(ruleId))
-                    {
                         results[ruleId] = (ruleId, keyword, confidence);
-                    }
-
                     break;
                 }
             }
@@ -140,10 +126,7 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
         using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
         var list = new List<(string, string, double)>();
         while (await reader.ReadAsync(ct).ConfigureAwait(false))
-        {
             list.Add((reader.GetString(0), reader.GetString(1), reader.GetDouble(2)));
-        }
-
         return list;
     }
 
@@ -167,9 +150,7 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
                     {
                         if (comment.TryGetProperty("body", out var body) &&
                             body.ValueKind != JsonValueKind.Null)
-                        {
                             sb.Append(' ').Append(body.GetString());
-                        }
                     }
                 }
             }
@@ -194,9 +175,7 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
                     {
                         if (review.TryGetProperty("body", out var body) &&
                             body.ValueKind != JsonValueKind.Null)
-                        {
                             sb.Append(' ').Append(body.GetString());
-                        }
                     }
                 }
             }
@@ -218,11 +197,11 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
             VALUES
                 ($fixtureId, $repo, $ruleId, $keyword, $confidence, datetime('now'))
             """;
-        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
-        cmd.Parameters.AddWithValue("$repo", repo);
-        cmd.Parameters.AddWithValue("$ruleId", ruleId);
-        cmd.Parameters.AddWithValue("$keyword", keyword);
-        cmd.Parameters.AddWithValue("$confidence", confidence);
+        cmd.Parameters.AddWithValue("$fixtureId",  fixtureId);
+        cmd.Parameters.AddWithValue("$repo",        repo);
+        cmd.Parameters.AddWithValue("$ruleId",      ruleId);
+        cmd.Parameters.AddWithValue("$keyword",     keyword);
+        cmd.Parameters.AddWithValue("$confidence",  confidence);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }

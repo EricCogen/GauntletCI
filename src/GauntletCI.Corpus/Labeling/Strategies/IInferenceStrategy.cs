@@ -14,10 +14,7 @@ public interface IInferenceStrategy
     /// The set of rule IDs this strategy is responsible for evaluating.
     /// Used for negative label generation when no positive signal is found.
     /// </summary>
-    IReadOnlySet<string> RuleIds
-    {
-        get;
-    }
+    IReadOnlySet<string> RuleIds { get; }
 
     /// <summary>
     /// Applies this strategy's heuristics to the given diff context.

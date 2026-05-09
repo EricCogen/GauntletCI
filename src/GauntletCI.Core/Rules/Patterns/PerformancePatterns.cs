@@ -35,10 +35,7 @@ internal static class PerformancePatterns
     /// <summary>Returns <c>true</c> if the given content contains a LINQ method call.</summary>
     public static bool HasLinqCall(string content)
     {
-        if (string.IsNullOrEmpty(content))
-        {
-            return false;
-        }
+        if (string.IsNullOrEmpty(content)) return false;
         // GCI0044: This is a pattern detection helper, not a performance-sensitive query
         return LinqMethods.Any(m => content.Contains(m, StringComparison.Ordinal));
     }
@@ -46,21 +43,14 @@ internal static class PerformancePatterns
     /// <summary>Returns <c>true</c> if the given content contains a loop construct.</summary>
     public static bool HasLoopConstruct(string content)
     {
-        if (string.IsNullOrEmpty(content))
-        {
-            return false;
-        }
+        if (string.IsNullOrEmpty(content)) return false;
         return LoopKeywords.Any(k => content.Contains(k, StringComparison.Ordinal));
     }
 
     /// <summary>Returns <c>true</c> if the given path is a rule implementation file (hotpath guard).</summary>
     public static bool IsRuleImplementationFile(string path)
     {
-        if (string.IsNullOrEmpty(path))
-        {
-            return false;
-        }
-
+        if (string.IsNullOrEmpty(path)) return false;
         return path.Contains("Rules/Implementations", StringComparison.OrdinalIgnoreCase) ||
                path.Contains(@"Rules\Implementations", StringComparison.OrdinalIgnoreCase);
     }

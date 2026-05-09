@@ -13,7 +13,7 @@ namespace GauntletCI.Corpus.Labeling;
 public sealed class SonarCloudEnricher : IDisposable
 {
     private readonly SonarCloudClient _client;
-    private readonly Dictionary<string, string?> _projectKeyCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string?> _projectKeyCache  = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, IReadOnlyList<SonarIssue>> _issuesCache = new(StringComparer.OrdinalIgnoreCase);
 
     public SonarCloudEnricher()
@@ -51,33 +51,20 @@ public sealed class SonarCloudEnricher : IDisposable
                 fixture.FixtureId,
                 "diff.patch");
 
-            if (!File.Exists(diffPath))
-            {
-                continue;
-            }
+            if (!File.Exists(diffPath)) continue;
 
             var changedFiles = ParseChangedCsFiles(diffPath);
-            if (changedFiles.Count == 0)
-            {
-                continue;
-            }
+            if (changedFiles.Count == 0) continue;
 
             var projectKey = await ResolveProjectKeyAsync(fixture.Repo, progress, ct).ConfigureAwait(false);
-            if (projectKey is null)
-            {
-                continue;
-            }
+            if (projectKey is null) continue;
 
             var issues = await ResolveIssuesAsync(projectKey, progress, ct).ConfigureAwait(false);
 
             int matchesThisFixture = 0;
             foreach (var issue in issues)
             {
-                if (!changedFiles.Contains(issue.FilePath))
-                {
-                    continue;
-                }
-
+                if (!changedFiles.Contains(issue.FilePath)) continue;
                 await WriteMatchAsync(db, fixture.FixtureId, issue, ct).ConfigureAwait(false);
                 matchesThisFixture++;
             }
@@ -108,16 +95,10 @@ public sealed class SonarCloudEnricher : IDisposable
 
         foreach (var line in File.ReadLines(diffPath))
         {
-            if (!line.StartsWith("+++ b/", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
+            if (!line.StartsWith("+++ b/", StringComparison.Ordinal)) continue;
             var path = line[6..]; // strip "+++ b/"
             if (path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
-            {
                 paths.Add(path);
-            }
         }
 
         return paths;
@@ -128,9 +109,7 @@ public sealed class SonarCloudEnricher : IDisposable
     private async Task<string?> ResolveProjectKeyAsync(string repo, Action<string>? progress, CancellationToken ct)
     {
         if (_projectKeyCache.TryGetValue(repo, out var cached))
-        {
             return cached;
-        }
 
         var parts = repo.Split('/', 2);
         if (parts.Length < 2)
@@ -144,13 +123,9 @@ public sealed class SonarCloudEnricher : IDisposable
         _projectKeyCache[repo] = key;
 
         if (key is null)
-        {
             progress?.Invoke($"[sonarcloud] No SonarCloud project found for {repo} - skipped");
-        }
         else
-        {
             progress?.Invoke($"[sonarcloud] Found project: {key}");
-        }
 
         return key;
     }
@@ -159,9 +134,7 @@ public sealed class SonarCloudEnricher : IDisposable
         string projectKey, Action<string>? progress, CancellationToken ct)
     {
         if (_issuesCache.TryGetValue(projectKey, out var cached))
-        {
             return cached;
-        }
 
         progress?.Invoke($"[sonarcloud] Fetching issues for {projectKey}...");
         var issues = await _client.GetIssuesAsync(projectKey, ct).ConfigureAwait(false);
@@ -180,13 +153,13 @@ public sealed class SonarCloudEnricher : IDisposable
             VALUES
                 ($fixtureId, $projectKey, $file, $rule, $severity, $type, $message)
             """;
-        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
+        cmd.Parameters.AddWithValue("$fixtureId",  fixtureId);
         cmd.Parameters.AddWithValue("$projectKey", issue.ProjectKey);
-        cmd.Parameters.AddWithValue("$file", issue.FilePath);
-        cmd.Parameters.AddWithValue("$rule", issue.Rule);
-        cmd.Parameters.AddWithValue("$severity", issue.Severity);
-        cmd.Parameters.AddWithValue("$type", issue.Type);
-        cmd.Parameters.AddWithValue("$message", issue.Message);
+        cmd.Parameters.AddWithValue("$file",       issue.FilePath);
+        cmd.Parameters.AddWithValue("$rule",       issue.Rule);
+        cmd.Parameters.AddWithValue("$severity",   issue.Severity);
+        cmd.Parameters.AddWithValue("$type",       issue.Type);
+        cmd.Parameters.AddWithValue("$message",    issue.Message);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
@@ -194,24 +167,9 @@ public sealed class SonarCloudEnricher : IDisposable
 /// <summary>Summary statistics from a <see cref="SonarCloudEnricher.EnrichAsync"/> run.</summary>
 public sealed class SonarEnrichmentResult
 {
-    public int ProjectsFound
-    {
-        get; set;
-    }
-    public int ProjectsNotFound
-    {
-        get; set;
-    }
-    public int FixturesProcessed
-    {
-        get; set;
-    }
-    public int FixturesWithMatches
-    {
-        get; set;
-    }
-    public int TotalMatches
-    {
-        get; set;
-    }
+    public int ProjectsFound       { get; set; }
+    public int ProjectsNotFound    { get; set; }
+    public int FixturesProcessed   { get; set; }
+    public int FixturesWithMatches { get; set; }
+    public int TotalMatches        { get; set; }
 }

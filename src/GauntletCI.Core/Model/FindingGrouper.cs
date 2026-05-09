@@ -39,10 +39,7 @@ public static class FindingGrouper
 
     private sealed class GroupAccumulator
     {
-        public int Order
-        {
-            get;
-        }
+        public int Order { get; }
         private readonly Finding _first;
         private readonly List<Finding> _all = new();
 
@@ -70,23 +67,23 @@ public static class FindingGrouper
 
             return new GroupedFinding
             {
-                RuleId = _first.RuleId,
-                RuleName = _first.RuleName,
-                Summary = _first.Summary,
-                WhyItMatters = _first.WhyItMatters,
+                RuleId          = _first.RuleId,
+                RuleName        = _first.RuleName,
+                Summary         = _first.Summary,
+                WhyItMatters    = _first.WhyItMatters,
                 SuggestedAction = _first.SuggestedAction,
-                Confidence = _first.Confidence,
-                Severity = _first.Severity,
-                FilePath = _first.FilePath,
-                PrimaryLine = lines.Count > 0 ? lines[0] : _first.Line,
-                Lines = lines,
-                Evidence = evidence,
-                Count = _all.Count,
-                LlmExplanation = _first.LlmExplanation,
-                ExpertContext = _first.ExpertContext,
-                CodeSnippet = _first.CodeSnippet,
-                CoverageNote = _first.CoverageNote,
-                TicketContext = _first.TicketContext,
+                Confidence      = _first.Confidence,
+                Severity        = _first.Severity,
+                FilePath        = _first.FilePath,
+                PrimaryLine     = lines.Count > 0 ? lines[0] : _first.Line,
+                Lines           = lines,
+                Evidence        = evidence,
+                Count           = _all.Count,
+                LlmExplanation  = _first.LlmExplanation,
+                ExpertContext   = _first.ExpertContext,
+                CodeSnippet     = _first.CodeSnippet,
+                CoverageNote    = _first.CoverageNote,
+                TicketContext   = _first.TicketContext,
             };
         }
     }

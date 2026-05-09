@@ -6,7 +6,7 @@ namespace GauntletCI.Tests;
 public class IssueEnricherTests
 {
     private const string DefaultOwner = "test-owner";
-    private const string DefaultRepo = "test-repo";
+    private const string DefaultRepo  = "test-repo";
 
     // ── ParseBodyRefs ────────────────────────────────────────────────────────
 

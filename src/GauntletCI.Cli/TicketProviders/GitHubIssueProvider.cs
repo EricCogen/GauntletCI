@@ -16,14 +16,14 @@ public sealed class GitHubIssueProvider : ITicketProvider
 
     public async Task<TicketInfo?> FetchAsync(string issueKey, CancellationToken ct = default)
     {
-        var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+        var token      = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
         var repository = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
-
+        
         if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(repository))
         {
             return null;  // Not available
         }
-
+        
         // issueKey may be "#42" or "42"
         var number = issueKey.TrimStart('#');
 
@@ -33,24 +33,21 @@ public sealed class GitHubIssueProvider : ITicketProvider
         req.Headers.Accept.ParseAdd("application/vnd.github+json");
 
         using var resp = await Http.SendAsync(req, ct);
-        if (!resp.IsSuccessStatusCode)
-        {
-            return null;
-        }
+        if (!resp.IsSuccessStatusCode) return null;
 
         var json = await resp.Content.ReadAsStringAsync(ct);
         using var doc = JsonDocument.Parse(json);
         var title = doc.RootElement.TryGetProperty("title", out var t) ? t.GetString() : null;
-        var body = doc.RootElement.TryGetProperty("body", out var b) ? b.GetString() : null;
-        var url = doc.RootElement.TryGetProperty("html_url", out var u) ? u.GetString() : null;
+        var body  = doc.RootElement.TryGetProperty("body",  out var b) ? b.GetString() : null;
+        var url   = doc.RootElement.TryGetProperty("html_url", out var u) ? u.GetString() : null;
 
         return new TicketInfo
         {
-            Id = $"#{number}",
-            Title = title ?? $"#{number}",
+            Id          = $"#{number}",
+            Title       = title ?? $"#{number}",
             Description = body?.Length > 500 ? body[..500] : body,
-            Url = url,
-            Provider = "GitHub",
+            Url         = url,
+            Provider    = "GitHub",
         };
     }
 }

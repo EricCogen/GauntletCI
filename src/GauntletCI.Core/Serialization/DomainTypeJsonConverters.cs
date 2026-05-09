@@ -15,15 +15,11 @@ public class RuleIdentifierJsonConverter : JsonConverter<RuleIdentifier>
     {
         var value = reader.GetString();
         if (string.IsNullOrWhiteSpace(value))
-        {
             throw new JsonException("RuleIdentifier cannot be null or empty");
-        }
-
+        
         if (!RuleIdentifier.TryParse(value, out var result))
-        {
             throw new JsonException($"Invalid RuleIdentifier format: {value}");
-        }
-
+        
         return result;
     }
 
@@ -45,15 +41,11 @@ public class CodeFilePathJsonConverter : JsonConverter<CodeFilePath>
     {
         var value = reader.GetString();
         if (string.IsNullOrWhiteSpace(value))
-        {
             throw new JsonException("CodeFilePath cannot be null or empty");
-        }
-
+        
         if (!CodeFilePath.TryParse(value, out var result))
-        {
             throw new JsonException($"Invalid CodeFilePath: {value}");
-        }
-
+        
         return result;
     }
 
@@ -74,21 +66,15 @@ public class NullableCodeFilePathJsonConverter : JsonConverter<CodeFilePath?>
     public override CodeFilePath? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType == JsonTokenType.Null)
-        {
             return null;
-        }
-
+        
         var value = reader.GetString();
         if (string.IsNullOrWhiteSpace(value))
-        {
             return null;
-        }
-
+        
         if (!CodeFilePath.TryParse(value, out var result))
-        {
             throw new JsonException($"Invalid CodeFilePath: {value}");
-        }
-
+        
         return result;
     }
 
@@ -96,13 +82,9 @@ public class NullableCodeFilePathJsonConverter : JsonConverter<CodeFilePath?>
     public override void Write(Utf8JsonWriter writer, CodeFilePath? value, JsonSerializerOptions options)
     {
         if (value == null)
-        {
             writer.WriteNullValue();
-        }
         else
-        {
             writer.WriteStringValue(value.Value.ToString());
-        }
     }
 }
 
@@ -136,10 +118,8 @@ public class NullableLlmExplanationJsonConverter : JsonConverter<LlmExplanation?
     public override LlmExplanation? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType == JsonTokenType.Null)
-        {
             return null;
-        }
-
+        
         var value = reader.GetString();
         return LlmExplanation.Create(value);
     }
@@ -148,12 +128,8 @@ public class NullableLlmExplanationJsonConverter : JsonConverter<LlmExplanation?
     public override void Write(Utf8JsonWriter writer, LlmExplanation? value, JsonSerializerOptions options)
     {
         if (value == null)
-        {
             writer.WriteNullValue();
-        }
         else
-        {
             writer.WriteStringValue(value.Value.ToString());
-        }
     }
 }

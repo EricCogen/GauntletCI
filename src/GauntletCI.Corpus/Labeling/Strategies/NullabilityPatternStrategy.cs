@@ -23,10 +23,8 @@ public sealed class NullabilityPatternStrategy : IInferenceStrategy
         bool hasUnsafeNullAssignment = context.ProductionAddedLines.Any(l =>
         {
             if (l.TrimStart().StartsWith("//"))
-            {
                 return false;
-            }
-
+            
             // Pattern: variable = null without explicit nullable type annotation
             return l.Contains(" = null", StringComparison.Ordinal) &&
                    !l.Contains("?", StringComparison.Ordinal); // No ? for nullable
@@ -55,9 +53,7 @@ public sealed class NullabilityPatternStrategy : IInferenceStrategy
         bool hasNullForgivingOperator = context.AddedLines.Any(l =>
         {
             if (l.TrimStart().StartsWith("//"))
-            {
                 return false;
-            }
             // Null-forgiving operator is just ! by itself after an expression
             // Pattern: it's typically after ) or an identifier
             return l.Contains(")!", StringComparison.Ordinal) ||  // method call!
@@ -69,10 +65,7 @@ public sealed class NullabilityPatternStrategy : IInferenceStrategy
         bool hasRemovedNullForgiving = context.ProductionRemovedLines.Any(l =>
         {
             if (l.TrimStart().StartsWith("//"))
-            {
                 return false;
-            }
-
             return l.Contains(")!", StringComparison.Ordinal) ||
                    l.Contains("!;", StringComparison.Ordinal) ||
                    l.Contains("!,", StringComparison.Ordinal) ||

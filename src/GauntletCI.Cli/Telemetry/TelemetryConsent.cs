@@ -65,20 +65,9 @@ public static class TelemetryConsent
     /// <returns>True when telemetry is enabled after the prompt (or was already enabled).</returns>
     public static bool PromptIfNeeded()
     {
-        if (HasDecided)
-        {
-            return IsOptedIn;
-        }
-
-        if (Console.IsInputRedirected || Console.IsOutputRedirected)
-        {
-            return false;
-        }
-
-        if (IsCI())
-        {
-            return false;
-        }
+        if (HasDecided) return IsOptedIn;
+        if (Console.IsInputRedirected || Console.IsOutputRedirected) return false;
+        if (IsCI()) return false;
 
         Console.WriteLine("┌─────────────────────────────────────────────────────────────┐");
         Console.WriteLine("│  🔒 Help improve GauntletCI?                                │");
@@ -138,9 +127,7 @@ public static class TelemetryConsent
     {
         var cfg = LoadConfig();
         if (cfg.Telemetry is not null)
-        {
             return cfg.Telemetry;
-        }
 
         var created = new TelemetrySection(Guid.NewGuid().ToString(), null, null);
         Save(created);
@@ -149,10 +136,7 @@ public static class TelemetryConsent
 
     private static RootConfig LoadConfig()
     {
-        if (_cache is not null)
-        {
-            return _cache;
-        }
+        if (_cache is not null) return _cache;
 
         try
         {
@@ -179,9 +163,9 @@ public static class TelemetryConsent
                 {
                     var migratedMode = legacy.OptedIn switch
                     {
-                        true => "shared",
+                        true  => "shared",
                         false => "off",
-                        null => null,
+                        null  => null,
                     };
                     var section = new TelemetrySection(legacy.InstallId, migratedMode, legacy.DecidedAt);
                     Save(section);

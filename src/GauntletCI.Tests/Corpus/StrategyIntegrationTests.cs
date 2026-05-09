@@ -59,7 +59,7 @@ public sealed class StrategyIntegrationTests
         {
             foreach (var ruleId in strategy.RuleIds)
             {
-                Assert.True(allRuleIds.Add(ruleId),
+                Assert.True(allRuleIds.Add(ruleId), 
                     $"Rule {ruleId} declared by multiple strategies");
             }
         }
@@ -91,10 +91,10 @@ public sealed class StrategyIntegrationTests
     {
         // Verify all strategy implementations can be instantiated
         var strategies = ReflectStrategies();
-
+        
         Assert.NotEmpty(strategies);
         Assert.Equal(6, strategies.Count);  // Exactly 6 strategies
-
+        
         // Verify each strategy has RuleIds
         foreach (var strategy in strategies)
         {
@@ -203,7 +203,7 @@ public sealed class StrategyIntegrationTests
             """;
 
         var labels = await _engine.InferLabelsAsync("fix-001", diff);
-
+        
         foreach (var label in labels.Where(l => l.ShouldTrigger))
         {
             Assert.InRange(label.ExpectedConfidence, 0.40, 0.80);

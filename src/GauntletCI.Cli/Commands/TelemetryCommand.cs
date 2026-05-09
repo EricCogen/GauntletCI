@@ -13,9 +13,9 @@ public static class TelemetryCommand
 {
     public static Command Create()
     {
-        var statusFlag = new Option<bool>("--status", "Show current telemetry status");
+        var statusFlag  = new Option<bool>("--status", "Show current telemetry status");
         var modeOption = new Option<string?>("--mode", "Set telemetry mode: shared, local, or off");
-        var enableFlag = new Option<bool>("--enable", "Opt in to shared telemetry (alias for --mode shared)");
+        var enableFlag  = new Option<bool>("--enable", "Opt in to shared telemetry (alias for --mode shared)");
         var disableFlag = new Option<bool>("--disable", "Disable telemetry (alias for --mode off)");
 
         var cmd = new Command("telemetry", "Manage telemetry preferences")
@@ -29,7 +29,7 @@ public static class TelemetryCommand
         cmd.SetHandler((System.CommandLine.Invocation.InvocationContext ctx) =>
         {
             var mode = ctx.ParseResult.GetValueForOption(modeOption);
-            var enable = ctx.ParseResult.GetValueForOption(enableFlag);
+            var enable  = ctx.ParseResult.GetValueForOption(enableFlag);
             var disable = ctx.ParseResult.GetValueForOption(disableFlag);
 
             if (enable)

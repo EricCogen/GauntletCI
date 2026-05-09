@@ -19,7 +19,7 @@ public class GCI0050_SqlColumnTruncationRisk : RuleBase
     public GCI0050_SqlColumnTruncationRisk(IPatternProvider patterns) : base(patterns)
     {
     }
-    public override string Id => "GCI0050";
+    public override string Id   => "GCI0050";
     public override string Name => "SQL Column Truncation Risk";
 
     // nvarchar(N) or varchar(N) with N captured
@@ -47,30 +47,19 @@ public class GCI0050_SqlColumnTruncationRisk : RuleBase
 
         foreach (var file in context.Diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
 
             var ext = Path.GetExtension(file.NewPath).ToLowerInvariant();
-            if (!TargetExtensions.Contains(ext))
-            {
-                continue;
-            }
+            if (!TargetExtensions.Contains(ext)) continue;
 
             // Only fire if the file looks like a migration, schema, or EF model
-            if (!IsMigrationOrSchemaFile(file.NewPath))
-            {
-                continue;
-            }
+            if (!IsMigrationOrSchemaFile(file.NewPath)) continue;
 
             foreach (var line in file.AddedLines)
             {
                 var trimmed = line.Content.TrimStart();
                 if (trimmed.StartsWith("//") || trimmed.StartsWith("--") || trimmed.StartsWith("*"))
-                {
                     continue;
-                }
 
                 if (TryGetShortLength(line.Content, out int length, out string pattern))
                 {
@@ -99,13 +88,13 @@ public class GCI0050_SqlColumnTruncationRisk : RuleBase
             var match = regex.Match(content);
             if (match.Success && int.TryParse(match.Groups[1].Value, out int n) && n < TruncationThreshold)
             {
-                length = n;
+                length  = n;
                 pattern = match.Value.Trim();
                 return true;
             }
         }
 
-        length = 0;
+        length  = 0;
         pattern = string.Empty;
         return false;
     }

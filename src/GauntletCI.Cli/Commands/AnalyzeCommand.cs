@@ -44,7 +44,7 @@ public static class AnalyzeCommand
         var asciiFlag = new Option<bool>("--ascii", "Use ASCII-only output (for terminals without Unicode support)");
         var noBannerOption = new Option<bool>("--no-banner", "Disable ASCII banner");
         var githubAnnotationsFlag = new Option<bool>("--github-annotations", "Emit GitHub Actions workflow commands for inline PR annotations");
-        var githubPrCommentsFlag = new Option<bool>("--github-pr-comments",
+        var githubPrCommentsFlag  = new Option<bool>("--github-pr-comments",
             "Post findings as a GitHub PR review with inline comments (requires pull-requests: write permission)");
         var withExpertCtxFlag = new Option<bool>("--with-expert-context",
             "Attach matching expert facts from the local vector store to findings (requires 'gauntletci llm seed')");
@@ -98,36 +98,36 @@ public static class AnalyzeCommand
 
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
         {
-            var diffFile = ctx.ParseResult.GetValueForOption(diffOption);
-            var commit = ctx.ParseResult.GetValueForOption(commitOption);
-            var staged = ctx.ParseResult.GetValueForOption(stagedFlag);
-            var unstaged = ctx.ParseResult.GetValueForOption(unstagedFlag);
+            var diffFile   = ctx.ParseResult.GetValueForOption(diffOption);
+            var commit     = ctx.ParseResult.GetValueForOption(commitOption);
+            var staged     = ctx.ParseResult.GetValueForOption(stagedFlag);
+            var unstaged   = ctx.ParseResult.GetValueForOption(unstagedFlag);
             var allChanges = ctx.ParseResult.GetValueForOption(allChangesFlag);
-            var repo = ctx.ParseResult.GetValueForOption(repoOption)!;
-            var output = ctx.ParseResult.GetValueForOption(outputOption)!;
-            var noLlm = ctx.ParseResult.GetValueForOption(noLlmFlag);
-            var withLlm = ctx.ParseResult.GetValueForOption(withLlmFlag);
-            var ascii = ctx.ParseResult.GetValueForOption(asciiFlag);
-            var noBanner = ctx.ParseResult.GetValueForOption(noBannerOption);
-            var ghAnnotate = ctx.ParseResult.GetValueForOption(githubAnnotationsFlag);
-            var ghPrComments = ctx.ParseResult.GetValueForOption(githubPrCommentsFlag);
+            var repo       = ctx.ParseResult.GetValueForOption(repoOption)!;
+            var output     = ctx.ParseResult.GetValueForOption(outputOption)!;
+            var noLlm      = ctx.ParseResult.GetValueForOption(noLlmFlag);
+            var withLlm    = ctx.ParseResult.GetValueForOption(withLlmFlag);
+            var ascii      = ctx.ParseResult.GetValueForOption(asciiFlag);
+            var noBanner   = ctx.ParseResult.GetValueForOption(noBannerOption);
+            var ghAnnotate    = ctx.ParseResult.GetValueForOption(githubAnnotationsFlag);
+            var ghPrComments  = ctx.ParseResult.GetValueForOption(githubPrCommentsFlag);
             var withExpertCtx = ctx.ParseResult.GetValueForOption(withExpertCtxFlag);
-            var verbose = ctx.ParseResult.GetValueForOption(verboseFlag);
+            var verbose    = ctx.ParseResult.GetValueForOption(verboseFlag);
             var severityStr = ctx.ParseResult.GetValueForOption(severityOption)!;
             var sensitivityStr = ctx.ParseResult.GetValueForOption(sensitivityOption)!;
             var noBaseline = ctx.ParseResult.GetValueForOption(noBaselineFlag);
             var showContext = ctx.ParseResult.GetValueForOption(showContextOption);
             var prCommentSuggest = ctx.ParseResult.GetValueForOption(prCommentSuggestFlag);
-            var withCoverage = ctx.ParseResult.GetValueForOption(withCoverageFlag);
-            var githubChecks = ctx.ParseResult.GetValueForOption(githubChecksFlag);
+            var withCoverage  = ctx.ParseResult.GetValueForOption(withCoverageFlag);
+            var githubChecks  = ctx.ParseResult.GetValueForOption(githubChecksFlag);
             var withTicketCtx = ctx.ParseResult.GetValueForOption(withTicketCtxFlag);
-            var notifySlack = ctx.ParseResult.GetValueForOption(notifySlackOption);
-            var notifyTeams = ctx.ParseResult.GetValueForOption(notifyTeamsOption);
+            var notifySlack   = ctx.ParseResult.GetValueForOption(notifySlackOption);
+            var notifyTeams   = ctx.ParseResult.GetValueForOption(notifyTeamsOption);
             var ct = ctx.GetCancellationToken();
 
             // Infer output format from filename if needed (e.g., --output report.html -> html format, save to file)
             string? outputFile = null;
-            if (!string.IsNullOrEmpty(output) && output.Contains('.') &&
+            if (!string.IsNullOrEmpty(output) && output.Contains('.') && 
                 (output.EndsWith(".json", StringComparison.OrdinalIgnoreCase) ||
                  output.EndsWith(".html", StringComparison.OrdinalIgnoreCase) ||
                  output.EndsWith(".sarif", StringComparison.OrdinalIgnoreCase)))
@@ -138,10 +138,10 @@ public static class AnalyzeCommand
 
             // Enforce single diff source
             int sourceCount = (diffFile is not null ? 1 : 0)
-                            + (commit is not null ? 1 : 0)
-                            + (staged ? 1 : 0)
-                            + (unstaged ? 1 : 0)
-                            + (allChanges ? 1 : 0);
+                            + (commit    is not null ? 1 : 0)
+                            + (staged      ? 1 : 0)
+                            + (unstaged    ? 1 : 0)
+                            + (allChanges  ? 1 : 0);
             if (sourceCount > 1)
             {
                 Console.Error.WriteLine("[GauntletCI] Error: multiple diff sources specified. Use exactly one of: --diff, --commit, --staged, --unstaged, --all-changes.");
@@ -168,8 +168,8 @@ public static class AnalyzeCommand
             try
             {
                 var config = ConfigLoader.Load(repo.FullName);
-                config.Ci ??= new();
-                config.Output ??= new();
+                config.Ci            ??= new();
+                config.Output        ??= new();
                 config.Notifications ??= new();
                 config.TicketProvider ??= new();
 
@@ -186,45 +186,28 @@ public static class AnalyzeCommand
                                     : DiffParser.Parse(await Console.In.ReadToEndAsync(ct));
 
                 // Merge config defaults: CLI value wins when explicitly passed; config fills in the rest.
-                withLlm = withLlm || (config.Llm?.Enabled == true);
+                withLlm       = withLlm       || (config.Llm?.Enabled      == true);
                 withExpertCtx = withExpertCtx || (config.Llm?.ExpertContext == true);
                 if (ctx.ParseResult.FindResultFor(withTicketCtxFlag) is null)
-                {
                     withTicketCtx = config.TicketProvider.Enabled;
-                }
-
                 if (ctx.ParseResult.FindResultFor(githubPrCommentsFlag) is null)
-                {
                     ghPrComments = config.Ci.PrComments;
-                }
-
                 if (ctx.ParseResult.FindResultFor(githubAnnotationsFlag) is null)
-                {
                     ghAnnotate = config.Ci.Annotations;
-                }
-
                 if (ctx.ParseResult.FindResultFor(githubChecksFlag) is null)
-                {
                     githubChecks = config.Ci.Checks;
-                }
-
                 if (ctx.ParseResult.FindResultFor(withCoverageFlag) is null)
-                {
                     withCoverage = config.Ci.Coverage;
-                }
-
                 if (ctx.ParseResult.FindResultFor(verboseFlag) is null)
-                {
                     verbose = config.Output.Verbose;
-                }
 
                 // Remote subscription check -- only when a licensed feature is in use.
                 // Fires once per 24h (cached). Fails open if the network is unreachable.
                 bool usingLicensedFeature = withLlm || withExpertCtx || ghPrComments || githubChecks;
                 if (usingLicensedFeature)
                 {
-                    var envVar = config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE";
-                    var rawToken = GauntletCI.Core.Licensing.LicenseService.ReadRawToken(envVar);
+                    var envVar    = config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE";
+                    var rawToken  = GauntletCI.Core.Licensing.LicenseService.ReadRawToken(envVar);
                     if (rawToken is not null)
                     {
                         var (netValid, netReason) = await GauntletCI.Cli.Licensing.NetworkLicenseValidator
@@ -242,21 +225,15 @@ public static class AnalyzeCommand
 
                 // Severity: only apply config value if user did not explicitly pass --severity
                 if (ctx.ParseResult.FindResultFor(severityOption) is null)
-                {
                     severityStr = config.Output.MinSeverity;
-                }
 
                 // Sensitivity: only apply config value if user did not explicitly pass --sensitivity
                 if (ctx.ParseResult.FindResultFor(sensitivityOption) is null && !string.IsNullOrEmpty(config.Output.Sensitivity))
-                {
                     sensitivityStr = config.Output.Sensitivity;
-                }
 
                 // Output format: resolved before banner so the correct writer is selected
                 if (ctx.ParseResult.FindResultFor(outputOption) is null && config.Output.Format != "text")
-                {
                     output = config.Output.Format;
-                }
 
                 CliBanner.PrintIfEnabled(new BannerContext
                 {
@@ -289,7 +266,7 @@ public static class AnalyzeCommand
                     // Enrichment failures should not break analysis - log and continue
                     Console.Error.WriteLine($"[enrichment] Pipeline failed: {ex.Message}");
                 }
-
+                
                 // Ensure result is not null (it shouldn't be, but satisfy the compiler)
                 if (result == null)
                 {
@@ -336,10 +313,10 @@ public static class AnalyzeCommand
 
                 using ILlmEngine llm = await LlmEngineSelector.ResolveAsync(config, withLlm && !noLlm);
 
-                var isJsonOutput = (output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase);
-                var isHtmlOutput = (output ?? "text").Equals("html", StringComparison.OrdinalIgnoreCase);
+                var isJsonOutput  = (output ?? "text").Equals("json", StringComparison.OrdinalIgnoreCase);
+                var isHtmlOutput  = (output ?? "text").Equals("html", StringComparison.OrdinalIgnoreCase);
                 var isSarifOutput = (output ?? "text").Equals("sarif", StringComparison.OrdinalIgnoreCase);
-                var showSpinner = llm.IsAvailable && !isJsonOutput && !isHtmlOutput && !isSarifOutput && !Console.IsOutputRedirected;
+                var showSpinner   = llm.IsAvailable && !isJsonOutput && !isHtmlOutput && !isSarifOutput && !Console.IsOutputRedirected;
 
                 async Task RunLlmStepsAsync(Action<string>? setStatus = null)
                 {
@@ -357,9 +334,7 @@ public static class AnalyzeCommand
                             {
                                 var ticketNote = await EnrichWithTicketContextAsync(llm, finding, ct);
                                 if (!string.IsNullOrWhiteSpace(ticketNote))
-                                {
                                     finding.LlmExplanation = $"{finding.LlmExplanation} | Ticket: {ticketNote}";
-                                }
                             }
                         }
                     }
@@ -373,11 +348,11 @@ public static class AnalyzeCommand
                         if (File.Exists(vectorDbPath))
                         {
                             setStatus("Adding context...");
-                            using var store = new GauntletCI.Llm.Embeddings.VectorStore(vectorDbPath);
-                            var embedUrl = config.Llm?.EmbeddingOllamaUrl ?? "http://localhost:11434";
-                            var embedModel = config.Llm?.Model ?? LlmDefaults.OllamaModel;
+                            using var store    = new GauntletCI.Llm.Embeddings.VectorStore(vectorDbPath);
+                            var embedUrl       = config.Llm?.EmbeddingOllamaUrl ?? "http://localhost:11434";
+                            var embedModel     = config.Llm?.Model ?? LlmDefaults.OllamaModel;
                             using var embedEng = new GauntletCI.Llm.Embeddings.OllamaEmbeddingEngine(embedModel, embedUrl);
-                            var adjudicator = new GauntletCI.Llm.Embeddings.LlmAdjudicator(embedEng, store);
+                            var adjudicator    = new GauntletCI.Llm.Embeddings.LlmAdjudicator(embedEng, store);
                             await adjudicator.AdjudicateAsync(result.Findings, ct);
                         }
                     }
@@ -386,8 +361,8 @@ public static class AnalyzeCommand
                     if (config.Experimental.EngineeringPolicy.Enabled && llm.IsAvailable)
                     {
                         setStatus("Checking standards...");
-                        var policyPath = Path.Combine(repo.FullName, config.Experimental.EngineeringPolicy.Path);
-                        var license = LicenseService.Load(config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE");
+                        var policyPath  = Path.Combine(repo.FullName, config.Experimental.EngineeringPolicy.Path);
+                        var license    = LicenseService.Load(config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE");
                         var isLicensed = license.IsLicensed;
                         var policyFindings = await EngineeringPolicyEvaluator.EvaluateAsync(
                             diff, policyPath, llm, isLicensed,
@@ -398,22 +373,16 @@ public static class AnalyzeCommand
                 }
 
                 if (showSpinner)
-                {
                     await AnsiConsole.Status()
                         .Spinner(Spinner.Known.Dots)
                         .SpinnerStyle(Style.Parse("cyan dim"))
                         .StartAsync("Thinking...", async sc =>
                             await RunLlmStepsAsync(s => sc.Status = s));
-                }
                 else
-                {
                     await RunLlmStepsAsync();
-                }
 
                 if (withCoverage)
-                {
                     await CoverageCorrelator.AnnotateAsync(result, ct);
-                }
 
                 sw.Stop();
 
@@ -429,7 +398,7 @@ public static class AnalyzeCommand
                         {
                             Directory.CreateDirectory(outputDir);
                         }
-
+                        
                         fileWriter = new StreamWriter(File.Create(outputFile), System.Text.Encoding.UTF8);
                         // Temporarily replace Console.Out
                         var originalOut = Console.Out;
@@ -529,27 +498,19 @@ public static class AnalyzeCommand
                 }
 
                 if (ghAnnotate)
-                {
                     GitHubAnnotationWriter.Write(result);
-                }
 
                 // Skip posting to GitHub API when --pr-comment-suggest is active (it acts as a dry-run)
                 if (ghPrComments && !prCommentSuggest)
-                {
                     await GitHubPrReviewWriter.WriteAsync(result, ctx.GetCancellationToken());
-                }
 
                 if (githubChecks)
-                {
                     await GitHubChecksWriter.WriteAsync(result, ct);
-                }
 
                 var slackUrl = notifySlack ?? Environment.GetEnvironmentVariable("GAUNTLETCI_SLACK_WEBHOOK");
                 var teamsUrl = notifyTeams ?? Environment.GetEnvironmentVariable("GAUNTLETCI_TEAMS_WEBHOOK");
                 if (slackUrl is not null || teamsUrl is not null)
-                {
                     await SlackTeamsNotifier.NotifyAsync(result, slackUrl, teamsUrl, ct);
-                }
 
                 await TelemetryCollector.CollectAsync(result, diff, repo.FullName, ct: ct);
 
@@ -563,14 +524,14 @@ public static class AnalyzeCommand
 
                 await AuditLog.AppendAsync(new AuditLogEntry
                 {
-                    RepoPath = repo.FullName,
-                    CommitSha = result.CommitSha,
-                    DiffSource = diffSource,
-                    FilesChanged = result.FileStatistics.TotalFiles,
-                    FilesEligible = result.FileStatistics.EligibleFiles,
+                    RepoPath       = repo.FullName,
+                    CommitSha      = result.CommitSha,
+                    DiffSource     = diffSource,
+                    FilesChanged   = result.FileStatistics.TotalFiles,
+                    FilesEligible  = result.FileStatistics.EligibleFiles,
                     RulesEvaluated = result.RulesEvaluated,
-                    FindingCount = result.Findings.Count,
-                    Findings = [.. result.Findings.Select(f => new AuditFinding
+                    FindingCount   = result.Findings.Count,
+                    Findings       = [.. result.Findings.Select(f => new AuditFinding
                     {
                         RuleId     = f.RuleId,
                         RuleName   = f.RuleName,
@@ -597,16 +558,16 @@ public static class AnalyzeCommand
         s.ToLowerInvariant() switch
         {
             "block" => GauntletCI.Core.Model.RuleSeverity.Block,
-            "info" => GauntletCI.Core.Model.RuleSeverity.Info,
-            _ => GauntletCI.Core.Model.RuleSeverity.Warn,
+            "info"  => GauntletCI.Core.Model.RuleSeverity.Info,
+            _       => GauntletCI.Core.Model.RuleSeverity.Warn,
         };
 
     private static GauntletCI.Core.Model.SensitivityThreshold ParseSensitivity(string s) =>
         s.ToLowerInvariant() switch
         {
-            "strict" => GauntletCI.Core.Model.SensitivityThreshold.Strict,
+            "strict"     => GauntletCI.Core.Model.SensitivityThreshold.Strict,
             "permissive" => GauntletCI.Core.Model.SensitivityThreshold.Permissive,
-            _ => GauntletCI.Core.Model.SensitivityThreshold.Balanced,
+            _            => GauntletCI.Core.Model.SensitivityThreshold.Balanced,
         };
 
     private static bool ShouldBlockWithSensitivity(EvaluationResult result, string? exitOn, GauntletCI.Core.Model.SensitivityThreshold sensitivity)

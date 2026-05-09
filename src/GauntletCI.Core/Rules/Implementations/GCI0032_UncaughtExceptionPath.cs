@@ -39,7 +39,7 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
                          !l.Content.Contains("throw new NotImplementedException", StringComparison.Ordinal) &&
                          !WellKnownPatterns.ExceptionPatterns.GuardClauseThrows.Any(g => l.Content.Contains(g, StringComparison.Ordinal))))
             .ToList();
-
+        
         if (nonTestFilesWithThrows.Any())
         {
             // Only non-removed lines: a deleted assertion is evidence that coverage was removed, not added.
@@ -61,7 +61,7 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
                     .Count(l => l.Content.Contains("throw new", StringComparison.Ordinal) &&
                                !l.Content.Contains("throw new NotImplementedException", StringComparison.Ordinal) &&
                                !WellKnownPatterns.ExceptionPatterns.GuardClauseThrows.Any(g => l.Content.Contains(g, StringComparison.Ordinal)));
-
+                
                 // Attribute to the first file with throws
                 findings.Add(CreateFinding(
                     nonTestFilesWithThrows[0],
@@ -78,7 +78,7 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
             .Where(f => !f.AddedLines.Any(l => WellKnownPatterns.HasMockPattern(l.Content))) // Skip test mocks
             .Where(f => CountEmptyCatchesInFile(f) > 0)
             .ToList();
-
+        
         if (filesWithEmptyCatches.Any())
         {
             var totalEmptyCatches = filesWithEmptyCatches.Sum(f => CountEmptyCatchesInFile(f));
@@ -121,10 +121,7 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
         for (int i = 0; i < lines.Count; i++)
         {
             var trimmed = lines[i].Trim();
-            if (!StartsWithCatchKeyword(trimmed))
-            {
-                continue;
-            }
+            if (!StartsWithCatchKeyword(trimmed)) continue;
 
             // Single-line: catch { } or catch (Exception ex) { }
             if (IsSingleLineEmptyCatch(trimmed))
@@ -135,9 +132,7 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
 
             // Multi-line: scan the catch block body for non-comment content
             if (IsMultiLineEmptyCatch(lines, i))
-            {
                 count++;
-            }
         }
         return count;
     }
@@ -146,24 +141,7 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
     {
         // Handle "catch (...)", "} catch (...)", and bare "catch"
         int idx = trimmed.IndexOf("catch", StringComparison.Ordinal);
-        if (idx < 0)
-        {
-            return false;
-        }
-
-        bool prevOk = idx == 0 || (!char.IsLetterOrDigit(trimmed[idx - 1]) && trimmed[idx - 1] != '_');
-        int nextIdx = idx + 5;
-        bool nextOk = nextIdx >= trimmed.Length || (!char.IsLetterOrDigit(trimmed[nextIdx]) && trimmed[nextIdx] != '_');
-        return prevOk && nextOk;
-    }
-
-    private static bool IsTestWord(string trimmed)
-    {
-        int idx = trimmed.IndexOf("test", StringComparison.OrdinalIgnoreCase);
-        if (idx < 0)
-        {
-            return false;
-        }
+        if (idx < 0) return false;
         bool prevOk = idx == 0 || (!char.IsLetterOrDigit(trimmed[idx - 1]) && trimmed[idx - 1] != '_');
         int nextIdx = idx + 5;
         bool nextOk = nextIdx >= trimmed.Length || (!char.IsLetterOrDigit(trimmed[nextIdx]) && trimmed[nextIdx] != '_');
@@ -175,16 +153,10 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
     {
         int openBrace = trimmed.IndexOf('{');
         int closeBrace = trimmed.LastIndexOf('}');
-        if (openBrace < 0 || closeBrace <= openBrace)
-        {
-            return false;
-        }
+        if (openBrace < 0 || closeBrace <= openBrace) return false;
 
         var body = trimmed[(openBrace + 1)..closeBrace].Trim();
-        if (body.Length == 0)
-        {
-            return true;
-        }
+        if (body.Length == 0) return true;
 
         // Body is only a comment
         return body.StartsWith("//") || body.StartsWith("/*") || body.StartsWith("*");
@@ -203,22 +175,13 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
             if (!inBlock)
             {
                 // The catch declaration line opens the block; skip it as content.
-                if (trimmed.Contains('{'))
-                {
-                    inBlock = true;
-                }
+                if (trimmed.Contains('{')) inBlock = true;
                 continue;
             }
 
             // Inside the catch block body.
-            if (trimmed == "}" || trimmed.Length == 0)
-            {
-                continue;
-            }
-            if (trimmed.StartsWith("//") || trimmed.StartsWith("/*") || trimmed.StartsWith("*"))
-            {
-                continue;
-            }
+            if (trimmed == "}" || trimmed.Length == 0) continue;
+            if (trimmed.StartsWith("//") || trimmed.StartsWith("/*") || trimmed.StartsWith("*")) continue;
 
             hasNonCommentContent = true;
             break;

@@ -81,10 +81,7 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
                 ct.ThrowIfCancellationRequested();
                 var nodes = await QueryAdvisoriesAsync(pkg, ct).ConfigureAwait(false);
                 advisories.AddRange(nodes);
-                if (delayMs > 0)
-                {
-                    await Task.Delay(delayMs, ct).ConfigureAwait(false);
-                }
+                if (delayMs > 0) await Task.Delay(delayMs, ct).ConfigureAwait(false);
             }
 
             // Determine highest severity
@@ -120,41 +117,33 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
     public static IReadOnlyList<string> ExtractPackageNames(string diffPath)
     {
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var inCsproj = false;
-        var inLockFile = false;
+        var inCsproj    = false;
+        var inLockFile  = false;
 
         foreach (var line in File.ReadLines(diffPath))
         {
             if (line.StartsWith("+++ b/", StringComparison.Ordinal))
             {
                 var path = line[6..].ToLowerInvariant();
-                inCsproj = path.EndsWith(".csproj", StringComparison.Ordinal);
+                inCsproj   = path.EndsWith(".csproj", StringComparison.Ordinal);
                 inLockFile = path.EndsWith("packages.lock.json", StringComparison.Ordinal);
                 continue;
             }
 
             if (!line.StartsWith("+", StringComparison.Ordinal) || line.StartsWith("+++", StringComparison.Ordinal))
-            {
                 continue;
-            }
 
             var added = line[1..];
 
             if (inCsproj)
             {
                 var m = CsprojPackageRegex.Match(added);
-                if (m.Success)
-                {
-                    names.Add(m.Groups[1].Value);
-                }
+                if (m.Success) names.Add(m.Groups[1].Value);
             }
             else if (inLockFile)
             {
                 var m = LockFilePackageRegex.Match(added);
-                if (m.Success)
-                {
-                    names.Add(m.Groups[1].Value);
-                }
+                if (m.Success) names.Add(m.Groups[1].Value);
             }
         }
 
@@ -175,55 +164,28 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
             }
             """;
 
-        var payload = JsonSerializer.Serialize(new
-        {
-            query,
-            variables = new
-            {
-                pkg = packageName
-            }
-        });
+        var payload = JsonSerializer.Serialize(new { query, variables = new { pkg = packageName } });
         using var content = new StringContent(payload, Encoding.UTF8, "application/json");
 
         try
         {
             using var resp = await _http.PostAsync("https://api.github.com/graphql", content, ct).ConfigureAwait(false);
-            if (!resp.IsSuccessStatusCode)
-            {
-                return [];
-            }
+            if (!resp.IsSuccessStatusCode) return [];
 
             await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
 
-            if (!doc.RootElement.TryGetProperty("data", out var data))
-            {
-                return [];
-            }
-
-            if (!data.TryGetProperty("securityVulnerabilities", out var sv))
-            {
-                return [];
-            }
-
-            if (!sv.TryGetProperty("nodes", out var nodes))
-            {
-                return [];
-            }
-
-            if (nodes.ValueKind != JsonValueKind.Array)
-            {
-                return [];
-            }
+            if (!doc.RootElement.TryGetProperty("data", out var data)) return [];
+            if (!data.TryGetProperty("securityVulnerabilities", out var sv)) return [];
+            if (!sv.TryGetProperty("nodes", out var nodes)) return [];
+            if (nodes.ValueKind != JsonValueKind.Array) return [];
 
             var list = new List<object>();
             foreach (var node in nodes.EnumerateArray())
             {
                 var obj = JsonSerializer.Deserialize<object>(node.GetRawText());
                 if (obj is not null)
-                {
                     list.Add(obj);
-                }
             }
             return list;
         }
@@ -239,9 +201,7 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
             using var doc = JsonDocument.Parse(json);
             if (doc.RootElement.TryGetProperty("advisory", out var adv) &&
                 adv.TryGetProperty("severity", out var sev))
-            {
                 return sev.GetString()?.ToUpperInvariant();
-            }
         }
         catch { }
         return null;
@@ -261,12 +221,12 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
                 ($fixtureId, $repo, $packagesChecked, $advisoryCount,
                  $highestSeverity, $advisoriesJson, datetime('now'))
             """;
-        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
-        cmd.Parameters.AddWithValue("$repo", repo);
-        cmd.Parameters.AddWithValue("$packagesChecked", packagesChecked);
-        cmd.Parameters.AddWithValue("$advisoryCount", advisoryCount);
-        cmd.Parameters.AddWithValue("$highestSeverity", (object?)highestSeverity ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("$advisoriesJson", advisoriesJson);
+        cmd.Parameters.AddWithValue("$fixtureId",       fixtureId);
+        cmd.Parameters.AddWithValue("$repo",             repo);
+        cmd.Parameters.AddWithValue("$packagesChecked",  packagesChecked);
+        cmd.Parameters.AddWithValue("$advisoryCount",    advisoryCount);
+        cmd.Parameters.AddWithValue("$highestSeverity",  (object?)highestSeverity ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$advisoriesJson",   advisoriesJson);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }

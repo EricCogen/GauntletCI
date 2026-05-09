@@ -27,9 +27,9 @@ internal static class RuleTestExtensions
         string? targetFramework = null,
         SyntaxContext? syntax = null)
     {
-        var allRecords = diff.Files.Select(f => FileAnalyzer.Analyze(f)).ToList();
+        var allRecords      = diff.Files.Select(f => FileAnalyzer.Analyze(f)).ToList();
         var eligibleRecords = allRecords.Where(r => r.IsEligible).ToList();
-        var skippedRecords = allRecords.Where(r => !r.IsEligible).ToList();
+        var skippedRecords  = allRecords.Where(r => !r.IsEligible).ToList();
 
         var eligiblePaths = eligibleRecords
             .Select(r => r.FilePath)
@@ -37,20 +37,20 @@ internal static class RuleTestExtensions
 
         var filteredDiff = new DiffContext
         {
-            RawDiff = diff.RawDiff,
-            CommitSha = diff.CommitSha,
+            RawDiff       = diff.RawDiff,
+            CommitSha     = diff.CommitSha,
             CommitMessage = diff.CommitMessage,
-            Files = diff.Files.Where(f => eligiblePaths.Contains(f.NewPath)).ToList(),
+            Files         = diff.Files.Where(f => eligiblePaths.Contains(f.NewPath)).ToList(),
         };
 
         var context = new AnalysisContext
         {
-            EligibleFiles = eligibleRecords,
-            SkippedFiles = skippedRecords,
-            FileStatistics = FileEligibilityStatistics.From(allRecords),
-            Diff = filteredDiff,
-            StaticAnalysis = staticAnalysis,
-            Syntax = syntax ?? staticAnalysis?.Syntax,
+            EligibleFiles   = eligibleRecords,
+            SkippedFiles    = skippedRecords,
+            FileStatistics  = FileEligibilityStatistics.From(allRecords),
+            Diff            = filteredDiff,
+            StaticAnalysis  = staticAnalysis,
+            Syntax          = syntax ?? staticAnalysis?.Syntax,
             TargetFramework = targetFramework ?? staticAnalysis?.TargetFramework,
         };
 

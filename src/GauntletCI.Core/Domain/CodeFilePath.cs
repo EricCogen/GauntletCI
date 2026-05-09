@@ -9,10 +9,7 @@ namespace GauntletCI.Core.Domain;
 public readonly record struct CodeFilePath : IEquatable<CodeFilePath>, IComparable<CodeFilePath>
 {
     /// <summary>Gets the normalized file path (using forward slashes).</summary>
-    public string Value
-    {
-        get;
-    }
+    public string Value { get; }
 
     /// <summary>Gets the file name without directory (e.g., "file.cs").</summary>
     public string FileName => Path.GetFileName(Value);
@@ -40,9 +37,7 @@ public readonly record struct CodeFilePath : IEquatable<CodeFilePath>, IComparab
     private CodeFilePath(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-        {
             throw new ArgumentException("File path cannot be null, empty, or whitespace.", nameof(value));
-        }
 
         // Normalize path separators to forward slashes
         Value = value.Replace('\\', '/');
@@ -56,9 +51,7 @@ public readonly record struct CodeFilePath : IEquatable<CodeFilePath>, IComparab
     {
         result = default;
         if (string.IsNullOrWhiteSpace(value))
-        {
             return false;
-        }
 
         result = new CodeFilePath(value);
         return true;
@@ -71,10 +64,7 @@ public readonly record struct CodeFilePath : IEquatable<CodeFilePath>, IComparab
     public static CodeFilePath Parse(string value)
     {
         if (!TryParse(value, out var result))
-        {
             throw new ArgumentException("File path cannot be null, empty, or whitespace.", nameof(value));
-        }
-
         return result;
     }
 

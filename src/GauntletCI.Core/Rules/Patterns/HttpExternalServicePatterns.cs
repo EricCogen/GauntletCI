@@ -51,7 +51,7 @@ internal static class HttpExternalServicePatterns
             l.Content.Contains("GrpcChannel", StringComparison.Ordinal)
             || l.Content.Contains("ChannelOptions", StringComparison.Ordinal)
             || l.Content.Contains("GrpcChannelOptions", StringComparison.Ordinal))
-            || addedLines.Any(l =>
+            || addedLines.Any(l => 
                 l.Content.Contains("HttpClientHandler", StringComparison.Ordinal)
                 && addedLines.Any(hl => hl.Content.Contains("GrpcChannel", StringComparison.Ordinal)));
     }

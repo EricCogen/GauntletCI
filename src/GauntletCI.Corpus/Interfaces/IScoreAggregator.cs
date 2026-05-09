@@ -19,11 +19,11 @@ public sealed record RuleScorecard(
     double AvgUsefulness,
     string Notes,
     // classification breakdown
-    int TruePositives = 0,
+    int TruePositives  = 0,
     int FalsePositives = 0,
     int FalseNegatives = 0,
-    int TrueNegatives = 0,
-    int Unknown = 0  // fired but no label
+    int TrueNegatives  = 0,
+    int Unknown        = 0  // fired but no label
 );
 
 public interface IScoreAggregator

@@ -58,9 +58,9 @@ public class TelemetryConsentTests
         bool? optedIn = true;
         var migratedMode = optedIn switch
         {
-            true => "shared",
+            true  => "shared",
             false => "off",
-            null => null,
+            null  => null,
         };
         Assert.Equal("shared", migratedMode);
     }
@@ -71,9 +71,9 @@ public class TelemetryConsentTests
         bool? optedIn = false;
         var migratedMode = optedIn switch
         {
-            true => "shared",
+            true  => "shared",
             false => "off",
-            null => null,
+            null  => null,
         };
         Assert.Equal("off", migratedMode);
     }
@@ -84,9 +84,9 @@ public class TelemetryConsentTests
         bool? optedIn = null;
         var migratedMode = optedIn switch
         {
-            true => "shared",
+            true  => "shared",
             false => "off",
-            null => null,
+            null  => null,
         };
         Assert.Null(migratedMode);
     }

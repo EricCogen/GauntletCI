@@ -40,15 +40,8 @@ public class GCI0004_BreakingChangeRisk : RuleBase
 
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath ?? file.OldPath ?? ""))
-            {
-                continue;
-            }
-
-            if (WellKnownPatterns.IsGeneratedFile(file.NewPath ?? file.OldPath ?? ""))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.IsTestFile(file.NewPath ?? file.OldPath ?? "")) continue;
+            if (WellKnownPatterns.IsGeneratedFile(file.NewPath ?? file.OldPath ?? "")) continue;
 
             var obsoleteAdded = file.AddedLines
                 .Where(l => !WellKnownPatterns.HasInternalMarker(l.Content)) // Skip internal/private APIs
@@ -56,15 +49,10 @@ public class GCI0004_BreakingChangeRisk : RuleBase
                 .ToList();
 
             if (obsoleteAdded.Count > 0)
-            {
                 hits.Add((file, obsoleteAdded));
-            }
         }
 
-        if (hits.Count == 0)
-        {
-            return;
-        }
+        if (hits.Count == 0) return;
 
         if (hits.Count <= 3)
         {
@@ -96,15 +84,8 @@ public class GCI0004_BreakingChangeRisk : RuleBase
     {
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath ?? file.OldPath ?? ""))
-            {
-                continue;
-            }
-
-            if (WellKnownPatterns.IsGeneratedFile(file.NewPath ?? file.OldPath ?? ""))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.IsTestFile(file.NewPath ?? file.OldPath ?? "")) continue;
+            if (WellKnownPatterns.IsGeneratedFile(file.NewPath ?? file.OldPath ?? "")) continue;
 
             var removedObsolete = file.RemovedLines
                 .Where(l => l.Content.Contains("[Obsolete", StringComparison.OrdinalIgnoreCase))

@@ -16,9 +16,7 @@ public sealed class CorpusDb : IDisposable
     {
         var dir = Path.GetDirectoryName(dbPath);
         if (!string.IsNullOrEmpty(dir))
-        {
             Directory.CreateDirectory(dir);
-        }
 
         _connectionString = $"Data Source={dbPath}";
     }
@@ -54,11 +52,11 @@ public sealed class CorpusDb : IDisposable
                 m.CommandText = migration;
                 await m.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception ex) when (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase)
-                                     || ex.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase))
-            {
-                // Idempotent: column or table already exists; safe to ignore
-            }
+        catch (Exception ex) when (ex.Message.Contains("already exists", StringComparison.OrdinalIgnoreCase)
+                                 || ex.Message.Contains("duplicate column", StringComparison.OrdinalIgnoreCase))
+        {
+            // Idempotent: column or table already exists; safe to ignore
+        }
         }
     }
 
@@ -70,7 +68,7 @@ public sealed class CorpusDb : IDisposable
         string? provider = null,
         string? repo = null,
         int? errorCode = null,
-        string? message = null,
+        string message = "",
         CancellationToken cancellationToken = default)
     {
         using var cmd = Connection.CreateCommand();
@@ -78,11 +76,11 @@ public sealed class CorpusDb : IDisposable
             INSERT INTO pipeline_errors (step, provider, repo, error_code, message)
             VALUES ($step, $provider, $repo, $code, $message)
             """;
-        cmd.Parameters.AddWithValue("$step", step);
+        cmd.Parameters.AddWithValue("$step",     step);
         cmd.Parameters.AddWithValue("$provider", (object?)provider ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("$repo", (object?)repo ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("$code", (object?)errorCode ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("$message", message ?? string.Empty);
+        cmd.Parameters.AddWithValue("$repo",     (object?)repo     ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$code",     (object?)errorCode ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$message",  message);
         await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 }

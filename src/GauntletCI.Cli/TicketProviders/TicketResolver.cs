@@ -20,28 +20,16 @@ public static class TicketResolver
     public static (string? Key, string? Provider) DetectIssueKey(string? branchName, string? prBody)
     {
         var text = $"{branchName} {prBody}".Trim();
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return (null, null);
-        }
+        if (string.IsNullOrWhiteSpace(text)) return (null, null);
 
         var jira = JiraKey.Match(text);
-        if (jira.Success)
-        {
-            return (jira.Groups[1].Value, "Jira");
-        }
+        if (jira.Success) return (jira.Groups[1].Value, "Jira");
 
         var linear = LinearKey.Match(text);
-        if (linear.Success)
-        {
-            return (linear.Groups[1].Value, "Linear");
-        }
+        if (linear.Success) return (linear.Groups[1].Value, "Linear");
 
         var gh = GitHubKey.Match(text);
-        if (gh.Success)
-        {
-            return (gh.Groups[1].Value, "GitHub");
-        }
+        if (gh.Success) return (gh.Groups[1].Value, "GitHub");
 
         return (null, null);
     }
@@ -54,10 +42,10 @@ public static class TicketResolver
     {
         return providerName switch
         {
-            "Jira" => new JiraTicketProvider(),
+            "Jira"   => new JiraTicketProvider(),
             "Linear" => new LinearTicketProvider(),
             "GitHub" => new GitHubIssueProvider(),
-            _ => null
+            _        => null
         };
     }
 
@@ -72,10 +60,7 @@ public static class TicketResolver
     {
         var prBody = Environment.GetEnvironmentVariable("GITHUB_PR_BODY");
         var (key, providerName) = DetectIssueKey(branchName, prBody);
-        if (key is null)
-        {
-            return;
-        }
+        if (key is null) return;
 
         var provider = ResolveProvider(providerName);
         if (provider is null || !provider.IsAvailable)
@@ -93,9 +78,7 @@ public static class TicketResolver
                 return;
             }
             foreach (var finding in findings)
-            {
                 finding.TicketContext = ticket;
-            }
         }
         catch (Exception ex)
         {

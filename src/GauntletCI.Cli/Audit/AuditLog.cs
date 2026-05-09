@@ -16,11 +16,7 @@ public static class AuditLog
         ".gauntletci", "audit-log.ndjson");
 
     private static readonly JsonSerializerOptions JsonOpts =
-        new()
-        {
-            WriteIndented = false,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
+        new() { WriteIndented = false, PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
 
     private static readonly SemaphoreSlim _guard = new(1, 1);
 
@@ -52,33 +48,21 @@ public static class AuditLog
     public static async Task<IReadOnlyList<AuditLogEntry>> LoadAllAsync(CancellationToken ct = default)
     {
         if (!File.Exists(LogPath))
-        {
             return [];
-        }
 
         var lines = new List<string>();
         using var reader = new StreamReader(LogPath);
         string? readLine;
         while ((readLine = await reader.ReadLineAsync(ct).ConfigureAwait(false)) != null)
-        {
             lines.Add(readLine);
-        }
-
         var entries = new List<AuditLogEntry>(lines.Count);
         foreach (var line in lines)
         {
-            if (string.IsNullOrWhiteSpace(line))
-            {
-                continue;
-            }
-
+            if (string.IsNullOrWhiteSpace(line)) continue;
             try
             {
                 var entry = JsonSerializer.Deserialize<AuditLogEntry>(line, JsonOpts);
-                if (entry is not null)
-                {
-                    entries.Add(entry);
-                }
+                if (entry is not null) entries.Add(entry);
             }
             catch { /* skip malformed lines */ }
         }

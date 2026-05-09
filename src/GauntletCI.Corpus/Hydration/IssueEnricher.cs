@@ -44,20 +44,11 @@ public sealed class IssueEnricher : IDisposable
         http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
         http.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
         if (!string.IsNullOrEmpty(token))
-        {
             http.DefaultRequestHeaders.Add("Authorization", $"token {token}");
-        }
-
         return new IssueEnricher(http, ownsClient: true);
     }
 
-    public void Dispose()
-    {
-        if (_ownsClient)
-        {
-            _http.Dispose();
-        }
-    }
+    public void Dispose() { if (_ownsClient) _http.Dispose(); }
 
     /// <summary>
     /// Parses issue references from <paramref name="prBody"/>, fetches each referenced issue from GitHub,
@@ -76,15 +67,10 @@ public sealed class IssueEnricher : IDisposable
         CancellationToken ct = default)
     {
         if (!GitHubTokenResolver.IsAvailable)
-        {
             return 0;
-        }
 
         var refs = ParseBodyRefs(owner, repo, prBody);
-        if (refs.Count == 0)
-        {
-            return 0;
-        }
+        if (refs.Count == 0) return 0;
 
         int linked = 0;
         foreach (var (issueOwner, issueRepo, issueNumber) in refs)
@@ -92,11 +78,7 @@ public sealed class IssueEnricher : IDisposable
             try
             {
                 var issue = await FetchIssueAsync(issueOwner, issueRepo, issueNumber, ct).ConfigureAwait(false);
-                if (issue is null)
-                {
-                    continue;
-                }
-
+                if (issue is null) continue;
                 await UpsertIssueAsync(db, issue, ct).ConfigureAwait(false);
                 await LinkToFixtureAsync(db, fixtureId, issue.Id, "pr-body-ref", ct).ConfigureAwait(false);
                 linked++;
@@ -119,40 +101,24 @@ public sealed class IssueEnricher : IDisposable
     public static List<(string Owner, string Repo, int Number)> ParseBodyRefs(
         string defaultOwner, string defaultRepo, string body)
     {
-        if (string.IsNullOrWhiteSpace(body))
-        {
-            return [];
-        }
-
+        if (string.IsNullOrWhiteSpace(body)) return [];
         var results = new List<(string, string, int)>();
         var seen = new HashSet<string>();
 
         foreach (Match m in IssueRefRegex.Matches(body))
         {
-            if (!int.TryParse(m.Groups[2].Value, out var num))
-            {
-                continue;
-            }
-
+            if (!int.TryParse(m.Groups[2].Value, out var num)) continue;
             var repoRef = m.Groups[1].Value;
             string issOwner, issRepo;
             if (!string.IsNullOrEmpty(repoRef))
             {
                 var parts = repoRef.Split('/');
-                issOwner = parts[0];
-                issRepo = parts[1];
+                issOwner = parts[0]; issRepo = parts[1];
             }
-            else
-            {
-                issOwner = defaultOwner;
-                issRepo = defaultRepo;
-            }
+            else { issOwner = defaultOwner; issRepo = defaultRepo; }
 
             var key = $"{issOwner}/{issRepo}#{num}";
-            if (seen.Add(key))
-            {
-                results.Add((issOwner, issRepo, num));
-            }
+            if (seen.Add(key)) results.Add((issOwner, issRepo, num));
         }
         return results;
     }
@@ -162,35 +128,25 @@ public sealed class IssueEnricher : IDisposable
     {
         var url = $"https://api.github.com/repos/{owner}/{repo}/issues/{number}";
         using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
-        if (!resp.IsSuccessStatusCode)
-        {
-            return null;
-        }
-
+        if (!resp.IsSuccessStatusCode) return null;
         var json = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
         var gh = JsonSerializer.Deserialize<GhIssue>(json, JsonOpts);
-        if (gh is null)
-        {
-            return null;
-        }
+        if (gh is null) return null;
         // Skip if it's actually a PR (GitHub issues API returns PRs too)
-        if (gh.PullRequest is not null)
-        {
-            return null;
-        }
+        if (gh.PullRequest is not null) return null;
 
         return new GithubIssue
         {
-            Id = $"github:{owner}/{repo}#{number}",
-            RepoOwner = owner,
-            RepoName = repo,
-            Number = number,
-            Title = gh.Title,
-            Body = gh.Body,
-            Labels = gh.Labels.Select(l => l.Name).ToList(),
-            State = gh.State,
+            Id          = $"github:{owner}/{repo}#{number}",
+            RepoOwner   = owner,
+            RepoName    = repo,
+            Number      = number,
+            Title       = gh.Title,
+            Body        = gh.Body,
+            Labels      = gh.Labels.Select(l => l.Name).ToList(),
+            State       = gh.State,
             ClosedAtUtc = gh.ClosedAt,
-            Url = gh.HtmlUrl,
+            Url         = gh.HtmlUrl,
         };
     }
 
@@ -204,17 +160,17 @@ public sealed class IssueEnricher : IDisposable
                 title=excluded.title, body=excluded.body, labels_json=excluded.labels_json,
                 state=excluded.state, closed_at_utc=excluded.closed_at_utc, fetched_at_utc=datetime('now')
             """;
-        cmd.Parameters.AddWithValue("$id", issue.Id);
-        cmd.Parameters.AddWithValue("$owner", issue.RepoOwner);
-        cmd.Parameters.AddWithValue("$repo", issue.RepoName);
-        cmd.Parameters.AddWithValue("$number", issue.Number);
-        cmd.Parameters.AddWithValue("$title", issue.Title);
-        cmd.Parameters.AddWithValue("$body", (object?)issue.Body ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("$labels", JsonSerializer.Serialize(issue.Labels));
-        cmd.Parameters.AddWithValue("$state", issue.State);
+        cmd.Parameters.AddWithValue("$id",       issue.Id);
+        cmd.Parameters.AddWithValue("$owner",    issue.RepoOwner);
+        cmd.Parameters.AddWithValue("$repo",     issue.RepoName);
+        cmd.Parameters.AddWithValue("$number",   issue.Number);
+        cmd.Parameters.AddWithValue("$title",    issue.Title);
+        cmd.Parameters.AddWithValue("$body",     (object?)issue.Body ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$labels",   JsonSerializer.Serialize(issue.Labels));
+        cmd.Parameters.AddWithValue("$state",    issue.State);
         cmd.Parameters.AddWithValue("$closedAt", issue.ClosedAtUtc.HasValue
             ? (object)issue.ClosedAtUtc.Value.ToString("O") : DBNull.Value);
-        cmd.Parameters.AddWithValue("$url", issue.Url);
+        cmd.Parameters.AddWithValue("$url",      issue.Url);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
@@ -227,8 +183,8 @@ public sealed class IssueEnricher : IDisposable
             VALUES ($fixtureId, $issueId, $source)
             """;
         cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
-        cmd.Parameters.AddWithValue("$issueId", issueId);
-        cmd.Parameters.AddWithValue("$source", source);
+        cmd.Parameters.AddWithValue("$issueId",   issueId);
+        cmd.Parameters.AddWithValue("$source",    source);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }

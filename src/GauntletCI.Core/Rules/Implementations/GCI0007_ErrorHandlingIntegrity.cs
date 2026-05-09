@@ -52,40 +52,24 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
                 // deleted throw/log cannot mask a genuinely empty new catch body.
                 var hunkLines = new List<DiffLine>();
                 foreach (var l in hunk.Lines)
-                {
-                    if (l.Kind != DiffLineKind.Removed)
-                    {
-                        hunkLines.Add(l);
-                    }
-                }
+                    if (l.Kind != DiffLineKind.Removed) hunkLines.Add(l);
 
                 for (int i = 0; i < hunkLines.Count; i++)
                 {
                     // Only evaluate catch blocks on Added lines (newly introduced catch).
-                    if (hunkLines[i].Kind != DiffLineKind.Added)
-                    {
-                        continue;
-                    }
+                    if (hunkLines[i].Kind != DiffLineKind.Added) continue;
 
                     var content = hunkLines[i].Content.Trim();
-                    if (!content.StartsWith("catch", StringComparison.Ordinal))
-                    {
-                        continue;
-                    }
+                    if (!content.StartsWith("catch", StringComparison.Ordinal)) continue;
 
                     if (content.Contains("TaskCanceledException", StringComparison.Ordinal) ||
                         content.Contains("OperationCanceledException", StringComparison.Ordinal))
-                    {
                         continue;
-                    }
 
                     // Only flag bare catch{} or catch(Exception): specific typed catches
                     // (e.g. catch (ChannelClosedException) { break; }) represent explicit
                     // handling intent and must not be flagged as swallowed.
-                    if (!IsBareOrBaseCatch(content))
-                    {
-                        continue;
-                    }
+                    if (!IsBareOrBaseCatch(content)) continue;
 
                     bool isSwallowed = IsCatchSwallowed(hunkLines, i, out string evidence);
                     if (isSwallowed)
@@ -118,15 +102,8 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
             var line = hunkLines[j].Content.Trim();
             foreach (char c in line)
             {
-                if (c == '{')
-                {
-                    depth++;
-                    inBody = true;
-                }
-                else if (c == '}')
-                {
-                    depth--;
-                }
+                if (c == '{') { depth++; inBody = true; }
+                else if (c == '}') { depth--; }
             }
 
             if (inBody && j > catchIdx)
@@ -140,19 +117,12 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
                                   line.Contains("Console.", StringComparison.Ordinal) ||
                                   line.Contains("Debug.", StringComparison.Ordinal) ||
                                   line.Contains("Trace.", StringComparison.Ordinal);
-                    if (hasThrow || hasLog)
-                    {
-                        return false;
-                    }
-
+                    if (hasThrow || hasLog) return false;
                     hasContent = true;
                 }
             }
 
-            if (inBody && depth == 0)
-            {
-                break;
-            }
+            if (inBody && depth == 0) break;
         }
 
         // If the catch body had no meaningful content, it's swallowed
@@ -163,10 +133,7 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
     {
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
 
             foreach (var hunk in file.Hunks)
             {
@@ -175,22 +142,13 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
                 for (int i = 0; i < hunkedLines.Count; i++)
                 {
                     var line = hunkedLines[i];
-                    if (line.Kind != DiffLineKind.Removed)
-                    {
-                        continue;
-                    }
+                    if (line.Kind != DiffLineKind.Removed) continue;
 
                     var content = line.Content.Trim();
-                    if (!content.StartsWith("throw ", StringComparison.Ordinal))
-                    {
-                        continue;
-                    }
+                    if (!content.StartsWith("throw ", StringComparison.Ordinal)) continue;
 
                     bool inErrorPath = IsInErrorHandlingContext(hunkedLines, i);
-                    if (!inErrorPath)
-                    {
-                        continue;
-                    }
+                    if (!inErrorPath) continue;
 
                     bool hasReplacementPattern = CheckForExceptionReplacement(hunkedLines, i);
                     if (hasReplacementPattern)
@@ -237,10 +195,7 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
         for (int i = throwLineIdx + 1; i < end; i++)
         {
             var line = hunkedLines[i];
-            if (line.Kind != DiffLineKind.Added)
-            {
-                continue;
-            }
+            if (line.Kind != DiffLineKind.Added) continue;
 
             var content = line.Content.Trim();
             if (content.StartsWith("return ", StringComparison.Ordinal) ||
@@ -261,28 +216,19 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
             int removedHighSev = file.RemovedLines
                 .Count(l => HighSeverityLogPatterns.Any(p => l.Content.Contains(p, StringComparison.Ordinal)));
 
-            if (removedHighSev == 0)
-            {
-                continue;
-            }
+            if (removedHighSev == 0) continue;
 
             int addedHighSev = file.AddedLines
                 .Count(l => HighSeverityLogPatterns.Any(p => l.Content.Contains(p, StringComparison.Ordinal)));
 
-            if (addedHighSev >= removedHighSev)
-            {
-                continue;
-            }
+            if (addedHighSev >= removedHighSev) continue;
 
             bool hasErrorHandlingContext = file.Hunks.Any(hunk =>
                 hunk.Lines.Any(l =>
                     (l.Kind == DiffLineKind.Context || l.Kind == DiffLineKind.Removed) &&
                     ErrorHandlingKeywords.Any(k => l.Content.Contains(k, StringComparison.OrdinalIgnoreCase))));
 
-            if (!hasErrorHandlingContext)
-            {
-                continue;
-            }
+            if (!hasErrorHandlingContext) continue;
 
             findings.Add(CreateFinding(
                 file,
@@ -303,32 +249,22 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
     private static bool IsBareOrBaseCatch(string catchLine)
     {
         // "catch {" or "catch{": no type at all
-        if (!catchLine.Contains('('))
-        {
-            return true;
-        }
+        if (!catchLine.Contains('(')) return true;
 
-        var open = catchLine.IndexOf('(');
+        var open  = catchLine.IndexOf('(');
         var close = catchLine.IndexOf(')', open + 1);
-        if (open < 0 || close <= open)
-        {
-            return true; // malformed: treat conservatively
-        }
+        if (open < 0 || close <= open) return true; // malformed: treat conservatively
 
         var typePart = catchLine[(open + 1)..close].Trim();
         // Strip variable name: "Exception e" → "Exception"
-        var space = typePart.IndexOf(' ');
+        var space    = typePart.IndexOf(' ');
         var typeName = space > 0 ? typePart[..space] : typePart;
 
         return typeName is "Exception" or "System.Exception";
     }
 
-    private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)
-    {
-        if (staticAnalysis is null)
-        {
-            return;
-        }
+    private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)    {
+        if (staticAnalysis is null) return;
         // CA2000 (don't dispose objects) and CA1001 (types owning disposable) are owned by GCI0024
         // (Resource Lifecycle): see DiagnosticMapper. GCI0007 keeps only CA1031 (catch generic
         // exception) to avoid producing two findings on the same diagnostic.

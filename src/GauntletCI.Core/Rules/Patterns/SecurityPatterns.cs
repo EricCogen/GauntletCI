@@ -54,27 +54,12 @@ internal static class SecurityPatterns
         for (int i = 0; i < content.Length; i++)
         {
             if (content[i] == '"' && (i == 0 || content[i - 1] != '\\'))
-            {
                 inString = !inString;
-            }
-
-            if (inString || content[i] != '=')
-            {
-                continue;
-            }
-
+            if (inString || content[i] != '=') continue;
             char prev = i > 0 ? content[i - 1] : '\0';
             char next = i < content.Length - 1 ? content[i + 1] : '\0';
-            if (prev is '!' or '<' or '>' or '=')
-            {
-                continue;
-            }
-
-            if (next is '=' or '>')
-            {
-                continue;  // == and =>
-            }
-
+            if (prev is '!' or '<' or '>' or '=') continue;
+            if (next is '=' or '>') continue;  // == and =>
             return i;
         }
         return content.Length;
@@ -100,10 +85,7 @@ internal static class SecurityPatterns
     public static string? ExtractDirectlyAssignedLiteral(string content)
     {
         int eqIdx = FindAssignmentIndex(content);
-        if (eqIdx >= content.Length)
-        {
-            return null;
-        }
+        if (eqIdx >= content.Length) return null;
 
         var rhs = content[(eqIdx + 1)..].TrimStart();
 
@@ -111,9 +93,7 @@ internal static class SecurityPatterns
         if (!rhs.StartsWith('"') &&
             !rhs.StartsWith("@\"", StringComparison.Ordinal) &&
             !rhs.StartsWith("$\"", StringComparison.Ordinal))
-        {
             return null;
-        }
 
         try
         {
@@ -160,11 +140,7 @@ internal static class SecurityPatterns
     /// </summary>
     public static bool HasSecurityKeywords(string text)
     {
-        if (string.IsNullOrEmpty(text))
-        {
-            return false;
-        }
-
+        if (string.IsNullOrEmpty(text)) return false;
         var lowerText = text.ToLowerInvariant();
         return SecurityKeywords.Any(k =>
             lowerText.Contains(k.ToLowerInvariant(), StringComparison.Ordinal));
@@ -176,11 +152,7 @@ internal static class SecurityPatterns
     /// </summary>
     public static bool HasSecurityTestPattern(string text)
     {
-        if (string.IsNullOrEmpty(text))
-        {
-            return false;
-        }
-
+        if (string.IsNullOrEmpty(text)) return false;
         return SecurityTestPatterns.Any(p =>
             text.Contains(p, StringComparison.OrdinalIgnoreCase));
     }

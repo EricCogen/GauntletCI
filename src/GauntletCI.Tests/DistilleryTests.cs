@@ -13,16 +13,13 @@ public sealed class DistilleryTests : IDisposable
     public DistilleryTests()
     {
         _dbPath = Path.Combine(Path.GetTempPath(), $"distillery-test-{Guid.NewGuid():N}.db");
-        _store = new VectorStore(_dbPath);
+        _store  = new VectorStore(_dbPath);
     }
 
     public void Dispose()
     {
         _store.Dispose();
-        if (File.Exists(_dbPath))
-        {
-            File.Delete(_dbPath);
-        }
+        if (File.Exists(_dbPath)) File.Delete(_dbPath);
     }
 
     // ── SeedAsync ─────────────────────────────────────────────────────────────
@@ -30,7 +27,7 @@ public sealed class DistilleryTests : IDisposable
     [Fact]
     public async Task SeedAsync_WithEmbeddingEngine_UpsertsAllFacts()
     {
-        var embedding = new FakeEmbeddingEngine([1f, 0f]);
+        var embedding  = new FakeEmbeddingEngine([1f, 0f]);
         var distillery = new Distillery(new NullLlmEngine(), embedding, _store);
 
         var facts = new[]
@@ -62,8 +59,8 @@ public sealed class DistilleryTests : IDisposable
     [Fact]
     public async Task DistillAsync_ValidInput_StoresExtractedFacts()
     {
-        var llm = new FakeLlmEngine("ValueTask must not be awaited twice.");
-        var embedding = new FakeEmbeddingEngine([0.5f, 0.5f]);
+        var llm        = new FakeLlmEngine("ValueTask must not be awaited twice.");
+        var embedding  = new FakeEmbeddingEngine([0.5f, 0.5f]);
         var distillery = new Distillery(llm, embedding, _store);
 
         var inputs = new[]
@@ -80,8 +77,8 @@ public sealed class DistilleryTests : IDisposable
     [Fact]
     public async Task DistillAsync_LlmReturnsEmpty_SkipsRecord()
     {
-        var llm = new FakeLlmEngine(string.Empty);
-        var embedding = new FakeEmbeddingEngine([1f, 0f]);
+        var llm        = new FakeLlmEngine(string.Empty);
+        var embedding  = new FakeEmbeddingEngine([1f, 0f]);
         var distillery = new Distillery(llm, embedding, _store);
 
         var inputs = new[]
@@ -98,8 +95,8 @@ public sealed class DistilleryTests : IDisposable
     [Fact]
     public async Task DistillAsync_EmbeddingReturnsEmpty_SkipsRecord()
     {
-        var llm = new FakeLlmEngine("A real fact.");
-        var embedding = new FakeEmbeddingEngine([]); // empty → skip
+        var llm        = new FakeLlmEngine("A real fact.");
+        var embedding  = new FakeEmbeddingEngine([]); // empty → skip
         var distillery = new Distillery(llm, embedding, _store);
 
         var inputs = new[]
@@ -116,8 +113,8 @@ public sealed class DistilleryTests : IDisposable
     public async Task DistillAsync_SortsByReactionsDescending()
     {
         var order = new List<string>();
-        var llm = new CapturingLlmEngine(id => { order.Add(id); return "fact"; });
-        var embedding = new FakeEmbeddingEngine([1f, 0f]);
+        var llm   = new CapturingLlmEngine(id => { order.Add(id); return "fact"; });
+        var embedding  = new FakeEmbeddingEngine([1f, 0f]);
         var distillery = new Distillery(llm, embedding, _store);
 
         var inputs = new[]
@@ -135,8 +132,8 @@ public sealed class DistilleryTests : IDisposable
     [Fact]
     public async Task DistillAsync_RespectsMaxRecords()
     {
-        var llm = new FakeLlmEngine("fact");
-        var embedding = new FakeEmbeddingEngine([1f, 0f]);
+        var llm        = new FakeLlmEngine("fact");
+        var embedding  = new FakeEmbeddingEngine([1f, 0f]);
         var distillery = new Distillery(llm, embedding, _store);
 
         var inputs = Enumerable.Range(0, 10)
@@ -181,7 +178,7 @@ public sealed class DistilleryTests : IDisposable
     public void ExtractExpertFact_TruncatesLongBody()
     {
         var longBody = new string('x', 3000);
-        var prompt = PromptTemplates.ExtractExpertFact("Title", longBody);
+        var prompt   = PromptTemplates.ExtractExpertFact("Title", longBody);
         Assert.Contains("…", prompt);
         Assert.True(prompt.Length < 3500, "Prompt should be well under full body length");
     }
@@ -205,9 +202,7 @@ public sealed class DistilleryTests : IDisposable
             => Task.FromResult(response);
         public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
             => Task.FromResult(response);
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 
     private sealed class CapturingLlmEngine(Func<string, string> responder) : ILlmEngine
@@ -220,13 +215,11 @@ public sealed class DistilleryTests : IDisposable
         public Task<string> CompleteAsync(string prompt, CancellationToken ct = default)
         {
             var id = prompt.Contains("High") ? "high" :
-                     prompt.Contains("Mid") ? "mid" :
-                     prompt.Contains("Low") ? "low" : "unknown";
+                     prompt.Contains("Mid")  ? "mid"  :
+                     prompt.Contains("Low")  ? "low"  : "unknown";
             return Task.FromResult(responder(id));
         }
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 
     private sealed class FakeEmbeddingEngine(float[] vec) : IEmbeddingEngine

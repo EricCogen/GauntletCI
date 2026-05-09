@@ -27,11 +27,11 @@ public class ConfigurationServiceTests
 
     [Theory]
     [InlineData("Block", RuleSeverity.Block)]
-    [InlineData("Warn", RuleSeverity.Warn)]
-    [InlineData("Info", RuleSeverity.Info)]
-    [InlineData("None", RuleSeverity.None)]
+    [InlineData("Warn",  RuleSeverity.Warn)]
+    [InlineData("Info",  RuleSeverity.Info)]
+    [InlineData("None",  RuleSeverity.None)]
     [InlineData("block", RuleSeverity.Block)]   // case-insensitive
-    [InlineData("WARN", RuleSeverity.Warn)]
+    [InlineData("WARN",  RuleSeverity.Warn)]
     public void GetEffectiveSeverity_JsonOverride_WinsOverDefault(string severityValue, RuleSeverity expected)
     {
         var config = new GauntletConfig
@@ -43,9 +43,9 @@ public class ConfigurationServiceTests
     }
 
     [Theory]
-    [InlineData("High", RuleSeverity.Block)]  // legacy Confidence values accepted
+    [InlineData("High",   RuleSeverity.Block)]  // legacy Confidence values accepted
     [InlineData("Medium", RuleSeverity.Warn)]
-    [InlineData("Low", RuleSeverity.Info)]
+    [InlineData("Low",    RuleSeverity.Info)]
     public void GetEffectiveSeverity_LegacySeverityStrings_MapCorrectly(string legacyValue, RuleSeverity expected)
     {
         var config = new GauntletConfig
@@ -74,9 +74,9 @@ public class ConfigurationServiceTests
 
             var svc = new ConfigurationService(new GauntletConfig(), dir);
             Assert.Equal(RuleSeverity.Block, svc.GetEffectiveSeverity("GCI0006"));
-            Assert.Equal(RuleSeverity.Warn, svc.GetEffectiveSeverity("GCI0022"));
-            Assert.Equal(RuleSeverity.Info, svc.GetEffectiveSeverity("GCI0029"));
-            Assert.Equal(RuleSeverity.None, svc.GetEffectiveSeverity("GCI0035"));
+            Assert.Equal(RuleSeverity.Warn,  svc.GetEffectiveSeverity("GCI0022"));
+            Assert.Equal(RuleSeverity.Info,  svc.GetEffectiveSeverity("GCI0029"));
+            Assert.Equal(RuleSeverity.None,  svc.GetEffectiveSeverity("GCI0035"));
         }
         finally { Directory.Delete(dir, recursive: true); }
     }
@@ -142,7 +142,7 @@ public class ConfigurationServiceTests
     public void GetEffectiveSeverity_CalledTwice_ReturnsSameResult()
     {
         var svc = new ConfigurationService(new GauntletConfig());
-        var first = svc.GetEffectiveSeverity("GCI0001");
+        var first  = svc.GetEffectiveSeverity("GCI0001");
         var second = svc.GetEffectiveSeverity("GCI0001");
         Assert.Equal(first, second);
     }

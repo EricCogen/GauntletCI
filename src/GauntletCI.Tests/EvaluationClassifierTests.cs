@@ -9,11 +9,7 @@ public sealed class EvaluationClassifierTests
     private readonly EvaluationClassifier _classifier = new();
 
     private static FixtureMetadata Fixture(string id = "fix-001", FixtureTier tier = FixtureTier.Silver) =>
-        new()
-        {
-            FixtureId = id,
-            Tier = tier
-        };
+        new() { FixtureId = id, Tier = tier };
 
     private static ExpectedFinding Label(
         string ruleId,
@@ -22,27 +18,23 @@ public sealed class EvaluationClassifierTests
         bool inconclusive = false) =>
         new()
         {
-            RuleId = ruleId,
-            ShouldTrigger = shouldTrigger,
-            LabelSource = source,
+            RuleId         = ruleId,
+            ShouldTrigger  = shouldTrigger,
+            LabelSource    = source,
             IsInconclusive = inconclusive,
-            Reason = "test reason",
+            Reason         = "test reason",
         };
 
     private static ActualFinding Actual(string ruleId, bool didTrigger) =>
-        new()
-        {
-            RuleId = ruleId,
-            DidTrigger = didTrigger
-        };
+        new() { RuleId = ruleId, DidTrigger = didTrigger };
 
     [Fact]
     public void Classify_FiredRuleWithShouldTriggerTrue_ReturnsTruePositive()
     {
         // Arrange
-        var fixture = Fixture();
+        var fixture  = Fixture();
         var expected = new[] { Label("GCI0001", shouldTrigger: true) };
-        var actual = new[] { Actual("GCI0001", didTrigger: true) };
+        var actual   = new[] { Actual("GCI0001", didTrigger: true) };
 
         // Act
         var results = _classifier.Classify(fixture, expected, actual);
@@ -59,9 +51,9 @@ public sealed class EvaluationClassifierTests
     public void Classify_FiredRuleWithShouldTriggerFalse_ReturnsFalsePositive()
     {
         // Arrange
-        var fixture = Fixture();
+        var fixture  = Fixture();
         var expected = new[] { Label("GCI0001", shouldTrigger: false) };
-        var actual = new[] { Actual("GCI0001", didTrigger: true) };
+        var actual   = new[] { Actual("GCI0001", didTrigger: true) };
 
         // Act
         var results = _classifier.Classify(fixture, expected, actual);
@@ -74,9 +66,9 @@ public sealed class EvaluationClassifierTests
     public void Classify_UnfiredRuleWithShouldTriggerTrue_ReturnsFalseNegative()
     {
         // Arrange
-        var fixture = Fixture();
+        var fixture  = Fixture();
         var expected = new[] { Label("GCI0001", shouldTrigger: true) };
-        var actual = new[] { Actual("GCI0001", didTrigger: false) };
+        var actual   = new[] { Actual("GCI0001", didTrigger: false) };
 
         // Act
         var results = _classifier.Classify(fixture, expected, actual);
@@ -89,9 +81,9 @@ public sealed class EvaluationClassifierTests
     public void Classify_UnfiredRuleWithShouldTriggerFalse_ReturnsTrueNegative()
     {
         // Arrange
-        var fixture = Fixture();
+        var fixture  = Fixture();
         var expected = new[] { Label("GCI0001", shouldTrigger: false) };
-        var actual = new[] { Actual("GCI0001", didTrigger: false) };
+        var actual   = new[] { Actual("GCI0001", didTrigger: false) };
 
         // Act
         var results = _classifier.Classify(fixture, expected, actual);
@@ -105,7 +97,7 @@ public sealed class EvaluationClassifierTests
     {
         // Arrange
         var fixture = Fixture();
-        var actual = new[] { Actual("GCI0001", didTrigger: true) };
+        var actual  = new[] { Actual("GCI0001", didTrigger: true) };
 
         // Act
         var results = _classifier.Classify(fixture, [], actual);
@@ -120,9 +112,9 @@ public sealed class EvaluationClassifierTests
     public void Classify_InconclusiveLabelIgnored_FiresAsUnknown()
     {
         // Arrange: label is inconclusive, so it is excluded from consideration
-        var fixture = Fixture();
+        var fixture  = Fixture();
         var expected = new[] { Label("GCI0001", shouldTrigger: true, inconclusive: true) };
-        var actual = new[] { Actual("GCI0001", didTrigger: true) };
+        var actual   = new[] { Actual("GCI0001", didTrigger: true) };
 
         // Act
         var results = _classifier.Classify(fixture, expected, actual);
@@ -137,9 +129,9 @@ public sealed class EvaluationClassifierTests
     public void Classify_HumanReviewLabel_LabelConfidenceIsTrusted()
     {
         // Arrange
-        var fixture = Fixture();
+        var fixture  = Fixture();
         var expected = new[] { Label("GCI0001", shouldTrigger: true, source: LabelSource.HumanReview) };
-        var actual = new[] { Actual("GCI0001", didTrigger: true) };
+        var actual   = new[] { Actual("GCI0001", didTrigger: true) };
 
         // Act
         var results = _classifier.Classify(fixture, expected, actual);
@@ -152,9 +144,9 @@ public sealed class EvaluationClassifierTests
     public void Classify_HeuristicLabel_LabelConfidenceIsHeuristic()
     {
         // Arrange
-        var fixture = Fixture();
+        var fixture  = Fixture();
         var expected = new[] { Label("GCI0001", shouldTrigger: true, source: LabelSource.Heuristic) };
-        var actual = new[] { Actual("GCI0001", didTrigger: true) };
+        var actual   = new[] { Actual("GCI0001", didTrigger: true) };
 
         // Act
         var results = _classifier.Classify(fixture, expected, actual);
@@ -167,7 +159,7 @@ public sealed class EvaluationClassifierTests
     public void Classify_MultipleRules_ClassifiesAllCorrectly()
     {
         // Arrange: GCI0001 fired + should → TP; GCI0002 fired + shouldn't → FP; GCI0003 not fired + should → FN
-        var fixture = Fixture();
+        var fixture  = Fixture();
         var expected = new[]
         {
             Label("GCI0001", shouldTrigger: true),
@@ -209,7 +201,7 @@ public sealed class EvaluationClassifierTests
     {
         // Arrange: rule exists in actual but didn't fire, and there are no labels
         var fixture = Fixture();
-        var actual = new[] { Actual("GCI0001", didTrigger: false) };
+        var actual  = new[] { Actual("GCI0001", didTrigger: false) };
 
         // Act
         var results = _classifier.Classify(fixture, [], actual);

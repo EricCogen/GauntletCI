@@ -5,11 +5,11 @@ namespace GauntletCI.Core.Licensing;
 /// Represents the result of reading and validating a GauntletCI license token.
 /// </summary>
 public sealed record LicenseInfo(
-    LicenseTier Tier,
-    string? Email,
-    DateTimeOffset? ExpiresAt,
-    bool IsValid,
-    string? Error = null)
+    LicenseTier      Tier,
+    string?          Email,
+    DateTimeOffset?  ExpiresAt,
+    bool             IsValid,
+    string?          Error = null)
 {
     /// <summary>True when the license is valid and grants at least Pro-tier features.</summary>
     public bool IsLicensed => IsValid && Tier >= LicenseTier.Pro;

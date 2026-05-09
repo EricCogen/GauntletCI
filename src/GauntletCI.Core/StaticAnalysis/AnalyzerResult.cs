@@ -9,22 +9,13 @@ public class AnalyzerResult
 {
     public List<AnalyzerDiagnostic> Diagnostics { get; init; } = [];
     public string AnalyzedFile { get; init; } = string.Empty;
-    public bool Success
-    {
-        get; init;
-    }
-    public string? ErrorMessage
-    {
-        get; init;
-    }
+    public bool Success { get; init; }
+    public string? ErrorMessage { get; init; }
     /// <summary>
     /// Primary target framework moniker detected from the repo's .csproj files
     /// (e.g. <c>net8.0</c>, <c>net6.0</c>). Null when detection was not possible.
     /// </summary>
-    public string? TargetFramework
-    {
-        get; init;
-    }
+    public string? TargetFramework { get; init; }
 
     /// <summary>
     /// Per-file Roslyn syntax trees built during analysis.
@@ -32,34 +23,16 @@ public class AnalyzerResult
     /// Null when analysis was not run or all files failed to parse.
     /// </summary>
     [System.Text.Json.Serialization.JsonIgnore]
-    public SyntaxContext? Syntax
-    {
-        get; init;
-    }
+    public SyntaxContext? Syntax { get; init; }
 }
 
 public class AnalyzerDiagnostic
 {
-    public required string Id
-    {
-        get; init;
-    }        // e.g. CA2100
-    public required string Message
-    {
-        get; init;
-    }
-    public required string FilePath
-    {
-        get; init;
-    }
-    public int Line
-    {
-        get; init;
-    }
-    public int Column
-    {
-        get; init;
-    }
+    public required string Id { get; init; }        // e.g. CA2100
+    public required string Message { get; init; }
+    public required string FilePath { get; init; }
+    public int Line { get; init; }
+    public int Column { get; init; }
     public string Severity { get; init; } = "Warning";
     public string Category { get; init; } = string.Empty;
 }

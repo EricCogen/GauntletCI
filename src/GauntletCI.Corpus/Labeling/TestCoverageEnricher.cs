@@ -97,38 +97,23 @@ public sealed class TestCoverageEnricher
         foreach (var line in diffLines)
         {
             if (!line.StartsWith("diff --git a/", StringComparison.Ordinal))
-            {
                 continue;
-            }
 
             // "diff --git a/path/to/file.cs b/path/to/file.cs"
             var rest = line[13..]; // skip "diff --git a/"
             var spaceB = rest.IndexOf(" b/", StringComparison.Ordinal);
-            if (spaceB < 0)
-            {
-                continue;
-            }
-
+            if (spaceB < 0) continue;
             var path = rest[..spaceB];
 
             if (!path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
-            {
                 continue;
-            }
 
-            if (IsGeneratedFile(path))
-            {
-                continue;
-            }
+            if (IsGeneratedFile(path)) continue;
 
             if (IsTestFile(path))
-            {
                 test++;
-            }
             else
-            {
                 prod++;
-            }
         }
 
         return (prod, test);
@@ -140,20 +125,12 @@ public sealed class TestCoverageEnricher
         var fileName = Path.GetFileName(path);
 
         foreach (var name in GeneratedFileNames)
-        {
             if (string.Equals(fileName, name, StringComparison.OrdinalIgnoreCase))
-            {
                 return true;
-            }
-        }
 
         foreach (var suffix in GeneratedSuffixes)
-        {
             if (path.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-            {
                 return true;
-            }
-        }
 
         return false;
     }
@@ -164,24 +141,14 @@ public sealed class TestCoverageEnricher
         var fileName = Path.GetFileName(path);
 
         foreach (var suffix in TestFileSuffixes)
-        {
             if (fileName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-            {
                 return true;
-            }
-        }
 
         var segments = path.Replace('\\', '/').Split('/');
         foreach (var segment in segments)
-        {
             foreach (var testSeg in TestPathSegments)
-            {
                 if (string.Equals(segment, testSeg, StringComparison.OrdinalIgnoreCase))
-                {
                     return true;
-                }
-            }
-        }
 
         return false;
     }
@@ -200,10 +167,10 @@ public sealed class TestCoverageEnricher
             VALUES
                 ($fixtureId, $repo, $prodCsCount, $testCsCount, $testCoverageGap, $testToProdRatio)
             """;
-        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
-        cmd.Parameters.AddWithValue("$repo", repo);
-        cmd.Parameters.AddWithValue("$prodCsCount", prodCsCount);
-        cmd.Parameters.AddWithValue("$testCsCount", testCsCount);
+        cmd.Parameters.AddWithValue("$fixtureId",      fixtureId);
+        cmd.Parameters.AddWithValue("$repo",           repo);
+        cmd.Parameters.AddWithValue("$prodCsCount",    prodCsCount);
+        cmd.Parameters.AddWithValue("$testCsCount",    testCsCount);
         cmd.Parameters.AddWithValue("$testCoverageGap", testCoverageGap ? 1 : 0);
         cmd.Parameters.AddWithValue("$testToProdRatio", testToProdRatio);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
