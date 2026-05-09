@@ -23,6 +23,15 @@ const jsonLd = {
 // Newest articles first: add new entries at the bottom, display is reversed
 const articles = [
   {
+    href: "/articles/the-asymmetry-of-change",
+    title: "The Asymmetry of Change: Why Your Tests Are Looking the Wrong Way",
+    description:
+      "Why passing tests don't guarantee correct behavior. How diff-scanning can close the gap between code changes and test validation.",
+    tags: ["Testing", "CI", "Diff-Based Analysis"],
+    readTime: "12 min read",
+    pinned: true,
+  },
+  {
     href: "/articles/can-ai-code-review-be-deterministic",
     title: "Can AI Code Review Tools Ever Be Deterministic?",
     description:
