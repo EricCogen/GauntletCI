@@ -33,7 +33,7 @@ Requires .NET 8+. Also available via [self-contained binaries](https://gauntletc
 
 > Running against StackExchange.Redis PR#2995 — GauntletCI flags a swallowed exception in production connection handling.
 
-[![GauntletCI terminal demo](https://github.com/EricCogen/GauntletCI/docs/assets/gauntletci-terminal-demo.gif)](https://github.com/EricCogen/GauntletCI)
+[![GauntletCI terminal demo](https://raw.githubusercontent.com/EricCogen/GauntletCI/refs/heads/main/site/public/gauntletci-terminal-demo.gif)](https://github.com/EricCogen/GauntletCI)
 
 ---
 
