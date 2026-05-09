@@ -7,7 +7,10 @@ namespace GauntletCI.Core.Domain;
 public readonly record struct LlmExplanation : IEquatable<LlmExplanation>
 {
     /// <summary>Gets the explanation text content.</summary>
-    public string Value { get; }
+    public string Value
+    {
+        get;
+    }
 
     /// <summary>Gets the number of words in the explanation.</summary>
     public int WordCount => string.IsNullOrWhiteSpace(Value) ? 0 : Value.Split(new[] { ' ', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries).Length;
@@ -66,10 +69,17 @@ public readonly record struct LlmExplanation : IEquatable<LlmExplanation>
     /// <returns>A truncated preview with ellipsis if text was longer.</returns>
     public string Preview(int wordCount = 10)
     {
-        if (IsEmpty) return string.Empty;
+        if (IsEmpty)
+        {
+            return string.Empty;
+        }
+
         var words = Value.Split(new[] { ' ', '\t', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
         if (words.Length <= wordCount)
+        {
             return Value;
+        }
+
         return string.Join(" ", words.Take(wordCount)) + "...";
     }
 

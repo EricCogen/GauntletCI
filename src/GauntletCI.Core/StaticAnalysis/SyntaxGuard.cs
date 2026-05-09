@@ -23,7 +23,10 @@ public static class SyntaxGuard
         ArgumentNullException.ThrowIfNull(tree);
         ArgumentNullException.ThrowIfNull(typeName);
         var text = tree.GetText();
-        if (lineNumber < 1 || lineNumber > text.Lines.Count) return false;
+        if (lineNumber < 1 || lineNumber > text.Lines.Count)
+        {
+            return false;
+        }
 
         var lineSpan = text.Lines[lineNumber - 1].Span;
         return tree.GetRoot()
@@ -44,22 +47,35 @@ public static class SyntaxGuard
     {
         ArgumentNullException.ThrowIfNull(tree);
         var text = tree.GetText();
-        if (lineNumber < 1 || lineNumber > text.Lines.Count) return false;
+        if (lineNumber < 1 || lineNumber > text.Lines.Count)
+        {
+            return false;
+        }
 
         var line = text.Lines[lineNumber - 1];
-        if (columnOffset < 0) columnOffset = 0;
-        if (line.Span.IsEmpty) return false;
+        if (columnOffset < 0)
+        {
+            columnOffset = 0;
+        }
+
+        if (line.Span.IsEmpty)
+        {
+            return false;
+        }
+
         var position = line.Start + Math.Min(columnOffset, line.Span.Length - 1);
 
-        var root  = tree.GetRoot();
+        var root = tree.GetRoot();
         var token = root.FindToken(position, findInsideTrivia: true);
 
         // Direct string literal token at this position
-        if (token.IsKind(SyntaxKind.StringLiteralToken)             ||
-            token.IsKind(SyntaxKind.InterpolatedStringTextToken)    ||
-            token.IsKind(SyntaxKind.SingleLineRawStringLiteralToken)||
+        if (token.IsKind(SyntaxKind.StringLiteralToken) ||
+            token.IsKind(SyntaxKind.InterpolatedStringTextToken) ||
+            token.IsKind(SyntaxKind.SingleLineRawStringLiteralToken) ||
             token.IsKind(SyntaxKind.MultiLineRawStringLiteralToken))
+        {
             return true;
+        }
 
         // Ancestor is a plain string literal expression.
         // Deliberately excludes InterpolatedStringExpression: the {…} holes are
@@ -68,7 +84,11 @@ public static class SyntaxGuard
         var node = token.Parent;
         while (node is not null)
         {
-            if (node.IsKind(SyntaxKind.StringLiteralExpression)) return true;
+            if (node.IsKind(SyntaxKind.StringLiteralExpression))
+            {
+                return true;
+            }
+
             node = node.Parent;
         }
 
@@ -76,12 +96,16 @@ public static class SyntaxGuard
         foreach (var trivia in token.LeadingTrivia)
         {
             if (IsCommentKind(trivia.Kind()) && trivia.FullSpan.Contains(position))
+            {
                 return true;
+            }
         }
         foreach (var trivia in token.TrailingTrivia)
         {
             if (IsCommentKind(trivia.Kind()) && trivia.FullSpan.Contains(position))
+            {
                 return true;
+            }
         }
 
         // Also check the preceding token's trailing trivia (handles end-of-line comments
@@ -90,7 +114,9 @@ public static class SyntaxGuard
         foreach (var trivia in prevToken.TrailingTrivia)
         {
             if (IsCommentKind(trivia.Kind()) && trivia.FullSpan.Contains(position))
+            {
                 return true;
+            }
         }
 
         return false;
@@ -104,9 +130,9 @@ public static class SyntaxGuard
 
     private static string GetSimpleTypeName(TypeSyntax type) => type switch
     {
-        SimpleNameSyntax simple              => simple.Identifier.ValueText,
-        QualifiedNameSyntax qualified        => qualified.Right.Identifier.ValueText,
-        AliasQualifiedNameSyntax aliased     => GetSimpleTypeName(aliased.Name),
-        _                                    => string.Empty,
+        SimpleNameSyntax simple => simple.Identifier.ValueText,
+        QualifiedNameSyntax qualified => qualified.Right.Identifier.ValueText,
+        AliasQualifiedNameSyntax aliased => GetSimpleTypeName(aliased.Name),
+        _ => string.Empty,
     };
 }

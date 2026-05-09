@@ -13,13 +13,19 @@ public interface IFindingEnricher
     /// The name of this enricher stage (e.g., "LlmExplanation", "ExpertKnowledge", "CoverageData").
     /// Used for diagnostics and pipeline ordering.
     /// </summary>
-    string StageName { get; }
+    string StageName
+    {
+        get;
+    }
 
     /// <summary>
     /// Whether this enricher should run.
     /// May be disabled based on configuration, availability of external services, or dependencies.
     /// </summary>
-    bool IsAvailable { get; }
+    bool IsAvailable
+    {
+        get;
+    }
 
     /// <summary>
     /// Enriches a single finding with context from this enricher's domain.
@@ -35,5 +41,8 @@ public interface IFindingEnricher
     /// The pipeline will execute dependencies before this enricher.
     /// Empty if no dependencies.
     /// </summary>
-    IReadOnlySet<string> DependsOn { get; }
+    IReadOnlySet<string> DependsOn
+    {
+        get;
+    }
 }

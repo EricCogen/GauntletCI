@@ -23,7 +23,9 @@ public sealed class SonarCloudClient
     {
         var conventional = $"{owner.ToLowerInvariant()}_{repo.ToLowerInvariant()}";
         if (await ProjectExistsAsync(conventional, ct).ConfigureAwait(false))
+        {
             return conventional;
+        }
 
         // Org search fallback: some projects use non-conventional keys
         var url = $"{BaseUrl}/components/search"
@@ -34,18 +36,31 @@ public sealed class SonarCloudClient
         try
         {
             using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
-            if (!resp.IsSuccessStatusCode) return null;
+            if (!resp.IsSuccessStatusCode)
+            {
+                return null;
+            }
 
             await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
 
             if (!doc.RootElement.TryGetProperty("components", out var components))
+            {
                 return null;
+            }
 
             foreach (var c in components.EnumerateArray())
             {
-                if (!c.TryGetProperty("name", out var nameEl)) continue;
-                if (!string.Equals(nameEl.GetString(), repo, StringComparison.OrdinalIgnoreCase)) continue;
+                if (!c.TryGetProperty("name", out var nameEl))
+                {
+                    continue;
+                }
+
+                if (!string.Equals(nameEl.GetString(), repo, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 return c.TryGetProperty("key", out var keyEl) ? keyEl.GetString() : null;
             }
         }
@@ -76,12 +91,18 @@ public sealed class SonarCloudClient
             try
             {
                 using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
-                if (!resp.IsSuccessStatusCode) break;
+                if (!resp.IsSuccessStatusCode)
+                {
+                    break;
+                }
 
                 await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
                 using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
 
-                if (!doc.RootElement.TryGetProperty("issues", out var issues)) break;
+                if (!doc.RootElement.TryGetProperty("issues", out var issues))
+                {
+                    break;
+                }
 
                 int countThisPage = 0;
                 foreach (var issue in issues.EnumerateArray())
@@ -94,14 +115,20 @@ public sealed class SonarCloudClient
                     }
                 }
 
-                if (countThisPage == 0) break;
+                if (countThisPage == 0)
+                {
+                    break;
+                }
 
                 // SonarCloud paging: stop when we have all items
                 if (doc.RootElement.TryGetProperty("paging", out var paging))
                 {
-                    var total    = paging.TryGetProperty("total",    out var t)  ? t.GetInt32()  : 0;
+                    var total = paging.TryGetProperty("total", out var t) ? t.GetInt32() : 0;
                     var pageSize = paging.TryGetProperty("pageSize", out var ps) ? ps.GetInt32() : 500;
-                    if (results.Count >= total || pageSize == 0) break;
+                    if (results.Count >= total || pageSize == 0)
+                    {
+                        break;
+                    }
                 }
                 else
                 {
@@ -131,7 +158,11 @@ public sealed class SonarCloudClient
 
     private static SonarIssue? MapIssue(JsonElement issue, string projectKey)
     {
-        if (!issue.TryGetProperty("component", out var compEl)) return null;
+        if (!issue.TryGetProperty("component", out var compEl))
+        {
+            return null;
+        }
+
         var component = compEl.GetString() ?? "";
 
         // SonarCloud component paths: "project_key:src/path/to/File.cs"
@@ -144,11 +175,11 @@ public sealed class SonarCloudClient
         return new SonarIssue
         {
             ProjectKey = projectKey,
-            FilePath   = filePath,
-            Rule       = issue.TryGetProperty("rule",     out var r)  ? r.GetString()  ?? "" : "",
-            Severity   = issue.TryGetProperty("severity", out var s)  ? s.GetString()  ?? "" : "",
-            Type       = issue.TryGetProperty("type",     out var tp) ? tp.GetString() ?? "" : "",
-            Message    = issue.TryGetProperty("message",  out var m)  ? m.GetString()  ?? "" : "",
+            FilePath = filePath,
+            Rule = issue.TryGetProperty("rule", out var r) ? r.GetString() ?? "" : "",
+            Severity = issue.TryGetProperty("severity", out var s) ? s.GetString() ?? "" : "",
+            Type = issue.TryGetProperty("type", out var tp) ? tp.GetString() ?? "" : "",
+            Message = issue.TryGetProperty("message", out var m) ? m.GetString() ?? "" : "",
         };
     }
 }

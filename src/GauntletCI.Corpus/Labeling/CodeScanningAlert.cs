@@ -35,5 +35,8 @@ public sealed class CodeScanningAlert
     public string Message { get; init; } = "";
 
     /// <summary>Line number of the finding in <see cref="FilePath"/>.</summary>
-    public int StartLine { get; init; }
+    public int StartLine
+    {
+        get; init;
+    }
 }

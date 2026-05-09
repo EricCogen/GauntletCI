@@ -68,32 +68,50 @@ public sealed class PatchCounterfactual
     /// <summary>
     /// Unique identifier for this counterfactual.
     /// </summary>
-    public required string Id { get; init; }
+    public required string Id
+    {
+        get; init;
+    }
 
     /// <summary>
     /// The kind of counterfactual scenario.
     /// </summary>
-    public required PatchCounterfactualKind Kind { get; init; }
+    public required PatchCounterfactualKind Kind
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Human-readable description of the scenario (e.g., "amount == limit").
     /// </summary>
-    public required string Description { get; init; }
+    public required string Description
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Optional file path where the change occurs.
     /// </summary>
-    public string? FilePath { get; init; }
+    public string? FilePath
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Optional primary line number in the new code.
     /// </summary>
-    public int? PrimaryLineNumber { get; init; }
+    public int? PrimaryLineNumber
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Optional secondary line number (e.g., for old code line being replaced).
     /// </summary>
-    public int? SecondaryLineNumber { get; init; }
+    public int? SecondaryLineNumber
+    {
+        get; init;
+    }
 
     /// <summary>
     /// How strongly the patch supports this scenario.
@@ -114,7 +132,10 @@ public sealed class PatchCounterfactual
     /// Optional note on whether this witness is actually executable in the system.
     /// "Inferred from patch structure" indicates structural reasoning, not actual test execution.
     /// </summary>
-    public string? ExecutabilityNote { get; init; }
+    public string? ExecutabilityNote
+    {
+        get; init;
+    }
 }
 
 /// <summary>

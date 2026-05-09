@@ -11,9 +11,15 @@ namespace GauntletCI.Core.Rules;
 public interface IRule
 {
     /// <summary>The stable rule identifier (e.g. "GCI0001") used in config and output.</summary>
-    string Id { get; }
+    string Id
+    {
+        get;
+    }
     /// <summary>The human-readable display name shown in findings and reports.</summary>
-    string Name { get; }
+    string Name
+    {
+        get;
+    }
     /// <summary>
     /// Evaluates the rule against the provided analysis context and returns any findings.
     /// </summary>

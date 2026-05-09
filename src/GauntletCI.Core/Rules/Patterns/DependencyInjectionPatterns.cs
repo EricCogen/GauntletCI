@@ -56,10 +56,13 @@ internal static class DependencyInjectionPatterns
     /// </summary>
     public static bool IsInfrastructureFile(string path)
     {
-        if (string.IsNullOrEmpty(path)) return false;
-        
+        if (string.IsNullOrEmpty(path))
+        {
+            return false;
+        }
+
         var lowerPath = path.Replace('\\', '/').ToLowerInvariant();
-        
+
         // DI container and startup files
         return lowerPath.Contains("startup") ||
                lowerPath.Contains("servicecollection") ||

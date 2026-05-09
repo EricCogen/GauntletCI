@@ -18,25 +18,34 @@ internal class BehavioralChangeContextAnalyzer
 
         // Signal 1: Security-critical file path (+0.20)
         if (diff.Files.Any(f => WellKnownPatterns.IsSecurityCriticalPath(f.NewPath ?? f.OldPath)))
+        {
             boost += 0.20;
+        }
 
         // Signal 2: Security-related commit message (+0.15)
         if (!string.IsNullOrEmpty(diff.CommitMessage) && WellKnownPatterns.HasSecurityKeywords(diff.CommitMessage))
+        {
             boost += 0.15;
+        }
 
         // Signal 3: Test changes with security patterns (+0.15)
         if (HasSecurityTestChanges(diff))
+        {
             boost += 0.15;
+        }
 
         return Math.Min(boost, 0.50); // Cap at +0.50 for maximum confidence boost
     }
 
     private static bool HasSecurityTestChanges(DiffContext diff)
     {
-        var testFiles = diff.Files.Where(f => 
+        var testFiles = diff.Files.Where(f =>
             WellKnownPatterns.IsTestFile(f.NewPath ?? f.OldPath)).ToList();
 
-        if (testFiles.Count == 0) return false;
+        if (testFiles.Count == 0)
+        {
+            return false;
+        }
 
         return testFiles.Any(f =>
         {
@@ -110,9 +119,13 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             {
                 finding.Confidence = newConfidence;
                 if (string.IsNullOrEmpty(finding.Evidence))
+                {
                     finding.Evidence = $"Context signals (+{boost:P0}): security-critical path, keywords, or test changes detected.";
+                }
                 else
+                {
                     finding.Evidence += $" [Context boost +{boost:P0}]";
+                }
             }
         }
     }
@@ -138,7 +151,10 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
         // Threshold of 15: small refactors routinely remove 5-10 lines of control flow.
         // Only a large-scale logic deletion (whole method body stripped, significant function
         // rewrite) should trigger without accompanying test changes.
-        if (removedLogicLines.Count < 15) return;
+        if (removedLogicLines.Count < 15)
+        {
+            return;
+        }
 
         bool hasTestChanges = diff.Files.Any(f =>
             f.NewPath.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
@@ -164,11 +180,14 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
     {
         // Accumulate per-file results; cross-file dedup prevents explosion on wide diffs.
         var fileIncompatible = new List<(DiffFile File, List<(string Name, DiffLine Removed, DiffLine Added)> Items)>();
-        var fileCompatible   = new List<(DiffFile File, List<(string Name, DiffLine Removed, DiffLine Added)> Items)>();
+        var fileCompatible = new List<(DiffFile File, List<(string Name, DiffLine Removed, DiffLine Added)> Items)>();
 
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath))
+            {
+                continue;
+            }
 
             var removedSigs = file.RemovedLines
                 .Where(l => { var t = l.Content.TrimStart(); return WellKnownPatterns.GuardPatterns.HasAccessModifier(t) && l.Content.Contains('('); })
@@ -179,57 +198,77 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
                 .ToList();
 
             var incompatible = new List<(string Name, DiffLine RemovedLine, DiffLine AddedLine)>();
-            var compatible   = new List<(string Name, DiffLine RemovedLine, DiffLine AddedLine)>();
+            var compatible = new List<(string Name, DiffLine RemovedLine, DiffLine AddedLine)>();
 
             foreach (var removed in removedSigs)
             {
-                if (removed.Content.TrimStart().StartsWith("private ", StringComparison.Ordinal)) continue;
+                if (removed.Content.TrimStart().StartsWith("private ", StringComparison.Ordinal))
+                {
+                    continue;
+                }
 
                 var removedName = ExtractMethodName(removed.Content);
-                if (removedName is null) continue;
+                if (removedName is null)
+                {
+                    continue;
+                }
 
                 var matchingAdded = addedSigs.FirstOrDefault(a => ExtractMethodName(a.Content) == removedName);
                 if (matchingAdded is not null && NormalizeSignature(removed.Content) != NormalizeSignature(matchingAdded.Content))
                 {
                     if (WellKnownPatterns.IsBackwardCompatibleExtension(removed.Content, matchingAdded.Content))
+                    {
                         compatible.Add((removedName, removed, matchingAdded));
+                    }
                     else
+                    {
                         incompatible.Add((removedName, removed, matchingAdded));
+                    }
                 }
             }
 
-            if (incompatible.Count > 0) fileIncompatible.Add((file, incompatible));
-            if (compatible.Count > 0)   fileCompatible.Add((file, compatible));
+            if (incompatible.Count > 0)
+            {
+                fileIncompatible.Add((file, incompatible));
+            }
+
+            if (compatible.Count > 0)
+            {
+                fileCompatible.Add((file, compatible));
+            }
         }
 
         EmitSigFindings(findings, fileIncompatible,
-            single1Summary:  (name, file) => $"Method signature changed: '{name}' in {file.NewPath}",
-            singleNSummary:  (count, file) => $"{count} method signatures changed (incompatible) in {file.NewPath}",
-            crossSummary:    (total, fcount) => $"{total} method signatures changed (incompatible) across {fcount} files",
-            whyItMatters:    "Signature changes can break callers that haven't been updated.",
+            single1Summary: (name, file) => $"Method signature changed: '{name}' in {file.NewPath}",
+            singleNSummary: (count, file) => $"{count} method signatures changed (incompatible) in {file.NewPath}",
+            crossSummary: (total, fcount) => $"{total} method signatures changed (incompatible) across {fcount} files",
+            whyItMatters: "Signature changes can break callers that haven't been updated.",
             suggestedAction: "Verify all callers are updated and consider adding an overload for backward compatibility.",
-            confidence:      Confidence.Medium);
+            confidence: Confidence.Medium);
 
         EmitSigFindings(findings, fileCompatible,
-            single1Summary:  (name, file) => $"Backward-compatible signature extension: '{name}' in {file.NewPath}",
-            singleNSummary:  (count, file) => $"{count} backward-compatible signature extensions in {file.NewPath}",
-            crossSummary:    (total, fcount) => $"{total} backward-compatible signature extensions across {fcount} files",
-            whyItMatters:    "New parameters have default values (backward-compatible), but callers using positional arguments may need review.",
+            single1Summary: (name, file) => $"Backward-compatible signature extension: '{name}' in {file.NewPath}",
+            singleNSummary: (count, file) => $"{count} backward-compatible signature extensions in {file.NewPath}",
+            crossSummary: (total, fcount) => $"{total} backward-compatible signature extensions across {fcount} files",
+            whyItMatters: "New parameters have default values (backward-compatible), but callers using positional arguments may need review.",
             suggestedAction: "Confirm all existing callers still compile and behave correctly with the new defaults.",
-            confidence:      Confidence.Low);
+            confidence: Confidence.Low);
     }
 
     private void EmitSigFindings(
         List<Finding> findings,
         List<(DiffFile File, List<(string Name, DiffLine Removed, DiffLine Added)> Items)> perFile,
         Func<string, DiffFile, string> single1Summary,
-        Func<int, DiffFile, string>    singleNSummary,
-        Func<int, int, string>         crossSummary,
+        Func<int, DiffFile, string> singleNSummary,
+        Func<int, int, string> crossSummary,
         string whyItMatters,
         string suggestedAction,
         Confidence confidence)
     {
-        if (perFile.Count == 0) return;
+        if (perFile.Count == 0)
+        {
+            return;
+        }
 
         if (perFile.Count <= 3)
         {
@@ -254,11 +293,11 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             int total = perFile.Sum(x => x.Items.Count);
             var fileList = FormatFileList(perFile.Select(x => (x.File, x.Items.Count)));
             findings.Add(CreateFinding(
-                summary:         crossSummary(total, perFile.Count),
-                evidence:        $"Files: {fileList}",
-                whyItMatters:    whyItMatters,
+                summary: crossSummary(total, perFile.Count),
+                evidence: $"Files: {fileList}",
+                whyItMatters: whyItMatters,
                 suggestedAction: suggestedAction,
-                confidence:      confidence));
+                confidence: confidence));
         }
     }
 
@@ -280,10 +319,18 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
     private static string? ExtractMethodName(string line)
     {
         var parenIdx = line.IndexOf('(');
-        if (parenIdx <= 0) return null;
+        if (parenIdx <= 0)
+        {
+            return null;
+        }
+
         var before = line[..parenIdx].TrimEnd();
         var lastSpace = before.LastIndexOf(' ');
-        if (lastSpace < 0) return null;
+        if (lastSpace < 0)
+        {
+            return null;
+        }
+
         return before[(lastSpace + 1)..];
     }
 
@@ -291,7 +338,10 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
     {
         var s = sig.Replace("async ", "", StringComparison.Ordinal).Trim();
         var open = s.IndexOf('(');
-        if (open < 0) return s;
+        if (open < 0)
+        {
+            return s;
+        }
 
         // Find the matching closing paren with string-literal-aware depth tracking
         // so default values like string s = ")" don't cause early termination.
@@ -304,21 +354,55 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             char c = s[i];
             if (inString)
             {
-                if (c == '\\') { i++; continue; } // skip escaped char in regular string
-                if (c == delim) inString = false;
+                if (c == '\\')
+                {
+                    i++;
+                    continue;
+                } // skip escaped char in regular string
+                if (c == delim)
+                {
+                    inString = false;
+                }
+
                 continue;
             }
-            if (c is '"' or '\'') { inString = true; delim = c; continue; }
-            if (c == '(') depth++;
-            else if (c == ')') { depth--; if (depth == 0) { closeIdx = i; break; } }
+            if (c is '"' or '\'')
+            {
+                inString = true;
+                delim = c;
+                continue;
+            }
+            if (c == '(')
+            {
+                depth++;
+            }
+            else if (c == ')')
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    closeIdx = i;
+                    break;
+                }
+            }
         }
-        if (closeIdx < 0) return s;
+        if (closeIdx < 0)
+        {
+            return s;
+        }
 
         // Include where-clauses (which precede the body) but drop method body (=> or {).
         for (int i = closeIdx + 1; i < s.Length; i++)
         {
-            if (s[i] == '{') return s[..i].TrimEnd();
-            if (s[i] == '=' && i + 1 < s.Length && s[i + 1] == '>') return s[..i].TrimEnd();
+            if (s[i] == '{')
+            {
+                return s[..i].TrimEnd();
+            }
+
+            if (s[i] == '=' && i + 1 < s.Length && s[i + 1] == '>')
+            {
+                return s[..i].TrimEnd();
+            }
         }
         return s;
     }
@@ -329,7 +413,10 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
 
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath))
+            {
+                continue;
+            }
 
             // Extract all cryptographic method calls from removed and added lines
             var removedCalls = ExtractCryptoMethodCalls(file.RemovedLines.ToList());
@@ -338,8 +425,15 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             // For each cryptographic method, check if arguments differ between removed and added
             foreach (var methodName in CryptographicMethods)
             {
-                if (!removedCalls.TryGetValue(methodName, out var removedArgs)) continue;
-                if (!addedCalls.TryGetValue(methodName, out var addedArgs)) continue;
+                if (!removedCalls.TryGetValue(methodName, out var removedArgs))
+                {
+                    continue;
+                }
+
+                if (!addedCalls.TryGetValue(methodName, out var addedArgs))
+                {
+                    continue;
+                }
 
                 // Same method called with different arguments = behavioral/security boundary change
                 if (removedArgs != addedArgs)
@@ -370,11 +464,17 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             {
                 var pattern = $"{method}(";
                 var idx = content.IndexOf(pattern, StringComparison.Ordinal);
-                if (idx < 0) continue;
+                if (idx < 0)
+                {
+                    continue;
+                }
 
                 var argsStart = idx + pattern.Length;
                 var closeParen = FindMatchingCloseParen(content, argsStart - 1);
-                if (closeParen < 0) continue;
+                if (closeParen < 0)
+                {
+                    continue;
+                }
 
                 var args = content[argsStart..closeParen].Trim();
                 // Store the first occurrence of each method (or could store all and compare)
@@ -391,7 +491,10 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
     // Finds the matching closing parenthesis, accounting for nested parens and string literals.
     private static int FindMatchingCloseParen(string content, int openParenIdx)
     {
-        if (openParenIdx < 0 || openParenIdx >= content.Length) return -1;
+        if (openParenIdx < 0 || openParenIdx >= content.Length)
+        {
+            return -1;
+        }
 
         int depth = 0;
         bool inString = false;
@@ -403,14 +506,37 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
 
             if (inString)
             {
-                if (c == '\\') { i++; continue; }
-                if (c == delim) inString = false;
+                if (c == '\\')
+                {
+                    i++;
+                    continue;
+                }
+                if (c == delim)
+                {
+                    inString = false;
+                }
+
                 continue;
             }
 
-            if (c is '"' or '\'') { inString = true; delim = c; continue; }
-            if (c == '(') depth++;
-            else if (c == ')') { depth--; if (depth == 0) return i; }
+            if (c is '"' or '\'')
+            {
+                inString = true;
+                delim = c;
+                continue;
+            }
+            if (c == '(')
+            {
+                depth++;
+            }
+            else if (c == ')')
+            {
+                depth--;
+                if (depth == 0)
+                {
+                    return i;
+                }
+            }
         }
 
         return -1;
@@ -422,15 +548,15 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
     {
         // Check if the file contains test-related patterns in the path or content
         var filePath = file.NewPath ?? file.OldPath;
-        
+
         // Patterns from corpus analysis showing high FP rates in test code
-        var testIndicators = new[] { 
-            "/test/", ".test/", "/tests/", ".tests/", 
-            ".Tests/", "/Tests/", "/UnitTests/", 
-            "Mock", "Fake", "Builder", "Factory" 
+        var testIndicators = new[] {
+            "/test/", ".test/", "/tests/", ".tests/",
+            ".Tests/", "/Tests/", "/UnitTests/",
+            "Mock", "Fake", "Builder", "Factory"
         };
 
-        bool isTestRelated = testIndicators.Any(indicator => 
+        bool isTestRelated = testIndicators.Any(indicator =>
             filePath.Contains(indicator, StringComparison.OrdinalIgnoreCase));
 
         // Patterns indicating refactored test helpers (low behavioral risk)
@@ -440,7 +566,9 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
 
         // If this appears to be test code with helper/extension patterns, reduce confidence
         if (isTestRelated && isTestHelper && baseConfidence == Confidence.Medium)
+        {
             return Confidence.Low;
+        }
 
         return baseConfidence;
     }

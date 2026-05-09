@@ -53,8 +53,16 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
     {
         get
         {
-            if (_loadFailed || _disposed) return false;
-            if (_model != null) return true;
+            if (_loadFailed || _disposed)
+            {
+                return false;
+            }
+
+            if (_model != null)
+            {
+                return true;
+            }
+
             return new ModelDownloader(_modelPath).IsModelCached();
         }
     }
@@ -82,7 +90,10 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
 
     private async Task<string> RunInferenceAsync(string prompt, CancellationToken ct)
     {
-        if (_disposed) return string.Empty;
+        if (_disposed)
+        {
+            return string.Empty;
+        }
 
         if (_promptsUsed >= _maxPromptsPerRun)
         {
@@ -91,13 +102,17 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
         }
 
         if (!TryEnsureLoaded())
+        {
             return string.Empty;
+        }
 
         Interlocked.Increment(ref _promptsUsed);
 
         // Verify resources are loaded (non-blocking check, no lock needed outside inference)
         if (_tokenizer == null || _model == null || _tokenizerStream == null)
+        {
             return string.Empty;
+        }
 
         return await Task.Run(() =>
         {
@@ -107,16 +122,18 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
             {
                 // Double-check after acquiring lock
                 if (_tokenizer == null || _model == null || _tokenizerStream == null)
+                {
                     return string.Empty;
+                }
             }
-            
+
             try
             {
                 var sw = Stopwatch.StartNew();
                 var tokenizer = _tokenizer!;
                 var model = _model!;
                 var tokenizerStream = _tokenizerStream!;
-                
+
                 var sequences = tokenizer.Encode(prompt);
                 using var generatorParams = new GeneratorParams(model);
                 generatorParams.SetSearchOption("max_length", MaxOutputTokens);
@@ -130,11 +147,17 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
                 {
                     ct.ThrowIfCancellationRequested();
                     generator.GenerateNextToken();
-                    if (generator.IsDone()) break;
+                    if (generator.IsDone())
+                    {
+                        break;
+                    }
 
                     var tokens = generator.GetNextTokens();
-                    if (tokens.Length == 0) break;
-                    
+                    if (tokens.Length == 0)
+                    {
+                        break;
+                    }
+
                     var token = tokens[0];
                     sb.Append(tokenizerStream.Decode(token));
 
@@ -161,13 +184,27 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
 
     private bool TryEnsureLoaded()
     {
-        if (_model != null) return true;
-        if (_loadFailed) return false;
+        if (_model != null)
+        {
+            return true;
+        }
+
+        if (_loadFailed)
+        {
+            return false;
+        }
 
         lock (_lock)
         {
-            if (_model != null) return true;
-            if (_loadFailed) return false;
+            if (_model != null)
+            {
+                return true;
+            }
+
+            if (_loadFailed)
+            {
+                return false;
+            }
 
             try
             {
@@ -188,7 +225,9 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
                 sw.Stop();
 
                 if (sw.ElapsedMilliseconds > 3000)
+                {
                     Console.Error.WriteLine($"[GauntletCI] Model load took {sw.ElapsedMilliseconds}ms (limit 3000ms).");
+                }
 
                 return true;
             }
@@ -204,7 +243,11 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
     /// <summary>Releases the ONNX model, tokenizer, and all associated native handles.</summary>
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
         lock (_lock)
         {

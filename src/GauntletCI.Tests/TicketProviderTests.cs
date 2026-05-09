@@ -87,21 +87,21 @@ public class TicketResolverTests
     [Fact]
     public void JiraProvider_IsNotAvailable_WhenEnvVarsMissing()
     {
-        var prevUrl   = Environment.GetEnvironmentVariable("JIRA_BASE_URL");
+        var prevUrl = Environment.GetEnvironmentVariable("JIRA_BASE_URL");
         var prevToken = Environment.GetEnvironmentVariable("JIRA_API_TOKEN");
         var prevEmail = Environment.GetEnvironmentVariable("JIRA_USER_EMAIL");
         try
         {
-            Environment.SetEnvironmentVariable("JIRA_BASE_URL",   null);
-            Environment.SetEnvironmentVariable("JIRA_API_TOKEN",  null);
+            Environment.SetEnvironmentVariable("JIRA_BASE_URL", null);
+            Environment.SetEnvironmentVariable("JIRA_API_TOKEN", null);
             Environment.SetEnvironmentVariable("JIRA_USER_EMAIL", null);
             var provider = new JiraTicketProvider();
             Assert.False(provider.IsAvailable);
         }
         finally
         {
-            Environment.SetEnvironmentVariable("JIRA_BASE_URL",   prevUrl);
-            Environment.SetEnvironmentVariable("JIRA_API_TOKEN",  prevToken);
+            Environment.SetEnvironmentVariable("JIRA_BASE_URL", prevUrl);
+            Environment.SetEnvironmentVariable("JIRA_API_TOKEN", prevToken);
             Environment.SetEnvironmentVariable("JIRA_USER_EMAIL", prevEmail);
         }
     }
@@ -126,17 +126,17 @@ public class TicketResolverTests
     public void GitHubProvider_IsNotAvailable_WhenEnvVarMissing()
     {
         var prevToken = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
-        var prevRepo  = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
+        var prevRepo = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
         try
         {
-            Environment.SetEnvironmentVariable("GITHUB_TOKEN",      null);
+            Environment.SetEnvironmentVariable("GITHUB_TOKEN", null);
             Environment.SetEnvironmentVariable("GITHUB_REPOSITORY", null);
             var provider = new GitHubIssueProvider();
             Assert.False(provider.IsAvailable);
         }
         finally
         {
-            Environment.SetEnvironmentVariable("GITHUB_TOKEN",      prevToken);
+            Environment.SetEnvironmentVariable("GITHUB_TOKEN", prevToken);
             Environment.SetEnvironmentVariable("GITHUB_REPOSITORY", prevRepo);
         }
     }

@@ -19,13 +19,13 @@ internal sealed class LlmDaemonClient : ILlmEngine
     private static readonly TimeSpan DaemonStartupPollInterval = TimeSpan.FromMilliseconds(500);
 
     private readonly NamedPipeClientStream _pipe;
-    private readonly StreamReader          _reader;
-    private readonly StreamWriter          _writer;
+    private readonly StreamReader _reader;
+    private readonly StreamWriter _writer;
     private bool _disposed;
 
     private LlmDaemonClient(NamedPipeClientStream pipe, StreamReader reader, StreamWriter writer)
     {
-        _pipe   = pipe;
+        _pipe = pipe;
         _reader = reader;
         _writer = writer;
     }
@@ -41,17 +41,24 @@ internal sealed class LlmDaemonClient : ILlmEngine
     {
         // Fast path: daemon already running
         var client = await TryConnectAsync(ct);
-        if (client is not null) return client;
+        if (client is not null)
+        {
+            return client;
+        }
 
         // Only auto-start if the model is already downloaded
         var modelDir = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             ".gauntletci", "models", "phi4-mini");
         if (!new ModelDownloader(modelDir).IsModelCached())
+        {
             return null;
+        }
 
         if (!TrySpawnDaemon())
+        {
             return null;
+        }
 
         // Notify the user immediately: they'll see this before the wait begins
         Console.Error.WriteLine();
@@ -68,7 +75,10 @@ internal sealed class LlmDaemonClient : ILlmEngine
         {
             await Task.Delay(DaemonStartupPollInterval, ct);
             client = await TryConnectAsync(ct);
-            if (client is not null) return client;
+            if (client is not null)
+            {
+                return client;
+            }
         }
 
         Console.Error.WriteLine(
@@ -96,10 +106,18 @@ internal sealed class LlmDaemonClient : ILlmEngine
             // Ping to confirm the server is ready
             await writer.WriteLineAsync(JsonSerializer.Serialize(new DaemonRequest("ping")));
             var raw = await reader.ReadLineAsync(ct);
-            if (raw is null) { pipe.Dispose(); return null; }
+            if (raw is null)
+            {
+                pipe.Dispose();
+                return null;
+            }
 
             var pong = JsonSerializer.Deserialize<DaemonResponse>(raw);
-            if (pong?.Ok != true) { pipe.Dispose(); return null; }
+            if (pong?.Ok != true)
+            {
+                pipe.Dispose();
+                return null;
+            }
 
             pipe = null; // ownership transferred to client
             return new LlmDaemonClient(
@@ -128,7 +146,7 @@ internal sealed class LlmDaemonClient : ILlmEngine
             var psi = new ProcessStartInfo(exe, "__llm-daemon")
             {
                 UseShellExecute = false,
-                CreateNoWindow  = true,
+                CreateNoWindow = true,
             };
 
             // Start the daemon and immediately release our handle: we don't own its lifetime.
@@ -144,9 +162,9 @@ internal sealed class LlmDaemonClient : ILlmEngine
     public async Task<string> EnrichFindingAsync(Finding finding, CancellationToken ct = default)
     {
         var req = new DaemonRequest("enrich",
-            RuleId:   finding.RuleId,
+            RuleId: finding.RuleId,
             RuleName: finding.RuleName,
-            Summary:  finding.Summary,
+            Summary: finding.Summary,
             Evidence: finding.Evidence);
 
         var resp = await SendAsync(req, ct);
@@ -161,7 +179,11 @@ internal sealed class LlmDaemonClient : ILlmEngine
 
     private async Task<DaemonResponse?> SendAsync(DaemonRequest req, CancellationToken ct)
     {
-        if (_disposed || !_pipe.IsConnected) return null;
+        if (_disposed || !_pipe.IsConnected)
+        {
+            return null;
+        }
+
         try
         {
             await _writer.WriteLineAsync(JsonSerializer.Serialize(req));
@@ -176,10 +198,26 @@ internal sealed class LlmDaemonClient : ILlmEngine
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+        {
+            return;
+        }
+
         _disposed = true;
-        try { _writer.Dispose(); } catch { }
-        try { _reader.Dispose(); } catch { }
-        try { _pipe.Dispose();  } catch { }
+        try
+        {
+            _writer.Dispose();
+        }
+        catch { }
+        try
+        {
+            _reader.Dispose();
+        }
+        catch { }
+        try
+        {
+            _pipe.Dispose();
+        }
+        catch { }
     }
 }

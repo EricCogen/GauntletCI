@@ -8,23 +8,26 @@ namespace GauntletCI.Tests;
 public class SlackTeamsNotifierTests
 {
     private static EvaluationResult MakeResult(params Finding[] findings) =>
-        new() { Findings = [.. findings] };
+        new()
+        {
+            Findings = [.. findings]
+        };
 
     private static Finding MakeFinding(
-        string ruleId    = "GCI0001",
-        string summary   = "A test summary",
-        string evidence  = "some evidence",
+        string ruleId = "GCI0001",
+        string summary = "A test summary",
+        string evidence = "some evidence",
         RuleSeverity severity = RuleSeverity.Block) => new()
-    {
-        RuleId          = ruleId,
-        RuleName        = "Test Rule",
-        Summary         = summary,
-        Evidence        = evidence,
-        WhyItMatters    = "why it matters",
-        SuggestedAction = "do something",
-        Confidence      = Confidence.High,
-        Severity        = severity,
-    };
+        {
+            RuleId = ruleId,
+            RuleName = "Test Rule",
+            Summary = summary,
+            Evidence = evidence,
+            WhyItMatters = "why it matters",
+            SuggestedAction = "do something",
+            Confidence = Confidence.High,
+            Severity = severity,
+        };
 
     [Fact]
     public void BuildSlackPayload_WithBlockFindings_ContainsRuleId()

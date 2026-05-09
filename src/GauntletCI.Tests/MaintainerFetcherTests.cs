@@ -122,9 +122,13 @@ public sealed class MaintainerFetcherTests
         var handler = new FakeHttpHandler(url =>
         {
             if (url.Contains("/contributors"))
+            {
                 return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(contributorsJson) };
+            }
             if (url.Contains("/search/issues"))
+            {
                 return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(searchJson) };
+            }
             return NotFound();
         });
 
@@ -150,9 +154,13 @@ public sealed class MaintainerFetcherTests
         var handler = new FakeHttpHandler(url =>
         {
             if (url.Contains("/contributors"))
+            {
                 return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(contributorsJson) };
+            }
             if (url.Contains("/search/issues"))
+            {
                 return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(searchJson) };
+            }
             return NotFound();
         });
 
@@ -161,7 +169,7 @@ public sealed class MaintainerFetcherTests
         var results = await fetcher.FetchAsync(targets, 100, default);
 
         Assert.Equal(99, results[0].Reactions);
-        Assert.Equal(3,  results[^1].Reactions);
+        Assert.Equal(3, results[^1].Reactions);
     }
 
     [Fact]
@@ -170,7 +178,10 @@ public sealed class MaintainerFetcherTests
         var handler = new FakeHttpHandler(url =>
         {
             if (url.Contains("/contributors"))
+            {
                 return new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent("[]") };
+            }
+
             return NotFound();
         });
 
@@ -209,7 +220,10 @@ public sealed class MaintainerFetcherTests
     }
 
     private static HttpResponseMessage NotFound() =>
-        new(HttpStatusCode.NotFound) { Content = new StringContent("{}") };
+        new(HttpStatusCode.NotFound)
+        {
+            Content = new StringContent("{}")
+        };
 
     // ── Fake handler ──────────────────────────────────────────────────────────
 

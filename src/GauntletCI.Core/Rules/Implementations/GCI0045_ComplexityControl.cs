@@ -9,8 +9,10 @@ namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
 /// GCI0045, Complexity Control
-/// Detects over-engineering: single-use interfaces, abstract classes without abstract members,
-/// and passive delegation wrappers.
+/// Detects over-engineering introduced in the diff:
+/// - newly introduced single-use interfaces (exactly one visible implementor),
+/// - abstract classes without abstract members,
+/// - passive delegation wrappers.
 /// </summary>
 public class GCI0045_ComplexityControl : RuleBase
 {
@@ -51,25 +53,29 @@ public class GCI0045_ComplexityControl : RuleBase
 
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath))
+            {
+                continue;
+            }
+
             foreach (var line in file.AddedLines)
             {
                 var match = InterfaceDefRegex.Match(line.Content);
                 if (match.Success)
+                {
                     interfaceDefinitions[match.Groups[1].Value] = (file.NewPath, line);
+                }
             }
         }
 
-        foreach (var (interfaceName, (sourcePath, sourceLine)) in interfaceDefinitions)
+        foreach (var (interfaceName, (sourcePath, _)) in interfaceDefinitions)
         {
-            // Count files that explicitly implement or reference this interface
             int implCount = 0;
             int referenceCount = 0;
             string? implFile = null;
 
             foreach (var file in diff.Files)
             {
-                // Check for class declaration implementing the interface
                 bool hasExplicitImpl = file.AddedLines.Any(l =>
                     (l.Content.Contains($": {interfaceName}", StringComparison.Ordinal) ||
                      l.Content.Contains($": {interfaceName},", StringComparison.Ordinal) ||
@@ -82,30 +88,35 @@ public class GCI0045_ComplexityControl : RuleBase
                     implFile ??= file.NewPath;
                 }
 
-                // Count any reference (type annotations, casts, returns, parameters)
                 bool hasReference = file.AddedLines.Any(l =>
                     l.Content.Contains(interfaceName, StringComparison.Ordinal) &&
                     !InterfaceDefRegex.IsMatch(l.Content) &&
                     !hasExplicitImpl);
 
-                if (hasReference) referenceCount++;
+                if (hasReference)
+                {
+                    referenceCount++;
+                }
             }
 
-            // Fire when:
-            // - 0 implementations (premature abstraction)
-            // - 1 implementation (single-use)
-            // - Multiple references but no clear alternative uses (likely test boundary only)
-            if (implCount > 1) continue;
+            // Narrow scope to newly introduced single-use interfaces only.
+            // Skip no-implementor cases (often boundary contracts expanded in later diffs)
+            // and skip broader usage with multiple references.
+            if (implCount != 1)
+            {
+                continue;
+            }
 
-            var evidenceDetail = implFile != null
-                ? $"Interface defined in {Path.GetFileName(sourcePath)}; single implementor in {Path.GetFileName(implFile)}"
-                : $"Interface defined in {Path.GetFileName(sourcePath)}; no implementing class visible in this diff";
+            if (referenceCount > 1)
+            {
+                continue;
+            }
 
             findings.Add(CreateFinding(
-                summary: $"Interface {interfaceName} has {(implCount == 0 ? "no visible" : "exactly one")} implementing class in this diff",
-                evidence: evidenceDetail,
-                whyItMatters: "An interface with a single implementation adds indirection without enabling polymorphism or testability. It is often premature abstraction.",
-                suggestedAction: "Consider using a concrete class directly. Add the interface only when a second implementation or mocking boundary is needed.",
+                summary: $"Interface {interfaceName} has exactly one implementing class in this diff",
+                evidence: $"Interface defined in {Path.GetFileName(sourcePath)}; single implementor in {Path.GetFileName(implFile!)}",
+                whyItMatters: "A newly introduced interface with one implementation often adds indirection without clear polymorphic value.",
+                suggestedAction: "Use the concrete type for now; extract or keep the interface when a second implementation or stronger boundary need is demonstrated.",
                 confidence: Confidence.Low));
         }
     }
@@ -117,7 +128,10 @@ public class GCI0045_ComplexityControl : RuleBase
             var addedLines = file.AddedLines.ToList();
 
             bool hasAbstractClass = addedLines.Any(l => AbstractClassRegex.IsMatch(l.Content));
-            if (!hasAbstractClass) continue;
+            if (!hasAbstractClass)
+            {
+                continue;
+            }
 
             // Skip when the abstract class declaration includes a base type or interface (`: SomeBase`).
             // In those cases the contract is defined by the ancestor, not by abstract members here.
@@ -125,7 +139,10 @@ public class GCI0045_ComplexityControl : RuleBase
                 AbstractClassRegex.IsMatch(l.Content) &&
                 l.Content.Contains(':'));
 
-            if (classHasBaseType) continue;
+            if (classHasBaseType)
+            {
+                continue;
+            }
 
             // Check all visible hunk lines (not just added): abstract members may be in context.
             var allVisible = file.Hunks.SelectMany(h => h.Lines)
@@ -136,7 +153,10 @@ public class GCI0045_ComplexityControl : RuleBase
                 AbstractMemberRegex.IsMatch(l.Content) &&
                 !AbstractClassRegex.IsMatch(l.Content));
 
-            if (hasAbstractMember) continue;
+            if (hasAbstractMember)
+            {
+                continue;
+            }
 
             findings.Add(CreateFinding(
                 file,
@@ -152,7 +172,10 @@ public class GCI0045_ComplexityControl : RuleBase
     {
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath))
+            {
+                continue;
+            }
 
             var addedLines = file.AddedLines.ToList();
 
@@ -161,7 +184,10 @@ public class GCI0045_ComplexityControl : RuleBase
                 .Where(l => DelegationCallRegex.IsMatch(l.Content))
                 .ToList();
 
-            if (delegatingMethods.Count < 2) continue;
+            if (delegatingMethods.Count < 2)
+            {
+                continue;
+            }
 
             // Check if this file stores a dependency (field or property assignment)
             bool hasStoredDependency = addedLines.Any(l =>

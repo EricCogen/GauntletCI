@@ -9,7 +9,10 @@ public sealed class RoundRobinLlmLabelerTests
     // Fake labeler that returns a fixed result or null, and tracks call order.
     private sealed class FakeLabeler(LlmLabelResult? returnValue = null) : ILlmLabeler
     {
-        public int CallCount { get; private set; }
+        public int CallCount
+        {
+            get; private set;
+        }
         public string Name { get; init; } = "fake";
 
         public Task<LlmLabelResult?> ClassifyAsync(
@@ -45,7 +48,9 @@ public sealed class RoundRobinLlmLabelerTests
 
         // Six calls → each endpoint gets exactly 2 turns.
         for (var i = 0; i < 6; i++)
+        {
             await rr.ClassifyAsync("GCI0001", "", "", null, [], "", default);
+        }
 
         Assert.Equal(2, a.CallCount);
         Assert.Equal(2, b.CallCount);
@@ -59,7 +64,7 @@ public sealed class RoundRobinLlmLabelerTests
     [Fact]
     public async Task Disables_endpoint_after_consecutive_failures()
     {
-        var bad  = new FakeLabeler(null) { Name = "bad" };   // always fails
+        var bad = new FakeLabeler(null) { Name = "bad" };   // always fails
         var good = new FakeLabeler(SomeResult()) { Name = "good" };
 
         // threshold=2: bad is disabled after 2 consecutive failures.
@@ -82,7 +87,9 @@ public sealed class RoundRobinLlmLabelerTests
         // bad should now be disabled for 1 hour.
         var badCallsBefore = bad.CallCount;
         for (var i = 0; i < 10; i++)
+        {
             await rr.ClassifyAsync("GCI0001", "", "", null, [], "", default);
+        }
 
         Assert.Equal(badCallsBefore, bad.CallCount);  // bad received no further calls
         Assert.True(good.CallCount > badCallsBefore);
@@ -96,7 +103,7 @@ public sealed class RoundRobinLlmLabelerTests
     public async Task Resets_consecutive_failures_on_disable()
     {
         // Use a very short cooldown so we can test re-entry in-process.
-        var bad  = new FakeLabeler(null) { Name = "bad" };
+        var bad = new FakeLabeler(null) { Name = "bad" };
         var good = new FakeLabeler(SomeResult()) { Name = "good" };
 
         // threshold=2; drive bad to disable via 3 calls (bad hit on calls 1 and 3).
@@ -109,7 +116,9 @@ public sealed class RoundRobinLlmLabelerTests
         cooldown: TimeSpan.FromMilliseconds(50));
 
         for (var i = 0; i < 3; i++)
+        {
             await rr.ClassifyAsync("GCI0001", "", "", null, [], "", default);
+        }
 
         var badCallsAfterDisable = bad.CallCount;
 
@@ -163,7 +172,7 @@ public sealed class RoundRobinLlmLabelerTests
     public async Task Does_not_throw_when_internal_counter_wraps_around()
     {
         var labeler = new FakeLabeler(SomeResult());
-        var rr = new RoundRobinLlmLabeler([ new LlmEndpoint("e", labeler) ]);
+        var rr = new RoundRobinLlmLabeler([new LlmEndpoint("e", labeler)]);
 
         // Force _nextIndex close to int.MaxValue by reflection so the very
         // next Increment wraps to int.MinValue, previously triggering Math.Abs overflow.
@@ -185,7 +194,7 @@ public sealed class RoundRobinLlmLabelerTests
     public void Constructor_throws_when_failureThreshold_is_zero()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new RoundRobinLlmLabeler([ new LlmEndpoint("e", new FakeLabeler()) ], failureThreshold: 0));
+            new RoundRobinLlmLabeler([new LlmEndpoint("e", new FakeLabeler())], failureThreshold: 0));
     }
 
     [Fact]
@@ -224,14 +233,17 @@ public sealed class RoundRobinLlmLabelerTests
     public void Dispose_disposes_underlying_labelers()
     {
         var disposableLabeler = new DisposableFakeLabeler();
-        var rr = new RoundRobinLlmLabeler([ new LlmEndpoint("e", disposableLabeler) ]);
+        var rr = new RoundRobinLlmLabeler([new LlmEndpoint("e", disposableLabeler)]);
         rr.Dispose();
         Assert.True(disposableLabeler.Disposed);
     }
 
     private sealed class DisposableFakeLabeler : ILlmLabeler, IDisposable
     {
-        public bool Disposed { get; private set; }
+        public bool Disposed
+        {
+            get; private set;
+        }
         public void Dispose() => Disposed = true;
         public Task<LlmLabelResult?> ClassifyAsync(string ruleId, string findingMessage,
             string evidence, string? filePath, IEnumerable<string> reviewCommentBodies,

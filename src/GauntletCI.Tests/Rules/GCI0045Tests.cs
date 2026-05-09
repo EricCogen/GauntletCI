@@ -95,10 +95,8 @@ public class GCI0045Tests
     }
 
     [Fact]
-    public async Task NewInterfaceWithNoImplementorInDiff_ShouldFire()
+    public async Task NewInterfaceWithNoImplementorInDiff_ShouldNotFire()
     {
-        // Regression: interface added with no visible implementor in the diff was missing (FN).
-        // implCount == 0 should now fire, same as implCount == 1.
         var raw = """
             diff --git a/src/IReaderOptions.cs b/src/IReaderOptions.cs
             index abc..def 100644
@@ -114,7 +112,7 @@ public class GCI0045Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f => f.Summary.Contains("IReaderOptions"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("IReaderOptions"));
     }
 
 

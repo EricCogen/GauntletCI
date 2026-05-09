@@ -38,19 +38,28 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
     {
         // Skip test files - test endpoints don't need production-level idempotency
         if (WellKnownPatterns.IsTestFile(file.NewPath))
+        {
             return;
+        }
 
         var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
 
         for (int i = 0; i < allLines.Count; i++)
         {
             var line = allLines[i];
-            if (line.Kind != DiffLineKind.Added) continue;
+            if (line.Kind != DiffLineKind.Added)
+            {
+                continue;
+            }
+
             var content = line.Content.Trim();
 
             if (!content.Equals("[HttpPost]", StringComparison.Ordinal) &&
                 !content.Equals("[HttpPost(\"\")]", StringComparison.Ordinal) &&
-                !content.StartsWith("[HttpPost(", StringComparison.Ordinal)) continue;
+                !content.StartsWith("[HttpPost(", StringComparison.Ordinal))
+            {
+                continue;
+            }
 
             // Look in a window around this line for idempotency signals
             int start = Math.Max(0, i - 2);
@@ -78,19 +87,26 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
     {
         // Skip migration and seed data files - they use raw INSERT intentionally
         if (WellKnownPatterns.GuardPatterns.IsMigrationOrSeedFile(file.NewPath))
+        {
             return;
+        }
 
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            if (!content.Contains("INSERT INTO", StringComparison.OrdinalIgnoreCase)) continue;
+            if (!content.Contains("INSERT INTO", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
 
             // Skip benign INSERT patterns that don't need upsert protection:
             // - SELECT INTO (copying data structure)
             // - INSERT ... DEFAULT (schema-only, no actual data)
             if (content.Contains("SELECT", StringComparison.OrdinalIgnoreCase) ||
                 content.Contains("DEFAULT", StringComparison.OrdinalIgnoreCase))
+            {
                 continue;
+            }
 
             // Check if this line or nearby lines have upsert protection
             bool hasUpsert = WellKnownPatterns.IdempotencyPatterns.UpsertPatterns.Any(p => content.Contains(p, StringComparison.OrdinalIgnoreCase));
@@ -115,24 +131,44 @@ public class GCI0022_IdempotencyRetrySafety : RuleBase
         for (int i = 0; i < allLines.Count; i++)
         {
             var line = allLines[i];
-            if (line.Kind != DiffLineKind.Added) continue;
+            if (line.Kind != DiffLineKind.Added)
+            {
+                continue;
+            }
+
             var content = line.Content.Trim();
 
             // Event subscription pattern: "SomeEvent += Handler;"
-            if (!content.Contains(" += ") || !content.EndsWith(';')) continue;
+            if (!content.Contains(" += ") || !content.EndsWith(';'))
+            {
+                continue;
+            }
+
             var contentLower = content.ToLowerInvariant();
             if (!contentLower.Contains("event") && !contentLower.Contains("handler") &&
-                !contentLower.Contains("listener") && !contentLower.Contains("callback")) continue;
+                !contentLower.Contains("listener") && !contentLower.Contains("callback"))
+            {
+                continue;
+            }
 
             // Exempt += inside a static constructor (runs exactly once -- inherently idempotent)
-            if (WellKnownPatterns.GuardPatterns.IsInsideStaticConstructor(allLines, i)) continue;
+            if (WellKnownPatterns.GuardPatterns.IsInsideStaticConstructor(allLines, i))
+            {
+                continue;
+            }
 
             // Exempt if in UI/XAML context (WPF, WinUI events are often attached once per control lifecycle)
-            if (WellKnownPatterns.GuardPatterns.IsUiEventHandler(file.NewPath)) continue;
+            if (WellKnownPatterns.GuardPatterns.IsUiEventHandler(file.NewPath))
+            {
+                continue;
+            }
 
             // Exempt MVVM View/ViewModel files - event subscriptions in these files are typically
             // done in constructor or initialization, which runs once per instance
-            if (IsMvvmComponentFile(file.NewPath)) continue;
+            if (IsMvvmComponentFile(file.NewPath))
+            {
+                continue;
+            }
 
             // Look for deduplication guard nearby (unsubscribe or bool guard)
             int start = Math.Max(0, i - 5);

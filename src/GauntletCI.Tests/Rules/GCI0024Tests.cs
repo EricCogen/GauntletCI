@@ -215,7 +215,8 @@ public class GCI0024Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var findings = await Rule.EvaluateAsync(diff, null);        Assert.DoesNotContain(findings, f => f.Summary.Contains("InvocationContext"));
+        var findings = await Rule.EvaluateAsync(diff, null);
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("InvocationContext"));
     }
 
     [Fact]

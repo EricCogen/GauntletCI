@@ -47,7 +47,10 @@ public static class GauntletTools
         }
         catch (Exception ex)
         {
-            return JsonSerializer.Serialize(new { error = ex.Message }, JsonOpts);
+            return JsonSerializer.Serialize(new
+            {
+                error = ex.Message
+            }, JsonOpts);
         }
     }
 
@@ -57,7 +60,9 @@ public static class GauntletTools
     {
         const int MaxDiffChars = 500_000;
         if (diff.Length > MaxDiffChars)
+        {
             return $"Error: diff input exceeds {MaxDiffChars:N0} character limit. Split the diff into smaller chunks.";
+        }
 
         try
         {
@@ -68,7 +73,10 @@ public static class GauntletTools
         }
         catch (Exception ex)
         {
-            return JsonSerializer.Serialize(new { error = ex.Message }, JsonOpts);
+            return JsonSerializer.Serialize(new
+            {
+                error = ex.Message
+            }, JsonOpts);
         }
     }
 
@@ -86,7 +94,10 @@ public static class GauntletTools
         }
         catch (Exception ex)
         {
-            return JsonSerializer.Serialize(new { error = ex.Message }, JsonOpts);
+            return JsonSerializer.Serialize(new
+            {
+                error = ex.Message
+            }, JsonOpts);
         }
     }
 
@@ -102,7 +113,10 @@ public static class GauntletTools
         }
         catch (Exception ex)
         {
-            return JsonSerializer.Serialize(new { error = ex.Message }, JsonOpts);
+            return JsonSerializer.Serialize(new
+            {
+                error = ex.Message
+            }, JsonOpts);
         }
     }
 
@@ -122,17 +136,29 @@ public static class GauntletTools
                 .Take(10)
                 .Select(g => new { ruleId = g.Key, count = g.Count() })
                 .ToList();
-            return JsonSerializer.Serialize(new { totalScans, scansWithFindings, totalFindings, topRules }, JsonOpts);
+            return JsonSerializer.Serialize(new
+            {
+                totalScans,
+                scansWithFindings,
+                totalFindings,
+                topRules
+            }, JsonOpts);
         }
         catch (Exception ex)
         {
-            return JsonSerializer.Serialize(new { error = ex.Message }, JsonOpts);
+            return JsonSerializer.Serialize(new
+            {
+                error = ex.Message
+            }, JsonOpts);
         }
     }
 
     private static async Task EnrichHighFindingsAsync(IReadOnlyList<Finding> findings)
     {
-        if (!_engine.IsAvailable) return;
+        if (!_engine.IsAvailable)
+        {
+            return;
+        }
 
         var toEnrich = findings
             .Where(f => f.Confidence == Confidence.High && f.LlmExplanation is null)

@@ -17,7 +17,11 @@ public static class TelemetryHasher
     /// <param name="input">The raw string to hash (trimmed and lowercased before hashing).</param>
     public static string Hash8(string input)
     {
-        if (string.IsNullOrEmpty(input)) return "00000000";
+        if (string.IsNullOrEmpty(input))
+        {
+            return "00000000";
+        }
+
         var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(input.Trim().ToLowerInvariant()));
         return Convert.ToHexString(bytes)[..8].ToLowerInvariant();
     }
@@ -41,7 +45,11 @@ public static class TelemetryHasher
                 CreateNoWindow = true,
             };
             using var proc = System.Diagnostics.Process.Start(psi);
-            if (proc is null) return "local";
+            if (proc is null)
+            {
+                return "local";
+            }
+
             var url = await proc.StandardOutput.ReadToEndAsync(ct);
             await proc.WaitForExitAsync(ct);
             return string.IsNullOrWhiteSpace(url) ? "local" : Hash8(url);

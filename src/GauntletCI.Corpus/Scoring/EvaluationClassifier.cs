@@ -41,16 +41,16 @@ public sealed class EvaluationClassifier : IEvaluationClassifier
             {
                 results.Add(new FindingEvaluation
                 {
-                    FixtureId       = fixture.FixtureId,
-                    RuleId          = ruleId,
-                    Tier            = fixture.Tier,
-                    Status          = label.ShouldTrigger
+                    FixtureId = fixture.FixtureId,
+                    RuleId = ruleId,
+                    Tier = fixture.Tier,
+                    Status = label.ShouldTrigger
                                         ? EvaluationStatus.TruePositive
                                         : EvaluationStatus.FalsePositive,
                     LabelConfidence = label.LabelSource == LabelSource.HumanReview
                                         ? LabelConfidence.Trusted
                                         : LabelConfidence.Heuristic,
-                    LabelReason     = label.Reason,
+                    LabelReason = label.Reason,
                 });
             }
             else
@@ -58,10 +58,10 @@ public sealed class EvaluationClassifier : IEvaluationClassifier
                 // Fired but no label: must be visible, not silently dropped
                 results.Add(new FindingEvaluation
                 {
-                    FixtureId       = fixture.FixtureId,
-                    RuleId          = ruleId,
-                    Tier            = fixture.Tier,
-                    Status          = EvaluationStatus.Unknown,
+                    FixtureId = fixture.FixtureId,
+                    RuleId = ruleId,
+                    Tier = fixture.Tier,
+                    Status = EvaluationStatus.Unknown,
                     LabelConfidence = LabelConfidence.Unknown,
                 });
             }
@@ -70,20 +70,23 @@ public sealed class EvaluationClassifier : IEvaluationClassifier
         // Evaluate every label where the rule did NOT fire
         foreach (var (ruleId, label) in labelByRule)
         {
-            if (firedRules.Contains(ruleId)) continue; // already classified above
+            if (firedRules.Contains(ruleId))
+            {
+                continue; // already classified above
+            }
 
             results.Add(new FindingEvaluation
             {
-                FixtureId       = fixture.FixtureId,
-                RuleId          = ruleId,
-                Tier            = fixture.Tier,
-                Status          = label.ShouldTrigger
+                FixtureId = fixture.FixtureId,
+                RuleId = ruleId,
+                Tier = fixture.Tier,
+                Status = label.ShouldTrigger
                                     ? EvaluationStatus.FalseNegative
                                     : EvaluationStatus.TrueNegative,
                 LabelConfidence = label.LabelSource == LabelSource.HumanReview
                                     ? LabelConfidence.Trusted
                                     : LabelConfidence.Heuristic,
-                LabelReason     = label.Reason,
+                LabelReason = label.Reason,
             });
         }
 

@@ -10,24 +10,32 @@ internal static class CorpusStringHelpers
         var ext = Path.GetExtension(path).ToLowerInvariant();
         return ext switch
         {
-            ".cs"   => "C#",
-            ".ts"   => "TypeScript",
-            ".js"   => "JavaScript",
-            ".py"   => "Python",
-            ".go"   => "Go",
+            ".cs" => "C#",
+            ".ts" => "TypeScript",
+            ".js" => "JavaScript",
+            ".py" => "Python",
+            ".go" => "Go",
             ".java" => "Java",
-            ".rs"   => "Rust",
-            ".rb"   => "Ruby",
-            _       => "",
+            ".rs" => "Rust",
+            ".rb" => "Ruby",
+            _ => "",
         };
     }
 
     internal static bool IsRateLimited(HttpResponseMessage resp)
     {
-        if (resp.StatusCode == HttpStatusCode.TooManyRequests) return true;
+        if (resp.StatusCode == HttpStatusCode.TooManyRequests)
+        {
+            return true;
+        }
+
         if (resp.StatusCode == HttpStatusCode.Forbidden &&
             resp.Headers.TryGetValues("x-ratelimit-remaining", out var vals) &&
-            vals.FirstOrDefault() == "0") return true;
+            vals.FirstOrDefault() == "0")
+        {
+            return true;
+        }
+
         return false;
     }
 }

@@ -15,7 +15,7 @@ public class GCI0052_DependencyBotApiDrift : RuleBase
     public GCI0052_DependencyBotApiDrift(IPatternProvider patterns) : base(patterns)
     {
     }
-    public override string Id   => "GCI0052";
+    public override string Id => "GCI0052";
     public override string Name => "Dependency Bot API Drift";
 
     private static readonly HashSet<string> LockfileNames =
@@ -51,7 +51,9 @@ public class GCI0052_DependencyBotApiDrift : RuleBase
 
         var actor = Environment.GetEnvironmentVariable("GITHUB_ACTOR");
         if (string.IsNullOrEmpty(actor) || !DependencyBotActors.Contains(actor))
+        {
             return Task.FromResult(findings);
+        }
 
         // Check all files (eligible and skipped) for lockfile changes
         var allFilePaths = context.EligibleFiles.Select(r => r.FilePath)
@@ -60,32 +62,42 @@ public class GCI0052_DependencyBotApiDrift : RuleBase
         bool hasLockfileChange = allFilePaths.Any(path =>
         {
             var fileName = Path.GetFileName(path);
-            if (LockfileNames.Contains(fileName)) return true;
+            if (LockfileNames.Contains(fileName))
+            {
+                return true;
+            }
+
             return Path.GetExtension(path).Equals(".csproj", StringComparison.OrdinalIgnoreCase);
         });
 
         if (!hasLockfileChange)
+        {
             return Task.FromResult(findings);
+        }
 
         // Check for public API changes in CS files
         foreach (var file in context.Diff.Files)
         {
             if (!file.NewPath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+            {
                 continue;
+            }
 
             foreach (var line in file.AddedLines)
             {
                 if (!PublicMethodSignatureRegex.IsMatch(line.Content))
+                {
                     continue;
+                }
 
                 findings.Add(CreateFinding(
                     file,
-                    summary:         "Dependency bot PR introduces a public API change: verify backward compatibility",
-                    evidence:        $"{file.NewPath} line {line.LineNumber}: {line.Content.Trim()}",
-                    whyItMatters:    "Automated dependency bots (Dependabot, Renovate, Snyk) should not be changing public method signatures. This may indicate a transitive dependency pulled in an unexpected API change or a bot misconfiguration.",
+                    summary: "Dependency bot PR introduces a public API change: verify backward compatibility",
+                    evidence: $"{file.NewPath} line {line.LineNumber}: {line.Content.Trim()}",
+                    whyItMatters: "Automated dependency bots (Dependabot, Renovate, Snyk) should not be changing public method signatures. This may indicate a transitive dependency pulled in an unexpected API change or a bot misconfiguration.",
                     suggestedAction: "Review the public API change carefully. If unintentional, revert the non-lockfile changes. If intentional, use a human-authored PR instead.",
-                    confidence:      Confidence.Medium,
-                    line:            line));
+                    confidence: Confidence.Medium,
+                    line: line));
             }
         }
 

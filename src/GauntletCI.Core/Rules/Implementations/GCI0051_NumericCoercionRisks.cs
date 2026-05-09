@@ -39,7 +39,10 @@ public class GCI0051_NumericCoercionRisks : RuleBase
 
         foreach (var file in context.Diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath))
+            {
+                continue;
+            }
 
             CheckExplicitCasts(file, findings);
             CheckUncheckedNumericAssignments(file, findings);
@@ -53,14 +56,17 @@ public class GCI0051_NumericCoercionRisks : RuleBase
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            if (content.TrimStart().StartsWith("//")) continue;
+            if (content.TrimStart().StartsWith("//"))
+            {
+                continue;
+            }
 
             // Look for explicit casts like (int)longValue
             var matches = ExplicitCastRegex.Matches(content);
             foreach (Match match in matches)
             {
                 var castType = match.Groups[1].Value.ToLower();
-                
+
                 // Check if preceded by a large type that could overflow
                 bool isPrecisionRisk = false;
                 var beforeCast = content[..match.Index];
@@ -75,11 +81,16 @@ public class GCI0051_NumericCoercionRisks : RuleBase
                     }
                 }
 
-                if (!isPrecisionRisk) continue;
+                if (!isPrecisionRisk)
+                {
+                    continue;
+                }
 
                 // Check if cast is wrapped in checked{}
                 if (content.Contains("checked", StringComparison.OrdinalIgnoreCase))
+                {
                     continue;
+                }
 
                 findings.Add(CreateFinding(
                     file,
@@ -98,7 +109,10 @@ public class GCI0051_NumericCoercionRisks : RuleBase
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            if (content.TrimStart().StartsWith("//") || !content.Contains("=")) continue;
+            if (content.TrimStart().StartsWith("//") || !content.Contains("="))
+            {
+                continue;
+            }
 
             // Simple heuristic: look for assignments from large int to small int
             // Pattern: smallIntVar = largeIntVar or function() without explicit check
@@ -109,14 +123,17 @@ public class GCI0051_NumericCoercionRisks : RuleBase
                 {
                     // Check if LHS suggests small type and RHS suggests large type
                     var parts = content.Split('=');
-                    if (parts.Length != 2) continue;
+                    if (parts.Length != 2)
+                    {
+                        continue;
+                    }
 
                     var lhs = parts[0];
                     var rhs = parts[1];
 
-                    bool lhsSmallHint = lhs.Contains("short") || lhs.Contains("byte") || 
+                    bool lhsSmallHint = lhs.Contains("short") || lhs.Contains("byte") ||
                                        lhs.Contains("capacity") || lhs.Contains("count");
-                    bool rhsLargeHint = rhs.Contains("long") || rhs.Contains(".Length") || 
+                    bool rhsLargeHint = rhs.Contains("long") || rhs.Contains(".Length") ||
                                        rhs.Contains(".Count");
 
                     if (lhsSmallHint && rhsLargeHint && !content.Contains("checked"))

@@ -37,7 +37,7 @@ public sealed class FixtureFolderStore : IFixtureStore
     public async Task SaveMetadataAsync(FixtureMetadata metadata, CancellationToken ct = default)
     {
         var fixturePath = EnsureFixtureDir(metadata.Tier, metadata.FixtureId);
-        var metaPath    = Path.Combine(fixturePath, "metadata.json");
+        var metaPath = Path.Combine(fixturePath, "metadata.json");
 
         await File.WriteAllTextAsync(metaPath, JsonSerializer.Serialize(metadata, JsonOpts), ct).ConfigureAwait(false);
         EnsureNotesTemplate(fixturePath, metadata);
@@ -50,7 +50,10 @@ public sealed class FixtureFolderStore : IFixtureStore
         foreach (var tier in new[] { FixtureTier.Gold, FixtureTier.Silver, FixtureTier.Discovery })
         {
             var path = Path.Combine(FixtureIdHelper.GetFixturePath(_basePath, tier, fixtureId), "metadata.json");
-            if (!File.Exists(path)) continue;
+            if (!File.Exists(path))
+            {
+                continue;
+            }
 
             var json = await File.ReadAllTextAsync(path, ct).ConfigureAwait(false);
             return JsonSerializer.Deserialize<FixtureMetadata>(json, JsonOpts);
@@ -103,17 +106,26 @@ public sealed class FixtureFolderStore : IFixtureStore
         while (await reader.ReadAsync(ct).ConfigureAwait(false))
         {
             if (!reader.IsDBNull(0))
+            {
                 paths.Add(reader.GetString(0));
+            }
         }
 
         var results = new List<FixtureMetadata>();
         foreach (var path in paths)
         {
             var metaPath = Path.Combine(path, "metadata.json");
-            if (!File.Exists(metaPath)) continue;
+            if (!File.Exists(metaPath))
+            {
+                continue;
+            }
+
             var json = await File.ReadAllTextAsync(metaPath, ct).ConfigureAwait(false);
             var m = JsonSerializer.Deserialize<FixtureMetadata>(json, JsonOpts);
-            if (m is not null) results.Add(m);
+            if (m is not null)
+            {
+                results.Add(m);
+            }
         }
         return results;
     }
@@ -122,10 +134,16 @@ public sealed class FixtureFolderStore : IFixtureStore
         string fixtureId, CancellationToken ct = default)
     {
         var fixturePath = FindExistingFixturePath(fixtureId);
-        if (fixturePath is null) return [];
+        if (fixturePath is null)
+        {
+            return [];
+        }
 
         var expectedPath = Path.Combine(fixturePath, "expected.json");
-        if (!File.Exists(expectedPath)) return [];
+        if (!File.Exists(expectedPath))
+        {
+            return [];
+        }
 
         try
         {
@@ -142,10 +160,16 @@ public sealed class FixtureFolderStore : IFixtureStore
         string fixtureId, CancellationToken ct = default)
     {
         var fixturePath = FindExistingFixturePath(fixtureId);
-        if (fixturePath is null) return [];
+        if (fixturePath is null)
+        {
+            return [];
+        }
 
         var actualPath = Path.Combine(fixturePath, "actual.json");
-        if (!File.Exists(actualPath)) return [];
+        if (!File.Exists(actualPath))
+        {
+            return [];
+        }
 
         try
         {
@@ -162,10 +186,16 @@ public sealed class FixtureFolderStore : IFixtureStore
         string fixtureId, CancellationToken ct = default)
     {
         var fixturePath = FindExistingFixturePath(fixtureId);
-        if (fixturePath is null) return null;
+        if (fixturePath is null)
+        {
+            return null;
+        }
 
         var reviewPath = Path.Combine(fixturePath, "raw", "review-comments.json");
-        if (!File.Exists(reviewPath)) return null;
+        if (!File.Exists(reviewPath))
+        {
+            return null;
+        }
 
         return await File.ReadAllTextAsync(reviewPath, ct).ConfigureAwait(false);
     }
@@ -185,7 +215,10 @@ public sealed class FixtureFolderStore : IFixtureStore
         foreach (var tier in new[] { FixtureTier.Gold, FixtureTier.Silver, FixtureTier.Discovery })
         {
             var path = FixtureIdHelper.GetFixturePath(_basePath, tier, fixtureId);
-            if (Directory.Exists(path)) return path;
+            if (Directory.Exists(path))
+            {
+                return path;
+            }
         }
         return null;
     }
@@ -193,7 +226,10 @@ public sealed class FixtureFolderStore : IFixtureStore
     private static void EnsureNotesTemplate(string fixturePath, FixtureMetadata meta)
     {
         var notesPath = Path.Combine(fixturePath, "notes.md");
-        if (File.Exists(notesPath)) return;
+        if (File.Exists(notesPath))
+        {
+            return;
+        }
 
         var template = $"""
             # {meta.FixtureId}

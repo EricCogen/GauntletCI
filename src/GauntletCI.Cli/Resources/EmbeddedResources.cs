@@ -13,7 +13,9 @@ public static class EmbeddedResources
             .FirstOrDefault(name => name.EndsWith($".{resourceFileName}", StringComparison.OrdinalIgnoreCase));
 
         if (resourceName is null)
+        {
             throw new FileNotFoundException($"Embedded resource not found: {resourceFileName}");
+        }
 
         using var stream = assembly.GetManifestResourceStream(resourceName)
             ?? throw new FileNotFoundException($"Unable to open embedded resource stream: {resourceName}");

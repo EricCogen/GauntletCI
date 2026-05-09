@@ -56,7 +56,7 @@ public static class TelemetryDb
         try
         {
             using var conn = Open(dbPath ?? DefaultDbPath);
-            using var cmd  = conn.CreateCommand();
+            using var cmd = conn.CreateCommand();
             cmd.CommandText = """
                 INSERT OR IGNORE INTO events (
                     event_id, event_type, timestamp, install_id, git_repo_hash,
@@ -70,23 +70,23 @@ public static class TelemetryDb
                     $duration_ms, $outcome, $vote, $sent
                 )
                 """;
-            cmd.Parameters.AddWithValue("$event_id",        evt.EventId);
-            cmd.Parameters.AddWithValue("$event_type",      evt.EventType);
-            cmd.Parameters.AddWithValue("$timestamp",       evt.Timestamp.ToUnixTimeSeconds());
-            cmd.Parameters.AddWithValue("$install_id",      (object?)evt.InstallId      ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("$git_repo_hash",   (object?)evt.RepoHash       ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("$rule_id",         (object?)evt.RuleId         ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("$finding_count",   (object?)evt.FindingCount   ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("$files_changed",   (object?)evt.FilesChanged   ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$event_id", evt.EventId);
+            cmd.Parameters.AddWithValue("$event_type", evt.EventType);
+            cmd.Parameters.AddWithValue("$timestamp", evt.Timestamp.ToUnixTimeSeconds());
+            cmd.Parameters.AddWithValue("$install_id", (object?)evt.InstallId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$git_repo_hash", (object?)evt.RepoHash ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$rule_id", (object?)evt.RuleId ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$finding_count", (object?)evt.FindingCount ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$files_changed", (object?)evt.FilesChanged ?? DBNull.Value);
             cmd.Parameters.AddWithValue("$rules_evaluated", (object?)evt.RulesEvaluated ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("$lines_added",     (object?)evt.LinesAdded     ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("$lines_removed",   (object?)evt.LinesRemoved   ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("$confidence",      (object?)evt.Confidence     ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("$file_ext",        (object?)evt.FileExt        ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("$duration_ms",     (object?)evt.DurationMs     ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("$outcome",         (object?)evt.Outcome        ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("$vote",            (object?)evt.Vote           ?? DBNull.Value);
-            cmd.Parameters.AddWithValue("$sent",            evt.Sent ? 1 : 0);
+            cmd.Parameters.AddWithValue("$lines_added", (object?)evt.LinesAdded ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$lines_removed", (object?)evt.LinesRemoved ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$confidence", (object?)evt.Confidence ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$file_ext", (object?)evt.FileExt ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$duration_ms", (object?)evt.DurationMs ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$outcome", (object?)evt.Outcome ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$vote", (object?)evt.Vote ?? DBNull.Value);
+            cmd.Parameters.AddWithValue("$sent", evt.Sent ? 1 : 0);
             await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
         }
         catch { /* telemetry must never crash the tool */ }
@@ -99,7 +99,7 @@ public static class TelemetryDb
         try
         {
             using var conn = Open(dbPath ?? DefaultDbPath);
-            using var tx   = conn.BeginTransaction();
+            using var tx = conn.BeginTransaction();
 
             foreach (var id in eventIds)
             {
@@ -127,7 +127,7 @@ public static class TelemetryDb
         try
         {
             using var conn = Open(dbPath ?? DefaultDbPath);
-            using var cmd  = conn.CreateCommand();
+            using var cmd = conn.CreateCommand();
             cmd.CommandText = "SELECT COUNT(*) FROM events";
             var result = await cmd.ExecuteScalarAsync().ConfigureAwait(false);
             return Convert.ToInt32(result);

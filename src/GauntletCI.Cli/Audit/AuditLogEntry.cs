@@ -12,10 +12,22 @@ public record AuditLogEntry
     public string RepoPath { get; init; } = string.Empty;
     public string CommitSha { get; init; } = string.Empty;
     public string DiffSource { get; init; } = string.Empty;
-    public int FilesChanged { get; init; }
-    public int FilesEligible { get; init; }
-    public int RulesEvaluated { get; init; }
-    public int FindingCount { get; init; }
+    public int FilesChanged
+    {
+        get; init;
+    }
+    public int FilesEligible
+    {
+        get; init;
+    }
+    public int RulesEvaluated
+    {
+        get; init;
+    }
+    public int FindingCount
+    {
+        get; init;
+    }
     public IReadOnlyList<AuditFinding> Findings { get; init; } = [];
 }
 
@@ -25,6 +37,12 @@ public record AuditFinding
     public string RuleName { get; init; } = string.Empty;
     public string Summary { get; init; } = string.Empty;
     public string Confidence { get; init; } = string.Empty;
-    public string? FilePath { get; init; }
-    public int? Line { get; init; }
+    public string? FilePath
+    {
+        get; init;
+    }
+    public int? Line
+    {
+        get; init;
+    }
 }

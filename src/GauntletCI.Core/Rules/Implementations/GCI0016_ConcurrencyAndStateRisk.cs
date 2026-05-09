@@ -32,18 +32,28 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
 
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsGeneratedFile(file.NewPath))
+            {
+                continue;
+            }
 
             bool isTest = WellKnownPatterns.IsTestFile(file.NewPath);
 
             foreach (var line in file.AddedLines)
             {
-                if (WellKnownPatterns.GuardPatterns.IsCommentLine(line.Content)) continue;
+                if (WellKnownPatterns.GuardPatterns.IsCommentLine(line.Content))
+                {
+                    continue;
+                }
+
                 CheckAsyncVoid(line, findings);
                 CheckBlockingAsyncCall(line, findings);
                 CheckLockThis(line, findings);
                 // Thread.Sleep in test code is legitimate timing control.
-                if (!isTest) CheckThreadSleepInAsync(line, findings);
+                if (!isTest)
+                {
+                    CheckThreadSleepInAsync(line, findings);
+                }
             }
         }
 
@@ -53,10 +63,16 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
     private void CheckAsyncVoid(DiffLine line, List<Finding> findings)
     {
         var content = line.Content;
-        if (!content.Contains("async void ", StringComparison.Ordinal)) return;
+        if (!content.Contains("async void ", StringComparison.Ordinal))
+        {
+            return;
+        }
 
         // Event handlers: (object sender, ...EventArgs ...): legitimate use.
-        if (WellKnownPatterns.GuardPatterns.IsEventHandler(content)) return;
+        if (WellKnownPatterns.GuardPatterns.IsEventHandler(content))
+        {
+            return;
+        }
 
         findings.Add(CreateFinding(
             summary: "async void method: exceptions are unobservable and crash the process.",
@@ -69,16 +85,29 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
     private void CheckBlockingAsyncCall(DiffLine line, List<Finding> findings)
     {
         var content = line.Content;
-        
+
         // Skip dev-only code (test utilities, profiling, temporary debug)
-        if (WellKnownPatterns.HasDevOnlyMarker(content)) return;
+        if (WellKnownPatterns.HasDevOnlyMarker(content))
+        {
+            return;
+        }
 
         // Phase 23.0 Enhancement: Skip legitimate async patterns
-        if (IsLegitimateAsyncPattern(content)) return;
+        if (IsLegitimateAsyncPattern(content))
+        {
+            return;
+        }
 
         // Phase 16 Guards: ORM async patterns and bounded synchronization
-        if (WellKnownPatterns.IsOrmAsyncPattern(content)) return;
-        if (WellKnownPatterns.IsBoundedSynchronization(content)) return;
+        if (WellKnownPatterns.IsOrmAsyncPattern(content))
+        {
+            return;
+        }
+
+        if (WellKnownPatterns.IsBoundedSynchronization(content))
+        {
+            return;
+        }
 
         // Determine if this is a blocking async call lacking timeout bounds
         bool isUnboundedBlocking = WellKnownPatterns.IsBlockingAsyncWithoutTimeout(content);
@@ -88,12 +117,12 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
         bool hasWait = content.Contains(".Wait()", StringComparison.Ordinal);
         bool hasGetAwaiterGetResult = content.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal) ||
                                       System.Text.RegularExpressions.Regex.IsMatch(content, @"\.ConfigureAwait\s*\([^)]*\)\s*\.GetAwaiter\s*\(\s*\)\s*\.GetResult\s*\(\s*\)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-        
+
         if (hasWait || hasGetAwaiterGetResult)
         {
             // Phase 17b: Use high confidence for unb ounded blocking (GCI0016 + GCI0020 coordination)
             findings.Add(CreateFinding(
-                summary: isUnboundedBlocking 
+                summary: isUnboundedBlocking
                     ? "Blocking async call (.Wait() / .GetAwaiter().GetResult()) without timeout - deadlock + resource exhaustion risk."
                     : "Blocking async call (.Wait() / .GetAwaiter().GetResult()) risks deadlock.",
                 evidence: $"Line {line.LineNumber}: {content.Trim()}",
@@ -109,21 +138,33 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
         // (HttpResult, OperationResult, ValidationResult, etc.). Only flag when the expression
         // clearly operates on an async result: i.e., .Result is chained directly on a method
         // call (preceded by ')') or the left-hand expression contains explicit Task/Async context.
-        if (!content.Contains(".Result", StringComparison.Ordinal)) return;
+        if (!content.Contains(".Result", StringComparison.Ordinal))
+        {
+            return;
+        }
 
         var resultIdx = content.IndexOf(".Result", StringComparison.Ordinal);
-        if (resultIdx <= 0) return;
+        if (resultIdx <= 0)
+        {
+            return;
+        }
 
         // Skip if the expression is already awaited.
         var beforeResult = content[..resultIdx];
-        if (beforeResult.Contains("await ", StringComparison.Ordinal)) return;
+        if (beforeResult.Contains("await ", StringComparison.Ordinal))
+        {
+            return;
+        }
 
         bool isChainedOnCall = content[resultIdx - 1] == ')';
-        bool hasTaskContext  = beforeResult.Contains("Async(", StringComparison.Ordinal) ||
+        bool hasTaskContext = beforeResult.Contains("Async(", StringComparison.Ordinal) ||
                                beforeResult.Contains("Task.", StringComparison.Ordinal) ||
                                beforeResult.Contains("Task<", StringComparison.Ordinal);
 
-        if (!isChainedOnCall && !hasTaskContext) return;
+        if (!isChainedOnCall && !hasTaskContext)
+        {
+            return;
+        }
 
         // Phase 17b: Boost confidence if also missing timeout (GCI0016 + GCI0020 coordination)
         var resultConfidence = isUnboundedBlocking ? Confidence.High : Confidence.High;
@@ -144,7 +185,10 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
     private void CheckLockThis(DiffLine line, List<Finding> findings)
     {
         if (!line.Content.Contains("lock(this)", StringComparison.Ordinal) &&
-            !line.Content.Contains("lock (this)", StringComparison.Ordinal)) return;
+            !line.Content.Contains("lock (this)", StringComparison.Ordinal))
+        {
+            return;
+        }
 
         findings.Add(CreateFinding(
             summary: "lock(this) antipattern: the lock object is visible to external callers.",
@@ -156,7 +200,10 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
 
     private void CheckThreadSleepInAsync(DiffLine line, List<Finding> findings)
     {
-        if (!line.Content.Contains("Thread.Sleep(", StringComparison.Ordinal)) return;
+        if (!line.Content.Contains("Thread.Sleep(", StringComparison.Ordinal))
+        {
+            return;
+        }
 
         findings.Add(CreateFinding(
             summary: "Thread.Sleep() blocks a thread pool thread.",
@@ -172,20 +219,27 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
     /// </summary>
     private static bool IsLegitimateAsyncPattern(string content)
     {
-        if (string.IsNullOrEmpty(content)) return false;
+        if (string.IsNullOrEmpty(content))
+        {
+            return false;
+        }
 
         // Fire-and-forget pattern: _ = Task, _ = MethodAsync()
-        if (content.Contains("_ =", StringComparison.Ordinal) && 
+        if (content.Contains("_ =", StringComparison.Ordinal) &&
             (content.Contains("Task", StringComparison.Ordinal) ||
              content.Contains("Async(", StringComparison.OrdinalIgnoreCase)))
+        {
             return true;
+        }
 
         // ConfigureAwait(false) alone is best practice, but still a violation if followed by .GetAwaiter().GetResult() or .Wait()
         if (content.Contains("ConfigureAwait(false)", StringComparison.OrdinalIgnoreCase) &&
             !content.Contains(".GetAwaiter().GetResult()", StringComparison.OrdinalIgnoreCase) &&
             !content.Contains(".Wait()", StringComparison.OrdinalIgnoreCase) &&
             !System.Text.RegularExpressions.Regex.IsMatch(content, @"\.ConfigureAwait\s*\([^)]*\)\s*\.GetAwaiter\s*\(\s*\)\s*\.GetResult\s*\(\s*\)", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+        {
             return true;
+        }
 
         // Explicit delegation patterns: Task.Run, ThreadPool.QueueUserWorkItem
         // BUT: Task.Run().Result or Task.Run().Wait() are NOT legitimate - they block
@@ -193,20 +247,26 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
               !content.Contains(".Result", StringComparison.OrdinalIgnoreCase) &&
               !content.Contains(".Wait(", StringComparison.OrdinalIgnoreCase))) ||
             content.Contains("ThreadPool.QueueUserWorkItem", StringComparison.OrdinalIgnoreCase))
+        {
             return true;
+        }
 
         // Startup/initialization code context markers
         if (content.Contains("startup", StringComparison.OrdinalIgnoreCase) ||
             content.Contains("initialization", StringComparison.OrdinalIgnoreCase) ||
             content.Contains("Program.cs", StringComparison.OrdinalIgnoreCase) ||
             content.Contains("Startup.cs", StringComparison.OrdinalIgnoreCase))
+        {
             return true;
+        }
 
         // Intentional comment markers
         if (content.Contains("intentional", StringComparison.OrdinalIgnoreCase) ||
             content.Contains("fire-and-forget", StringComparison.OrdinalIgnoreCase) ||
             content.Contains("by design", StringComparison.OrdinalIgnoreCase))
+        {
             return true;
+        }
 
         return false;
     }

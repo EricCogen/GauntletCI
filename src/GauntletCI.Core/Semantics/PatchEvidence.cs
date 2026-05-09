@@ -168,7 +168,10 @@ public enum PatchKnowledgeLevel
 public sealed class PatchEvidence
 {
     /// <summary>The kind of evidence (added line, operator change, pattern, etc.).</summary>
-    public PatchEvidenceKind Kind { get; init; }
+    public PatchEvidenceKind Kind
+    {
+        get; init;
+    }
 
     /// <summary>The level of certainty about this evidence.</summary>
     public PatchKnowledgeLevel KnowledgeLevel { get; init; } = PatchKnowledgeLevel.KnownFromPatch;
@@ -177,16 +180,28 @@ public sealed class PatchEvidence
     public string Description { get; init; } = string.Empty;
 
     /// <summary>The text content or value that is evidence.</summary>
-    public string? Text { get; init; }
+    public string? Text
+    {
+        get; init;
+    }
 
     /// <summary>The file path where this evidence occurs.</summary>
-    public string? FilePath { get; init; }
+    public string? FilePath
+    {
+        get; init;
+    }
 
     /// <summary>The line number (old file) where this evidence occurs, if applicable.</summary>
-    public int? OldLineNumber { get; init; }
+    public int? OldLineNumber
+    {
+        get; init;
+    }
 
     /// <summary>The line number (new file) where this evidence occurs, if applicable.</summary>
-    public int? NewLineNumber { get; init; }
+    public int? NewLineNumber
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Confidence score (0.0-1.0) indicating certainty that this evidence is correctly identified.
@@ -198,7 +213,10 @@ public sealed class PatchEvidence
     /// Optional context or surrounding code snippet for reference.
     /// Helps reviewers understand the evidence in context.
     /// </summary>
-    public string? Context { get; init; }
+    public string? Context
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Optional related evidence (e.g., if this is an OperatorChange, cite the OperatorChange evidence).
@@ -297,7 +315,9 @@ public sealed class PatchEvidenceCollection
     public double AggregateConfidence(string metric = "mean")
     {
         if (_evidence.Count == 0)
+        {
             return 0;
+        }
 
         return metric switch
         {
@@ -322,7 +342,9 @@ public sealed class PatchEvidenceCollection
     {
         var sorted = values.OrderBy(v => v).ToList();
         if (sorted.Count == 0)
+        {
             return 0;
+        }
 
         var index = (int)Math.Ceiling(percentile * sorted.Count) - 1;
         return sorted[Math.Max(0, Math.Min(index, sorted.Count - 1))];

@@ -57,7 +57,11 @@ public class ConsoleReporterTests
 public class GitHubAnnotationWriterTests
 {
     private static EvaluationResult MakeResult(params Finding[] findings) =>
-        new() { Findings = [.. findings], RulesEvaluated = 1 };
+        new()
+        {
+            Findings = [.. findings],
+            RulesEvaluated = 1
+        };
 
     private static Finding MakeFinding(
         string ruleId = "GCI0001",
@@ -67,9 +71,12 @@ public class GitHubAnnotationWriterTests
         Confidence confidence = Confidence.High) =>
         new()
         {
-            RuleId = ruleId, RuleName = ruleName,
-            Summary = summary, Evidence = evidence,
-            WhyItMatters = "It matters.", SuggestedAction = "Fix it.",
+            RuleId = ruleId,
+            RuleName = ruleName,
+            Summary = summary,
+            Evidence = evidence,
+            WhyItMatters = "It matters.",
+            SuggestedAction = "Fix it.",
             Confidence = confidence,
         };
 
@@ -78,7 +85,10 @@ public class GitHubAnnotationWriterTests
         var sw = new StringWriter();
         var original = Console.Out;
         Console.SetOut(sw);
-        try { GitHubAnnotationWriter.Write(result); }
+        try
+        {
+            GitHubAnnotationWriter.Write(result);
+        }
         finally { Console.SetOut(original); }
         return sw.ToString();
     }
@@ -117,9 +127,12 @@ public class GitHubAnnotationWriterTests
         // file= and line= come from structured FilePath/Line fields now
         var f = new Finding
         {
-            RuleId = "GCI0001", RuleName = "Diff Integrity",
-            Summary = "Something risky", Evidence = "x = secret",
-            WhyItMatters = "It matters.", SuggestedAction = "Fix it.",
+            RuleId = "GCI0001",
+            RuleName = "Diff Integrity",
+            Summary = "Something risky",
+            Evidence = "x = secret",
+            WhyItMatters = "It matters.",
+            SuggestedAction = "Fix it.",
             Confidence = Confidence.High,
             FilePath = "src/Auth.cs",
             Line = 77,
@@ -188,7 +201,7 @@ public class GitHubAnnotationWriterTests
     {
         var f = MakeFinding();
         f.LlmExplanation = "Async deadlock risk here.";
-        f.ExpertContext  = new GauntletCI.Core.Model.ExpertFact(
+        f.ExpertContext = new GauntletCI.Core.Model.ExpertFact(
             "SemaphoreSlim preferred over lock.", "https://github.com/dotnet/runtime/issues/22144", 0.78f);
         var output = CaptureAnnotations(MakeResult(f));
         Assert.Contains("LLM:", output);
@@ -258,9 +271,12 @@ public class GitHubAnnotationWriterTests
     {
         var f = new Finding
         {
-            RuleId = "GCI0001", RuleName = "Diff Integrity",
-            Summary = "Something risky", Evidence = "x = secret",
-            WhyItMatters = "It matters.", SuggestedAction = "Fix it.",
+            RuleId = "GCI0001",
+            RuleName = "Diff Integrity",
+            Summary = "Something risky",
+            Evidence = "x = secret",
+            WhyItMatters = "It matters.",
+            SuggestedAction = "Fix it.",
             Confidence = Confidence.High,
             FilePath = "",
             Line = 77,
@@ -274,9 +290,12 @@ public class GitHubAnnotationWriterTests
     {
         var f = new Finding
         {
-            RuleId = "GCI0001", RuleName = "Diff Integrity",
-            Summary = "Something risky", Evidence = "x = secret",
-            WhyItMatters = "It matters.", SuggestedAction = "Fix it.",
+            RuleId = "GCI0001",
+            RuleName = "Diff Integrity",
+            Summary = "Something risky",
+            Evidence = "x = secret",
+            WhyItMatters = "It matters.",
+            SuggestedAction = "Fix it.",
             Confidence = Confidence.High,
             FilePath = "src/Test.cs",
             Line = null,

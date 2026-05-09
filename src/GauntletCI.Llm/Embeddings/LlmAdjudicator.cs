@@ -20,8 +20,8 @@ public sealed class LlmAdjudicator
     public LlmAdjudicator(IEmbeddingEngine embedding, VectorStore store, float minScore = 0.40f)
     {
         _embedding = embedding;
-        _store     = store;
-        _minScore  = minScore;
+        _store = store;
+        _minScore = minScore;
     }
 
     /// <summary>
@@ -33,23 +33,34 @@ public sealed class LlmAdjudicator
         IEnumerable<Finding> findings,
         CancellationToken ct = default)
     {
-        if (!_embedding.IsAvailable || _store.Count() == 0) return;
+        if (!_embedding.IsAvailable || _store.Count() == 0)
+        {
+            return;
+        }
 
         foreach (var finding in findings)
         {
             ct.ThrowIfCancellationRequested();
             try
             {
-                var query     = BuildQuery(finding);
+                var query = BuildQuery(finding);
                 var embedding = await _embedding.EmbedAsync(query, ct);
-                if (embedding.Length == 0) continue;
+                if (embedding.Length == 0)
+                {
+                    continue;
+                }
 
                 var results = _store.Search(embedding, topK: 1);
-                if (results.Count == 0) continue;
+                if (results.Count == 0)
+                {
+                    continue;
+                }
 
                 var top = results[0];
                 if (top.Score >= _minScore)
+                {
                     finding.ExpertContext = new ExpertFact(top.Content, top.Source, top.Score);
+                }
             }
             // Catch per-finding to ensure one bad embedding doesn't abort the entire batch
             catch (Exception ex)

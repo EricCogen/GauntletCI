@@ -14,7 +14,7 @@ namespace GauntletCI.Llm;
 /// </summary>
 public sealed class RemoteLlmEngine : ILlmEngine
 {
-    private const int MaxEnrichTokens  = 256;    // single-sentence enrichment
+    private const int MaxEnrichTokens = 256;    // single-sentence enrichment
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(120);
 
     private readonly string _endpoint;
@@ -33,12 +33,12 @@ public sealed class RemoteLlmEngine : ILlmEngine
     public RemoteLlmEngine(string endpoint, string model, string apiKey,
         int numCtx = 16_384, int maxCompleteTokens = 2_048)
     {
-        _endpoint           = endpoint;
-        _model              = model;
-        _apiKey             = apiKey;
-        _numCtx             = numCtx;
-        _maxCompleteTokens  = maxCompleteTokens;
-        _http               = HttpClientFactory.GetLongTimeoutClient();
+        _endpoint = endpoint;
+        _model = model;
+        _apiKey = apiKey;
+        _numCtx = numCtx;
+        _maxCompleteTokens = maxCompleteTokens;
+        _http = HttpClientFactory.GetLongTimeoutClient();
         _http.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
     }
 
@@ -77,12 +77,17 @@ public sealed class RemoteLlmEngine : ILlmEngine
 
         var body = new
         {
-            model       = _model,
-            max_tokens  = maxTokens,
+            model = _model,
+            max_tokens = maxTokens,
             temperature = 0,
-            seed        = 42,
+            seed = 42,
             messages,
-            options     = new { num_ctx = _numCtx, repeat_penalty = 1.1, top_k = 1 },
+            options = new
+            {
+                num_ctx = _numCtx,
+                repeat_penalty = 1.1,
+                top_k = 1
+            },
         };
 
         try

@@ -77,13 +77,18 @@ public class GCI0001_DiffIntegrity : RuleBase
             var addedLines = file.AddedLines.ToList();
             var removedLines = file.RemovedLines.ToList();
 
-            if (addedLines.Count == 0 && removedLines.Count == 0) continue;
+            if (addedLines.Count == 0 && removedLines.Count == 0)
+            {
+                continue;
+            }
 
             int whitespaceOnlyPairs = 0;
             foreach (var added in addedLines)
             {
                 if (string.IsNullOrWhiteSpace(added.Content))
+                {
                     whitespaceOnlyPairs++;
+                }
             }
 
             var totalChanged = addedLines.Count + removedLines.Count;

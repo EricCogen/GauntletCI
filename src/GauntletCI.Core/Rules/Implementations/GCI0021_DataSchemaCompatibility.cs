@@ -35,10 +35,16 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
 
     private void CheckRemovedSerializationAttributes(DiffFile file, List<Finding> findings)
     {
-        if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) return;
-        
+        if (WellKnownPatterns.IsGeneratedFile(file.NewPath))
+        {
+            return;
+        }
+
         // Skip migration/infrastructure files (schema migration scripts)
-        if (WellKnownPatterns.DependencyInjectionPatterns.IsInfrastructureFile(file.NewPath)) return;
+        if (WellKnownPatterns.DependencyInjectionPatterns.IsInfrastructureFile(file.NewPath))
+        {
+            return;
+        }
 
         foreach (var line in file.RemovedLines)
         {
@@ -47,7 +53,10 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
             // Use StartsWith to avoid matching indexer syntax like dictionary[key] against [Key].
             foreach (var attr in WellKnownPatterns.DataSchemaPatterns.SerializationAttributes)
             {
-                if (!content.StartsWith(attr, StringComparison.OrdinalIgnoreCase)) continue;
+                if (!content.StartsWith(attr, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
 
                 findings.Add(CreateFinding(
                     file,
@@ -63,7 +72,10 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
 
     private void CheckRemovedEnumMembers(DiffFile file, List<Finding> findings)
     {
-        if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) return;
+        if (WellKnownPatterns.IsGeneratedFile(file.NewPath))
+        {
+            return;
+        }
 
         // Collect enum member names present in added lines: skips members that were
         // moved (refactored into a new namespace/file) rather than truly deleted.
@@ -72,7 +84,9 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
         {
             var ac = addedLine.Content.Trim();
             if (IsEnumMember(ac))
+            {
                 addedMemberNames.Add(ac.TrimEnd(',').Trim().Split('=')[0].Trim());
+            }
         }
 
         var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
@@ -109,7 +123,10 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
                 else if (c == '}')
                 {
                     if (inEnumBody && braceDepth == enumBraceDepth)
+                    {
                         inEnumBody = false;
+                    }
+
                     braceDepth--;
                 }
             }
@@ -128,7 +145,11 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
             }
 
             var content = raw.Trim();
-            if (content.Length == 0 || content.StartsWith("//")) continue;
+            if (content.Length == 0 || content.StartsWith("//"))
+            {
+                continue;
+            }
+
             if (!IsEnumMember(content))
             {
                 lastRemovedInEnum = content;
@@ -150,7 +171,10 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
 
             lastRemovedInEnum = content;
 
-            if (!hasPrecedingSerializationAttr) continue;
+            if (!hasPrecedingSerializationAttr)
+            {
+                continue;
+            }
 
             findings.Add(CreateFinding(
                 file,
@@ -165,7 +189,10 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
     private static bool IsEnumMember(string content)
     {
         // Statements end with ';': enum members never do (they end with ',' or nothing).
-        if (content.TrimEnd().EndsWith(';')) return false;
+        if (content.TrimEnd().EndsWith(';'))
+        {
+            return false;
+        }
         // Matches: "SomeName," or "SomeName = 5," or "SomeName = 0x1,"
         var trimmed = content.TrimEnd(',').Trim();
         // Split on '=' to handle "Name = Value"

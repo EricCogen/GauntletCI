@@ -28,16 +28,32 @@ public class GCI0015_DataIntegrityRisk : RuleBase
 
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
-            if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath))
+            {
+                continue;
+            }
+
+            if (WellKnownPatterns.IsGeneratedFile(file.NewPath))
+            {
+                continue;
+            }
+
             CheckMassAssignment(file, findings);
             CheckUnsafeHttpInputBinding(file, findings);
         }
 
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
-            if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath))
+            {
+                continue;
+            }
+
+            if (WellKnownPatterns.IsGeneratedFile(file.NewPath))
+            {
+                continue;
+            }
+
             CheckUncheckedCastsInFile(file, findings);
             foreach (var line in file.AddedLines)
             {
@@ -56,12 +72,17 @@ public class GCI0015_DataIntegrityRisk : RuleBase
 
         // Skip files with ORM or DTO mapping patterns (safe auto-mapping)
         if (file.AddedLines.Any(l => WellKnownPatterns.HasMappingPattern(l.Content)))
+        {
             return;
+        }
 
         bool hasHttpSignal = addedLines.Any(l =>
             WellKnownPatterns.DataIntegrityPatterns.HasHttpContextSignal(l.Content));
 
-        if (!hasHttpSignal) return;
+        if (!hasHttpSignal)
+        {
+            return;
+        }
 
         int assignmentCount = 0;
         int firstLine = 0;
@@ -75,7 +96,11 @@ public class GCI0015_DataIntegrityRisk : RuleBase
                                       !content.StartsWith("//");
             if (isFieldAssignment)
             {
-                if (assignmentCount == 0) firstLine = addedLines[i].LineNumber;
+                if (assignmentCount == 0)
+                {
+                    firstLine = addedLines[i].LineNumber;
+                }
+
                 assignmentCount++;
             }
             else
@@ -102,7 +127,10 @@ public class GCI0015_DataIntegrityRisk : RuleBase
         bool hasHttpSignal = addedLines.Any(l =>
             WellKnownPatterns.DataIntegrityPatterns.HasHttpContextSignal(l.Content));
 
-        if (!hasHttpSignal) return;
+        if (!hasHttpSignal)
+        {
+            return;
+        }
 
         // Look for 3+ consecutive entity.Field = request.Field patterns
         int assignmentCount = 0;
@@ -117,7 +145,11 @@ public class GCI0015_DataIntegrityRisk : RuleBase
                                       !content.StartsWith("//");
             if (isFieldAssignment)
             {
-                if (assignmentCount == 0) firstLine = addedLines[i].LineNumber;
+                if (assignmentCount == 0)
+                {
+                    firstLine = addedLines[i].LineNumber;
+                }
+
                 assignmentCount++;
             }
             else
@@ -151,13 +183,19 @@ public class GCI0015_DataIntegrityRisk : RuleBase
         bool hasHttpSignal = file.AddedLines.Any(l =>
             WellKnownPatterns.DataIntegrityPatterns.HasHttpContextSignal(l.Content));
 
-        if (!hasHttpSignal) return;
+        if (!hasHttpSignal)
+        {
+            return;
+        }
 
         foreach (var line in file.AddedLines)
         {
             foreach (var cast in WellKnownPatterns.DataIntegrityPatterns.UncheckedCastPatterns)
             {
-                if (!line.Content.Contains(cast, StringComparison.Ordinal)) continue;
+                if (!line.Content.Contains(cast, StringComparison.Ordinal))
+                {
+                    continue;
+                }
 
                 findings.Add(CreateFinding(
                     file,
@@ -176,7 +214,10 @@ public class GCI0015_DataIntegrityRisk : RuleBase
     {
         foreach (var pattern in WellKnownPatterns.DataIntegrityPatterns.SqlIgnorePatterns)
         {
-            if (!line.Content.Contains(pattern, StringComparison.OrdinalIgnoreCase)) continue;
+            if (!line.Content.Contains(pattern, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
 
             findings.Add(CreateFinding(
                 file,
@@ -192,7 +233,11 @@ public class GCI0015_DataIntegrityRisk : RuleBase
 
     private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)
     {
-        if (staticAnalysis is null) return;
+        if (staticAnalysis is null)
+        {
+            return;
+        }
+
         foreach (var diag in staticAnalysis.Diagnostics.Where(d => d.Id is "CA2227" or "CA1819"))
         {
             findings.Add(new Finding

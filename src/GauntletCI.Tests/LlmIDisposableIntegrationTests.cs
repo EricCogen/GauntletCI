@@ -21,13 +21,16 @@ public sealed class LlmIDisposableIntegrationTests : IDisposable
     public LlmIDisposableIntegrationTests()
     {
         _dbPath = Path.Combine(Path.GetTempPath(), $"idisposable-test-{Guid.NewGuid():N}.db");
-        _store  = new VectorStore(_dbPath);
+        _store = new VectorStore(_dbPath);
     }
 
     public void Dispose()
     {
         _store.Dispose();
-        if (File.Exists(_dbPath)) File.Delete(_dbPath);
+        if (File.Exists(_dbPath))
+        {
+            File.Delete(_dbPath);
+        }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -36,13 +39,13 @@ public sealed class LlmIDisposableIntegrationTests : IDisposable
 
     private static Finding MakeIDisposableFinding() => new()
     {
-        RuleId          = "GCI0021",
-        RuleName        = "IDisposable Not Disposed",
-        Summary         = "StreamReader opened without using statement may leak file handle",
-        Evidence        = "Line 55: new StreamReader(path)",
-        WhyItMatters    = "Undisposed IDisposable objects silently leak OS file handles",
+        RuleId = "GCI0021",
+        RuleName = "IDisposable Not Disposed",
+        Summary = "StreamReader opened without using statement may leak file handle",
+        Evidence = "Line 55: new StreamReader(path)",
+        WhyItMatters = "Undisposed IDisposable objects silently leak OS file handles",
         SuggestedAction = "Wrap in a using statement or call Dispose() in a finally block",
-        Confidence      = Confidence.High,
+        Confidence = Confidence.High,
     };
 
     // ── Phase 1: seed → adjudicate → citation check ───────────────────────────
@@ -55,7 +58,7 @@ public sealed class LlmIDisposableIntegrationTests : IDisposable
         _store.Upsert(idisFact.Id, idisFact.Content, idisFact.Source, _vec);
 
         var adjudicator = new LlmAdjudicator(StaticEngine(), _store, minScore: 0.0f);
-        var finding     = MakeIDisposableFinding();
+        var finding = MakeIDisposableFinding();
 
         // Act
         await adjudicator.AdjudicateAsync([finding]);
@@ -75,7 +78,7 @@ public sealed class LlmIDisposableIntegrationTests : IDisposable
         _store.Upsert(idisFact.Id, idisFact.Content, idisFact.Source, _vec);
 
         var adjudicator = new LlmAdjudicator(StaticEngine(), _store, minScore: 0.0f);
-        var finding     = MakeIDisposableFinding();
+        var finding = MakeIDisposableFinding();
 
         await adjudicator.AdjudicateAsync([finding]);
 
@@ -93,12 +96,14 @@ public sealed class LlmIDisposableIntegrationTests : IDisposable
             f.Content.Contains("leak") || f.Content.Contains("IDisposable"));
 
         foreach (var fact in resourceFacts)
+        {
             _store.Upsert(fact.Id, fact.Content, fact.Source, _vec);
+        }
 
         Assert.True(_store.Count() >= 1, "At least one resource-lifecycle fact must be seeded");
 
         var adjudicator = new LlmAdjudicator(StaticEngine(), _store, minScore: 0.0f);
-        var finding     = MakeIDisposableFinding();
+        var finding = MakeIDisposableFinding();
 
         await adjudicator.AdjudicateAsync([finding]);
 
@@ -126,9 +131,9 @@ public sealed class LlmIDisposableIntegrationTests : IDisposable
         _store.Upsert("unrelated", "Some unrelated content.", "https://github.com/dotnet/runtime/issues/1", [0f, 1f, 0f]);
 
         // Query with a different vector → cosine = 0, below any threshold
-        var engine      = new FixedVectorEngine([1f, 0f, 0f]);
+        var engine = new FixedVectorEngine([1f, 0f, 0f]);
         var adjudicator = new LlmAdjudicator(engine, _store, minScore: 0.5f);
-        var finding     = MakeIDisposableFinding();
+        var finding = MakeIDisposableFinding();
 
         await adjudicator.AdjudicateAsync([finding]);
 

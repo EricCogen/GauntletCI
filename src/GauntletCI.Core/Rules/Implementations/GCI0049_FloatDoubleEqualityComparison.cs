@@ -18,7 +18,7 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
     public GCI0049_FloatDoubleEqualityComparison(IPatternProvider patterns) : base(patterns)
     {
     }
-    public override string Id   => "GCI0049";
+    public override string Id => "GCI0049";
     public override string Name => "Float/Double Equality Comparison";
 
     public override Task<List<Finding>> EvaluateAsync(
@@ -28,7 +28,10 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
 
         foreach (var file in context.Diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath))
+            {
+                continue;
+            }
 
             foreach (var line in file.AddedLines)
             {
@@ -37,12 +40,16 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
                 // Skip comment lines (simple prefix check)
                 var trimmed = content.TrimStart();
                 if (trimmed.StartsWith("//") || trimmed.StartsWith("*") || trimmed.StartsWith("/*"))
+                {
                     continue;
+                }
 
                 // Syntax guard: suppress if the first operator position is inside a comment or string literal.
                 if (context.Syntax?.IsInCommentOrStringLiteral(
                         file.NewPath, line.LineNumber, GetFirstOperatorIndex(content)) == true)
+                {
                     continue;
+                }
 
                 // When the line is an integer zero-guard ternary (e.g. count == 0 ? 0.0 : (double)a/b),
                 // the (double)/(float) cast and the == appear in different clauses: skip cast/type checks.
@@ -53,7 +60,10 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
                             || (!hasSafeDivGuard && HasMatchOutsideStringLiteral(WellKnownPatterns.FloatingPointPatterns.FloatCastWithEqualityRegex, content))
                             || (!hasSafeDivGuard && HasMatchOutsideStringLiteral(WellKnownPatterns.FloatingPointPatterns.FloatTypeWithEqualityRegex, content));
 
-                if (!matches) continue;
+                if (!matches)
+                {
+                    continue;
+                }
 
                 findings.Add(CreateFinding(
                     file,
@@ -75,8 +85,8 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
     private static int GetFirstOperatorIndex(string content)
     {
         int min = int.MaxValue;
-        UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatLiteralOnRightRegex,   content, ref min);
-        UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatLiteralOnLeftRegex,    content, ref min);
+        UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatLiteralOnRightRegex, content, ref min);
+        UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatLiteralOnLeftRegex, content, ref min);
         UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatCastWithEqualityRegex, content, ref min);
         UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatTypeWithEqualityRegex, content, ref min);
         return min == int.MaxValue ? 0 : min;
@@ -88,7 +98,10 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
         if (m.Success)
         {
             int opIdx = GetEqualityOperatorIndex(m);
-            if (opIdx < min) min = opIdx;
+            if (opIdx < min)
+            {
+                min = opIdx;
+            }
         }
     }
 
@@ -102,7 +115,9 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
         {
             char c = match.Value[i], n = match.Value[i + 1];
             if ((c == '=' && n == '=') || (c == '!' && n == '='))
+            {
                 return match.Index + i;
+            }
         }
         return match.Index;
     }
@@ -121,7 +136,10 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
 
         while (i < content.Length)
         {
-            if (i == position) return inString;
+            if (i == position)
+            {
+                return inString;
+            }
 
             char c = content[i];
 
@@ -187,7 +205,9 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
         {
             int opIdx = GetEqualityOperatorIndex(match);
             if (!IsInsideStringLiteralAt(content, opIdx))
+            {
                 return true;
+            }
         }
         return false;
     }

@@ -79,19 +79,19 @@ public static class TraceCommand
 
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
         {
-            var deployTag   = ctx.ParseResult.GetValueForOption(deployTagOption);
-            var fromCommit  = ctx.ParseResult.GetValueForOption(fromCommitOption);
-            var since       = ctx.ParseResult.GetValueForOption(sinceOption)!;
-            var repo        = ctx.ParseResult.GetValueForOption(repoOption)!;
-            var output      = ctx.ParseResult.GetValueForOption(outputOption)!;
-            var pdToken     = ctx.ParseResult.GetValueForOption(pdTokenOption)
+            var deployTag = ctx.ParseResult.GetValueForOption(deployTagOption);
+            var fromCommit = ctx.ParseResult.GetValueForOption(fromCommitOption);
+            var since = ctx.ParseResult.GetValueForOption(sinceOption)!;
+            var repo = ctx.ParseResult.GetValueForOption(repoOption)!;
+            var output = ctx.ParseResult.GetValueForOption(outputOption)!;
+            var pdToken = ctx.ParseResult.GetValueForOption(pdTokenOption)
                            ?? Environment.GetEnvironmentVariable("PAGERDUTY_TOKEN");
-            var ogToken     = ctx.ParseResult.GetValueForOption(ogTokenOption)
+            var ogToken = ctx.ParseResult.GetValueForOption(ogTokenOption)
                            ?? Environment.GetEnvironmentVariable("OPSGENIE_TOKEN");
-            var postToPd    = ctx.ParseResult.GetValueForOption(postToPdOption);
-            var noBanner    = ctx.ParseResult.GetValueForOption(noBannerOption);
-            var ascii       = ctx.ParseResult.GetValueForOption(asciiFlag);
-            var ct          = ctx.GetCancellationToken();
+            var postToPd = ctx.ParseResult.GetValueForOption(postToPdOption);
+            var noBanner = ctx.ParseResult.GetValueForOption(noBannerOption);
+            var ascii = ctx.ParseResult.GetValueForOption(asciiFlag);
+            var ct = ctx.GetCancellationToken();
 
             var isJson = output.Equals("json", StringComparison.OrdinalIgnoreCase);
             CliBanner.PrintIfEnabled(new BannerContext { NoBanner = noBanner, OutputFormat = output });
@@ -114,18 +114,18 @@ public static class TraceCommand
 
             try
             {
-                var now      = DateTimeOffset.UtcNow;
+                var now = DateTimeOffset.UtcNow;
                 var sinceDto = IncidentClient.ParseSince(since, now);
 
                 // Step 1: get diff from base ref to HEAD using three-dot range
                 var rangeRef = $"{baseRef}...HEAD";
-                var config      = ConfigLoader.Load(repo.FullName);
-                var diff     = await DiffParser.FromGitAsync(repo.FullName, rangeRef, config.DiffContextLines, ct);
+                var config = ConfigLoader.Load(repo.FullName);
+                var diff = await DiffParser.FromGitAsync(repo.FullName, rangeRef, config.DiffContextLines, ct);
 
                 // Step 2: run rule orchestrator
-                var ignoreList  = IgnoreList.Load(repo.FullName);
+                var ignoreList = IgnoreList.Load(repo.FullName);
                 var orchestrator = RuleOrchestrator.CreateDefault(config, repoPath: repo.FullName);
-                var result       = await orchestrator.RunAsync(diff, ignoreList: ignoreList);
+                var result = await orchestrator.RunAsync(diff, ignoreList: ignoreList);
 
                 // Step 3: fetch incidents (soft-fail)
                 var allIncidents = new List<IncidentCorrelation.IncidentSummary>();
@@ -135,7 +135,9 @@ public static class TraceCommand
                     var pdIncidents = await IncidentClient.FetchPagerDutyAsync(pdToken, sinceDto, now, ct);
                     allIncidents.AddRange(pdIncidents);
                     if (!isJson)
+                    {
                         AnsiConsole.MarkupLine($"[dim]  {(ascii ? "[PD]" : "📟")}  Fetched {pdIncidents.Count} PagerDuty incident(s)[/]");
+                    }
                 }
                 else
                 {
@@ -147,7 +149,9 @@ public static class TraceCommand
                     var ogAlerts = await IncidentClient.FetchOpsgenieAsync(ogToken, sinceDto, now, ct);
                     allIncidents.AddRange(ogAlerts);
                     if (!isJson)
+                    {
                         AnsiConsole.MarkupLine($"[dim]  {(ascii ? "[OG]" : "📟")}  Fetched {ogAlerts.Count} Opsgenie alert(s)[/]");
+                    }
                 }
                 else
                 {
@@ -175,7 +179,9 @@ public static class TraceCommand
                     var textContent = BuildHeatmapText(baseRef, result, correlations, allIncidents);
                     var posted = await IncidentClient.PostPagerDutyNoteAsync(pdToken, postToPd, $"GauntletCI Change Risk Heatmap:\n{textContent}", ct);
                     if (!isJson && posted)
+                    {
                         AnsiConsole.MarkupLine($"[dim]  {(ascii ? "[OK]" : "✅")}  Posted heatmap note to PagerDuty incident {Markup.Escape(postToPd)}[/]");
+                    }
                 }
                 else if (!string.IsNullOrWhiteSpace(postToPd) && string.IsNullOrWhiteSpace(pdToken))
                 {
@@ -239,12 +245,12 @@ public static class TraceCommand
         foreach (var grp in byFile.OrderByDescending(g => g.Max(f => f.Severity)))
         {
             var filePath = grp.Key;
-            var maxSev   = grp.Max(f => f.Severity);
+            var maxSev = grp.Max(f => f.Severity);
             var sevColor = maxSev switch
             {
                 RuleSeverity.Block => "red",
-                RuleSeverity.Warn  => "yellow",
-                _                  => "grey",
+                RuleSeverity.Warn => "yellow",
+                _ => "grey",
             };
 
             var findingsSummary = string.Join(", ", grp.Select(f => f.RuleId).Distinct());
@@ -282,15 +288,19 @@ public static class TraceCommand
         foreach (var grp in byFile.OrderByDescending(g => g.Max(f => f.Severity)))
         {
             var filePath = grp.Key;
-            var maxSev   = grp.Max(f => f.Severity);
+            var maxSev = grp.Max(f => f.Severity);
             correlations.TryGetValue(filePath, out var correlated);
 
             sb.AppendLine($"  {filePath} [{maxSev}]");
             foreach (var f in grp)
+            {
                 sb.AppendLine($"    - [{f.RuleId}] {f.Summary}");
+            }
 
             if (correlated is { Count: > 0 })
+            {
                 sb.AppendLine($"    Incidents: {string.Join(", ", correlated.Select(i => $"{i.Source}:{i.Id} \"{i.Title}\""))}");
+            }
         }
 
         return sb.ToString();

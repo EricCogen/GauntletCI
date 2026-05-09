@@ -45,9 +45,9 @@ public static class ConsoleReporter
     /// <param name="sensitivity">Confidence-based filter threshold: strict, balanced (default), or permissive.</param>
     public static void Report(EvaluationResult result, bool ascii = false, RuleSeverity minSeverity = RuleSeverity.Warn, int suppressedByBaseline = 0, DiffContext? diff = null, int showContext = 0, TimeSpan elapsed = default, SensitivityThreshold sensitivity = SensitivityThreshold.Balanced)
     {
-        string hr  = ascii ? "=======================================================" : "═══════════════════════════════════════════════════════";
+        string hr = ascii ? "=======================================================" : "═══════════════════════════════════════════════════════";
         string sep = ascii ? "-- {0} ({1}) --------------------------" : "── {0} ({1}) ──────────────────────────";
-        string ok  = ascii
+        string ok = ascii
             ? "  Scan complete. 0 detected signals. GauntletCI analyzes the diff only -- review context is still required."
             : "  \u2713 Scan complete. 0 detected signals. GauntletCI analyzes the diff only - review context is still required.";
 
@@ -81,7 +81,9 @@ public static class ConsoleReporter
         AnsiConsole.Write(meta);
 
         if (suppressedBySensitivity > 0)
+        {
             AnsiConsole.MarkupLine($"[dim]  ({suppressedBySensitivity} hidden by {sensitivity.ToString().ToLowerInvariant()} sensitivity - use --sensitivity permissive to see all)[/]");
+        }
 
         var distinctRules = filteredFindings
             .Where(f => f.Severity is RuleSeverity.Block or RuleSeverity.Warn)
@@ -89,7 +91,9 @@ public static class ConsoleReporter
             .Distinct()
             .Count();
         if (distinctRules >= 4)
+        {
             AnsiConsole.MarkupLine($"[yellow]  Risk        : {distinctRules} distinct rules triggered (compound risk)[/]");
+        }
 
         AnsiConsole.WriteLine();
 
@@ -97,9 +101,15 @@ public static class ConsoleReporter
         {
             AnsiConsole.MarkupLine($"[green]{ok}[/]");
             if (suppressedByBaseline > 0)
+            {
                 AnsiConsole.MarkupLine($"[dim]  ({suppressedByBaseline} finding(s) suppressed by baseline)[/]");
+            }
+
             if (suppressedBySensitivity > 0)
+            {
                 AnsiConsole.MarkupLine($"[dim]  ({suppressedBySensitivity} finding(s) hidden by {sensitivity.ToString().ToLowerInvariant()} sensitivity threshold)[/]");
+            }
+
             return;
         }
 
@@ -114,14 +124,23 @@ public static class ConsoleReporter
         bool anyVisible = false;
         foreach (var (severity, label, color) in sevGroups)
         {
-            if (severity < minSeverity) continue;
+            if (severity < minSeverity)
+            {
+                continue;
+            }
+
             var section = groups.Where(g => g.Severity == severity).ToList();
-            if (section.Count == 0) continue;
+            if (section.Count == 0)
+            {
+                continue;
+            }
 
             anyVisible = true;
             AnsiConsole.MarkupLine($"[{color}]{string.Format(sep, label, section.Count)}[/]");
             foreach (var g in section)
+            {
                 PrintGroup(g, color, diff, showContext);
+            }
         }
 
         if (!anyVisible)
@@ -129,17 +148,24 @@ public static class ConsoleReporter
             // Only print "below threshold" if there are also no Advisory findings being shown
             var advisoryFindings = result.Findings.Where(f => f.Severity == RuleSeverity.Advisory).ToList();
             if (advisoryFindings.Count == 0)
+            {
                 AnsiConsole.MarkupLine("[grey]  All findings are below the current severity threshold. Use --verbose to see Info findings.[/]");
+            }
 
             if (advisoryFindings.Count > 0)
             {
                 AnsiConsole.MarkupLine($"[blue]{string.Format(sep, "ENGINEERING POLICY SIGNALS", advisoryFindings.Count)}[/]");
                 foreach (var finding in advisoryFindings)
+                {
                     PrintEpSignal(finding);
+                }
             }
 
             if (suppressedByBaseline > 0)
+            {
                 AnsiConsole.MarkupLine($"[dim]  ({suppressedByBaseline} finding(s) suppressed by baseline)[/]");
+            }
+
             return;
         }
 
@@ -149,11 +175,15 @@ public static class ConsoleReporter
         {
             AnsiConsole.MarkupLine($"[blue]{string.Format(sep, "ENGINEERING POLICY SIGNALS", advisoryFindingsFinal.Count)}[/]");
             foreach (var finding in advisoryFindingsFinal)
+            {
                 PrintEpSignal(finding);
+            }
         }
 
         if (suppressedByBaseline > 0)
+        {
             AnsiConsole.MarkupLine($"[dim]  ({suppressedByBaseline} finding(s) suppressed by baseline)[/]");
+        }
     }
 
     /// <summary>
@@ -172,7 +202,9 @@ public static class ConsoleReporter
                     : group.FilePath)
             : null;
         if (locLabel is not null)
+        {
             AnsiConsole.MarkupLine($"[grey]  Location : {Markup.Escape(locLabel)}[/]");
+        }
 
         AnsiConsole.MarkupLine($"  Summary  : {Markup.Escape(group.Summary)}");
 
@@ -213,14 +245,18 @@ public static class ConsoleReporter
         {
             AnsiConsole.MarkupLine("[grey]  Snippet  :[/]");
             foreach (var line in group.CodeSnippet.Split('\n'))
+            {
                 AnsiConsole.MarkupLine($"[grey]    {Markup.Escape(line)}[/]");
+            }
         }
 
         AnsiConsole.MarkupLine($"  Why      : {Markup.Escape(group.WhyItMatters)}");
         AnsiConsole.MarkupLine($"[cyan]  Action   : {Markup.Escape(group.SuggestedAction)}[/]");
 
         if (!string.IsNullOrEmpty(group.LlmExplanation))
+        {
             AnsiConsole.MarkupLine($"[magenta]  LLM      : {Markup.Escape(group.LlmExplanation)}[/]");
+        }
 
         if (group.ExpertContext is { } expert)
         {
@@ -233,7 +269,9 @@ public static class ConsoleReporter
             var ticketRef = ticket.Url is not null ? $"{ticket.Id} ({ticket.Url})" : ticket.Id;
             AnsiConsole.MarkupLine($"[cyan]  Ticket   : [[{Markup.Escape(ticket.Provider)}]] {Markup.Escape(ticketRef)} - {Markup.Escape(ticket.Title)}[/]");
             if (!string.IsNullOrWhiteSpace(ticket.Description))
+            {
                 AnsiConsole.MarkupLine($"[grey]             {Markup.Escape(ticket.Description)}[/]");
+            }
         }
 
         AnsiConsole.WriteLine();
@@ -272,14 +310,18 @@ public static class ConsoleReporter
         {
             AnsiConsole.MarkupLine("[grey]  Snippet  :[/]");
             foreach (var line in finding.CodeSnippet.Split('\n'))
+            {
                 AnsiConsole.MarkupLine($"[grey]    {Markup.Escape(line)}[/]");
+            }
         }
 
         AnsiConsole.MarkupLine($"  Why      : {Markup.Escape(finding.WhyItMatters)}");
         AnsiConsole.MarkupLine($"[cyan]  Action   : {Markup.Escape(finding.SuggestedAction)}[/]");
 
         if (!string.IsNullOrEmpty(finding.LlmExplanation))
+        {
             AnsiConsole.MarkupLine($"[magenta]  LLM      : {Markup.Escape(finding.LlmExplanation)}[/]");
+        }
 
         if (finding.ExpertContext is { } expert)
         {
@@ -292,7 +334,9 @@ public static class ConsoleReporter
             var ticketRef = ticket.Url is not null ? $"{ticket.Id} ({ticket.Url})" : ticket.Id;
             AnsiConsole.MarkupLine($"[cyan]  Ticket   : [[{Markup.Escape(ticket.Provider)}]] {Markup.Escape(ticketRef)} - {Markup.Escape(ticket.Title)}[/]");
             if (!string.IsNullOrWhiteSpace(ticket.Description))
+            {
                 AnsiConsole.MarkupLine($"[grey]             {Markup.Escape(ticket.Description)}[/]");
+            }
         }
 
         AnsiConsole.WriteLine();
@@ -305,16 +349,25 @@ public static class ConsoleReporter
             string.Equals(f.NewPath, filePath, StringComparison.OrdinalIgnoreCase) ||
             f.NewPath.EndsWith(filePath.Replace('\\', '/'), StringComparison.OrdinalIgnoreCase));
 
-        if (diffFile is null) return [];
+        if (diffFile is null)
+        {
+            return [];
+        }
 
         var allLines = diffFile.Hunks.SelectMany(h => h.Lines).ToList();
         var idx = allLines.FindIndex(l => l.LineNumber == lineNumber && l.Kind != DiffLineKind.Removed);
         if (idx < 0)
+        {
             idx = allLines.FindIndex(l => l.LineNumber == lineNumber);
-        if (idx < 0) return [];
+        }
+
+        if (idx < 0)
+        {
+            return [];
+        }
 
         var start = Math.Max(0, idx - n);
-        var end   = Math.Min(allLines.Count - 1, idx + n);
+        var end = Math.Min(allLines.Count - 1, idx + n);
 
         return allLines[start..(end + 1)].Select(l =>
         {
@@ -342,7 +395,10 @@ public static class ConsoleReporter
         {
             AnsiConsole.MarkupLine("[white]  Evidence:[/]");
             foreach (var bullet in finding.Evidence.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+            {
                 AnsiConsole.MarkupLine($"[grey]  - {Markup.Escape(bullet.Trim())}[/]");
+            }
+
             AnsiConsole.WriteLine();
         }
 

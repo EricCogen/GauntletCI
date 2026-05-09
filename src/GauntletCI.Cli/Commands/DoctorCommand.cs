@@ -29,7 +29,7 @@ public static class DoctorCommand
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
         {
             var repo = ctx.ParseResult.GetValueForOption(repoOption)!;
-            var ct   = ctx.GetCancellationToken();
+            var ct = ctx.GetCancellationToken();
 
             var repoRoot = FindGitRoot(repo.FullName);
 
@@ -49,16 +49,26 @@ public static class DoctorCommand
                 : null;
 
             if (File.Exists(homeConfigPath))
+            {
                 AnsiConsole.MarkupLine($"[green]  ✓[/] Home config    : {Markup.Escape(homeConfigPath)}");
+            }
             else
+            {
                 AnsiConsole.MarkupLine($"[dim]  -[/] Home config    : {Markup.Escape(homeConfigPath)} [dim](not found)[/]");
+            }
 
             if (repoConfigPath is not null && File.Exists(repoConfigPath))
+            {
                 AnsiConsole.MarkupLine($"[green]  ✓[/] Repo config    : {Markup.Escape(repoConfigPath)}");
+            }
             else if (repoConfigPath is not null)
+            {
                 AnsiConsole.MarkupLine($"[dim]  -[/] Repo config    : {Markup.Escape(repoConfigPath)} [dim](not found: using defaults)[/]");
+            }
             else
+            {
                 AnsiConsole.MarkupLine("[yellow]  ![/] Repo config    : not inside a Git repository");
+            }
 
             AnsiConsole.WriteLine();
 
@@ -77,11 +87,11 @@ public static class DoctorCommand
 
             // ── 3. Rules ─────────────────────────────────────────────────────
             AnsiConsole.MarkupLine("[bold]Rules[/]");
-            var allIds   = RuleOrchestrator.GetAllRuleIds();
+            var allIds = RuleOrchestrator.GetAllRuleIds();
             var disabled = allIds
                 .Where(id => config.Rules.TryGetValue(id, out var rc) && !rc.Enabled)
                 .ToList();
-            var enabled  = allIds.Count - disabled.Count;
+            var enabled = allIds.Count - disabled.Count;
 
             AnsiConsole.MarkupLine($"  Total       : {allIds.Count}");
             AnsiConsole.MarkupLine($"  Enabled     : [green]{enabled}[/]");
@@ -105,9 +115,13 @@ public static class DoctorCommand
                 using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(3) };
                 var response = await http.GetAsync(ollamaUrl, ct);
                 if (response.IsSuccessStatusCode)
+                {
                     AnsiConsole.MarkupLine($"[green]  ✓[/] Reachable at {Markup.Escape(ollamaUrl)}");
+                }
                 else
+                {
                     AnsiConsole.MarkupLine($"[yellow]  ![/] Responded with {(int)response.StatusCode} at {Markup.Escape(ollamaUrl)}");
+                }
             }
             catch
             {
@@ -125,7 +139,9 @@ public static class DoctorCommand
                 {
                     AnsiConsole.MarkupLine($"[green]  ✓[/] Active: {baseline.Fingerprints.Count} fingerprint(s), created {baseline.CreatedAt:u}");
                     if (baseline.Commit is not null)
+                    {
                         AnsiConsole.MarkupLine($"  [dim]  Commit: {Markup.Escape(baseline.Commit)}[/]");
+                    }
                 }
                 else
                 {
@@ -153,7 +169,10 @@ public static class DoctorCommand
         while (current is not null)
         {
             if (Directory.Exists(Path.Combine(current.FullName, ".git")))
+            {
                 return current.FullName;
+            }
+
             current = current.Parent;
         }
         return null;

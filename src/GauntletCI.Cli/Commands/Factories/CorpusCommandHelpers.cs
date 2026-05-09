@@ -20,9 +20,9 @@ public static class CorpusCommandHelpers
     public static async Task<(CorpusDb Db, FixtureFolderStore Store, NormalizationPipeline Pipeline)>
         BuildPipeline(string dbPath, string fixturesPath, CancellationToken ct)
     {
-        var db       = new CorpusDb(dbPath);
+        var db = new CorpusDb(dbPath);
         await db.InitializeAsync(ct);
-        var store    = new FixtureFolderStore(db, fixturesPath);
+        var store = new FixtureFolderStore(db, fixturesPath);
         var pipeline = new NormalizationPipeline(store);
         return (db, store, pipeline);
     }
@@ -87,7 +87,10 @@ public static class CorpusCommandHelpers
         while (current != null)
         {
             if (Directory.Exists(Path.Combine(current.FullName, ".git")))
+            {
                 return current.FullName;
+            }
+
             current = current.Parent;
         }
         return null;

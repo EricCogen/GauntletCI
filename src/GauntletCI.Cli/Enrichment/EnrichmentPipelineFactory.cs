@@ -63,13 +63,20 @@ public static class EnrichmentPipelineFactory
         if ((options & EnricherOptions.LlmExplanation) != 0)
         {
             if (llmEngine == null)
+            {
                 throw new InvalidOperationException("LlmExplanation enricher requested but llmEngine is null.");
+            }
+
             if (llmEngine.IsAvailable)
+            {
                 enrichers.Add(new LlmExplanationEnricher(llmEngine));
+            }
         }
 
         if (enrichers.Count == 0)
+        {
             throw new InvalidOperationException("At least one enricher must be selected.");
+        }
 
         return new EnrichmentPipeline(enrichers);
     }

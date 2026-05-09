@@ -9,13 +9,13 @@ public class BaselineStoreTests
     private static Finding MakeFinding(string ruleId = "GCI0001", string? filePath = "src/Foo.cs", string evidence = "Line 10: foo") =>
         new()
         {
-            RuleId         = ruleId,
-            RuleName       = "Test Rule",
-            Summary        = "Test summary",
-            Evidence       = evidence,
-            WhyItMatters   = "Why",
+            RuleId = ruleId,
+            RuleName = "Test Rule",
+            Summary = "Test summary",
+            Evidence = evidence,
+            WhyItMatters = "Why",
             SuggestedAction = "Action",
-            FilePath       = filePath,
+            FilePath = filePath,
         };
 
     [Fact]

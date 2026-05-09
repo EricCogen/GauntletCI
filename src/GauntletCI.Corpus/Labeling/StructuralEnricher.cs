@@ -61,18 +61,25 @@ public sealed class StructuralEnricher : IDisposable
                 "diff.patch");
 
             if (!File.Exists(diffPath))
+            {
                 continue;
+            }
 
             var changedFiles = ParseChangedFiles(diffPath);
             if (changedFiles.Count == 0)
+            {
                 continue;
+            }
 
             var sensitiveFiles = changedFiles
                 .Where(f => IsSensitivePath(f))
                 .ToList();
 
             var parts = fixture.Repo.Split('/', 2);
-            if (parts.Length < 2) continue;
+            if (parts.Length < 2)
+            {
+                continue;
+            }
 
             // Fetch per-file churn for .cs files only
             var since = DateTime.UtcNow.AddDays(-30).ToString("O");
@@ -82,11 +89,14 @@ public sealed class StructuralEnricher : IDisposable
                 ct.ThrowIfCancellationRequested();
                 var churn = await FetchFileChurnAsync(parts[0], parts[1], file, since, ct).ConfigureAwait(false);
                 churnByFile[file] = churn;
-                if (delayMs > 0) await Task.Delay(delayMs, ct).ConfigureAwait(false);
+                if (delayMs > 0)
+                {
+                    await Task.Delay(delayMs, ct).ConfigureAwait(false);
+                }
             }
 
             var maxChurn = churnByFile.Count > 0 ? churnByFile.Values.Max() : 0;
-            var score    = ComputeScore(sensitiveFiles.Count > 0, maxChurn, changedFiles.Count);
+            var score = ComputeScore(sensitiveFiles.Count > 0, maxChurn, changedFiles.Count);
 
             var changedFilesJson = JsonSerializer.Serialize(changedFiles);
             await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo,
@@ -113,10 +123,16 @@ public sealed class StructuralEnricher : IDisposable
         var paths = new List<string>();
         foreach (var line in File.ReadLines(diffPath))
         {
-            if (!line.StartsWith("+++ b/", StringComparison.Ordinal)) continue;
+            if (!line.StartsWith("+++ b/", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
             var path = line[6..];
             if (!string.IsNullOrWhiteSpace(path))
+            {
                 paths.Add(path);
+            }
         }
         return paths;
     }
@@ -125,8 +141,13 @@ public sealed class StructuralEnricher : IDisposable
     {
         var lower = filePath.ToLowerInvariant();
         foreach (var pattern in SensitivePatterns)
+        {
             if (lower.Contains(pattern, StringComparison.OrdinalIgnoreCase))
+            {
                 return true;
+            }
+        }
+
         return false;
     }
 
@@ -135,10 +156,25 @@ public sealed class StructuralEnricher : IDisposable
     private static double ComputeScore(bool hasSensitivePath, int maxChurn, int changedFileCount)
     {
         double score = 0.0;
-        if (hasSensitivePath) score += 0.40;
-        if (maxChurn >= 10)   score += 0.30;
-        else if (maxChurn >= 5) score += 0.20;
-        if (changedFileCount >= 5) score += 0.10;
+        if (hasSensitivePath)
+        {
+            score += 0.40;
+        }
+
+        if (maxChurn >= 10)
+        {
+            score += 0.30;
+        }
+        else if (maxChurn >= 5)
+        {
+            score += 0.20;
+        }
+
+        if (changedFileCount >= 5)
+        {
+            score += 0.10;
+        }
+
         return Math.Clamp(score, 0.0, 1.0);
     }
 
@@ -152,7 +188,10 @@ public sealed class StructuralEnricher : IDisposable
         try
         {
             using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
-            if (!resp.IsSuccessStatusCode) return 0;
+            if (!resp.IsSuccessStatusCode)
+            {
+                return 0;
+            }
 
             await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
@@ -180,12 +219,12 @@ public sealed class StructuralEnricher : IDisposable
                 ($fixtureId, $repo, $changedFiles, $sensitiveCount,
                  $maxChurn, $score, datetime('now'))
             """;
-        cmd.Parameters.AddWithValue("$fixtureId",      fixtureId);
-        cmd.Parameters.AddWithValue("$repo",            repo);
-        cmd.Parameters.AddWithValue("$changedFiles",    changedFilesJson);
-        cmd.Parameters.AddWithValue("$sensitiveCount",  sensitiveFileCount);
-        cmd.Parameters.AddWithValue("$maxChurn",        maxChurn);
-        cmd.Parameters.AddWithValue("$score",           structuralRiskScore);
+        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$changedFiles", changedFilesJson);
+        cmd.Parameters.AddWithValue("$sensitiveCount", sensitiveFileCount);
+        cmd.Parameters.AddWithValue("$maxChurn", maxChurn);
+        cmd.Parameters.AddWithValue("$score", structuralRiskScore);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }

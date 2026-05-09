@@ -33,9 +33,9 @@ public sealed class RuleCorpusRunner
     /// </param>
     public RuleCorpusRunner(IFixtureStore store, CorpusDb db, GauntletConfig? config = null, string? repoPath = null)
     {
-        _store    = store;
-        _db       = db;
-        _config   = config;
+        _store = store;
+        _db = db;
+        _config = config;
         _repoPath = repoPath;
     }
 
@@ -43,28 +43,28 @@ public sealed class RuleCorpusRunner
         string fixtureId, string diffText, CancellationToken cancellationToken = default)
     {
         var startedAt = DateTime.UtcNow;
-        var runId     = Guid.NewGuid().ToString();
-        LastRunId     = runId;
+        var runId = Guid.NewGuid().ToString();
+        LastRunId = runId;
 
-        var diff   = DiffParser.Parse(diffText);
+        var diff = DiffParser.Parse(diffText);
         var result = await RuleOrchestrator.CreateDefault(_config, repoPath: _repoPath).RunAsync(diff, null, null, cancellationToken).ConfigureAwait(false);
 
         var findings = result.Findings
             .Select(f => new ActualFinding
             {
-                RuleId            = f.RuleId,
-                DidTrigger        = true,
-                ActualConfidence  = f.Confidence switch
+                RuleId = f.RuleId,
+                DidTrigger = true,
+                ActualConfidence = f.Confidence switch
                 {
-                    Confidence.High   => 1.0,
+                    Confidence.High => 1.0,
                     Confidence.Medium => 0.5,
-                    _                 => 0.25,
+                    _ => 0.25,
                 },
-                Message           = f.Summary,
+                Message = f.Summary,
                 ChangeImplication = f.WhyItMatters,
-                Evidence          = f.Evidence,
-                FilePath          = f.FilePath,
-                ExecutionTimeMs   = 0,
+                Evidence = f.Evidence,
+                FilePath = f.FilePath,
+                ExecutionTimeMs = 0,
             })
             .ToList();
 
@@ -89,10 +89,10 @@ public sealed class RuleCorpusRunner
             INSERT INTO rule_runs (id, fixture_id, started_at_utc, completed_at_utc, engine_version, status)
             VALUES ($id, $fixture_id, $started, $completed, $version, 'Completed')
             """;
-        cmd.Parameters.AddWithValue("$id",         runId);
+        cmd.Parameters.AddWithValue("$id", runId);
         cmd.Parameters.AddWithValue("$fixture_id", fixtureId);
-        cmd.Parameters.AddWithValue("$started",    startedAt.ToString("o"));
-        cmd.Parameters.AddWithValue("$completed",  completedAt.ToString("o"));
+        cmd.Parameters.AddWithValue("$started", startedAt.ToString("o"));
+        cmd.Parameters.AddWithValue("$completed", completedAt.ToString("o"));
         cmd.Parameters.AddWithValue("$version",
             System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0");
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
@@ -114,17 +114,17 @@ public sealed class RuleCorpusRunner
                     ($id, $fixture_id, $run_id, $rule_id, $did_trigger, $actual_confidence,
                      $message, $change_implication, $evidence_json, $execution_time_ms, $file_path)
                 """;
-            cmd.Parameters.AddWithValue("$id",                Guid.NewGuid().ToString());
-            cmd.Parameters.AddWithValue("$fixture_id",        fixtureId);
-            cmd.Parameters.AddWithValue("$run_id",            runId);
-            cmd.Parameters.AddWithValue("$rule_id",           f.RuleId);
-            cmd.Parameters.AddWithValue("$did_trigger",       f.DidTrigger ? 1 : 0);
+            cmd.Parameters.AddWithValue("$id", Guid.NewGuid().ToString());
+            cmd.Parameters.AddWithValue("$fixture_id", fixtureId);
+            cmd.Parameters.AddWithValue("$run_id", runId);
+            cmd.Parameters.AddWithValue("$rule_id", f.RuleId);
+            cmd.Parameters.AddWithValue("$did_trigger", f.DidTrigger ? 1 : 0);
             cmd.Parameters.AddWithValue("$actual_confidence", f.ActualConfidence);
-            cmd.Parameters.AddWithValue("$message",           f.Message);
-            cmd.Parameters.AddWithValue("$change_implication",f.ChangeImplication);
-            cmd.Parameters.AddWithValue("$evidence_json",     JsonSerializer.Serialize(f.Evidence));
+            cmd.Parameters.AddWithValue("$message", f.Message);
+            cmd.Parameters.AddWithValue("$change_implication", f.ChangeImplication);
+            cmd.Parameters.AddWithValue("$evidence_json", JsonSerializer.Serialize(f.Evidence));
             cmd.Parameters.AddWithValue("$execution_time_ms", f.ExecutionTimeMs);
-            cmd.Parameters.AddWithValue("$file_path",         f.FilePath ?? (object)DBNull.Value);
+            cmd.Parameters.AddWithValue("$file_path", f.FilePath ?? (object)DBNull.Value);
             await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
         }
     }

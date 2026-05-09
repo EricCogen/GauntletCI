@@ -56,33 +56,47 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
 
         foreach (var issue in issueResults.Items.Take(limit))
         {
-            if (cancellationToken.IsCancellationRequested) break;
+            if (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
 
             // Parse owner/repo from html_url: https://github.com/owner/repo/issues/N
             var (owner, repo, issueNumber) = TryParseIssueUrl(issue.HtmlUrl);
-            if (owner is null) continue;
+            if (owner is null)
+            {
+                continue;
+            }
 
             var fullRepo = $"{owner}/{repo}";
             if (query.RepoBlockList.Count > 0 &&
                 query.RepoBlockList.Any(b => b.Equals(fullRepo, StringComparison.OrdinalIgnoreCase)))
+            {
                 continue;
+            }
 
             // Find the PR that closed this issue via timeline
             var pr = await FindClosingPrAsync(owner, repo!, issueNumber, cancellationToken).ConfigureAwait(false);
-            if (pr is null) continue;
+            if (pr is null)
+            {
+                continue;
+            }
 
             var candidateId = $"{owner}/{repo}#{pr.Value}";
-            if (!seen.Add(candidateId)) continue;
+            if (!seen.Add(candidateId))
+            {
+                continue;
+            }
 
             candidates.Add(new PullRequestCandidate
             {
-                Source            = "github-issue-discovery",
-                RepoOwner         = owner,
-                RepoName          = repo!,
+                Source = "github-issue-discovery",
+                RepoOwner = owner,
+                RepoName = repo!,
                 PullRequestNumber = pr.Value,
-                Url               = $"https://github.com/{owner}/{repo}/pull/{pr.Value}",
-                Language          = query.Languages.Count > 0 ? query.Languages[0] : "C#",
-                CandidateReason   = $"Closes issue #{issueNumber}: {issue.Title}",
+                Url = $"https://github.com/{owner}/{repo}/pull/{pr.Value}",
+                Language = query.Languages.Count > 0 ? query.Languages[0] : "C#",
+                CandidateReason = $"Closes issue #{issueNumber}: {issue.Title}",
             });
 
             Console.WriteLine($"[corpus/issues] Found PR {owner}/{repo}#{pr.Value} via issue #{issueNumber}");
@@ -102,22 +116,38 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.mockingbird-preview+json"));
 
             using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
-            if (!resp.IsSuccessStatusCode) return null;
+            if (!resp.IsSuccessStatusCode)
+            {
+                return null;
+            }
 
             var json = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             var events = JsonSerializer.Deserialize<List<GhTimelineEvent>>(json, JsonOpts) ?? [];
 
             foreach (var ev in events)
             {
-                if (!ev.Event.Equals("cross-referenced", StringComparison.OrdinalIgnoreCase)) continue;
+                if (!ev.Event.Equals("cross-referenced", StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
                 var linkedIssue = ev.Source?.Issue;
-                if (linkedIssue?.PullRequest is null) continue;
-                if (linkedIssue.PullRequest.MergedAt is null) continue;
+                if (linkedIssue?.PullRequest is null)
+                {
+                    continue;
+                }
+
+                if (linkedIssue.PullRequest.MergedAt is null)
+                {
+                    continue;
+                }
 
                 var prUrl = linkedIssue.PullRequest.Url;
                 var parts = prUrl.Split('/');
                 if (int.TryParse(parts[^1], out var prNum))
+                {
                     return (prNum);
+                }
             }
         }
         catch { /* network error, skip */ }
@@ -142,7 +172,9 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
             }
 
             if (!IsRateLimited(resp) || attempt >= MaxRetries)
+            {
                 resp.EnsureSuccessStatusCode();
+            }
 
             var waitTime = GetWaitTime(resp, baseDelay);
             baseDelay = TimeSpan.FromSeconds(Math.Min(baseDelay.TotalSeconds * 2, 64));
@@ -161,13 +193,18 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
     private static TimeSpan GetWaitTime(HttpResponseMessage resp, TimeSpan fallback)
     {
         if (resp.Headers.RetryAfter?.Delta is { } delta)
+        {
             return delta + TimeSpan.FromSeconds(1);
+        }
 
         if (resp.Headers.TryGetValues("x-ratelimit-reset", out var resetVals) &&
             long.TryParse(resetVals.FirstOrDefault(), out var epoch))
         {
             var wait = DateTimeOffset.FromUnixTimeSeconds(epoch) - DateTimeOffset.UtcNow + TimeSpan.FromSeconds(2);
-            if (wait > TimeSpan.Zero) return wait;
+            if (wait > TimeSpan.Zero)
+            {
+                return wait;
+            }
         }
 
         var jitter = 1.0 + (Random.Shared.NextDouble() * 0.2 - 0.1);
@@ -178,10 +215,12 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
     {
         try
         {
-            var uri  = new Uri(htmlUrl);
+            var uri = new Uri(htmlUrl);
             var segs = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
             if (segs.Length >= 4 && int.TryParse(segs[3], out var num))
+            {
                 return (segs[0], segs[1], num);
+            }
         }
         catch { }
         return (null, null, 0);

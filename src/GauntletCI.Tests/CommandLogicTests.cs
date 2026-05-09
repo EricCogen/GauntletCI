@@ -24,7 +24,11 @@ public class CommandLogicTests : IDisposable
     {
         foreach (var dir in _tempDirs)
         {
-            try { Directory.Delete(dir, recursive: true); } catch { }
+            try
+            {
+                Directory.Delete(dir, recursive: true);
+            }
+            catch { }
         }
     }
 
@@ -183,9 +187,13 @@ public class CommandLogicTests : IDisposable
         // In the rare case the temp dir sits inside a git repo (some CI configs),
         // the returned path must at least contain a real .git folder.
         if (result is not null)
+        {
             Assert.True(Directory.Exists(Path.Combine(result, ".git")));
+        }
         else
+        {
             Assert.Null(result);
+        }
     }
 
     [Fact]
@@ -234,7 +242,9 @@ public class CommandLogicTests : IDisposable
         var rules = BuildDefaultRules();
 
         foreach (var key in rules.Keys)
+        {
             Assert.Matches(@"^GCI\d{4}$", key);
+        }
     }
 
     [Fact]
@@ -257,15 +267,15 @@ public class CommandLogicTests : IDisposable
         mode.Trim().ToLowerInvariant() switch
         {
             "shared" => TelemetryMode.Shared,
-            "local"  => TelemetryMode.Local,
-            "off"    => TelemetryMode.Off,
-            _        => (TelemetryMode?)null,
+            "local" => TelemetryMode.Local,
+            "off" => TelemetryMode.Off,
+            _ => (TelemetryMode?)null,
         };
 
     [Theory]
     [InlineData("shared", TelemetryMode.Shared)]
-    [InlineData("local",  TelemetryMode.Local)]
-    [InlineData("off",    TelemetryMode.Off)]
+    [InlineData("local", TelemetryMode.Local)]
+    [InlineData("off", TelemetryMode.Off)]
     public void ParseMode_ValidLowercase_ReturnsMappedEnum(string input, TelemetryMode expected)
     {
         Assert.Equal(expected, ParseMode(input));

@@ -33,21 +33,39 @@ internal static class LlmLabelerHelpers
         {
             // Strip markdown fences if the model wraps the JSON
             var trimmed = text.Trim();
-            if (trimmed.StartsWith("```")) trimmed = trimmed.Split('\n', 2)[1];
-            if (trimmed.EndsWith("```"))   trimmed = trimmed[..trimmed.LastIndexOf("```")];
+            if (trimmed.StartsWith("```"))
+            {
+                trimmed = trimmed.Split('\n', 2)[1];
+            }
+
+            if (trimmed.EndsWith("```"))
+            {
+                trimmed = trimmed[..trimmed.LastIndexOf("```")];
+            }
 
             using var doc = JsonDocument.Parse(trimmed.Trim());
             var root = doc.RootElement;
 
-            if (!root.TryGetProperty("should_trigger", out var shouldTrigger)) return null;
-            if (!root.TryGetProperty("confidence",     out var confidence))     return null;
-            if (!root.TryGetProperty("reason",         out var reason))         return null;
+            if (!root.TryGetProperty("should_trigger", out var shouldTrigger))
+            {
+                return null;
+            }
+
+            if (!root.TryGetProperty("confidence", out var confidence))
+            {
+                return null;
+            }
+
+            if (!root.TryGetProperty("reason", out var reason))
+            {
+                return null;
+            }
 
             var conf = confidence.GetDouble();
             return new LlmLabelResult(
-                ShouldTrigger:  shouldTrigger.GetBoolean(),
-                Confidence:     conf,
-                Reason:         reason.GetString() ?? string.Empty,
+                ShouldTrigger: shouldTrigger.GetBoolean(),
+                Confidence: conf,
+                Reason: reason.GetString() ?? string.Empty,
                 IsInconclusive: conf < 0.4);
         }
         catch (Exception) { return null; }

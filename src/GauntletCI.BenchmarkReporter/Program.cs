@@ -10,8 +10,15 @@ string outputArg = "docs/benchmarks";
 
 for (int i = 0; i < args.Length - 1; i++)
 {
-    if (args[i] == "--fixtures") fixturesArg = args[i + 1];
-    if (args[i] == "--output") outputArg = args[i + 1];
+    if (args[i] == "--fixtures")
+    {
+        fixturesArg = args[i + 1];
+    }
+
+    if (args[i] == "--output")
+    {
+        outputArg = args[i + 1];
+    }
 }
 
 var fixturesRoot = Path.IsPathRooted(fixturesArg)
@@ -43,7 +50,10 @@ var allEntries = new List<(string Dir, FixtureEntry Entry)>();
 foreach (var dir in Directory.GetDirectories(fixturesRoot).OrderBy(d => d))
 {
     var manifestPath = Path.Combine(dir, "manifest.json");
-    if (!File.Exists(manifestPath)) continue;
+    if (!File.Exists(manifestPath))
+    {
+        continue;
+    }
 
     FixtureManifest? manifest;
     try
@@ -53,13 +63,18 @@ foreach (var dir in Directory.GetDirectories(fixturesRoot).OrderBy(d => d))
     }
     catch { continue; }
 
-    if (manifest?.Fixtures is null) continue;
+    if (manifest?.Fixtures is null)
+    {
+        continue;
+    }
 
     foreach (var entry in manifest.Fixtures)
     {
         var diffPath = Path.Combine(dir, entry.DiffFile);
         if (File.Exists(diffPath))
+        {
             allEntries.Add((dir, entry));
+        }
     }
 }
 
@@ -90,12 +105,18 @@ foreach (var (dir, entry) in allEntries)
                 EnsureRule(ruleAccumulators, ruleId);
                 if (firedRuleIds.Contains(ruleId))
                 {
-                    ruleAccumulators[ruleId] = ruleAccumulators[ruleId] with { Tp = ruleAccumulators[ruleId].Tp + 1 };
+                    ruleAccumulators[ruleId] = ruleAccumulators[ruleId] with
+                    {
+                        Tp = ruleAccumulators[ruleId].Tp + 1
+                    };
                     aggTp++;
                 }
                 else
                 {
-                    ruleAccumulators[ruleId] = ruleAccumulators[ruleId] with { Fn = ruleAccumulators[ruleId].Fn + 1 };
+                    ruleAccumulators[ruleId] = ruleAccumulators[ruleId] with
+                    {
+                        Fn = ruleAccumulators[ruleId].Fn + 1
+                    };
                     aggFn++;
                 }
             }
@@ -103,8 +124,14 @@ foreach (var (dir, entry) in allEntries)
         else
         {
             // no specific rule expected: count as aggregate TP/FN
-            if (result.HasFindings) aggTp++;
-            else aggFn++;
+            if (result.HasFindings)
+            {
+                aggTp++;
+            }
+            else
+            {
+                aggFn++;
+            }
         }
     }
     else if (entry.ExpectedOutcome == "do-not-fire")
@@ -116,20 +143,32 @@ foreach (var (dir, entry) in allEntries)
                 EnsureRule(ruleAccumulators, ruleId);
                 if (firedRuleIds.Contains(ruleId))
                 {
-                    ruleAccumulators[ruleId] = ruleAccumulators[ruleId] with { Fp = ruleAccumulators[ruleId].Fp + 1 };
+                    ruleAccumulators[ruleId] = ruleAccumulators[ruleId] with
+                    {
+                        Fp = ruleAccumulators[ruleId].Fp + 1
+                    };
                     aggFp++;
                 }
                 else
                 {
-                    ruleAccumulators[ruleId] = ruleAccumulators[ruleId] with { Tn = ruleAccumulators[ruleId].Tn + 1 };
+                    ruleAccumulators[ruleId] = ruleAccumulators[ruleId] with
+                    {
+                        Tn = ruleAccumulators[ruleId].Tn + 1
+                    };
                     aggTn++;
                 }
             }
         }
         else
         {
-            if (result.HasFindings) aggFp++;
-            else aggTn++;
+            if (result.HasFindings)
+            {
+                aggFp++;
+            }
+            else
+            {
+                aggTn++;
+            }
         }
     }
     // edge-case entries skipped
@@ -145,7 +184,10 @@ var ruleStatsList = ruleAccumulators
         {
             RuleId = kv.Key,
             Description = desc,
-            Tp = tp, Fp = fp, Fn = fn, Tn = tn,
+            Tp = tp,
+            Fp = fp,
+            Fn = fn,
+            Tn = tn,
             Precision = CalcPrecision(tp, fp),
             Recall = CalcRecall(tp, fn),
             F1 = CalcF1(tp, fp, fn)
@@ -155,7 +197,10 @@ var ruleStatsList = ruleAccumulators
 var aggregate = new AggregateStats
 {
     TotalFixtures = allEntries.Count,
-    Tp = aggTp, Fp = aggFp, Fn = aggFn, Tn = aggTn,
+    Tp = aggTp,
+    Fp = aggFp,
+    Fn = aggFn,
+    Tn = aggTn,
     Precision = CalcPrecision(aggTp, aggFp),
     Recall = CalcRecall(aggTp, aggFn),
     F1 = CalcF1(aggTp, aggFp, aggFn)
@@ -184,7 +229,10 @@ Console.WriteLine();
 Console.WriteLine($"{"Rule",-12} {"TP",5} {"FP",5} {"FN",5} {"TN",5} {"Prec",8} {"Recall",8} {"F1",8}");
 Console.WriteLine(new string('-', 70));
 foreach (var r in ruleStatsList)
+{
     Console.WriteLine($"{r.RuleId,-12} {r.Tp,5} {r.Fp,5} {r.Fn,5} {r.Tn,5} {r.Precision,8:F4} {r.Recall,8:F4} {r.F1,8:F4}");
+}
+
 Console.WriteLine(new string('-', 70));
 Console.WriteLine($"{"AGGREGATE",-12} {aggregate.Tp,5} {aggregate.Fp,5} {aggregate.Fn,5} {aggregate.Tn,5} {aggregate.Precision,8:F4} {aggregate.Recall,8:F4} {aggregate.F1,8:F4}");
 Console.WriteLine();
@@ -198,14 +246,19 @@ static string NormalizeRuleId(string id)
 {
     if (id.StartsWith("GCI", StringComparison.OrdinalIgnoreCase) &&
         int.TryParse(id[3..], out int n))
+    {
         return $"GCI{n:D4}";
+    }
+
     return id;
 }
 
 static void EnsureRule(Dictionary<string, (int Tp, int Fp, int Fn, int Tn, string Desc)> dict, string ruleId)
 {
     if (!dict.ContainsKey(ruleId))
+    {
         dict[ruleId] = (0, 0, 0, 0, string.Empty);
+    }
 }
 
 static double CalcPrecision(int tp, int fp) =>
@@ -224,7 +277,10 @@ static double CalcF1(int tp, int fp, int fn)
 static string EscapeCsv(string s)
 {
     if (s.Contains(',') || s.Contains('"') || s.Contains('\n'))
+    {
         return $"\"{s.Replace("\"", "\"\"")}\"";
+    }
+
     return s;
 }
 

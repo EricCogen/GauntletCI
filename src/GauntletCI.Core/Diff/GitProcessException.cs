@@ -7,9 +7,18 @@ namespace GauntletCI.Core.Diff;
 /// </summary>
 public sealed class GitProcessException : Exception
 {
-    public int ExitCode { get; }
-    public string StdErr { get; }
-    public string Command { get; }
+    public int ExitCode
+    {
+        get;
+    }
+    public string StdErr
+    {
+        get;
+    }
+    public string Command
+    {
+        get;
+    }
 
     public GitProcessException(string command, int exitCode, string stderr)
         : base($"git process failed for '{command}' (exit {exitCode}): {stderr.Trim()}")

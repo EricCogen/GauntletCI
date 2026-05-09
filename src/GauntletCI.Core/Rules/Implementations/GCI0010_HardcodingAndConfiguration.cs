@@ -57,8 +57,16 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
 
         foreach (var file in context.Diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
-            if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath))
+            {
+                continue;
+            }
+
+            if (WellKnownPatterns.IsGeneratedFile(file.NewPath))
+            {
+                continue;
+            }
+
             CheckIpAddress(file, findings);
             CheckHardcodedUrl(file, findings);
             CheckConnectionString(file, findings);
@@ -74,14 +82,24 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
     private void CheckIpAddress(DiffFile file, List<Finding> findings)
     {
         // Skip test and infrastructure files - they often have hardcoded localhost/test IPs
-        if (WellKnownPatterns.IsTestFile(file.NewPath)) return;
-        if (WellKnownPatterns.DependencyInjectionPatterns.IsInfrastructureFile(file.NewPath)) return;
+        if (WellKnownPatterns.IsTestFile(file.NewPath))
+        {
+            return;
+        }
+
+        if (WellKnownPatterns.DependencyInjectionPatterns.IsInfrastructureFile(file.NewPath))
+        {
+            return;
+        }
 
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
             var trimmed = content.Trim();
-            if (WellKnownPatterns.IsCommentLine(trimmed)) continue;
+            if (WellKnownPatterns.IsCommentLine(trimmed))
+            {
+                continue;
+            }
 
             // Check for IP address assignment patterns (e.g., var ip = "192.168.1.1")
             if (content.Contains("=") && BareIpAddressRegex.IsMatch(trimmed.Split('=').LastOrDefault()?.Trim() ?? ""))
@@ -99,15 +117,24 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
             // Scope to string literals only: prevents matching version strings like "1.0.0.0"
             // in XML, NuGet manifests, and assembly attributes.
             var literals = ExtractStringLiterals(content);
-            if (literals.Count == 0) continue;
+            if (literals.Count == 0)
+            {
+                continue;
+            }
 
             foreach (var literal in literals)
             {
                 // Skip if this is a URL: CheckHardcodedUrl already handles that case.
-                if (literal.Contains("://", StringComparison.Ordinal)) continue;
+                if (literal.Contains("://", StringComparison.Ordinal))
+                {
+                    continue;
+                }
 
                 var match = BareIpAddressRegex.Match(literal.Trim());
-                if (!match.Success) continue;
+                if (!match.Success)
+                {
+                    continue;
+                }
 
                 findings.Add(CreateFinding(
                     file,
@@ -124,18 +151,31 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
     private void CheckHardcodedUrl(DiffFile file, List<Finding> findings)
     {
         // Skip test and infrastructure files - they often have hardcoded localhost URLs
-        if (WellKnownPatterns.IsTestFile(file.NewPath)) return;
-        if (WellKnownPatterns.DependencyInjectionPatterns.IsInfrastructureFile(file.NewPath)) return;
+        if (WellKnownPatterns.IsTestFile(file.NewPath))
+        {
+            return;
+        }
+
+        if (WellKnownPatterns.DependencyInjectionPatterns.IsInfrastructureFile(file.NewPath))
+        {
+            return;
+        }
 
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
             var trimmed = content.Trim();
 
-            if (WellKnownPatterns.IsCommentLine(trimmed)) continue;
+            if (WellKnownPatterns.IsCommentLine(trimmed))
+            {
+                continue;
+            }
 
             var literals = ExtractStringLiterals(content);
-            if (literals.Count == 0) continue;
+            if (literals.Count == 0)
+            {
+                continue;
+            }
 
             // Only fire on localhost/IP URLs: public URLs (docs, CDN, GitHub, etc.) are
             // intentional references, not hardcoded configuration. CheckIpAddress covers
@@ -144,7 +184,10 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
                 HardcodedUrlRegex.IsMatch(l) &&
                 !SafeUrlPrefixes.Any(s => l.StartsWith(s, StringComparison.OrdinalIgnoreCase)));
 
-            if (!hasPrivateUrl) continue;
+            if (!hasPrivateUrl)
+            {
+                continue;
+            }
 
             findings.Add(CreateFinding(
                 file,
@@ -161,18 +204,31 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         // Phase 17a: GCI0010 ↔ GCI0021 Coordination
         // Skip connection strings in infrastructure/migration files (GCI0021 owns schema context).
         // Connection strings in Migrations/ or Infrastructure/ are typically test/seed data.
-        if (WellKnownPatterns.IsInfrastructureFile(file.NewPath)) return;
+        if (WellKnownPatterns.IsInfrastructureFile(file.NewPath))
+        {
+            return;
+        }
 
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            if (WellKnownPatterns.IsCommentLine(content.Trim())) continue;
+            if (WellKnownPatterns.IsCommentLine(content.Trim()))
+            {
+                continue;
+            }
+
             var literals = ExtractStringLiterals(content);
-            if (literals.Count == 0) continue;
+            if (literals.Count == 0)
+            {
+                continue;
+            }
 
             foreach (var marker in WellKnownPatterns.ConnectionStringMarkers)
             {
-                if (!literals.Any(l => l.Contains(marker, StringComparison.OrdinalIgnoreCase))) continue;
+                if (!literals.Any(l => l.Contains(marker, StringComparison.OrdinalIgnoreCase)))
+                {
+                    continue;
+                }
 
                 findings.Add(CreateFinding(
                     file,
@@ -191,7 +247,11 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            if (WellKnownPatterns.IsCommentLine(content.Trim())) continue;
+            if (WellKnownPatterns.IsCommentLine(content.Trim()))
+            {
+                continue;
+            }
+
             var literals = ExtractStringLiterals(content);
 
             foreach (var port in KnownPorts)
@@ -217,22 +277,33 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            if (WellKnownPatterns.IsCommentLine(content.Trim())) continue;
+            if (WellKnownPatterns.IsCommentLine(content.Trim()))
+            {
+                continue;
+            }
+
             var literals = ExtractStringLiterals(content);
-            if (literals.Count == 0) continue;
+            if (literals.Count == 0)
+            {
+                continue;
+            }
 
             foreach (var env in EnvironmentNames)
             {
                 if (!literals.Any(l => string.Equals(l, env, StringComparison.OrdinalIgnoreCase) ||
                                        string.Equals(l, $"ASPNETCORE_ENVIRONMENT={env}", StringComparison.OrdinalIgnoreCase) ||
                                        string.Equals(l, $"DOTNET_ENVIRONMENT={env}", StringComparison.OrdinalIgnoreCase)))
+                {
                     continue;
+                }
 
                 // Skip IHostEnvironment fluent calls: IsProduction() etc. are the correct pattern
                 if (content.Contains(".IsProduction()", StringComparison.OrdinalIgnoreCase) ||
-                    content.Contains(".IsStaging()",    StringComparison.OrdinalIgnoreCase) ||
+                    content.Contains(".IsStaging()", StringComparison.OrdinalIgnoreCase) ||
                     content.Contains(".IsDevelopment()", StringComparison.OrdinalIgnoreCase))
+                {
                     continue;
+                }
 
                 findings.Add(CreateFinding(
                     file,
@@ -251,7 +322,9 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
     private static List<string> ExtractStringLiterals(string content)
     {
         if (string.IsNullOrWhiteSpace(content) || !content.Contains('"', StringComparison.Ordinal))
+        {
             return [];
+        }
 
         try
         {
@@ -272,7 +345,10 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
 
     private void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)
     {
-        if (staticAnalysis is null) return;
+        if (staticAnalysis is null)
+        {
+            return;
+        }
 
         foreach (var diag in staticAnalysis.Diagnostics.Where(d => d.Id is "CA1054" or "CA1056"))
         {

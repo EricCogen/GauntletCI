@@ -29,7 +29,11 @@ public static class TelemetryStore
     private static readonly SemaphoreSlim _inProcessGuard = new(1, 1);
 
     private static readonly JsonSerializerOptions JsonOpts =
-        new() { WriteIndented = false, PropertyNameCaseInsensitive = true };
+        new()
+        {
+            WriteIndented = false,
+            PropertyNameCaseInsensitive = true
+        };
 
     /// <summary>
     /// Appends a telemetry event to the local queue, evicting the oldest events when the queue
@@ -48,7 +52,10 @@ public static class TelemetryStore
                 // Keep queue bounded: drop oldest sent events first, then oldest unsent
                 // Bounded to 500 events to prevent unbounded growth in offline scenarios
                 if (events.Count > 500)
+                {
                     events = events.OrderBy(e => e.Sent).ThenBy(e => e.Timestamp).Skip(50).ToList();
+                }
+
                 Save(events);
             });
         }
@@ -114,13 +121,18 @@ public static class TelemetryStore
                 acquired = true;
             }
             if (acquired)
+            {
                 action();
+            }
         }
         finally
         {
             if (acquired)
             {
-                try { mutex.ReleaseMutex(); }
+                try
+                {
+                    mutex.ReleaseMutex();
+                }
                 catch (ApplicationException) { /* mutex was abandoned by another process */ }
             }
         }
@@ -128,7 +140,11 @@ public static class TelemetryStore
 
     private static List<TelemetryEvent> Load()
     {
-        if (!File.Exists(QueuePath)) return [];
+        if (!File.Exists(QueuePath))
+        {
+            return [];
+        }
+
         var json = File.ReadAllText(QueuePath);
         return JsonSerializer.Deserialize<List<TelemetryEvent>>(json, JsonOpts) ?? [];
     }

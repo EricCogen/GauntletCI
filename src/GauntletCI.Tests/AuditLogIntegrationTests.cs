@@ -5,7 +5,9 @@ using GauntletCI.Cli.Audit;
 namespace GauntletCI.Tests;
 
 [CollectionDefinition("AuditLogSerial", DisableParallelization = true)]
-public class AuditLogSerialCollection { }
+public class AuditLogSerialCollection
+{
+}
 
 /// <summary>
 /// Integration tests for AuditLog that exercise real file I/O against AuditLog.LogPath.
@@ -30,18 +32,24 @@ public class AuditLogIntegrationTests : IDisposable
 
         // Move the real log out of the way so tests start with a clean slate
         if (File.Exists(AuditLog.LogPath))
+        {
             File.Move(AuditLog.LogPath, _backupPath, overwrite: true);
+        }
     }
 
     public void Dispose()
     {
         // Remove any file left by the test
         if (File.Exists(AuditLog.LogPath))
+        {
             File.Delete(AuditLog.LogPath);
+        }
 
         // Restore the original log
         if (File.Exists(_backupPath))
+        {
             File.Move(_backupPath, AuditLog.LogPath, overwrite: true);
+        }
     }
 
     [Fact]
@@ -92,7 +100,9 @@ public class AuditLogIntegrationTests : IDisposable
         var entries = await AuditLog.LoadAllAsync();
         Assert.Equal(5, entries.Count);
         for (int i = 1; i <= 5; i++)
+        {
             Assert.Contains(entries, e => e.ScanId == $"concurrent-{i}");
+        }
     }
 
     [Fact]

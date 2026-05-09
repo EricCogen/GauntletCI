@@ -18,8 +18,8 @@ public sealed class MarkdownReportExporter
     {
         var scorecards = await _aggregator.ScoreAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 
-        var gold      = scorecards.Where(s => s.Tier == FixtureTier.Gold).OrderBy(s => s.RuleId).ToList();
-        var silver    = scorecards.Where(s => s.Tier == FixtureTier.Silver).OrderBy(s => s.RuleId).ToList();
+        var gold = scorecards.Where(s => s.Tier == FixtureTier.Gold).OrderBy(s => s.RuleId).ToList();
+        var silver = scorecards.Where(s => s.Tier == FixtureTier.Silver).OrderBy(s => s.RuleId).ToList();
         var discovery = scorecards.Where(s => s.Tier == FixtureTier.Discovery).OrderBy(s => s.RuleId).ToList();
 
         var sb = new StringBuilder();
@@ -51,11 +51,17 @@ public sealed class MarkdownReportExporter
 
     private static void AppendGoldSilverSection(StringBuilder sb, IReadOnlyList<RuleScorecard> scorecards, string heading, bool trusted)
     {
-        if (scorecards.Count == 0) return;
+        if (scorecards.Count == 0)
+        {
+            return;
+        }
 
         sb.AppendLine($"## {heading} Metrics");
         if (!trusted)
+        {
             sb.AppendLine("_Metrics derived from heuristic labels -- treat as directional, not definitive._");
+        }
+
         sb.AppendLine();
         sb.AppendLine("| Rule | Labeled | TP | FP | FN | TN | Unknown | Precision | Recall | Trigger Rate |");
         sb.AppendLine("|------|--------:|---:|---:|---:|---:|--------:|----------:|-------:|-------------:|");
@@ -78,7 +84,10 @@ public sealed class MarkdownReportExporter
 
     private static void AppendDiscoverySection(StringBuilder sb, IReadOnlyList<RuleScorecard> scorecards)
     {
-        if (scorecards.Count == 0) return;
+        if (scorecards.Count == 0)
+        {
+            return;
+        }
 
         sb.AppendLine("## Discovery Operational Metrics");
         sb.AppendLine("_Discovery fixtures are unlabeled -- precision/recall are not reported. " +

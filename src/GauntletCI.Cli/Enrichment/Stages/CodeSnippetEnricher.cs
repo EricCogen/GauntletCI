@@ -23,15 +23,21 @@ public class CodeSnippetEnricher : IFindingEnricher
     public Task<bool> EnrichAsync(Finding finding, CancellationToken ct = default)
     {
         if (finding is null)
+        {
             return Task.FromResult(false);
+        }
 
         // Skip if already enriched
         if (!string.IsNullOrWhiteSpace(finding.CodeSnippet))
+        {
             return Task.FromResult(false);
+        }
 
         // Extract from evidence if available
         if (string.IsNullOrWhiteSpace(finding.Evidence))
+        {
             return Task.FromResult(false);
+        }
 
         try
         {

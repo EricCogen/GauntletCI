@@ -18,7 +18,9 @@ var isMcpServe = args.Any(a => string.Equals(a, "mcp", StringComparison.OrdinalI
 // First-run prompt for non-init paths (init handles its own prompt and supports --no-telemetry)
 // Skip for mcp serve: stdout is the MCP protocol channel and must not be polluted
 if (!isInitCommand && !isTelemetryCommand && !isMcpServe)
+{
     TelemetryConsent.PromptIfNeeded();
+}
 
 var rootCommand = new RootCommand("GauntletCI: deterministic pre-commit risk detection engine");
 

@@ -23,10 +23,14 @@ public static class RuleOrchestratorExtensions
         CancellationToken ct = default)
     {
         if (pipeline == null)
+        {
             throw new ArgumentNullException(nameof(pipeline));
+        }
 
         if (result?.Findings == null || result.Findings.Count == 0)
+        {
             return result;
+        }
 
         try
         {

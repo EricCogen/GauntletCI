@@ -15,7 +15,7 @@ public class GCI0053_LockfileChangedWithoutSource : RuleBase
     public GCI0053_LockfileChangedWithoutSource(IPatternProvider patterns) : base(patterns)
     {
     }
-    public override string Id   => "GCI0053";
+    public override string Id => "GCI0053";
     public override string Name => "Lockfile Changed Without Source Review";
 
     private static readonly HashSet<string> LockfileNames =
@@ -50,7 +50,9 @@ public class GCI0053_LockfileChangedWithoutSource : RuleBase
             .ToList();
 
         if (lockfileChanges.Count == 0)
+        {
             return Task.FromResult(findings);
+        }
 
         // Look for non-lockfile source changes in CS-eligible files and skipped files
         bool hasSourceChange =
@@ -58,16 +60,18 @@ public class GCI0053_LockfileChangedWithoutSource : RuleBase
             || allRecords.Any(r => !IsLockfile(r.FilePath) && SourceExtensions.Contains(Path.GetExtension(r.FilePath)));
 
         if (hasSourceChange)
+        {
             return Task.FromResult(findings);
+        }
 
         foreach (var lockfileRecord in lockfileChanges)
         {
             findings.Add(CreateFinding(
-                summary:         "Lockfile modified without accompanying source changes: verify dependency upgrade",
-                evidence:        lockfileRecord.FilePath,
-                whyItMatters:    "Lockfile-only changes introduce new dependency versions without visible source context. Malicious packages or unexpected breaking changes may go unnoticed.",
+                summary: "Lockfile modified without accompanying source changes: verify dependency upgrade",
+                evidence: lockfileRecord.FilePath,
+                whyItMatters: "Lockfile-only changes introduce new dependency versions without visible source context. Malicious packages or unexpected breaking changes may go unnoticed.",
                 suggestedAction: "Review the lockfile diff carefully. Verify each changed package version is intentional and from a trusted source. Consider adding a comment in the PR description describing the upgrade reason.",
-                confidence:      Confidence.Low));
+                confidence: Confidence.Low));
         }
 
         return Task.FromResult(findings);
@@ -76,7 +80,11 @@ public class GCI0053_LockfileChangedWithoutSource : RuleBase
     private static bool IsLockfile(string path)
     {
         var fileName = Path.GetFileName(path);
-        if (LockfileNames.Contains(fileName)) return true;
+        if (LockfileNames.Contains(fileName))
+        {
+            return true;
+        }
+
         return LockfileExtensions.Contains(Path.GetExtension(path));
     }
 }

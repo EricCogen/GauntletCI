@@ -12,7 +12,10 @@ public class DependencyRuleTests
     private static readonly GCI0053_LockfileChangedWithoutSource Rule53 = new(new StubPatternProvider());
 
     private static DiffContext MakeDiff(params DiffFile[] files) =>
-        new() { Files = [.. files] };
+        new()
+        {
+            Files = [.. files]
+        };
 
     private static DiffFile MakeFile(string path, params string[] addedLineContents)
     {

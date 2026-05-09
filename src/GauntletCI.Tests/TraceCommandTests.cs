@@ -10,22 +10,22 @@ public class TraceCommandTests
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private static Finding MakeFinding(
-        string ruleId    = "GCI0001",
-        string summary   = "A test finding",
+        string ruleId = "GCI0001",
+        string summary = "A test finding",
         string? filePath = "src/Auth.cs",
         RuleSeverity severity = RuleSeverity.Warn) => new()
-    {
-        RuleId          = ruleId,
-        RuleName        = "Test Rule",
-        Summary         = summary,
-        Evidence        = "Line 10: some code",
-        WhyItMatters    = "risk reason",
-        SuggestedAction = "fix it",
-        Confidence      = Confidence.High,
-        Severity        = severity,
-        FilePath        = filePath,
-        Line            = 10,
-    };
+        {
+            RuleId = ruleId,
+            RuleName = "Test Rule",
+            Summary = summary,
+            Evidence = "Line 10: some code",
+            WhyItMatters = "risk reason",
+            SuggestedAction = "fix it",
+            Confidence = Confidence.High,
+            Severity = severity,
+            FilePath = filePath,
+            Line = 10,
+        };
 
     private static IncidentSummary MakeIncident(
         string id,
@@ -39,7 +39,7 @@ public class TraceCommandTests
     [Fact]
     public void ParseSince_24h_Returns24HoursAgo()
     {
-        var now    = new DateTimeOffset(2024, 6, 1, 12, 0, 0, TimeSpan.Zero);
+        var now = new DateTimeOffset(2024, 6, 1, 12, 0, 0, TimeSpan.Zero);
         var result = IncidentClient.ParseSince("24h", now);
 
         Assert.Equal(now.AddHours(-24), result);
@@ -48,7 +48,7 @@ public class TraceCommandTests
     [Fact]
     public void ParseSince_7d_Returns7DaysAgo()
     {
-        var now    = new DateTimeOffset(2024, 6, 10, 0, 0, 0, TimeSpan.Zero);
+        var now = new DateTimeOffset(2024, 6, 10, 0, 0, 0, TimeSpan.Zero);
         var result = IncidentClient.ParseSince("7d", now);
 
         Assert.Equal(now.AddDays(-7), result);
@@ -57,7 +57,7 @@ public class TraceCommandTests
     [Fact]
     public void ParseSince_30m_Returns30MinutesAgo()
     {
-        var now    = new DateTimeOffset(2024, 1, 1, 6, 0, 0, TimeSpan.Zero);
+        var now = new DateTimeOffset(2024, 1, 1, 6, 0, 0, TimeSpan.Zero);
         var result = IncidentClient.ParseSince("30m", now);
 
         Assert.Equal(now.AddMinutes(-30), result);
@@ -69,15 +69,15 @@ public class TraceCommandTests
         var now = new DateTimeOffset(2024, 6, 1, 12, 0, 0, TimeSpan.Zero);
 
         Assert.Equal(now.AddHours(-24), IncidentClient.ParseSince("xyz", now));
-        Assert.Equal(now.AddHours(-24), IncidentClient.ParseSince("",    now));
+        Assert.Equal(now.AddHours(-24), IncidentClient.ParseSince("", now));
         Assert.Equal(now.AddHours(-24), IncidentClient.ParseSince("-5h", now));
-        Assert.Equal(now.AddHours(-24), IncidentClient.ParseSince("h",   now));
+        Assert.Equal(now.AddHours(-24), IncidentClient.ParseSince("h", now));
     }
 
     [Fact]
     public void ParseSince_1w_Returns7DaysAgo()
     {
-        var now    = new DateTimeOffset(2024, 3, 15, 0, 0, 0, TimeSpan.Zero);
+        var now = new DateTimeOffset(2024, 3, 15, 0, 0, 0, TimeSpan.Zero);
         var result = IncidentClient.ParseSince("1w", now);
 
         Assert.Equal(now.AddDays(-7), result);
@@ -88,7 +88,7 @@ public class TraceCommandTests
     [Fact]
     public void CorrelateIncidents_FileMatchesTitle_ReturnsCorrelated()
     {
-        var finding  = MakeFinding(filePath: "src/Auth.cs");
+        var finding = MakeFinding(filePath: "src/Auth.cs");
         var incident = MakeIncident("INC001", "Outage in Auth.cs module: users cannot log in");
 
         var result = IncidentClient.CorrelateIncidents([finding], [incident]);
@@ -102,7 +102,7 @@ public class TraceCommandTests
     [Fact]
     public void CorrelateIncidents_FileMatchesDescription_ReturnsCorrelated()
     {
-        var finding  = MakeFinding(filePath: "src/PaymentService.cs");
+        var finding = MakeFinding(filePath: "src/PaymentService.cs");
         var incident = MakeIncident("INC002", "Payment failures", "Errors in PaymentService.cs at line 42");
 
         var result = IncidentClient.CorrelateIncidents([finding], [incident]);
@@ -114,7 +114,7 @@ public class TraceCommandTests
     [Fact]
     public void CorrelateIncidents_NoMatch_ReturnsEmpty()
     {
-        var finding  = MakeFinding(filePath: "src/Auth.cs");
+        var finding = MakeFinding(filePath: "src/Auth.cs");
         var incident = MakeIncident("INC003", "Database connection pool exhausted");
 
         var result = IncidentClient.CorrelateIncidents([finding], [incident]);
@@ -154,11 +154,11 @@ public class TraceCommandTests
     [Fact]
     public void BuildHeatmapJson_WithFindings_ContainsExpectedFields()
     {
-        var finding  = MakeFinding(ruleId: "GCI0010", filePath: "src/Auth.cs", severity: RuleSeverity.Block);
+        var finding = MakeFinding(ruleId: "GCI0010", filePath: "src/Auth.cs", severity: RuleSeverity.Block);
         var incident = MakeIncident("INC010", "Auth.cs is broken");
         var correlations = IncidentClient.CorrelateIncidents([finding], [incident]);
 
-        var now   = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var since = now.AddHours(-24);
 
         var json = IncidentClient.BuildHeatmapJson(
@@ -199,7 +199,7 @@ public class TraceCommandTests
         var finding = MakeFinding(filePath: "src/Foo.cs");
         var correlations = IncidentClient.CorrelateIncidents([finding], []);
 
-        var now   = DateTimeOffset.UtcNow;
+        var now = DateTimeOffset.UtcNow;
         var since = now.AddDays(-7);
 
         var json = IncidentClient.BuildHeatmapJson(

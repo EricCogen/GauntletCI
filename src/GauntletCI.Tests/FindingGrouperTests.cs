@@ -7,25 +7,25 @@ namespace GauntletCI.Tests;
 public class FindingGrouperTests
 {
     private static Finding MakeFinding(
-        string ruleId    = "GCI0001",
+        string ruleId = "GCI0001",
         string? filePath = "src/Foo.cs",
-        int? line        = 10,
-        string evidence  = "Line 10: var x = 1;",
-        string summary   = "Sample summary",
-        Confidence conf  = Confidence.Medium,
+        int? line = 10,
+        string evidence = "Line 10: var x = 1;",
+        string summary = "Sample summary",
+        Confidence conf = Confidence.Medium,
         RuleSeverity sev = RuleSeverity.Warn) => new()
-    {
-        RuleId          = ruleId,
-        RuleName        = "Sample",
-        Summary         = summary,
-        Evidence        = evidence,
-        WhyItMatters    = "why",
-        SuggestedAction = "action",
-        FilePath        = filePath,
-        Line            = line,
-        Confidence      = conf,
-        Severity        = sev,
-    };
+        {
+            RuleId = ruleId,
+            RuleName = "Sample",
+            Summary = summary,
+            Evidence = evidence,
+            WhyItMatters = "why",
+            SuggestedAction = "action",
+            FilePath = filePath,
+            Line = line,
+            Confidence = conf,
+            Severity = sev,
+        };
 
     [Fact]
     public void Group_DistinctRules_KeepsFindingsSeparate()

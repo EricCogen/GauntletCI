@@ -40,7 +40,7 @@ public static class CorpusCommand
               5. corpus score
               6. corpus report
             """);
-        
+
         // Operations commands
         corpus.AddCommand(opsFactory.CreateAddPr());
         corpus.AddCommand(opsFactory.CreateNormalize());
@@ -48,19 +48,19 @@ public static class CorpusCommand
         corpus.AddCommand(opsFactory.CreateShow());
         corpus.AddCommand(opsFactory.CreateStatus());
         corpus.AddCommand(opsFactory.CreateBatchHydrate());
-        
+
         // Analysis commands
         corpus.AddCommand(analysisFactory.CreateDiscover());
         corpus.AddCommand(analysisFactory.CreateRun());
         corpus.AddCommand(analysisFactory.CreateRunAll());
         corpus.AddCommand(analysisFactory.CreateScore());
         corpus.AddCommand(analysisFactory.CreateReport());
-        
+
         // Labeling commands
         corpus.AddCommand(labelingFactory.CreateLabel());
         corpus.AddCommand(labelingFactory.CreateLabelAll());
         corpus.AddCommand(labelingFactory.CreateResetStats());
-        
+
         // Utility commands
         corpus.AddCommand(utilityFactory.CreatePurge());
         corpus.AddCommand(utilityFactory.CreateErrors());
@@ -145,10 +145,10 @@ public static class CorpusCommand
 
     private static Command CreateIssueSearch()
     {
-        var languageOpt = new Option<string>("--language", () => "cs",           "Programming language filter (e.g. cs, python)");
-        var limitOpt    = new Option<int>   ("--limit",    () => 50,             "Maximum candidates to fetch");
-        var labelsOpt   = new Option<string>("--labels",   () => "bug,security", "Comma-separated GitHub issue labels to search for");
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var languageOpt = new Option<string>("--language", () => "cs", "Programming language filter (e.g. cs, python)");
+        var limitOpt = new Option<int>("--limit", () => 50, "Maximum candidates to fetch");
+        var labelsOpt = new Option<string>("--labels", () => "bug,security", "Comma-separated GitHub issue labels to search for");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
 
         var cmd = new Command("search", "Search for corpus candidates via closed GitHub issues");
         cmd.AddOption(languageOpt);
@@ -159,10 +159,10 @@ public static class CorpusCommand
         cmd.SetHandler(async (ctx) =>
         {
             var language = ctx.ParseResult.GetValueForOption(languageOpt)!;
-            var limit    = ctx.ParseResult.GetValueForOption(limitOpt);
-            var labels   = ctx.ParseResult.GetValueForOption(labelsOpt)!;
-            var dbPath   = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var ct       = ctx.GetCancellationToken();
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
+            var labels = ctx.ParseResult.GetValueForOption(labelsOpt)!;
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var ct = ctx.GetCancellationToken();
 
             var token = GitHubTokenResolver.Resolve();
             if (string.IsNullOrEmpty(token))
@@ -174,7 +174,7 @@ public static class CorpusCommand
 
             var query = new DiscoveryQuery
             {
-                Languages     = new[] { language },
+                Languages = new[] { language },
                 MaxCandidates = limit,
             };
 
@@ -193,7 +193,9 @@ public static class CorpusCommand
                     rejectedCmd.CommandText = "SELECT repo_owner || '/' || repo_name FROM repo_rejections";
                     using var rejectedReader = await rejectedCmd.ExecuteReaderAsync(ct);
                     while (await rejectedReader.ReadAsync(ct))
+                    {
                         rejectedRepos.Add(rejectedReader.GetString(0));
+                    }
                 }
 
                 int inserted = 0;
@@ -217,20 +219,23 @@ public static class CorpusCommand
                             ($id, $source, $owner, $repo, $prNumber, $url, $language,
                              $createdAt, $updatedAt, $reviewComments, $reason)
                         """;
-                    insertCmd.Parameters.AddWithValue("$id",             id);
-                    insertCmd.Parameters.AddWithValue("$source",         c.Source);
-                    insertCmd.Parameters.AddWithValue("$owner",          c.RepoOwner);
-                    insertCmd.Parameters.AddWithValue("$repo",           c.RepoName);
-                    insertCmd.Parameters.AddWithValue("$prNumber",       c.PullRequestNumber);
-                    insertCmd.Parameters.AddWithValue("$url",            c.Url);
-                    insertCmd.Parameters.AddWithValue("$language",       (object?)c.Language ?? DBNull.Value);
-                    insertCmd.Parameters.AddWithValue("$createdAt",      c.CreatedAtUtc == default ? DBNull.Value : (object)c.CreatedAtUtc.ToString("O"));
-                    insertCmd.Parameters.AddWithValue("$updatedAt",      c.UpdatedAtUtc == default ? DBNull.Value : (object)c.UpdatedAtUtc.ToString("O"));
+                    insertCmd.Parameters.AddWithValue("$id", id);
+                    insertCmd.Parameters.AddWithValue("$source", c.Source);
+                    insertCmd.Parameters.AddWithValue("$owner", c.RepoOwner);
+                    insertCmd.Parameters.AddWithValue("$repo", c.RepoName);
+                    insertCmd.Parameters.AddWithValue("$prNumber", c.PullRequestNumber);
+                    insertCmd.Parameters.AddWithValue("$url", c.Url);
+                    insertCmd.Parameters.AddWithValue("$language", (object?)c.Language ?? DBNull.Value);
+                    insertCmd.Parameters.AddWithValue("$createdAt", c.CreatedAtUtc == default ? DBNull.Value : (object)c.CreatedAtUtc.ToString("O"));
+                    insertCmd.Parameters.AddWithValue("$updatedAt", c.UpdatedAtUtc == default ? DBNull.Value : (object)c.UpdatedAtUtc.ToString("O"));
                     insertCmd.Parameters.AddWithValue("$reviewComments", c.ReviewCommentCount);
-                    insertCmd.Parameters.AddWithValue("$reason",         (object?)c.CandidateReason ?? DBNull.Value);
+                    insertCmd.Parameters.AddWithValue("$reason", (object?)c.CandidateReason ?? DBNull.Value);
 
                     var rows = await insertCmd.ExecuteNonQueryAsync(ct);
-                    if (rows > 0) inserted++;
+                    if (rows > 0)
+                    {
+                        inserted++;
+                    }
                 }
 
                 var skipped = candidates.Count - inserted - rejected;
@@ -245,7 +250,7 @@ public static class CorpusCommand
 
     private static Command CreateDoctor()
     {
-        var dbOpt    = new Option<string>("--db",    () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var tokenOpt = new Option<string?>("--token", "GitHub token (overrides GITHUB_TOKEN env var)");
 
         var cmd = new Command("doctor", "Check GitHub API connectivity, rate limits, and recent pipeline errors");
@@ -255,9 +260,9 @@ public static class CorpusCommand
         cmd.SetHandler(async (ctx) =>
         {
             var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var token  = ctx.ParseResult.GetValueForOption(tokenOpt)
+            var token = ctx.ParseResult.GetValueForOption(tokenOpt)
                          ?? GitHubTokenResolver.Resolve();
-            var ct     = ctx.GetCancellationToken();
+            var ct = ctx.GetCancellationToken();
 
             if (string.IsNullOrEmpty(token))
             {
@@ -308,11 +313,11 @@ public static class CorpusCommand
 
             var buckets = new[] { "core", "search", "graphql" };
 
-            const int colBucket    = 10;
-            const int colLimit     = 7;
-            const int colUsed      = 8;
+            const int colBucket = 10;
+            const int colLimit = 7;
+            const int colUsed = 8;
             const int colRemaining = 11;
-            const int colResets    = 11;
+            const int colResets = 11;
 
             Console.WriteLine($"  {"Bucket",-colBucket}  {"Limit",-colLimit}  {"Used",-colUsed}  {"Remaining",-colRemaining}  {"Resets In",-colResets}");
             Console.WriteLine($"  {"--------",-colBucket}  {"-----",-colLimit}  {"----",-colUsed}  {"---------",-colRemaining}  {"---------",-colResets}");
@@ -320,14 +325,16 @@ public static class CorpusCommand
             foreach (var bucket in buckets)
             {
                 if (!resources.TryGetProperty(bucket, out var b))
+                {
                     continue;
+                }
 
-                var limit     = b.TryGetProperty("limit",     out var lEl) ? lEl.GetInt32() : 0;
-                var used      = b.TryGetProperty("used",      out var uEl) ? uEl.GetInt32() : 0;
+                var limit = b.TryGetProperty("limit", out var lEl) ? lEl.GetInt32() : 0;
+                var used = b.TryGetProperty("used", out var uEl) ? uEl.GetInt32() : 0;
                 var remaining = b.TryGetProperty("remaining", out var rEl) ? rEl.GetInt32() : 0;
-                var resetEpoch = b.TryGetProperty("reset",    out var reEl) ? reEl.GetInt64() : 0;
+                var resetEpoch = b.TryGetProperty("reset", out var reEl) ? reEl.GetInt64() : 0;
 
-                var resetAt  = DateTimeOffset.FromUnixTimeSeconds(resetEpoch);
+                var resetAt = DateTimeOffset.FromUnixTimeSeconds(resetEpoch);
                 var timeLeft = resetAt - DateTimeOffset.UtcNow;
                 var resetsIn = timeLeft.TotalSeconds <= 0
                     ? "0m 0s"
@@ -365,22 +372,28 @@ public static class CorpusCommand
             {
                 using var errCmd = db.Connection.CreateCommand();
                 errCmd.CommandText = "SELECT recorded_at, step, provider, repo, error_code, message FROM pipeline_errors ORDER BY id DESC LIMIT 5";
-                using var reader  = await errCmd.ExecuteReaderAsync(ct);
+                using var reader = await errCmd.ExecuteReaderAsync(ct);
                 bool any = false;
                 while (await reader.ReadAsync(ct))
                 {
                     any = true;
-                    var at   = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                    var at = reader.IsDBNull(0) ? "" : reader.GetString(0);
                     var step = reader.IsDBNull(1) ? "" : reader.GetString(1);
                     var prov = reader.IsDBNull(2) ? "" : reader.GetString(2);
                     var repo = reader.IsDBNull(3) ? "" : reader.GetString(3);
                     var code = reader.IsDBNull(4) ? "" : reader.GetInt32(4).ToString();
-                    var msg  = reader.IsDBNull(5) ? "" : reader.GetString(5);
-                    if (msg.Length > 60) msg = msg[..57] + "...";
+                    var msg = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                    if (msg.Length > 60)
+                    {
+                        msg = msg[..57] + "...";
+                    }
+
                     Console.WriteLine($"  [{at}] {step}/{prov} {repo} ({code}): {msg}");
                 }
                 if (!any)
+                {
                     Console.WriteLine("  (none)");
+                }
             }
         });
 
@@ -393,12 +406,12 @@ public static class CorpusCommand
 
     private static Command CreatePurge()
     {
-        var languageOpt              = new Option<string>("--language",              () => "C#",  "Remove fixtures whose inferred language doesn't match this value. Pass empty to skip language filter.");
+        var languageOpt = new Option<string>("--language", () => "C#", "Remove fixtures whose inferred language doesn't match this value. Pass empty to skip language filter.");
         var requireReviewCommentsOpt = new Option<bool>("--require-review-comments", () => false, "Remove fixtures that have no inline review comments");
-        var repoBlocklistOpt         = new Option<string[]>("--repo-blocklist",      "Remove fixtures from these owner/repo names (e.g. 'Goob-Station/Goob-Station')") { AllowMultipleArgumentsPerToken = false, Arity = ArgumentArity.ZeroOrMore };
-        var dryRunOpt                = new Option<bool>  ("--dry-run",              () => false, "Print what would be purged without making changes");
-        var dbOpt                    = new Option<string>("--db",                   () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt              = new Option<string>("--fixtures",             () => "./data/fixtures",             "Path to fixtures root directory");
+        var repoBlocklistOpt = new Option<string[]>("--repo-blocklist", "Remove fixtures from these owner/repo names (e.g. 'Goob-Station/Goob-Station')") { AllowMultipleArgumentsPerToken = false, Arity = ArgumentArity.ZeroOrMore };
+        var dryRunOpt = new Option<bool>("--dry-run", () => false, "Print what would be purged without making changes");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Path to fixtures root directory");
 
         var cmd = new Command("purge", "Remove low-quality fixtures from the corpus (language mismatch, no review comments, blocklisted repos)");
         cmd.AddOption(languageOpt);
@@ -410,13 +423,13 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var language              = ctx.ParseResult.GetValueForOption(languageOpt)!;
+            var language = ctx.ParseResult.GetValueForOption(languageOpt)!;
             var requireReviewComments = ctx.ParseResult.GetValueForOption(requireReviewCommentsOpt);
-            var repoBlocklist         = ctx.ParseResult.GetValueForOption(repoBlocklistOpt) ?? [];
-            var dryRun                = ctx.ParseResult.GetValueForOption(dryRunOpt);
-            var dbPath                = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var fixturesRoot          = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var ct                    = ctx.GetCancellationToken();
+            var repoBlocklist = ctx.ParseResult.GetValueForOption(repoBlocklistOpt) ?? [];
+            var dryRun = ctx.ParseResult.GetValueForOption(dryRunOpt);
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixturesRoot = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct = ctx.GetCancellationToken();
 
             var (db, _, _) = await BuildPipeline(dbPath, fixturesRoot, ct);
             using (db)
@@ -424,11 +437,19 @@ public static class CorpusCommand
                 // Build WHERE predicate
                 var conditions = new List<string>();
                 if (!string.IsNullOrEmpty(language))
+                {
                     conditions.Add("(f.language IS NULL OR LOWER(f.language) != LOWER($lang))");
+                }
+
                 if (requireReviewComments)
+                {
                     conditions.Add("f.has_review_comments = 0");
+                }
+
                 if (repoBlocklist.Length > 0)
+                {
                     conditions.Add("f.repo IN (" + string.Join(",", repoBlocklist.Select((_, i) => $"$blk{i}")) + ")");
+                }
 
                 if (conditions.Count == 0)
                 {
@@ -447,17 +468,19 @@ public static class CorpusCommand
                     """;
                 selectCmd.Parameters.AddWithValue("$lang", language);
                 for (int i = 0; i < repoBlocklist.Length; i++)
+                {
                     selectCmd.Parameters.AddWithValue($"$blk{i}", repoBlocklist[i]);
+                }
 
                 var toPurge = new List<(string FixtureId, string? Path, string Repo, int PrNumber)>();
                 using (var reader = await selectCmd.ExecuteReaderAsync(ct))
                 {
                     while (await reader.ReadAsync(ct))
                     {
-                        var fid  = reader.GetString(0);
+                        var fid = reader.GetString(0);
                         var path = reader.IsDBNull(1) ? null : reader.GetString(1);
                         var repo = reader.GetString(2);
-                        var prn  = reader.GetInt32(3);
+                        var prn = reader.GetInt32(3);
                         var lang = reader.IsDBNull(4) ? "(none)" : reader.GetString(4);
                         var hasRc = reader.GetInt32(5) == 1;
                         var blocklisted = repoBlocklist.Length > 0 && repoBlocklist.Contains(repo, StringComparer.OrdinalIgnoreCase);
@@ -501,12 +524,15 @@ public static class CorpusCommand
                     Exec("DELETE FROM fixture_issues    WHERE fixture_id = $fid", "$fid", fixtureId);
                     Exec("DELETE FROM fixtures          WHERE fixture_id = $fid", "$fid", fixtureId);
                     Exec("DELETE FROM hydrations        WHERE candidate_id = $cid", "$cid", candidateId);
-                    Exec("DELETE FROM candidates        WHERE id = $cid",           "$cid", candidateId);
+                    Exec("DELETE FROM candidates        WHERE id = $cid", "$cid", candidateId);
 
                     // Remove fixture directory from disk
                     if (path is not null && Directory.Exists(path))
                     {
-                        try { Directory.Delete(path, recursive: true); }
+                        try
+                        {
+                            Directory.Delete(path, recursive: true);
+                        }
                         catch (Exception ex)
                         {
                             Console.Error.WriteLine($"[corpus] purge: warning: could not delete {path}: {ex.Message}");
@@ -528,7 +554,7 @@ public static class CorpusCommand
 
     private static Command CreateRejectedRepos()
     {
-        var dbOpt       = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var namesOnlyOpt = new Option<bool>("--names-only", () => false, "Print only owner/repo names, one per line");
 
         var cmd = new Command("rejected-repos", "List repositories permanently rejected during corpus hydration");
@@ -537,9 +563,9 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var namesOnly = ctx.ParseResult.GetValueForOption(namesOnlyOpt);
-            var ct        = ctx.GetCancellationToken();
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
@@ -562,10 +588,10 @@ public static class CorpusCommand
                         continue;
                     }
 
-                    var reason    = reader.GetString(2);
-                    var source    = reader.GetString(3);
+                    var reason = reader.GetString(2);
+                    var source = reader.GetString(3);
                     var firstSeen = reader.GetString(4);
-                    var lastSeen  = reader.GetString(5);
+                    var lastSeen = reader.GetString(5);
                     Console.WriteLine($"{repoSpec} | {reason} | source={source} | first={firstSeen} | last={lastSeen}");
                 }
             }
@@ -578,9 +604,9 @@ public static class CorpusCommand
 
     private static Command CreateErrors()
     {
-        var dbOpt    = new Option<string>("--db",    () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var stepOpt  = new Option<string?>("--step", "Filter by pipeline step (e.g. discover)");
-        var limitOpt = new Option<int>("--limit",    () => 50, "Max rows to show");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var stepOpt = new Option<string?>("--step", "Filter by pipeline step (e.g. discover)");
+        var limitOpt = new Option<int>("--limit", () => 50, "Max rows to show");
 
         var cmd = new Command("errors", "Show recent pipeline errors logged to the corpus database");
         cmd.AddOption(dbOpt);
@@ -590,9 +616,9 @@ public static class CorpusCommand
         cmd.SetHandler(async (ctx) =>
         {
             var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var step   = ctx.ParseResult.GetValueForOption(stepOpt);
-            var limit  = ctx.ParseResult.GetValueForOption(limitOpt);
-            var ct     = ctx.GetCancellationToken();
+            var step = ctx.ParseResult.GetValueForOption(stepOpt);
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
@@ -603,7 +629,10 @@ public static class CorpusCommand
                     ? "SELECT recorded_at, step, provider, repo, error_code, message FROM pipeline_errors WHERE step = $step ORDER BY id DESC LIMIT $limit"
                     : "SELECT recorded_at, step, provider, repo, error_code, message FROM pipeline_errors ORDER BY id DESC LIMIT $limit";
                 cmd2.Parameters.AddWithValue("$limit", limit);
-                if (step is not null) cmd2.Parameters.AddWithValue("$step", step);
+                if (step is not null)
+                {
+                    cmd2.Parameters.AddWithValue("$step", step);
+                }
 
                 using var reader = await cmd2.ExecuteReaderAsync(ct);
                 bool any = false;
@@ -613,16 +642,22 @@ public static class CorpusCommand
                 {
                     any = true;
                     var recordedAt = reader.IsDBNull(0) ? "" : reader.GetString(0);
-                    var stepVal    = reader.IsDBNull(1) ? "" : reader.GetString(1);
-                    var prov       = reader.IsDBNull(2) ? "" : reader.GetString(2);
-                    var repo       = reader.IsDBNull(3) ? "" : reader.GetString(3);
-                    var code       = reader.IsDBNull(4) ? "" : reader.GetInt32(4).ToString();
-                    var msgVal     = reader.IsDBNull(5) ? "" : reader.GetString(5);
-                    if (msgVal.Length > 80) msgVal = msgVal[..77] + "...";
+                    var stepVal = reader.IsDBNull(1) ? "" : reader.GetString(1);
+                    var prov = reader.IsDBNull(2) ? "" : reader.GetString(2);
+                    var repo = reader.IsDBNull(3) ? "" : reader.GetString(3);
+                    var code = reader.IsDBNull(4) ? "" : reader.GetInt32(4).ToString();
+                    var msgVal = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                    if (msgVal.Length > 80)
+                    {
+                        msgVal = msgVal[..77] + "...";
+                    }
+
                     Console.WriteLine($"{recordedAt,-22} {stepVal,-10} {prov,-12} {repo,-30} {code,-6} {msgVal}");
                 }
                 if (!any)
+                {
                     Console.WriteLine("  (no errors recorded)");
+                }
             }
         });
 
@@ -633,9 +668,9 @@ public static class CorpusCommand
 
     private static Command CreateSonarCloudEnrich()
     {
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root folder");
-        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Path to fixtures root folder");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to enrich (Silver|discovery|gold)");
 
         var cmd = new Command("enrich", "Cross-reference corpus fixtures against SonarCloud open issues");
         cmd.AddOption(dbOpt);
@@ -644,10 +679,10 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var ct           = ctx.GetCancellationToken();
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
@@ -672,8 +707,8 @@ public static class CorpusCommand
                     fixtures.Add(new FixtureMetadata
                     {
                         FixtureId = reader.GetString(0),
-                        Repo      = reader.GetString(1),
-                        Tier      = tierParsed,
+                        Repo = reader.GetString(1),
+                        Tier = tierParsed,
                     });
                 }
 
@@ -703,9 +738,9 @@ public static class CorpusCommand
 
     private static Command CreateCodeScanningEnrich()
     {
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root folder");
-        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Path to fixtures root folder");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to enrich (Silver|discovery|gold)");
 
         var cmd = new Command("enrich", "Cross-reference corpus fixtures against GitHub CodeQL open alerts (requires GITHUB_TOKEN)");
         cmd.AddOption(dbOpt);
@@ -714,10 +749,10 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var ct           = ctx.GetCancellationToken();
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
@@ -741,8 +776,8 @@ public static class CorpusCommand
                     fixtures.Add(new FixtureMetadata
                     {
                         FixtureId = reader.GetString(0),
-                        Repo      = reader.GetString(1),
-                        Tier      = tierParsed,
+                        Repo = reader.GetString(1),
+                        Tier = tierParsed,
                     });
                 }
 
@@ -780,12 +815,12 @@ public static class CorpusCommand
 
     private static Command CreateFetchDiffs()
     {
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
-        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to process (Silver|discovery|gold)");
-        var limitOpt    = new Option<int?>  ("--limit",                                          "Maximum number of diffs to fetch (default: all)");
-        var delayMsOpt  = new Option<int>   ("--delay-ms", () => 1000,                           "Delay in ms between GitHub API requests");
-        var dryRunOpt   = new Option<bool>  ("--dry-run",  () => false,                          "List missing diffs without fetching");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Path to fixtures root directory");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to process (Silver|discovery|gold)");
+        var limitOpt = new Option<int?>("--limit", "Maximum number of diffs to fetch (default: all)");
+        var delayMsOpt = new Option<int>("--delay-ms", () => 1000, "Delay in ms between GitHub API requests");
+        var dryRunOpt = new Option<bool>("--dry-run", () => false, "List missing diffs without fetching");
 
         var cmd = new Command("fetch-diffs", "Fetch missing diff.patch files for existing fixtures from GitHub");
         cmd.AddOption(dbOpt);
@@ -797,13 +832,13 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
-            var delayMs      = ctx.ParseResult.GetValueForOption(delayMsOpt);
-            var dryRun       = ctx.ParseResult.GetValueForOption(dryRunOpt);
-            var ct           = ctx.GetCancellationToken();
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
+            var delayMs = ctx.ParseResult.GetValueForOption(delayMsOpt);
+            var dryRun = ctx.ParseResult.GetValueForOption(dryRunOpt);
+            var ct = ctx.GetCancellationToken();
 
             var token = GitHubTokenResolver.Resolve();
             if (string.IsNullOrEmpty(token))
@@ -830,7 +865,9 @@ public static class CorpusCommand
                 using (var reader = await selectCmd.ExecuteReaderAsync(ct))
                 {
                     while (await reader.ReadAsync(ct))
+                    {
                         allFixtures.Add((reader.GetString(0), reader.GetString(1), reader.GetInt64(2)));
+                    }
                 }
 
                 var missing = allFixtures
@@ -838,14 +875,19 @@ public static class CorpusCommand
                     .ToList();
 
                 if (limit.HasValue)
+                {
                     missing = missing.Take(limit.Value).ToList();
+                }
 
                 Console.WriteLine($"[fetch-diffs] {missing.Count} of {allFixtures.Count} fixtures missing diff.patch (tier: {tier})");
 
                 if (dryRun)
                 {
                     foreach (var f in missing)
+                    {
                         Console.WriteLine($"  [dry-run] {f.FixtureId}");
+                    }
+
                     return;
                 }
 
@@ -919,11 +961,11 @@ public static class CorpusCommand
 
     private static Command CreateCodeScanningCheckRepos()
     {
-        var dbOpt            = new Option<string>  ("--db",              () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt      = new Option<string>  ("--fixtures",        () => "./data/fixtures",             "Path to fixtures root directory");
-        var tierOpt          = new Option<string>  ("--tier",            () => "Silver",                      "Fixture tier used to determine repo list (Silver|discovery|gold)");
-        var reposOpt         = new Option<string[]>("--repos",                                                "Additional repos to check (owner/repo), comma-separated") { AllowMultipleArgumentsPerToken = true };
-        var seedCandidatesOpt = new Option<int?>   ("--seed-candidates",                                     "Discover and add this many candidate PRs per CodeQL-enabled repo");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Path to fixtures root directory");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier used to determine repo list (Silver|discovery|gold)");
+        var reposOpt = new Option<string[]>("--repos", "Additional repos to check (owner/repo), comma-separated") { AllowMultipleArgumentsPerToken = true };
+        var seedCandidatesOpt = new Option<int?>("--seed-candidates", "Discover and add this many candidate PRs per CodeQL-enabled repo");
 
         var cmd = new Command("check-repos", "Check which corpus repos have GitHub Code Scanning (CodeQL) enabled");
         cmd.AddOption(dbOpt);
@@ -934,12 +976,12 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath         = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var fixturesPath   = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var tier           = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var extraRepos     = ctx.ParseResult.GetValueForOption(reposOpt) ?? [];
-            var seedPerRepo    = ctx.ParseResult.GetValueForOption(seedCandidatesOpt);
-            var ct             = ctx.GetCancellationToken();
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var extraRepos = ctx.ParseResult.GetValueForOption(reposOpt) ?? [];
+            var seedPerRepo = ctx.ParseResult.GetValueForOption(seedCandidatesOpt);
+            var ct = ctx.GetCancellationToken();
 
             var token = GitHubTokenResolver.Resolve();
             if (string.IsNullOrEmpty(token))
@@ -960,14 +1002,22 @@ public static class CorpusCommand
 
                 var repos = new List<string>();
                 using (var reader = await selectCmd.ExecuteReaderAsync(ct))
+                {
                     while (await reader.ReadAsync(ct))
+                    {
                         repos.Add(reader.GetString(0));
+                    }
+                }
 
                 foreach (var r in extraRepos
                     .SelectMany(r => r.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                     .Where(r => r.Contains('/')))
+                {
                     if (!repos.Contains(r, StringComparer.OrdinalIgnoreCase))
+                    {
                         repos.Add(r);
+                    }
+                }
 
                 Console.WriteLine($"[check-repos] Checking {repos.Count} repos for CodeQL via GitHub Actions workflows API...");
                 Console.WriteLine();
@@ -977,7 +1027,7 @@ public static class CorpusCommand
                 http.DefaultRequestHeaders.Add("Authorization", $"token {token}");
                 http.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
 
-                var enabled  = new List<string>();
+                var enabled = new List<string>();
                 var disabled = new List<string>();
 
                 foreach (var repo in repos)
@@ -1039,7 +1089,10 @@ public static class CorpusCommand
                 {
                     Console.WriteLine();
                     Console.WriteLine("CodeQL-enabled repos:");
-                    foreach (var r in enabled) Console.WriteLine($"  {r}");
+                    foreach (var r in enabled)
+                    {
+                        Console.WriteLine($"  {r}");
+                    }
                 }
 
                 if (enabled.Count > 0 && seedPerRepo.HasValue)
@@ -1069,23 +1122,33 @@ public static class CorpusCommand
         string owner, string repo, int limit, CancellationToken ct)
     {
         var since = DateTime.UtcNow.AddYears(-1).ToString("O");
-        var url   = $"https://api.github.com/repos/{owner}/{repo}/pulls?state=closed&sort=updated&direction=desc&per_page={Math.Min(limit * 2, 100)}";
+        var url = $"https://api.github.com/repos/{owner}/{repo}/pulls?state=closed&sort=updated&direction=desc&per_page={Math.Min(limit * 2, 100)}";
 
         using var resp = await http.GetAsync(url, ct);
-        if (!resp.IsSuccessStatusCode) return 0;
+        if (!resp.IsSuccessStatusCode)
+        {
+            return 0;
+        }
 
         var json = await resp.Content.ReadAsStringAsync(ct);
         System.Text.Json.JsonElement[] prs;
-        try { prs = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement[]>(json) ?? []; }
+        try
+        {
+            prs = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement[]>(json) ?? [];
+        }
         catch { return 0; }
 
         int added = 0;
         foreach (var pr in prs.Take(limit))
         {
-            if (!pr.TryGetProperty("number", out var numEl)) continue;
+            if (!pr.TryGetProperty("number", out var numEl))
+            {
+                continue;
+            }
+
             var prNumber = numEl.GetInt32();
-            var prUrl    = $"https://github.com/{owner}/{repo}/pull/{prNumber}";
-            var id       = $"{owner}/{repo}#{prNumber}";
+            var prUrl = $"https://github.com/{owner}/{repo}/pull/{prNumber}";
+            var id = $"{owner}/{repo}#{prNumber}";
 
             using var insert = conn.CreateCommand();
             insert.CommandText = """
@@ -1093,12 +1156,15 @@ public static class CorpusCommand
                     (id, source, repo_owner, repo_name, pr_number, url, candidate_reason)
                 VALUES ($id, 'codescanning-seed', $owner, $repo, $pr, $url, 'repo has active CodeQL alerts')
                 """;
-            insert.Parameters.AddWithValue("$id",    id);
+            insert.Parameters.AddWithValue("$id", id);
             insert.Parameters.AddWithValue("$owner", owner);
-            insert.Parameters.AddWithValue("$repo",  repo);
-            insert.Parameters.AddWithValue("$pr",    prNumber);
-            insert.Parameters.AddWithValue("$url",   prUrl);
-            if (await insert.ExecuteNonQueryAsync(ct) > 0) added++;
+            insert.Parameters.AddWithValue("$repo", repo);
+            insert.Parameters.AddWithValue("$pr", prNumber);
+            insert.Parameters.AddWithValue("$url", prUrl);
+            if (await insert.ExecuteNonQueryAsync(ct) > 0)
+            {
+                added++;
+            }
         }
 
         return added;
@@ -1108,10 +1174,10 @@ public static class CorpusCommand
 
     private static Command CreateDependabotEnrich()
     {
-        var dbOpt      = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var tierOpt    = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
-        var limitOpt   = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
-        var delayOpt   = new Option<int>   ("--delay-ms", () => 200,                           "Delay between GitHub API calls (ms)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt = new Option<int>("--limit", () => 0, "Max fixtures to process (0 = all)");
+        var delayOpt = new Option<int>("--delay-ms", () => 200, "Delay between GitHub API calls (ms)");
 
         var cmd = new Command("enrich", "Check whether each fixture PR was authored by Dependabot (Tier 1 oracle)");
         cmd.AddOption(dbOpt);
@@ -1121,18 +1187,21 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath  = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var tier    = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var limit   = ctx.ParseResult.GetValueForOption(limitOpt);
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
             var delayMs = ctx.ParseResult.GetValueForOption(delayOpt);
-            var ct      = ctx.GetCancellationToken();
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
             using (db)
             {
                 var fixtures = await LoadFixturesWithPrAsync(db, tier, ct);
-                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+                if (limit > 0)
+                {
+                    fixtures = fixtures.Take(limit).ToList();
+                }
 
                 Console.WriteLine($"Checking {fixtures.Count} {tier} fixtures for Dependabot authorship...");
                 Console.WriteLine();
@@ -1143,7 +1212,11 @@ public static class CorpusCommand
                     progress: msg => Console.WriteLine(msg),
                     ct: ct);
 
-                if (result.AuthMissing) { ctx.ExitCode = 1; return; }
+                if (result.AuthMissing)
+                {
+                    ctx.ExitCode = 1;
+                    return;
+                }
 
                 Console.WriteLine();
                 Console.WriteLine("-- Dependabot Enrichment Summary --");
@@ -1159,10 +1232,10 @@ public static class CorpusCommand
 
     private static Command CreateDependabotDiscover()
     {
-        var dbOpt        = new Option<string>("--db",         () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
         var startDateOpt = new Option<string>("--start-date", () => DateTime.UtcNow.AddDays(-7).ToString("yyyy-MM-dd"), "Start date for GH Archive scan (yyyy-MM-dd)");
-        var endDateOpt   = new Option<string>("--end-date",   () => DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-dd"), "End date for GH Archive scan (yyyy-MM-dd)");
-        var limitOpt     = new Option<int>   ("--limit",      () => 200,                           "Max Dependabot PR candidates to seed");
+        var endDateOpt = new Option<string>("--end-date", () => DateTime.UtcNow.AddDays(-1).ToString("yyyy-MM-dd"), "End date for GH Archive scan (yyyy-MM-dd)");
+        var limitOpt = new Option<int>("--limit", () => 200, "Max Dependabot PR candidates to seed");
 
         var cmd = new Command("discover", "Scan GH Archive to find Dependabot PRs in C# repos and seed them as candidates");
         cmd.AddOption(dbOpt);
@@ -1172,14 +1245,14 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var startStr  = ctx.ParseResult.GetValueForOption(startDateOpt)!;
-            var endStr    = ctx.ParseResult.GetValueForOption(endDateOpt)!;
-            var limit     = ctx.ParseResult.GetValueForOption(limitOpt);
-            var ct        = ctx.GetCancellationToken();
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var startStr = ctx.ParseResult.GetValueForOption(startDateOpt)!;
+            var endStr = ctx.ParseResult.GetValueForOption(endDateOpt)!;
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
+            var ct = ctx.GetCancellationToken();
 
             if (!DateTime.TryParse(startStr, out var startDate) ||
-                !DateTime.TryParse(endStr,   out var endDate))
+                !DateTime.TryParse(endStr, out var endDate))
             {
                 Console.Error.WriteLine("Invalid date format. Use yyyy-MM-dd.");
                 ctx.ExitCode = 1;
@@ -1204,36 +1277,72 @@ public static class CorpusCommand
                         var url = $"https://data.gharchive.org/{d:yyyy-MM-dd}-{h}.json.gz";
 
                         byte[]? compressed;
-                        try { compressed = await http.GetByteArrayAsync(url, ct); }
+                        try
+                        {
+                            compressed = await http.GetByteArrayAsync(url, ct);
+                        }
                         catch { continue; }
 
-                        using var mem    = new System.IO.MemoryStream(compressed);
-                        using var gz     = new System.IO.Compression.GZipStream(mem, System.IO.Compression.CompressionMode.Decompress);
+                        using var mem = new System.IO.MemoryStream(compressed);
+                        using var gz = new System.IO.Compression.GZipStream(mem, System.IO.Compression.CompressionMode.Decompress);
                         using var reader = new System.IO.StreamReader(gz);
 
                         string? line;
                         while ((line = await reader.ReadLineAsync(ct)) is not null && seeded < limit)
                         {
-                            if (string.IsNullOrWhiteSpace(line)) continue;
+                            if (string.IsNullOrWhiteSpace(line))
+                            {
+                                continue;
+                            }
+
                             try
                             {
                                 using var doc = System.Text.Json.JsonDocument.Parse(line);
                                 var root = doc.RootElement;
 
                                 if (!root.TryGetProperty("type", out var typeEl) ||
-                                    typeEl.GetString() != "PullRequestEvent") continue;
+                                    typeEl.GetString() != "PullRequestEvent")
+                                {
+                                    continue;
+                                }
 
-                                if (!root.TryGetProperty("payload", out var payload)) continue;
+                                if (!root.TryGetProperty("payload", out var payload))
+                                {
+                                    continue;
+                                }
+
                                 if (!payload.TryGetProperty("action", out var actionEl) ||
-                                    actionEl.GetString() != "closed") continue;
-                                if (!payload.TryGetProperty("pull_request", out var pr)) continue;
-                                if (!pr.TryGetProperty("merged", out var mergedEl) || !mergedEl.GetBoolean()) continue;
+                                    actionEl.GetString() != "closed")
+                                {
+                                    continue;
+                                }
+
+                                if (!payload.TryGetProperty("pull_request", out var pr))
+                                {
+                                    continue;
+                                }
+
+                                if (!pr.TryGetProperty("merged", out var mergedEl) || !mergedEl.GetBoolean())
+                                {
+                                    continue;
+                                }
 
                                 // Only Dependabot PRs
-                                if (!pr.TryGetProperty("user", out var user)) continue;
-                                if (!user.TryGetProperty("login", out var loginEl)) continue;
+                                if (!pr.TryGetProperty("user", out var user))
+                                {
+                                    continue;
+                                }
+
+                                if (!user.TryGetProperty("login", out var loginEl))
+                                {
+                                    continue;
+                                }
+
                                 var login = loginEl.GetString() ?? "";
-                                if (!login.StartsWith("dependabot", StringComparison.OrdinalIgnoreCase)) continue;
+                                if (!login.StartsWith("dependabot", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    continue;
+                                }
 
                                 // Only C# repos
                                 var language = "";
@@ -1241,21 +1350,40 @@ public static class CorpusCommand
                                     baseEl.TryGetProperty("repo", out var baseRepo) &&
                                     baseRepo.TryGetProperty("language", out var langEl) &&
                                     langEl.ValueKind != System.Text.Json.JsonValueKind.Null)
+                                {
                                     language = langEl.GetString() ?? "";
+                                }
 
-                                if (!string.Equals(language, "C#", StringComparison.OrdinalIgnoreCase)) continue;
+                                if (!string.Equals(language, "C#", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    continue;
+                                }
 
-                                if (!root.TryGetProperty("repo", out var repoEl)) continue;
-                                if (!repoEl.TryGetProperty("name", out var nameEl)) continue;
+                                if (!root.TryGetProperty("repo", out var repoEl))
+                                {
+                                    continue;
+                                }
+
+                                if (!repoEl.TryGetProperty("name", out var nameEl))
+                                {
+                                    continue;
+                                }
+
                                 var repoFull = nameEl.GetString() ?? "";
                                 var parts = repoFull.Split('/', 2);
-                                if (parts.Length < 2) continue;
+                                if (parts.Length < 2)
+                                {
+                                    continue;
+                                }
 
                                 var prNumber = pr.TryGetProperty("number", out var numEl) ? numEl.GetInt32() : 0;
-                                if (prNumber == 0) continue;
+                                if (prNumber == 0)
+                                {
+                                    continue;
+                                }
 
-                                var id     = $"{parts[0]}/{parts[1]}#{prNumber}";
-                                var prUrl  = $"https://github.com/{parts[0]}/{parts[1]}/pull/{prNumber}";
+                                var id = $"{parts[0]}/{parts[1]}#{prNumber}";
+                                var prUrl = $"https://github.com/{parts[0]}/{parts[1]}/pull/{prNumber}";
 
                                 using var insert = db.Connection.CreateCommand();
                                 insert.CommandText = """
@@ -1264,12 +1392,12 @@ public static class CorpusCommand
                                     VALUES
                                         ($id, 'dependabot-gharchive', $owner, $repo, $pr, $url, $lang, 'Dependabot PR from GH Archive')
                                     """;
-                                insert.Parameters.AddWithValue("$id",    id);
+                                insert.Parameters.AddWithValue("$id", id);
                                 insert.Parameters.AddWithValue("$owner", parts[0]);
-                                insert.Parameters.AddWithValue("$repo",  parts[1]);
-                                insert.Parameters.AddWithValue("$pr",    prNumber);
-                                insert.Parameters.AddWithValue("$url",   prUrl);
-                                insert.Parameters.AddWithValue("$lang",  language);
+                                insert.Parameters.AddWithValue("$repo", parts[1]);
+                                insert.Parameters.AddWithValue("$pr", prNumber);
+                                insert.Parameters.AddWithValue("$url", prUrl);
+                                insert.Parameters.AddWithValue("$lang", language);
                                 if (await insert.ExecuteNonQueryAsync(ct) > 0)
                                 {
                                     seeded++;
@@ -1296,10 +1424,10 @@ public static class CorpusCommand
 
     private static Command CreateSocialSignalEnrich()
     {
-        var dbOpt    = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var tierOpt  = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
-        var limitOpt = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
-        var delayOpt = new Option<int>   ("--delay-ms", () => 300,                           "Delay between GitHub API calls (ms)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt = new Option<int>("--limit", () => 0, "Max fixtures to process (0 = all)");
+        var delayOpt = new Option<int>("--delay-ms", () => 300, "Delay between GitHub API calls (ms)");
 
         var cmd = new Command("enrich", "Fetch PR review metadata (time, reviewers, comments) and compute social-signal score (Tier 2 oracle)");
         cmd.AddOption(dbOpt);
@@ -1309,18 +1437,21 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath  = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var tier    = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var limit   = ctx.ParseResult.GetValueForOption(limitOpt);
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
             var delayMs = ctx.ParseResult.GetValueForOption(delayOpt);
-            var ct      = ctx.GetCancellationToken();
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
             using (db)
             {
                 var fixtures = await LoadFixturesWithPrAsync(db, tier, ct);
-                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+                if (limit > 0)
+                {
+                    fixtures = fixtures.Take(limit).ToList();
+                }
 
                 Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with PR social-signal data...");
                 Console.WriteLine();
@@ -1331,7 +1462,11 @@ public static class CorpusCommand
                     progress: msg => Console.WriteLine(msg),
                     ct: ct);
 
-                if (result.AuthMissing) { ctx.ExitCode = 1; return; }
+                if (result.AuthMissing)
+                {
+                    ctx.ExitCode = 1;
+                    return;
+                }
 
                 Console.WriteLine();
                 Console.WriteLine("-- Social Signal Enrichment Summary --");
@@ -1347,10 +1482,10 @@ public static class CorpusCommand
 
     private static Command CreateCompositeLabelApply()
     {
-        var dbOpt                 = new Option<string>("--db",                      () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var tierOpt               = new Option<string>("--tier",                    () => "Silver",                      "Fixture tier to label (Silver|discovery|gold)");
-        var limitOpt              = new Option<int>   ("--limit",                   () => 0,                             "Max fixtures to process (0 = all)");
-        var updateExpectedOpt     = new Option<bool>  ("--update-expected-findings", () => false,                        "Seed expected_findings rows from composite labels (INSERT OR IGNORE - never overwrites gold labels)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to label (Silver|discovery|gold)");
+        var limitOpt = new Option<int>("--limit", () => 0, "Max fixtures to process (0 = all)");
+        var updateExpectedOpt = new Option<bool>("--update-expected-findings", () => false, "Seed expected_findings rows from composite labels (INSERT OR IGNORE - never overwrites gold labels)");
 
         var cmd = new Command("apply", "Combine all enricher signals into composite ground-truth labels (HIGH_RISK_GHOST, DEPENDABOT_FIX, SILENT_LOGIC_CHANGE, etc.)");
         cmd.AddOption(dbOpt);
@@ -1360,26 +1495,32 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath         = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var tier           = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var limit          = ctx.ParseResult.GetValueForOption(limitOpt);
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
             var updateExpected = ctx.ParseResult.GetValueForOption(updateExpectedOpt);
-            var ct             = ctx.GetCancellationToken();
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
             using (db)
             {
                 var fixtures = await LoadFixturesAsync(db, tier, ct);
-                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+                if (limit > 0)
+                {
+                    fixtures = fixtures.Take(limit).ToList();
+                }
 
                 Console.WriteLine($"Applying composite labels to {fixtures.Count} {tier} fixtures...");
                 if (updateExpected)
+                {
                     Console.WriteLine("  (--update-expected-findings enabled: will seed expected_findings rows)");
+                }
+
                 Console.WriteLine();
 
                 var labeler = new CompositeLabeler();
-                var result  = await labeler.ApplyAsync(
+                var result = await labeler.ApplyAsync(
                     fixtures, db, updateExpected,
                     progress: msg => Console.WriteLine(msg),
                     ct: ct);
@@ -1404,11 +1545,11 @@ public static class CorpusCommand
 
     private static Command CreateSemgrepEnrich()
     {
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
-        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
-        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
-        var configOpt   = new Option<string>("--config",   () => "auto",                        "Semgrep config (e.g. auto, p/default, p/owasp-top-ten)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Base path to fixtures folder");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt = new Option<int>("--limit", () => 0, "Max fixtures to process (0 = all)");
+        var configOpt = new Option<string>("--config", () => "auto", "Semgrep config (e.g. auto, p/default, p/owasp-top-ten)");
 
         var cmd = new Command("enrich", "Run Semgrep C# ruleset against each fixture's added lines (Tier 1 scanner oracle)");
         cmd.AddOption(dbOpt);
@@ -1419,30 +1560,37 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
-            var config       = ctx.ParseResult.GetValueForOption(configOpt)!;
-            var ct           = ctx.GetCancellationToken();
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
+            var config = ctx.ParseResult.GetValueForOption(configOpt)!;
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
             using (db)
             {
                 var fixtures = await LoadFixturesAsync(db, tier, ct);
-                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+                if (limit > 0)
+                {
+                    fixtures = fixtures.Take(limit).ToList();
+                }
 
                 Console.WriteLine($"Running Semgrep on {fixtures.Count} {tier} fixtures (config={config})...");
                 Console.WriteLine();
 
                 var enricher = new SemgrepEnricher(config);
-                var result   = await enricher.EnrichAsync(
+                var result = await enricher.EnrichAsync(
                     fixtures, db, fixturesPath,
                     progress: msg => Console.WriteLine(msg),
                     ct: ct);
 
-                if (result.SemgrepMissing) { ctx.ExitCode = 1; return; }
+                if (result.SemgrepMissing)
+                {
+                    ctx.ExitCode = 1;
+                    return;
+                }
 
                 Console.WriteLine();
                 Console.WriteLine("-- Semgrep Enrichment Summary --");
@@ -1459,11 +1607,11 @@ public static class CorpusCommand
 
     private static Command CreateStructuralEnrich()
     {
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
-        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
-        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
-        var delayOpt    = new Option<int>   ("--delay-ms", () => 200,                           "Delay between GitHub API calls (ms)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Base path to fixtures folder");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt = new Option<int>("--limit", () => 0, "Max fixtures to process (0 = all)");
+        var delayOpt = new Option<int>("--delay-ms", () => 200, "Delay between GitHub API calls (ms)");
 
         var cmd = new Command("enrich", "Detect sensitive file paths and fetch file-level commit churn from GitHub (Tier 3 structural enricher)");
         cmd.AddOption(dbOpt);
@@ -1474,19 +1622,22 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
-            var delayMs      = ctx.ParseResult.GetValueForOption(delayOpt);
-            var ct           = ctx.GetCancellationToken();
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
+            var delayMs = ctx.ParseResult.GetValueForOption(delayOpt);
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
             using (db)
             {
                 var fixtures = await LoadFixturesAsync(db, tier, ct);
-                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+                if (limit > 0)
+                {
+                    fixtures = fixtures.Take(limit).ToList();
+                }
 
                 Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with structural data...");
                 Console.WriteLine();
@@ -1497,7 +1648,11 @@ public static class CorpusCommand
                     progress: msg => Console.WriteLine(msg),
                     ct: ct);
 
-                if (result.AuthMissing) { ctx.ExitCode = 1; return; }
+                if (result.AuthMissing)
+                {
+                    ctx.ExitCode = 1;
+                    return;
+                }
 
                 Console.WriteLine();
                 Console.WriteLine("-- Structural Enrichment Summary --");
@@ -1513,10 +1668,10 @@ public static class CorpusCommand
 
     private static Command CreateReviewNlpEnrich()
     {
-        var dbOpt    = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var tierOpt  = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
-        var limitOpt = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
-        var delayOpt = new Option<int>   ("--delay-ms", () => 200,                           "Delay between GitHub API calls (ms)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt = new Option<int>("--limit", () => 0, "Max fixtures to process (0 = all)");
+        var delayOpt = new Option<int>("--delay-ms", () => 200, "Delay between GitHub API calls (ms)");
 
         var cmd = new Command("enrich", "Fetch PR review comments and apply keyword taxonomy to extract rule intent signals");
         cmd.AddOption(dbOpt);
@@ -1526,18 +1681,21 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath  = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var tier    = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var limit   = ctx.ParseResult.GetValueForOption(limitOpt);
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
             var delayMs = ctx.ParseResult.GetValueForOption(delayOpt);
-            var ct      = ctx.GetCancellationToken();
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
             using (db)
             {
                 var fixtures = await LoadFixturesWithPrAsync(db, tier, ct);
-                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+                if (limit > 0)
+                {
+                    fixtures = fixtures.Take(limit).ToList();
+                }
 
                 Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with review NLP data...");
                 Console.WriteLine();
@@ -1548,7 +1706,11 @@ public static class CorpusCommand
                     progress: msg => Console.WriteLine(msg),
                     ct: ct);
 
-                if (result.AuthMissing) { ctx.ExitCode = 1; return; }
+                if (result.AuthMissing)
+                {
+                    ctx.ExitCode = 1;
+                    return;
+                }
 
                 Console.WriteLine();
                 Console.WriteLine("-- Review NLP Enrichment Summary --");
@@ -1565,11 +1727,11 @@ public static class CorpusCommand
 
     private static Command CreateFileChurnEnrich()
     {
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
-        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
-        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
-        var delayOpt    = new Option<int>   ("--delay-ms", () => 200,                           "Delay between GitHub API calls (ms)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Base path to fixtures folder");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt = new Option<int>("--limit", () => 0, "Max fixtures to process (0 = all)");
+        var delayOpt = new Option<int>("--delay-ms", () => 200, "Delay between GitHub API calls (ms)");
 
         var cmd = new Command("enrich", "Fetch 90-day per-file commit churn from GitHub and compute hotspot scores");
         cmd.AddOption(dbOpt);
@@ -1580,19 +1742,22 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
-            var delayMs      = ctx.ParseResult.GetValueForOption(delayOpt);
-            var ct           = ctx.GetCancellationToken();
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
+            var delayMs = ctx.ParseResult.GetValueForOption(delayOpt);
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
             using (db)
             {
                 var fixtures = await LoadFixturesAsync(db, tier, ct);
-                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+                if (limit > 0)
+                {
+                    fixtures = fixtures.Take(limit).ToList();
+                }
 
                 Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with file churn data...");
                 Console.WriteLine();
@@ -1603,7 +1768,11 @@ public static class CorpusCommand
                     progress: msg => Console.WriteLine(msg),
                     ct: ct);
 
-                if (result.AuthMissing) { ctx.ExitCode = 1; return; }
+                if (result.AuthMissing)
+                {
+                    ctx.ExitCode = 1;
+                    return;
+                }
 
                 Console.WriteLine();
                 Console.WriteLine("-- File Churn Enrichment Summary --");
@@ -1620,10 +1789,10 @@ public static class CorpusCommand
 
     private static Command CreateTestCoverageEnrich()
     {
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
-        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
-        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Base path to fixtures folder");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt = new Option<int>("--limit", () => 0, "Max fixtures to process (0 = all)");
 
         var cmd = new Command("enrich", "Classify changed .cs files as production vs test and detect test coverage gaps");
         cmd.AddOption(dbOpt);
@@ -1633,18 +1802,21 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
-            var ct           = ctx.GetCancellationToken();
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
             using (db)
             {
                 var fixtures = await LoadFixturesAsync(db, tier, ct);
-                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+                if (limit > 0)
+                {
+                    fixtures = fixtures.Take(limit).ToList();
+                }
 
                 Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with test coverage data...");
                 Console.WriteLine();
@@ -1668,10 +1840,10 @@ public static class CorpusCommand
 
     private static Command CreateDiffEntropyEnrich()
     {
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
-        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
-        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Base path to fixtures folder");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt = new Option<int>("--limit", () => 0, "Max fixtures to process (0 = all)");
 
         var cmd = new Command("enrich", "Compute Kamei et al. JIT defect prediction entropy features from diffs");
         cmd.AddOption(dbOpt);
@@ -1681,18 +1853,21 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
-            var ct           = ctx.GetCancellationToken();
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
             using (db)
             {
                 var fixtures = await LoadFixturesAsync(db, tier, ct);
-                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+                if (limit > 0)
+                {
+                    fixtures = fixtures.Take(limit).ToList();
+                }
 
                 Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with diff entropy data...");
                 Console.WriteLine();
@@ -1716,10 +1891,10 @@ public static class CorpusCommand
 
     private static Command CreateEfMigrationEnrich()
     {
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
-        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
-        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Base path to fixtures folder");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt = new Option<int>("--limit", () => 0, "Max fixtures to process (0 = all)");
 
         var cmd = new Command("enrich", "Detect EF Core migration files and SQL DDL changes in diffs");
         cmd.AddOption(dbOpt);
@@ -1729,18 +1904,21 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
-            var ct           = ctx.GetCancellationToken();
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
             using (db)
             {
                 var fixtures = await LoadFixturesAsync(db, tier, ct);
-                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+                if (limit > 0)
+                {
+                    fixtures = fixtures.Take(limit).ToList();
+                }
 
                 Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with EF migration data...");
                 Console.WriteLine();
@@ -1762,12 +1940,13 @@ public static class CorpusCommand
 
     // ── gauntletci corpus nuget-advisory enrich ────────────────────────────────
 
-    private static Command CreateNuGetAdvisoryEnrich(){
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
-        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
-        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
-        var delayOpt    = new Option<int>   ("--delay-ms", () => 200,                           "Delay between GitHub GraphQL API calls (ms)");
+    private static Command CreateNuGetAdvisoryEnrich()
+    {
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Base path to fixtures folder");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt = new Option<int>("--limit", () => 0, "Max fixtures to process (0 = all)");
+        var delayOpt = new Option<int>("--delay-ms", () => 200, "Delay between GitHub GraphQL API calls (ms)");
 
         var cmd = new Command("enrich", "Query GHSA for NuGet vulnerabilities in changed packages (GraphQL advisory enricher)");
         cmd.AddOption(dbOpt);
@@ -1778,19 +1957,22 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixturesPath = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var tier         = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
-            var delayMs      = ctx.ParseResult.GetValueForOption(delayOpt);
-            var ct           = ctx.GetCancellationToken();
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
+            var delayMs = ctx.ParseResult.GetValueForOption(delayOpt);
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
             using (db)
             {
                 var fixtures = await LoadFixturesAsync(db, tier, ct);
-                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+                if (limit > 0)
+                {
+                    fixtures = fixtures.Take(limit).ToList();
+                }
 
                 Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with NuGet advisory data...");
                 Console.WriteLine();
@@ -1801,7 +1983,11 @@ public static class CorpusCommand
                     progress: msg => Console.WriteLine(msg),
                     ct: ct);
 
-                if (result.AuthMissing) { ctx.ExitCode = 1; return; }
+                if (result.AuthMissing)
+                {
+                    ctx.ExitCode = 1;
+                    return;
+                }
 
                 Console.WriteLine();
                 Console.WriteLine("-- NuGet Advisory Enrichment Summary --");
@@ -1818,11 +2004,11 @@ public static class CorpusCommand
 
     private static Command CreatePrDescriptionEnrich()
     {
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
-        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
-        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
-        var delayOpt    = new Option<int>   ("--delay-ms", () => 250,                           "Delay between GitHub API calls (ms)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Base path to fixtures folder");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt = new Option<int>("--limit", () => 0, "Max fixtures to process (0 = all)");
+        var delayOpt = new Option<int>("--delay-ms", () => 250, "Delay between GitHub API calls (ms)");
 
         var cmd = new Command("enrich", "Fetch PR title/body quality signals (linked issue, WIP keywords, empty body) from GitHub API");
         cmd.AddOption(dbOpt);
@@ -1833,18 +2019,21 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath  = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var tier    = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var limit   = ctx.ParseResult.GetValueForOption(limitOpt);
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
             var delayMs = ctx.ParseResult.GetValueForOption(delayOpt);
-            var ct      = ctx.GetCancellationToken();
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
             using (db)
             {
                 var fixtures = await LoadFixturesWithPrAsync(db, tier, ct);
-                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+                if (limit > 0)
+                {
+                    fixtures = fixtures.Take(limit).ToList();
+                }
 
                 Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with PR description data...");
                 Console.WriteLine();
@@ -1855,7 +2044,11 @@ public static class CorpusCommand
                     progress: msg => Console.WriteLine(msg),
                     ct: ct);
 
-                if (result.AuthMissing) { ctx.ExitCode = 1; return; }
+                if (result.AuthMissing)
+                {
+                    ctx.ExitCode = 1;
+                    return;
+                }
 
                 Console.WriteLine();
                 Console.WriteLine("-- PR Description Enrichment Summary --");
@@ -1872,11 +2065,11 @@ public static class CorpusCommand
 
     private static Command CreateAuthorExperienceEnrich()
     {
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Base path to fixtures folder");
-        var tierOpt     = new Option<string>("--tier",     () => "Silver",                      "Fixture tier to enrich (Silver|discovery|gold)");
-        var limitOpt    = new Option<int>   ("--limit",    () => 0,                             "Max fixtures to process (0 = all)");
-        var delayOpt    = new Option<int>   ("--delay-ms", () => 400,                           "Delay between fixture GitHub API calls (ms)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Base path to fixtures folder");
+        var tierOpt = new Option<string>("--tier", () => "Silver", "Fixture tier to enrich (Silver|discovery|gold)");
+        var limitOpt = new Option<int>("--limit", () => 0, "Max fixtures to process (0 = all)");
+        var delayOpt = new Option<int>("--delay-ms", () => 400, "Delay between fixture GitHub API calls (ms)");
 
         var cmd = new Command("enrich", "Fetch PR author commit history and first-contributor status from GitHub API");
         cmd.AddOption(dbOpt);
@@ -1887,18 +2080,21 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var dbPath  = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var tier    = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var limit   = ctx.ParseResult.GetValueForOption(limitOpt);
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var tier = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
             var delayMs = ctx.ParseResult.GetValueForOption(delayOpt);
-            var ct      = ctx.GetCancellationToken();
+            var ct = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
             using (db)
             {
                 var fixtures = await LoadFixturesWithPrAsync(db, tier, ct);
-                if (limit > 0) fixtures = fixtures.Take(limit).ToList();
+                if (limit > 0)
+                {
+                    fixtures = fixtures.Take(limit).ToList();
+                }
 
                 Console.WriteLine($"Enriching {fixtures.Count} {tier} fixtures with author experience data...");
                 Console.WriteLine();
@@ -1909,7 +2105,11 @@ public static class CorpusCommand
                     progress: msg => Console.WriteLine(msg),
                     ct: ct);
 
-                if (result.AuthMissing) { ctx.ExitCode = 1; return; }
+                if (result.AuthMissing)
+                {
+                    ctx.ExitCode = 1;
+                    return;
+                }
 
                 Console.WriteLine();
                 Console.WriteLine("-- Author Experience Enrichment Summary --");
@@ -1945,8 +2145,8 @@ public static class CorpusCommand
             list.Add(new FixtureMetadata
             {
                 FixtureId = reader.GetString(0),
-                Repo      = reader.GetString(1),
-                Tier      = tierParsed,
+                Repo = reader.GetString(1),
+                Tier = tierParsed,
             });
         }
         return list;
@@ -1972,9 +2172,9 @@ public static class CorpusCommand
                 ? t : FixtureTier.Silver;
             list.Add(new FixtureMetadata
             {
-                FixtureId         = reader.GetString(0),
-                Repo              = reader.GetString(1),
-                Tier              = tierParsed,
+                FixtureId = reader.GetString(0),
+                Repo = reader.GetString(1),
+                Tier = tierParsed,
                 PullRequestNumber = reader.GetInt32(3),
             });
         }
@@ -1984,9 +2184,9 @@ public static class CorpusCommand
     private static async Task<(CorpusDb Db, FixtureFolderStore Store, NormalizationPipeline Pipeline)>
         BuildPipeline(string dbPath, string fixturesPath, CancellationToken ct)
     {
-        var db       = new CorpusDb(dbPath);
+        var db = new CorpusDb(dbPath);
         await db.InitializeAsync(ct);
-        var store    = new FixtureFolderStore(db, fixturesPath);
+        var store = new FixtureFolderStore(db, fixturesPath);
         var pipeline = new NormalizationPipeline(store);
         return (db, store, pipeline);
     }
@@ -2095,7 +2295,10 @@ public static class CorpusCommand
         while (current is not null)
         {
             if (Directory.Exists(Path.Combine(current.FullName, ".git")))
+            {
                 return current.FullName;
+            }
+
             current = current.Parent;
         }
         return null;
@@ -2104,7 +2307,9 @@ public static class CorpusCommand
     private static bool IsLocalOllamaUrl(string baseUrl)
     {
         if (!Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri))
+        {
             return false;
+        }
 
         return uri.IsLoopback
             || uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
@@ -2132,11 +2337,14 @@ public static class CorpusCommand
     {
         var outputOpt = new Option<string>("--output", () => "./data/maintainer-records.ndjson",
             "Output path for NDJSON records");
-        var maxOpt    = new Option<int>("--max-per-label", () => 100,
+        var maxOpt = new Option<int>("--max-per-label", () => 100,
             "Max search results per label per repo");
-        var reposOpt  = new Option<string[]>("--repo",
+        var reposOpt = new Option<string[]>("--repo",
             "Additional repos to fetch (format: owner/repo). Can specify multiple times.")
-            { AllowMultipleArgumentsPerToken = false, Arity = ArgumentArity.ZeroOrMore };
+        {
+            AllowMultipleArgumentsPerToken = false,
+            Arity = ArgumentArity.ZeroOrMore
+        };
 
         var cmd = new Command("fetch", "Fetch high-signal PRs/issues from top OSS contributors");
         cmd.AddOption(outputOpt);
@@ -2145,18 +2353,20 @@ public static class CorpusCommand
 
         cmd.SetHandler(async (ctx) =>
         {
-            var output      = ctx.ParseResult.GetValueForOption(outputOpt)!;
-            var max         = ctx.ParseResult.GetValueForOption(maxOpt);
-            var extraRepos  = ctx.ParseResult.GetValueForOption(reposOpt) ?? [];
-            var ct          = ctx.GetCancellationToken();
+            var output = ctx.ParseResult.GetValueForOption(outputOpt)!;
+            var max = ctx.ParseResult.GetValueForOption(maxOpt);
+            var extraRepos = ctx.ParseResult.GetValueForOption(reposOpt) ?? [];
+            var ct = ctx.GetCancellationToken();
 
             var targets = GauntletCI.Corpus.MaintainerFetcher.MaintainerTarget.Defaults.ToList();
             foreach (var r in extraRepos)
             {
                 var parts = r.Split('/', 2);
                 if (parts.Length == 2)
+                {
                     targets.Add(new GauntletCI.Corpus.MaintainerFetcher.MaintainerTarget(
                         parts[0], parts[1], ["performance", "design-discussion"]));
+                }
             }
 
             Console.WriteLine($"[maintainers] Fetching from {targets.Count} repos, max {max} per label…");
@@ -2165,7 +2375,10 @@ public static class CorpusCommand
             var records = await fetcher.FetchAsync([.. targets], max, ct);
 
             var dir = Path.GetDirectoryName(output);
-            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+            if (!string.IsNullOrEmpty(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
 
             var jsonOpts = new JsonSerializerOptions
             {
@@ -2175,7 +2388,9 @@ public static class CorpusCommand
 
             await using var writer = new StreamWriter(output, append: false, System.Text.Encoding.UTF8);
             foreach (var rec in records)
+            {
                 await writer.WriteLineAsync(JsonSerializer.Serialize(rec, jsonOpts));
+            }
 
             Console.WriteLine($"[maintainers] Wrote {records.Count} records to {output}");
         });

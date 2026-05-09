@@ -35,15 +35,21 @@ public class LlmExplanationEnricher : IFindingEnricher
     public async Task<bool> EnrichAsync(Finding finding, CancellationToken ct = default)
     {
         if (finding is null)
+        {
             return false;
+        }
 
         // Skip if already enriched
         if (!string.IsNullOrWhiteSpace(finding.LlmExplanation))
+        {
             return false;
+        }
 
         // Only enrich high-confidence findings to conserve LLM budget
         if (finding.Confidence != Confidence.High)
+        {
             return false;
+        }
 
         try
         {

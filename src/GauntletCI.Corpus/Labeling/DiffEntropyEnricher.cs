@@ -37,7 +37,7 @@ public sealed class DiffEntropyEnricher
             }
 
             var diffLines = await File.ReadAllLinesAsync(diffPath, ct).ConfigureAwait(false);
-            var metrics   = ComputeMetrics(diffLines);
+            var metrics = ComputeMetrics(diffLines);
 
             await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo, metrics, ct).ConfigureAwait(false);
 
@@ -70,15 +70,21 @@ public sealed class DiffEntropyEnricher
             // Detect file header
             if (line.StartsWith("diff --git a/", StringComparison.Ordinal))
             {
-                var rest   = line[13..];
+                var rest = line[13..];
                 var spaceB = rest.IndexOf(" b/", StringComparison.Ordinal);
                 currentFile = spaceB >= 0 ? rest[..spaceB] : null;
                 if (currentFile is not null && !changedLinesPerFile.ContainsKey(currentFile))
+                {
                     changedLinesPerFile[currentFile] = 0;
+                }
+
                 continue;
             }
 
-            if (currentFile is null) continue;
+            if (currentFile is null)
+            {
+                continue;
+            }
 
             // Count added lines
             if (line.StartsWith("+", StringComparison.Ordinal) &&
@@ -98,13 +104,15 @@ public sealed class DiffEntropyEnricher
 
         int fileCount = changedLinesPerFile.Count;
         if (fileCount == 0)
+        {
             return new DiffEntropyMetrics(0, 0, 0, 0, 0.0, 0.0);
+        }
 
         int totalLinesChanged = changedLinesPerFile.Values.Sum();
-        int directoryCount   = CountDistinctDirectories(changedLinesPerFile.Keys);
-        int namespaceCount   = CountDistinctNamespaces(changedLinesPerFile.Keys);
-        double entropy       = ComputeShannonEntropy(changedLinesPerFile, totalLinesChanged);
-        double normEntropy   = fileCount <= 1 ? 0.0 : entropy / Math.Log2(fileCount);
+        int directoryCount = CountDistinctDirectories(changedLinesPerFile.Keys);
+        int namespaceCount = CountDistinctNamespaces(changedLinesPerFile.Keys);
+        double entropy = ComputeShannonEntropy(changedLinesPerFile, totalLinesChanged);
+        double normEntropy = fileCount <= 1 ? 0.0 : entropy / Math.Log2(fileCount);
 
         return new DiffEntropyMetrics(
             fileCount, directoryCount, namespaceCount,
@@ -117,8 +125,8 @@ public sealed class DiffEntropyEnricher
         foreach (var path in filePaths)
         {
             var normalized = path.Replace('\\', '/');
-            var lastSlash  = normalized.LastIndexOf('/');
-            var dir        = lastSlash >= 0 ? normalized[..lastSlash] : ".";
+            var lastSlash = normalized.LastIndexOf('/');
+            var dir = lastSlash >= 0 ? normalized[..lastSlash] : ".";
             dirs.Add(dir);
         }
         return dirs.Count;
@@ -142,21 +150,31 @@ public sealed class DiffEntropyEnricher
     internal static string ExtractNamespace(string path)
     {
         var normalized = path.Replace('\\', '/');
-        var segments   = normalized.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        var segments = normalized.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (segments.Length >= 2)
+        {
             return segments[0] + "/" + segments[1];
+        }
+
         return segments.Length == 1 ? segments[0] : ".";
     }
 
     internal static double ComputeShannonEntropy(
         Dictionary<string, int> changedLinesPerFile, int totalLinesChanged)
     {
-        if (totalLinesChanged == 0) return 0.0;
+        if (totalLinesChanged == 0)
+        {
+            return 0.0;
+        }
 
         double entropy = 0.0;
         foreach (var lines in changedLinesPerFile.Values)
         {
-            if (lines <= 0) continue;
+            if (lines <= 0)
+            {
+                continue;
+            }
+
             double p = (double)lines / totalLinesChanged;
             entropy -= p * Math.Log2(p);
         }
@@ -178,24 +196,24 @@ public sealed class DiffEntropyEnricher
                 ($fixtureId, $repo, $fileCount, $dirCount, $nsCount,
                  $totalLines, $entropy, $normEntropy)
             """;
-        cmd.Parameters.AddWithValue("$fixtureId",   fixtureId);
-        cmd.Parameters.AddWithValue("$repo",         repo);
-        cmd.Parameters.AddWithValue("$fileCount",    m.FileCount);
-        cmd.Parameters.AddWithValue("$dirCount",     m.DirectoryCount);
-        cmd.Parameters.AddWithValue("$nsCount",      m.NamespaceCount);
-        cmd.Parameters.AddWithValue("$totalLines",   m.TotalLinesChanged);
-        cmd.Parameters.AddWithValue("$entropy",      m.ChangeEntropy);
-        cmd.Parameters.AddWithValue("$normEntropy",  m.NormalizedEntropy);
+        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$fileCount", m.FileCount);
+        cmd.Parameters.AddWithValue("$dirCount", m.DirectoryCount);
+        cmd.Parameters.AddWithValue("$nsCount", m.NamespaceCount);
+        cmd.Parameters.AddWithValue("$totalLines", m.TotalLinesChanged);
+        cmd.Parameters.AddWithValue("$entropy", m.ChangeEntropy);
+        cmd.Parameters.AddWithValue("$normEntropy", m.NormalizedEntropy);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
 
 /// <summary>Intermediate metrics bag from a single diff analysis.</summary>
 internal record DiffEntropyMetrics(
-    int    FileCount,
-    int    DirectoryCount,
-    int    NamespaceCount,
-    int    TotalLinesChanged,
+    int FileCount,
+    int DirectoryCount,
+    int NamespaceCount,
+    int TotalLinesChanged,
     double ChangeEntropy,
     double NormalizedEntropy);
 

@@ -33,7 +33,10 @@ public static class SarifWriter
             {
                 id = r.RuleId,
                 name = SanitizeName(r.RuleName),
-                shortDescription = new { text = r.RuleName },
+                shortDescription = new
+                {
+                    text = r.RuleName
+                },
                 helpUri = $"https://gauntletci.com/rules/{r.RuleId}",
             })
             .ToList();
@@ -72,9 +75,9 @@ public static class SarifWriter
     {
         var level = finding.Severity switch
         {
-            RuleSeverity.Block    => "error",
-            RuleSeverity.Warn     => "warning",
-            _                     => "note",
+            RuleSeverity.Block => "error",
+            RuleSeverity.Warn => "warning",
+            _ => "note",
         };
 
         var message = string.IsNullOrWhiteSpace(finding.WhyItMatters)
@@ -82,17 +85,23 @@ public static class SarifWriter
             : $"{finding.Summary}: {finding.WhyItMatters}";
 
         if (!string.IsNullOrWhiteSpace(finding.SuggestedAction))
+        {
             message += $" Action: {finding.SuggestedAction}";
+        }
 
         // Build properties dict for enriched fields
         var properties = new Dictionary<string, object>();
-        
+
         if (!string.IsNullOrWhiteSpace(finding.CodeSnippet))
+        {
             properties["codeSnippet"] = finding.CodeSnippet;
-            
+        }
+
         if (!string.IsNullOrWhiteSpace(finding.LlmExplanation))
+        {
             properties["llmExplanation"] = finding.LlmExplanation;
-            
+        }
+
         if (finding.ExpertContext is { } expert)
         {
             properties["expertContextContent"] = expert.Content;
@@ -105,7 +114,10 @@ public static class SarifWriter
             var result = new
             {
                 ruleId = finding.RuleId,
-                message = new { text = message },
+                message = new
+                {
+                    text = message
+                },
                 level,
                 locations = new[]
                 {
@@ -123,13 +135,17 @@ public static class SarifWriter
                     }
                 },
             };
-            
+
             // Only include properties if there are enriched fields
             if (properties.Count > 0)
+            {
                 return new
                 {
                     ruleId = finding.RuleId,
-                    message = new { text = message },
+                    message = new
+                    {
+                        text = message
+                    },
                     level,
                     locations = new[]
                     {
@@ -148,25 +164,34 @@ public static class SarifWriter
                     },
                     properties = (object)properties,
                 };
-            
+            }
+
             return result;
         }
 
         var baseResult = new
         {
             ruleId = finding.RuleId,
-            message = new { text = message },
+            message = new
+            {
+                text = message
+            },
             level,
         };
-        
+
         if (properties.Count > 0)
+        {
             return new
             {
                 ruleId = finding.RuleId,
-                message = new { text = message },
+                message = new
+                {
+                    text = message
+                },
                 level,
                 properties = (object)properties,
             };
+        }
 
         return baseResult;
     }

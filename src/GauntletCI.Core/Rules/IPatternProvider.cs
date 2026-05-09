@@ -34,7 +34,10 @@ public interface IPatternProvider
     bool IsCommentLine(string trimmed);
 
     /// <summary>File path components indicating security-critical code sections.</summary>
-    IReadOnlyList<string> SecurityCriticalPaths { get; }
+    IReadOnlyList<string> SecurityCriticalPaths
+    {
+        get;
+    }
 
     // ================= Nullability and NRT Patterns =================
 
@@ -97,10 +100,16 @@ public interface IPatternProvider
     string? ExtractDirectlyAssignedLiteral(string content);
 
     /// <summary>Commit message keywords indicating security-focused changes.</summary>
-    IReadOnlyList<string> SecurityKeywords { get; }
+    IReadOnlyList<string> SecurityKeywords
+    {
+        get;
+    }
 
     /// <summary>Test pattern keywords indicating security-focused test additions.</summary>
-    IReadOnlyList<string> SecurityTestPatterns { get; }
+    IReadOnlyList<string> SecurityTestPatterns
+    {
+        get;
+    }
 
     /// <summary>Returns true if the given text contains security-related keywords.</summary>
     bool HasSecurityKeywords(string text);
@@ -111,46 +120,88 @@ public interface IPatternProvider
     // ================= Domain-Specific Pattern Collections =================
 
     /// <summary>Variable and field name fragments used to detect hardcoded secrets by name.</summary>
-    IReadOnlyList<string> SecretNamePatterns { get; }
+    IReadOnlyList<string> SecretNamePatterns
+    {
+        get;
+    }
 
     /// <summary>Log-level keywords indicating high-severity log calls.</summary>
-    IReadOnlyList<string> HighSeverityLogKeywords { get; }
+    IReadOnlyList<string> HighSeverityLogKeywords
+    {
+        get;
+    }
 
     /// <summary>Patterns indicating resource timeout limits in code.</summary>
-    IReadOnlyList<string> TimeoutPatterns { get; }
+    IReadOnlyList<string> TimeoutPatterns
+    {
+        get;
+    }
 
     /// <summary>Patterns indicating iteration or loop count limits in code.</summary>
-    IReadOnlyList<string> IterationLimitPatterns { get; }
+    IReadOnlyList<string> IterationLimitPatterns
+    {
+        get;
+    }
 
     /// <summary>Patterns indicating resource limits (connections, threads, buffers, pools).</summary>
-    IReadOnlyList<string> ResourceLimitPatterns { get; }
+    IReadOnlyList<string> ResourceLimitPatterns
+    {
+        get;
+    }
 
     /// <summary>Patterns indicating resource cleanup/disposal operations.</summary>
-    IReadOnlyList<string> ResourceCleanupPatterns { get; }
+    IReadOnlyList<string> ResourceCleanupPatterns
+    {
+        get;
+    }
 
     /// <summary>Patterns indicating asynchronous operations that can consume resources.</summary>
-    IReadOnlyList<string> AsyncPatterns { get; }
+    IReadOnlyList<string> AsyncPatterns
+    {
+        get;
+    }
 
     /// <summary>Test silence/skip patterns that prevent tests from running.</summary>
-    IReadOnlyList<string> TestSilencePatterns { get; }
+    IReadOnlyList<string> TestSilencePatterns
+    {
+        get;
+    }
 
     /// <summary>Test attribute markers that identify test methods.</summary>
-    IReadOnlyList<string> TestAttributeMarkers { get; }
+    IReadOnlyList<string> TestAttributeMarkers
+    {
+        get;
+    }
 
     /// <summary>Assertion keywords used across popular .NET testing frameworks.</summary>
-    IReadOnlyList<string> TestAssertionKeywords { get; }
+    IReadOnlyList<string> TestAssertionKeywords
+    {
+        get;
+    }
 
     /// <summary>Array of service locator patterns that violate DI principles.</summary>
-    IReadOnlyList<string> ServiceLocatorPatterns { get; }
+    IReadOnlyList<string> ServiceLocatorPatterns
+    {
+        get;
+    }
 
     /// <summary>Regex to detect direct instantiation of injectable types.</summary>
-    Regex DirectInstantiationRegex { get; }
+    Regex DirectInstantiationRegex
+    {
+        get;
+    }
 
     /// <summary>Patterns to exclude from direct instantiation checks.</summary>
-    IReadOnlyList<string> DirectInstantiationExclusions { get; }
+    IReadOnlyList<string> DirectInstantiationExclusions
+    {
+        get;
+    }
 
     /// <summary>Common connection string markers that indicate hardcoded database/service connections.</summary>
-    IReadOnlyList<string> ConnectionStringMarkers { get; }
+    IReadOnlyList<string> ConnectionStringMarkers
+    {
+        get;
+    }
 
     // ================= Signature Compatibility =================
 
@@ -168,90 +219,186 @@ public interface IPatternProvider
     // ================= Nested Pattern Groups (Complex Type Aggregates) =================
 
     /// <summary>Data integrity patterns (HTTP context, SQL injection, unchecked casts).</summary>
-    IDataIntegrityPatterns DataIntegrityPatterns { get; }
+    IDataIntegrityPatterns DataIntegrityPatterns
+    {
+        get;
+    }
 
     /// <summary>PII detection patterns (terms, log prefixes, transformations, reflection guards).</summary>
-    IPiiDetectionPatterns PiiDetectionPatterns { get; }
+    IPiiDetectionPatterns PiiDetectionPatterns
+    {
+        get;
+    }
 
     /// <summary>Idempotency patterns (signals, upsert operations).</summary>
-    IIdempotencyPatterns IdempotencyPatterns { get; }
+    IIdempotencyPatterns IdempotencyPatterns
+    {
+        get;
+    }
 
     /// <summary>Resource patterns (disposable types, owned/non-disposable registries, regex).</summary>
-    IResourcePatterns ResourcePatterns { get; }
+    IResourcePatterns ResourcePatterns
+    {
+        get;
+    }
 
     /// <summary>External service patterns (HTTP methods, cancellation token checks).</summary>
-    IExternalServicePatterns ExternalServicePatterns { get; }
+    IExternalServicePatterns ExternalServicePatterns
+    {
+        get;
+    }
 
     /// <summary>Performance patterns (LINQ methods, loop keywords).</summary>
-    IPerformancePatterns PerformancePatterns { get; }
+    IPerformancePatterns PerformancePatterns
+    {
+        get;
+    }
 
     /// <summary>Floating-point patterns (float literals, equality checks, integer zero guards).</summary>
-    IFloatingPointPatterns FloatingPointPatterns { get; }
+    IFloatingPointPatterns FloatingPointPatterns
+    {
+        get;
+    }
 
     /// <summary>Data schema patterns (serialization attributes).</summary>
-    IDataSchemaPatterns DataSchemaPatterns { get; }
+    IDataSchemaPatterns DataSchemaPatterns
+    {
+        get;
+    }
 
     /// <summary>Exception patterns (throw assertions, guard clause throws).</summary>
-    IExceptionPatterns ExceptionPatterns { get; }
+    IExceptionPatterns ExceptionPatterns
+    {
+        get;
+    }
 
     /// <summary>Dependency injection patterns (service locators, direct instantiation, infrastructure files).</summary>
-    IDependencyInjectionPatterns DependencyInjectionPatterns { get; }
+    IDependencyInjectionPatterns DependencyInjectionPatterns
+    {
+        get;
+    }
 
     /// <summary>Stub detection patterns (keywords).</summary>
-    IStubDetectionPatterns StubDetectionPatterns { get; }
+    IStubDetectionPatterns StubDetectionPatterns
+    {
+        get;
+    }
 
     /// <summary>Architecture patterns (using statements).</summary>
-    IArchitecturePatterns ArchitecturePatterns { get; }
+    IArchitecturePatterns ArchitecturePatterns
+    {
+        get;
+    }
 
     /// <summary>Guard patterns (null checks, value mappings, event handlers, cryptographic boundaries, etc.).</summary>
-    IGuardPatterns GuardPatterns { get; }
+    IGuardPatterns GuardPatterns
+    {
+        get;
+    }
 }
 
 // ================= Nested Interface Definitions =================
 
 public interface IDataIntegrityPatterns
 {
-    IReadOnlyList<string> HttpContextSignals { get; }
-    IReadOnlyList<string> SqlIgnorePatterns { get; }
-    IReadOnlyList<string> UncheckedCastPatterns { get; }
+    IReadOnlyList<string> HttpContextSignals
+    {
+        get;
+    }
+    IReadOnlyList<string> SqlIgnorePatterns
+    {
+        get;
+    }
+    IReadOnlyList<string> UncheckedCastPatterns
+    {
+        get;
+    }
     bool HasHttpContextSignal(string content);
 }
 
 public interface IPiiDetectionPatterns
 {
-    IReadOnlyList<string> PiiTerms { get; }
-    IReadOnlyList<string> LogPrefixes { get; }
-    IReadOnlyList<string> TransformationPatterns { get; }
-    IReadOnlyList<string> ReflectionGuards { get; }
+    IReadOnlyList<string> PiiTerms
+    {
+        get;
+    }
+    IReadOnlyList<string> LogPrefixes
+    {
+        get;
+    }
+    IReadOnlyList<string> TransformationPatterns
+    {
+        get;
+    }
+    IReadOnlyList<string> ReflectionGuards
+    {
+        get;
+    }
     bool IsDataTransformed(string content);
 }
 
 public interface IIdempotencyPatterns
 {
-    IReadOnlyList<string> IdempotencySignals { get; }
-    IReadOnlyList<string> UpsertPatterns { get; }
+    IReadOnlyList<string> IdempotencySignals
+    {
+        get;
+    }
+    IReadOnlyList<string> UpsertPatterns
+    {
+        get;
+    }
 }
 
 public interface IResourcePatterns
 {
-    IReadOnlyList<string> DisposableTypes { get; }
-    IReadOnlyList<string> DisposableSuffixes { get; }
-    HashSet<string> OwnedByOtherRules { get; }
-    HashSet<string> KnownNonDisposableTypes { get; }
-    Regex NewTypeRegex { get; }
+    IReadOnlyList<string> DisposableTypes
+    {
+        get;
+    }
+    IReadOnlyList<string> DisposableSuffixes
+    {
+        get;
+    }
+    HashSet<string> OwnedByOtherRules
+    {
+        get;
+    }
+    HashSet<string> KnownNonDisposableTypes
+    {
+        get;
+    }
+    Regex NewTypeRegex
+    {
+        get;
+    }
 }
 
 public interface IExternalServicePatterns
 {
-    IReadOnlyList<string> HttpCallMethods { get; }
-    IReadOnlyList<string> CtCheckHttpMethods { get; }
+    IReadOnlyList<string> HttpCallMethods
+    {
+        get;
+    }
+    IReadOnlyList<string> CtCheckHttpMethods
+    {
+        get;
+    }
 }
 
 public interface IPerformancePatterns
 {
-    IReadOnlyList<string> LinqMethods { get; }
-    IReadOnlyList<string> LoopKeywords { get; }
-    IReadOnlyList<string> UnboundedLoopKeywords { get; }
+    IReadOnlyList<string> LinqMethods
+    {
+        get;
+    }
+    IReadOnlyList<string> LoopKeywords
+    {
+        get;
+    }
+    IReadOnlyList<string> UnboundedLoopKeywords
+    {
+        get;
+    }
     bool HasLinqCall(string content);
     bool HasLoopConstruct(string content);
     bool IsRuleImplementationFile(string path);
@@ -259,41 +406,80 @@ public interface IPerformancePatterns
 
 public interface IFloatingPointPatterns
 {
-    Regex FloatLiteralOnRightRegex { get; }
-    Regex FloatLiteralOnLeftRegex { get; }
-    Regex FloatCastWithEqualityRegex { get; }
-    Regex FloatTypeWithEqualityRegex { get; }
-    Regex IntegerZeroGuardRegex { get; }
+    Regex FloatLiteralOnRightRegex
+    {
+        get;
+    }
+    Regex FloatLiteralOnLeftRegex
+    {
+        get;
+    }
+    Regex FloatCastWithEqualityRegex
+    {
+        get;
+    }
+    Regex FloatTypeWithEqualityRegex
+    {
+        get;
+    }
+    Regex IntegerZeroGuardRegex
+    {
+        get;
+    }
     bool IsGuardedIntegerZeroCheck(string content);
 }
 
 public interface IDataSchemaPatterns
 {
-    IReadOnlyList<string> SerializationAttributes { get; }
+    IReadOnlyList<string> SerializationAttributes
+    {
+        get;
+    }
 }
 
 public interface IExceptionPatterns
 {
-    IReadOnlyList<string> ThrowAssertions { get; }
-    IReadOnlyList<string> GuardClauseThrows { get; }
+    IReadOnlyList<string> ThrowAssertions
+    {
+        get;
+    }
+    IReadOnlyList<string> GuardClauseThrows
+    {
+        get;
+    }
 }
 
 public interface IDependencyInjectionPatterns
 {
-    IReadOnlyList<string> ServiceLocatorPatterns { get; }
-    IReadOnlyList<string> DirectInstantiationExclusions { get; }
-    Regex DirectInstantiationRegex { get; }
+    IReadOnlyList<string> ServiceLocatorPatterns
+    {
+        get;
+    }
+    IReadOnlyList<string> DirectInstantiationExclusions
+    {
+        get;
+    }
+    Regex DirectInstantiationRegex
+    {
+        get;
+    }
     bool IsInfrastructureFile(string path);
 }
 
 public interface IStubDetectionPatterns
 {
-    IReadOnlyList<string> StubKeywords { get; }
+    IReadOnlyList<string> StubKeywords
+    {
+        get;
+    }
 }
 
 public interface IArchitecturePatterns
 {
-    Regex UsingRegex { get; }
+    Regex UsingRegex
+    {
+        get;
+    }
 }
 
 public interface IGuardPatterns

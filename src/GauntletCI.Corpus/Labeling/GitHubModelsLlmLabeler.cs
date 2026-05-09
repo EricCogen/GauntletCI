@@ -16,12 +16,12 @@ public sealed class GitHubModelsLlmLabeler : ILlmLabeler
     private const string Endpoint = "https://models.inference.ai.azure.com/chat/completions";
 
     private readonly HttpClient _http;
-    private readonly string     _model;
+    private readonly string _model;
 
     public GitHubModelsLlmLabeler(string githubToken, string model = "gpt-4o-mini")
     {
         _model = model;
-        _http  = HttpClientFactory.GetLongTimeoutClient();
+        _http = HttpClientFactory.GetLongTimeoutClient();
         _http.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", githubToken);
     }
@@ -44,8 +44,8 @@ public sealed class GitHubModelsLlmLabeler : ILlmLabeler
 
             var requestBody = JsonSerializer.Serialize(new
             {
-                model      = _model,
-                messages   = new[] { new { role = "user", content = prompt } },
+                model = _model,
+                messages = new[] { new { role = "user", content = prompt } },
                 max_tokens = 150,
             });
 
@@ -53,13 +53,23 @@ public sealed class GitHubModelsLlmLabeler : ILlmLabeler
             request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
 
             using var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
-            if (!response.IsSuccessStatusCode) return null;
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
 
             var responseJson = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             using var doc = JsonDocument.Parse(responseJson);
 
-            if (!doc.RootElement.TryGetProperty("choices", out var choices)) return null;
-            if (choices.ValueKind != JsonValueKind.Array || choices.GetArrayLength() == 0) return null;
+            if (!doc.RootElement.TryGetProperty("choices", out var choices))
+            {
+                return null;
+            }
+
+            if (choices.ValueKind != JsonValueKind.Array || choices.GetArrayLength() == 0)
+            {
+                return null;
+            }
 
             var text = choices[0].GetProperty("message").GetProperty("content").GetString();
             return string.IsNullOrWhiteSpace(text) ? null : LlmLabelerHelpers.ParseJson(text);

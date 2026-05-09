@@ -33,11 +33,15 @@ public class ExpertKnowledgeEnricher : IFindingEnricher
     public Task<bool> EnrichAsync(Finding finding, CancellationToken ct = default)
     {
         if (finding is null || !IsAvailable)
+        {
             return Task.FromResult(false);
+        }
 
         // Skip if already enriched
         if (finding.ExpertContext != null)
+        {
             return Task.FromResult(false);
+        }
 
         // Try exact match on RuleId first
         if (_knowledgeBase.TryGetValue(finding.RuleId, out var fact))

@@ -27,14 +27,14 @@ public class TelemetryCollectorTests
 
     private static EvaluationResult EmptyResult() => new()
     {
-        Findings       = [],
+        Findings = [],
         RulesEvaluated = 0,
-        RuleMetrics    = [],
+        RuleMetrics = [],
     };
 
     private static DiffContext EmptyDiff() => new()
     {
-        Files   = [],
+        Files = [],
         RawDiff = "",
     };
 
@@ -73,7 +73,7 @@ public class TelemetryCollectorTests
                 }
             ],
             RulesEvaluated = 1,
-            RuleMetrics    = [],
+            RuleMetrics = [],
         };
 
         await TelemetryCollector.CollectAsync(result, EmptyDiff(), Path.GetTempPath());

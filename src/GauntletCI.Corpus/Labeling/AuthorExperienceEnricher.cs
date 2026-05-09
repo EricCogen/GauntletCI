@@ -48,13 +48,20 @@ public sealed class AuthorExperienceEnricher : IDisposable
             ct.ThrowIfCancellationRequested();
 
             var parts = fixture.Repo.Split('/', 2);
-            if (parts.Length < 2) continue;
+            if (parts.Length < 2)
+            {
+                continue;
+            }
+
             var owner = parts[0];
-            var repo  = parts[1];
+            var repo = parts[1];
 
             // Step 1: get author login from PR API
             var authorLogin = await FetchAuthorLoginAsync(owner, repo, fixture.PullRequestNumber, ct).ConfigureAwait(false);
-            if (string.IsNullOrEmpty(authorLogin)) continue;
+            if (string.IsNullOrEmpty(authorLogin))
+            {
+                continue;
+            }
 
             await Task.Delay(150, ct).ConfigureAwait(false);
 
@@ -74,15 +81,24 @@ public sealed class AuthorExperienceEnricher : IDisposable
                 authorLogin, commitCount, isFirstContributor, tier, ct).ConfigureAwait(false);
 
             processed++;
-            if (isFirstContributor) firstContributors++;
-            if (tier is "none" or "low") lowExperienceCount++;
+            if (isFirstContributor)
+            {
+                firstContributors++;
+            }
+
+            if (tier is "none" or "low")
+            {
+                lowExperienceCount++;
+            }
 
             progress?.Invoke(
                 $"[author-experience] {fixture.FixtureId}: {authorLogin} - " +
                 $"commits={commitCount}, tier={tier}, first={isFirstContributor}");
 
             if (delayMs > 0)
+            {
                 await Task.Delay(delayMs, ct).ConfigureAwait(false);
+            }
         }
 
         return new AuthorExperienceResult(processed, firstContributors, lowExperienceCount, AuthMissing: false);
@@ -95,13 +111,20 @@ public sealed class AuthorExperienceEnricher : IDisposable
         try
         {
             using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
-            if (!resp.IsSuccessStatusCode) return null;
+            if (!resp.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
             await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
             var root = doc.RootElement;
             if (root.TryGetProperty("user", out var user) &&
                 user.TryGetProperty("login", out var login))
+            {
                 return login.GetString();
+            }
+
             return null;
         }
         catch (OperationCanceledException) { throw; }
@@ -115,7 +138,10 @@ public sealed class AuthorExperienceEnricher : IDisposable
         try
         {
             using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
-            if (!resp.IsSuccessStatusCode) return 0;
+            if (!resp.IsSuccessStatusCode)
+            {
+                return 0;
+            }
 
             // Try to parse total from Link header
             resp.Headers.TryGetValues("Link", out var linkValues);
@@ -123,13 +149,18 @@ public sealed class AuthorExperienceEnricher : IDisposable
             var lastPage = ParseLastPage(linkHeader);
 
             if (lastPage > 0)
+            {
                 return Math.Min(lastPage, CommitCountCap);
+            }
 
             // No Link header - read array length (0 or 1)
             await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
             if (doc.RootElement.ValueKind == JsonValueKind.Array)
+            {
                 return doc.RootElement.GetArrayLength();
+            }
+
             return 0;
         }
         catch (OperationCanceledException) { throw; }
@@ -141,7 +172,9 @@ public sealed class AuthorExperienceEnricher : IDisposable
     {
         var key = $"{owner}/{repo}";
         if (_contributorCache.TryGetValue(key, out var cached))
+        {
             return cached;
+        }
 
         var set = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var url = $"https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100";
@@ -160,7 +193,9 @@ public sealed class AuthorExperienceEnricher : IDisposable
                         {
                             var login = l.GetString();
                             if (!string.IsNullOrEmpty(login))
+                            {
                                 set.Add(login);
+                            }
                         }
                     }
                 }
@@ -185,12 +220,12 @@ public sealed class AuthorExperienceEnricher : IDisposable
             VALUES
                 ($fixtureId, $repo, $authorLogin, $commitCount, $isFirstContributor, $experienceTier)
             """;
-        cmd.Parameters.AddWithValue("$fixtureId",          fixtureId);
-        cmd.Parameters.AddWithValue("$repo",               repo);
-        cmd.Parameters.AddWithValue("$authorLogin",        authorLogin);
-        cmd.Parameters.AddWithValue("$commitCount",        commitCount);
+        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$authorLogin", authorLogin);
+        cmd.Parameters.AddWithValue("$commitCount", commitCount);
         cmd.Parameters.AddWithValue("$isFirstContributor", isFirstContributor ? 1 : 0);
-        cmd.Parameters.AddWithValue("$experienceTier",     experienceTier);
+        cmd.Parameters.AddWithValue("$experienceTier", experienceTier);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
@@ -198,10 +233,10 @@ public sealed class AuthorExperienceEnricher : IDisposable
 
     internal static string ClassifyExperienceTier(int commitCount) => commitCount switch
     {
-        0    => "none",
+        0 => "none",
         <= 5 => "low",
         <= 50 => "medium",
-        _    => "high",
+        _ => "high",
     };
 
     /// <summary>
@@ -211,18 +246,28 @@ public sealed class AuthorExperienceEnricher : IDisposable
     /// </summary>
     internal static int ParseLastPage(string? linkHeader)
     {
-        if (string.IsNullOrEmpty(linkHeader)) return 0;
+        if (string.IsNullOrEmpty(linkHeader))
+        {
+            return 0;
+        }
+
         foreach (var part in linkHeader.Split(','))
         {
             var trimmed = part.Trim();
-            if (!trimmed.Contains("rel=\"last\"")) continue;
+            if (!trimmed.Contains("rel=\"last\""))
+            {
+                continue;
+            }
+
             var urlPart = trimmed.Split(';')[0].Trim().Trim('<', '>');
             var query = new Uri(urlPart).Query;
             foreach (var param in query.TrimStart('?').Split('&'))
             {
                 var kv = param.Split('=');
                 if (kv.Length == 2 && kv[0] == "page" && int.TryParse(kv[1], out var n))
+                {
                     return n;
+                }
             }
         }
         return 0;
@@ -231,7 +276,7 @@ public sealed class AuthorExperienceEnricher : IDisposable
 
 /// <summary>Summary statistics from a <see cref="AuthorExperienceEnricher.EnrichAsync"/> run.</summary>
 public record AuthorExperienceResult(
-    int  FixturesProcessed,
-    int  FirstContributors,
-    int  LowExperienceCount,
+    int FixturesProcessed,
+    int FirstContributors,
+    int LowExperienceCount,
     bool AuthMissing);

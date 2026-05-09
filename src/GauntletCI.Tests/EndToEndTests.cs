@@ -43,14 +43,14 @@ public class EndToEndTests
     {
         var psi = new ProcessStartInfo("dotnet", $"\"{dll}\" {args}")
         {
-            RedirectStandardOutput  = true,
-            RedirectStandardError   = true,
-            RedirectStandardInput   = stdin is not null,
-            UseShellExecute         = false,
-            StandardOutputEncoding  = System.Text.Encoding.UTF8,
-            StandardErrorEncoding   = System.Text.Encoding.UTF8,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            RedirectStandardInput = stdin is not null,
+            UseShellExecute = false,
+            StandardOutputEncoding = System.Text.Encoding.UTF8,
+            StandardErrorEncoding = System.Text.Encoding.UTF8,
         };
-        psi.Environment["CI"]       = "true"; // suppress telemetry prompt + banner
+        psi.Environment["CI"] = "true"; // suppress telemetry prompt + banner
         psi.Environment["NO_COLOR"] = "1";
 
         var proc = Process.Start(psi)!;
@@ -71,7 +71,10 @@ public class EndToEndTests
     public async Task Analyze_ViaStdin_JsonOutput_IsValidJson()
     {
         var (dll, skip) = GetCliDll();
-        if (skip) return;
+        if (skip)
+        {
+            return;
+        }
 
         var (stdout, _, _) = await RunCliAsync(dll, "analyze --output json", SimpleDiff);
 
@@ -83,7 +86,10 @@ public class EndToEndTests
     public async Task Analyze_ViaStdin_TextOutput_ContainsExpectedFields()
     {
         var (dll, skip) = GetCliDll();
-        if (skip) return;
+        if (skip)
+        {
+            return;
+        }
 
         var (stdout, stderr, _) = await RunCliAsync(dll, "analyze", SimpleDiff);
 
@@ -95,7 +101,10 @@ public class EndToEndTests
     public async Task Analyze_WithDiffFile_ProducesOutput()
     {
         var (dll, skip) = GetCliDll();
-        if (skip) return;
+        if (skip)
+        {
+            return;
+        }
 
         var tempFile = Path.Combine(Path.GetTempPath(), $"gci_e2e_{Guid.NewGuid():N}.patch");
         try
@@ -108,7 +117,10 @@ public class EndToEndTests
         }
         finally
         {
-            if (File.Exists(tempFile)) File.Delete(tempFile);
+            if (File.Exists(tempFile))
+            {
+                File.Delete(tempFile);
+            }
         }
     }
 
@@ -116,7 +128,10 @@ public class EndToEndTests
     public async Task Analyze_StagedInNonGitDir_ExitsWithError()
     {
         var (dll, skip) = GetCliDll();
-        if (skip) return;
+        if (skip)
+        {
+            return;
+        }
 
         var tempDir = Path.Combine(Path.GetTempPath(), $"gci_e2e_{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
@@ -135,7 +150,10 @@ public class EndToEndTests
     public async Task AuditExport_AfterAnalyze_ContainsEntry()
     {
         var (dll, skip) = GetCliDll();
-        if (skip) return;
+        if (skip)
+        {
+            return;
+        }
 
         // Ensure at least one audit entry exists by running an analysis first
         await RunCliAsync(dll, "analyze --output json", SimpleDiff);
@@ -143,7 +161,9 @@ public class EndToEndTests
         var (stdout, stderr, _) = await RunCliAsync(dll, "audit export --format json");
 
         if (stderr.Contains("No scan records"))
+        {
             return; // No entries yet in this environment — not a failure
+        }
 
         if (!string.IsNullOrWhiteSpace(stdout) && stdout.TrimStart().StartsWith('['))
         {
@@ -157,7 +177,10 @@ public class EndToEndTests
     public async Task Version_Flag_ReturnsVersionString()
     {
         var (dll, skip) = GetCliDll();
-        if (skip) return;
+        if (skip)
+        {
+            return;
+        }
 
         var (stdout, stderr, exitCode) = await RunCliAsync(dll, "--version");
 

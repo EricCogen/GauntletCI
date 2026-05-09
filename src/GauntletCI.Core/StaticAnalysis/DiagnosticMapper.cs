@@ -35,11 +35,17 @@ public static class DiagnosticMapper
     /// </summary>
     public static IEnumerable<Finding> MapDiagnostics(AnalyzerResult result)
     {
-        if (!result.Success) yield break;
+        if (!result.Success)
+        {
+            yield break;
+        }
 
         foreach (var diag in result.Diagnostics)
         {
-            if (!Mappings.TryGetValue(diag.Id, out var mapping)) continue;
+            if (!Mappings.TryGetValue(diag.Id, out var mapping))
+            {
+                continue;
+            }
 
             yield return new Finding
             {

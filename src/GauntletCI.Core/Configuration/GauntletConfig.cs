@@ -19,14 +19,20 @@ public class GauntletConfig
     public string[] PolicyReferences { get; set; } = [];
 
     /// <summary>Premium LLM configuration for CI/CD enrichment.</summary>
-    public LlmConfig? Llm { get; set; }
+    public LlmConfig? Llm
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Per-layer forbidden import rules for GCI0035 Architecture Layer Guard.
     /// Key: a namespace fragment identifying the source layer (e.g. "Domain").
     /// Value: list of namespace fragments that the source layer must not import (e.g. ["Infrastructure", "AspNetCore"]).
     /// </summary>
-    public Dictionary<string, List<string>>? ForbiddenImports { get; set; }
+    public Dictionary<string, List<string>>? ForbiddenImports
+    {
+        get; set;
+    }
 
     /// <summary>Corpus pipeline configuration (local dev tool settings).</summary>
     public CorpusConfig Corpus { get; set; } = new();
@@ -67,7 +73,10 @@ public class RuleConfig
     /// Override the rule's default severity. Valid values: "High", "Medium", "Low".
     /// Null means use the rule's default.
     /// </summary>
-    public string? Severity { get; set; }
+    public string? Severity
+    {
+        get; set;
+    }
 }
 
 /// <summary>
@@ -81,7 +90,10 @@ public class LlmConfig
     /// OpenAI-compatible chat completions endpoint.
     /// E.g. "https://api.openai.com/v1/chat/completions" or an Azure OpenAI endpoint.
     /// </summary>
-    public string? CiEndpoint { get; set; }
+    public string? CiEndpoint
+    {
+        get; set;
+    }
 
     /// <summary>Model name to request (e.g. "gpt-4o-mini", "gpt-4o").</summary>
     public string CiModel { get; set; } = "gpt-4o-mini";
@@ -90,7 +102,10 @@ public class LlmConfig
     /// Path to the local ONNX model directory used by <c>LocalLlmEngine</c>.
     /// Defaults to <c>~/.gauntletci/models/phi4-mini</c> when null or absent.
     /// </summary>
-    public string? ModelPath { get; set; }
+    public string? ModelPath
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Name of the environment variable that holds the API key for the CI endpoint.
@@ -181,7 +196,10 @@ public class EngineeringPolicyConfig
     /// Requires an LLM to be available (local model or CI endpoint). Findings are emitted as Advisory severity : 
     /// always shown in output but never block a commit.
     /// </summary>
-    public string Description { get; set; } =
+    public string Description
+    {
+        get; set;
+    } =
         "Evaluates diffs against a structured engineering policy document using an LLM. " +
         "Requires an LLM to be available (local model or CI endpoint). Findings are emitted as Advisory severity: " +
         "shown in output but never block a commit.";
@@ -248,13 +266,19 @@ public class NotificationsConfig
     /// Slack Incoming Webhook URL. Posts Block findings to Slack.
     /// Equivalent to --notify-slack. Can also be set via GAUNTLETCI_SLACK_WEBHOOK env var.
     /// </summary>
-    public string? SlackWebhook { get; set; }
+    public string? SlackWebhook
+    {
+        get; set;
+    }
 
     /// <summary>
     /// Microsoft Teams Incoming Webhook URL. Posts Block findings to Teams.
     /// Equivalent to --notify-teams. Can also be set via GAUNTLETCI_TEAMS_WEBHOOK env var.
     /// </summary>
-    public string? TeamsWebhook { get; set; }
+    public string? TeamsWebhook
+    {
+        get; set;
+    }
 }
 
 /// <summary>Default output and display settings.</summary>

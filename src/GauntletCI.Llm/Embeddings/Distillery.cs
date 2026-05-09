@@ -17,9 +17,9 @@ public sealed class Distillery
     /// <param name="store">Vector store where embedded facts are persisted.</param>
     public Distillery(ILlmEngine llm, IEmbeddingEngine embedding, VectorStore store)
     {
-        _llm       = llm;
+        _llm = llm;
         _embedding = embedding;
-        _store     = store;
+        _store = store;
     }
 
     /// <summary>
@@ -35,7 +35,11 @@ public sealed class Distillery
         {
             ct.ThrowIfCancellationRequested();
             var embedding = await _embedding.EmbedAsync(fact.Content, ct).ConfigureAwait(false);
-            if (embedding.Length == 0) continue;
+            if (embedding.Length == 0)
+            {
+                continue;
+            }
+
             _store.Upsert(fact.Id, fact.Content, fact.Source, embedding);
             count++;
         }
@@ -60,10 +64,16 @@ public sealed class Distillery
             ct.ThrowIfCancellationRequested();
 
             var fact = await ExtractFactAsync(input, ct).ConfigureAwait(false);
-            if (string.IsNullOrWhiteSpace(fact)) continue;
+            if (string.IsNullOrWhiteSpace(fact))
+            {
+                continue;
+            }
 
             var embedding = await _embedding.EmbedAsync(fact, ct).ConfigureAwait(false);
-            if (embedding.Length == 0) continue;
+            if (embedding.Length == 0)
+            {
+                continue;
+            }
 
             _store.Upsert(input.Id, fact, input.Source, embedding);
             count++;

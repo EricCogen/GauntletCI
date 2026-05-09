@@ -13,7 +13,7 @@ namespace GauntletCI.Cli.LlmDaemon;
 /// </summary>
 internal static class LlmDaemonServer
 {
-    private static readonly TimeSpan IdleTimeout          = TimeSpan.FromMinutes(30);
+    private static readonly TimeSpan IdleTimeout = TimeSpan.FromMinutes(30);
     private static readonly TimeSpan ConnectionPollWindow = TimeSpan.FromSeconds(30);
 
     internal static string PipeName =>
@@ -67,7 +67,10 @@ internal static class LlmDaemonServer
         catch (OperationCanceledException) { }
         finally
         {
-            try { File.Delete(pidPath); }
+            try
+            {
+                File.Delete(pidPath);
+            }
             catch (Exception ex)
             {
                 // Log but don't rethrow: cleanup is best-effort and shouldn't crash the daemon
@@ -84,13 +87,19 @@ internal static class LlmDaemonServer
         while (pipe.IsConnected && !ct.IsCancellationRequested)
         {
             string? line;
-            try { line = await reader.ReadLineAsync(ct); }
+            try
+            {
+                line = await reader.ReadLineAsync(ct);
+            }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"LlmDaemonServer: Read error: {ex.Message}");
                 break;
             }
-            if (line is null) break;
+            if (line is null)
+            {
+                break;
+            }
 
             DaemonResponse resp;
             try
@@ -114,9 +123,9 @@ internal static class LlmDaemonServer
                 {
                     resp = req.Op switch
                     {
-                        "ping"   => new DaemonResponse(true, "ready"),
+                        "ping" => new DaemonResponse(true, "ready"),
                         "enrich" => new DaemonResponse(true, await EnrichAsync(engine, req, ct)),
-                        _        => new DaemonResponse(false, $"Unknown op: {req.Op}")
+                        _ => new DaemonResponse(false, $"Unknown op: {req.Op}")
                     };
                 }
             }
@@ -125,8 +134,11 @@ internal static class LlmDaemonServer
                 resp = new DaemonResponse(false, ex.Message);
             }
 
-            SendResponse:
-            try { await writer.WriteLineAsync(JsonSerializer.Serialize(resp)); }
+        SendResponse:
+            try
+            {
+                await writer.WriteLineAsync(JsonSerializer.Serialize(resp));
+            }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"LlmDaemonServer: Write error: {ex.Message}");
@@ -139,11 +151,11 @@ internal static class LlmDaemonServer
     {
         var finding = new Finding
         {
-            RuleId          = req.RuleId   ?? string.Empty,
-            RuleName        = req.RuleName ?? string.Empty,
-            Summary         = req.Summary  ?? string.Empty,
-            Evidence        = req.Evidence ?? string.Empty,
-            WhyItMatters    = string.Empty,
+            RuleId = req.RuleId ?? string.Empty,
+            RuleName = req.RuleName ?? string.Empty,
+            Summary = req.Summary ?? string.Empty,
+            Evidence = req.Evidence ?? string.Empty,
+            WhyItMatters = string.Empty,
             SuggestedAction = string.Empty,
         };
         return await engine.EnrichFindingAsync(finding, ct);

@@ -469,9 +469,9 @@ export const rules: Rule[] = [
     severity: "Info",
     categorySlug: "architecture",
     description:
-      "Detects over-engineering: single-use interfaces, abstract classes without abstract members, and unnecessary indirection added in the diff.",
+      "Detects over-engineering introduced in the diff: newly introduced single-use interfaces (exactly one visible implementor), abstract classes without abstract members, and unnecessary indirection added in the diff.",
     whyExists:
-      "Speculative abstraction is a tax on every future reader. An IFoo with one implementation and no test double doubles the navigation cost without adding flexibility.",
+      "Speculative abstraction is a tax on every future reader. This rule focuses on newly introduced indirection in a PR, not long-standing architectural boundary contracts.",
     example: {
       language: "csharp",
       bad: "+ public interface IFoo { void Bar(); }\n+ public class Foo : IFoo { public void Bar() { ... } }\n+ // IFoo has exactly one implementation and no tests use it",

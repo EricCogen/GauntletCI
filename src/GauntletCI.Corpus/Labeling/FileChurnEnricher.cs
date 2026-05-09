@@ -49,7 +49,9 @@ public sealed class FileChurnEnricher : IDisposable
                 "diff.patch");
 
             if (!File.Exists(diffPath))
+            {
                 continue;
+            }
 
             var changedFiles = ParseChangedCsFiles(diffPath);
             if (changedFiles.Count == 0)
@@ -59,7 +61,10 @@ public sealed class FileChurnEnricher : IDisposable
             }
 
             var parts = fixture.Repo.Split('/', 2);
-            if (parts.Length < 2) continue;
+            if (parts.Length < 2)
+            {
+                continue;
+            }
 
             bool isHotspot = false;
 
@@ -72,9 +77,15 @@ public sealed class FileChurnEnricher : IDisposable
                 await WriteFileChurnAsync(db, fixture.FixtureId, fixture.Repo, file, churn, hotspotScore, ct).ConfigureAwait(false);
                 totalFilesAnalyzed++;
 
-                if (hotspotScore >= 0.7) isHotspot = true;
+                if (hotspotScore >= 0.7)
+                {
+                    isHotspot = true;
+                }
 
-                if (delayMs > 0) await Task.Delay(delayMs, ct).ConfigureAwait(false);
+                if (delayMs > 0)
+                {
+                    await Task.Delay(delayMs, ct).ConfigureAwait(false);
+                }
             }
 
             processed++;
@@ -94,11 +105,17 @@ public sealed class FileChurnEnricher : IDisposable
         var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var line in File.ReadLines(diffPath))
         {
-            if (!line.StartsWith("+++ b/", StringComparison.Ordinal)) continue;
+            if (!line.StartsWith("+++ b/", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
             var path = line[6..];
             if (!string.IsNullOrWhiteSpace(path) &&
                 path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+            {
                 paths.Add(path);
+            }
         }
         return paths.ToList();
     }
@@ -115,7 +132,11 @@ public sealed class FileChurnEnricher : IDisposable
         try
         {
             using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
-            if (!resp.IsSuccessStatusCode) return 0;
+            if (!resp.IsSuccessStatusCode)
+            {
+                return 0;
+            }
+
             await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
             return doc.RootElement.ValueKind == JsonValueKind.Array
@@ -138,10 +159,10 @@ public sealed class FileChurnEnricher : IDisposable
                 ($fixtureId, $repo, $filePath, $churn, $score, datetime('now'))
             """;
         cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
-        cmd.Parameters.AddWithValue("$repo",       repo);
-        cmd.Parameters.AddWithValue("$filePath",   filePath);
-        cmd.Parameters.AddWithValue("$churn",      churn90d);
-        cmd.Parameters.AddWithValue("$score",      hotspotScore);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$filePath", filePath);
+        cmd.Parameters.AddWithValue("$churn", churn90d);
+        cmd.Parameters.AddWithValue("$score", hotspotScore);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }

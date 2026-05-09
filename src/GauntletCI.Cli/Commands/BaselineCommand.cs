@@ -29,12 +29,12 @@ public static class BaselineCommand
 
     private static Command BuildCreate()
     {
-        var diffOption     = new Option<FileInfo?>("--diff",        "Path to a .diff file");
-        var commitOption   = new Option<string?>("--commit",        "Commit SHA to analyse");
-        var stagedFlag     = new Option<bool>("--staged",           "Analyse staged changes (git diff --cached)");
-        var unstagedFlag   = new Option<bool>("--unstaged",         "Analyse unstaged changes (git diff)");
-        var allChangesFlag = new Option<bool>("--all-changes",      "Analyse all local changes: staged + unstaged");
-        var repoOption     = new Option<DirectoryInfo>(
+        var diffOption = new Option<FileInfo?>("--diff", "Path to a .diff file");
+        var commitOption = new Option<string?>("--commit", "Commit SHA to analyse");
+        var stagedFlag = new Option<bool>("--staged", "Analyse staged changes (git diff --cached)");
+        var unstagedFlag = new Option<bool>("--unstaged", "Analyse unstaged changes (git diff)");
+        var allChangesFlag = new Option<bool>("--all-changes", "Analyse all local changes: staged + unstaged");
+        var repoOption = new Option<DirectoryInfo>(
             "--repo",
             () => new DirectoryInfo(Directory.GetCurrentDirectory()),
             "Repository root (defaults to current directory)");
@@ -47,18 +47,18 @@ public static class BaselineCommand
 
         create.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
         {
-            var diffFile   = ctx.ParseResult.GetValueForOption(diffOption);
-            var commit     = ctx.ParseResult.GetValueForOption(commitOption);
-            var staged     = ctx.ParseResult.GetValueForOption(stagedFlag);
-            var unstaged   = ctx.ParseResult.GetValueForOption(unstagedFlag);
+            var diffFile = ctx.ParseResult.GetValueForOption(diffOption);
+            var commit = ctx.ParseResult.GetValueForOption(commitOption);
+            var staged = ctx.ParseResult.GetValueForOption(stagedFlag);
+            var unstaged = ctx.ParseResult.GetValueForOption(unstagedFlag);
             var allChanges = ctx.ParseResult.GetValueForOption(allChangesFlag);
-            var repo       = ctx.ParseResult.GetValueForOption(repoOption)!;
-            var ct         = ctx.GetCancellationToken();
+            var repo = ctx.ParseResult.GetValueForOption(repoOption)!;
+            var ct = ctx.GetCancellationToken();
 
-            var sourceCount = (diffFile   is not null ? 1 : 0)
-                            + (commit     is not null ? 1 : 0)
-                            + (staged     ? 1 : 0)
-                            + (unstaged   ? 1 : 0)
+            var sourceCount = (diffFile is not null ? 1 : 0)
+                            + (commit is not null ? 1 : 0)
+                            + (staged ? 1 : 0)
+                            + (unstaged ? 1 : 0)
                             + (allChanges ? 1 : 0);
 
             if (sourceCount > 1)
@@ -77,7 +77,7 @@ public static class BaselineCommand
 
             try
             {
-                var config       = ConfigLoader.Load(repo.FullName);
+                var config = ConfigLoader.Load(repo.FullName);
                 var diff = diffFile is not null
                     ? DiffParser.FromFile(diffFile.FullName)
                     : commit is not null
@@ -90,10 +90,10 @@ public static class BaselineCommand
                                     ? await DiffParser.FromAllChangesAsync(repo.FullName, config.DiffContextLines, ct)
                                     : DiffParser.Parse(await Console.In.ReadToEndAsync(ct));
 
-                var ignoreList   = IgnoreList.Load(repo.FullName);
+                var ignoreList = IgnoreList.Load(repo.FullName);
                 var orchestrator = RuleOrchestrator.CreateDefault(config, repoPath: repo.FullName);
                 var staticAnalysis = await StaticAnalysisRunner.RunAsync(diff, repo.FullName, ct);
-                var result       = await orchestrator.RunAsync(diff, staticAnalysis, ignoreList: ignoreList);
+                var result = await orchestrator.RunAsync(diff, staticAnalysis, ignoreList: ignoreList);
 
                 var fingerprints = result.Findings.Select(BaselineStore.ComputeFingerprint).ToList();
                 BaselineStore.Save(repo.FullName, fingerprints, commit);
@@ -129,9 +129,13 @@ public static class BaselineCommand
             var repo = ctx.ParseResult.GetValueForOption(repoOption)!;
 
             if (BaselineStore.Clear(repo.FullName))
+            {
                 AnsiConsole.MarkupLine("[green]Baseline cleared.[/]");
+            }
             else
+            {
                 AnsiConsole.MarkupLine("[yellow]No baseline found: nothing to clear.[/]");
+            }
 
             ctx.ExitCode = 0;
         });
@@ -177,12 +181,17 @@ public static class BaselineCommand
             AnsiConsole.MarkupLine($"[bold cyan]Baseline[/]: {baseline.Fingerprints.Count} fingerprint(s)");
             AnsiConsole.MarkupLine($"[dim]  Created : {baseline.CreatedAt:u}[/]");
             if (baseline.Commit is not null)
+            {
                 AnsiConsole.MarkupLine($"[dim]  Commit  : {Markup.Escape(baseline.Commit)}[/]");
+            }
+
             AnsiConsole.MarkupLine($"[dim]  Path    : {Markup.Escape(BaselineStore.GetPath(repo.FullName))}[/]");
             AnsiConsole.WriteLine();
 
             foreach (var fp in baseline.Fingerprints.OrderBy(s => s))
+            {
                 Console.WriteLine($"  {fp}");
+            }
 
             ctx.ExitCode = 0;
         });

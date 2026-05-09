@@ -42,13 +42,16 @@ public static class BaselineStore
     public static BaselineFile? Load(string repoRoot)
     {
         var path = GetPath(repoRoot);
-        if (!File.Exists(path)) return null;
+        if (!File.Exists(path))
+        {
+            return null;
+        }
 
         using var doc = JsonDocument.Parse(File.ReadAllText(path));
         var root = doc.RootElement;
 
-        var version    = root.GetProperty("version").GetInt32();
-        var createdAt  = root.GetProperty("createdAt").GetDateTimeOffset();
+        var version = root.GetProperty("version").GetInt32();
+        var createdAt = root.GetProperty("createdAt").GetDateTimeOffset();
         string? commit = root.TryGetProperty("commit", out var c) ? c.GetString() : null;
         var fingerprints = root.GetProperty("fingerprints")
             .EnumerateArray()
@@ -63,8 +66,8 @@ public static class BaselineStore
     {
         var payload = new
         {
-            version      = 1,
-            createdAt    = DateTimeOffset.UtcNow,
+            version = 1,
+            createdAt = DateTimeOffset.UtcNow,
             commit,
             fingerprints = fingerprints.Distinct().OrderBy(s => s).ToArray(),
         };
@@ -76,7 +79,11 @@ public static class BaselineStore
     public static bool Clear(string repoRoot)
     {
         var path = GetPath(repoRoot);
-        if (!File.Exists(path)) return false;
+        if (!File.Exists(path))
+        {
+            return false;
+        }
+
         File.Delete(path);
         return true;
     }

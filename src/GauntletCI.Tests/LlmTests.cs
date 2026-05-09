@@ -19,9 +19,12 @@ public class NullLlmEngineTests
     {
         var finding = new Finding
         {
-            RuleId = "GCI0001", RuleName = "Diff Integrity",
-            Summary = "Mixed concerns", Evidence = "Line 1: x",
-            WhyItMatters = "Risk.", SuggestedAction = "Fix.",
+            RuleId = "GCI0001",
+            RuleName = "Diff Integrity",
+            Summary = "Mixed concerns",
+            Evidence = "Line 1: x",
+            WhyItMatters = "Risk.",
+            SuggestedAction = "Fix.",
         };
         var result = await _engine.EnrichFindingAsync(finding);
         Assert.Equal(string.Empty, result);

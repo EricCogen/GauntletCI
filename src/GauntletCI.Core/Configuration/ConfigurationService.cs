@@ -38,7 +38,10 @@ public sealed class ConfigurationService
     /// </summary>
     public RuleSeverity GetEffectiveSeverity(string ruleId)
     {
-        if (_cache.TryGetValue(ruleId, out var cached)) return cached;
+        if (_cache.TryGetValue(ruleId, out var cached))
+        {
+            return cached;
+        }
 
         RuleSeverity resolved;
 
@@ -67,17 +70,23 @@ public sealed class ConfigurationService
     {
         var result = new Dictionary<string, RuleSeverity>(StringComparer.OrdinalIgnoreCase);
         var path = Path.Combine(repoPath, ".editorconfig");
-        if (!File.Exists(path)) return result;
+        if (!File.Exists(path))
+        {
+            return result;
+        }
 
         try
         {
             foreach (var line in File.ReadAllLines(path))
             {
                 var m = DiagnosticLineRegex.Match(line);
-                if (!m.Success) continue;
+                if (!m.Success)
+                {
+                    continue;
+                }
 
                 var ruleId = m.Groups[1].Value;
-                var level  = m.Groups[2].Value;
+                var level = m.Groups[2].Value;
                 result[ruleId] = MapEditorConfigLevel(level);
             }
         }
@@ -92,11 +101,11 @@ public sealed class ConfigurationService
     private static RuleSeverity MapEditorConfigLevel(string level) =>
         level.ToLowerInvariant() switch
         {
-            "error"      => RuleSeverity.Block,
-            "warning"    => RuleSeverity.Warn,
+            "error" => RuleSeverity.Block,
+            "warning" => RuleSeverity.Warn,
             "suggestion" => RuleSeverity.Info,
-            "none"       => RuleSeverity.None,
-            _            => RuleSeverity.Info,
+            "none" => RuleSeverity.None,
+            _ => RuleSeverity.Info,
         };
 
     /// <summary>
@@ -107,11 +116,11 @@ public sealed class ConfigurationService
     {
         severity = value.ToLowerInvariant() switch
         {
-            "block" or "high"            => RuleSeverity.Block,
-            "warn"  or "warning" or "medium" => RuleSeverity.Warn,
-            "info"  or "suggestion" or "low" => RuleSeverity.Info,
-            "none"                       => RuleSeverity.None,
-            _                            => RuleSeverity.Info,
+            "block" or "high" => RuleSeverity.Block,
+            "warn" or "warning" or "medium" => RuleSeverity.Warn,
+            "info" or "suggestion" or "low" => RuleSeverity.Info,
+            "none" => RuleSeverity.None,
+            _ => RuleSeverity.Info,
         };
         return true;
     }

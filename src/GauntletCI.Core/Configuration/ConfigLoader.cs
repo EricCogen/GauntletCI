@@ -27,7 +27,10 @@ public static class ConfigLoader
     public static GauntletConfig Load(string repoPath)
     {
         var path = Path.Combine(repoPath, ".gauntletci.json");
-        if (!File.Exists(path)) return new GauntletConfig();
+        if (!File.Exists(path))
+        {
+            return new GauntletConfig();
+        }
 
         try
         {

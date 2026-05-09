@@ -28,14 +28,16 @@ public static class GitHubPrReviewWriter
     public static async Task WriteAsync(EvaluationResult result, CancellationToken ct = default)
     {
         if (result.Findings.Count == 0)
+        {
             return;
+        }
 
         var githubAuth = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
         var repository = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
         // Prefer explicit override so callers can pass the PR head SHA directly.
-        var sha        = Environment.GetEnvironmentVariable("GAUNTLETCI_COMMIT_SHA")
+        var sha = Environment.GetEnvironmentVariable("GAUNTLETCI_COMMIT_SHA")
                       ?? Environment.GetEnvironmentVariable("GITHUB_SHA");
-        var prNumber   = ResolvePrNumber();
+        var prNumber = ResolvePrNumber();
 
         if (string.IsNullOrEmpty(githubAuth) || string.IsNullOrEmpty(repository) || string.IsNullOrEmpty(sha))
         {
@@ -68,7 +70,9 @@ public static class GitHubPrReviewWriter
         // If GitHub rejects (422, line not in diff), fall back to summary-only.
         var retry = await TryPostReviewAsync(githubAuth, url, sha, inlineGroups, summaryGroups, ct);
         if (retry)
+        {
             await TryPostReviewAsync(githubAuth, url, sha, [], [.. summaryGroups, .. inlineGroups], ct);
+        }
     }
 
     /// <summary>
@@ -79,20 +83,24 @@ public static class GitHubPrReviewWriter
     {
         var explicit_ = Environment.GetEnvironmentVariable("GAUNTLETCI_PR_NUMBER");
         if (int.TryParse(explicit_, out var n) && n > 0)
+        {
             return n;
+        }
 
         var ghRef = Environment.GetEnvironmentVariable("GITHUB_REF");
         if (!string.IsNullOrEmpty(ghRef))
         {
             // refs/pull/42/merge → ["refs", "pull", "42", "merge"]
             var parts = ghRef.Split('/');
-            if (parts.Length == 4 && 
-                parts[0] == "refs" && 
-                parts[1] == "pull" && 
-                int.TryParse(parts[2], out var prN) && 
+            if (parts.Length == 4 &&
+                parts[0] == "refs" &&
+                parts[1] == "pull" &&
+                int.TryParse(parts[2], out var prN) &&
                 prN > 0 &&
                 parts[3] == "merge")
+            {
                 return prN;
+            }
         }
 
         return null;
@@ -151,7 +159,10 @@ public static class GitHubPrReviewWriter
             sb.AppendLine();
             sb.AppendLine($"🎫 **Ticket ({t.Provider}):** {link}: {t.Title}");
             if (!string.IsNullOrWhiteSpace(t.Description))
+            {
                 sb.AppendLine($"> {t.Description}");
+            }
+
             sb.AppendLine();
         }
 
@@ -182,7 +193,9 @@ public static class GitHubPrReviewWriter
             sb.AppendLine();
             sb.AppendLine("**Evidence:**");
             foreach (var ev in group.Evidence)
+            {
                 sb.AppendLine(FormatEvidenceMarkdown(ev));
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(group.WhyItMatters))
@@ -222,12 +235,18 @@ public static class GitHubPrReviewWriter
             sb.AppendLine();
             sb.AppendLine($"🎫 **Ticket ({t.Provider}):** {link}: {t.Title}");
             if (!string.IsNullOrWhiteSpace(t.Description))
+            {
                 sb.AppendLine($"> {t.Description}");
+            }
         }
 
         sb.AppendLine();
         sb.Append($"<sub>Confidence: {group.Confidence} | Severity: {group.Severity}");
-        if (group.Count > 1) sb.Append($" | {group.Count} occurrences");
+        if (group.Count > 1)
+        {
+            sb.Append($" | {group.Count} occurrences");
+        }
+
         sb.Append("</sub>");
 
         return sb.ToString();
@@ -245,7 +264,9 @@ public static class GitHubPrReviewWriter
     public static string FormatEvidenceMarkdown(string evidence)
     {
         if (string.IsNullOrWhiteSpace(evidence))
+        {
             return string.Empty;
+        }
 
         // Was: X | Now: Y  →  diff block with - (red) and + (green)
         var wasNow = Regex.Match(evidence, @"^Was:\s*(.+?)\s*\|\s*Now:\s*(.+)$", RegexOptions.Singleline);
@@ -268,7 +289,9 @@ public static class GitHubPrReviewWriter
         // Removed: X  →  diff block with a single red line
         var removed = Regex.Match(evidence, @"^Removed:\s*(.+)$", RegexOptions.Singleline);
         if (removed.Success)
+        {
             return $"```diff\n- {removed.Groups[1].Value.Trim()}\n```";
+        }
 
         // Fallback: plain blockquote
         return $"> {evidence}";
@@ -288,8 +311,8 @@ public static class GitHubPrReviewWriter
         var payload = new ReviewPayload
         {
             CommitId = sha,
-            Body     = bodyText,
-            Event    = "COMMENT",
+            Body = bodyText,
+            Event = "COMMENT",
             Comments = [.. inlineGroups.Select(g =>
             {
                 var filePath = g.FilePath ?? throw new InvalidOperationException("FilePath must not be null for inline review comments.");
@@ -305,7 +328,7 @@ public static class GitHubPrReviewWriter
             })],
         };
 
-        var json    = JsonSerializer.Serialize(payload, _jsonOpts);
+        var json = JsonSerializer.Serialize(payload, _jsonOpts);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
@@ -359,9 +382,11 @@ public static class GitHubPrReviewWriter
     public static string BuildReviewBody(List<GroupedFinding> summaryGroups, bool hasInlineComments)
     {
         if (summaryGroups.Count == 0)
+        {
             return hasInlineComments
                 ? "**GauntletCI** found issues in this PR. See inline comments for details."
                 : string.Empty;
+        }
 
         var sb = new StringBuilder();
         sb.AppendLine("**GauntletCI** found the following issues:");
@@ -399,30 +424,54 @@ public static class GitHubPrReviewWriter
     private sealed class ReviewPayload
     {
         [JsonPropertyName("commit_id")]
-        public required string CommitId { get; init; }
+        public required string CommitId
+        {
+            get; init;
+        }
 
         [JsonPropertyName("body")]
-        public required string Body { get; init; }
+        public required string Body
+        {
+            get; init;
+        }
 
         [JsonPropertyName("event")]
-        public required string Event { get; init; }
+        public required string Event
+        {
+            get; init;
+        }
 
         [JsonPropertyName("comments")]
-        public required List<ReviewComment> Comments { get; init; }
+        public required List<ReviewComment> Comments
+        {
+            get; init;
+        }
     }
 
     private sealed class ReviewComment
     {
         [JsonPropertyName("path")]
-        public required string Path { get; init; }
+        public required string Path
+        {
+            get; init;
+        }
 
         [JsonPropertyName("line")]
-        public required int Line { get; init; }
+        public required int Line
+        {
+            get; init;
+        }
 
         [JsonPropertyName("side")]
-        public required string Side { get; init; }
+        public required string Side
+        {
+            get; init;
+        }
 
         [JsonPropertyName("body")]
-        public required string Body { get; init; }
+        public required string Body
+        {
+            get; init;
+        }
     }
 }

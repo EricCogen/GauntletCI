@@ -34,7 +34,10 @@ public class GCI0055_MethodSignatureChange : RuleBase
         foreach (var file in diff.Files)
         {
             // Skip test files
-            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath))
+            {
+                continue;
+            }
 
             CheckMethodSignatureChanges(file, findings);
         }
@@ -62,10 +65,16 @@ public class GCI0055_MethodSignatureChange : RuleBase
         foreach (var line in file.AddedLines)
         {
             var match = MethodDeclarationRegex.Match(line.Content);
-            if (!match.Success) continue;
+            if (!match.Success)
+            {
+                continue;
+            }
 
             var methodName = match.Groups[3].Value;
-            if (!oldMethods.TryGetValue(methodName, out var oldSignature)) continue;
+            if (!oldMethods.TryGetValue(methodName, out var oldSignature))
+            {
+                continue;
+            }
 
             var returnType = match.Groups[2].Value;
             var paramString = match.Groups[4].Value.Trim();
@@ -127,7 +136,10 @@ public class GCI0055_MethodSignatureChange : RuleBase
 
     private List<Parameter> ParseParameters(string paramString)
     {
-        if (string.IsNullOrWhiteSpace(paramString)) return [];
+        if (string.IsNullOrWhiteSpace(paramString))
+        {
+            return [];
+        }
 
         var result = new List<Parameter>();
         var parts = paramString.Split(',');
@@ -135,7 +147,10 @@ public class GCI0055_MethodSignatureChange : RuleBase
         foreach (var part in parts)
         {
             var trimmed = part.Trim();
-            if (string.IsNullOrEmpty(trimmed)) continue;
+            if (string.IsNullOrEmpty(trimmed))
+            {
+                continue;
+            }
 
             var hasDefault = trimmed.Contains("=", StringComparison.Ordinal);
             var nameMatch = Regex.Match(trimmed, @"(\w+)(?:\s*=)?");
@@ -162,7 +177,10 @@ public class GCI0055_MethodSignatureChange : RuleBase
     private record Parameter
     {
         public string Name { get; set; } = "";
-        public bool HasDefault { get; set; }
+        public bool HasDefault
+        {
+            get; set;
+        }
     }
 }
 

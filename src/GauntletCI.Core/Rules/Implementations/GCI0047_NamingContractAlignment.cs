@@ -69,8 +69,16 @@ public class GCI0047_NamingContractAlignment : RuleBase
         foreach (var file in context.Diff.Files)
         {
             var filePath = file.NewPath ?? file.OldPath ?? "";
-            if (WellKnownPatterns.IsGeneratedFile(filePath)) continue;
-            if (WellKnownPatterns.IsTestFile(filePath)) continue;
+            if (WellKnownPatterns.IsGeneratedFile(filePath))
+            {
+                continue;
+            }
+
+            if (WellKnownPatterns.IsTestFile(filePath))
+            {
+                continue;
+            }
+
             CheckCrudVerbContradict(file, findings);
             CheckBooleanNamingInversion(file, findings);
         }
@@ -85,14 +93,20 @@ public class GCI0047_NamingContractAlignment : RuleBase
             .Where(l => !WellKnownPatterns.HasMockPattern(l.Content))
             .ToList();
         var removedMethods = ExtractVerbSuffixPairs(removedLines);
-        if (removedMethods.Count == 0) return;
+        if (removedMethods.Count == 0)
+        {
+            return;
+        }
 
         // Extract (verb, suffix) from added method signatures
         var addedMethods = ExtractVerbSuffixPairs(file.AddedLines);
-        if (addedMethods.Count == 0) return;
+        if (addedMethods.Count == 0)
+        {
+            return;
+        }
 
         // Build lookup sets for the both-sides guard (method wasn't renamed if it still exists post-change).
-        var addedVerbSuffixes   = new HashSet<(string, string)>(addedMethods.Select(m => (m.Verb, m.Suffix)));
+        var addedVerbSuffixes = new HashSet<(string, string)>(addedMethods.Select(m => (m.Verb, m.Suffix)));
         var removedVerbSuffixes = new HashSet<(string, string)>(removedMethods.Select(m => (m.Verb, m.Suffix)));
 
         // Accumulate counts per unique (removedVerb, addedVerb) pair to avoid N×M explosion.
@@ -101,20 +115,37 @@ public class GCI0047_NamingContractAlignment : RuleBase
         foreach (var (removedVerb, suffix) in removedMethods)
         {
             // Guard: if this verb+suffix also appears in added lines the method wasn't renamed away.
-            if (addedVerbSuffixes.Contains((removedVerb, suffix))) continue;
+            if (addedVerbSuffixes.Contains((removedVerb, suffix)))
+            {
+                continue;
+            }
 
             foreach (var (addedVerb, addedSuffix) in addedMethods)
             {
-                if (!string.Equals(suffix, addedSuffix, StringComparison.Ordinal)) continue;
+                if (!string.Equals(suffix, addedSuffix, StringComparison.Ordinal))
+                {
+                    continue;
+                }
                 // Guard: if the added verb+suffix also appears in removed lines it wasn't newly introduced.
-                if (removedVerbSuffixes.Contains((addedVerb, addedSuffix))) continue;
-                if (!ContradictoryPairs.Contains((removedVerb, addedVerb))) continue;
+                if (removedVerbSuffixes.Contains((addedVerb, addedSuffix)))
+                {
+                    continue;
+                }
+
+                if (!ContradictoryPairs.Contains((removedVerb, addedVerb)))
+                {
+                    continue;
+                }
 
                 var key = (removedVerb, addedVerb);
                 if (!pairCounts.TryGetValue(key, out var existing))
+                {
                     pairCounts[key] = (1, suffix);
+                }
                 else
+                {
                     pairCounts[key] = (existing.Count + 1, existing.FirstSuffix);
+                }
             }
         }
 
@@ -135,24 +166,39 @@ public class GCI0047_NamingContractAlignment : RuleBase
     private void CheckBooleanNamingInversion(DiffFile file, List<Finding> findings)
     {
         var removedContent = string.Join("\n", file.RemovedLines.Select(l => l.Content));
-        var addedContent   = string.Join("\n", file.AddedLines.Select(l => l.Content));
+        var addedContent = string.Join("\n", file.AddedLines.Select(l => l.Content));
 
-        if (string.IsNullOrEmpty(removedContent) || string.IsNullOrEmpty(addedContent)) return;
+        if (string.IsNullOrEmpty(removedContent) || string.IsNullOrEmpty(addedContent))
+        {
+            return;
+        }
 
         foreach (var (removedPattern, addedPattern) in BooleanInversionPairs)
         {
             var removedMatch = removedPattern.Match(removedContent);
-            if (!removedMatch.Success) continue;
+            if (!removedMatch.Success)
+            {
+                continue;
+            }
 
             // Guard: if the "removed" symbol also appears in added lines, it was not renamed away.
             // Example: adding `readonly` to both IsValid and IsInvalid leaves both on each side.
-            if (removedPattern.IsMatch(addedContent)) continue;
+            if (removedPattern.IsMatch(addedContent))
+            {
+                continue;
+            }
 
             var addedMatch = addedPattern.Match(addedContent);
-            if (!addedMatch.Success) continue;
+            if (!addedMatch.Success)
+            {
+                continue;
+            }
 
             // Guard: if the "added" symbol also appears in removed lines, it was not newly introduced.
-            if (addedPattern.IsMatch(removedContent)) continue;
+            if (addedPattern.IsMatch(removedContent))
+            {
+                continue;
+            }
 
             findings.Add(CreateFinding(
                 file,
@@ -172,11 +218,14 @@ public class GCI0047_NamingContractAlignment : RuleBase
         foreach (var line in lines)
         {
             var match = MethodSignatureRegex.Match(line.Content);
-            if (!match.Success) continue;
+            if (!match.Success)
+            {
+                continue;
+            }
 
             var fullName = match.Groups[1].Value;
-            var suffix   = match.Groups[2].Value;
-            var verb     = fullName[..^suffix.Length];
+            var suffix = match.Groups[2].Value;
+            var verb = fullName[..^suffix.Length];
             result.Add((verb, suffix));
         }
         return result;

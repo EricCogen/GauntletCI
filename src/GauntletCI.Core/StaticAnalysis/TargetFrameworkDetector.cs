@@ -21,23 +21,33 @@ public static class TargetFrameworkDetector
     public static string? Detect(string repoPath)
     {
         if (string.IsNullOrEmpty(repoPath) || !Directory.Exists(repoPath))
+        {
             return null;
+        }
 
         try
         {
             foreach (var csproj in Directory.EnumerateFiles(repoPath, "*.csproj", SearchOption.AllDirectories))
             {
                 string xml;
-                try { xml = File.ReadAllText(csproj); }
+                try
+                {
+                    xml = File.ReadAllText(csproj);
+                }
                 catch (IOException) { continue; }
 
                 var match = TfmPattern.Match(xml);
-                if (!match.Success) continue;
+                if (!match.Success)
+                {
+                    continue;
+                }
 
                 // <TargetFrameworks> may contain semicolon-separated values; take the first
                 var primary = match.Groups[1].Value.Trim().Split(';')[0].Trim();
                 if (!string.IsNullOrEmpty(primary))
+                {
                     return primary;
+                }
             }
         }
         catch (Exception)
@@ -55,7 +65,10 @@ public static class TargetFrameworkDetector
     /// </summary>
     public static bool IsNet8OrLater(string? tfm)
     {
-        if (string.IsNullOrEmpty(tfm)) return false;
+        if (string.IsNullOrEmpty(tfm))
+        {
+            return false;
+        }
 
         // net8.0, net9.0, net10.0, … : match netN.M where N >= 8
         var m = Regex.Match(tfm, @"^net(\d+)\.\d+$", RegexOptions.IgnoreCase);

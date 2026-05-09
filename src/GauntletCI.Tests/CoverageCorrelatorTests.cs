@@ -8,22 +8,25 @@ namespace GauntletCI.Tests;
 public class CoverageCorrelatorTests
 {
     private static EvaluationResult MakeResult(params Finding[] findings) =>
-        new() { Findings = [.. findings] };
+        new()
+        {
+            Findings = [.. findings]
+        };
 
     private static Finding MakeFinding(
         RuleSeverity severity = RuleSeverity.Block,
         string? filePath = "src/MyService.cs") => new()
-    {
-        RuleId          = "GCI0001",
-        RuleName        = "Test Rule",
-        Summary         = "test finding",
-        Evidence        = "evidence",
-        WhyItMatters    = "why",
-        SuggestedAction = "action",
-        Confidence      = Confidence.High,
-        Severity        = severity,
-        FilePath        = filePath,
-    };
+        {
+            RuleId = "GCI0001",
+            RuleName = "Test Rule",
+            Summary = "test finding",
+            Evidence = "evidence",
+            WhyItMatters = "why",
+            SuggestedAction = "action",
+            Confidence = Confidence.High,
+            Severity = severity,
+            FilePath = filePath,
+        };
 
     [Fact]
     public void ParseCoverageResponse_ValidJsonWithFiles_ExtractsFilesCoverage()
@@ -41,7 +44,7 @@ public class CoverageCorrelatorTests
 
         Assert.NotNull(result);
         Assert.Equal(82.5, result!["src/MyService.cs"]);
-        Assert.Equal(0.0,  result!["src/Other.cs"]);
+        Assert.Equal(0.0, result!["src/Other.cs"]);
     }
 
     [Fact]

@@ -11,7 +11,7 @@ namespace GauntletCI.Corpus.Labeling.Strategies;
 public sealed class SecurityPatternStrategy : IInferenceStrategy
 {
     private static readonly Regex SqlStringLiteralStart = new(@"\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b|\bFROM\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    
+
     private static readonly string[] CredentialKeywords =
     [
         "password", "passwd", "secret", "apikey", "api_key", "token",
@@ -30,7 +30,9 @@ public sealed class SecurityPatternStrategy : IInferenceStrategy
 
         // GCI0012 only applies to production code (not test files)
         if (context.ProductionAddedLines.Count == 0)
+        {
             return labels;
+        }
 
         bool hasCredential = context.ProductionAddedLines.Any(IsCredentialAssignment);
         bool hasWeakHash = context.ProductionAddedLines.Any(IsWeakHashUsage);
@@ -62,28 +64,36 @@ public sealed class SecurityPatternStrategy : IInferenceStrategy
     private static bool IsCredentialAssignment(string line)
     {
         if (line.TrimStart().StartsWith("//"))
+        {
             return false;
+        }
 
         var lower = line.ToLowerInvariant();
-        
+
         // Must contain a credential keyword
         if (!CredentialKeywords.Any(keyword => lower.Contains(keyword)))
+        {
             return false;
+        }
 
         // Must have an assignment operator
         if (!line.Contains("="))
+        {
             return false;
+        }
 
         // Must assign to a string literal (not a variable or method call)
         var eqIdx = line.IndexOf('=');
         if (eqIdx < 0 || eqIdx == line.Length - 1)
+        {
             return false;
+        }
 
         var afterEq = line[(eqIdx + 1)..].TrimStart();
-        
+
         // Check for string literal assignment
-        return afterEq.StartsWith("\"") || 
-               afterEq.StartsWith("@\"") || 
+        return afterEq.StartsWith("\"") ||
+               afterEq.StartsWith("@\"") ||
                afterEq.StartsWith("$\"");
     }
 
@@ -93,7 +103,9 @@ public sealed class SecurityPatternStrategy : IInferenceStrategy
     private static bool IsWeakHashUsage(string line)
     {
         if (line.TrimStart().StartsWith("//"))
+        {
             return false;
+        }
 
         return line.Contains("MD5.Create()", StringComparison.Ordinal) ||
                line.Contains("SHA1.Create()", StringComparison.Ordinal) ||
@@ -109,11 +121,15 @@ public sealed class SecurityPatternStrategy : IInferenceStrategy
     private static bool IsSqlInjectionVulnerability(string line)
     {
         if (line.TrimStart().StartsWith("//"))
+        {
             return false;
+        }
 
         // Must be a SQL string literal
         if (!SqlStringLiteralStart.IsMatch(line))
+        {
             return false;
+        }
 
         // Must use unsafe concatenation or interpolation
         return line.Contains(" + ", StringComparison.Ordinal) ||

@@ -53,23 +53,38 @@ public sealed class PRDescriptionEnricher : IDisposable
             ct.ThrowIfCancellationRequested();
 
             var parts = fixture.Repo.Split('/', 2);
-            if (parts.Length < 2) continue;
+            if (parts.Length < 2)
+            {
+                continue;
+            }
 
             var data = await FetchPrDataAsync(parts[0], parts[1], fixture.PullRequestNumber, ct).ConfigureAwait(false);
-            if (data is null) continue;
+            if (data is null)
+            {
+                continue;
+            }
 
             await WriteDataAsync(db, fixture.FixtureId, fixture.Repo, data, ct).ConfigureAwait(false);
             processed++;
 
-            if (data.IsEmptyBody)    emptyBodyCount++;
-            if (data.HasLinkedIssue) linkedIssueCount++;
+            if (data.IsEmptyBody)
+            {
+                emptyBodyCount++;
+            }
+
+            if (data.HasLinkedIssue)
+            {
+                linkedIssueCount++;
+            }
 
             progress?.Invoke(
                 $"[pr-description] {fixture.FixtureId}: " +
                 $"body={data.BodyLength}ch, linked={data.HasLinkedIssue}, wip={data.HasWipKeywords}");
 
             if (delayMs > 0)
+            {
                 await Task.Delay(delayMs, ct).ConfigureAwait(false);
+            }
         }
 
         return new PRDescriptionResult(processed, emptyBodyCount, linkedIssueCount, AuthMissing: false);
@@ -82,7 +97,10 @@ public sealed class PRDescriptionEnricher : IDisposable
         try
         {
             using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
-            if (!resp.IsSuccessStatusCode) return null;
+            if (!resp.IsSuccessStatusCode)
+            {
+                return null;
+            }
 
             await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
@@ -93,20 +111,24 @@ public sealed class PRDescriptionEnricher : IDisposable
 
             string? body = null;
             if (root.TryGetProperty("body", out var bodyEl) && bodyEl.ValueKind != JsonValueKind.Null)
+            {
                 body = bodyEl.GetString();
+            }
 
             int labelCount = 0;
             if (root.TryGetProperty("labels", out var labelsEl) && labelsEl.ValueKind == JsonValueKind.Array)
+            {
                 labelCount = labelsEl.GetArrayLength();
+            }
 
             return new PrDescriptionData
             {
-                TitleLength    = title.Length,
-                BodyLength     = body?.Length ?? 0,
-                IsEmptyBody    = IsBodyEmpty(body),
+                TitleLength = title.Length,
+                BodyLength = body?.Length ?? 0,
+                IsEmptyBody = IsBodyEmpty(body),
                 HasLinkedIssue = HasLinkedIssue(body),
                 HasWipKeywords = HasWipKeywords(title, body),
-                LabelCount     = labelCount,
+                LabelCount = labelCount,
             };
         }
         catch (OperationCanceledException) { throw; }
@@ -125,14 +147,14 @@ public sealed class PRDescriptionEnricher : IDisposable
                 ($fixtureId, $repo, $titleLength, $bodyLength, $isEmptyBody,
                  $hasLinkedIssue, $hasWipKeywords, $labelCount)
             """;
-        cmd.Parameters.AddWithValue("$fixtureId",      fixtureId);
-        cmd.Parameters.AddWithValue("$repo",           repo);
-        cmd.Parameters.AddWithValue("$titleLength",    data.TitleLength);
-        cmd.Parameters.AddWithValue("$bodyLength",     data.BodyLength);
-        cmd.Parameters.AddWithValue("$isEmptyBody",    data.IsEmptyBody    ? 1 : 0);
+        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$titleLength", data.TitleLength);
+        cmd.Parameters.AddWithValue("$bodyLength", data.BodyLength);
+        cmd.Parameters.AddWithValue("$isEmptyBody", data.IsEmptyBody ? 1 : 0);
         cmd.Parameters.AddWithValue("$hasLinkedIssue", data.HasLinkedIssue ? 1 : 0);
         cmd.Parameters.AddWithValue("$hasWipKeywords", data.HasWipKeywords ? 1 : 0);
-        cmd.Parameters.AddWithValue("$labelCount",     data.LabelCount);
+        cmd.Parameters.AddWithValue("$labelCount", data.LabelCount);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
@@ -148,25 +170,48 @@ public sealed class PRDescriptionEnricher : IDisposable
     {
         var combined = (title + " " + (body ?? "")).ToLowerInvariant();
         foreach (var kw in WipKeywords)
+        {
             if (combined.Contains(kw, StringComparison.Ordinal))
+            {
                 return true;
+            }
+        }
+
         return false;
     }
 
     private sealed record PrDescriptionData
     {
-        public int  TitleLength    { get; init; }
-        public int  BodyLength     { get; init; }
-        public bool IsEmptyBody    { get; init; }
-        public bool HasLinkedIssue { get; init; }
-        public bool HasWipKeywords { get; init; }
-        public int  LabelCount     { get; init; }
+        public int TitleLength
+        {
+            get; init;
+        }
+        public int BodyLength
+        {
+            get; init;
+        }
+        public bool IsEmptyBody
+        {
+            get; init;
+        }
+        public bool HasLinkedIssue
+        {
+            get; init;
+        }
+        public bool HasWipKeywords
+        {
+            get; init;
+        }
+        public int LabelCount
+        {
+            get; init;
+        }
     }
 }
 
 /// <summary>Summary statistics from a <see cref="PRDescriptionEnricher.EnrichAsync"/> run.</summary>
 public record PRDescriptionResult(
-    int  FixturesProcessed,
-    int  EmptyBodyCount,
-    int  LinkedIssueCount,
+    int FixturesProcessed,
+    int EmptyBodyCount,
+    int LinkedIssueCount,
     bool AuthMissing);

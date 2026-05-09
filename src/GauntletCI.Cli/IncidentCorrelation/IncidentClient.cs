@@ -27,11 +27,15 @@ public static class IncidentClient
     internal static DateTimeOffset ParseSince(string since, DateTimeOffset now)
     {
         if (string.IsNullOrWhiteSpace(since) || since.Length < 2)
+        {
             return now.AddHours(-24);
+        }
 
         var unit = char.ToLowerInvariant(since[^1]);
         if (!int.TryParse(since[..^1], out var value) || value <= 0)
+        {
             return now.AddHours(-24);
+        }
 
         return unit switch
         {
@@ -39,7 +43,7 @@ public static class IncidentClient
             'd' => now.AddDays(-value),
             'm' => now.AddMinutes(-value),
             'w' => now.AddDays(-value * 7),
-            _   => now.AddHours(-24),
+            _ => now.AddHours(-24),
         };
     }
 
@@ -77,11 +81,14 @@ public static class IncidentClient
             {
                 foreach (var item in arr.EnumerateArray())
                 {
-                    var id    = item.TryGetProperty("id",    out var p) ? p.GetString() ?? "" : "";
+                    var id = item.TryGetProperty("id", out var p) ? p.GetString() ?? "" : "";
                     var title = item.TryGetProperty("title", out var t) ? t.GetString() ?? "" : "";
                     string? desc = null;
                     if (item.TryGetProperty("description", out var d))
+                    {
                         desc = d.GetString();
+                    }
+
                     incidents.Add(new IncidentSummary(id, title, desc, "PagerDuty"));
                 }
             }
@@ -105,7 +112,13 @@ public static class IncidentClient
         try
         {
             var url = $"https://api.pagerduty.com/incidents/{Uri.EscapeDataString(incidentId)}/notes";
-            var body = JsonSerializer.Serialize(new { note = new { content } });
+            var body = JsonSerializer.Serialize(new
+            {
+                note = new
+                {
+                    content
+                }
+            });
 
             using var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Headers.Authorization = new AuthenticationHeaderValue("Token", $"token={token}");
@@ -164,11 +177,14 @@ public static class IncidentClient
             {
                 foreach (var item in arr.EnumerateArray())
                 {
-                    var id      = item.TryGetProperty("id",      out var p) ? p.GetString() ?? "" : "";
+                    var id = item.TryGetProperty("id", out var p) ? p.GetString() ?? "" : "";
                     var message = item.TryGetProperty("message", out var m) ? m.GetString() ?? "" : "";
                     string? desc = null;
                     if (item.TryGetProperty("description", out var d))
+                    {
                         desc = d.GetString();
+                    }
+
                     alerts.Add(new IncidentSummary(id, message, desc, "Opsgenie"));
                 }
             }
@@ -198,14 +214,20 @@ public static class IncidentClient
         foreach (var finding in findings)
         {
             if (string.IsNullOrWhiteSpace(finding.FilePath))
+            {
                 continue;
+            }
 
             var fileName = Path.GetFileName(finding.FilePath);
             if (string.IsNullOrWhiteSpace(fileName))
+            {
                 continue;
+            }
 
             if (result.ContainsKey(finding.FilePath))
+            {
                 continue;
+            }
 
             var matches = incidents.Where(inc =>
                 Contains(inc.Title, fileName) ||
@@ -243,8 +265,8 @@ public static class IncidentClient
             .GroupBy(f => f.FilePath!, StringComparer.OrdinalIgnoreCase)
             .Select(g =>
             {
-                var filePath   = g.Key;
-                var maxSev     = g.Max(f => f.Severity);
+                var filePath = g.Key;
+                var maxSev = g.Max(f => f.Severity);
                 var correlated = correlations.TryGetValue(filePath, out var incs) ? incs : [];
                 return new
                 {

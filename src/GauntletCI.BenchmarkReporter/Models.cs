@@ -12,23 +12,68 @@ internal class RuleStats
 {
     public string RuleId { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
-    public int Tp { get; set; }
-    public int Fp { get; set; }
-    public int Fn { get; set; }
-    public int Tn { get; set; }
-    public double Precision { get; set; }
-    public double Recall { get; set; }
-    public double F1 { get; set; }
+    public int Tp
+    {
+        get; set;
+    }
+    public int Fp
+    {
+        get; set;
+    }
+    public int Fn
+    {
+        get; set;
+    }
+    public int Tn
+    {
+        get; set;
+    }
+    public double Precision
+    {
+        get; set;
+    }
+    public double Recall
+    {
+        get; set;
+    }
+    public double F1
+    {
+        get; set;
+    }
 }
 
 internal class AggregateStats
 {
-    public int TotalFixtures { get; set; }
-    public int Tp { get; set; }
-    public int Fp { get; set; }
-    public int Fn { get; set; }
-    public int Tn { get; set; }
-    public double Precision { get; set; }
-    public double Recall { get; set; }
-    public double F1 { get; set; }
+    public int TotalFixtures
+    {
+        get; set;
+    }
+    public int Tp
+    {
+        get; set;
+    }
+    public int Fp
+    {
+        get; set;
+    }
+    public int Fn
+    {
+        get; set;
+    }
+    public int Tn
+    {
+        get; set;
+    }
+    public double Precision
+    {
+        get; set;
+    }
+    public double Recall
+    {
+        get; set;
+    }
+    public double F1
+    {
+        get; set;
+    }
 }

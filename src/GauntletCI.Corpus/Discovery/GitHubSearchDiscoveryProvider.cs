@@ -14,15 +14,29 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
     private readonly HttpClient _http;
     private readonly Action<string?, int?, string>? _errorCallback;
 
-    public int? LastSearchRemaining { get; private set; }
-    public int? LastSearchLimit { get; private set; }
-    public DateTimeOffset? LastSearchResetUtc { get; private set; }
-    public int ThrottleCount { get; private set; }
+    public int? LastSearchRemaining
+    {
+        get; private set;
+    }
+    public int? LastSearchLimit
+    {
+        get; private set;
+    }
+    public DateTimeOffset? LastSearchResetUtc
+    {
+        get; private set;
+    }
+    public int ThrottleCount
+    {
+        get; private set;
+    }
 
     public GitHubSearchDiscoveryProvider(string githubToken, Action<string?, int?, string>? errorCallback = null)
     {
         if (string.IsNullOrWhiteSpace(githubToken))
+        {
             throw new InvalidOperationException("GITHUB_TOKEN is required for gh-search provider");
+        }
 
         _http = HttpClientFactory.GetGitHubClient();
         _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", githubToken);
@@ -41,20 +55,24 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
     public async Task<IReadOnlyList<PullRequestCandidate>> SearchCandidatesAsync(
         DiscoveryQuery query, CancellationToken cancellationToken = default)
     {
-        var seen    = new HashSet<(string Owner, string Repo, int Number)>();
+        var seen = new HashSet<(string Owner, string Repo, int Number)>();
         var results = new List<PullRequestCandidate>();
 
         if (query.RepoAllowList.Count == 0)
+        {
             throw new InvalidOperationException(
                 "gh-search requires a repo allowlist. " +
                 "Pass --repo-allowlist owner/repo (repeatable) or use -RepoAllowlist in run-corpus.ps1. " +
                 "Global keyword search is disabled to prevent low-quality corpus ingestion.");
+        }
 
         // Allowlist mode: one targeted repo: query per known repo
         foreach (var repoSpec in query.RepoAllowList)
         {
             if (results.Count >= query.MaxCandidates)
+            {
                 break;
+            }
 
             // Pre-flight: verify repo is accessible, not archived, not renamed
             var skip = await PreflightRepoAsync(repoSpec, query.MinStars, cancellationToken).ConfigureAwait(false);
@@ -65,7 +83,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
                 continue;
             }
 
-            var q   = BuildRepoQuery(query, repoSpec);
+            var q = BuildRepoQuery(query, repoSpec);
             var url = $"https://api.github.com/search/issues?q={Uri.EscapeDataString(q)}&sort=updated&order=desc&per_page=100&page=1";
 
             var repoLimit = query.PerRepoLimit > 0
@@ -86,7 +104,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
                     422 => "QueryError",
                     404 => "NotFound",
                     403 => "IpBlockOrAbuse",
-                    _   => "HttpError"
+                    _ => "HttpError"
                 };
                 Console.Error.WriteLine($"[gh-search] {kind}: Skipping {repoSpec} ({code})");
                 _errorCallback?.Invoke(repoSpec, code, $"[gh-search] {kind}: Skipping {repoSpec} ({code})");
@@ -125,11 +143,15 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
 
             if (response.Headers.TryGetValues("X-RateLimit-Limit", out var limitVals) &&
                 int.TryParse(limitVals.FirstOrDefault(), out var limit))
+            {
                 LastSearchLimit = limit;
+            }
 
             if (response.Headers.TryGetValues("X-RateLimit-Reset", out var resetVals) &&
                 long.TryParse(resetVals.FirstOrDefault(), out var resetEpoch))
+            {
                 LastSearchResetUtc = DateTimeOffset.FromUnixTimeSeconds(resetEpoch);
+            }
 
             if (remaining <= 0)
             {
@@ -153,28 +175,38 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
 
         if (!doc.RootElement.TryGetProperty("items", out var items))
+        {
             return;
+        }
 
         int addedFromThisCall = 0;
 
         foreach (var item in items.EnumerateArray())
         {
             if (addedFromThisCall >= maxFromThisCall)
+            {
                 break;
+            }
 
             var candidate = MapToCandidate(item, "");
             if (candidate is null)
+            {
                 continue;
+            }
 
             var key = (candidate.RepoOwner, candidate.RepoName, candidate.PullRequestNumber);
             if (!seen.Add(key))
+            {
                 continue;
+            }
 
             var fullRepo = $"{candidate.RepoOwner}/{candidate.RepoName}";
 
             if (query.RepoBlockList.Count > 0 &&
                 query.RepoBlockList.Any(r => string.Equals(r, fullRepo, StringComparison.OrdinalIgnoreCase)))
+            {
                 continue;
+            }
 
             results.Add(candidate);
             addedFromThisCall++;
@@ -196,14 +228,20 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
             using var response = await _http.GetAsync(url, cancellationToken).ConfigureAwait(false);
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
                 return "repo not found (deleted, private, or never existed)";
+            }
 
             if (response.StatusCode == System.Net.HttpStatusCode.MovedPermanently ||
                 (int)response.StatusCode == 301)
+            {
                 return "repo has moved permanently (update allowlist with new owner/name)";
+            }
 
             if (!response.IsSuccessStatusCode)
+            {
                 return $"HTTP {(int)response.StatusCode} from repo metadata endpoint";
+            }
 
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -211,14 +249,18 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
 
             // Archived check
             if (root.TryGetProperty("archived", out var archivedEl) && archivedEl.GetBoolean())
+            {
                 return "repo is archived";
+            }
 
             // Renamed/transferred check: canonical name differs from the requested spec
             if (root.TryGetProperty("full_name", out var fullNameEl))
             {
                 var canonical = fullNameEl.GetString() ?? repoSpec;
                 if (!string.Equals(canonical, repoSpec, StringComparison.OrdinalIgnoreCase))
+                {
                     return $"repo was renamed/transferred: canonical name is '{canonical}' (update allowlist)";
+                }
             }
 
             // Star threshold check
@@ -248,18 +290,24 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         int code = (int)response.StatusCode;
 
         if (response.Headers.Contains("Retry-After"))
+        {
             return $"SecondaryRateLimit: {code} - Retry-After: {response.Headers.GetValues("Retry-After").FirstOrDefault()}";
+        }
 
         if (response.Headers.TryGetValues("X-RateLimit-Remaining", out var rem) &&
             int.TryParse(rem.FirstOrDefault(), out var remaining) && remaining == 0)
+        {
             return $"RateLimit: {code} - quota exhausted";
+        }
 
         string? ghMessage = null;
         try
         {
             using var doc = JsonDocument.Parse(body);
             if (doc.RootElement.TryGetProperty("message", out var msgEl))
+            {
                 ghMessage = msgEl.GetString();
+            }
         }
         catch { /* ignore parse errors */ }
 
@@ -270,7 +318,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
             404 => $"NotFound: 404 - {ghMessage ?? "resource not found"}",
             422 => $"QueryError: 422 - {ghMessage ?? "unprocessable query"}",
             429 => $"RateLimit: 429 - {ghMessage ?? "too many requests"}",
-            _   => $"HttpError: {code} - {ghMessage ?? body[..Math.Min(100, body.Length)]}",
+            _ => $"HttpError: {code} - {ghMessage ?? body[..Math.Min(100, body.Length)]}",
         };
     }
 
@@ -279,13 +327,19 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         var parts = new List<string> { "is:pr", "is:merged", $"repo:{repoSpec}" };
 
         if (query.MinReviewComments > 0)
+        {
             parts.Add($"comments:>{query.MinReviewComments}");
+        }
 
         if (query.StartDateUtc.HasValue)
+        {
             parts.Add($"merged:>={query.StartDateUtc.Value:yyyy-MM-dd}");
+        }
 
         if (query.EndDateUtc.HasValue)
+        {
             parts.Add($"merged:<={query.EndDateUtc.Value:yyyy-MM-dd}");
+        }
 
         return string.Join(" ", parts);
     }
@@ -295,19 +349,29 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         var parts = new List<string> { "is:pr", "is:merged" };
 
         if (query.MinReviewComments > 0)
+        {
             parts.Add($"comments:>{query.MinReviewComments}");
+        }
 
         if (query.MinStars > 0)
+        {
             parts.Add($"stars:>{query.MinStars}");
+        }
 
         if (!string.IsNullOrEmpty(lang))
+        {
             parts.Add($"language:{lang}");
+        }
 
         if (query.StartDateUtc.HasValue)
+        {
             parts.Add($"merged:>={query.StartDateUtc.Value:yyyy-MM-dd}");
+        }
 
         if (query.EndDateUtc.HasValue)
+        {
             parts.Add($"merged:<={query.EndDateUtc.Value:yyyy-MM-dd}");
+        }
 
         return string.Join(" ", parts);
     }
@@ -315,41 +379,47 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
     private static PullRequestCandidate? MapToCandidate(JsonElement item, string lang)
     {
         if (!item.TryGetProperty("repository_url", out var repoUrlEl))
+        {
             return null;
+        }
 
-        var repoUrl  = repoUrlEl.GetString() ?? "";
+        var repoUrl = repoUrlEl.GetString() ?? "";
         var repoPath = repoUrl.Replace("https://api.github.com/repos/", "", StringComparison.Ordinal);
         var repoParts = repoPath.Split('/', 2);
         if (repoParts.Length < 2)
+        {
             return null;
+        }
 
         var owner = repoParts[0];
-        var repo  = repoParts[1];
+        var repo = repoParts[1];
 
         if (!item.TryGetProperty("number", out var numEl))
+        {
             return null;
+        }
 
-        var prNumber  = numEl.GetInt32();
-        var htmlUrl   = item.TryGetProperty("html_url",   out var urlEl)      ? urlEl.GetString()      ?? "" : "";
-        var createdAt = item.TryGetProperty("created_at", out var createdEl)  ? createdEl.GetDateTime()     : DateTime.UtcNow;
-        var updatedAt = item.TryGetProperty("updated_at", out var updatedEl)  ? updatedEl.GetDateTime()     : DateTime.UtcNow;
-        var comments  = item.TryGetProperty("comments",   out var commentsEl) ? commentsEl.GetInt32()       : 0;
-        var isDraft   = item.TryGetProperty("draft",      out var draftEl)    && draftEl.GetBoolean();
+        var prNumber = numEl.GetInt32();
+        var htmlUrl = item.TryGetProperty("html_url", out var urlEl) ? urlEl.GetString() ?? "" : "";
+        var createdAt = item.TryGetProperty("created_at", out var createdEl) ? createdEl.GetDateTime() : DateTime.UtcNow;
+        var updatedAt = item.TryGetProperty("updated_at", out var updatedEl) ? updatedEl.GetDateTime() : DateTime.UtcNow;
+        var comments = item.TryGetProperty("comments", out var commentsEl) ? commentsEl.GetInt32() : 0;
+        var isDraft = item.TryGetProperty("draft", out var draftEl) && draftEl.GetBoolean();
 
         return new PullRequestCandidate
         {
-            Source             = "gh-search",
-            RepoOwner          = owner,
-            RepoName           = repo,
-            PullRequestNumber  = prNumber,
-            Url                = htmlUrl,
-            Language           = lang,
-            CreatedAtUtc       = createdAt,
-            UpdatedAtUtc       = updatedAt,
+            Source = "gh-search",
+            RepoOwner = owner,
+            RepoName = repo,
+            PullRequestNumber = prNumber,
+            Url = htmlUrl,
+            Language = lang,
+            CreatedAtUtc = createdAt,
+            UpdatedAtUtc = updatedAt,
             ReviewCommentCount = comments,
-            IsDraft            = isDraft,
-            MergeState         = MergeState.Merged,
-            CandidateReason    = "gh-search",
+            IsDraft = isDraft,
+            MergeState = MergeState.Merged,
+            CandidateReason = "gh-search",
         };
     }
 }

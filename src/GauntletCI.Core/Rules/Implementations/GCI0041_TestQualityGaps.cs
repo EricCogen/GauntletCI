@@ -66,7 +66,10 @@ public class GCI0041_TestQualityGaps : RuleBase
         var path = file.NewPath;
         // Skip test-data directories used as test subjects by the framework itself (not actual tests).
         if (path.Contains("testdata", StringComparison.OrdinalIgnoreCase))
+        {
             return false;
+        }
+
         return WellKnownPatterns.IsTestFile(path);
     }
 
@@ -75,15 +78,20 @@ public class GCI0041_TestQualityGaps : RuleBase
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            
+
             // Guard: skip if this is a decorator/attribute for non-test purposes
             if (content.Contains("[SkipLocalsInit]", StringComparison.OrdinalIgnoreCase) ||
                 content.Contains("[SkipOn", StringComparison.OrdinalIgnoreCase))
+            {
                 continue;
-            
+            }
+
             foreach (var pattern in SilencePatterns)
             {
-                if (!content.Contains(pattern, StringComparison.OrdinalIgnoreCase)) continue;
+                if (!content.Contains(pattern, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
 
                 findings.Add(CreateFinding(
                     file,
@@ -105,28 +113,45 @@ public class GCI0041_TestQualityGaps : RuleBase
         for (int i = 0; i < allLines.Count; i++)
         {
             var line = allLines[i];
-            if (line.Kind != DiffLineKind.Added) continue;
+            if (line.Kind != DiffLineKind.Added)
+            {
+                continue;
+            }
 
             var content = line.Content.Trim();
             if (!TestAttributeMarkers.Any(a => content.Equals(a, StringComparison.OrdinalIgnoreCase)))
+            {
                 continue;
+            }
 
             // Find the method name on the next non-blank line
             string? methodName = null;
             for (int j = i + 1; j < Math.Min(allLines.Count, i + 5); j++)
             {
                 var nextContent = allLines[j].Content.Trim();
-                if (string.IsNullOrWhiteSpace(nextContent)) continue;
+                if (string.IsNullOrWhiteSpace(nextContent))
+                {
+                    continue;
+                }
 
                 var match = MethodNameRegex.Match(nextContent);
                 if (match.Success)
+                {
                     methodName = match.Groups[1].Value;
+                }
+
                 break;
             }
 
-            if (methodName is null) continue;
+            if (methodName is null)
+            {
+                continue;
+            }
 
-            if (!BadMethodNames.Contains(methodName) && !BadNamePattern.IsMatch(methodName)) continue;
+            if (!BadMethodNames.Contains(methodName) && !BadNamePattern.IsMatch(methodName))
+            {
+                continue;
+            }
 
             findings.Add(CreateFinding(
                 file,
@@ -143,14 +168,19 @@ public class GCI0041_TestQualityGaps : RuleBase
     {
         // Skip documentation/sample files that intentionally use test attributes without assertions.
         if (WellKnownPatterns.GuardPatterns.IsDocumentationFile(file.NewPath))
+        {
             return;
+        }
 
         var addedLines = file.AddedLines.ToList();
 
         bool hasTestAttribute = addedLines.Any(l =>
             TestAttributeMarkers.Any(a => l.Content.Trim().Equals(a, StringComparison.OrdinalIgnoreCase)));
 
-        if (!hasTestAttribute) return;
+        if (!hasTestAttribute)
+        {
+            return;
+        }
 
         // Check both added lines and context lines: assertions may live in helper calls
         // or in lines that weren't changed in this diff.
@@ -163,7 +193,10 @@ public class GCI0041_TestQualityGaps : RuleBase
             AssertionKeywords.Any(k => l.Contains(k, StringComparison.OrdinalIgnoreCase)) ||
             AssertionHelperRegex.IsMatch(l));
 
-        if (hasAssertion) return;
+        if (hasAssertion)
+        {
+            return;
+        }
 
         findings.Add(CreateFinding(
             file,

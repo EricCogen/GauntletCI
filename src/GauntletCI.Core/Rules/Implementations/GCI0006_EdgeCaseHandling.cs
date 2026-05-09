@@ -39,7 +39,10 @@ public class GCI0006_EdgeCaseHandling : RuleBase
     {
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath))
+            {
+                continue;
+            }
 
             var addedLines = file.AddedLines.ToList();
             var fileContent = string.Join("\n", addedLines.Select(l => l.Content));
@@ -48,34 +51,57 @@ public class GCI0006_EdgeCaseHandling : RuleBase
             for (int i = 0; i < addedLines.Count; i++)
             {
                 var content = addedLines[i].Content;
-                if (!HasUnsafeValueAccess(content)) continue;
+                if (!HasUnsafeValueAccess(content))
+                {
+                    continue;
+                }
 
                 // Skip comment lines: .Value in a comment is not executable code
-                if (WellKnownPatterns.GuardPatterns.IsCommentLine(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.IsCommentLine(content))
+                {
+                    continue;
+                }
 
                 // Skip expression-bodied property/method declarations: the .Value access IS
                 // the declaration body (e.g. public override object? Value => _inner.Value;)
-                if (WellKnownPatterns.GuardPatterns.IsExpressionBodied(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.IsExpressionBodied(content))
+                {
+                    continue;
+                }
 
                 // Skip KeyValuePair / Dictionary iteration: .Key and .Value together
                 // means this is safe dict-entry access, not a Nullable<T>.Value dereference
-                if (WellKnownPatterns.GuardPatterns.IsKeyValuePairAccess(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.IsKeyValuePairAccess(content))
+                {
+                    continue;
+                }
 
                 // Skip when .Value is part of a LINQ projection (.Select(x => x.Value), etc.)
                 // LINQ projections are intentionally mapping nullable to non-nullable
-                if (WellKnownPatterns.GuardPatterns.IsLinqValueMapping(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.IsLinqValueMapping(content))
+                {
+                    continue;
+                }
 
                 // Skip when .Value itself is null-checked inline or when HasValue guards it
-                if (WellKnownPatterns.GuardPatterns.HasValueNullCheck(content) || WellKnownPatterns.GuardPatterns.HasHasValueGuard(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.HasValueNullCheck(content) || WellKnownPatterns.GuardPatterns.HasHasValueGuard(content))
+                {
+                    continue;
+                }
 
                 // Skip IOptions<T>.Value / IOptionsSnapshot<T>.Value / IOptionsMonitor<T>.Value
                 // These are DI-injected configuration wrappers, not Nullable<T>
-                if (WellKnownPatterns.GuardPatterns.IsIOptionsValue(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.IsIOptionsValue(content))
+                {
+                    continue;
+                }
 
                 // NRT-aware: Skip Nullable<T>.Value when T is a non-nullable reference type in NRT context
                 // In NRT-enabled files, Nullable<string> where string is non-nullable is safe (always has value)
                 if (isNrtEnabled && WellKnownPatterns.IsNullableOfNonNullableType(content))
+                {
                     continue;
+                }
 
                 // Check preceding lines for null guard
                 int start = Math.Max(0, i - 5);
@@ -107,12 +133,15 @@ public class GCI0006_EdgeCaseHandling : RuleBase
         foreach (var file in diff.Files)
         {
             // Test helpers do not need null guards: skip test files entirely
-            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath))
+            {
+                continue;
+            }
 
             var addedLines = file.AddedLines
                 .Where(l => !WellKnownPatterns.HasDevOnlyMarker(l.Content)) // Skip dev-only code
                 .ToList();
-            
+
             var fileContent = string.Join("\n", addedLines.Select(l => l.Content));
             var isNrtEnabled = WellKnownPatterns.IsNullableReferenceTypeEnabled(fileContent);
 
@@ -120,39 +149,63 @@ public class GCI0006_EdgeCaseHandling : RuleBase
             {
                 var content = addedLines[i].Content;
                 // Only flag public or protected methods: private/internal callers are controlled
-                if (!IsPublicOrProtectedSignature(content)) continue;
+                if (!IsPublicOrProtectedSignature(content))
+                {
+                    continue;
+                }
 
                 // Override and sealed methods cannot change the parameter contract declared by the base
                 // class or interface: enforcing null validation here is incorrect
-                if (WellKnownPatterns.GuardPatterns.IsOverrideOrSealedMethod(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.IsOverrideOrSealedMethod(content))
+                {
+                    continue;
+                }
 
                 // Abstract methods, delegate declarations, and partial stubs have no body
-                if (WellKnownPatterns.GuardPatterns.IsAbstractOrDelegateOrPartial(content)) continue;
+                if (WellKnownPatterns.GuardPatterns.IsAbstractOrDelegateOrPartial(content))
+                {
+                    continue;
+                }
 
                 // Constructors have no return type: skip them
                 // A method signature has: <accessModifier> <returnType> <name>(<params>)
                 // A constructor has:       <accessModifier> <name>(<params>)
                 // Detect constructors by checking for a return-type token before the name
-                if (!HasReturnType(content)) continue;
+                if (!HasReturnType(content))
+                {
+                    continue;
+                }
 
                 // Check "string" or "object" in the parameter section, not just the return type
                 var parenIdx = content.IndexOf('(');
                 var closeIdx = parenIdx >= 0 ? content.IndexOf(')', parenIdx) : -1;
                 var paramSection = (parenIdx >= 0 && closeIdx > parenIdx) ? content[parenIdx..(closeIdx + 1)] : "";
-                if (!WellKnownPatterns.HasNullableReferenceParam(paramSection)) continue;
+                if (!WellKnownPatterns.HasNullableReferenceParam(paramSection))
+                {
+                    continue;
+                }
 
                 // Guard: Skip if NRT (Nullable Reference Type) is enabled for non-nullable params
                 // In NRT-enabled files, `string` param is explicitly non-nullable, so no validation needed
-                if (isNrtEnabled && WellKnownPatterns.HasNonNullableParams(paramSection)) continue;
+                if (isNrtEnabled && WellKnownPatterns.HasNonNullableParams(paramSection))
+                {
+                    continue;
+                }
 
                 // Guard: Skip if file is auto-generated (reduces FP in generated code)
                 // Auto-generated files (.g.cs, .Designer.cs, migrations, API clients) have predictable patterns
-                if (IsAutoGeneratedCodeFile(file.NewPath)) continue;
+                if (IsAutoGeneratedCodeFile(file.NewPath))
+                {
+                    continue;
+                }
 
                 // Guard: Skip if method parameters have default values or null-coalescing
                 // Parameters with defaults (e.g., string param = "default") or nullable annotation
                 // already provide fallback values, so validation is not needed
-                if (HasParameterDefaults(paramSection)) continue;
+                if (HasParameterDefaults(paramSection))
+                {
+                    continue;
+                }
 
                 // Check next 5 lines for null/range validation
                 int end = Math.Min(addedLines.Count, i + 6);
@@ -186,7 +239,9 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                                     "sealed ", "new ", "internal ", "extern " })
         {
             while (t.StartsWith(mod, StringComparison.Ordinal))
+            {
                 t = t[mod.Length..];
+            }
         }
         // After modifiers, a method has a return type token FOLLOWED BY a space and then the name.
         // A constructor has only the class name followed directly by '('.
@@ -204,24 +259,48 @@ public class GCI0006_EdgeCaseHandling : RuleBase
         for (int i = 0; i < paramSection.Length; i++)
         {
             char c = paramSection[i];
-            if (c == '<') { angleDepth++; continue; }
-            if (c == '>') { angleDepth = Math.Max(0, angleDepth - 1); continue; }
-            if (angleDepth > 0) continue;
+            if (c == '<')
+            {
+                angleDepth++;
+                continue;
+            }
+            if (c == '>')
+            {
+                angleDepth = Math.Max(0, angleDepth - 1);
+                continue;
+            }
+            if (angleDepth > 0)
+            {
+                continue;
+            }
 
             foreach (var keyword in new[] { "string?", "object?" })
             {
-                if (i + keyword.Length > paramSection.Length) continue;
-                if (!paramSection.AsSpan(i).StartsWith(keyword, StringComparison.Ordinal)) continue;
+                if (i + keyword.Length > paramSection.Length)
+                {
+                    continue;
+                }
+
+                if (!paramSection.AsSpan(i).StartsWith(keyword, StringComparison.Ordinal))
+                {
+                    continue;
+                }
 
                 // Leading boundary: must be preceded by a non-identifier char
                 bool leadOk = i == 0 || paramSection[i - 1] is ' ' or '(' or ',' or '<';
-                if (!leadOk) continue;
+                if (!leadOk)
+                {
+                    continue;
+                }
 
                 // Trailing boundary: must be followed by a non-identifier char
                 int after = i + keyword.Length;
                 bool trailOk = after >= paramSection.Length ||
                                paramSection[after] is ' ' or '[' or ',' or ')' or '<';
-                if (trailOk) return true;
+                if (trailOk)
+                {
+                    return true;
+                }
             }
         }
         return false;
@@ -232,13 +311,18 @@ public class GCI0006_EdgeCaseHandling : RuleBase
     private static bool IsSuccessGuardFor(string valueLine, string guardLine)
     {
         int valIdx = valueLine.IndexOf(".Value", StringComparison.Ordinal);
-        if (valIdx <= 0) return false;
+        if (valIdx <= 0)
+        {
+            return false;
+        }
 
         // Walk backward from the dot to collect the expression chain (e.g. "match.Groups[1]")
         int start = valIdx - 1;
         while (start > 0 && valueLine[start - 1] is char pc &&
                (char.IsLetterOrDigit(pc) || pc is '_' or '.' or '[' or ']'))
+        {
             start--;
+        }
 
         var expr = valueLine[start..valIdx]; // e.g. "match.Groups[1]"
 
@@ -261,7 +345,10 @@ public class GCI0006_EdgeCaseHandling : RuleBase
         while (pos < content.Length)
         {
             int idx = content.IndexOf(".Value", pos, StringComparison.Ordinal);
-            if (idx < 0) return false;
+            if (idx < 0)
+            {
+                return false;
+            }
 
             int afterIdx = idx + 6;
 
@@ -297,7 +384,11 @@ public class GCI0006_EdgeCaseHandling : RuleBase
             // .Value = (LHS assignment) -- writing to a Value property, not reading a Nullable<T>
             // Exclude .Value == (comparison) and .Value => (lambda expression body)
             int assignPos = afterIdx;
-            while (assignPos < content.Length && content[assignPos] == ' ') assignPos++;
+            while (assignPos < content.Length && content[assignPos] == ' ')
+            {
+                assignPos++;
+            }
+
             if (assignPos < content.Length && content[assignPos] == '=' &&
                 (assignPos + 1 >= content.Length ||
                  (content[assignPos + 1] != '=' && content[assignPos + 1] != '>')))
@@ -319,12 +410,19 @@ public class GCI0006_EdgeCaseHandling : RuleBase
         while (pos < content.Length)
         {
             int idx = content.IndexOf(".Key", pos, StringComparison.Ordinal);
-            if (idx < 0) return false;
+            if (idx < 0)
+            {
+                return false;
+            }
+
             int after = idx + 4;
             // Ensure what follows is NOT a word character (avoids matching .Keys, .KeyValues, etc.)
             if (after >= content.Length ||
                 (!char.IsLetterOrDigit(content[after]) && content[after] != '_'))
+            {
                 return true;
+            }
+
             pos = after;
         }
         return false;
@@ -342,7 +440,10 @@ public class GCI0006_EdgeCaseHandling : RuleBase
     {
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath))
+            {
+                continue;
+            }
 
             foreach (var hunk in file.Hunks)
             {
@@ -364,10 +465,16 @@ public class GCI0006_EdgeCaseHandling : RuleBase
         for (int i = 0; i < lines.Count; i++)
         {
             var line = lines[i];
-            if (line.Kind != DiffLineKind.Added) continue;
+            if (line.Kind != DiffLineKind.Added)
+            {
+                continue;
+            }
 
             var content = line.Content.Trim();
-            if (!content.StartsWith("break", StringComparison.Ordinal)) continue;
+            if (!content.StartsWith("break", StringComparison.Ordinal))
+            {
+                continue;
+            }
 
             // Check surrounding context for loop keywords
             int start = Math.Max(0, i - 10);
@@ -408,7 +515,10 @@ public class GCI0006_EdgeCaseHandling : RuleBase
         for (int i = 0; i < lines.Count; i++)
         {
             var line = lines[i];
-            if (line.Kind != DiffLineKind.Added) continue;
+            if (line.Kind != DiffLineKind.Added)
+            {
+                continue;
+            }
 
             var content = line.Content.Trim();
             // Look for patterns like: i < MAX, count < 1000, iterations < limit
@@ -460,21 +570,33 @@ public class GCI0006_EdgeCaseHandling : RuleBase
         for (int i = 0; i < lines.Count; i++)
         {
             var removedLine = lines[i];
-            if (removedLine.Kind != DiffLineKind.Removed) continue;
+            if (removedLine.Kind != DiffLineKind.Removed)
+            {
+                continue;
+            }
 
             var removedContent = removedLine.Content.Trim();
             if (!removedContent.StartsWith("while (", StringComparison.Ordinal) &&
-                !removedContent.StartsWith("for (", StringComparison.Ordinal)) continue;
+                !removedContent.StartsWith("for (", StringComparison.Ordinal))
+            {
+                continue;
+            }
 
             // Look for a corresponding added line
             for (int j = i + 1; j < Math.Min(lines.Count, i + 10); j++)
             {
                 var addedLine = lines[j];
-                if (addedLine.Kind != DiffLineKind.Added) continue;
+                if (addedLine.Kind != DiffLineKind.Added)
+                {
+                    continue;
+                }
 
                 var addedContent = addedLine.Content.Trim();
                 if (!addedContent.StartsWith("while (", StringComparison.Ordinal) &&
-                    !addedContent.StartsWith("for (", StringComparison.Ordinal)) continue;
+                    !addedContent.StartsWith("for (", StringComparison.Ordinal))
+                {
+                    continue;
+                }
 
                 // Check if the new condition is more restrictive (added AND clause)
                 if (addedContent.Contains(" && ") && !removedContent.Contains(" && "))
@@ -495,7 +617,11 @@ public class GCI0006_EdgeCaseHandling : RuleBase
 
     private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)
     {
-        if (staticAnalysis is null) return;
+        if (staticAnalysis is null)
+        {
+            return;
+        }
+
         var ca1062 = staticAnalysis.Diagnostics.Where(d => d.Id == "CA1062");
         foreach (var diag in ca1062)
         {
@@ -520,7 +646,9 @@ public class GCI0006_EdgeCaseHandling : RuleBase
             filePath.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase) ||
             filePath.EndsWith(".pb.cs", StringComparison.OrdinalIgnoreCase) ||
             filePath.EndsWith(".grpc.cs", StringComparison.OrdinalIgnoreCase))
+        {
             return true;
+        }
 
         // Generated code directory patterns
         var normalized = filePath.Replace('\\', '/');
@@ -528,18 +656,24 @@ public class GCI0006_EdgeCaseHandling : RuleBase
             normalized.Contains("/generated/", StringComparison.OrdinalIgnoreCase) ||
             normalized.Contains("/obj/", StringComparison.OrdinalIgnoreCase) ||
             normalized.Contains("/bin/", StringComparison.OrdinalIgnoreCase))
+        {
             return true;
+        }
 
         // Entity Framework migration patterns
         if (normalized.Contains("/Migrations/", StringComparison.OrdinalIgnoreCase) &&
             (filePath.EndsWith("Migration.cs", StringComparison.OrdinalIgnoreCase) ||
              filePath.EndsWith("Migrations.cs", StringComparison.OrdinalIgnoreCase)))
+        {
             return true;
+        }
 
         // Compiler/AssemblyInfo generated files
         if (filePath.EndsWith("AssemblyInfo.cs", StringComparison.OrdinalIgnoreCase) ||
             filePath.EndsWith(".assemblyinfo.cs", StringComparison.OrdinalIgnoreCase))
+        {
             return true;
+        }
 
         return false;
     }
@@ -555,23 +689,72 @@ public class GCI0006_EdgeCaseHandling : RuleBase
     private static bool HasNullValidationPattern(string content)
     {
         // Direct null checks
-        if (content.Contains("null", StringComparison.Ordinal)) return true;
-        if (content.Contains("ArgumentNull", StringComparison.Ordinal)) return true;
-        if (content.Contains("ArgumentException", StringComparison.Ordinal)) return true;
-        if (content.Contains("throw", StringComparison.Ordinal)) return true;
+        if (content.Contains("null", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (content.Contains("ArgumentNull", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (content.Contains("ArgumentException", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (content.Contains("throw", StringComparison.Ordinal))
+        {
+            return true;
+        }
 
         // Common null-check patterns
-        if (content.Contains("ThrowIfNull", StringComparison.Ordinal)) return true;
-        if (content.Contains("is null", StringComparison.Ordinal)) return true;
-        if (content.Contains("is not null", StringComparison.Ordinal)) return true;
-        if (content.Contains("== null", StringComparison.Ordinal)) return true;
-        if (content.Contains("!= null", StringComparison.Ordinal)) return true;
-        if (content.Contains("?.", StringComparison.Ordinal)) return true; // null-conditional operator
-        if (content.Contains("??", StringComparison.Ordinal)) return true;  // null-coalescing operator (?? or ??=)
+        if (content.Contains("ThrowIfNull", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (content.Contains("is null", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (content.Contains("is not null", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (content.Contains("== null", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (content.Contains("!= null", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        if (content.Contains("?.", StringComparison.Ordinal))
+        {
+            return true; // null-conditional operator
+        }
+
+        if (content.Contains("??", StringComparison.Ordinal))
+        {
+            return true;  // null-coalescing operator (?? or ??=)
+        }
 
         // Guard clauses and early returns
-        if (content.Contains("guard", StringComparison.OrdinalIgnoreCase)) return true;
-        if (content.Contains("return", StringComparison.Ordinal)) return true;
+        if (content.Contains("guard", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        if (content.Contains("return", StringComparison.Ordinal))
+        {
+            return true;
+        }
 
         return false;
     }

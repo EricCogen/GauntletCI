@@ -159,16 +159,28 @@ public enum PatchOperationKind
 public sealed class PatchOperation
 {
     /// <summary>The semantic kind of this operation.</summary>
-    public PatchOperationKind Kind { get; init; }
+    public PatchOperationKind Kind
+    {
+        get; init;
+    }
 
     /// <summary>The line where this operation occurs (old file line number, if applicable).</summary>
-    public int? OldLineNumber { get; init; }
+    public int? OldLineNumber
+    {
+        get; init;
+    }
 
     /// <summary>The line where this operation occurs (new file line number, if applicable).</summary>
-    public int? NewLineNumber { get; init; }
+    public int? NewLineNumber
+    {
+        get; init;
+    }
 
     /// <summary>The file path where this operation occurs.</summary>
-    public string? FilePath { get; init; }
+    public string? FilePath
+    {
+        get; init;
+    }
 
     /// <summary>
     /// A free-form description of the operation for human readability.
@@ -179,18 +191,27 @@ public sealed class PatchOperation
     /// <summary>
     /// Optional text snippet that was removed or replaced (for changed/removed operations).
     /// </summary>
-    public string? Before { get; init; }
+    public string? Before
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Optional text snippet that was added or replaced (for added/changed operations).
     /// </summary>
-    public string? After { get; init; }
+    public string? After
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Optional symbol or identifier involved in this operation.
     /// Useful for tracking specific symbols across operations.
     /// </summary>
-    public string? Symbol { get; init; }
+    public string? Symbol
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Confidence score (0.0-1.0) indicating how certain the analyzer is about this operation.
@@ -204,13 +225,19 @@ public sealed class PatchOperation
     /// 0.0 = negligible risk (formatting, whitespace)
     /// 1.0 = critical risk (logic change, control flow modification)
     /// </summary>
-    public double RiskLevel { get; init; }
+    public double RiskLevel
+    {
+        get; init;
+    }
 
     /// <summary>
     /// Optional category or tag for grouping related operations.
     /// Examples: "logic", "io", "performance", "security".
     /// </summary>
-    public string? Category { get; init; }
+    public string? Category
+    {
+        get; init;
+    }
 }
 
 /// <summary>
@@ -310,7 +337,9 @@ public sealed class PatchOperationCollection
     {
         var sorted = values.OrderBy(v => v).ToList();
         if (sorted.Count == 0)
+        {
             return 0;
+        }
 
         var index = (int)Math.Ceiling(percentile * sorted.Count) - 1;
         return sorted[Math.Max(0, Math.Min(index, sorted.Count - 1))];

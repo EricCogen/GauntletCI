@@ -35,7 +35,10 @@ public class GCI0054_AsyncVoidAbuse : RuleBase
         foreach (var file in diff.Files)
         {
             // Skip test files
-            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsTestFile(file.NewPath))
+            {
+                continue;
+            }
 
             CheckAsyncVoidMethods(file, findings);
         }
@@ -47,11 +50,17 @@ public class GCI0054_AsyncVoidAbuse : RuleBase
     {
         foreach (var line in file.AddedLines)
         {
-            if (!AsyncVoidMethodRegex.IsMatch(line.Content)) continue;
+            if (!AsyncVoidMethodRegex.IsMatch(line.Content))
+            {
+                continue;
+            }
 
             // Extract method name to check if it's an event handler
             var methodMatch = Regex.Match(line.Content, @"async\s+void\s+(\w+)\s*\(");
-            if (!methodMatch.Success) continue;
+            if (!methodMatch.Success)
+            {
+                continue;
+            }
 
             var methodName = methodMatch.Groups[1].Value;
 
@@ -59,7 +68,9 @@ public class GCI0054_AsyncVoidAbuse : RuleBase
             if (EventHandlerRegex.IsMatch(methodName) ||
                 methodName.StartsWith("On", StringComparison.Ordinal) ||
                 methodName.EndsWith("Handler", StringComparison.Ordinal))
+            {
                 continue;
+            }
 
             findings.Add(CreateFinding(
                 file,

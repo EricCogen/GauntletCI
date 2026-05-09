@@ -27,11 +27,15 @@ internal static class NullabilityPatterns
         // Explicit NRT directive: #nullable enable or #nullable restore
         if (fileContent.Contains("#nullable enable", StringComparison.OrdinalIgnoreCase) ||
             fileContent.Contains("#nullable restore", StringComparison.OrdinalIgnoreCase))
+        {
             return true;
+        }
 
         // Explicit NRT disable: #nullable disable indicates NRT is not active
         if (fileContent.Contains("#nullable disable", StringComparison.OrdinalIgnoreCase))
+        {
             return false;
+        }
 
         // Heuristic: Modern .NET projects (net5+) typically have NRT enabled
         // Look for patterns that indicate modern C# (nullable annotations, record types, init accessors, required members)
@@ -39,14 +43,18 @@ internal static class NullabilityPatterns
             fileContent.Contains("{ init; }", StringComparison.Ordinal) ||
             fileContent.Contains("{ get; init; }", StringComparison.Ordinal) ||
             fileContent.Contains("required ", StringComparison.Ordinal))
+        {
             return true;
+        }
 
         // Look for the pattern: non-nullable string used in method signatures
         // This is stronger evidence of NRT enablement than just presence of 'string'
         // Pattern: public/protected method with 'string' param not followed by '?'
         if (Regex.IsMatch(
                 fileContent, @"(public|protected)\s+\w+\s+\w+\s*\(\s*string\s+\w+"))
+        {
             return true;
+        }
 
         // Default: assume NRT disabled (conservative approach - will validate parameters)
         return false;
@@ -63,9 +71,20 @@ internal static class NullabilityPatterns
         for (int i = 0; i < paramSection.Length; i++)
         {
             char c = paramSection[i];
-            if (c == '<') { angleDepth++; continue; }
-            if (c == '>') { angleDepth = Math.Max(0, angleDepth - 1); continue; }
-            if (angleDepth > 0) continue;
+            if (c == '<')
+            {
+                angleDepth++;
+                continue;
+            }
+            if (c == '>')
+            {
+                angleDepth = Math.Max(0, angleDepth - 1);
+                continue;
+            }
+            if (angleDepth > 0)
+            {
+                continue;
+            }
 
             // Match "string" not followed by "?"
             if (i + 6 <= paramSection.Length && paramSection.AsSpan(i, 6).SequenceEqual("string"))
@@ -75,7 +94,10 @@ internal static class NullabilityPatterns
                     // Check boundary
                     bool leadOk = i == 0 || paramSection[i - 1] is ' ' or '(' or ',' or '<';
                     bool trailOk = i + 6 >= paramSection.Length || paramSection[i + 6] is ' ' or '[' or ',' or ')';
-                    if (leadOk && trailOk) return true;
+                    if (leadOk && trailOk)
+                    {
+                        return true;
+                    }
                 }
             }
         }
@@ -94,24 +116,48 @@ internal static class NullabilityPatterns
         for (int i = 0; i < paramSection.Length; i++)
         {
             char c = paramSection[i];
-            if (c == '<') { angleDepth++; continue; }
-            if (c == '>') { angleDepth = Math.Max(0, angleDepth - 1); continue; }
-            if (angleDepth > 0) continue;
+            if (c == '<')
+            {
+                angleDepth++;
+                continue;
+            }
+            if (c == '>')
+            {
+                angleDepth = Math.Max(0, angleDepth - 1);
+                continue;
+            }
+            if (angleDepth > 0)
+            {
+                continue;
+            }
 
             foreach (var keyword in new[] { "string?", "object?" })
             {
-                if (i + keyword.Length > paramSection.Length) continue;
-                if (!paramSection.AsSpan(i).StartsWith(keyword, StringComparison.Ordinal)) continue;
+                if (i + keyword.Length > paramSection.Length)
+                {
+                    continue;
+                }
+
+                if (!paramSection.AsSpan(i).StartsWith(keyword, StringComparison.Ordinal))
+                {
+                    continue;
+                }
 
                 // Leading boundary: must be preceded by a non-identifier char
                 bool leadOk = i == 0 || paramSection[i - 1] is ' ' or '(' or ',' or '<';
-                if (!leadOk) continue;
+                if (!leadOk)
+                {
+                    continue;
+                }
 
                 // Trailing boundary: must be followed by a non-identifier char
                 int after = i + keyword.Length;
                 bool trailOk = after >= paramSection.Length ||
                                paramSection[after] is ' ' or '[' or ',' or ')' or '<';
-                if (trailOk) return true;
+                if (trailOk)
+                {
+                    return true;
+                }
             }
         }
         return false;
@@ -125,14 +171,17 @@ internal static class NullabilityPatterns
     {
         // Look for Nullable<T> or Nullable<...> patterns
         var match = Regex.Match(content, @"Nullable<(\w+(?:<[^>]+>)?)>");
-        if (!match.Success) return false;
+        if (!match.Success)
+        {
+            return false;
+        }
 
         var typeParam = match.Groups[1].Value;
-        
+
         // If T is a value type (int, bool, DateTime, etc.), Nullable<T> always has a value in NRT context
-        var valueTypes = new[] 
-        { 
-            "int", "long", "short", "byte", "double", "float", "decimal", "bool", 
+        var valueTypes = new[]
+        {
+            "int", "long", "short", "byte", "double", "float", "decimal", "bool",
             "uint", "ulong", "ushort", "ubyte", "char",
             "DateTime", "TimeSpan", "DateOnly", "TimeOnly", "Guid",
             "DateTimeOffset", "DateTimeKind"
@@ -153,8 +202,10 @@ internal static class NullabilityPatterns
     public static bool IsPragmaNullableDisable(string content)
     {
         if (!content.Contains("#pragma warning disable", StringComparison.OrdinalIgnoreCase))
+        {
             return false;
-        
+        }
+
         var nullableCodes = new[] { "nullable", "CS8600", "CS8601", "CS8602", "CS8603", "CS8604" };
         return nullableCodes.Any(code =>
             content.Contains(code, StringComparison.OrdinalIgnoreCase));
@@ -167,8 +218,8 @@ internal static class NullabilityPatterns
     /// </summary>
     public static bool IsLinqValueProjection(string content)
     {
-        var linqMethods = new[] { "Select", "SelectMany", "Where", "OrderBy", "OrderByDescending", 
-                                  "GroupBy", "All", "Any", "First", "FirstOrDefault", 
+        var linqMethods = new[] { "Select", "SelectMany", "Where", "OrderBy", "OrderByDescending",
+                                  "GroupBy", "All", "Any", "First", "FirstOrDefault",
                                   "Last", "LastOrDefault", "Single", "SingleOrDefault" };
 
         foreach (var method in linqMethods)
@@ -176,7 +227,9 @@ internal static class NullabilityPatterns
             // Pattern: .MethodName(... => ....Value...)
             var pattern = @"\." + method + @"\s*\([^)]*=>.*\.Value";
             if (Regex.IsMatch(content, pattern, RegexOptions.IgnoreCase))
+            {
                 return true;
+            }
         }
 
         return false;

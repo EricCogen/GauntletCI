@@ -73,8 +73,16 @@ internal static class PiiDetectionPatterns
     /// </summary>
     public static bool IsDataTransformed(string content)
     {
-        if (TransformationPatterns.Any(p => content.Contains(p))) return true;
-        if (ReflectionGuards.Any(p => content.Contains(p))) return true;
+        if (TransformationPatterns.Any(p => content.Contains(p)))
+        {
+            return true;
+        }
+
+        if (ReflectionGuards.Any(p => content.Contains(p)))
+        {
+            return true;
+        }
+
         return false;
     }
 }

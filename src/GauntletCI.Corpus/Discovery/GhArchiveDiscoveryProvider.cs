@@ -24,16 +24,18 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
         DiscoveryQuery query, CancellationToken cancellationToken = default)
     {
         var archiveSlots = BuildArchiveSlots(query);
-        var seen         = new HashSet<(string Owner, string Repo, int Number)>();
-        var prReviewed   = new HashSet<(string Owner, string Repo, int Number)>();
-        var results      = new List<PullRequestCandidate>();
+        var seen = new HashSet<(string Owner, string Repo, int Number)>();
+        var prReviewed = new HashSet<(string Owner, string Repo, int Number)>();
+        var results = new List<PullRequestCandidate>();
 
         foreach (var (date, hour) in archiveSlots)
         {
             if (results.Count >= query.MaxCandidates)
+            {
                 break;
+            }
 
-            var url      = $"https://data.gharchive.org/{date:yyyy-MM-dd}-{hour}.json.gz";
+            var url = $"https://data.gharchive.org/{date:yyyy-MM-dd}-{hour}.json.gz";
             var dateSlot = $"{date:yyyy-MM-dd}-{hour}";
 
             byte[]? compressedData;
@@ -47,18 +49,22 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
                 continue;
             }
 
-            using var memStream    = new MemoryStream(compressedData);
-            using var gzipStream   = new GZipStream(memStream, CompressionMode.Decompress);
-            using var reader       = new StreamReader(gzipStream);
+            using var memStream = new MemoryStream(compressedData);
+            using var gzipStream = new GZipStream(memStream, CompressionMode.Decompress);
+            using var reader = new StreamReader(gzipStream);
 
             string? line;
             while ((line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false)) is not null)
             {
                 if (results.Count >= query.MaxCandidates)
+                {
                     break;
+                }
 
                 if (string.IsNullOrWhiteSpace(line))
+                {
                     continue;
+                }
 
                 try
                 {
@@ -66,7 +72,9 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
                     var root = doc.RootElement;
 
                     if (!root.TryGetProperty("type", out var typeEl))
+                    {
                         continue;
+                    }
 
                     var eventType = typeEl.GetString();
 
@@ -74,36 +82,55 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
                     {
                         var (owner, repo, number) = ExtractRepoAndNumber(root);
                         if (owner is not null && repo is not null && number > 0)
+                        {
                             prReviewed.Add((owner, repo, number));
+                        }
+
                         continue;
                     }
 
                     if (eventType != "PullRequestEvent")
+                    {
                         continue;
+                    }
 
                     if (!root.TryGetProperty("payload", out var payload))
+                    {
                         continue;
+                    }
 
                     if (!payload.TryGetProperty("action", out var actionEl) ||
                         actionEl.GetString() != "closed")
+                    {
                         continue;
+                    }
 
                     if (!payload.TryGetProperty("pull_request", out var pr))
+                    {
                         continue;
+                    }
 
                     if (!pr.TryGetProperty("merged", out var mergedEl) || !mergedEl.GetBoolean())
+                    {
                         continue;
+                    }
 
                     var candidate = MapToCandidate(root, pr, query, dateSlot);
                     if (candidate is null)
+                    {
                         continue;
+                    }
 
                     var key = (candidate.RepoOwner, candidate.RepoName, candidate.PullRequestNumber);
                     if (!seen.Add(key))
+                    {
                         continue;
+                    }
 
                     if (query.MinReviewComments > 0 && !prReviewed.Contains(key))
+                    {
                         continue;
+                    }
 
                     results.Add(candidate);
                 }
@@ -131,7 +158,9 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
         for (var d = start; d <= end; d = d.AddDays(1))
         {
             for (var h = 0; h < 24; h++)
+            {
                 slots.Add((d, h));
+            }
         }
 
         return slots;
@@ -140,20 +169,30 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
     private static (string? Owner, string? Repo, int Number) ExtractRepoAndNumber(JsonElement root)
     {
         if (!root.TryGetProperty("repo", out var repoEl))
+        {
             return (null, null, 0);
+        }
 
         if (!repoEl.TryGetProperty("name", out var nameEl))
+        {
             return (null, null, 0);
+        }
 
         var parts = nameEl.GetString()?.Split('/', 2);
         if (parts is null || parts.Length < 2)
+        {
             return (null, null, 0);
+        }
 
         if (!root.TryGetProperty("payload", out var payload))
+        {
             return (parts[0], parts[1], 0);
+        }
 
         if (!payload.TryGetProperty("pull_request", out var pr))
+        {
             return (parts[0], parts[1], 0);
+        }
 
         var number = pr.TryGetProperty("number", out var numEl) ? numEl.GetInt32() : 0;
         return (parts[0], parts[1], number);
@@ -163,22 +202,28 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
         JsonElement root, JsonElement pr, DiscoveryQuery query, string dateSlot)
     {
         if (!root.TryGetProperty("repo", out var repoEl))
+        {
             return null;
+        }
 
         if (!repoEl.TryGetProperty("name", out var nameEl))
+        {
             return null;
+        }
 
         var repoFullName = nameEl.GetString() ?? "";
-        var parts        = repoFullName.Split('/', 2);
+        var parts = repoFullName.Split('/', 2);
         if (parts.Length < 2)
+        {
             return null;
+        }
 
         var owner = parts[0];
-        var repo  = parts[1];
+        var repo = parts[1];
 
-        var prNumber  = pr.TryGetProperty("number",   out var numEl)     ? numEl.GetInt32()     : 0;
-        var htmlUrl   = pr.TryGetProperty("html_url", out var urlEl)     ? urlEl.GetString()    ?? "" : "";
-        var createdAt = pr.TryGetProperty("created_at",out var createdEl) ? createdEl.GetDateTime() : DateTime.UtcNow;
+        var prNumber = pr.TryGetProperty("number", out var numEl) ? numEl.GetInt32() : 0;
+        var htmlUrl = pr.TryGetProperty("html_url", out var urlEl) ? urlEl.GetString() ?? "" : "";
+        var createdAt = pr.TryGetProperty("created_at", out var createdEl) ? createdEl.GetDateTime() : DateTime.UtcNow;
 
         string language = "";
         if (pr.TryGetProperty("base", out var baseEl) &&
@@ -192,25 +237,29 @@ public sealed class GhArchiveDiscoveryProvider : IDiscoveryProvider
         if (query.Languages.Count > 0 &&
             !string.IsNullOrEmpty(language) &&
             !query.Languages.Any(l => string.Equals(l, language, StringComparison.OrdinalIgnoreCase)))
+        {
             return null;
+        }
 
         var fullRepo = $"{owner}/{repo}";
 
         if (query.RepoBlockList.Count > 0 &&
             query.RepoBlockList.Any(r => string.Equals(r, fullRepo, StringComparison.OrdinalIgnoreCase)))
+        {
             return null;
+        }
 
         return new PullRequestCandidate
         {
-            Source             = "gh-archive",
-            RepoOwner          = owner,
-            RepoName           = repo,
-            PullRequestNumber  = prNumber,
-            Url                = htmlUrl,
-            Language           = language,
-            CreatedAtUtc       = createdAt,
-            MergeState         = MergeState.Merged,
-            CandidateReason    = $"gh-archive:{dateSlot}",
+            Source = "gh-archive",
+            RepoOwner = owner,
+            RepoName = repo,
+            PullRequestNumber = prNumber,
+            Url = htmlUrl,
+            Language = language,
+            CreatedAtUtc = createdAt,
+            MergeState = MergeState.Merged,
+            CandidateReason = $"gh-archive:{dateSlot}",
         };
     }
 }

@@ -7,10 +7,28 @@ namespace GauntletCI.Corpus.Models;
 /// </summary>
 public sealed class FindingEvaluation
 {
-    public required string FixtureId { get; init; }
-    public required string RuleId { get; init; }
-    public FixtureTier Tier { get; init; }
-    public EvaluationStatus Status { get; init; }
-    public LabelConfidence LabelConfidence { get; init; }
-    public string? LabelReason { get; init; }
+    public required string FixtureId
+    {
+        get; init;
+    }
+    public required string RuleId
+    {
+        get; init;
+    }
+    public FixtureTier Tier
+    {
+        get; init;
+    }
+    public EvaluationStatus Status
+    {
+        get; init;
+    }
+    public LabelConfidence LabelConfidence
+    {
+        get; init;
+    }
+    public string? LabelReason
+    {
+        get; init;
+    }
 }

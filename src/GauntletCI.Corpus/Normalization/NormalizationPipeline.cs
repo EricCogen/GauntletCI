@@ -49,7 +49,9 @@ public sealed class NormalizationPipeline
         // 3. expected.json: empty list for discovery-tier fixtures
         //    (human or heuristic labels will populate this later)
         if (metadata.Tier == FixtureTier.Discovery)
+        {
             await _store.SaveExpectedFindingsAsync(metadata.FixtureId, [], ct).ConfigureAwait(false);
+        }
 
         return metadata;
     }
@@ -68,24 +70,32 @@ public sealed class NormalizationPipeline
         CancellationToken ct = default)
     {
         var fixturePath = FixtureIdHelper.GetFixturePath(_store.BasePath, tier, fixtureId);
-        var rawPath     = FixtureIdHelper.GetRawPath(fixturePath);
+        var rawPath = FixtureIdHelper.GetRawPath(fixturePath);
 
-        var prJsonPath       = Path.Combine(rawPath, "pr.json");
-        var filesJsonPath    = Path.Combine(rawPath, "files.json");
+        var prJsonPath = Path.Combine(rawPath, "pr.json");
+        var filesJsonPath = Path.Combine(rawPath, "files.json");
         var commentsJsonPath = Path.Combine(rawPath, "review-comments.json");
-        var diffPatchPath    = Path.Combine(fixturePath, "diff.patch");
+        var diffPatchPath = Path.Combine(fixturePath, "diff.patch");
 
         if (!File.Exists(prJsonPath))
+        {
             throw new FileNotFoundException($"Raw snapshot not found: {prJsonPath}");
-        if (!File.Exists(filesJsonPath))
-            throw new FileNotFoundException($"Raw snapshot not found: {filesJsonPath}");
-        if (!File.Exists(commentsJsonPath))
-            throw new FileNotFoundException($"Raw snapshot not found: {commentsJsonPath}");
+        }
 
-        var prJson       = await File.ReadAllTextAsync(prJsonPath, ct).ConfigureAwait(false);
-        var filesJson    = await File.ReadAllTextAsync(filesJsonPath, ct).ConfigureAwait(false);
+        if (!File.Exists(filesJsonPath))
+        {
+            throw new FileNotFoundException($"Raw snapshot not found: {filesJsonPath}");
+        }
+
+        if (!File.Exists(commentsJsonPath))
+        {
+            throw new FileNotFoundException($"Raw snapshot not found: {commentsJsonPath}");
+        }
+
+        var prJson = await File.ReadAllTextAsync(prJsonPath, ct).ConfigureAwait(false);
+        var filesJson = await File.ReadAllTextAsync(filesJsonPath, ct).ConfigureAwait(false);
         var commentsJson = await File.ReadAllTextAsync(commentsJsonPath, ct).ConfigureAwait(false);
-        var diffText     = File.Exists(diffPatchPath)
+        var diffText = File.Exists(diffPatchPath)
             ? await File.ReadAllTextAsync(diffPatchPath, ct).ConfigureAwait(false) : "";
 
         // Preserve original hydration timestamp for idempotency
@@ -103,9 +113,12 @@ public sealed class NormalizationPipeline
 
     private async Task WriteDiffPatchAsync(FixtureMetadata meta, string diffText, CancellationToken ct)
     {
-        if (string.IsNullOrEmpty(diffText)) return;
+        if (string.IsNullOrEmpty(diffText))
+        {
+            return;
+        }
 
-        var fixturePath  = FixtureIdHelper.GetFixturePath(_store.BasePath, meta.Tier, meta.FixtureId);
+        var fixturePath = FixtureIdHelper.GetFixturePath(_store.BasePath, meta.Tier, meta.FixtureId);
         var diffPatchPath = Path.Combine(fixturePath, "diff.patch");
         await File.WriteAllTextAsync(diffPatchPath, diffText, ct).ConfigureAwait(false);
     }
@@ -114,7 +127,10 @@ public sealed class NormalizationPipeline
         string fixturePath, CancellationToken ct)
     {
         var metaPath = Path.Combine(fixturePath, "metadata.json");
-        if (!File.Exists(metaPath)) return null;
+        if (!File.Exists(metaPath))
+        {
+            return null;
+        }
 
         try
         {
@@ -133,51 +149,51 @@ public sealed class NormalizationPipeline
         string prJson, string filesJson, string commentsJson, string diffText,
         DateTime? preservedTimestamp)
     {
-        var ghPr       = JsonSerializer.Deserialize<RawPrSnapshot>(prJson, JsonOpts);
-        var ghFiles    = JsonSerializer.Deserialize<List<RawFileSnapshot>>(filesJson, JsonOpts) ?? [];
+        var ghPr = JsonSerializer.Deserialize<RawPrSnapshot>(prJson, JsonOpts);
+        var ghFiles = JsonSerializer.Deserialize<List<RawFileSnapshot>>(filesJson, JsonOpts) ?? [];
         var ghComments = JsonSerializer.Deserialize<List<RawCommentSnapshot>>(commentsJson, JsonOpts) ?? [];
 
         var changedFiles = ghFiles.Select(f => new ChangedFile
         {
-            Path        = f.Filename ?? "",
-            Status      = f.Status ?? "",
-            Additions   = f.Additions,
-            Deletions   = f.Deletions,
-            Patch       = f.Patch ?? "",
-            IsTestFile  = TestFileClassifier.IsTestFile(f.Filename ?? ""),
+            Path = f.Filename ?? "",
+            Status = f.Status ?? "",
+            Additions = f.Additions,
+            Deletions = f.Deletions,
+            Patch = f.Patch ?? "",
+            IsTestFile = TestFileClassifier.IsTestFile(f.Filename ?? ""),
             LanguageHint = GuessLanguage(f.Filename ?? ""),
         }).ToList();
 
         var reviewComments = ghComments.Select(c => new ReviewComment
         {
-            Author       = c.User?.Login ?? "",
-            Body         = c.Body ?? "",
-            Path         = c.Path ?? "",
-            DiffHunk     = c.DiffHunk ?? "",
-            Position     = c.Position ?? 0,
+            Author = c.User?.Login ?? "",
+            Body = c.Body ?? "",
+            Path = c.Path ?? "",
+            DiffHunk = c.DiffHunk ?? "",
+            Position = c.Position ?? 0,
             CreatedAtUtc = c.CreatedAt,
-            Url          = c.HtmlUrl ?? "",
+            Url = c.HtmlUrl ?? "",
         }).ToList();
 
         var hydratedAt = preservedTimestamp ?? DateTime.UtcNow;
 
         return new HydratedPullRequest
         {
-            RepoOwner         = owner,
-            RepoName          = repo,
+            RepoOwner = owner,
+            RepoName = repo,
             PullRequestNumber = prNumber,
-            Title             = ghPr?.Title ?? "",
-            Body              = ghPr?.Body ?? "",
-            BaseSha           = ghPr?.Base?.Sha ?? "",
-            HeadSha           = ghPr?.Head?.Sha ?? "",
-            MergeCommitSha    = ghPr?.MergeCommitSha ?? "",
+            Title = ghPr?.Title ?? "",
+            Body = ghPr?.Body ?? "",
+            BaseSha = ghPr?.Base?.Sha ?? "",
+            HeadSha = ghPr?.Head?.Sha ?? "",
+            MergeCommitSha = ghPr?.MergeCommitSha ?? "",
             FilesChangedCount = ghPr?.ChangedFiles ?? changedFiles.Count,
-            Additions         = ghPr?.Additions ?? 0,
-            Deletions         = ghPr?.Deletions ?? 0,
-            ChangedFiles      = changedFiles,
-            ReviewComments    = reviewComments,
-            DiffText          = diffText,
-            HydratedAtUtc     = hydratedAt,
+            Additions = ghPr?.Additions ?? 0,
+            Deletions = ghPr?.Deletions ?? 0,
+            ChangedFiles = changedFiles,
+            ReviewComments = reviewComments,
+            DiffText = diffText,
+            HydratedAtUtc = hydratedAt,
         };
     }
 
@@ -187,43 +203,131 @@ public sealed class NormalizationPipeline
     // Minimal raw snapshot shapes for re-normalization deserialization
     private sealed class RawPrSnapshot
     {
-        [System.Text.Json.Serialization.JsonPropertyName("title")]        public string? Title { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("body")]         public string? Body { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("additions")]    public int Additions { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("deletions")]    public int Deletions { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("changed_files")] public int ChangedFiles { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("merge_commit_sha")] public string? MergeCommitSha { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("base")]         public RawRef? Base { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("head")]         public RawRef? Head { get; init; }
+        [System.Text.Json.Serialization.JsonPropertyName("title")]
+        public string? Title
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("body")]
+        public string? Body
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("additions")]
+        public int Additions
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("deletions")]
+        public int Deletions
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("changed_files")]
+        public int ChangedFiles
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("merge_commit_sha")]
+        public string? MergeCommitSha
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("base")]
+        public RawRef? Base
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("head")]
+        public RawRef? Head
+        {
+            get; init;
+        }
     }
 
     private sealed class RawRef
     {
-        [System.Text.Json.Serialization.JsonPropertyName("sha")] public string? Sha { get; init; }
+        [System.Text.Json.Serialization.JsonPropertyName("sha")]
+        public string? Sha
+        {
+            get; init;
+        }
     }
 
     private sealed class RawFileSnapshot
     {
-        [System.Text.Json.Serialization.JsonPropertyName("filename")]  public string? Filename { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("status")]    public string? Status { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("additions")] public int Additions { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("deletions")] public int Deletions { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("patch")]     public string? Patch { get; init; }
+        [System.Text.Json.Serialization.JsonPropertyName("filename")]
+        public string? Filename
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("status")]
+        public string? Status
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("additions")]
+        public int Additions
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("deletions")]
+        public int Deletions
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("patch")]
+        public string? Patch
+        {
+            get; init;
+        }
     }
 
     private sealed class RawCommentSnapshot
     {
-        [System.Text.Json.Serialization.JsonPropertyName("user")]       public RawUser? User { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("body")]       public string? Body { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("path")]       public string? Path { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("diff_hunk")]  public string? DiffHunk { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("position")]   public int? Position { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("created_at")] public DateTime CreatedAt { get; init; }
-        [System.Text.Json.Serialization.JsonPropertyName("html_url")]   public string? HtmlUrl { get; init; }
+        [System.Text.Json.Serialization.JsonPropertyName("user")]
+        public RawUser? User
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("body")]
+        public string? Body
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("path")]
+        public string? Path
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("diff_hunk")]
+        public string? DiffHunk
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("position")]
+        public int? Position
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("created_at")]
+        public DateTime CreatedAt
+        {
+            get; init;
+        }
+        [System.Text.Json.Serialization.JsonPropertyName("html_url")]
+        public string? HtmlUrl
+        {
+            get; init;
+        }
     }
 
     private sealed class RawUser
     {
-        [System.Text.Json.Serialization.JsonPropertyName("login")] public string? Login { get; init; }
+        [System.Text.Json.Serialization.JsonPropertyName("login")]
+        public string? Login
+        {
+            get; init;
+        }
     }
 }

@@ -145,7 +145,7 @@ public sealed class SilverLabelEngine
     {
         _store = store;
         _llmLabeler = llmLabeler ?? new NullLlmLabeler();
-        
+
         // Initialize strategy registry in execution order
         _strategies = new IInferenceStrategy[]
         {
@@ -166,12 +166,12 @@ public sealed class SilverLabelEngine
     public Task<IReadOnlyList<ExpectedFinding>> InferLabelsAsync(
         string fixtureId, string diffText, CancellationToken ct = default)
     {
-        var addedLines   = ExtractAddedLines(diffText);
+        var addedLines = ExtractAddedLines(diffText);
         var removedLines = ExtractRemovedLines(diffText);
-        var pathLines    = ExtractPathLines(diffText);
-        var prodCsLines         = ExtractAddedLinesFromProductionCsFiles(diffText);
-        var prodCsRemovedLines  = ExtractRemovedLinesFromProductionCsFiles(diffText);
-        var labels       = new List<ExpectedFinding>();
+        var pathLines = ExtractPathLines(diffText);
+        var prodCsLines = ExtractAddedLinesFromProductionCsFiles(diffText);
+        var prodCsRemovedLines = ExtractRemovedLinesFromProductionCsFiles(diffText);
+        var labels = new List<ExpectedFinding>();
 
         // Create context for strategies to analyze
         var context = new DiffAnalysisContext
@@ -204,7 +204,7 @@ public sealed class SilverLabelEngine
 
         try
         {
-            using var doc   = JsonDocument.Parse(reviewCommentsJson);
+            using var doc = JsonDocument.Parse(reviewCommentsJson);
             var commentBodies = ExtractCommentBodies(doc.RootElement);
             ApplyCommentHeuristics(commentBodies, labels);
         }
@@ -231,7 +231,7 @@ public sealed class SilverLabelEngine
         var inferred = (await InferLabelsAsync(fixtureId, diffText, ct).ConfigureAwait(false)).ToList();
 
         IReadOnlyList<string> commentBodies = [];
-        IReadOnlySet<string> commentPaths   = new HashSet<string>(StringComparer.Ordinal);
+        IReadOnlySet<string> commentPaths = new HashSet<string>(StringComparer.Ordinal);
 
         var reviewCommentsJson = await _store.TryReadReviewCommentsAsync(fixtureId, ct).ConfigureAwait(false);
         if (reviewCommentsJson is not null)
@@ -240,7 +240,7 @@ public sealed class SilverLabelEngine
             {
                 using var doc = JsonDocument.Parse(reviewCommentsJson);
                 commentBodies = ExtractCommentBodies(doc.RootElement);
-                commentPaths  = ExtractCommentPaths(doc.RootElement);
+                commentPaths = ExtractCommentPaths(doc.RootElement);
 
                 var commentLabels = new List<ExpectedFinding>();
                 ApplyCommentHeuristics(commentBodies, commentLabels);
@@ -249,7 +249,9 @@ public sealed class SilverLabelEngine
                 {
                     var existing = inferred.FirstOrDefault(l => l.RuleId == label.RuleId);
                     if (existing is null)
+                    {
                         inferred.Add(label);
+                    }
                     else if (label.ExpectedConfidence > existing.ExpectedConfidence)
                     {
                         inferred.Remove(existing);
@@ -275,21 +277,32 @@ public sealed class SilverLabelEngine
 
             foreach (var finding in actualFindings)
             {
-                if (!finding.DidTrigger || finding.FilePath is null) continue;
-                if (!RulesWithHeuristics.Contains(finding.RuleId)) continue;
-                if (positiveRuleIdsTier12.Contains(finding.RuleId)) continue;
+                if (!finding.DidTrigger || finding.FilePath is null)
+                {
+                    continue;
+                }
+
+                if (!RulesWithHeuristics.Contains(finding.RuleId))
+                {
+                    continue;
+                }
+
+                if (positiveRuleIdsTier12.Contains(finding.RuleId))
+                {
+                    continue;
+                }
 
                 var normalizedPath = finding.FilePath.Replace('\\', '/').ToLowerInvariant();
                 if (commentPaths.Contains(normalizedPath))
                 {
                     inferred.Add(new ExpectedFinding
                     {
-                        RuleId             = finding.RuleId,
-                        ShouldTrigger      = true,
+                        RuleId = finding.RuleId,
+                        ShouldTrigger = true,
                         ExpectedConfidence = 0.55,
-                        Reason             = $"[file-path correlation] Reviewer commented on '{finding.FilePath}'",
-                        LabelSource        = LabelSource.FilePathCorrelation,
-                        IsInconclusive     = false,
+                        Reason = $"[file-path correlation] Reviewer commented on '{finding.FilePath}'",
+                        LabelSource = LabelSource.FilePathCorrelation,
+                        IsInconclusive = false,
                     });
                     positiveRuleIdsTier12.Add(finding.RuleId);
                 }
@@ -327,9 +340,20 @@ public sealed class SilverLabelEngine
         {
             foreach (var finding in actualFindings)
             {
-                if (!finding.DidTrigger) continue;
-                if (!RulesWithHeuristics.Contains(finding.RuleId)) continue;
-                if (positiveRuleIdsAfterTier12.Contains(finding.RuleId)) continue;
+                if (!finding.DidTrigger)
+                {
+                    continue;
+                }
+
+                if (!RulesWithHeuristics.Contains(finding.RuleId))
+                {
+                    continue;
+                }
+
+                if (positiveRuleIdsAfterTier12.Contains(finding.RuleId))
+                {
+                    continue;
+                }
 
                 var diffSnippet = ExtractFileDiffHunk(diffText, finding.FilePath);
                 (log ?? Console.WriteLine)($"  [llm] Tier 3 calling {_llmLabeler.GetType().Name} for rule {finding.RuleId}");
@@ -347,12 +371,12 @@ public sealed class SilverLabelEngine
                 {
                     inferred.Add(new ExpectedFinding
                     {
-                        RuleId             = finding.RuleId,
-                        ShouldTrigger      = result.ShouldTrigger,
+                        RuleId = finding.RuleId,
+                        ShouldTrigger = result.ShouldTrigger,
                         ExpectedConfidence = result.Confidence,
-                        Reason             = $"[llm] {result.Reason}",
-                        LabelSource        = LabelSource.LlmReview,
-                        IsInconclusive     = false,
+                        Reason = $"[llm] {result.Reason}",
+                        LabelSource = LabelSource.LlmReview,
+                        IsInconclusive = false,
                     });
                     positiveRuleIdsAfterTier12.Add(finding.RuleId);
                 }
@@ -371,7 +395,9 @@ public sealed class SilverLabelEngine
         foreach (var strategy in _strategies)
         {
             foreach (var ruleId in strategy.RuleIds)
+            {
                 allStrategyRuleIds.Add(ruleId);
+            }
         }
 
         // Generate negative labels for strategies' rules with no positive signal
@@ -388,9 +414,11 @@ public sealed class SilverLabelEngine
 
         // When overwriting, strip stale heuristic labels for rules removed from strategies.
         if (overwriteExisting)
+        {
             existingLabels = existingLabels
                 .Where(l => l.LabelSource != LabelSource.Heuristic || allStrategyRuleIds.Contains(l.RuleId))
                 .ToList();
+        }
 
         var merged = MergeLabels(existingLabels, inferred, overwriteExisting);
         await _store.SaveExpectedFindingsAsync(fixtureId, merged, ct).ConfigureAwait(false);
@@ -434,7 +462,9 @@ public sealed class SilverLabelEngine
                 !l.TrimStart().StartsWith("//"));
 
             if (hasBlockingCall || hasAsyncVoid || hasLockThis || hasThreadSleep)
+            {
                 labels.Add(MakeLabel("GCI0016", "Diff contains async execution model violation (blocking call, async void, lock(this), or Thread.Sleep)", 0.65));
+            }
         }
 
         // GCI0012 -- Secret/credential exposure + weak cryptography + SQL injection
@@ -463,7 +493,7 @@ public sealed class SilverLabelEngine
 
             if (hasCredential || hasWeakHash || hasSqlInjection)
             {
-                var reason = hasWeakHash   ? "Diff adds use of weak hashing algorithm (MD5 or SHA1) in production code"
+                var reason = hasWeakHash ? "Diff adds use of weak hashing algorithm (MD5 or SHA1) in production code"
                            : hasSqlInjection ? "Diff builds SQL string via concatenation or interpolation in production code"
                            : "Diff contains credential keyword assigned to a literal string value on added production lines";
                 labels.Add(MakeLabel("GCI0012", reason, 0.7));
@@ -477,17 +507,21 @@ public sealed class SilverLabelEngine
             static bool IsSigLine(string l)
             {
                 var t = l.TrimStart();
-                return (t.StartsWith("public ",    StringComparison.Ordinal) ||
+                return (t.StartsWith("public ", StringComparison.Ordinal) ||
                         t.StartsWith("protected ", StringComparison.Ordinal) ||
-                        t.StartsWith("internal ",  StringComparison.Ordinal)) && t.Contains('(');
+                        t.StartsWith("internal ", StringComparison.Ordinal)) && t.Contains('(');
             }
             if (prodCsRemovedLines.Any(IsSigLine) && prodCsLines.Any(IsSigLine))
+            {
                 labels.Add(MakeLabel("GCI0003", "Diff removes and re-adds a non-private method signature in production code", 0.60));
+            }
         }
 
         // GCI0032 -- Empty or comment-only catch block (exception swallowing)
         if (HasEmptyCatch(addedLines))
+        {
             labels.Add(MakeLabel("GCI0032", "Diff contains an empty or comment-only catch block on added lines", 0.65));
+        }
 
         // GCI0021 -- Serialization attribute removed from production CS, or EF migration schema operation removed
         // Migration detection: check if removed lines from a non-test EF migration .cs file contain actual
@@ -500,7 +534,7 @@ public sealed class SilverLabelEngine
             // Require that removed lines from migration files contain actual EF schema operations
             var migrationRemovedLines = prodCsRemovedLines;
             hasMigrationModified = migrationRemovedLines.Any(l =>
-                l.Contains("migrationBuilder.Drop",  StringComparison.OrdinalIgnoreCase) ||
+                l.Contains("migrationBuilder.Drop", StringComparison.OrdinalIgnoreCase) ||
                 l.Contains("migrationBuilder.Alter", StringComparison.OrdinalIgnoreCase) ||
                 l.Contains("migrationBuilder.Rename", StringComparison.OrdinalIgnoreCase) ||
                 l.Contains("migrationBuilder.Create", StringComparison.OrdinalIgnoreCase));
@@ -509,12 +543,12 @@ public sealed class SilverLabelEngine
         bool hasRemovedSerializationAttr = prodCsRemovedLines.Any(l =>
         {
             var t = l.TrimStart();
-            return t.StartsWith("[JsonProperty",    StringComparison.OrdinalIgnoreCase) ||
+            return t.StartsWith("[JsonProperty", StringComparison.OrdinalIgnoreCase) ||
                    t.StartsWith("[JsonPropertyName", StringComparison.OrdinalIgnoreCase) ||
-                   t.StartsWith("[DataMember",      StringComparison.OrdinalIgnoreCase) ||
-                   t.StartsWith("[Column(",         StringComparison.OrdinalIgnoreCase) ||
-                   t.StartsWith("[BsonElement",     StringComparison.OrdinalIgnoreCase) ||
-                   t.StartsWith("[ForeignKey",      StringComparison.OrdinalIgnoreCase);
+                   t.StartsWith("[DataMember", StringComparison.OrdinalIgnoreCase) ||
+                   t.StartsWith("[Column(", StringComparison.OrdinalIgnoreCase) ||
+                   t.StartsWith("[BsonElement", StringComparison.OrdinalIgnoreCase) ||
+                   t.StartsWith("[ForeignKey", StringComparison.OrdinalIgnoreCase);
         });
 
         if (hasRemovedSerializationAttr || hasMigrationModified)
@@ -525,7 +559,7 @@ public sealed class SilverLabelEngine
         // GCI0004 -- Breaking change signals
         // Use production-CS-only lines to match the rule's file-scope filters (no test files, no .md docs).
         // Fire for [Obsolete] ADDED (active deprecation) OR [Obsolete] REMOVED (guard stripped).
-        bool hasObsoleteAdded   = prodCsLines.Any(l => l.Contains("[Obsolete", StringComparison.OrdinalIgnoreCase));
+        bool hasObsoleteAdded = prodCsLines.Any(l => l.Contains("[Obsolete", StringComparison.OrdinalIgnoreCase));
         bool hasObsoleteRemoved = prodCsRemovedLines.Any(l => l.Contains("[Obsolete", StringComparison.OrdinalIgnoreCase));
         if (hasObsoleteAdded || hasObsoleteRemoved)
         {
@@ -545,27 +579,42 @@ public sealed class SilverLabelEngine
             {
                 var line = addedLines[i];
                 var trimmed = line.TrimStart();
-                if (trimmed.StartsWith("//") || trimmed.StartsWith("*") || trimmed.StartsWith("/*")) continue;
+                if (trimmed.StartsWith("//") || trimmed.StartsWith("*") || trimmed.StartsWith("/*"))
+                {
+                    continue;
+                }
 
                 // --- Signal 1: unsafe .Value access ---
                 if (HasLabelerUnsafeValueAccess(line))
                 {
                     // Skip: IOptions<T>.Value (DI pattern, always non-null)
-                    if (line.Contains("IOptions", StringComparison.Ordinal)) continue;
+                    if (line.Contains("IOptions", StringComparison.Ordinal))
+                    {
+                        continue;
+                    }
                     // Skip: .Value = (LHS assignment, not reading)
-                    if (Regex.IsMatch(line, @"\.Value\s*=(?!=|>)")) continue;
+                    if (Regex.IsMatch(line, @"\.Value\s*=(?!=|>)"))
+                    {
+                        continue;
+                    }
                     // Skip: KVP iteration (.Key word-bounded on same line)
-                    if (HasLabelerDotKeyAccess(line)) continue;
+                    if (HasLabelerDotKeyAccess(line))
+                    {
+                        continue;
+                    }
                     // Check: no null guard in surrounding 10 added lines
                     int start = Math.Max(0, i - 5);
-                    int end   = Math.Min(addedLines.Count, i + 5);
+                    int end = Math.Min(addedLines.Count, i + 5);
                     bool guarded = addedLines[start..end]
                         .Any(l => l.Contains("HasValue", StringComparison.Ordinal) ||
                                   l.Contains("is not null", StringComparison.Ordinal) ||
                                   Regex.IsMatch(l, @"\.Value\s*(==|!=|is)\s*null") ||
                                   (l.Contains(".Success", StringComparison.Ordinal) &&
                                    HasSharedRoot(line, l)));
-                    if (!guarded) triggered = true;
+                    if (!guarded)
+                    {
+                        triggered = true;
+                    }
                 }
 
                 // --- Signal 2: public/protected non-constructor method with nullable params missing guard ---
@@ -583,11 +632,16 @@ public sealed class SilverLabelEngine
                                   l.Contains("ArgumentNullException", StringComparison.Ordinal) ||
                                   l.Contains("ThrowIfNull", StringComparison.Ordinal) ||
                                   l.Contains("Guard.", StringComparison.Ordinal));
-                    if (!hasValidation) triggered = true;
+                    if (!hasValidation)
+                    {
+                        triggered = true;
+                    }
                 }
             }
             if (triggered)
+            {
                 labels.Add(MakeLabel("GCI0006", "Added C# code accesses .Value without a null guard or has unvalidated nullable parameters", 0.6));
+            }
         }
 
         // GCI0010 -- Hardcoded configuration value
@@ -608,8 +662,8 @@ public sealed class SilverLabelEngine
         // OR when a raw INSERT INTO appears without an upsert guard.
         {
             var idempotencySignals = new[] { "IdempotencyKey", "Idempotency-Key", "idempotencyKey", "idempotent", "dedup", "Dedup", "RequestId", "requestId", "MessageId", "messageId" };
-            var upsertPatterns     = new[] { "ON DUPLICATE KEY", "ON CONFLICT", "INSERT OR REPLACE", "INSERT OR IGNORE", "MERGE INTO", "UPSERT" };
-            bool hasHttpPostAdded  = addedLines.Any(l =>
+            var upsertPatterns = new[] { "ON DUPLICATE KEY", "ON CONFLICT", "INSERT OR REPLACE", "INSERT OR IGNORE", "MERGE INTO", "UPSERT" };
+            bool hasHttpPostAdded = addedLines.Any(l =>
             {
                 var t = l.Trim();
                 return t.Equals("[HttpPost]", StringComparison.Ordinal) ||
@@ -623,7 +677,9 @@ public sealed class SilverLabelEngine
                 bool hasIdempotencySignal = addedLines.Any(l =>
                     idempotencySignals.Any(sig => l.Contains(sig, StringComparison.OrdinalIgnoreCase)));
                 if (!hasIdempotencySignal)
+                {
                     labels.Add(MakeLabel("GCI0022", "Diff adds an [HttpPost] endpoint or raw INSERT INTO without idempotency/upsert guard", 0.60));
+                }
             }
         }
 
@@ -671,43 +727,78 @@ public sealed class SilverLabelEngine
             {
                 var trimmed = l.TrimStart();
                 if (trimmed.StartsWith("//") || trimmed.StartsWith("*") || trimmed.StartsWith("/*"))
+                {
                     return false;
-                if (l.Contains("using ", StringComparison.Ordinal)) return false;
-                if (trimmed.StartsWith("return ", StringComparison.Ordinal)) return false;
-                if (l.Contains("static ", StringComparison.Ordinal)) return false;
+                }
+
+                if (l.Contains("using ", StringComparison.Ordinal))
+                {
+                    return false;
+                }
+
+                if (trimmed.StartsWith("return ", StringComparison.Ordinal))
+                {
+                    return false;
+                }
+
+                if (l.Contains("static ", StringComparison.Ordinal))
+                {
+                    return false;
+                }
                 // Lambda body: `(...) => new X(`: ownership transfers into the lambda's caller.
                 int arrowIdx = l.IndexOf("=>", StringComparison.Ordinal);
-                int newIdx   = l.IndexOf("new ", StringComparison.Ordinal);
-                if (arrowIdx >= 0 && newIdx >= 0 && newIdx > arrowIdx) return false;
+                int newIdx = l.IndexOf("new ", StringComparison.Ordinal);
+                if (arrowIdx >= 0 && newIdx >= 0 && newIdx > arrowIdx)
+                {
+                    return false;
+                }
                 // Fast path: explicit known types
-                if (labeler0024Explicit.Any(t => l.Contains(t, StringComparison.Ordinal))) return true;
+                if (labeler0024Explicit.Any(t => l.Contains(t, StringComparison.Ordinal)))
+                {
+                    return true;
+                }
                 // Suffix heuristic
                 var m = labeler0024Rx.Match(l);
-                if (!m.Success) return false;
+                if (!m.Success)
+                {
+                    return false;
+                }
+
                 var typeName = m.Groups[1].Value;
                 if (!labeler0024Suffixes.Any(s => typeName.EndsWith(s, StringComparison.Ordinal)))
+                {
                     return false;
-                if (labeler0024NonDisposable.Contains(typeName)) return false;
+                }
+
+                if (labeler0024NonDisposable.Contains(typeName))
+                {
+                    return false;
+                }
                 // Callee-owns skip: unmatched `(` before `new typeName` means arg in a method call
                 int idx = l.IndexOf("new " + typeName, StringComparison.Ordinal);
                 if (idx > 0)
                 {
                     var before = l[..idx];
-                    int opens  = before.Count(c => c == '(');
+                    int opens = before.Count(c => c == '(');
                     int closes = before.Count(c => c == ')');
-                    if (opens > closes) return false;
+                    if (opens > closes)
+                    {
+                        return false;
+                    }
                 }
                 return true;
             }
 
             if (prodCsLines.Any(HasUnsafeDisposableAllocation))
+            {
                 labels.Add(MakeLabel("GCI0024", "Diff allocates a disposable resource without a using statement on added lines", 0.60));
+            }
         }
 
         // GCI0029 -- PII term in a log call
         {
             var piiLogPrefixes = new[] { "_logger.", "logger.", "Logger.", "_log.", "log.", "Log.Information", "Log.Warning", "Log.Error", "Log.Debug" };
-            var piiTerms       = new[] { "email", "ssn", "phonenumber", "creditcard", "dateofbirth", "passport", "bankaccount", "nationalid", "taxid", "dob", "birthdate", "zipcode", "postalcode", "geolocation" };
+            var piiTerms = new[] { "email", "ssn", "phonenumber", "creditcard", "dateofbirth", "passport", "bankaccount", "nationalid", "taxid", "dob", "birthdate", "zipcode", "postalcode", "geolocation" };
             if (addedLines.Any(l =>
                     piiLogPrefixes.Any(p => l.Contains(p, StringComparison.Ordinal)) &&
                     piiTerms.Any(t => l.Contains(t, StringComparison.OrdinalIgnoreCase))))
@@ -737,46 +828,68 @@ public sealed class SilverLabelEngine
                 if (dl.StartsWith("+++ b/", StringComparison.Ordinal))
                 {
                     var fp32 = dl[6..].TrimEnd('\r');
-                    inCsFile32   = fp32.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
+                    inCsFile32 = fp32.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
                     inTestFile32 = fp32.Contains("test", StringComparison.OrdinalIgnoreCase) ||
                                    fp32.Contains("spec", StringComparison.OrdinalIgnoreCase);
                     continue;
                 }
-                if (!inCsFile32) continue;
-                if (dl.StartsWith("---") || dl.StartsWith("+++") || dl.StartsWith("@@")) continue;
-                if (dl.StartsWith("-")) continue;  // Skip removed lines for both checks
+                if (!inCsFile32)
+                {
+                    continue;
+                }
+
+                if (dl.StartsWith("---") || dl.StartsWith("+++") || dl.StartsWith("@@"))
+                {
+                    continue;
+                }
+
+                if (dl.StartsWith("-"))
+                {
+                    continue;  // Skip removed lines for both checks
+                }
 
                 // Line is either added (+) or context (space/empty).
                 var content32 = dl.StartsWith("+") ? dl[1..] : dl;
                 var trimmed32 = content32.TrimStart();
-                if (trimmed32.StartsWith("//")) continue;
+                if (trimmed32.StartsWith("//"))
+                {
+                    continue;
+                }
 
                 if (inTestFile32)
                 {
                     // Context and added lines both count as assertion evidence (matches rule hunk scan).
                     if (throwAssertions0032.Any(a => content32.Contains(a, StringComparison.Ordinal)))
+                    {
                         hasThrowAssertion32 = true;
+                    }
                 }
                 else if (dl.StartsWith("+"))
                 {
                     // Only new (+) lines in prod code can be new throw paths.
                     if (content32.Contains("throw new", StringComparison.Ordinal) &&
                         !guardPrefixes0032.Any(g => content32.Contains(g, StringComparison.Ordinal)))
+                    {
                         hasRealThrow32 = true;
+                    }
                 }
             }
 
             if (hasRealThrow32 && !hasThrowAssertion32)
+            {
                 labels.Add(MakeLabel("GCI0032", "Diff adds a throw new (non-guard) expression without test assertion coverage", 0.55));
+            }
         }
 
         // GCI0036 -- mutation in a visible getter block (or mutation within [Pure]-annotated context)
         {
             bool hasGetterMutation = HasGetterMutationInDiff(rawDiff, pathLines);
             if (hasGetterMutation)
+            {
                 labels.Add(MakeLabel("GCI0036",
                     "Diff adds a field assignment inside a property getter block",
                     0.60));
+            }
         }
 
         // GCI0038 -- DI anti-pattern: service locator or direct injectable instantiation
@@ -815,17 +928,33 @@ public sealed class SilverLabelEngine
                     inProdCs38 = isCsFile38 && !isTest38 && !isInfra38;
                     continue;
                 }
-                if (!inProdCs38) continue;
-                if (!dl.StartsWith("+") || dl.StartsWith("+++")) continue;
+                if (!inProdCs38)
+                {
+                    continue;
+                }
+
+                if (!dl.StartsWith("+") || dl.StartsWith("+++"))
+                {
+                    continue;
+                }
+
                 var c38 = dl[1..];
-                if (c38.TrimStart().StartsWith("//")) continue;
+                if (c38.TrimStart().StartsWith("//"))
+                {
+                    continue;
+                }
 
                 if (serviceLocatorPatterns38.Any(p => c38.Contains(p, StringComparison.Ordinal)) ||
                     newInjectableRegex38.IsMatch(c38))
-                { hasGci0038 = true; break; }
+                {
+                    hasGci0038 = true;
+                    break;
+                }
             }
             if (hasGci0038)
+            {
                 labels.Add(MakeLabel("GCI0038", "Diff contains a service locator call or direct instantiation of an injectable type", 0.60));
+            }
         }
 
         // GCI0039 -- Direct HttpClient instantiation in non-test .cs files.
@@ -846,15 +975,32 @@ public sealed class SilverLabelEngine
                     inNonTestCs39 = isCsFile39 && !isTest39;
                     continue;
                 }
-                if (!inNonTestCs39) continue;
-                if (!t39.StartsWith('+') || t39.StartsWith("+++")) continue;
+                if (!inNonTestCs39)
+                {
+                    continue;
+                }
+
+                if (!t39.StartsWith('+') || t39.StartsWith("+++"))
+                {
+                    continue;
+                }
+
                 var c39 = t39[1..];
-                if (c39.TrimStart().StartsWith("//")) continue;
+                if (c39.TrimStart().StartsWith("//"))
+                {
+                    continue;
+                }
+
                 if (c39.Contains("new HttpClient(", StringComparison.Ordinal))
-                { hasDirectHttpClient39 = true; break; }
+                {
+                    hasDirectHttpClient39 = true;
+                    break;
+                }
             }
             if (hasDirectHttpClient39)
+            {
                 labels.Add(MakeLabel("GCI0039", "Diff instantiates HttpClient directly in a non-test C# file, bypassing IHttpClientFactory", 0.65));
+            }
         }
 
         // GCI0041 -- Silenced tests in test files.
@@ -875,8 +1021,16 @@ public sealed class SilverLabelEngine
                                  !filePath.Contains("testdata", StringComparison.OrdinalIgnoreCase);
                     continue;
                 }
-                if (!inTestFile) continue;
-                if (!trimmed.StartsWith('+') || trimmed.StartsWith("+++")) continue;
+                if (!inTestFile)
+                {
+                    continue;
+                }
+
+                if (!trimmed.StartsWith('+') || trimmed.StartsWith("+++"))
+                {
+                    continue;
+                }
+
                 var content = trimmed[1..];
                 if (silenceTokens.Any(s => content.Contains(s, StringComparison.OrdinalIgnoreCase)))
                 {
@@ -885,7 +1039,9 @@ public sealed class SilverLabelEngine
                 }
             }
             if (hasSilencedTest)
+            {
                 labels.Add(MakeLabel("GCI0041", "Diff silences or skips a test in a test file", 0.65));
+            }
         }
 
         // GCI0042 -- TODO/FIXME/HACK marker or NotImplementedException in non-test .cs files
@@ -906,27 +1062,47 @@ public sealed class SilverLabelEngine
                     inNonTestCs42 = isCsFile && !isTest42;
                     continue;
                 }
-                if (!inNonTestCs42) continue;
-                if (!trimmed42.StartsWith('+') || trimmed42.StartsWith("+++")) continue;
+                if (!inNonTestCs42)
+                {
+                    continue;
+                }
+
+                if (!trimmed42.StartsWith('+') || trimmed42.StartsWith("+++"))
+                {
+                    continue;
+                }
+
                 var content42 = trimmed42[1..];
                 var ct42 = content42.TrimStart();
-                if (ct42.StartsWith("///", StringComparison.Ordinal)) continue;
+                if (ct42.StartsWith("///", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
                 if (ct42.StartsWith("//", StringComparison.Ordinal))
                 {
                     var body42 = ct42[2..].TrimStart();
                     if (body42.StartsWith("TODO", StringComparison.OrdinalIgnoreCase) ||
                         body42.StartsWith("FIXME", StringComparison.OrdinalIgnoreCase) ||
                         body42.StartsWith("HACK", StringComparison.OrdinalIgnoreCase))
-                    { hasStub42 = true; break; }
+                    {
+                        hasStub42 = true;
+                        break;
+                    }
                 }
                 else if (content42.Contains("TODO", StringComparison.OrdinalIgnoreCase) ||
                          content42.Contains("FIXME", StringComparison.OrdinalIgnoreCase) ||
                          content42.Contains("HACK", StringComparison.OrdinalIgnoreCase) ||
                          content42.Contains("throw new NotImplementedException", StringComparison.Ordinal))
-                { hasStub42 = true; break; }
+                {
+                    hasStub42 = true;
+                    break;
+                }
             }
             if (hasStub42)
+            {
                 labels.Add(MakeLabel("GCI0042", "Diff contains a TODO/FIXME/HACK marker or NotImplementedException stub in a non-test C# file", 0.70));
+            }
         }
 
         // GCI0043 -- Null-forgiving / nullable pragma disable / unchecked as-cast
@@ -955,29 +1131,57 @@ public sealed class SilverLabelEngine
             for (int i = 0; i < asCastLines.Count && !hasUncheckedAsCast43; i++)
             {
                 var l = asCastLines[i];
-                if (!l.Contains(" as ", StringComparison.Ordinal)) continue;
+                if (!l.Contains(" as ", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
                 var t = l.TrimStart();
-                if (t.StartsWith("//") || t.StartsWith("///") || t.StartsWith("*")) continue;
+                if (t.StartsWith("//") || t.StartsWith("///") || t.StartsWith("*"))
+                {
+                    continue;
+                }
+
                 var ap = l.IndexOf(" as ", StringComparison.Ordinal);
                 var afterAs43 = l[(ap + 4)..].TrimStart();
                 // as object: always safe
                 if (afterAs43.StartsWith("object", StringComparison.Ordinal) &&
-                    (afterAs43.Length == 6 || (!char.IsLetterOrDigit(afterAs43[6]) && afterAs43[6] != '_'))) continue;
+                    (afterAs43.Length == 6 || (!char.IsLetterOrDigit(afterAs43[6]) && afterAs43[6] != '_')))
+                {
+                    continue;
+                }
                 // (x as T)?.: null-conditional, safe
-                if (l[(ap + 4)..].Contains(")?.", StringComparison.Ordinal)) continue;
+                if (l[(ap + 4)..].Contains(")?.", StringComparison.Ordinal))
+                {
+                    continue;
+                }
                 // .Value boundary: owned by GCI0006
-                if (l.Contains(".Value", StringComparison.Ordinal)) continue;
+                if (l.Contains(".Value", StringComparison.Ordinal))
+                {
+                    continue;
+                }
                 // ±2 null-check window
                 int s43 = Math.Max(0, i - 2), e43 = Math.Min(asCastLines.Count - 1, i + 2);
                 bool hasNullCheck43 = false;
                 for (int j = s43; j <= e43; j++)
+                {
                     if (nullCheckPatterns43.Any(p => asCastLines[j].Contains(p, StringComparison.Ordinal)))
-                    { hasNullCheck43 = true; break; }
-                if (!hasNullCheck43) hasUncheckedAsCast43 = true;
+                    {
+                        hasNullCheck43 = true;
+                        break;
+                    }
+                }
+
+                if (!hasNullCheck43)
+                {
+                    hasUncheckedAsCast43 = true;
+                }
             }
 
             if (hasPragma43 || hasNullForgiving43 || hasUncheckedAsCast43)
+            {
                 labels.Add(MakeLabel("GCI0043", "Diff disables nullable warnings, uses multiple null-forgiving operators, or has unchecked as-cast on added lines", 0.60));
+            }
         }
 
         // GCI0044 -- Performance hotpath risk: Thread.Sleep / LINQ in loop / unbounded .Add in loop
@@ -994,32 +1198,48 @@ public sealed class SilverLabelEngine
                 // Build non-removed lines list from rawDiff, scoped to non-test C# files,
                 // preserving context lines so loop keywords on unchanged code are visible.
                 bool inTestFile44 = false;
-                bool inCsFile44   = false;
-                var nonRemoved44  = new List<(bool IsAdded, string Content)>();
+                bool inCsFile44 = false;
+                var nonRemoved44 = new List<(bool IsAdded, string Content)>();
                 foreach (var dl in rawDiff.Split('\n'))
                 {
                     if (dl.StartsWith("+++ b/", StringComparison.Ordinal))
                     {
                         var fp = dl[6..].TrimEnd('\r');
-                        inCsFile44   = fp.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
+                        inCsFile44 = fp.EndsWith(".cs", StringComparison.OrdinalIgnoreCase);
                         inTestFile44 = fp.Contains("test", StringComparison.OrdinalIgnoreCase) ||
                                        fp.Contains("spec", StringComparison.OrdinalIgnoreCase);
                         continue;
                     }
-                    if (!inCsFile44 || inTestFile44) continue;
-                    if (dl.StartsWith("---") || dl.StartsWith("+++") || dl.StartsWith("@@")) continue;
-                    if (dl.StartsWith("-")) continue;
+                    if (!inCsFile44 || inTestFile44)
+                    {
+                        continue;
+                    }
+
+                    if (dl.StartsWith("---") || dl.StartsWith("+++") || dl.StartsWith("@@"))
+                    {
+                        continue;
+                    }
+
+                    if (dl.StartsWith("-"))
+                    {
+                        continue;
+                    }
+
                     nonRemoved44.Add((dl.StartsWith("+"), dl.StartsWith("+") ? dl[1..] : dl));
                 }
 
-                var linqMethods44        = new[] { ".Where(", ".Select(", ".FirstOrDefault(", ".Any(", ".Count(" };
-                var loopKeywordsAll44    = new[] { "for (", "foreach (", "while (" };
-                var unboundedLoops44     = new[] { "for (", "while (" };
+                var linqMethods44 = new[] { ".Where(", ".Select(", ".FirstOrDefault(", ".Any(", ".Count(" };
+                var loopKeywordsAll44 = new[] { "for (", "foreach (", "while (" };
+                var unboundedLoops44 = new[] { "for (", "while (" };
 
                 bool triggered44 = false;
                 for (int i = 0; i < nonRemoved44.Count && !triggered44; i++)
                 {
-                    if (!nonRemoved44[i].IsAdded) continue;
+                    if (!nonRemoved44[i].IsAdded)
+                    {
+                        continue;
+                    }
+
                     var lc = nonRemoved44[i].Content;
 
                     bool hasLinq = linqMethods44.Any(m => lc.Contains(m, StringComparison.Ordinal));
@@ -1027,7 +1247,10 @@ public sealed class SilverLabelEngine
                     bool hasCollectionAdd = lc.Replace("Unsafe.Add(", "UNSAFE_PTR(")
                                              .Contains(".Add(", StringComparison.Ordinal);
 
-                    if (!hasLinq && !hasCollectionAdd) continue;
+                    if (!hasLinq && !hasCollectionAdd)
+                    {
+                        continue;
+                    }
 
                     var keywords = hasLinq ? loopKeywordsAll44 : unboundedLoops44;
                     int lookback = Math.Max(0, i - 10);
@@ -1042,14 +1265,18 @@ public sealed class SilverLabelEngine
                 }
 
                 if (triggered44)
+                {
                     labels.Add(MakeLabel("GCI0044", "Diff adds LINQ call or unbounded .Add inside a loop on production code", 0.55));
+                }
             }
         }
 
         // GCI0045 -- New interface definition (potential single-use interface)
         // Use prodCsLines (non-test .cs only) to mirror the rule, which skips test files and non-.cs files.
         if (prodCsLines.Any(l => Regex.IsMatch(l, @"\binterface\s+I[A-Z]")))
+        {
             labels.Add(MakeLabel("GCI0045", "Diff adds a new interface definition (potential single-use abstraction)", 0.45));
+        }
 
         // GCI0046 -- Service locator pattern or mixed sync/async method names
         {
@@ -1092,7 +1319,7 @@ public sealed class SilverLabelEngine
                 .Where(m => m.Success)
                 .Select(m => (Verb: m.Groups[1].Value[..^m.Groups[2].Value.Length], Base: m.Groups[2].Value))
                 .ToList();
-            var addedVerbBases   = new HashSet<(string, string)>(addedBases.Select(a  => (a.Verb, a.Base)));
+            var addedVerbBases = new HashSet<(string, string)>(addedBases.Select(a => (a.Verb, a.Base)));
             var removedVerbBases = new HashSet<(string, string)>(removedBases.Select(r => (r.Verb, r.Base)));
             bool hasContradiction = removedBases.Any(r =>
                 // Guard: skip if the removed method still exists in added lines (not renamed away)
@@ -1103,7 +1330,9 @@ public sealed class SilverLabelEngine
                     !removedVerbBases.Contains((a.Verb, a.Base)) &&
                     contradictoryPairs.Contains((r.Verb, a.Verb))));
             if (hasContradiction)
+            {
                 labels.Add(MakeLabel("GCI0047", "Diff renames a CRUD-verb method to a semantically opposing verb on the same base name", 0.65));
+            }
         }
 
         // GCI0049 -- Float/double equality comparison
@@ -1118,13 +1347,15 @@ public sealed class SilverLabelEngine
         // GCI0015 -- Data integrity risk: SQL IGNORE pattern or HTTP input binding in production code.
         {
             var httpSignals0015 = new[] { "Request.Form", "Request.Query", "Request.Body", "HttpContext.Request", "[FromBody]", "[FromForm]", "[FromQuery]" };
-            var sqlIgnore0015   = new[] { "INSERT IGNORE", "ON CONFLICT DO NOTHING", "INSERT OR IGNORE" };
+            var sqlIgnore0015 = new[] { "INSERT IGNORE", "ON CONFLICT DO NOTHING", "INSERT OR IGNORE" };
             bool hasSqlIgnore0015 = addedLines.Any(l =>
                 sqlIgnore0015.Any(p => l.Contains(p, StringComparison.OrdinalIgnoreCase)));
             bool hasHttpInput0015 = prodCsLines.Any(l =>
                 httpSignals0015.Any(s => l.Contains(s, StringComparison.Ordinal)));
             if (hasSqlIgnore0015 || hasHttpInput0015)
+            {
                 labels.Add(MakeLabel("GCI0015", "Diff contains SQL IGNORE pattern or HTTP input binding in production code", 0.55));
+            }
         }
 
         // GCI0035 -- Architecture layer guard: added using directive importing an infrastructure namespace
@@ -1142,18 +1373,35 @@ public sealed class SilverLabelEngine
                                  || lower35.Contains(".domain.") || lower35.Contains(".application.");
                     continue;
                 }
-                if (!inDomainOrApp) continue;
-                if (!t35.StartsWith('+') || t35.StartsWith("+++")) continue;
+                if (!inDomainOrApp)
+                {
+                    continue;
+                }
+
+                if (!t35.StartsWith('+') || t35.StartsWith("+++"))
+                {
+                    continue;
+                }
+
                 var c35 = t35[1..].TrimStart();
-                if (!c35.StartsWith("using ", StringComparison.Ordinal)) continue;
+                if (!c35.StartsWith("using ", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
                 if (c35.Contains(".Infrastructure.", StringComparison.OrdinalIgnoreCase) ||
                     c35.Contains(".Persistence.", StringComparison.OrdinalIgnoreCase) ||
                     c35.Contains(".Data.", StringComparison.OrdinalIgnoreCase) ||
                     c35.Contains(".Database.", StringComparison.OrdinalIgnoreCase))
-                { triggered0035 = true; break; }
+                {
+                    triggered0035 = true;
+                    break;
+                }
             }
             if (triggered0035)
+            {
                 labels.Add(MakeLabel("GCI0035", "Diff adds a using directive importing an infrastructure namespace in a domain/application layer file", 0.60));
+            }
         }
 
         // GCI0048 -- System.Random instantiation near a security-sensitive identifier in production code.
@@ -1164,27 +1412,40 @@ public sealed class SilverLabelEngine
             for (int i = 0; i < prodList0048.Count && !triggered0048; i++)
             {
                 var l48 = prodList0048[i];
-                if (!Regex.IsMatch(l48, @"\bnew\s+Random\s*\(", RegexOptions.IgnoreCase)) continue;
-                if (l48.TrimStart().StartsWith("//")) continue;
+                if (!Regex.IsMatch(l48, @"\bnew\s+Random\s*\(", RegexOptions.IgnoreCase))
+                {
+                    continue;
+                }
+
+                if (l48.TrimStart().StartsWith("//"))
+                {
+                    continue;
+                }
+
                 int s48 = Math.Max(0, i - 5), e48 = Math.Min(prodList0048.Count - 1, i + 5);
                 for (int j = s48; j <= e48 && !triggered0048; j++)
                 {
                     var lower48 = prodList0048[j].ToLowerInvariant();
-                    if (secTerms0048.Any(t => lower48.Contains(t))) triggered0048 = true;
+                    if (secTerms0048.Any(t => lower48.Contains(t)))
+                    {
+                        triggered0048 = true;
+                    }
                 }
             }
             if (triggered0048)
+            {
                 labels.Add(MakeLabel("GCI0048", "Diff instantiates System.Random near a security-sensitive identifier in production code", 0.70));
+            }
         }
 
         // GCI0050 -- SQL column truncation risk: short nvarchar/varchar or StringLength/MaxLength in schema files.
         {
             var schemaTokens0050 = new[] { "/migration", "migration.cs", "schema", "dbcontext", "entityconfig", "modelbuilder", "fluent" };
-            bool inSchema0050    = false;
-            bool triggered0050   = false;
-            var varcharRx0050    = new Regex(@"\bn?varchar\s*\(\s*(\d+)\s*\)", RegexOptions.IgnoreCase);
-            var attrRx0050       = new Regex(@"\[(?:StringLength|MaxLength)\s*\(\s*(\d+)", RegexOptions.IgnoreCase);
-            var fluentRx0050     = new Regex(@"\bHasMaxLength\s*\(\s*(\d+)\s*\)");
+            bool inSchema0050 = false;
+            bool triggered0050 = false;
+            var varcharRx0050 = new Regex(@"\bn?varchar\s*\(\s*(\d+)\s*\)", RegexOptions.IgnoreCase);
+            var attrRx0050 = new Regex(@"\[(?:StringLength|MaxLength)\s*\(\s*(\d+)", RegexOptions.IgnoreCase);
+            var fluentRx0050 = new Regex(@"\bHasMaxLength\s*\(\s*(\d+)\s*\)");
             foreach (var rawLine in rawDiff.Split('\n'))
             {
                 var t50 = rawLine.TrimEnd('\r');
@@ -1194,21 +1455,41 @@ public sealed class SilverLabelEngine
                     inSchema0050 = lower50.EndsWith(".cs") && schemaTokens0050.Any(tok => lower50.Contains(tok));
                     continue;
                 }
-                if (!inSchema0050) continue;
-                if (!t50.StartsWith('+') || t50.StartsWith("+++")) continue;
+                if (!inSchema0050)
+                {
+                    continue;
+                }
+
+                if (!t50.StartsWith('+') || t50.StartsWith("+++"))
+                {
+                    continue;
+                }
+
                 var c50 = t50[1..];
                 var tr50 = c50.TrimStart();
-                if (tr50.StartsWith("//") || tr50.StartsWith("--") || tr50.StartsWith("*")) continue;
+                if (tr50.StartsWith("//") || tr50.StartsWith("--") || tr50.StartsWith("*"))
+                {
+                    continue;
+                }
+
                 foreach (var rx50 in new[] { varcharRx0050, attrRx0050, fluentRx0050 })
                 {
                     var m50 = rx50.Match(c50);
                     if (m50.Success && int.TryParse(m50.Groups[1].Value, out int n50) && n50 < 100)
-                    { triggered0050 = true; break; }
+                    {
+                        triggered0050 = true;
+                        break;
+                    }
                 }
-                if (triggered0050) break;
+                if (triggered0050)
+                {
+                    break;
+                }
             }
             if (triggered0050)
+            {
                 labels.Add(MakeLabel("GCI0050", "Diff adds a short string column definition (< 100 chars) in a schema or migration file", 0.65));
+            }
         }
 
         // GCI0053 -- Lockfile changed without source changes.
@@ -1221,7 +1502,11 @@ public sealed class SilverLabelEngine
             var sourceExts0053 = new[] { ".cs", ".ts", ".js", ".py", ".go", ".rs" };
             bool hasLockfile0053 = pathLines.Any(l =>
             {
-                if (!l.StartsWith("+++ b/", StringComparison.Ordinal)) return false;
+                if (!l.StartsWith("+++ b/", StringComparison.Ordinal))
+                {
+                    return false;
+                }
+
                 var path = l[6..].TrimEnd('\r');
                 return lockfileNames0053.Contains(Path.GetFileName(path)) ||
                        Path.GetExtension(path).Equals(".lock", StringComparison.OrdinalIgnoreCase);
@@ -1230,11 +1515,17 @@ public sealed class SilverLabelEngine
             {
                 bool hasSource0053 = pathLines.Any(l =>
                 {
-                    if (!l.StartsWith("+++ b/", StringComparison.Ordinal)) return false;
+                    if (!l.StartsWith("+++ b/", StringComparison.Ordinal))
+                    {
+                        return false;
+                    }
+
                     return sourceExts0053.Contains(Path.GetExtension(l[6..].TrimEnd('\r')).ToLowerInvariant());
                 });
                 if (!hasSource0053)
+                {
                     labels.Add(MakeLabel("GCI0053", "Diff modifies a lockfile without any accompanying source file changes", 0.60));
+                }
             }
         }
     }
@@ -1258,12 +1549,19 @@ public sealed class SilverLabelEngine
         // Skip comments and null-checks
         var trimmed = line.TrimStart();
         if (trimmed.StartsWith("//") || trimmed.StartsWith("*") || trimmed.StartsWith("/*"))
+        {
             return false;
+        }
+
         if (trimmed.Contains("== null") || trimmed.Contains("!= null") || trimmed.Contains("?? "))
+        {
             return false;
+        }
         // Skip nullable declarations: `Type? name = null;`
         if (Regex.IsMatch(trimmed, @"\?\s+\w+\s*=\s*null\s*;"))
+        {
             return false;
+        }
 
         return MeaningfulNullAssign.IsMatch(line) || NullForgivingNonTrivial.IsMatch(line);
     }
@@ -1277,17 +1575,36 @@ public sealed class SilverLabelEngine
         while (pos < line.Length)
         {
             int idx = line.IndexOf(".Value", pos, StringComparison.Ordinal);
-            if (idx < 0) return false;
+            if (idx < 0)
+            {
+                return false;
+            }
+
             int after = idx + 6;
             // .Values, .ValueOrDefault etc.: not a bare .Value access
             if (after < line.Length && (char.IsLetterOrDigit(line[after]) || line[after] == '_'))
-            { pos = after; continue; }
+            {
+                pos = after;
+                continue;
+            }
             // .Value!: null-forgiving
-            if (after < line.Length && line[after] == '!') { pos = after; continue; }
+            if (after < line.Length && line[after] == '!')
+            {
+                pos = after;
+                continue;
+            }
             // .Value?: null-conditional
-            if (after < line.Length && line[after] == '?') { pos = after; continue; }
+            if (after < line.Length && line[after] == '?')
+            {
+                pos = after;
+                continue;
+            }
             // ?.Value: null-conditional
-            if (idx > 0 && line[idx - 1] == '?') { pos = after; continue; }
+            if (idx > 0 && line[idx - 1] == '?')
+            {
+                pos = after;
+                continue;
+            }
             return true;
         }
         return false;
@@ -1300,11 +1617,18 @@ public sealed class SilverLabelEngine
         while (pos < content.Length)
         {
             int idx = content.IndexOf(".Key", pos, StringComparison.Ordinal);
-            if (idx < 0) return false;
+            if (idx < 0)
+            {
+                return false;
+            }
+
             int after = idx + 4;
             if (after >= content.Length ||
                 (!char.IsLetterOrDigit(content[after]) && content[after] != '_'))
+            {
                 return true;
+            }
+
             pos = after;
         }
         return false;
@@ -1325,13 +1649,21 @@ public sealed class SilverLabelEngine
             stripped = false;
             foreach (var kw in LabelerCtorSkipKeywords)
             {
-                if (!part.StartsWith(kw + " ", StringComparison.Ordinal)) continue;
+                if (!part.StartsWith(kw + " ", StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
                 part = part[(kw.Length + 1)..].TrimStart();
                 stripped = true;
             }
         }
         int paren = part.IndexOf('(');
-        if (paren <= 0) return false;
+        if (paren <= 0)
+        {
+            return false;
+        }
+
         return !part[..paren].Contains(' ');
     }
 
@@ -1339,10 +1671,18 @@ public sealed class SilverLabelEngine
     private static bool HasSharedRoot(string valueLine, string guardLine)
     {
         int vi = valueLine.IndexOf(".Value", StringComparison.Ordinal);
-        if (vi <= 0) return false;
+        if (vi <= 0)
+        {
+            return false;
+        }
+
         int s = vi - 1;
         while (s > 0 && valueLine[s - 1] is char c2 &&
-               (char.IsLetterOrDigit(c2) || c2 is '_' or '.' or '[' or ']')) s--;
+               (char.IsLetterOrDigit(c2) || c2 is '_' or '.' or '[' or ']'))
+        {
+            s--;
+        }
+
         var expr = valueLine[s..vi];
         int b = expr.IndexOfAny(['.', '[']);
         var root = b > 0 ? expr[..b] : expr;
@@ -1377,7 +1717,10 @@ public sealed class SilverLabelEngine
     /// </summary>
     private static bool HasGetterMutationInDiff(string rawDiff, List<string> pathLines)
     {
-        if (string.IsNullOrEmpty(rawDiff)) return false;
+        if (string.IsNullOrEmpty(rawDiff))
+        {
+            return false;
+        }
 
         int braceDepth = 0;
         bool inGetter = false;
@@ -1396,23 +1739,37 @@ public sealed class SilverLabelEngine
                 rawLine.StartsWith("index ", StringComparison.Ordinal) ||
                 rawLine.StartsWith("--- ", StringComparison.Ordinal))
             {
-                braceDepth = 0; inGetter = false; getterExitDepth = -1; getterStartIdx = -1; expectGetterBrace = false;
+                braceDepth = 0;
+                inGetter = false;
+                getterExitDepth = -1;
+                getterStartIdx = -1;
+                expectGetterBrace = false;
                 continue;
             }
             if (rawLine.StartsWith("+++ ", StringComparison.Ordinal))
             {
-                braceDepth = 0; inGetter = false; getterExitDepth = -1; getterStartIdx = -1; expectGetterBrace = false;
+                braceDepth = 0;
+                inGetter = false;
+                getterExitDepth = -1;
+                getterStartIdx = -1;
+                expectGetterBrace = false;
                 skipCurrentFile = rawLine.Contains("Test", StringComparison.OrdinalIgnoreCase) ||
                                   rawLine.Contains("Spec", StringComparison.OrdinalIgnoreCase) ||
                                   rawLine.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase) ||
                                   rawLine.Contains(".g.cs", StringComparison.OrdinalIgnoreCase);
                 continue;
             }
-            if (rawLine.StartsWith("@@")) continue; // hunk header -- no state reset (mirrors rule)
+            if (rawLine.StartsWith("@@"))
+            {
+                continue; // hunk header -- no state reset (mirrors rule)
+            }
 
             bool isAdded = rawLine.Length > 0 && rawLine[0] == '+';
             bool isRemoved = rawLine.Length > 0 && rawLine[0] == '-';
-            if (isRemoved) continue;
+            if (isRemoved)
+            {
+                continue;
+            }
 
             var content = rawLine.Length > 0 ? rawLine[1..] : "";
             var trimmed = content.TrimStart();
@@ -1449,8 +1806,14 @@ public sealed class SilverLabelEngine
 
             foreach (char c in content)
             {
-                if (c == '{') braceDepth++;
-                else if (c == '}') braceDepth--;
+                if (c == '{')
+                {
+                    braceDepth++;
+                }
+                else if (c == '}')
+                {
+                    braceDepth--;
+                }
             }
 
             if (inGetter && braceDepth <= getterExitDepth)
@@ -1468,16 +1831,31 @@ public sealed class SilverLabelEngine
                 {
                     for (int k = 0; k < trimmed.Length; k++)
                     {
-                        if (trimmed[k] != '=') continue;
+                        if (trimmed[k] != '=')
+                        {
+                            continue;
+                        }
+
                         char prev = k > 0 ? trimmed[k - 1] : '\0';
                         char next = k + 1 < trimmed.Length ? trimmed[k + 1] : '\0';
-                        if (prev is '=' or '!' or '<' or '>') continue;
-                        if (next is '=' or '>') continue;
+                        if (prev is '=' or '!' or '<' or '>')
+                        {
+                            continue;
+                        }
+
+                        if (next is '=' or '>')
+                        {
+                            continue;
+                        }
+
                         var lhs = trimmed[..k].TrimEnd('+', '-', '*', '/', '%', '|', '&', '^', ' ');
                         if (!lhs.Contains(' ') && !IsLocalVariableInLabelerScope(diffLines, getterStartIdx, i, lhs)
                             && !IsNullGuardedInLabelerScope(diffLines, i, lhs))
                         {
-                            if (!skipCurrentFile) return true;
+                            if (!skipCurrentFile)
+                            {
+                                return true;
+                            }
                         }
                     }
                 }
@@ -1493,35 +1871,64 @@ public sealed class SilverLabelEngine
     /// </summary>
     private static bool IsLocalVariableInLabelerScope(string[] diffLines, int scopeStart, int idx, string lhsName)
     {
-        if (scopeStart < 0 || string.IsNullOrEmpty(lhsName)) return false;
+        if (scopeStart < 0 || string.IsNullOrEmpty(lhsName))
+        {
+            return false;
+        }
 
         // Private-field naming conventions → always a field
         if (lhsName.StartsWith("_", StringComparison.Ordinal) ||
-            lhsName.StartsWith("m_", StringComparison.Ordinal)) return false;
+            lhsName.StartsWith("m_", StringComparison.Ordinal))
+        {
+            return false;
+        }
 
         // Dotted or indexed → can't be a plain local
-        if (lhsName.Contains('.') || lhsName.Contains('[')) return false;
+        if (lhsName.Contains('.') || lhsName.Contains('['))
+        {
+            return false;
+        }
 
         for (int j = scopeStart; j < idx && j < diffLines.Length; j++)
         {
             var raw = diffLines[j];
-            if (raw.Length == 0) continue;
+            if (raw.Length == 0)
+            {
+                continue;
+            }
             // Strip diff prefix (+, -, space)
             var content = raw[0] is '+' or '-' or ' ' ? raw[1..] : raw;
-            if (string.IsNullOrWhiteSpace(content)) continue;
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                continue;
+            }
 
             int pos = -1;
             while ((pos = content.IndexOf(lhsName, pos + 1, StringComparison.Ordinal)) >= 0)
             {
-                if (pos == 0 || content[pos - 1] != ' ') continue;
+                if (pos == 0 || content[pos - 1] != ' ')
+                {
+                    continue;
+                }
+
                 int afterPos = pos + lhsName.Length;
                 if (afterPos < content.Length &&
-                    content[afterPos] is not (' ' or '=' or ';' or ',')) continue;
+                    content[afterPos] is not (' ' or '=' or ';' or ','))
+                {
+                    continue;
+                }
+
                 var before = content[..pos].TrimEnd();
-                if (before.Length == 0) continue;
+                if (before.Length == 0)
+                {
+                    continue;
+                }
+
                 char lastChar = before[^1];
                 if (char.IsLetterOrDigit(lastChar) || lastChar is '>' or ']' or '?')
+                {
                     return true;
+                }
             }
         }
         return false;
@@ -1533,28 +1940,42 @@ public sealed class SilverLabelEngine
     /// </summary>
     private static bool IsNullGuardedInLabelerScope(string[] diffLines, int idx, string lhsName)
     {
-        if (string.IsNullOrEmpty(lhsName)) return false;
+        if (string.IsNullOrEmpty(lhsName))
+        {
+            return false;
+        }
 
         // Strip this. prefix for matching
         var name = lhsName.Contains('.')
             ? lhsName[(lhsName.LastIndexOf('.') + 1)..]
             : lhsName;
-        if (string.IsNullOrEmpty(name)) return false;
+        if (string.IsNullOrEmpty(name))
+        {
+            return false;
+        }
 
         int scanned = 0;
         for (int j = idx - 1; j >= 0 && scanned < 20; j--)
         {
             var raw = diffLines[j];
-            if (raw.Length == 0) continue;
+            if (raw.Length == 0)
+            {
+                continue;
+            }
+
             var content = raw[0] is '+' or '-' or ' ' ? raw[1..] : raw;
             var trimmed = content.TrimStart();
-            if (string.IsNullOrEmpty(trimmed)) continue;
+            if (string.IsNullOrEmpty(trimmed))
+            {
+                continue;
+            }
+
             scanned++;
 
             if (trimmed.Contains(name, StringComparison.Ordinal) &&
-                (trimmed.Contains("== null",     StringComparison.Ordinal) ||
-                 trimmed.Contains("is null",     StringComparison.Ordinal) ||
-                 trimmed.Contains("!= null",     StringComparison.Ordinal) ||
+                (trimmed.Contains("== null", StringComparison.Ordinal) ||
+                 trimmed.Contains("is null", StringComparison.Ordinal) ||
+                 trimmed.Contains("!= null", StringComparison.Ordinal) ||
                  trimmed.Contains("is not null", StringComparison.Ordinal) ||
                  trimmed.Contains("ReferenceEquals", StringComparison.Ordinal)))
             {
@@ -1569,15 +1990,19 @@ public sealed class SilverLabelEngine
         // Skip test/mock values and comments
         var trimmed = line.TrimStart();
         if (trimmed.StartsWith("//") || trimmed.StartsWith("*"))
+        {
             return false;
+        }
 
         // Skip obvious test placeholder strings
         if (line.Contains("fake", StringComparison.OrdinalIgnoreCase) ||
             line.Contains("mock", StringComparison.OrdinalIgnoreCase) ||
-            line.Contains("test",  StringComparison.OrdinalIgnoreCase) ||
+            line.Contains("test", StringComparison.OrdinalIgnoreCase) ||
             line.Contains("dummy", StringComparison.OrdinalIgnoreCase) ||
             line.Contains("placeholder", StringComparison.OrdinalIgnoreCase))
+        {
             return false;
+        }
 
         return CredentialAssignToLiteral.IsMatch(line) || HardcodedCredentialValue.IsMatch(line);
     }
@@ -1588,7 +2013,10 @@ public sealed class SilverLabelEngine
 
         foreach (var (keywords, ruleId, reason, confidence) in CommentRules)
         {
-            if (emitted.Contains(ruleId)) continue;
+            if (emitted.Contains(ruleId))
+            {
+                continue;
+            }
 
             bool matched = commentBodies.Any(body =>
                 keywords.Any(kw => body.Contains(kw, StringComparison.OrdinalIgnoreCase)));
@@ -1606,23 +2034,23 @@ public sealed class SilverLabelEngine
     private static ExpectedFinding MakeLabel(string ruleId, string reason, double confidence) =>
         new()
         {
-            RuleId             = ruleId,
-            ShouldTrigger      = true,
+            RuleId = ruleId,
+            ShouldTrigger = true,
             ExpectedConfidence = confidence,
-            Reason             = reason,
-            LabelSource        = LabelSource.Heuristic,
-            IsInconclusive     = false,
+            Reason = reason,
+            LabelSource = LabelSource.Heuristic,
+            IsInconclusive = false,
         };
 
     private static ExpectedFinding MakeNegativeLabel(string ruleId, string reason, double confidence) =>
         new()
         {
-            RuleId             = ruleId,
-            ShouldTrigger      = false,
+            RuleId = ruleId,
+            ShouldTrigger = false,
             ExpectedConfidence = confidence,
-            Reason             = reason,
-            LabelSource        = LabelSource.Heuristic,
-            IsInconclusive     = false,
+            Reason = reason,
+            LabelSource = LabelSource.Heuristic,
+            IsInconclusive = false,
         };
 
     private static List<string> ExtractAddedLines(string diffText)
@@ -1672,7 +2100,9 @@ public sealed class SilverLabelEngine
                 continue;
             }
             if (inProductionCs && line.StartsWith('+') && !line.StartsWith("+++"))
+            {
                 result.Add(line[1..]);
+            }
         }
         return result;
     }
@@ -1717,7 +2147,9 @@ public sealed class SilverLabelEngine
             }
 
             if (inProductionCs && line.StartsWith('-') && !line.StartsWith("---"))
+            {
                 result.Add(line[1..]);
+            }
         }
         return result;
     }
@@ -1728,8 +2160,16 @@ public sealed class SilverLabelEngine
     /// </summary>
     private static bool IsEfMigrationCsFile(string path)
     {
-        if (!path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)) return false;
-        if (TestFileClassifier.IsTestFile(path)) return false;
+        if (!path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (TestFileClassifier.IsTestFile(path))
+        {
+            return false;
+        }
+
         var segments = path.ToLowerInvariant().Split(['/', '\\']);
         return segments.Take(segments.Length - 1).Any(seg => seg == "migrations");
     }
@@ -1752,10 +2192,15 @@ public sealed class SilverLabelEngine
         foreach (var seg in segments.Take(segments.Length - 1))
         {
             if (seg is "benchmark" or "benchmarks" or "sample" or "samples" or "example" or "examples")
+            {
                 return true;
+            }
+
             if (seg.EndsWith(".benchmark") || seg.EndsWith(".benchmarks") ||
                 seg.EndsWith(".sample") || seg.EndsWith(".samples"))
+            {
                 return true;
+            }
         }
         return false;
     }
@@ -1763,7 +2208,9 @@ public sealed class SilverLabelEngine
     private static string ExtractFileDiffHunk(string diffText, string? filePath, int maxChars = 800)
     {
         if (string.IsNullOrEmpty(filePath))
+        {
             return diffText.Length > maxChars ? diffText[..maxChars] : diffText;
+        }
 
         var normalized = filePath.Replace('\\', '/');
 
@@ -1790,11 +2237,13 @@ public sealed class SilverLabelEngine
         }
 
         if (startIdx < 0)
+        {
             return diffText.Length > maxChars ? diffText[..maxChars] : diffText;
+        }
 
         // Find the end of this file's section (next diff --git or end of string)
         var nextDiff = diffText.IndexOf("\ndiff --git ", startIdx + 10, StringComparison.Ordinal);
-        var section  = nextDiff > 0 ? diffText[startIdx..nextDiff] : diffText[startIdx..];
+        var section = nextDiff > 0 ? diffText[startIdx..nextDiff] : diffText[startIdx..];
 
         return section.Length > maxChars ? section[..maxChars] : section;
     }
@@ -1806,20 +2255,32 @@ public sealed class SilverLabelEngine
         void ExtractFromArray(JsonElement arr)
         {
             foreach (var el in arr.EnumerateArray())
+            {
                 if (el.TryGetProperty("path", out var path))
                 {
                     var p = path.GetString();
                     if (!string.IsNullOrEmpty(p))
+                    {
                         paths.Add(p.Replace('\\', '/').ToLowerInvariant());
+                    }
                 }
+            }
         }
 
         if (root.ValueKind == JsonValueKind.Array)
+        {
             ExtractFromArray(root);
+        }
         else if (root.ValueKind == JsonValueKind.Object)
+        {
             foreach (var prop in root.EnumerateObject())
+            {
                 if (prop.Value.ValueKind == JsonValueKind.Array)
+                {
                     ExtractFromArray(prop.Value);
+                }
+            }
+        }
 
         return paths;
     }
@@ -1831,8 +2292,12 @@ public sealed class SilverLabelEngine
         if (root.ValueKind == JsonValueKind.Array)
         {
             foreach (var el in root.EnumerateArray())
+            {
                 if (el.TryGetProperty("body", out var body))
+                {
                     bodies.Add(body.GetString() ?? string.Empty);
+                }
+            }
         }
         else if (root.ValueKind == JsonValueKind.Object)
         {
@@ -1841,8 +2306,12 @@ public sealed class SilverLabelEngine
                 if (prop.Value.ValueKind == JsonValueKind.Array)
                 {
                     foreach (var el in prop.Value.EnumerateArray())
+                    {
                         if (el.TryGetProperty("body", out var body))
+                        {
                             bodies.Add(body.GetString() ?? string.Empty);
+                        }
+                    }
                 }
             }
         }
@@ -1855,11 +2324,16 @@ public sealed class SilverLabelEngine
         var joined = string.Join("\n", addedLines);
 
         if (Regex.IsMatch(joined, @"catch\s*(\([^)]*\))?\s*\{\s*\}"))
+        {
             return true;
+        }
 
         for (int i = 0; i < addedLines.Count; i++)
         {
-            if (!addedLines[i].TrimStart().StartsWith("catch", StringComparison.OrdinalIgnoreCase)) continue;
+            if (!addedLines[i].TrimStart().StartsWith("catch", StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
 
             bool inBlock = false;
             bool hasNonCommentContent = false;
@@ -1867,17 +2341,34 @@ public sealed class SilverLabelEngine
             for (int j = i; j < addedLines.Count && j < i + 10; j++)
             {
                 var trimmed = addedLines[j].Trim();
-                if (trimmed.Contains('{')) inBlock = true;
-                if (!inBlock) continue;
+                if (trimmed.Contains('{'))
+                {
+                    inBlock = true;
+                }
 
-                if (trimmed == "{" || trimmed == "}" || trimmed == "") continue;
-                if (trimmed.StartsWith("//") || trimmed.StartsWith("/*") || trimmed.StartsWith("*")) continue;
+                if (!inBlock)
+                {
+                    continue;
+                }
+
+                if (trimmed == "{" || trimmed == "}" || trimmed == "")
+                {
+                    continue;
+                }
+
+                if (trimmed.StartsWith("//") || trimmed.StartsWith("/*") || trimmed.StartsWith("*"))
+                {
+                    continue;
+                }
 
                 hasNonCommentContent = true;
                 break;
             }
 
-            if (inBlock && !hasNonCommentContent) return true;
+            if (inBlock && !hasNonCommentContent)
+            {
+                return true;
+            }
         }
 
         return false;
@@ -1916,9 +2407,11 @@ public sealed class SilverLabelEngine
     {
         // If GCI0016 (async violation) fires, check if GCI0039 or GCI0044 are present
         var hasGci0016 = labels.Any(l => l.RuleId == "GCI0016" && l.ShouldTrigger);
-        
+
         if (!hasGci0016)
+        {
             return;
+        }
 
         // Boost confidence on GCI0039 (HttpClient safety) - blocking calls + HttpClient = socket exhaustion risk
         var gci0039Index = labels.FindIndex(l => l.RuleId == "GCI0039");
@@ -1987,7 +2480,7 @@ public sealed class SilverLabelEngine
         // ── Coordination Pattern 1: Exception Swallowing + Breaking Changes ──
         // When GCI0032 (exception swallowing) + GCI0003 (breaking change) both fire,
         // it signals compound risk: callers will fail AND won't have proper error handling.
-        
+
         var hasGci0032 = labels.Any(l => l.RuleId == "GCI0032" && l.ShouldTrigger);
         var hasGci0003 = labels.Any(l => l.RuleId == "GCI0003" && l.ShouldTrigger);
 

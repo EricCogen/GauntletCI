@@ -19,7 +19,7 @@ namespace GauntletCI.Core.Rules.Patterns;
 internal static class DomainSpecificPatterns
 {
     // ===== Module-level properties delegating to ResourceTimeoutPatterns =====
-    
+
     public static string[] TimeoutPatterns => ResourceTimeoutPatterns.TimeoutPatterns;
     public static string[] IterationLimitPatterns => ResourceTimeoutPatterns.IterationLimitPatterns;
     public static string[] ResourceLimitPatterns => ResourceTimeoutPatterns.ResourceLimitPatterns;
@@ -187,7 +187,7 @@ internal static class DomainSpecificPatterns
 
     // ===== Helper Method Delegations =====
 
-    public static bool HasHttpContextSignal(string content) => 
+    public static bool HasHttpContextSignal(string content) =>
         global::GauntletCI.Core.Rules.Patterns.DataIntegrityPatterns.HasHttpContextSignal(content);
 }
 

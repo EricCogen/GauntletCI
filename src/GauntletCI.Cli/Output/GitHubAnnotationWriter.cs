@@ -24,9 +24,9 @@ public static class GitHubAnnotationWriter
         {
             var level = group.Confidence switch
             {
-                Confidence.High   => "error",
+                Confidence.High => "error",
                 Confidence.Medium => "warning",
-                _                 => "notice",
+                _ => "notice",
             };
 
             var file = group.FilePath ?? string.Empty;
@@ -59,20 +59,28 @@ public static class GitHubAnnotationWriter
         sb.Append(Sanitize(group.Summary));
 
         if (group.Lines.Count > 1)
+        {
             sb.Append("%0A").Append("Lines: ").Append(string.Join(", ", group.Lines));
+        }
 
         if (group.Evidence.Count > 0)
         {
             sb.Append("%0A").Append("Evidence:");
             foreach (var ev in group.Evidence)
+            {
                 sb.Append("%0A  - ").Append(Sanitize(ev));
+            }
         }
 
         if (!string.IsNullOrWhiteSpace(group.WhyItMatters))
+        {
             sb.Append("%0A").Append("Why: ").Append(Sanitize(group.WhyItMatters));
+        }
 
         if (!string.IsNullOrWhiteSpace(group.SuggestedAction))
+        {
             sb.Append("%0A").Append("Action: ").Append(Sanitize(group.SuggestedAction));
+        }
 
         if (!string.IsNullOrWhiteSpace(group.LlmExplanation))
         {
@@ -80,8 +88,10 @@ public static class GitHubAnnotationWriter
         }
 
         if (group.ExpertContext is { } ctx)
+        {
             sb.Append("%0A").Append("Expert: ")
               .Append(Sanitize(ctx.Content)).Append(" (").Append(Sanitize(ctx.Source)).Append(')');
+        }
 
         return sb.ToString();
     }
@@ -102,7 +112,9 @@ public static class GitHubAnnotationWriter
         }
 
         if (finding.ExpertContext is { } ctx)
+        {
             sb.Append($" | Expert: {Sanitize(ctx.Content)} ({Sanitize(ctx.Source)})");
+        }
 
         return sb.ToString();
     }

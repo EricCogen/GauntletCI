@@ -34,8 +34,15 @@ public class GCI0036_PureContextMutation : RuleBase
 
     private void CheckPureContextMutations(DiffFile file, List<Finding> findings)
     {
-        if (WellKnownPatterns.IsTestFile(file.NewPath)) return;
-        if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) return;
+        if (WellKnownPatterns.IsTestFile(file.NewPath))
+        {
+            return;
+        }
+
+        if (WellKnownPatterns.IsGeneratedFile(file.NewPath))
+        {
+            return;
+        }
 
         var allLines = file.Hunks.SelectMany(h => h.Lines).ToList();
 
@@ -60,7 +67,9 @@ public class GCI0036_PureContextMutation : RuleBase
                 pureLineIdx = i;
             }
             if (seenPure && i - pureLineIdx > 5)
+            {
                 seenPure = false;
+            }
 
             // Detect getter with inline brace
             if (trimmed.StartsWith("get {") || trimmed.Contains(" get {"))
@@ -95,8 +104,14 @@ public class GCI0036_PureContextMutation : RuleBase
             // Count braces
             foreach (char c in content)
             {
-                if (c == '{') braceDepth++;
-                else if (c == '}') braceDepth--;
+                if (c == '{')
+                {
+                    braceDepth++;
+                }
+                else if (c == '}')
+                {
+                    braceDepth--;
+                }
             }
 
             // Exit getter when depth returns to entry level
@@ -131,28 +146,41 @@ public class GCI0036_PureContextMutation : RuleBase
     private static bool IsNullGuardedAssignment(List<DiffLine> allLines, int idx, string trimmed)
     {
         int eqIdx = FindAssignmentIndex(trimmed);
-        if (eqIdx < 0) return false;
+        if (eqIdx < 0)
+        {
+            return false;
+        }
 
         var rawLhs = trimmed[..eqIdx].TrimEnd('+', '-', '*', '/', '%', '|', '&', '^', ' ').Trim();
-        if (string.IsNullOrEmpty(rawLhs)) return false;
+        if (string.IsNullOrEmpty(rawLhs))
+        {
+            return false;
+        }
 
         // Use just the simple name (strip `this.` prefix) for the null-check search
         var lhsName = rawLhs.Contains('.')
             ? rawLhs[(rawLhs.LastIndexOf('.') + 1)..]
             : rawLhs;
-        if (string.IsNullOrEmpty(lhsName) || lhsName.Contains(' ')) return false;
+        if (string.IsNullOrEmpty(lhsName) || lhsName.Contains(' '))
+        {
+            return false;
+        }
 
         int scanned = 0;
         for (int j = idx - 1; j >= 0 && scanned < 20; j--)
         {
             var prev = allLines[j].Content.Trim();
-            if (string.IsNullOrEmpty(prev)) continue;
+            if (string.IsNullOrEmpty(prev))
+            {
+                continue;
+            }
+
             scanned++;
 
             if (prev.Contains(lhsName, StringComparison.Ordinal) &&
-                (prev.Contains("== null",   StringComparison.Ordinal) ||
-                 prev.Contains("is null",   StringComparison.Ordinal) ||
-                 prev.Contains("!= null",   StringComparison.Ordinal) ||
+                (prev.Contains("== null", StringComparison.Ordinal) ||
+                 prev.Contains("is null", StringComparison.Ordinal) ||
+                 prev.Contains("!= null", StringComparison.Ordinal) ||
                  prev.Contains("is not null", StringComparison.Ordinal)))
             {
                 return true;
@@ -161,15 +189,26 @@ public class GCI0036_PureContextMutation : RuleBase
         return false;
     }
 
-    private static bool IsFieldOrPropertyAssignment(string trimmed)    {
+    private static bool IsFieldOrPropertyAssignment(string trimmed)
+    {
         ArgumentNullException.ThrowIfNull(trimmed);
         // Skip local variable declarations and loop variables
-        if (trimmed.StartsWith("var ", StringComparison.Ordinal)) return false;
+        if (trimmed.StartsWith("var ", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
         if (trimmed.StartsWith("for ", StringComparison.Ordinal) ||
-            trimmed.StartsWith("for(", StringComparison.Ordinal)) return false;
+            trimmed.StartsWith("for(", StringComparison.Ordinal))
+        {
+            return false;
+        }
 
         int eqIdx = FindAssignmentIndex(trimmed);
-        if (eqIdx < 0) return false;
+        if (eqIdx < 0)
+        {
+            return false;
+        }
 
         // Strip compound-assignment operator character (+=, -=, etc.) then trim spaces
         // so "total += x" → lhs = "total" (no space → real field mutation)
@@ -188,44 +227,74 @@ public class GCI0036_PureContextMutation : RuleBase
     private static bool IsLocalVariableInScope(
         List<DiffLine> allLines, int scopeStart, int idx, string trimmed)
     {
-        if (scopeStart < 0) return false;
+        if (scopeStart < 0)
+        {
+            return false;
+        }
 
         int eqIdx = FindAssignmentIndex(trimmed);
-        if (eqIdx < 0) return false;
+        if (eqIdx < 0)
+        {
+            return false;
+        }
 
         var rawLhs = trimmed[..eqIdx].TrimEnd('+', '-', '*', '/', '%', '|', '&', '^', ' ').Trim();
-        if (rawLhs.Length == 0) return false;
+        if (rawLhs.Length == 0)
+        {
+            return false;
+        }
 
         // Dotted (this.x) or indexed (arr[i]): can't be a plain local
-        if (rawLhs.Contains('.') || rawLhs.Contains('[') || rawLhs.Contains(')')) return false;
+        if (rawLhs.Contains('.') || rawLhs.Contains('[') || rawLhs.Contains(')'))
+        {
+            return false;
+        }
 
         // Private-field naming conventions → always a field, never a local
         if (rawLhs.StartsWith("_", StringComparison.Ordinal) ||
-            rawLhs.StartsWith("m_", StringComparison.Ordinal)) return false;
+            rawLhs.StartsWith("m_", StringComparison.Ordinal))
+        {
+            return false;
+        }
 
         // Search within the getter/pure scope for "Type varName" or "var varName"
         for (int j = scopeStart; j < idx; j++)
         {
             var content = allLines[j].Content;
-            if (string.IsNullOrWhiteSpace(content)) continue;
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                continue;
+            }
 
             int pos = -1;
             while ((pos = content.IndexOf(rawLhs, pos + 1, StringComparison.Ordinal)) >= 0)
             {
                 // Name must be preceded by a space (type separator)
-                if (pos == 0 || content[pos - 1] != ' ') continue;
+                if (pos == 0 || content[pos - 1] != ' ')
+                {
+                    continue;
+                }
 
                 // Name must be followed by space, =, ;, or , (end of declarator)
                 int afterPos = pos + rawLhs.Length;
                 if (afterPos < content.Length &&
-                    content[afterPos] is not (' ' or '=' or ';' or ',')) continue;
+                    content[afterPos] is not (' ' or '=' or ';' or ','))
+                {
+                    continue;
+                }
 
                 // What precedes the space must end with a type-name character (letter, digit, >, ], ?)
                 var before = content[..pos].TrimEnd();
-                if (before.Length == 0) continue;
+                if (before.Length == 0)
+                {
+                    continue;
+                }
+
                 char lastChar = before[^1];
                 if (char.IsLetterOrDigit(lastChar) || lastChar is '>' or ']' or '?')
+                {
                     return true;
+                }
             }
         }
         return false;
@@ -236,11 +305,23 @@ public class GCI0036_PureContextMutation : RuleBase
         ArgumentNullException.ThrowIfNull(content);
         for (int i = 0; i < content.Length; i++)
         {
-            if (content[i] != '=') continue;
+            if (content[i] != '=')
+            {
+                continue;
+            }
+
             char prev = i > 0 ? content[i - 1] : '\0';
             char next = i + 1 < content.Length ? content[i + 1] : '\0';
-            if (prev is '=' or '!' or '<' or '>') continue;
-            if (next is '=' or '>') continue;
+            if (prev is '=' or '!' or '<' or '>')
+            {
+                continue;
+            }
+
+            if (next is '=' or '>')
+            {
+                continue;
+            }
+
             return i;
         }
         return -1;

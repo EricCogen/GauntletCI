@@ -155,7 +155,9 @@ public class RuleOrchestratorExtensionsTests
         public Task<bool> EnrichAsync(Finding finding, CancellationToken ct = default)
         {
             if (finding?.Evidence == null)
+            {
                 return Task.FromResult(false);
+            }
 
             var parts = finding.Evidence.Split(':');
             if (parts.Length >= 2)

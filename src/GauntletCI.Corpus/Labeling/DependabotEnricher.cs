@@ -59,10 +59,16 @@ public sealed class DependabotEnricher : IDisposable
             ct.ThrowIfCancellationRequested();
 
             var parts = fixture.Repo.Split('/', 2);
-            if (parts.Length < 2) continue;
+            if (parts.Length < 2)
+            {
+                continue;
+            }
 
             var prInfo = await FetchPrInfoAsync(parts[0], parts[1], fixture.PullRequestNumber, ct).ConfigureAwait(false);
-            if (prInfo is null) continue;
+            if (prInfo is null)
+            {
+                continue;
+            }
 
             var (isDependabot, prTitle, authorLogin) = prInfo.Value;
 
@@ -79,7 +85,9 @@ public sealed class DependabotEnricher : IDisposable
             }
 
             if (delayMs > 0)
+            {
                 await Task.Delay(delayMs, ct).ConfigureAwait(false);
+            }
         }
 
         return result;
@@ -92,7 +100,10 @@ public sealed class DependabotEnricher : IDisposable
         try
         {
             using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
-            if (!resp.IsSuccessStatusCode) return null;
+            if (!resp.IsSuccessStatusCode)
+            {
+                return null;
+            }
 
             await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
@@ -104,7 +115,9 @@ public sealed class DependabotEnricher : IDisposable
             var login = "";
             if (root.TryGetProperty("user", out var userEl) &&
                 userEl.TryGetProperty("login", out var loginEl))
+            {
                 login = loginEl.GetString() ?? "";
+            }
 
             var isDependabot =
                 DependabotLogins.Contains(login) ||
@@ -128,12 +141,12 @@ public sealed class DependabotEnricher : IDisposable
             VALUES
                 ($fixtureId, $repo, $prNumber, $isDependabot, $title, $login)
             """;
-        cmd.Parameters.AddWithValue("$fixtureId",   fixtureId);
-        cmd.Parameters.AddWithValue("$repo",         repo);
-        cmd.Parameters.AddWithValue("$prNumber",     prNumber);
+        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$prNumber", prNumber);
         cmd.Parameters.AddWithValue("$isDependabot", isDependabot ? 1 : 0);
-        cmd.Parameters.AddWithValue("$title",        prTitle);
-        cmd.Parameters.AddWithValue("$login",        authorLogin);
+        cmd.Parameters.AddWithValue("$title", prTitle);
+        cmd.Parameters.AddWithValue("$login", authorLogin);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
@@ -141,7 +154,16 @@ public sealed class DependabotEnricher : IDisposable
 /// <summary>Summary statistics from a <see cref="DependabotEnricher.EnrichAsync"/> run.</summary>
 public sealed class DependabotEnrichmentResult
 {
-    public bool AuthMissing        { get; set; }
-    public int  FixturesProcessed  { get; set; }
-    public int  DependabotFixtures { get; set; }
+    public bool AuthMissing
+    {
+        get; set;
+    }
+    public int FixturesProcessed
+    {
+        get; set;
+    }
+    public int DependabotFixtures
+    {
+        get; set;
+    }
 }
