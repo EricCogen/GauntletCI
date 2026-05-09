@@ -700,8 +700,8 @@ public sealed class SilverLabelEngineTests
             if (gci0044.ExpectedConfidence >= 0.50 && gci0035.ExpectedConfidence >= 0.50)
             {
                 // Coordination should apply
-                Assert.NotEmpty(labels.Where(l => 
-                    l.Reason != null && l.Reason.Contains("[coordination]")));
+                Assert.True(labels.Where(l => 
+                    l.Reason != null && l.Reason.Contains("[coordination]")).Any());
             }
         }
     }
@@ -795,9 +795,9 @@ public sealed class SilverLabelEngineTests
             if (gci0039.ExpectedConfidence >= 0.55 && gci0048.ExpectedConfidence >= 0.60)
             {
                 // Coordination should apply
-                Assert.NotEmpty(labels.Where(l => 
+                Assert.True(labels.Where(l => 
                     l.Reason != null && l.Reason.Contains("[coordination]") && 
-                    (l.RuleId == "GCI0039" || l.RuleId == "GCI0048")));
+                    (l.RuleId == "GCI0039" || l.RuleId == "GCI0048")).Any());
             }
         }
     }
@@ -890,9 +890,9 @@ public sealed class SilverLabelEngineTests
             if (gci0045.ExpectedConfidence >= 0.60 && gci0016.ExpectedConfidence >= 0.55)
             {
                 // Coordination should apply
-                Assert.NotEmpty(labels.Where(l => 
+                Assert.True(labels.Where(l => 
                     l.Reason != null && l.Reason.Contains("[coordination]") && 
-                    (l.RuleId == "GCI0045" || l.RuleId == "GCI0016")));
+                    (l.RuleId == "GCI0045" || l.RuleId == "GCI0016")).Any());
             }
         }
     }
