@@ -232,10 +232,10 @@ public class PatchSemanticGraphTests
 
         // Assert
         Assert.NotNull(graph.PatchNode);
-        Assert.NotEmpty(graph.FileNodes);
-        Assert.NotEmpty(graph.OperationNodes);
-        Assert.NotEmpty(graph.TransformationNodes);
-        Assert.NotEmpty(graph.EvidenceNodes);
+        Assert.True(graph.FileNodes.Any());
+        Assert.True(graph.OperationNodes.Any());
+        Assert.True(graph.TransformationNodes.Any());
+        Assert.True(graph.EvidenceNodes.Any());
     }
 
     [Fact]
@@ -349,7 +349,7 @@ public class PatchSemanticGraphTests
 
         // Assert
         var containEdges = graph.EdgesByKind(PatchGraphEdgeKind.Contains).ToList();
-        Assert.NotEmpty(containEdges);
+        Assert.True(containEdges.Any());
     }
 
     [Fact]
@@ -374,7 +374,7 @@ public class PatchSemanticGraphTests
 
         // Assert
         var derivedEdges = graph.EdgesByKind(PatchGraphEdgeKind.DerivedFrom).ToList();
-        Assert.NotEmpty(derivedEdges);
+        Assert.True(derivedEdges.Any());
     }
 
     [Fact]
