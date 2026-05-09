@@ -11,81 +11,84 @@ namespace GauntletCI.Benchmarks;
 [Orderer(BenchmarkDotNet.Order.SummaryOrderPolicy.FastestToSlowest)]
 public class PerformanceBenchmarks
 {
-    private string _smallDiff = null!;
-    private string _mediumDiff = null!;
-    private string _largeDiff = null!;
+    private DiffContext _smallDiff = null!;
+    private DiffContext _mediumDiff = null!;
+    private DiffContext _largeDiff = null!;
     private RuleOrchestrator _orchestrator = null!;
 
     [GlobalSetup]
     public void Setup()
     {
         _orchestrator = RuleOrchestrator.CreateDefault();
-        _smallDiff = GenerateDiff(1, 5, 100);      // 1 file, 5 hunks, 100 lines
-        _mediumDiff = GenerateDiff(5, 20, 500);    // 5 files, 20 hunks each, 500 lines
-        _largeDiff = GenerateDiff(20, 50, 2000);   // 20 files, 50 hunks each, 2000 lines
+        _smallDiff = DiffParser.Parse(GenerateDiff(1, 5, 20));      // 1 file, 5 hunks, ~100 lines
+        _mediumDiff = DiffParser.Parse(GenerateDiff(5, 20, 25));    // 5 files, 20 hunks each, ~2500 lines
+        _largeDiff = DiffParser.Parse(GenerateDiff(20, 50, 20));    // 20 files, 50 hunks each, ~20k lines
     }
 
-    [Benchmark(Description = "Parse small diff (1 file, 5 hunks)")]
+    [Benchmark(Description = "Parse small diff (1 file, 5 hunks, ~100 lines)")]
     public DiffContext ParseSmallDiff()
     {
-        return DiffParser.Parse(_smallDiff);
+        var rawDiff = GenerateDiff(1, 5, 20);
+        return DiffParser.Parse(rawDiff);
     }
 
-    [Benchmark(Description = "Parse medium diff (5 files, 20 hunks each)")]
+    [Benchmark(Description = "Parse medium diff (5 files, 20 hunks, ~2500 lines)")]
     public DiffContext ParseMediumDiff()
     {
-        return DiffParser.Parse(_mediumDiff);
+        var rawDiff = GenerateDiff(5, 20, 25);
+        return DiffParser.Parse(rawDiff);
     }
 
-    [Benchmark(Description = "Parse large diff (20 files, 50 hunks each)")]
+    [Benchmark(Description = "Parse large diff (20 files, 50 hunks, ~20k lines)")]
     public DiffContext ParseLargeDiff()
     {
-        return DiffParser.Parse(_largeDiff);
+        var rawDiff = GenerateDiff(20, 50, 20);
+        return DiffParser.Parse(rawDiff);
     }
 
-    [Benchmark(Description = "Analyze small diff (rules execution)")]
+    [Benchmark(Description = "Analyze small diff (parse + rules execution)")]
     public async Task AnalyzeSmallDiff()
     {
-        var diff = DiffParser.Parse(_smallDiff);
-        await _orchestrator.RunAsync(diff);
+        await _orchestrator.RunAsync(_smallDiff);
     }
 
-    [Benchmark(Description = "Analyze medium diff (rules execution)")]
+    [Benchmark(Description = "Analyze medium diff (parse + rules execution)")]
     public async Task AnalyzeMediumDiff()
     {
-        var diff = DiffParser.Parse(_mediumDiff);
-        await _orchestrator.RunAsync(diff);
+        await _orchestrator.RunAsync(_mediumDiff);
     }
 
-    [Benchmark(Description = "Analyze large diff (rules execution)")]
+    [Benchmark(Description = "Analyze large diff (parse + rules execution)")]
     public async Task AnalyzeLargeDiff()
     {
-        var diff = DiffParser.Parse(_largeDiff);
-        await _orchestrator.RunAsync(diff);
+        await _orchestrator.RunAsync(_largeDiff);
     }
 
-    [Benchmark(Description = "End-to-end small (parse + analyze)")]
+    [Benchmark(Description = "End-to-end small (parse + rules, ~100 lines)")]
     public async Task EndToEndSmall()
     {
-        var diff = DiffParser.Parse(_smallDiff);
+        var rawDiff = GenerateDiff(1, 5, 20);
+        var diff = DiffParser.Parse(rawDiff);
         await _orchestrator.RunAsync(diff);
     }
 
-    [Benchmark(Description = "End-to-end medium (parse + analyze)")]
+    [Benchmark(Description = "End-to-end medium (parse + rules, ~2500 lines)")]
     public async Task EndToEndMedium()
     {
-        var diff = DiffParser.Parse(_mediumDiff);
+        var rawDiff = GenerateDiff(5, 20, 25);
+        var diff = DiffParser.Parse(rawDiff);
         await _orchestrator.RunAsync(diff);
     }
 
-    [Benchmark(Description = "End-to-end large (parse + analyze)")]
+    [Benchmark(Description = "End-to-end large (parse + rules, ~20k lines)")]
     public async Task EndToEndLarge()
     {
-        var diff = DiffParser.Parse(_largeDiff);
+        var rawDiff = GenerateDiff(20, 50, 20);
+        var diff = DiffParser.Parse(rawDiff);
         await _orchestrator.RunAsync(diff);
     }
 
-    private static string GenerateDiff(int fileCount, int hunksPerFile, int totalLines)
+    private static string GenerateDiff(int fileCount, int hunksPerFile, int linesPerHunk)
     {
         var lines = new List<string>();
         int lineNum = 0;
@@ -98,24 +101,24 @@ public class PerformanceBenchmarks
             lines.Add($"--- a/{fileName}");
             lines.Add($"+++ b/{fileName}");
 
-            int linesPerHunk = totalLines / (fileCount * hunksPerFile);
             for (int h = 0; h < hunksPerFile; h++)
             {
                 int startLine = lineNum + 1;
                 lineNum += linesPerHunk;
 
-                lines.Add($"@@ -{startLine},10 +{startLine},11 @@");
-                lines.Add(" public void Method() {");
-                lines.Add("-    var oldCode = 42;");
-                lines.Add("+    var newCode = 43;");
-                lines.Add("+    if (newCode > 0) {");
+                lines.Add($"@@ -{startLine},{linesPerHunk} +{startLine},{linesPerHunk + 1} @@");
+                lines.Add(" public class TestClass");
+                lines.Add(" {");
 
-                for (int i = 0; i < linesPerHunk - 4; i++)
+                // Generate balanced code changes
+                for (int i = 0; i < linesPerHunk - 2; i++)
                 {
-                    if (i % 2 == 0)
-                        lines.Add($"-    // Old comment {i}");
+                    if (i % 3 == 0)
+                        lines.Add($"-    // Line {lineNum - linesPerHunk + i}");
+                    else if (i % 3 == 1)
+                        lines.Add($"+    // Line {lineNum - linesPerHunk + i} (updated)");
                     else
-                        lines.Add($"+    // New comment {i}");
+                        lines.Add($" public void Method{i}()");
                 }
 
                 lines.Add(" }");
@@ -125,3 +128,4 @@ public class PerformanceBenchmarks
         return string.Join("\n", lines);
     }
 }
+

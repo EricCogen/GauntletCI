@@ -2,4 +2,4 @@
 using BenchmarkDotNet.Running;
 using GauntletCI.Benchmarks;
 
-var summary = BenchmarkRunner.Run<PerformanceBenchmarks>();
+BenchmarkRunner.Run<PerformanceBenchmarks>();
