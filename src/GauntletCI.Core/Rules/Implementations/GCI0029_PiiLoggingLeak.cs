@@ -28,10 +28,7 @@ public class GCI0029_PiiLoggingLeak : RuleBase
 
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
 
             foreach (var line in file.AddedLines)
             {
@@ -39,57 +36,34 @@ public class GCI0029_PiiLoggingLeak : RuleBase
                 var trimmed = content.TrimStart();
 
                 // XML documentation comments are never runtime log calls
-                if (trimmed.StartsWith("///"))
-                {
-                    continue;
-                }
-
+                if (trimmed.StartsWith("///")) continue;
+                
                 // Skip comment lines entirely (// or *)
-                if (trimmed.StartsWith("//") || trimmed.StartsWith("*"))
-                {
-                    continue;
-                }
+                if (trimmed.StartsWith("//") || trimmed.StartsWith("*")) continue;
 
                 // Skip field/property definitions (declarations without assignment in log context)
-                if (IsFieldOrPropertyDefinition(content))
-                {
-                    continue;
-                }
+                if (IsFieldOrPropertyDefinition(content)) continue;
 
                 bool hasLogPrefix = false;
                 foreach (var prefix in WellKnownPatterns.PiiDetectionPatterns.LogPrefixes)
                 {
                     if (content.Contains(prefix, StringComparison.Ordinal))
-                    {
-                        hasLogPrefix = true;
-                        break;
-                    }
+                    { hasLogPrefix = true; break; }
                 }
-                if (!hasLogPrefix)
-                {
-                    continue;
-                }
+                if (!hasLogPrefix) continue;
 
                 // Skip if data is being hashed, tokenized, or otherwise transformed before logging
                 // Use IsDataTransformedWithBoundary for precision (avoids "myToken" false positives)
                 if (WellKnownPatterns.IsDataTransformedWithBoundary(content))
-                {
                     continue;
-                }
 
                 string? matchedTerm = null;
                 foreach (var term in WellKnownPatterns.PiiDetectionPatterns.PiiTerms)
                 {
                     if (ContainsPiiTerm(content, term))
-                    {
-                        matchedTerm = term;
-                        break;
-                    }
+                    { matchedTerm = term; break; }
                 }
-                if (matchedTerm is null)
-                {
-                    continue;
-                }
+                if (matchedTerm is null) continue;
 
                 findings.Add(CreateFinding(
                     file,
@@ -116,19 +90,15 @@ public class GCI0029_PiiLoggingLeak : RuleBase
     {
         // If it contains property getter/setter syntax, it's a property definition
         if (content.Contains('{') && content.Contains("get;") && !content.Contains("_logger") && !content.Contains("logger"))
-        {
             return true;
-        }
 
         // If it's just a field declaration ending with semicolon (no logger, no assignment)
-        if (content.EndsWith(';') &&
+        if (content.EndsWith(';') && 
             !content.Contains("_logger") && !content.Contains("logger") &&
             !content.Contains(" = ") &&
-            (content.Contains("public ") || content.Contains("private ") || content.Contains("protected ")) &&
+            (content.Contains("public ") || content.Contains("private ") || content.Contains("protected "))&&
             !content.Contains("("))  // not a method call
-        {
             return true;
-        }
 
         return false;
     }
@@ -139,19 +109,12 @@ public class GCI0029_PiiLoggingLeak : RuleBase
         while (idx < content.Length)
         {
             int found = content.IndexOf(term, idx, StringComparison.OrdinalIgnoreCase);
-            if (found < 0)
-            {
-                return false;
-            }
+            if (found < 0) return false;
 
             bool prevOk = found == 0 || !IsWordChar(content[found - 1]);
             bool nextOk = found + term.Length >= content.Length || !IsWordChar(content[found + term.Length]);
 
-            if (prevOk && nextOk)
-            {
-                return true;
-            }
-
+            if (prevOk && nextOk) return true;
             idx = found + 1;
         }
         return false;

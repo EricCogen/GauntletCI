@@ -20,15 +20,15 @@ public sealed class JiraTicketProvider : ITicketProvider
     public async Task<TicketInfo?> FetchAsync(string issueKey, CancellationToken ct = default)
     {
         var baseUrl = Environment.GetEnvironmentVariable("JIRA_BASE_URL");
-        var token = Environment.GetEnvironmentVariable("JIRA_API_TOKEN");
-        var email = Environment.GetEnvironmentVariable("JIRA_USER_EMAIL");
+        var token   = Environment.GetEnvironmentVariable("JIRA_API_TOKEN");
+        var email   = Environment.GetEnvironmentVariable("JIRA_USER_EMAIL");
 
         if (string.IsNullOrEmpty(baseUrl) || string.IsNullOrEmpty(token) || string.IsNullOrEmpty(email))
         {
             return null;  // Not available
         }
 
-        var creds = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{email}:{token}"));
+        var creds   = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{email}:{token}"));
         var cleanUrl = baseUrl.TrimEnd('/');
 
         using var req = new HttpRequestMessage(HttpMethod.Get,
@@ -37,33 +37,28 @@ public sealed class JiraTicketProvider : ITicketProvider
         req.Headers.Accept.ParseAdd("application/json");
 
         using var resp = await Http.SendAsync(req, ct);
-        if (!resp.IsSuccessStatusCode)
-        {
-            return null;
-        }
+        if (!resp.IsSuccessStatusCode) return null;
 
         var json = await resp.Content.ReadAsStringAsync(ct);
         using var doc = JsonDocument.Parse(json);
         var fields = doc.RootElement.GetProperty("fields");
         var summary = fields.TryGetProperty("summary", out var s) ? s.GetString() : null;
-        var desc = ExtractDescription(fields);
+        var desc    = ExtractDescription(fields);
 
         return new TicketInfo
         {
-            Id = issueKey,
-            Title = summary ?? issueKey,
+            Id          = issueKey,
+            Title       = summary ?? issueKey,
             Description = desc,
-            Url = $"{baseUrl}/browse/{issueKey}",
-            Provider = "Jira",
+            Url         = $"{baseUrl}/browse/{issueKey}",
+            Provider    = "Jira",
         };
     }
 
     private static string? ExtractDescription(JsonElement fields)
     {
         if (!fields.TryGetProperty("description", out var d) || d.ValueKind == JsonValueKind.Null)
-        {
             return null;
-        }
         // Jira v3 uses Atlassian Document Format; extract plain text from paragraphs
         if (d.ValueKind == JsonValueKind.Object &&
             d.TryGetProperty("content", out var content) &&
@@ -73,17 +68,10 @@ public sealed class JiraTicketProvider : ITicketProvider
             foreach (var block in content.EnumerateArray())
             {
                 if (!block.TryGetProperty("content", out var inner) ||
-                    inner.ValueKind != JsonValueKind.Array)
-                {
-                    continue;
-                }
-
+                    inner.ValueKind != JsonValueKind.Array) continue;
                 foreach (var node in inner.EnumerateArray())
                 {
-                    if (node.TryGetProperty("text", out var t))
-                    {
-                        sb.Append(t.GetString()).Append(' ');
-                    }
+                    if (node.TryGetProperty("text", out var t)) sb.Append(t.GetString()).Append(' ');
                 }
             }
             var text = sb.ToString().Trim();

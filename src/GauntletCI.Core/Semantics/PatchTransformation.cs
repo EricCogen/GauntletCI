@@ -143,10 +143,7 @@ public enum PatchTransformationKind
 public sealed class PatchTransformation
 {
     /// <summary>The semantic kind of this transformation.</summary>
-    public PatchTransformationKind Kind
-    {
-        get; init;
-    }
+    public PatchTransformationKind Kind { get; init; }
 
     /// <summary>A human-readable name or title for this transformation.</summary>
     public string Name { get; init; } = string.Empty;
@@ -161,37 +158,22 @@ public sealed class PatchTransformation
     public IReadOnlyList<PatchOperation> Operations { get; init; } = [];
 
     /// <summary>Optional symbol (class name, method name, etc.) this transformation targets.</summary>
-    public string? TargetSymbol
-    {
-        get; init;
-    }
+    public string? TargetSymbol { get; init; }
 
     /// <summary>Optional source symbol (for rename/move operations).</summary>
-    public string? SourceSymbol
-    {
-        get; init;
-    }
+    public string? SourceSymbol { get; init; }
 
     /// <summary>The line range (old file) where this transformation starts and ends.</summary>
-    public (int Start, int End)? OldLineRange
-    {
-        get; init;
-    }
+    public (int Start, int End)? OldLineRange { get; init; }
 
     /// <summary>The line range (new file) where this transformation starts and ends.</summary>
-    public (int Start, int End)? NewLineRange
-    {
-        get; init;
-    }
+    public (int Start, int End)? NewLineRange { get; init; }
 
     /// <summary>
     /// Risk level (0.0-1.0) indicating the potential severity of this transformation.
     /// Calculated from constituent operations.
     /// </summary>
-    public double RiskLevel
-    {
-        get; init;
-    }
+    public double RiskLevel { get; init; }
 
     /// <summary>
     /// Confidence score (0.0-1.0) indicating analyzer certainty about this transformation.
@@ -209,10 +191,7 @@ public sealed class PatchTransformation
     /// Whether this transformation is a known-safe pattern (e.g., idiomatic refactoring).
     /// Safe transformations may be prioritized lower in review.
     /// </summary>
-    public bool IsSafePattern
-    {
-        get; init;
-    }
+    public bool IsSafePattern { get; init; }
 }
 
 /// <summary>
@@ -332,9 +311,7 @@ public sealed class PatchTransformationCollection
     {
         var sorted = values.OrderBy(v => v).ToList();
         if (sorted.Count == 0)
-        {
             return 0;
-        }
 
         var index = (int)Math.Ceiling(percentile * sorted.Count) - 1;
         return sorted[Math.Max(0, Math.Min(index, sorted.Count - 1))];

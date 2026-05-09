@@ -34,49 +34,31 @@ internal static class FileContextPatterns
             {
                 var lower = segment.ToLowerInvariant();
                 // Exact match for spec/specs directories (covers RSpec, Jest, etc.)
-                if (lower == "spec" || lower == "specs")
-                {
-                    return true;
-                }
+                if (lower == "spec" || lower == "specs") return true;
                 // Word-boundary "test(s)" check on lowercase segment (avoids "latest", "protest")
-                if (IsTestSegment(lower))
-                {
-                    return true;
-                }
+                if (IsTestSegment(lower)) return true;
                 // Benchmark / sample / example directories are not consumer-facing APIs
-                if (IsNonProductionSegment(lower))
-                {
-                    return true;
-                }
+                if (IsNonProductionSegment(lower)) return true;
                 // Mock / Fake infrastructure directories
-                if (lower == "mock" || lower == "mocks" || lower == "fake" || lower == "fakes")
-                {
-                    return true;
-                }
+                if (lower == "mock" || lower == "mocks" || lower == "fake" || lower == "fakes") return true;
                 // PascalCase compound directory names: "IntegrationTests", "UnitTest", etc.
                 if (segment.EndsWith("Tests", StringComparison.Ordinal)
-                    || segment.EndsWith("Test", StringComparison.Ordinal))
-                {
-                    return true;
-                }
+                    || segment.EndsWith("Test", StringComparison.Ordinal)) return true;
                 // PascalCase benchmark directories: "MyProject.Benchmarks", "Perf.Benchmark"
                 if (segment.EndsWith("Benchmark", StringComparison.Ordinal)
-                    || segment.EndsWith("Benchmarks", StringComparison.Ordinal))
-                {
-                    return true;
-                }
+                    || segment.EndsWith("Benchmarks", StringComparison.Ordinal)) return true;
             }
         }
 
         // File name: use original casing to distinguish PascalCase "Tests"/"Test"/"Spec" suffix
         // from English words that embed "test" (e.g. "Contest.cs", "Latest.cs", "Protest.cs").
-        var origFile = lastSlash >= 0 ? normPath[(lastSlash + 1)..] : normPath;
+        var origFile  = lastSlash >= 0 ? normPath[(lastSlash + 1)..] : normPath;
         var origNoExt = origFile.Contains('.') ? origFile[..origFile.LastIndexOf('.')] : origFile;
         return origNoExt.StartsWith("test", StringComparison.OrdinalIgnoreCase)
             || origNoExt.EndsWith("Tests", StringComparison.Ordinal)
-            || origNoExt.EndsWith("Test", StringComparison.Ordinal)
-            || origNoExt.EndsWith("Spec", StringComparison.OrdinalIgnoreCase)
-            || origNoExt.EndsWith("Benchmark", StringComparison.OrdinalIgnoreCase)
+            || origNoExt.EndsWith("Test",  StringComparison.Ordinal)
+            || origNoExt.EndsWith("Spec",  StringComparison.OrdinalIgnoreCase)
+            || origNoExt.EndsWith("Benchmark",  StringComparison.OrdinalIgnoreCase)
             || origNoExt.EndsWith("Benchmarks", StringComparison.OrdinalIgnoreCase);
     }
 
@@ -84,22 +66,11 @@ internal static class FileContextPatterns
     // Requires "test" to appear at a word boundary: avoids "latest", "protest", etc.
     private static bool IsTestSegment(string segment)
     {
-        if (segment.StartsWith("test"))
-        {
-            return true;
-        }
+        if (segment.StartsWith("test")) return true;
         // EndsWith "test": only when the character immediately before "test" is non-letter
         // e.g. ".test", "-test", "_test" → yes; "latest" → 'a' precedes "test" → no
-        if (segment.Length > 4 && segment.EndsWith("test") && !char.IsLetter(segment[^5]))
-        {
-            return true;
-        }
-
-        if (segment.Length > 5 && segment.EndsWith("tests") && !char.IsLetter(segment[^6]))
-        {
-            return true;
-        }
-
+        if (segment.Length > 4 && segment.EndsWith("test") && !char.IsLetter(segment[^5])) return true;
+        if (segment.Length > 5 && segment.EndsWith("tests") && !char.IsLetter(segment[^6])) return true;
         return false;
     }
 
@@ -108,26 +79,11 @@ internal static class FileContextPatterns
     private static bool IsNonProductionSegment(string segment)
     {
         // Benchmark projects: BenchmarkDotNet, microbenchmarks, perf projects
-        if (segment.EndsWith("benchmark") || segment.EndsWith("benchmarks"))
-        {
-            return true;
-        }
-
-        if (segment == "benchmark" || segment == "benchmarks")
-        {
-            return true;
-        }
+        if (segment.EndsWith("benchmark") || segment.EndsWith("benchmarks")) return true;
+        if (segment == "benchmark" || segment == "benchmarks") return true;
         // Sample and example projects: demonstration code with no API stability guarantee
-        if (segment == "samples" || segment == "sample")
-        {
-            return true;
-        }
-
-        if (segment == "examples" || segment == "example")
-        {
-            return true;
-        }
-
+        if (segment == "samples" || segment == "sample") return true;
+        if (segment == "examples" || segment == "example") return true;
         return false;
     }
 
@@ -141,49 +97,27 @@ internal static class FileContextPatterns
         var normPath = path.Replace('\\', '/');
 
         // Directory segment: any path with a /Generated/ folder is auto-generated
-        if (normPath.Contains("/Generated/", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
+        if (normPath.Contains("/Generated/", StringComparison.OrdinalIgnoreCase)) return true;
         // Build output or intermediate artifacts
-        if (normPath.Contains("/obj/", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
+        if (normPath.Contains("/obj/", StringComparison.OrdinalIgnoreCase)) return true;
 
         var fileName = normPath.Contains('/')
             ? normPath[(normPath.LastIndexOf('/') + 1)..]
             : normPath;
 
         // Roslyn source generator outputs: Foo.g.cs, Foo.g.i.cs
-        if (fileName.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
-        if (fileName.EndsWith(".g.i.cs", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
+        if (fileName.EndsWith(".g.cs", StringComparison.OrdinalIgnoreCase)) return true;
+        if (fileName.EndsWith(".g.i.cs", StringComparison.OrdinalIgnoreCase)) return true;
         // WinForms / WPF designer files
-        if (fileName.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
+        if (fileName.EndsWith(".Designer.cs", StringComparison.OrdinalIgnoreCase)) return true;
         // Assembly-level attribute file emitted by SDK
-        if (fileName.Equals("AssemblyInfo.cs", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
+        if (fileName.Equals("AssemblyInfo.cs", StringComparison.OrdinalIgnoreCase)) return true;
         // API surface manifest files emitted by the .NET SDK:
         //   net8.0.cs, net10.0.cs (numeric TFMs) and netstandard2.0.cs, netstandard2.1.cs, etc.
         // These enumerate every public member and are never hand-authored.
         if (Regex.IsMatch(
                 fileName, @"\.(net\d+\.\d+|netstandard\d+\.\d+)\.cs$",
-                RegexOptions.IgnoreCase))
-        {
-            return true;
-        }
+                RegexOptions.IgnoreCase)) return true;
 
         return false;
     }
@@ -218,11 +152,7 @@ internal static class FileContextPatterns
     /// </summary>
     public static bool IsSecurityCriticalPath(string path)
     {
-        if (string.IsNullOrEmpty(path))
-        {
-            return false;
-        }
-
+        if (string.IsNullOrEmpty(path)) return false;
         return SecurityCriticalPaths.Any(p =>
             path.Contains(p, StringComparison.OrdinalIgnoreCase));
     }

@@ -54,9 +54,7 @@ internal static class EngineeringPolicyEvaluator
         CancellationToken ct = default)
     {
         if (!llm.IsAvailable)
-        {
             return [];
-        }
 
         if (!File.Exists(policyPath))
         {
@@ -84,7 +82,7 @@ internal static class EngineeringPolicyEvaluator
             return [];
         }
 
-        var diffText = rawDiffText.Length > maxDiffChars
+        var diffText  = rawDiffText.Length > maxDiffChars
             ? rawDiffText[..maxDiffChars] + "\n... (truncated)"
             : rawDiffText;
         var fileNames = ExtractFileNames(diffText);
@@ -135,19 +133,11 @@ internal static class EngineeringPolicyEvaluator
         foreach (var file in diff.Files)
         {
             var path = file.NewPath ?? file.OldPath ?? "unknown";
-            if (IsTestFile(path))
-            {
-                continue;
-            }
+            if (IsTestFile(path)) continue;  // test files never ship; skip entirely
             sb.AppendLine($"// FILE: {path}");
             foreach (var hunk in file.Hunks)
-            {
-                foreach (var line in hunk.Lines.Where(l => l.Kind == DiffLineKind.Added))
-                {
-                    sb.AppendLine(line.Content);
-                }
-            }
-
+            foreach (var line in hunk.Lines.Where(l => l.Kind == DiffLineKind.Added))
+                sb.AppendLine(line.Content);
             sb.AppendLine();
         }
         return sb.ToString();
@@ -203,19 +193,15 @@ internal static class EngineeringPolicyEvaluator
 
             // Extract JSON array regardless of preamble text or markdown fences
             var start = trimmed.IndexOf('[');
-            var end = trimmed.LastIndexOf(']');
+            var end   = trimmed.LastIndexOf(']');
             if (start >= 0 && end > start)
-            {
                 trimmed = trimmed[start..(end + 1)];
-            }
 
             var records = JsonSerializer.Deserialize<PolicyFinding[]>(trimmed,
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (records is null || records.Length == 0)
-            {
                 return [];
-            }
 
             return records
                 .Where(r => !string.IsNullOrWhiteSpace(r.RuleId)
@@ -232,14 +218,14 @@ internal static class EngineeringPolicyEvaluator
                     var normalizedId = NormalizeRuleId(r.RuleId!.TrimEnd(':', ' '));
                     return new Finding
                     {
-                        RuleId = normalizedId,
-                        RuleName = CanonicalRuleNames[normalizedId],
-                        Summary = r.Summary!,
-                        Evidence = evidenceBullets,
-                        WhyItMatters = r.WhyItMatters ?? string.Empty,
+                        RuleId          = normalizedId,
+                        RuleName        = CanonicalRuleNames[normalizedId],
+                        Summary         = r.Summary!,
+                        Evidence        = evidenceBullets,
+                        WhyItMatters    = r.WhyItMatters ?? string.Empty,
                         SuggestedAction = r.SuggestedAction ?? string.Empty,
-                        Severity = RuleSeverity.Advisory,
-                        Confidence = Confidence.Medium,
+                        Severity        = RuleSeverity.Advisory,
+                        Confidence      = Confidence.Medium,
                     };
                 }).ToList();
         }
@@ -256,31 +242,18 @@ internal static class EngineeringPolicyEvaluator
     private static string NormalizeRuleId(string raw)
     {
         var upper = raw.ToUpperInvariant();
-        if (CanonicalRuleIds.Contains(upper))
-        {
-            return upper;
-        }
+        if (CanonicalRuleIds.Contains(upper)) return upper;
 
         if (upper.Contains("OBSERV") || upper.Contains("DIAGNOS") || upper.Contains("LOG") || upper.Contains("MONITOR"))
-        {
             return "EP_OBSERVABILITY";
-        }
         if (upper.Contains("TEST") || upper.Contains("SPEC") || upper.Contains("VERIF"))
-        {
             return "EP_TESTING";
-        }
         if (upper.Contains("CONTRACT") || upper.Contains("COMPAT") || upper.Contains("BREAK") || upper.Contains("API"))
-        {
             return "EP_CONTRACTS";
-        }
         if (upper.Contains("FAIL") || upper.Contains("ERROR") || upper.Contains("EXCEPT") || upper.Contains("RECOVER"))
-        {
             return "EP_FAILURE";
-        }
         if (upper.Contains("SCOPE") || upper.Contains("COMPLEX") || upper.Contains("CONTAIN"))
-        {
             return "EP_SCOPE";
-        }
 
         return "EP_CORRECTNESS";
     }

@@ -10,12 +10,9 @@ namespace GauntletCI.Core.Domain;
 public readonly record struct RuleIdentifier : IEquatable<RuleIdentifier>, IComparable<RuleIdentifier>
 {
     private static readonly Regex RuleIdPattern = new(@"^GCI\d{4}$", RegexOptions.Compiled);
-
+    
     /// <summary>Gets the raw rule ID value (e.g., "GCI0001").</summary>
-    public string Value
-    {
-        get;
-    }
+    public string Value { get; }
 
     /// <summary>Gets the numeric portion of the rule ID (e.g., 1 for "GCI0001").</summary>
     public int Number => int.Parse(Value.Substring(3));
@@ -26,16 +23,12 @@ public readonly record struct RuleIdentifier : IEquatable<RuleIdentifier>, IComp
     private RuleIdentifier(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
-        {
             throw new ArgumentException("Rule ID cannot be null or empty.", nameof(value));
-        }
 
         if (!RuleIdPattern.IsMatch(value))
-        {
             throw new ArgumentException(
                 $"Rule ID must match format 'GCIXXXX' where X is a digit. Got: {value}",
                 nameof(value));
-        }
 
         Value = value;
     }
@@ -48,9 +41,7 @@ public readonly record struct RuleIdentifier : IEquatable<RuleIdentifier>, IComp
     {
         result = default;
         if (string.IsNullOrWhiteSpace(value) || !RuleIdPattern.IsMatch(value))
-        {
             return false;
-        }
 
         result = new RuleIdentifier(value);
         return true;
@@ -63,12 +54,9 @@ public readonly record struct RuleIdentifier : IEquatable<RuleIdentifier>, IComp
     public static RuleIdentifier Parse(string value)
     {
         if (!TryParse(value, out var result))
-        {
             throw new ArgumentException(
                 $"Invalid rule ID format: '{value}'. Expected format: GCIXXXX where X is a digit.",
                 nameof(value));
-        }
-
         return result;
     }
 
@@ -79,10 +67,7 @@ public readonly record struct RuleIdentifier : IEquatable<RuleIdentifier>, IComp
     public static RuleIdentifier FromNumber(int number)
     {
         if (number < 0 || number > 9999)
-        {
             throw new ArgumentOutOfRangeException(nameof(number), "Rule number must be between 0 and 9999.");
-        }
-
         return new RuleIdentifier($"GCI{number:D4}");
     }
 

@@ -11,15 +11,15 @@ public class FixtureNormalizerTests
         string owner = "acme", string repo = "api", int prNumber = 1,
         string diff = "", IReadOnlyList<ChangedFile>? files = null,
         IReadOnlyList<ReviewComment>? comments = null) => new()
-        {
-            RepoOwner = owner,
-            RepoName = repo,
-            PullRequestNumber = prNumber,
-            DiffText = diff,
-            ChangedFiles = files ?? [],
-            ReviewComments = comments ?? [],
-            HydratedAtUtc = DateTime.UtcNow,
-        };
+    {
+        RepoOwner = owner,
+        RepoName = repo,
+        PullRequestNumber = prNumber,
+        DiffText = diff,
+        ChangedFiles = files ?? [],
+        ReviewComments = comments ?? [],
+        HydratedAtUtc = DateTime.UtcNow,
+    };
 
     [Fact]
     public void Normalize_BuildsCorrectFixtureId()

@@ -96,11 +96,7 @@ public sealed class SemgrepEnricher
             }
             finally
             {
-                try
-                {
-                    Directory.Delete(tempDir, recursive: true);
-                }
-                catch { /* best-effort */ }
+                try { Directory.Delete(tempDir, recursive: true); } catch { /* best-effort */ }
             }
         }
 
@@ -127,20 +123,9 @@ public sealed class SemgrepEnricher
                 continue;
             }
 
-            if (currentFile is null)
-            {
-                continue;
-            }
-
-            if (!line.StartsWith("+", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            if (line.StartsWith("+++", StringComparison.Ordinal))
-            {
-                continue;
-            }
+            if (currentFile is null) continue;
+            if (!line.StartsWith("+", StringComparison.Ordinal)) continue;
+            if (line.StartsWith("+++", StringComparison.Ordinal)) continue;
 
             if (!result.TryGetValue(currentFile, out var lines))
             {
@@ -162,9 +147,9 @@ public sealed class SemgrepEnricher
             $"--config={_config} --json --lang=csharp --quiet {tempDir}")
         {
             RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
+            RedirectStandardError  = true,
+            UseShellExecute        = false,
+            CreateNoWindow         = true,
         };
 
         string stdout;
@@ -182,9 +167,7 @@ public sealed class SemgrepEnricher
         }
 
         if (string.IsNullOrWhiteSpace(stdout))
-        {
             return (0, null, null, null);
-        }
 
         try
         {
@@ -193,35 +176,27 @@ public sealed class SemgrepEnricher
 
             if (!root.TryGetProperty("results", out var resultsEl) ||
                 resultsEl.ValueKind != JsonValueKind.Array)
-            {
                 return (0, null, null, null);
-            }
 
             var findings = resultsEl.EnumerateArray().ToList();
             if (findings.Count == 0)
-            {
                 return (0, null, null, null);
-            }
 
-            var rules = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var rules      = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var severities = new List<string>();
 
             foreach (var f in findings)
             {
                 if (f.TryGetProperty("check_id", out var cid))
-                {
                     rules.Add(cid.GetString() ?? "");
-                }
 
                 if (f.TryGetProperty("extra", out var extra) &&
                     extra.TryGetProperty("severity", out var sev))
-                {
                     severities.Add(sev.GetString() ?? "INFO");
-                }
             }
 
             var highestSeverity = PickHighestSeverity(severities);
-            var rulesFired = string.Join(",", rules.Where(r => !string.IsNullOrEmpty(r)));
+            var rulesFired      = string.Join(",", rules.Where(r => !string.IsNullOrEmpty(r)));
 
             return (findings.Count, rulesFired, highestSeverity, stdout);
         }
@@ -236,11 +211,11 @@ public sealed class SemgrepEnricher
         static int Rank(string s) => s.ToUpperInvariant() switch
         {
             "CRITICAL" => 5,
-            "HIGH" => 4,
-            "MEDIUM" => 3,
-            "LOW" => 2,
-            "INFO" => 1,
-            _ => 0,
+            "HIGH"     => 4,
+            "MEDIUM"   => 3,
+            "LOW"      => 2,
+            "INFO"     => 1,
+            _          => 0,
         };
 
         return severities
@@ -257,9 +232,9 @@ public sealed class SemgrepEnricher
             var psi = new ProcessStartInfo("semgrep", "--version")
             {
                 RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
+                RedirectStandardError  = true,
+                UseShellExecute        = false,
+                CreateNoWindow         = true,
             };
             using var proc = Process.Start(psi);
             proc?.WaitForExit(5_000);
@@ -278,7 +253,7 @@ public sealed class SemgrepEnricher
     private static string SanitizeFileName(string filePath)
     {
         var invalid = Path.GetInvalidFileNameChars();
-        var name = filePath.Replace('/', '_').Replace('\\', '_');
+        var name    = filePath.Replace('/', '_').Replace('\\', '_');
         return string.Concat(name.Select(c => invalid.Contains(c) ? '_' : c));
     }
 
@@ -296,12 +271,12 @@ public sealed class SemgrepEnricher
             VALUES
                 ($fixtureId, $repo, $findingCount, $rulesFired, $highestSeverity, $findingsJson, datetime('now'))
             """;
-        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
-        cmd.Parameters.AddWithValue("$repo", repo);
-        cmd.Parameters.AddWithValue("$findingCount", findingCount);
-        cmd.Parameters.AddWithValue("$rulesFired", (object?)rulesFired ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("$highestSeverity", (object?)highestSeverity ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("$findingsJson", (object?)findingsJson ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$fixtureId",       fixtureId);
+        cmd.Parameters.AddWithValue("$repo",             repo);
+        cmd.Parameters.AddWithValue("$findingCount",     findingCount);
+        cmd.Parameters.AddWithValue("$rulesFired",       (object?)rulesFired       ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$highestSeverity",  (object?)highestSeverity  ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$findingsJson",     (object?)findingsJson     ?? DBNull.Value);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }

@@ -70,9 +70,7 @@ public sealed class ExceptionHandlingPatternStrategy : IInferenceStrategy
 
             // Look for catch block opening
             if (!trimmed.StartsWith("catch", StringComparison.Ordinal))
-            {
                 continue;
-            }
 
             // Check if brace is on same line
             var openBraceIdx = line.IndexOf('{');
@@ -80,13 +78,9 @@ public sealed class ExceptionHandlingPatternStrategy : IInferenceStrategy
             {
                 // Brace might be on next line
                 if (i + 1 < addedLines.Count && addedLines[i + 1].TrimStart().StartsWith("{"))
-                {
                     openBraceIdx = addedLines[i + 1].IndexOf('{');
-                }
                 else
-                {
                     continue;
-                }
             }
 
             // Find the closing brace
@@ -96,15 +90,8 @@ public sealed class ExceptionHandlingPatternStrategy : IInferenceStrategy
                 var searchLine = j == i ? line[(openBraceIdx + 1)..] : addedLines[j];
                 foreach (var ch in searchLine)
                 {
-                    if (ch == '{')
-                    {
-                        braceDepth++;
-                    }
-
-                    if (ch == '}')
-                    {
-                        braceDepth--;
-                    }
+                    if (ch == '{') braceDepth++;
+                    if (ch == '}') braceDepth--;
                 }
             }
 
@@ -115,9 +102,7 @@ public sealed class ExceptionHandlingPatternStrategy : IInferenceStrategy
             var afterCatch = catchIdx >= 0 ? line[catchIdx..].TrimStart() : string.Empty;
             if (afterCatch.StartsWith("{ }", StringComparison.Ordinal) ||
                 afterCatch.StartsWith("{}"))
-            {
                 return true;
-            }
         }
 
         return false;

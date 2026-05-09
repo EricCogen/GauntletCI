@@ -117,14 +117,10 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
         var lowerText = text.ToLowerInvariant();
 
         if (words.Length < 4)
-        {
             flags.Add(new("TOO_SHORT", $"Only {words.Length} words: likely degenerate output."));
-        }
 
         if (words.Length > 60)
-        {
             flags.Add(new("OVER_LONG", $"{words.Length} words: far exceeds 30-word constraint."));
-        }
 
         // Prompt echo: 6-word verbatim span from probe appears in output
         var sourceWords = $"{probe.Summary} {probe.Evidence}"
@@ -163,24 +159,20 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
         // Inverted guidance: claims code is safe when asked about a risk
         string[] inversionTerms = ["is safe", "is correct", "no risk", "not a problem", "is fine", "no issue"];
         foreach (var term in inversionTerms)
-        {
             if (lowerText.Contains(term))
             {
                 flags.Add(new("INVERTED_GUIDANCE", $"Contains \"{term}\": sycophancy under constraint?"));
                 break;
             }
-        }
 
         // Apologetic refusal: over-hedging triggered by strict constraints
         string[] refusalTerms = ["i don't know", "i cannot determine", "i'm not sure", "cannot assess", "insufficient information"];
         foreach (var term in refusalTerms)
-        {
             if (lowerText.Contains(term))
             {
                 flags.Add(new("APOLOGETIC_REFUSAL", $"Contains \"{term}\": over-refusal under constraint."));
                 break;
             }
-        }
 
         return flags;
     }
@@ -221,20 +213,13 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
                 probe.RuleId, probe.RuleName, probe.Summary, probe.Evidence);
 
             var baseOut = await engine.CompleteAsync(baselinePrompt);
-            var conOut = await engine.CompleteAsync(constrainedPrompt);
+            var conOut  = await engine.CompleteAsync(constrainedPrompt);
 
             var baseFlags = DetectFlags(probe, baseOut);
-            var conFlags = DetectFlags(probe, conOut);
+            var conFlags  = DetectFlags(probe, conOut);
 
-            if (baseFlags.Count > 0)
-            {
-                baselineHallucinated++;
-            }
-
-            if (conFlags.Count > 0)
-            {
-                constrainedHallucinated++;
-            }
+            if (baseFlags.Count > 0) baselineHallucinated++;
+            if (conFlags.Count > 0)  constrainedHallucinated++;
 
             sb.AppendLine();
             sb.AppendLine($"┌─ {probe.RuleId}: {probe.RuleName}");
@@ -243,25 +228,17 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
             sb.AppendLine($"│");
             sb.AppendLine($"│  BASELINE    [{(baseFlags.Count == 0 ? "CLEAN" : "⚠ " + string.Join(", ", baseFlags.Select(f => f.Code)))}]");
             sb.AppendLine($"│  → \"{TruncateWords(baseOut, 40)}\"");
-            foreach (var f in baseFlags)
-            {
-                sb.AppendLine($"│    ⚠ {f.Code}: {f.Detail}");
-            }
-
+            foreach (var f in baseFlags) sb.AppendLine($"│    ⚠ {f.Code}: {f.Detail}");
             sb.AppendLine($"│");
             sb.AppendLine($"│  CONSTRAINED [{(conFlags.Count == 0 ? "CLEAN" : "⚠ " + string.Join(", ", conFlags.Select(f => f.Code)))}]");
             sb.AppendLine($"│  → \"{TruncateWords(conOut, 40)}\"");
-            foreach (var f in conFlags)
-            {
-                sb.AppendLine($"│    ⚠ {f.Code}: {f.Detail}");
-            }
-
+            foreach (var f in conFlags) sb.AppendLine($"│    ⚠ {f.Code}: {f.Detail}");
             sb.AppendLine($"└─");
         }
 
         double baseRate = (double)baselineHallucinated / Probes.Length * 100;
-        double conRate = (double)constrainedHallucinated / Probes.Length * 100;
-        double delta = baseRate - conRate;
+        double conRate  = (double)constrainedHallucinated / Probes.Length * 100;
+        double delta    = baseRate - conRate;
 
         sb.AppendLine();
         sb.AppendLine("═══════════════════════════════════════════════════════════════════");
@@ -272,10 +249,10 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
         sb.AppendLine();
         sb.AppendLine(delta switch
         {
-            > 10 => "  VERDICT: Constraints meaningfully reduced hallucination (>10pp improvement).",
-            > 0 => "  VERDICT: Constraints helped slightly but not decisively.",
-            0 => "  VERDICT: Constraints had no measurable effect on this model.",
-            _ => "  VERDICT: Constraints increased refusal/empty output: inspect APOLOGETIC_REFUSAL flags."
+            > 10  => "  VERDICT: Constraints meaningfully reduced hallucination (>10pp improvement).",
+            > 0   => "  VERDICT: Constraints helped slightly but not decisively.",
+            0     => "  VERDICT: Constraints had no measurable effect on this model.",
+            _     => "  VERDICT: Constraints increased refusal/empty output: inspect APOLOGETIC_REFUSAL flags."
         });
         sb.AppendLine("═══════════════════════════════════════════════════════════════════");
         output.WriteLine(sb.ToString());
@@ -289,10 +266,7 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
 
     private static string TruncateWords(string text, int maxWords)
     {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            return "(empty)";
-        }
+        if (string.IsNullOrWhiteSpace(text)) return "(empty)";
         var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         return words.Length <= maxWords ? text : string.Join(" ", words.Take(maxWords)) + "…";
     }

@@ -27,12 +27,12 @@ public static class CorpusUtilityFactory
     /// </summary>
     public static Command CreatePurge()
     {
-        var languageOpt = new Option<string>("--language", () => "C#", "Remove fixtures whose inferred language doesn't match this value");
+        var languageOpt              = new Option<string>("--language",              () => "C#",  "Remove fixtures whose inferred language doesn't match this value");
         var requireReviewCommentsOpt = new Option<bool>("--require-review-comments", () => false, "Remove fixtures that have no inline review comments");
-        var repoBlocklistOpt = new Option<string[]>("--repo-blocklist", "Remove fixtures from these owner/repo names") { AllowMultipleArgumentsPerToken = false, Arity = ArgumentArity.ZeroOrMore };
-        var dryRunOpt = new Option<bool>("--dry-run", () => false, "Print what would be purged without making changes");
-        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Path to fixtures root directory");
+        var repoBlocklistOpt         = new Option<string[]>("--repo-blocklist",      "Remove fixtures from these owner/repo names") { AllowMultipleArgumentsPerToken = false, Arity = ArgumentArity.ZeroOrMore };
+        var dryRunOpt                = new Option<bool>  ("--dry-run",              () => false, "Print what would be purged without making changes");
+        var dbOpt                    = new Option<string>("--db",                   () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt              = new Option<string>("--fixtures",             () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("purge", "Remove low-quality fixtures from the corpus");
         cmd.AddOption(languageOpt);
@@ -44,13 +44,13 @@ public static class CorpusUtilityFactory
 
         cmd.SetHandler(async (ctx) =>
         {
-            var language = ctx.ParseResult.GetValueForOption(languageOpt)!;
+            var language              = ctx.ParseResult.GetValueForOption(languageOpt)!;
             var requireReviewComments = ctx.ParseResult.GetValueForOption(requireReviewCommentsOpt);
-            var repoBlocklist = ctx.ParseResult.GetValueForOption(repoBlocklistOpt) ?? [];
-            var dryRun = ctx.ParseResult.GetValueForOption(dryRunOpt);
-            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var fixturesRoot = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var ct = ctx.GetCancellationToken();
+            var repoBlocklist         = ctx.ParseResult.GetValueForOption(repoBlocklistOpt) ?? [];
+            var dryRun                = ctx.ParseResult.GetValueForOption(dryRunOpt);
+            var dbPath                = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixturesRoot          = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct                    = ctx.GetCancellationToken();
 
             var (db, _, _) = await CorpusCommandHelpers.BuildPipeline(dbPath, fixturesRoot, ct);
             using (db)
@@ -60,19 +60,11 @@ public static class CorpusUtilityFactory
                     // Build WHERE predicate
                     var conditions = new List<string>();
                     if (!string.IsNullOrEmpty(language))
-                    {
                         conditions.Add("(f.language IS NULL OR LOWER(f.language) != LOWER($lang))");
-                    }
-
                     if (requireReviewComments)
-                    {
                         conditions.Add("f.has_review_comments = 0");
-                    }
-
                     if (repoBlocklist.Length > 0)
-                    {
                         conditions.Add("f.repo IN (" + string.Join(",", repoBlocklist.Select((_, i) => $"$blk{i}")) + ")");
-                    }
 
                     if (conditions.Count == 0)
                     {
@@ -91,19 +83,17 @@ public static class CorpusUtilityFactory
                         """;
                     selectCmd.Parameters.AddWithValue("$lang", language);
                     for (int i = 0; i < repoBlocklist.Length; i++)
-                    {
                         selectCmd.Parameters.AddWithValue($"$blk{i}", repoBlocklist[i]);
-                    }
 
                     var toPurge = new List<(string FixtureId, string? Path, string Repo, int PrNumber)>();
                     using (var reader = await selectCmd.ExecuteReaderAsync(ct))
                     {
                         while (await reader.ReadAsync(ct))
                         {
-                            var fid = reader.GetString(0);
+                            var fid  = reader.GetString(0);
                             var path = reader.IsDBNull(1) ? null : reader.GetString(1);
                             var repo = reader.GetString(2);
-                            var prn = reader.GetInt32(3);
+                            var prn  = reader.GetInt32(3);
                             var lang = reader.IsDBNull(4) ? "(none)" : reader.GetString(4);
                             var hasRc = reader.GetInt32(5) == 1;
                             var blocklisted = repoBlocklist.Length > 0 && repoBlocklist.Contains(repo, StringComparer.OrdinalIgnoreCase);
@@ -131,9 +121,7 @@ public static class CorpusUtilityFactory
                             await deleteCmd.ExecuteNonQueryAsync(ct);
 
                             if (!string.IsNullOrEmpty(path) && Directory.Exists(path))
-                            {
                                 Directory.Delete(path, recursive: true);
-                            }
                         }
 
                         Console.WriteLine($"[corpus] purge: {toPurge.Count} fixture(s) deleted");
@@ -160,10 +148,10 @@ public static class CorpusUtilityFactory
     /// </summary>
     public static Command CreateErrors()
     {
-        var stepOpt = new Option<string?>("--step", "Filter by pipeline step (discover|hydrate|label|run)");
-        var repoOpt = new Option<string?>("--repo", "Filter by repo owner/repo");
-        var limitOpt = new Option<int>("--limit", () => 50, "Max errors to display");
-        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var stepOpt   = new Option<string?>("--step",  "Filter by pipeline step (discover|hydrate|label|run)");
+        var repoOpt   = new Option<string?>("--repo",  "Filter by repo owner/repo");
+        var limitOpt  = new Option<int>    ("--limit", () => 50, "Max errors to display");
+        var dbOpt     = new Option<string> ("--db",    () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
 
         var cmd = new Command("errors", "View pipeline errors logged during corpus operations");
         cmd.AddOption(stepOpt);
@@ -173,11 +161,11 @@ public static class CorpusUtilityFactory
 
         cmd.SetHandler(async (ctx) =>
         {
-            var step = ctx.ParseResult.GetValueForOption(stepOpt);
-            var repo = ctx.ParseResult.GetValueForOption(repoOpt);
+            var step  = ctx.ParseResult.GetValueForOption(stepOpt);
+            var repo  = ctx.ParseResult.GetValueForOption(repoOpt);
             var limit = ctx.ParseResult.GetValueForOption(limitOpt);
             var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var ct = ctx.GetCancellationToken();
+            var ct    = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
@@ -187,14 +175,9 @@ public static class CorpusUtilityFactory
                 using var cmd2 = db.Connection.CreateCommand();
                 var where = new List<string>();
                 if (!string.IsNullOrEmpty(step))
-                {
                     where.Add("step = $step");
-                }
-
                 if (!string.IsNullOrEmpty(repo))
-                {
                     where.Add("repo LIKE $repo");
-                }
 
                 var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
                 cmd2.CommandText = $"""
@@ -206,15 +189,9 @@ public static class CorpusUtilityFactory
                     """;
 
                 if (!string.IsNullOrEmpty(step))
-                {
                     cmd2.Parameters.AddWithValue("$step", step);
-                }
-
                 if (!string.IsNullOrEmpty(repo))
-                {
                     cmd2.Parameters.AddWithValue("$repo", $"%{repo}%");
-                }
-
                 cmd2.Parameters.AddWithValue("$limit", limit);
 
                 Console.WriteLine("[corpus] Pipeline errors:");
@@ -226,25 +203,19 @@ public static class CorpusUtilityFactory
                     while (await reader.ReadAsync(ct))
                     {
                         any = true;
-                        var at = reader.IsDBNull(0) ? "" : reader.GetString(0);
+                        var at   = reader.IsDBNull(0) ? "" : reader.GetString(0);
                         var step2 = reader.IsDBNull(1) ? "" : reader.GetString(1);
                         var prov = reader.IsDBNull(2) ? "" : reader.GetString(2);
                         var repo2 = reader.IsDBNull(3) ? "" : reader.GetString(3);
                         var code = reader.IsDBNull(4) ? "" : reader.GetInt32(4).ToString();
-                        var msg = reader.IsDBNull(5) ? "" : reader.GetString(5);
-                        if (msg.Length > 60)
-                        {
-                            msg = msg[..57] + "...";
-                        }
-
+                        var msg  = reader.IsDBNull(5) ? "" : reader.GetString(5);
+                        if (msg.Length > 60) msg = msg[..57] + "...";
                         Console.WriteLine($"  [{at}] {step2}/{prov} {repo2} ({code}): {msg}");
                     }
                 }
 
                 if (!any)
-                {
                     Console.WriteLine("  (none)");
-                }
             }
             catch (Exception ex)
             {
@@ -266,8 +237,8 @@ public static class CorpusUtilityFactory
     /// </summary>
     public static Command CreateRejectedRepos()
     {
-        var limitOpt = new Option<int>("--limit", () => 20, "Max repos to display");
-        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var limitOpt = new Option<int>   ("--limit", () => 20, "Max repos to display");
+        var dbOpt    = new Option<string>("--db",    () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
 
         var cmd = new Command("rejected-repos", "List repositories that had fixtures rejected during hydration");
         cmd.AddOption(limitOpt);
@@ -275,9 +246,9 @@ public static class CorpusUtilityFactory
 
         cmd.SetHandler(async (ctx) =>
         {
-            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
+            var limit  = ctx.ParseResult.GetValueForOption(limitOpt);
             var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var ct = ctx.GetCancellationToken();
+            var ct     = ctx.GetCancellationToken();
 
             var db = new CorpusDb(dbPath);
             await db.InitializeAsync(ct);
@@ -333,9 +304,9 @@ public static class CorpusUtilityFactory
     /// </summary>
     public static Command CreateDoctor()
     {
-        var verboseOpt = new Option<bool>("--verbose", () => false, "Print detailed diagnostic output");
-        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Path to fixtures root directory");
+        var verboseOpt  = new Option<bool>  ("--verbose",  () => false, "Print detailed diagnostic output");
+        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
 
         var cmd = new Command("doctor", "Run corpus health checks and diagnostics");
         cmd.AddOption(verboseOpt);
@@ -344,10 +315,10 @@ public static class CorpusUtilityFactory
 
         cmd.SetHandler(async (ctx) =>
         {
-            var verbose = ctx.ParseResult.GetValueForOption(verboseOpt);
-            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var verbose  = ctx.ParseResult.GetValueForOption(verboseOpt);
+            var dbPath   = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var ct = ctx.GetCancellationToken();
+            var ct       = ctx.GetCancellationToken();
 
             var (db, store, _) = await CorpusCommandHelpers.BuildPipeline(dbPath, fixtures, ct);
             using (db)
@@ -377,17 +348,11 @@ public static class CorpusUtilityFactory
                         foreach (var t in new[] { FixtureTier.Gold, FixtureTier.Silver, FixtureTier.Discovery })
                         {
                             var candidate = FixtureIdHelper.GetFixturePath(fixtures, t, fixture.FixtureId);
-                            if (Directory.Exists(candidate))
-                            {
-                                fixturePath = candidate;
-                                break;
-                            }
+                            if (Directory.Exists(candidate)) { fixturePath = candidate; break; }
                         }
 
                         if (fixturePath is null || !File.Exists(Path.Combine(fixturePath, "diff.patch")))
-                        {
                             orphaned++;
-                        }
                     }
 
                     Console.WriteLine();
@@ -432,13 +397,9 @@ public static class CorpusUtilityFactory
                     Console.WriteLine();
                     Console.WriteLine("Status: ", ConsoleColor.Green);
                     if (orphaned == 0 && errorCount == 0)
-                    {
                         Console.WriteLine("✓ Corpus is healthy");
-                    }
                     else
-                    {
                         Console.WriteLine("⚠ Issues detected - review above warnings");
-                    }
                 }
                 catch (Exception ex)
                 {

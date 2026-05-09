@@ -173,8 +173,6 @@ public class EngineeringPolicyEvaluatorTests
         public Task<string> CompleteAsync(string prompt, CancellationToken ct) => Task.FromResult(response);
         public Task<string> EnrichFindingAsync(Finding finding, CancellationToken ct) => Task.FromResult(string.Empty);
         public Task<string> SummarizeReportAsync(IEnumerable<Finding> findings, CancellationToken ct) => Task.FromResult(string.Empty);
-        public void Dispose()
-        {
-        }
+        public void Dispose() { }
     }
 }

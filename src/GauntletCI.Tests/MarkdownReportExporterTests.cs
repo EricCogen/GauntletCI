@@ -14,10 +14,7 @@ public class MarkdownReportExporterTests
     private sealed class FakeAggregator : IScoreAggregator
     {
         private readonly IReadOnlyList<RuleScorecard> _cards;
-        public FakeAggregator(params RuleScorecard[] cards)
-        {
-            _cards = cards;
-        }
+        public FakeAggregator(params RuleScorecard[] cards) { _cards = cards; }
         public Task<IReadOnlyList<RuleScorecard>> ScoreAsync(string? ruleId = null, FixtureTier? tier = null, CancellationToken cancellationToken = default)
             => Task.FromResult(_cards);
     }

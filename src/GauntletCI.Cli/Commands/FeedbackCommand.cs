@@ -51,7 +51,7 @@ public static class FeedbackCommand
             {
                 EventType = "feedback",
                 InstallId = TelemetryConsent.InstallId,
-                Vote = vote,
+                Vote      = vote,
             });
 
             TelemetryUploader.UploadInBackground();

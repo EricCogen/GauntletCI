@@ -26,24 +26,15 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
     private static bool IsNullForgivingLine(string content)
     {
         var trimmed = content.TrimStart();
-        if (trimmed.StartsWith("//"))
-        {
-            return false;
-        }
+        if (trimmed.StartsWith("//")) return false;
 
         // Postfix null-forgiving: !. or !; or !, (not != which would be !=)
         for (int i = 0; i < content.Length - 1; i++)
         {
-            if (content[i] != '!')
-            {
-                continue;
-            }
-
+            if (content[i] != '!') continue;
             char next = content[i + 1];
             if (next == '.' || next == ';' || next == ',')
-            {
                 return true;
-            }
         }
         return false;
     }
@@ -74,10 +65,7 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
             .Where(l => !l.Content.Contains("GetValueForOption(", StringComparison.Ordinal))
             .ToList();
 
-        if (matchingLines.Count <= 1)
-        {
-            return;
-        }
+        if (matchingLines.Count <= 1) return;
 
         var evidence = matchingLines.Take(5)
             .Select(l => $"Line {l.LineNumber}: {l.Content.Trim()}");
@@ -95,10 +83,7 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
     {
         foreach (var line in file.AddedLines)
         {
-            if (!WellKnownPatterns.IsPragmaNullableDisable(line.Content))
-            {
-                continue;
-            }
+            if (!WellKnownPatterns.IsPragmaNullableDisable(line.Content)) continue;
 
             findings.Add(CreateFinding(
                 file,
@@ -118,56 +103,32 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
         for (int i = 0; i < addedLines.Count; i++)
         {
             var content = addedLines[i].Content;
-            if (!content.Contains(" as ", StringComparison.Ordinal))
-            {
-                continue;
-            }
+            if (!content.Contains(" as ", StringComparison.Ordinal)) continue;
 
             // Skip XML doc comment lines: they contain "as" in natural prose
-            if (content.TrimStart().StartsWith("///"))
-            {
-                continue;
-            }
+            if (content.TrimStart().StartsWith("///")) continue;
 
             // Skip regular comment lines (// and /* ... */ block-comment body lines starting with *)
-            if (content.TrimStart().StartsWith("//"))
-            {
-                continue;
-            }
-
-            if (content.TrimStart().StartsWith("*"))
-            {
-                continue;
-            }
+            if (content.TrimStart().StartsWith("//")) continue;
+            if (content.TrimStart().StartsWith("*")) continue;
 
             // Skip "as" that appears inside a string literal (odd quote count before it)
             var asPos = content.IndexOf(" as ", StringComparison.Ordinal);
-            if (IsInsideStringLiteral(content, asPos))
-            {
-                continue;
-            }
+            if (IsInsideStringLiteral(content, asPos)) continue;
 
             // `as object` always succeeds for any non-null reference: safe, never returns null.
             var afterAs = content[(asPos + 4)..].TrimStart();
             if (afterAs.StartsWith("object", StringComparison.Ordinal) &&
                 (afterAs.Length == 6 || (!char.IsLetterOrDigit(afterAs[6]) && afterAs[6] != '_')))
-            {
                 continue;
-            }
 
             // (x as T)?.: null-conditional usage; NullReferenceException is impossible here.
-            if (content[(asPos + 4)..].Contains(")?.", StringComparison.Ordinal))
-            {
-                continue;
-            }
+            if (content[(asPos + 4)..].Contains(")?.", StringComparison.Ordinal)) continue;
 
             // GCI0006 (Edge Case Handling) owns .Value access detection. When the as-cast result
             // is immediately accessed via .Value on the same line, suppress here to avoid
             // double-reporting the same null-safety defect.
-            if (content.Contains(".Value", StringComparison.Ordinal))
-            {
-                continue;
-            }
+            if (content.Contains(".Value", StringComparison.Ordinal)) continue;
 
             // Check the same line and ±2 neighboring added lines for null checks
             int start = Math.Max(0, i - 2);
@@ -184,10 +145,7 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
                 }
             }
 
-            if (hasNullCheck)
-            {
-                continue;
-            }
+            if (hasNullCheck) continue;
 
             findings.Add(CreateFinding(
                 file,
@@ -206,18 +164,12 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
     /// </summary>
     private static bool IsInsideStringLiteral(string content, int position)
     {
-        if (position < 0)
-        {
-            return false;
-        }
-
+        if (position < 0) return false;
         int quoteCount = 0;
         for (int i = 0; i < position; i++)
         {
             if (content[i] == '"' && (i == 0 || content[i - 1] != '\\'))
-            {
                 quoteCount++;
-            }
         }
         return quoteCount % 2 != 0;
     }

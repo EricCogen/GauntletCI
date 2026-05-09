@@ -30,9 +30,7 @@ public static class StaticAnalysisRunner
         CancellationToken ct = default)
     {
         if (string.IsNullOrEmpty(repoPath))
-        {
             return null;
-        }
 
         var tfm = TargetFrameworkDetector.Detect(repoPath);
 
@@ -42,12 +40,10 @@ public static class StaticAnalysisRunner
             .ToList();
 
         if (csFiles.Count == 0)
-        {
             return tfm is null ? null : new AnalyzerResult { TargetFramework = tfm, Success = true };
-        }
 
         var allDiagnostics = new List<AnalyzerDiagnostic>();
-        var syntaxTrees = new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>();
+        var syntaxTrees    = new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>();
         var anySuccess = false;
 
         foreach (var file in csFiles)
@@ -59,9 +55,7 @@ public static class StaticAnalysisRunner
             var absolutePath = Path.Combine(repoPath, relativePath);
 
             if (!File.Exists(absolutePath))
-            {
                 continue;
-            }
 
             string sourceCode;
             try
@@ -82,24 +76,20 @@ public static class StaticAnalysisRunner
                 anySuccess = true;
                 allDiagnostics.AddRange(result.Diagnostics);
                 if (tree is not null)
-                {
                     syntaxTrees[absolutePath] = tree;
-                }
             }
         }
 
         if (!anySuccess && allDiagnostics.Count == 0)
-        {
             return null;
-        }
 
         return new AnalyzerResult
         {
-            AnalyzedFile = $"[{csFiles.Count} file(s)]",
-            Success = anySuccess,
-            Diagnostics = allDiagnostics,
+            AnalyzedFile  = $"[{csFiles.Count} file(s)]",
+            Success       = anySuccess,
+            Diagnostics   = allDiagnostics,
             TargetFramework = tfm,
-            Syntax = syntaxTrees.Count > 0 ? new SyntaxContext(syntaxTrees) : null,
+            Syntax        = syntaxTrees.Count > 0 ? new SyntaxContext(syntaxTrees) : null,
         };
     }
 }

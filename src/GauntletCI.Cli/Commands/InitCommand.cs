@@ -45,9 +45,7 @@ public static class InitCommand
             InstallHooks(gitRoot, force);
 
             if (!noTelemetry)
-            {
                 TelemetryConsent.PromptIfNeeded();
-            }
 
             ctx.ExitCode = 0;
         });
@@ -113,9 +111,7 @@ public static class InitCommand
         while (current is not null)
         {
             if (Directory.Exists(Path.Combine(current.FullName, ".git")))
-            {
                 return current.FullName;
-            }
 
             current = current.Parent;
         }
@@ -127,13 +123,7 @@ public static class InitCommand
     {
         var rules = new Dictionary<string, object>();
         foreach (var id in RuleOrchestrator.GetAllRuleIds())
-        {
-            rules[id] = new
-            {
-                enabled = true
-            };
-        }
-
+            rules[id] = new { enabled = true };
         return rules;
     }
 }

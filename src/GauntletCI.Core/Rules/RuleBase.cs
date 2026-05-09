@@ -18,10 +18,7 @@ public abstract class RuleBase : IRule
     /// Pattern detection service, injected via dependency injection.
     /// Provides access to all pattern registries without tight coupling to WellKnownPatterns.
     /// </summary>
-    protected IPatternProvider Patterns
-    {
-        get;
-    }
+    protected IPatternProvider Patterns { get; }
 
     /// <summary>
     /// Initializes a new instance of RuleBase with an injected pattern provider.
@@ -33,15 +30,9 @@ public abstract class RuleBase : IRule
     }
 
     /// <inheritdoc/>
-    public abstract string Id
-    {
-        get;
-    }
+    public abstract string Id { get; }
     /// <inheritdoc/>
-    public abstract string Name
-    {
-        get;
-    }
+    public abstract string Name { get; }
 
     /// <inheritdoc/>
     public abstract Task<List<Finding>> EvaluateAsync(
@@ -99,15 +90,15 @@ public abstract class RuleBase : IRule
         var ruleId = RuleIdentifier.TryParse(Id, out var parsed) ? parsed.ToString() : Id;
         return new()
         {
-            RuleId = ruleId,
-            RuleName = Name,
-            Summary = summary,
-            Evidence = evidence,
-            WhyItMatters = whyItMatters,
+            RuleId          = ruleId,
+            RuleName        = Name,
+            Summary         = summary,
+            Evidence        = evidence,
+            WhyItMatters    = whyItMatters,
             SuggestedAction = suggestedAction,
-            Confidence = confidence,
-            FilePath = file.NewPath,
-            Line = (line?.LineNumber > 0) ? line.LineNumber : null,
+            Confidence      = confidence,
+            FilePath        = file.NewPath,
+            Line            = (line?.LineNumber > 0) ? line.LineNumber : null,
         };
     }
 }

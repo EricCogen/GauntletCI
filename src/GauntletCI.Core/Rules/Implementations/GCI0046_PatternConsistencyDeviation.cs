@@ -53,18 +53,12 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
     private static bool IsInsideStringLiteral(string content, string pattern)
     {
         int idx = content.IndexOf(pattern, StringComparison.Ordinal);
-        if (idx < 0)
-        {
-            return false;
-        }
-
+        if (idx < 0) return false;
         int quotes = 0;
         for (int i = 0; i < idx; i++)
         {
             if (content[i] == '"' && (i == 0 || content[i - 1] != '\\'))
-            {
                 quotes++;
-            }
         }
         return quotes % 2 == 1;
     }
@@ -104,10 +98,7 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
 
     private void CheckServiceLocator(DiffFile file, List<Finding> findings)
     {
-        if (IsInfrastructureFile(file.NewPath))
-        {
-            return;
-        }
+        if (IsInfrastructureFile(file.NewPath)) return;
 
         // Check both added and context lines to catch service locator patterns
         // that may appear in modified sections or existing code
@@ -121,22 +112,13 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
             var matched = ServiceLocatorPatterns.FirstOrDefault(
                 p => line.Content.Contains(p, StringComparison.Ordinal));
 
-            if (matched is null)
-            {
-                continue;
-            }
+            if (matched is null) continue;
 
             // Skip pattern-definition arrays: the match is inside a string literal
-            if (IsInsideStringLiteral(line.Content, matched))
-            {
-                continue;
-            }
+            if (IsInsideStringLiteral(line.Content, matched)) continue;
 
             // Only flag added lines (not context) to avoid over-reporting
-            if (line.Kind != DiffLineKind.Added)
-            {
-                continue;
-            }
+            if (line.Kind != DiffLineKind.Added) continue;
 
             findings.Add(CreateFinding(
                 file,
@@ -178,22 +160,13 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
         foreach (var baseName in asyncMethodBases)
         {
             // Check if the sync variant exists (either added or in context)
-            if (!allMethodNames.Contains(baseName))
-            {
-                continue;
-            }
+            if (!allMethodNames.Contains(baseName)) continue;
 
             // Skip pairs in the framework-exempt list (standard .NET async interface pairs)
-            if (FrameworkExemptPairs.Contains(baseName))
-            {
-                continue;
-            }
+            if (FrameworkExemptPairs.Contains(baseName)) continue;
 
             // Skip pairs that are intentionally sync+async (configured allowlist)
-            if (_allowedSyncAsyncPairs.Contains(baseName))
-            {
-                continue;
-            }
+            if (_allowedSyncAsyncPairs.Contains(baseName)) continue;
 
             findings.Add(CreateFinding(
                 file,
@@ -212,21 +185,11 @@ public class GCI0046_PatternConsistencyDeviation : RuleBase, IConfigurableRule
         foreach (var baseName in syncMethodBases)
         {
             var asyncName = baseName + "Async";
-            if (!allMethodNames.Contains(asyncName))
-            {
-                continue;
-            }
+            if (!allMethodNames.Contains(asyncName)) continue;
 
             // Skip framework-exempt and configured pairs
-            if (FrameworkExemptPairs.Contains(baseName))
-            {
-                continue;
-            }
-
-            if (_allowedSyncAsyncPairs.Contains(baseName))
-            {
-                continue;
-            }
+            if (FrameworkExemptPairs.Contains(baseName)) continue;
+            if (_allowedSyncAsyncPairs.Contains(baseName)) continue;
 
             findings.Add(CreateFinding(
                 file,

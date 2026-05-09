@@ -12,17 +12,11 @@ namespace GauntletCI.Core.Analysis;
 public sealed class AnalysisContext
 {
     /// <summary>Classification records for files that passed the eligibility filter.</summary>
-    public IReadOnlyList<ChangedFileAnalysisRecord> EligibleFiles
-    {
-        get; init;
-    }
+    public IReadOnlyList<ChangedFileAnalysisRecord> EligibleFiles { get; init; }
         = Array.Empty<ChangedFileAnalysisRecord>();
 
     /// <summary>Classification records for files that were skipped before rules ran.</summary>
-    public IReadOnlyList<ChangedFileAnalysisRecord> SkippedFiles
-    {
-        get; init;
-    }
+    public IReadOnlyList<ChangedFileAnalysisRecord> SkippedFiles { get; init; }
         = Array.Empty<ChangedFileAnalysisRecord>();
 
     /// <summary>Aggregate counts from file classification.</summary>
@@ -35,28 +29,19 @@ public sealed class AnalysisContext
     public DiffContext Diff { get; init; } = new();
 
     /// <summary>Optional static analysis results for the diff.</summary>
-    public AnalyzerResult? StaticAnalysis
-    {
-        get; init;
-    }
+    public AnalyzerResult? StaticAnalysis { get; init; }
 
     /// <summary>
     /// Roslyn syntax trees for files analyzed in this run.
     /// Used by rules to perform syntax-level false-positive guards.
     /// Null when no C# files were analyzed or static analysis was skipped.
     /// </summary>
-    public SyntaxContext? Syntax
-    {
-        get; init;
-    }
+    public SyntaxContext? Syntax { get; init; }
 
     /// <summary>
     /// Primary target framework moniker detected from the repo's .csproj files
     /// (e.g. <c>net8.0</c>, <c>net9.0</c>). Null when detection was not possible.
     /// Rules use this to tailor suggested actions to the target platform.
     /// </summary>
-    public string? TargetFramework
-    {
-        get; init;
-    }
+    public string? TargetFramework { get; init; }
 }

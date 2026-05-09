@@ -13,16 +13,13 @@ public sealed class LlmAdjudicatorTests : IDisposable
     public LlmAdjudicatorTests()
     {
         _dbPath = Path.Combine(Path.GetTempPath(), $"adj-test-{Guid.NewGuid():N}.db");
-        _store = new VectorStore(_dbPath);
+        _store  = new VectorStore(_dbPath);
     }
 
     public void Dispose()
     {
         _store.Dispose();
-        if (File.Exists(_dbPath))
-        {
-            File.Delete(_dbPath);
-        }
+        if (File.Exists(_dbPath)) File.Delete(_dbPath);
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -30,13 +27,13 @@ public sealed class LlmAdjudicatorTests : IDisposable
     private static Finding MakeFinding(string ruleId = "GCI0016", Confidence confidence = Confidence.High)
         => new()
         {
-            RuleId = ruleId,
-            RuleName = "Blocking Async Calls",
-            Summary = "ValueTask awaited more than once",
-            Evidence = "Line 42: task.Result",
-            WhyItMatters = "Causes deadlock in async context",
+            RuleId          = ruleId,
+            RuleName        = "Blocking Async Calls",
+            Summary         = "ValueTask awaited more than once",
+            Evidence        = "Line 42: task.Result",
+            WhyItMatters    = "Causes deadlock in async context",
             SuggestedAction = "Use await instead of .Result",
-            Confidence = confidence,
+            Confidence      = confidence,
         };
 
     private static IEmbeddingEngine FakeEngine(float[] vec) => new StaticEmbeddingEngine(vec);
@@ -50,7 +47,7 @@ public sealed class LlmAdjudicatorTests : IDisposable
         _store.Upsert("fact1", "ValueTask must not be awaited twice.", "https://github.com/dotnet/runtime/1", vec);
 
         var adjudicator = new LlmAdjudicator(FakeEngine(vec), _store, minScore: 0.0f);
-        var finding = MakeFinding();
+        var finding     = MakeFinding();
 
         await adjudicator.AdjudicateAsync([finding]);
 
@@ -68,7 +65,7 @@ public sealed class LlmAdjudicatorTests : IDisposable
         _store.Upsert("fact1", "Some fact.", "source", storeVec);
 
         var adjudicator = new LlmAdjudicator(FakeEngine(queryVec), _store, minScore: 0.5f);
-        var finding = MakeFinding();
+        var finding     = MakeFinding();
 
         await adjudicator.AdjudicateAsync([finding]);
 
@@ -79,7 +76,7 @@ public sealed class LlmAdjudicatorTests : IDisposable
     public async Task Adjudicate_EmptyStore_SkipsGracefully()
     {
         var adjudicator = new LlmAdjudicator(FakeEngine([1f, 0f]), _store);
-        var finding = MakeFinding();
+        var finding     = MakeFinding();
 
         await adjudicator.AdjudicateAsync([finding]); // should not throw
 
@@ -92,7 +89,7 @@ public sealed class LlmAdjudicatorTests : IDisposable
         _store.Upsert("fact1", "Some fact.", "source", [1f, 0f]);
 
         var adjudicator = new LlmAdjudicator(NullEmbeddingEngine.Instance, _store);
-        var finding = MakeFinding();
+        var finding     = MakeFinding();
 
         await adjudicator.AdjudicateAsync([finding]); // should not throw
 
@@ -127,7 +124,7 @@ public sealed class LlmAdjudicatorTests : IDisposable
         _store.Upsert("fact1", "Some fact.", "source", [1f, 0f]);
 
         var adjudicator = new LlmAdjudicator(FakeEngine([]), _store, minScore: 0.0f);
-        var finding = MakeFinding();
+        var finding     = MakeFinding();
 
         await adjudicator.AdjudicateAsync([finding]);
 

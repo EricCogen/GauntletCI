@@ -52,9 +52,7 @@ public static class DiffParser
             if (fileMatch.Success)
             {
                 if (currentFile != null)
-                {
                     files.Add(FinalizeFile(currentFile, isAdded, isDeleted));
-                }
 
                 currentFile = new DiffFile
                 {
@@ -73,9 +71,7 @@ public static class DiffParser
             if (line.StartsWith("--- a/") && (currentFile == null || currentHunk != null))
             {
                 if (currentFile != null)
-                {
                     files.Add(FinalizeFile(currentFile, isAdded, isDeleted));
-                }
 
                 var path = line[6..];
                 currentFile = new DiffFile { OldPath = path, NewPath = path };
@@ -85,48 +81,31 @@ public static class DiffParser
                 continue;
             }
 
-            if (currentFile == null)
-            {
-                continue;
-            }
+            if (currentFile == null) continue;
 
             // Update new path from "+++ b/path" (bare format or git format: safe to apply always)
-            if (line.StartsWith("+++ b/"))
-            {
-                currentFile.NewPath = line[6..];
-                continue;
-            }
+            if (line.StartsWith("+++ b/")) { currentFile.NewPath = line[6..]; continue; }
 
-            if (AddedFileMarker.IsMatch(line))
-            {
-                isAdded = true;
-                continue;
-            }
-            if (DeletedFileMarker.IsMatch(line))
-            {
-                isDeleted = true;
-                continue;
-            }
+            if (AddedFileMarker.IsMatch(line)) { isAdded = true; continue; }
+            if (DeletedFileMarker.IsMatch(line)) { isDeleted = true; continue; }
 
             // Skip git diff header lines (index, old-path, new-path)
             if (line.StartsWith("index ") || line.StartsWith("--- ") || line.StartsWith("+++ "))
-            {
                 continue;
-            }
 
             var hunkMatch = HunkHeader.Match(line);
             if (hunkMatch.Success)
             {
                 var oldStartLineStr = hunkMatch.Groups[1].Value;
                 var newStartLineStr = hunkMatch.Groups[2].Value;
-
-                if (!int.TryParse(oldStartLineStr, out var oldStartLine) ||
+                
+                if (!int.TryParse(oldStartLineStr, out var oldStartLine) || 
                     !int.TryParse(newStartLineStr, out var newStartLine))
                 {
                     // Malformed hunk header - skip this hunk
                     continue;
                 }
-
+                
                 currentHunk = new DiffHunk
                 {
                     OldStartLine = oldStartLine,
@@ -138,16 +117,10 @@ public static class DiffParser
                 continue;
             }
 
-            if (currentHunk == null)
-            {
-                continue;
-            }
+            if (currentHunk == null) continue;
 
             // Skip git meta lines (e.g. "\ No newline at end of file")
-            if (line.StartsWith('\\'))
-            {
-                continue;
-            }
+            if (line.StartsWith('\\')) continue;
 
             if (line.StartsWith('+'))
             {
@@ -182,9 +155,7 @@ public static class DiffParser
         }
 
         if (currentFile != null)
-        {
             files.Add(FinalizeFile(currentFile, isAdded, isDeleted));
-        }
 
         return new DiffContext
         {
@@ -285,21 +256,13 @@ public static class DiffParser
             try
             {
                 if (!process.HasExited)
-                {
                     process.Kill(entireProcessTree: true);
-                }
             }
             catch (InvalidOperationException) { /* already exited */ }
             catch (NotSupportedException)
             {
                 // entireProcessTree not supported on all platforms: fall back to single-process kill.
-                try
-                {
-                    if (!process.HasExited)
-                    {
-                        process.Kill();
-                    }
-                }
+                try { if (!process.HasExited) process.Kill(); }
                 catch (InvalidOperationException) { /* already exited */ }
             }
         });
@@ -317,23 +280,15 @@ public static class DiffParser
         finally
         {
             // Drain streams even on cancellation to release handles.
-            try
-            {
-                output = await stdoutTask.ConfigureAwait(false);
-            }
+            try { output = await stdoutTask.ConfigureAwait(false); }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
 
-            try
-            {
-                stderr = await stderrTask.ConfigureAwait(false);
-            }
+            try { stderr = await stderrTask.ConfigureAwait(false); }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { }
         }
 
         if (process.ExitCode != 0)
-        {
             throw new GitProcessException($"{executable} {arguments}", process.ExitCode, stderr);
-        }
 
         return output;
     }

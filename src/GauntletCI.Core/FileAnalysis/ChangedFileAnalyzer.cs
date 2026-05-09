@@ -36,15 +36,15 @@ public sealed class ChangedFileAnalyzer : IChangedFileAnalyzer
         {
             return new ChangedFileAnalysisRecord
             {
-                FilePath = filePath,
-                OldFilePath = oldPath,
-                Extension = string.Empty,
-                Classification = FileEligibilityClassification.EmptyPath,
-                IsEligible = false,
-                Reason = "File path was empty",
-                IsDeleted = isDeleted,
-                IsRename = isRename,
-                HasContentChanges = hasContentChanges,
+                FilePath           = filePath,
+                OldFilePath        = oldPath,
+                Extension          = string.Empty,
+                Classification     = FileEligibilityClassification.EmptyPath,
+                IsEligible         = false,
+                Reason             = "File path was empty",
+                IsDeleted          = isDeleted,
+                IsRename           = isRename,
+                HasContentChanges  = hasContentChanges,
             };
         }
 
@@ -52,15 +52,15 @@ public sealed class ChangedFileAnalyzer : IChangedFileAnalyzer
         {
             return new ChangedFileAnalysisRecord
             {
-                FilePath = filePath,
-                OldFilePath = oldPath,
-                Extension = Path.GetExtension(filePath),
-                Classification = FileEligibilityClassification.Deleted,
-                IsEligible = false,
-                Reason = "File was deleted and is skipped in v1",
-                IsDeleted = true,
-                IsRename = isRename,
-                HasContentChanges = hasContentChanges,
+                FilePath           = filePath,
+                OldFilePath        = oldPath,
+                Extension          = Path.GetExtension(filePath),
+                Classification     = FileEligibilityClassification.Deleted,
+                IsEligible         = false,
+                Reason             = "File was deleted and is skipped in v1",
+                IsDeleted          = true,
+                IsRename           = isRename,
+                HasContentChanges  = hasContentChanges,
             };
         }
 
@@ -68,15 +68,15 @@ public sealed class ChangedFileAnalyzer : IChangedFileAnalyzer
         {
             return new ChangedFileAnalysisRecord
             {
-                FilePath = filePath,
-                OldFilePath = oldPath,
-                Extension = Path.GetExtension(filePath),
-                Classification = FileEligibilityClassification.RenamedOnly,
-                IsEligible = false,
-                Reason = "File was renamed without content changes and is skipped",
-                IsDeleted = false,
-                IsRename = true,
-                HasContentChanges = false,
+                FilePath           = filePath,
+                OldFilePath        = oldPath,
+                Extension          = Path.GetExtension(filePath),
+                Classification     = FileEligibilityClassification.RenamedOnly,
+                IsEligible         = false,
+                Reason             = "File was renamed without content changes and is skipped",
+                IsDeleted          = false,
+                IsRename           = true,
+                HasContentChanges  = false,
             };
         }
 
@@ -84,16 +84,16 @@ public sealed class ChangedFileAnalyzer : IChangedFileAnalyzer
         {
             return new ChangedFileAnalysisRecord
             {
-                FilePath = filePath,
-                OldFilePath = oldPath,
-                Extension = Path.GetExtension(filePath),
-                Classification = FileEligibilityClassification.Generated,
-                IsEligible = false,
-                Reason = "File appears to be generated code and is skipped",
-                IsDeleted = false,
-                IsRename = isRename,
-                HasContentChanges = hasContentChanges,
-                IsGenerated = true,
+                FilePath           = filePath,
+                OldFilePath        = oldPath,
+                Extension          = Path.GetExtension(filePath),
+                Classification     = FileEligibilityClassification.Generated,
+                IsEligible         = false,
+                Reason             = "File appears to be generated code and is skipped",
+                IsDeleted          = false,
+                IsRename           = isRename,
+                HasContentChanges  = hasContentChanges,
+                IsGenerated        = true,
             };
         }
 
@@ -103,15 +103,15 @@ public sealed class ChangedFileAnalyzer : IChangedFileAnalyzer
         {
             return new ChangedFileAnalysisRecord
             {
-                FilePath = filePath,
-                OldFilePath = oldPath,
-                Extension = string.Empty,
-                Classification = FileEligibilityClassification.MissingExtension,
-                IsEligible = false,
-                Reason = "File had no extension",
-                IsDeleted = false,
-                IsRename = isRename,
-                HasContentChanges = hasContentChanges,
+                FilePath           = filePath,
+                OldFilePath        = oldPath,
+                Extension          = string.Empty,
+                Classification     = FileEligibilityClassification.MissingExtension,
+                IsEligible         = false,
+                Reason             = "File had no extension",
+                IsDeleted          = false,
+                IsRename           = isRename,
+                HasContentChanges  = hasContentChanges,
             };
         }
 
@@ -119,29 +119,29 @@ public sealed class ChangedFileAnalyzer : IChangedFileAnalyzer
         {
             return new ChangedFileAnalysisRecord
             {
-                FilePath = filePath,
-                OldFilePath = oldPath,
-                Extension = extension,
-                Classification = FileEligibilityClassification.EligibleSource,
-                IsEligible = true,
-                Reason = $"Extension {extension} is allowed for analysis",
-                IsDeleted = false,
-                IsRename = isRename,
-                HasContentChanges = hasContentChanges,
+                FilePath           = filePath,
+                OldFilePath        = oldPath,
+                Extension          = extension,
+                Classification     = FileEligibilityClassification.EligibleSource,
+                IsEligible         = true,
+                Reason             = $"Extension {extension} is allowed for analysis",
+                IsDeleted          = false,
+                IsRename           = isRename,
+                HasContentChanges  = hasContentChanges,
             };
         }
 
         return new ChangedFileAnalysisRecord
         {
-            FilePath = filePath,
-            OldFilePath = oldPath,
-            Extension = extension,
-            Classification = FileEligibilityClassification.UnknownUnsupported,
-            IsEligible = false,
-            Reason = $"Extension {extension} is not supported for analysis",
-            IsDeleted = false,
-            IsRename = isRename,
-            HasContentChanges = hasContentChanges,
+            FilePath           = filePath,
+            OldFilePath        = oldPath,
+            Extension          = extension,
+            Classification     = FileEligibilityClassification.UnknownUnsupported,
+            IsEligible         = false,
+            Reason             = $"Extension {extension} is not supported for analysis",
+            IsDeleted          = false,
+            IsRename           = isRename,
+            HasContentChanges  = hasContentChanges,
         };
     }
 

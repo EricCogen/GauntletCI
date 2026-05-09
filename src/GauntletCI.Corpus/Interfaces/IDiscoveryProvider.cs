@@ -6,10 +6,7 @@ namespace GauntletCI.Corpus.Interfaces;
 public interface IDiscoveryProvider : IDisposable
 {
     string GetProviderName();
-    bool SupportsIncrementalSync
-    {
-        get;
-    }
+    bool SupportsIncrementalSync { get; }
     Task<IReadOnlyList<PullRequestCandidate>> SearchCandidatesAsync(
         DiscoveryQuery query, CancellationToken cancellationToken = default);
 }

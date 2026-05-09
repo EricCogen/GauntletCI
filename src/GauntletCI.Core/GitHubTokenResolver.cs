@@ -23,9 +23,7 @@ public static class GitHubTokenResolver
     {
         var env = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
         if (!string.IsNullOrWhiteSpace(env))
-        {
             return env;
-        }
 
         return TryGhCli();
     }
@@ -40,16 +38,13 @@ public static class GitHubTokenResolver
             var psi = new ProcessStartInfo("gh", "auth token")
             {
                 RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
+                RedirectStandardError  = true,
+                UseShellExecute        = false,
+                CreateNoWindow         = true,
             };
 
             using var proc = Process.Start(psi);
-            if (proc is null)
-            {
-                return null;
-            }
+            if (proc is null) return null;
 
             var token = proc.StandardOutput.ReadToEnd().Trim();
             proc.WaitForExit(5_000);

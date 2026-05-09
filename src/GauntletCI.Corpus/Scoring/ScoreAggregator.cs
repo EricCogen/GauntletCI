@@ -25,38 +25,35 @@ public sealed class ScoreAggregator : IScoreAggregator
 
     public ScoreAggregator(IFixtureStore store, CorpusDb db, IEvaluationClassifier classifier)
     {
-        _store = store;
-        _db = db;
+        _store      = store;
+        _db         = db;
         _classifier = classifier;
     }
 
     public async Task<IReadOnlyList<RuleScorecard>> ScoreAsync(
         string? ruleId = null, FixtureTier? tier = null, CancellationToken cancellationToken = default)
     {
-        var fixtures = await _store.ListFixturesAsync(tier, cancellationToken).ConfigureAwait(false);
+        var fixtures     = await _store.ListFixturesAsync(tier, cancellationToken).ConfigureAwait(false);
         var fixturePaths = await LoadFixturePathsAsync(cancellationToken).ConfigureAwait(false);
 
         // Totals per tier (denominator for trigger rate)
         var totalPerTier = new Dictionary<FixtureTier, int>();
         // How many fixtures each rule fired on, per tier
-        var firedCounts = new Dictionary<(string RuleId, FixtureTier Tier), int>();
+        var firedCounts  = new Dictionary<(string RuleId, FixtureTier Tier), int>();
         // All classification results
         var allEvaluations = new List<FindingEvaluation>();
 
         foreach (var fixture in fixtures)
         {
-            if (!fixturePaths.TryGetValue(fixture.FixtureId, out var fixturePath))
-            {
-                continue;
-            }
+            if (!fixturePaths.TryGetValue(fixture.FixtureId, out var fixturePath)) continue;
 
             totalPerTier[fixture.Tier] = totalPerTier.GetValueOrDefault(fixture.Tier) + 1;
 
             var expectedPath = Path.Combine(fixturePath, "expected.json");
-            var actualPath = Path.Combine(fixturePath, "actual.json");
+            var actualPath   = Path.Combine(fixturePath, "actual.json");
 
             var expectedFindings = await ReadJsonFileAsync<List<ExpectedFinding>>(expectedPath, cancellationToken).ConfigureAwait(false) ?? [];
-            var actualFindings = await ReadJsonFileAsync<List<ActualFinding>>(actualPath, cancellationToken).ConfigureAwait(false) ?? [];
+            var actualFindings   = await ReadJsonFileAsync<List<ActualFinding>>(actualPath, cancellationToken).ConfigureAwait(false)   ?? [];
 
             // Track trigger counts across ALL fixtures (not just labeled ones).
             // Count each rule at most once per fixture -- trigger rate = fraction of fixtures
@@ -78,10 +75,7 @@ public sealed class ScoreAggregator : IScoreAggregator
 
         // Collect all rule/tier combinations that had any activity
         var allKeys = new HashSet<(string RuleId, FixtureTier Tier)>(groups.Keys);
-        foreach (var key in firedCounts.Keys)
-        {
-            allKeys.Add(key);
-        }
+        foreach (var key in firedCounts.Keys) allKeys.Add(key);
 
         var scorecards = new List<RuleScorecard>();
 
@@ -90,47 +84,44 @@ public sealed class ScoreAggregator : IScoreAggregator
         foreach (var key in allKeys)
         {
             var (rid, rtier) = key;
-            if (!string.IsNullOrEmpty(ruleId) && rid != ruleId)
-            {
-                continue;
-            }
+            if (!string.IsNullOrEmpty(ruleId) && rid != ruleId) continue;
 
             groups.TryGetValue(key, out var evals);
             evals ??= [];
 
-            int tp = evals.Count(e => e.Status == EvaluationStatus.TruePositive);
-            int fp = evals.Count(e => e.Status == EvaluationStatus.FalsePositive);
-            int fn = evals.Count(e => e.Status == EvaluationStatus.FalseNegative);
-            int tn = evals.Count(e => e.Status == EvaluationStatus.TrueNegative);
+            int tp      = evals.Count(e => e.Status == EvaluationStatus.TruePositive);
+            int fp      = evals.Count(e => e.Status == EvaluationStatus.FalsePositive);
+            int fn      = evals.Count(e => e.Status == EvaluationStatus.FalseNegative);
+            int tn      = evals.Count(e => e.Status == EvaluationStatus.TrueNegative);
             int unknown = evals.Count(e => e.Status == EvaluationStatus.Unknown);
 
-            int labeled = tp + fp + fn + tn;
-            int totalTier = totalPerTier.GetValueOrDefault(rtier, 1);
-            int fired = firedCounts.GetValueOrDefault(key, 0);
+            int labeled     = tp + fp + fn + tn;
+            int totalTier   = totalPerTier.GetValueOrDefault(rtier, 1);
+            int fired       = firedCounts.GetValueOrDefault(key, 0);
 
             double triggerRate = (double)fired / totalTier;
             // Precision = TP / (TP + FP);  Recall = TP / (TP + FN)
             // Guard against division by zero when no predictions or no actual positives
-            double precision = (tp + fp) > 0 ? (double)tp / (tp + fp) : 0.0;
-            double recall = (tp + fn) > 0 ? (double)tp / (tp + fn) : 0.0;
+            double precision   = (tp + fp) > 0 ? (double)tp / (tp + fp) : 0.0;
+            double recall      = (tp + fn) > 0 ? (double)tp / (tp + fn) : 0.0;
 
             double avgUsefulness = allUsefulnessScores.GetValueOrDefault(rid, 0.0);
 
             var scorecard = new RuleScorecard(
-                RuleId: rid,
-                Tier: rtier,
-                Fixtures: labeled,
-                TriggerRate: triggerRate,
-                Precision: precision,
-                Recall: recall,
+                RuleId:           rid,
+                Tier:             rtier,
+                Fixtures:         labeled,
+                TriggerRate:      triggerRate,
+                Precision:        precision,
+                Recall:           recall,
                 InconclusiveRate: 0.0,
-                AvgUsefulness: avgUsefulness,
-                Notes: string.Empty,
-                TruePositives: tp,
-                FalsePositives: fp,
-                FalseNegatives: fn,
-                TrueNegatives: tn,
-                Unknown: unknown);
+                AvgUsefulness:    avgUsefulness,
+                Notes:            string.Empty,
+                TruePositives:    tp,
+                FalsePositives:   fp,
+                FalseNegatives:   fn,
+                TrueNegatives:    tn,
+                Unknown:          unknown);
 
             scorecards.Add(scorecard);
             await UpsertAggregateAsync(scorecard, cancellationToken).ConfigureAwait(false);
@@ -150,9 +141,7 @@ public sealed class ScoreAggregator : IScoreAggregator
         while (await reader.ReadAsync(ct).ConfigureAwait(false))
         {
             if (!reader.IsDBNull(0) && !reader.IsDBNull(1))
-            {
                 result[reader.GetString(0)] = reader.GetString(1);
-            }
         }
         return result;
     }
@@ -194,22 +183,18 @@ public sealed class ScoreAggregator : IScoreAggregator
                 usefulness_score = excluded.usefulness_score,
                 last_updated_utc = excluded.last_updated_utc;
             """;
-        cmd.Parameters.AddWithValue("$ruleId", sc.RuleId);
-        cmd.Parameters.AddWithValue("$tier", sc.Tier.ToString());
+        cmd.Parameters.AddWithValue("$ruleId",      sc.RuleId);
+        cmd.Parameters.AddWithValue("$tier",        sc.Tier.ToString());
         cmd.Parameters.AddWithValue("$triggerRate", sc.TriggerRate);
-        cmd.Parameters.AddWithValue("$precision", sc.Precision);
-        cmd.Parameters.AddWithValue("$recall", sc.Recall);
-        cmd.Parameters.AddWithValue("$usefulness", sc.AvgUsefulness);
+        cmd.Parameters.AddWithValue("$precision",   sc.Precision);
+        cmd.Parameters.AddWithValue("$recall",      sc.Recall);
+        cmd.Parameters.AddWithValue("$usefulness",  sc.AvgUsefulness);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
     private async Task<T?> ReadJsonFileAsync<T>(string path, CancellationToken ct)
     {
-        if (!File.Exists(path))
-        {
-            return default;
-        }
-
+        if (!File.Exists(path)) return default;
         var json = await File.ReadAllTextAsync(path, ct).ConfigureAwait(false);
         return JsonSerializer.Deserialize<T>(json, JsonOpts);
     }

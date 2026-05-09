@@ -24,16 +24,8 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
 
         foreach (var file in context.Diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath))
-            {
-                continue;
-            }
-
-            if (WellKnownPatterns.PerformancePatterns.IsRuleImplementationFile(file.NewPath))
-            {
-                continue;
-            }
-
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.PerformancePatterns.IsRuleImplementationFile(file.NewPath)) continue;
             CheckThreadSleep(file, findings);
             CheckLinqInsideLoop(file, findings);
             CheckAddInsideLoop(file, findings);
@@ -45,17 +37,11 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
     private void CheckThreadSleep(DiffFile file, List<Finding> findings)
     {
         // Skip infrastructure/profiling code that may intentionally use Thread.Sleep
-        if (WellKnownPatterns.DependencyInjectionPatterns.IsInfrastructureFile(file.NewPath))
-        {
-            return;
-        }
+        if (WellKnownPatterns.DependencyInjectionPatterns.IsInfrastructureFile(file.NewPath)) return;
 
         foreach (var line in file.AddedLines)
         {
-            if (!line.Content.Contains("Thread.Sleep(", StringComparison.Ordinal))
-            {
-                continue;
-            }
+            if (!line.Content.Contains("Thread.Sleep(", StringComparison.Ordinal)) continue;
 
             findings.Add(CreateFinding(
                 file,
@@ -75,23 +61,12 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
             // Include context lines so loop keywords on unchanged lines are detected
             var nonRemovedLines = new List<DiffLine>();
             foreach (var l in hunk.Lines)
-            {
-                if (l.Kind != DiffLineKind.Removed)
-                {
-                    nonRemovedLines.Add(l);
-                }
-            }
+                if (l.Kind != DiffLineKind.Removed) nonRemovedLines.Add(l);
 
             for (int i = 0; i < nonRemovedLines.Count; i++)
             {
-                if (nonRemovedLines[i].Kind != DiffLineKind.Added)
-                {
-                    continue;
-                }
-                if (!WellKnownPatterns.PerformancePatterns.HasLinqCall(nonRemovedLines[i].Content))
-                {
-                    continue;
-                }
+                if (nonRemovedLines[i].Kind != DiffLineKind.Added) continue;
+                if (!WellKnownPatterns.PerformancePatterns.HasLinqCall(nonRemovedLines[i].Content)) continue;
 
                 int lookbackStart = Math.Max(0, i - 10);
                 bool inLoop = false;
@@ -104,10 +79,7 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
                     }
                 }
 
-                if (!inLoop)
-                {
-                    continue;
-                }
+                if (!inLoop) continue;
 
                 findings.Add(CreateFinding(
                     file,
@@ -128,31 +100,17 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
             // Use non-removed lines for lookback so loop keywords on context lines are detected
             var nonRemovedLines = new List<DiffLine>();
             foreach (var l in hunk.Lines)
-            {
-                if (l.Kind != DiffLineKind.Removed)
-                {
-                    nonRemovedLines.Add(l);
-                }
-            }
+                if (l.Kind != DiffLineKind.Removed) nonRemovedLines.Add(l);
 
             for (int i = 0; i < nonRemovedLines.Count; i++)
             {
-                if (nonRemovedLines[i].Kind != DiffLineKind.Added)
-                {
-                    continue;
-                }
+                if (nonRemovedLines[i].Kind != DiffLineKind.Added) continue;
                 var content = nonRemovedLines[i].Content;
-                if (!content.Contains(".Add(", StringComparison.Ordinal))
-                {
-                    continue;
-                }
+                if (!content.Contains(".Add(", StringComparison.Ordinal)) continue;
                 // Unsafe.Add(ref ...) is SIMD/pointer arithmetic, not a collection mutation.
                 // Neutralise it and re-check so mixed lines (Unsafe.Add + real .Add) still fire.
                 if (!content.Replace("Unsafe.Add(", "UNSAFE_PTR(")
-                            .Contains(".Add(", StringComparison.Ordinal))
-                {
-                    continue;
-                }
+                            .Contains(".Add(", StringComparison.Ordinal)) continue;
 
                 int lookbackStart = Math.Max(0, i - 10);
                 bool inLoop = false;
@@ -164,23 +122,15 @@ public class GCI0044_PerformanceHotpathRisk : RuleBase
                         {
                             // DB reader loops are bounded by query results: not a hotpath risk.
                             if (nonRemovedLines[j].Content.Contains(".Read()", StringComparison.Ordinal))
-                            {
                                 break;
-                            }
                             inLoop = true;
                             break;
                         }
                     }
-                    if (inLoop)
-                    {
-                        break;
-                    }
+                    if (inLoop) break;
                 }
 
-                if (!inLoop)
-                {
-                    continue;
-                }
+                if (!inLoop) continue;
 
                 findings.Add(CreateFinding(
                     file,

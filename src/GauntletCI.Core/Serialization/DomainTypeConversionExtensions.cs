@@ -16,10 +16,8 @@ public static class DomainTypeConversionExtensions
     public static RuleIdentifier? ToRuleIdentifier(this Finding finding)
     {
         if (finding?.RuleId == null)
-        {
             return null;
-        }
-
+        
         return RuleIdentifier.TryParse(finding.RuleId, out var result) ? (RuleIdentifier?)result : null;
     }
 
@@ -30,10 +28,8 @@ public static class DomainTypeConversionExtensions
     public static CodeFilePath? ToCodeFilePath(this Finding finding)
     {
         if (finding?.FilePath == null)
-        {
             return null;
-        }
-
+        
         return CodeFilePath.TryParse(finding.FilePath, out var result) ? (CodeFilePath?)result : null;
     }
 
@@ -69,34 +65,19 @@ public static class DomainTypeConversionExtensions
 public sealed record FindingDomainConversionResult
 {
     /// <summary>Parsed rule identifier, or null if invalid.</summary>
-    public RuleIdentifier? RuleId
-    {
-        get; init;
-    }
+    public RuleIdentifier? RuleId { get; init; }
 
     /// <summary>Parsed file path, or null if invalid.</summary>
-    public CodeFilePath? FilePath
-    {
-        get; init;
-    }
+    public CodeFilePath? FilePath { get; init; }
 
     /// <summary>Parsed LLM explanation.</summary>
-    public LlmExplanation Explanation
-    {
-        get; init;
-    }
+    public LlmExplanation Explanation { get; init; }
 
     /// <summary>Whether the rule ID was successfully converted.</summary>
-    public bool IsValidRuleId
-    {
-        get; init;
-    }
+    public bool IsValidRuleId { get; init; }
 
     /// <summary>Whether the file path was successfully converted.</summary>
-    public bool IsValidFilePath
-    {
-        get; init;
-    }
+    public bool IsValidFilePath { get; init; }
 
     /// <summary>True if all conversions succeeded.</summary>
     public bool AllConversionsSucceeded => IsValidRuleId && IsValidFilePath;

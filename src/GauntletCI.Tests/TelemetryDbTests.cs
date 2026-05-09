@@ -19,11 +19,7 @@ public class TelemetryDbTests : IDisposable
         SqliteConnection.ClearAllPools();
         for (int i = 0; i < 5 && File.Exists(_dbPath); i++)
         {
-            try
-            {
-                File.Delete(_dbPath);
-                break;
-            }
+            try { File.Delete(_dbPath); break; }
             catch (IOException) when (i < 4) { Thread.Sleep(20 * (i + 1)); }
             catch { break; }
         }
@@ -34,12 +30,12 @@ public class TelemetryDbTests : IDisposable
     {
         var evt = new TelemetryEvent
         {
-            EventType = "rule_metric",
-            InstallId = "test-install",
-            RepoHash = "abc12345",
-            RuleId = "GCI0001",
-            DurationMs = 42,
-            Outcome = "Triggered",
+            EventType    = "rule_metric",
+            InstallId    = "test-install",
+            RepoHash     = "abc12345",
+            RuleId       = "GCI0001",
+            DurationMs   = 42,
+            Outcome      = "Triggered",
             FindingCount = 1,
         };
 
@@ -63,9 +59,7 @@ public class TelemetryDbTests : IDisposable
     public async Task AppendAsync_MultipleDistinctEvents_AllPersisted()
     {
         for (int i = 0; i < 5; i++)
-        {
             await TelemetryDb.AppendAsync(new TelemetryEvent { EventType = "rule_metric", RuleId = $"GCI{i:D4}" }, _dbPath);
-        }
 
         Assert.Equal(5, await TelemetryDb.CountAsync(_dbPath));
     }
@@ -77,14 +71,12 @@ public class TelemetryDbTests : IDisposable
         {
             new TelemetryEvent { EventType = "analysis",    FindingCount = 3, FilesChanged = 2, RulesEvaluated = 10, LinesAdded = 50, LinesRemoved = 10 },
             new TelemetryEvent { EventType = "finding",     RuleId = "GCI0005", Confidence = "High", FileExt = ".cs" },
-            new TelemetryEvent { EventType = "analysis",    FindingCount = 3, FilesChanged = 2, RulesEvaluated = 10, LinesAdded = 50, LinesRemoved = 10 },
+            new TelemetryEvent { EventType = "rule_metric", RuleId = "GCI0001", DurationMs = 15, Outcome = "Passed", FindingCount = 0 },
             new TelemetryEvent { EventType = "feedback",    Vote = "up" },
         };
 
         foreach (var evt in events)
-        {
             await TelemetryDb.AppendAsync(evt, _dbPath);
-        }
 
         Assert.Equal(4, await TelemetryDb.CountAsync(_dbPath));
     }

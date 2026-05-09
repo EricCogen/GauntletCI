@@ -51,9 +51,7 @@ public static class LicenseService
     {
         var envVal = Environment.GetEnvironmentVariable(envVarName);
         if (!string.IsNullOrWhiteSpace(envVal))
-        {
             return envVal.Trim();
-        }
 
         if (File.Exists(DefaultLicenseFilePath))
         {
@@ -61,9 +59,7 @@ public static class LicenseService
             {
                 var content = File.ReadAllText(DefaultLicenseFilePath).Trim();
                 if (!string.IsNullOrWhiteSpace(content))
-                {
                     return content;
-                }
             }
             catch { /* unreadable file = no license */ }
         }
@@ -84,43 +80,37 @@ public static class LicenseService
         try
         {
             var dataToVerify = Encoding.ASCII.GetBytes($"{parts[0]}.{parts[1]}");
-            var signature = Base64UrlDecode(parts[2]);
+            var signature    = Base64UrlDecode(parts[2]);
 
             using var rsa = RSA.Create();
             rsa.ImportFromPem(EmbeddedPublicKey);
 
             if (!rsa.VerifyData(dataToVerify, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1))
-            {
                 return LicenseInfo.Invalid(
                     "License signature is invalid. The token may be tampered or was not issued by GauntletCI.");
-            }
 
             var payloadJson = Encoding.UTF8.GetString(Base64UrlDecode(parts[1]));
-            using var doc = JsonDocument.Parse(payloadJson);
-            var root = doc.RootElement;
+            using var doc   = JsonDocument.Parse(payloadJson);
+            var root        = doc.RootElement;
 
             if (!root.TryGetProperty("iss", out var iss) || iss.GetString() != "gauntletci.com")
-            {
                 return LicenseInfo.Invalid("License issuer is invalid.");
-            }
 
             DateTimeOffset? expiresAt = null;
             if (root.TryGetProperty("exp", out var expProp))
             {
                 expiresAt = DateTimeOffset.FromUnixTimeSeconds(expProp.GetInt64());
                 if (expiresAt.Value < DateTimeOffset.UtcNow)
-                {
                     return LicenseInfo.Expired(expiresAt.Value);
-                }
             }
 
             var tierStr = root.TryGetProperty("tier", out var tierProp) ? tierProp.GetString() : null;
             var tier = tierStr?.ToLowerInvariant() switch
             {
-                "pro" => LicenseTier.Pro,
-                "teams" => LicenseTier.Teams,
+                "pro"        => LicenseTier.Pro,
+                "teams"      => LicenseTier.Teams,
                 "enterprise" => LicenseTier.Enterprise,
-                _ => LicenseTier.Community,
+                _            => LicenseTier.Community,
             };
 
             var email = root.TryGetProperty("email", out var emailProp) ? emailProp.GetString() : null;

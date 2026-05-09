@@ -46,15 +46,8 @@ public class GCI0012_SecurityRisk : RuleBase
 
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath))
-            {
-                continue;
-            }
-
-            if (WellKnownPatterns.IsGeneratedFile(file.NewPath))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
 
             CheckHardcodedCredentials(file, findings);
 
@@ -77,26 +70,17 @@ public class GCI0012_SecurityRisk : RuleBase
     private void CheckSqlInjection(DiffLine line, List<Finding> findings)
     {
         var content = line.Content;
-
+        
         // Skip mock objects in unit tests (even if test file guard wasn't applied)
-        if (WellKnownPatterns.HasMockPattern(content))
-        {
-            return;
-        }
+        if (WellKnownPatterns.HasMockPattern(content)) return;
 
         bool hasSqlKeyword = SqlKeywords.Any(k => content.Contains(k, StringComparison.OrdinalIgnoreCase));
-        if (!hasSqlKeyword)
-        {
-            return;
-        }
+        if (!hasSqlKeyword) return;
 
         bool hasConcatenation = content.Contains(" + ", StringComparison.Ordinal) ||
                                  content.Contains("$\"", StringComparison.Ordinal) ||
                                  content.Contains("string.Format", StringComparison.Ordinal);
-        if (!hasConcatenation)
-        {
-            return;
-        }
+        if (!hasConcatenation) return;
 
         findings.Add(CreateFinding(
             summary: "Potential SQL injection: SQL string built via concatenation or interpolation.",
@@ -110,10 +94,7 @@ public class GCI0012_SecurityRisk : RuleBase
     {
         foreach (var algo in WeakHashAlgorithms)
         {
-            if (!line.Content.Contains(algo, StringComparison.Ordinal))
-            {
-                continue;
-            }
+            if (!line.Content.Contains(algo, StringComparison.Ordinal)) continue;
 
             findings.Add(CreateFinding(
                 summary: $"Weak hashing algorithm used: {algo}",
@@ -128,19 +109,13 @@ public class GCI0012_SecurityRisk : RuleBase
     private void CheckWeakCrypto(DiffLine line, List<Finding> findings)
     {
         var content = line.Content;
-
+        
         // Skip test code (cryptography unit tests may intentionally use weak algos for comparison)
-        if (WellKnownPatterns.HasMockPattern(content))
-        {
-            return;
-        }
+        if (WellKnownPatterns.HasMockPattern(content)) return;
 
         foreach (var algo in WeakCryptoAlgorithms)
         {
-            if (!content.Contains(algo, StringComparison.Ordinal))
-            {
-                continue;
-            }
+            if (!content.Contains(algo, StringComparison.Ordinal)) continue;
 
             findings.Add(CreateFinding(
                 summary: $"Weak or deprecated cryptographic algorithm: {algo}",
@@ -156,20 +131,14 @@ public class GCI0012_SecurityRisk : RuleBase
     {
         foreach (var api in DangerousApis)
         {
-            if (!line.Content.Contains(api, StringComparison.Ordinal))
-            {
-                continue;
-            }
+            if (!line.Content.Contains(api, StringComparison.Ordinal)) continue;
 
             // Activator.CreateInstance is safe when called with a typeof() literal (compile-time type)
             // or when the result is immediately cast to a known type (cast pattern: (Type)Activator.CreateInstance).
             // These patterns represent controlled factory usage, not user-input-driven code injection.
             if (api == "Activator.CreateInstance(" &&
                 (line.Content.Contains("typeof(", StringComparison.Ordinal) ||
-                 line.Content.Contains(")Activator.CreateInstance(", StringComparison.Ordinal)))
-            {
-                continue;
-            }
+                 line.Content.Contains(")Activator.CreateInstance(", StringComparison.Ordinal))) continue;
 
             findings.Add(CreateFinding(
                 summary: $"Dangerous API call detected: {api}",
@@ -186,44 +155,26 @@ public class GCI0012_SecurityRisk : RuleBase
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            if (WellKnownPatterns.IsCommentLine(content.Trim()))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.IsCommentLine(content.Trim())) continue;
 
             // GCI0029 (PII Logging Leak) owns PII detection in log calls; skip here to avoid
             // double-reporting when a log call contains a term like 'token'.
-            if (LogCallPrefixes.Any(p => content.Contains(p, StringComparison.Ordinal)))
-            {
-                continue;
-            }
+            if (LogCallPrefixes.Any(p => content.Contains(p, StringComparison.Ordinal))) continue;
 
-            if (!WellKnownPatterns.HasAssignment(content))
-            {
-                continue;
-            }
+            if (!WellKnownPatterns.HasAssignment(content)) continue;
 
             // Only fire when the RHS is a bare string literal (e.g. = "value"), not a method
             // call whose argument happens to contain a string (e.g. Switch("ui-element-id")).
             // This prevents FPs from UI component field declarations named after token concepts.
             var literal = WellKnownPatterns.ExtractDirectlyAssignedLiteral(content);
-            if (literal is null)
-            {
-                continue;
-            }
+            if (literal is null) continue;
 
             // Skip references to env var names (ALL_CAPS_UNDERSCORES): not credential values.
-            if (WellKnownPatterns.IsEnvVarName(literal))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.IsEnvVarName(literal)) continue;
 
             // Skip obviously benign default values: empty strings, HTTP scheme names,
             // and other initialization placeholders that are never real credentials.
-            if (WellKnownPatterns.IsBenignLiteralValue(literal))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.IsBenignLiteralValue(literal)) continue;
 
             // Check secret keyword only in the left-hand side of the assignment (the variable name),
             // not anywhere in the line: avoids false positives from type names like HtmlTokenType.
@@ -232,10 +183,7 @@ public class GCI0012_SecurityRisk : RuleBase
 
             foreach (var pattern in SecretNamePatterns)
             {
-                if (!lhs.Contains(pattern))
-                {
-                    continue;
-                }
+                if (!lhs.Contains(pattern)) continue;
 
                 findings.Add(CreateFinding(
                     file,
@@ -273,15 +221,8 @@ public class GCI0012_SecurityRisk : RuleBase
     {
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath))
-            {
-                continue;
-            }
-
-            if (WellKnownPatterns.IsGeneratedFile(file.NewPath))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
+            if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
 
             bool hadAuthorize = file.RemovedLines.Any(l =>
                 l.Content.Contains("[Authorize", StringComparison.Ordinal));
@@ -303,11 +244,7 @@ public class GCI0012_SecurityRisk : RuleBase
 
     private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)
     {
-        if (staticAnalysis is null)
-        {
-            return;
-        }
-
+        if (staticAnalysis is null) return;
         foreach (var diag in staticAnalysis.Diagnostics.Where(d => d.Id is "CA2100" or "CA2101" or "CA2153"))
         {
             findings.Add(new Finding

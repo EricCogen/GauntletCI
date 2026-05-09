@@ -7,39 +7,39 @@ namespace GauntletCI.Tests;
 public class GitHubPrReviewWriterTests
 {
     private static Finding MakeFinding(
-        string ruleId = "GCI0001",
-        string ruleName = "Test Rule",
-        string summary = "test finding",
-        string? filePath = "src/Foo.cs",
-        int? line = 42,
-        string? evidence = null,
-        string? whyItMatters = null,
+        string ruleId          = "GCI0001",
+        string ruleName        = "Test Rule",
+        string summary         = "test finding",
+        string? filePath       = "src/Foo.cs",
+        int?    line           = 42,
+        string? evidence       = null,
+        string? whyItMatters   = null,
         string? suggestedAction = null,
         string? llmExplanation = null,
         ExpertFact? expertContext = null,
-        Confidence confidence = Confidence.Medium,
-        RuleSeverity severity = RuleSeverity.Warn) => new()
-        {
-            RuleId = ruleId,
-            RuleName = ruleName,
-            Summary = summary,
-            FilePath = filePath,
-            Line = line,
-            Evidence = evidence ?? string.Empty,
-            WhyItMatters = whyItMatters ?? string.Empty,
-            SuggestedAction = suggestedAction ?? string.Empty,
-            LlmExplanation = llmExplanation,
-            ExpertContext = expertContext,
-            Confidence = confidence,
-            Severity = severity,
-        };
+        Confidence confidence  = Confidence.Medium,
+        RuleSeverity severity  = RuleSeverity.Warn) => new()
+    {
+        RuleId          = ruleId,
+        RuleName        = ruleName,
+        Summary         = summary,
+        FilePath        = filePath,
+        Line            = line,
+        Evidence        = evidence ?? string.Empty,
+        WhyItMatters    = whyItMatters ?? string.Empty,
+        SuggestedAction = suggestedAction ?? string.Empty,
+        LlmExplanation  = llmExplanation,
+        ExpertContext   = expertContext,
+        Confidence      = confidence,
+        Severity        = severity,
+    };
 
     // --- BuildCommentBody ---
 
     [Fact]
     public void BuildCommentBody_MinimalFinding_ContainsRuleIdAndSummary()
     {
-        var f = MakeFinding(ruleId: "GCI0042", ruleName: "Async Rule", summary: "Use async here");
+        var f   = MakeFinding(ruleId: "GCI0042", ruleName: "Async Rule", summary: "Use async here");
         var body = GitHubPrReviewWriter.BuildCommentBody(f);
 
         Assert.Contains("GCI0042", body);
@@ -50,7 +50,7 @@ public class GitHubPrReviewWriterTests
     [Fact]
     public void BuildCommentBody_ContainsConfidenceAndSeverity()
     {
-        var f = MakeFinding(confidence: Confidence.High, severity: RuleSeverity.Block);
+        var f    = MakeFinding(confidence: Confidence.High, severity: RuleSeverity.Block);
         var body = GitHubPrReviewWriter.BuildCommentBody(f);
 
         Assert.Contains("High", body);
@@ -60,7 +60,7 @@ public class GitHubPrReviewWriterTests
     [Fact]
     public void BuildCommentBody_WithEvidence_QuotesEvidence()
     {
-        var f = MakeFinding(evidence: "await Task.Delay(0);");
+        var f    = MakeFinding(evidence: "await Task.Delay(0);");
         var body = GitHubPrReviewWriter.BuildCommentBody(f);
 
         Assert.Contains("> await Task.Delay(0);", body);
@@ -111,7 +111,7 @@ public class GitHubPrReviewWriterTests
     [Fact]
     public void BuildCommentBody_WasNowEvidence_RendersDiffBlock()
     {
-        var f = MakeFinding(evidence: "Was: Task.Run(Foo) | Now: await FooAsync()");
+        var f    = MakeFinding(evidence: "Was: Task.Run(Foo) | Now: await FooAsync()");
         var body = GitHubPrReviewWriter.BuildCommentBody(f);
 
         Assert.Contains("```diff", body);
@@ -122,7 +122,7 @@ public class GitHubPrReviewWriterTests
     [Fact]
     public void BuildCommentBody_WithWhyItMatters_IncludesSection()
     {
-        var f = MakeFinding(whyItMatters: "Deadlocks under load");
+        var f    = MakeFinding(whyItMatters: "Deadlocks under load");
         var body = GitHubPrReviewWriter.BuildCommentBody(f);
 
         Assert.Contains("Why it matters", body);
@@ -132,7 +132,7 @@ public class GitHubPrReviewWriterTests
     [Fact]
     public void BuildCommentBody_WithSuggestedAction_IncludesSection()
     {
-        var f = MakeFinding(suggestedAction: "Use ConfigureAwait(false)");
+        var f    = MakeFinding(suggestedAction: "Use ConfigureAwait(false)");
         var body = GitHubPrReviewWriter.BuildCommentBody(f);
 
         Assert.Contains("Suggested action", body);
@@ -142,7 +142,7 @@ public class GitHubPrReviewWriterTests
     [Fact]
     public void BuildCommentBody_WithLlmExplanation_IncludesInsightSection()
     {
-        var f = MakeFinding(llmExplanation: "This blocks the thread pool.");
+        var f    = MakeFinding(llmExplanation: "This blocks the thread pool.");
         var body = GitHubPrReviewWriter.BuildCommentBody(f);
 
         Assert.Contains("LLM insight", body);
@@ -152,8 +152,8 @@ public class GitHubPrReviewWriterTests
     [Fact]
     public void BuildCommentBody_WithExpertContext_IncludesExpertSection()
     {
-        var ctx = new ExpertFact("Prefer async all the way", "MSDN", 0.95f);
-        var f = MakeFinding(expertContext: ctx);
+        var ctx  = new ExpertFact("Prefer async all the way", "MSDN", 0.95f);
+        var f    = MakeFinding(expertContext: ctx);
         var body = GitHubPrReviewWriter.BuildCommentBody(f);
 
         Assert.Contains("Expert context", body);
@@ -164,7 +164,7 @@ public class GitHubPrReviewWriterTests
     [Fact]
     public void BuildCommentBody_NoLlmNoExpert_DoesNotContainThoseSections()
     {
-        var f = MakeFinding(llmExplanation: null, expertContext: null);
+        var f    = MakeFinding(llmExplanation: null, expertContext: null);
         var body = GitHubPrReviewWriter.BuildCommentBody(f);
 
         Assert.DoesNotContain("LLM insight", body);
@@ -174,7 +174,7 @@ public class GitHubPrReviewWriterTests
     [Fact]
     public void BuildCommentBody_WithCoverageNote_IncludesCoverageSection()
     {
-        var f = MakeFinding();
+        var f    = MakeFinding();
         f.CoverageNote = "⚠️ No test coverage detected for this file (Codecov).";
         var body = GitHubPrReviewWriter.BuildCommentBody(f);
 
@@ -186,28 +186,28 @@ public class GitHubPrReviewWriterTests
     // --- BuildReviewBody ---
 
     private static GroupedFinding MakeGroup(
-        string ruleId = "GCI0016",
-        string ruleName = "Concurrency Rule",
-        string summary = "Static mutable field detected",
-        string filePath = "src/Foo.cs",
-        int primaryLine = 12,
-        string whyItMatters = "Mutable static fields are shared across threads.",
-        string suggestedAction = "Use Interlocked or readonly.",
-        string evidence = "Line 12: private static long _count;") => new()
-        {
-            RuleId = ruleId,
-            RuleName = ruleName,
-            Summary = summary,
-            FilePath = filePath,
-            PrimaryLine = primaryLine,
-            Lines = new[] { primaryLine },
-            Evidence = new[] { evidence },
-            WhyItMatters = whyItMatters,
-            SuggestedAction = suggestedAction,
-            Confidence = Confidence.Medium,
-            Severity = RuleSeverity.Warn,
-            Count = 1,
-        };
+        string ruleId           = "GCI0016",
+        string ruleName         = "Concurrency Rule",
+        string summary          = "Static mutable field detected",
+        string filePath         = "src/Foo.cs",
+        int    primaryLine      = 12,
+        string whyItMatters     = "Mutable static fields are shared across threads.",
+        string suggestedAction  = "Use Interlocked or readonly.",
+        string evidence         = "Line 12: private static long _count;") => new()
+    {
+        RuleId          = ruleId,
+        RuleName        = ruleName,
+        Summary         = summary,
+        FilePath        = filePath,
+        PrimaryLine     = primaryLine,
+        Lines           = new[] { primaryLine },
+        Evidence        = new[] { evidence },
+        WhyItMatters    = whyItMatters,
+        SuggestedAction = suggestedAction,
+        Confidence      = Confidence.Medium,
+        Severity        = RuleSeverity.Warn,
+        Count           = 1,
+    };
 
     [Fact]
     public void BuildReviewBody_NoSummaryGroups_NoInline_ReturnsEmpty()
@@ -227,7 +227,7 @@ public class GitHubPrReviewWriterTests
     public void BuildReviewBody_SummaryGroup_EmbedsRichDetailsBlock()
     {
         var groups = new List<GroupedFinding> { MakeGroup() };
-        var body = GitHubPrReviewWriter.BuildReviewBody(groups, hasInlineComments: false);
+        var body   = GitHubPrReviewWriter.BuildReviewBody(groups, hasInlineComments: false);
 
         // Top-level header preserved
         Assert.Contains("**GauntletCI** found the following issues:", body);
@@ -264,7 +264,7 @@ public class GitHubPrReviewWriterTests
     public void BuildReviewBody_HasInlineAndSummary_AppendsInlinePointer()
     {
         var groups = new List<GroupedFinding> { MakeGroup() };
-        var body = GitHubPrReviewWriter.BuildReviewBody(groups, hasInlineComments: true);
+        var body   = GitHubPrReviewWriter.BuildReviewBody(groups, hasInlineComments: true);
         Assert.Contains("inline comments on the diff", body);
     }
 

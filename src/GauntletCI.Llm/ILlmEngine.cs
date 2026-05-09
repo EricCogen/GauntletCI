@@ -10,10 +10,7 @@ namespace GauntletCI.Llm;
 public interface ILlmEngine : IDisposable
 {
     /// <summary>Returns <see langword="true"/> when the underlying model is loaded and ready to accept prompts.</summary>
-    bool IsAvailable
-    {
-        get;
-    }
+    bool IsAvailable { get; }
 
     /// <summary>Generates a one-sentence plain-English explanation of why a finding is risky.</summary>
     /// <param name="finding">The finding to enrich with LLM-generated context.</param>

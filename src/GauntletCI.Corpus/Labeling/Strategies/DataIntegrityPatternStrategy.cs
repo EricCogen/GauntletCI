@@ -27,9 +27,9 @@ public sealed class DataIntegrityPatternStrategy : IInferenceStrategy
             static bool IsSigLine(string l)
             {
                 var t = l.TrimStart();
-                return (t.StartsWith("public ", StringComparison.Ordinal) ||
+                return (t.StartsWith("public ",    StringComparison.Ordinal) ||
                         t.StartsWith("protected ", StringComparison.Ordinal) ||
-                        t.StartsWith("internal ", StringComparison.Ordinal)) && t.Contains('(');
+                        t.StartsWith("internal ",  StringComparison.Ordinal)) && t.Contains('(');
             }
             if (context.ProductionRemovedLines.Any(IsSigLine) && context.ProductionAddedLines.Any(IsSigLine))
             {
@@ -49,12 +49,12 @@ public sealed class DataIntegrityPatternStrategy : IInferenceStrategy
         bool hasRemovedSerializationAttr = context.ProductionRemovedLines.Any(l =>
         {
             var t = l.TrimStart();
-            return t.StartsWith("[JsonProperty", StringComparison.OrdinalIgnoreCase) ||
-                   t.StartsWith("[JsonIgnore", StringComparison.OrdinalIgnoreCase) ||
-                   t.StartsWith("[XmlElement", StringComparison.OrdinalIgnoreCase) ||
-                   t.StartsWith("[DataMember", StringComparison.OrdinalIgnoreCase) ||
-                   t.StartsWith("[ProtoMember", StringComparison.OrdinalIgnoreCase) ||
-                   t.StartsWith("[Column", StringComparison.OrdinalIgnoreCase);
+            return t.StartsWith("[JsonProperty",    StringComparison.OrdinalIgnoreCase) ||
+                   t.StartsWith("[JsonIgnore",      StringComparison.OrdinalIgnoreCase) ||
+                   t.StartsWith("[XmlElement",      StringComparison.OrdinalIgnoreCase) ||
+                   t.StartsWith("[DataMember",      StringComparison.OrdinalIgnoreCase) ||
+                   t.StartsWith("[ProtoMember",     StringComparison.OrdinalIgnoreCase) ||
+                   t.StartsWith("[Column",          StringComparison.OrdinalIgnoreCase);
         });
 
         // EF migration: check if removed lines (not just production) contain actual schema operations
@@ -117,13 +117,11 @@ public sealed class DataIntegrityPatternStrategy : IInferenceStrategy
             IsEfMigrationCsFile(l[6..].TrimEnd('\r')));
 
         if (!isMigrationFile)
-        {
             return false;
-        }
 
         // Require that removed lines from migration files contain actual EF schema operations
         return removedLines.Any(l =>
-            l.Contains("migrationBuilder.Drop", StringComparison.OrdinalIgnoreCase) ||
+            l.Contains("migrationBuilder.Drop",  StringComparison.OrdinalIgnoreCase) ||
             l.Contains("migrationBuilder.Alter", StringComparison.OrdinalIgnoreCase) ||
             l.Contains("migrationBuilder.Rename", StringComparison.OrdinalIgnoreCase) ||
             l.Contains("migrationBuilder.Create", StringComparison.OrdinalIgnoreCase));
@@ -136,18 +134,14 @@ public sealed class DataIntegrityPatternStrategy : IInferenceStrategy
     private static bool IsEfMigrationCsFile(string filePath)
     {
         if (!filePath.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
-        {
             return false;
-        }
 
         var pathNormalized = filePath.Replace('\\', '/');
-
+        
         // Check for Migrations directory
         if (!pathNormalized.Contains("/Migrations/", StringComparison.OrdinalIgnoreCase) &&
             !pathNormalized.Contains("\\Migrations\\", StringComparison.OrdinalIgnoreCase))
-        {
             return false;
-        }
 
         // Migration files have timestamp prefix: either YYYYMMDDHHMMSS_Name.cs or YYYYMMDD_Name.cs
         var fileName = pathNormalized.Contains('/')
@@ -156,20 +150,14 @@ public sealed class DataIntegrityPatternStrategy : IInferenceStrategy
 
         // Check if filename starts with 8 or 14 digits followed by underscore
         if (fileName.Length < 10)
-        {
             return false;
-        }
-
+            
         if (fileName[8] == '_' && fileName[0..8].All(char.IsDigit))
-        {
             return true;  // YYYYMMDD_Name.cs format
-        }
-
+            
         if (fileName.Length > 15 && fileName[14] == '_' && fileName[0..14].All(char.IsDigit))
-        {
             return true;  // YYYYMMDDHHMMSS_Name.cs format
-        }
-
+            
         return false;
     }
 }

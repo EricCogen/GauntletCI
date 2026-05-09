@@ -10,16 +10,16 @@ namespace GauntletCI.Tests;
 public class TargetFrameworkDetectorTests
 {
     [Theory]
-    [InlineData("net8.0", true)]
-    [InlineData("net9.0", true)]
+    [InlineData("net8.0",  true)]
+    [InlineData("net9.0",  true)]
     [InlineData("net10.0", true)]
-    [InlineData("net6.0", false)]
-    [InlineData("net7.0", false)]
+    [InlineData("net6.0",  false)]
+    [InlineData("net7.0",  false)]
     [InlineData("netstandard2.0", false)]
     [InlineData("netcoreapp3.1", false)]
-    [InlineData("net48", false)]
-    [InlineData(null, false)]
-    [InlineData("", false)]
+    [InlineData("net48",  false)]
+    [InlineData(null,     false)]
+    [InlineData("",       false)]
     public void IsNet8OrLater_ReturnsExpected(string? tfm, bool expected)
         => Assert.Equal(expected, TargetFrameworkDetector.IsNet8OrLater(tfm));
 
@@ -159,25 +159,13 @@ public class SarifWriterTests
     {
         var f1 = new Finding
         {
-            RuleId = "GCI0001",
-            RuleName = "Rule One",
-            Summary = "s",
-            Evidence = "e",
-            WhyItMatters = "w",
-            SuggestedAction = "a",
-            Confidence = Confidence.Low,
-            Severity = RuleSeverity.Info,
+            RuleId = "GCI0001", RuleName = "Rule One", Summary = "s", Evidence = "e",
+            WhyItMatters = "w", SuggestedAction = "a", Confidence = Confidence.Low, Severity = RuleSeverity.Info,
         };
         var f2 = new Finding
         {
-            RuleId = "GCI0001",
-            RuleName = "Rule One",
-            Summary = "s2",
-            Evidence = "e2",
-            WhyItMatters = "w2",
-            SuggestedAction = "a2",
-            Confidence = Confidence.Low,
-            Severity = RuleSeverity.Info,
+            RuleId = "GCI0001", RuleName = "Rule One", Summary = "s2", Evidence = "e2",
+            WhyItMatters = "w2", SuggestedAction = "a2", Confidence = Confidence.Low, Severity = RuleSeverity.Info,
         };
 
         var json = SarifWriter.Serialize(BuildResult(f1, f2));
@@ -222,7 +210,7 @@ public class SarifWriterTests
 
         // Verify enrichment properties are included
         Assert.True(result.TryGetProperty("properties", out var props));
-        Assert.Equal("var r = new Random();\r\nvar num = r.Next();",
+        Assert.Equal("var r = new Random();\r\nvar num = r.Next();", 
             props.GetProperty("codeSnippet").GetString());
         Assert.Equal("This uses Random which is predictable. Use RandomNumberGenerator.GetInt32() instead.",
             props.GetProperty("llmExplanation").GetString());

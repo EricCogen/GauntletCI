@@ -90,10 +90,7 @@ public class DiffParserTests
     [Fact]
     public async Task FromGitAsync_InvalidRepo_ShouldThrowGitProcessException()
     {
-        if (!await GitAvailableAsync())
-        {
-            return;
-        }
+        if (!await GitAvailableAsync()) return;
 
         // Use a guaranteed non-existent path so git fails deterministically
         // without risking parent-repo discovery when TMP is inside a worktree.
@@ -109,10 +106,7 @@ public class DiffParserTests
     [Fact]
     public async Task FromStagedAsync_InvalidRepo_ShouldThrowGitProcessException()
     {
-        if (!await GitAvailableAsync())
-        {
-            return;
-        }
+        if (!await GitAvailableAsync()) return;
 
         var nonExistentDir = Path.Combine(Path.GetTempPath(), $"gci_test_{Guid.NewGuid():N}");
 

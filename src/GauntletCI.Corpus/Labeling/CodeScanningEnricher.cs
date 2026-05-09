@@ -51,10 +51,7 @@ public sealed class CodeScanningEnricher : IDisposable
         {
             ct.ThrowIfCancellationRequested();
 
-            if (_noScanningRepos.Contains(fixture.Repo))
-            {
-                continue;
-            }
+            if (_noScanningRepos.Contains(fixture.Repo)) continue;
 
             var diffPath = Path.Combine(
                 fixturesBasePath,
@@ -62,31 +59,18 @@ public sealed class CodeScanningEnricher : IDisposable
                 fixture.FixtureId,
                 "diff.patch");
 
-            if (!File.Exists(diffPath))
-            {
-                continue;
-            }
+            if (!File.Exists(diffPath)) continue;
 
             var changedFiles = ParseChangedCsFiles(diffPath);
-            if (changedFiles.Count == 0)
-            {
-                continue;
-            }
+            if (changedFiles.Count == 0) continue;
 
             var alerts = await ResolveAlertsAsync(fixture.Repo, result, progress, ct).ConfigureAwait(false);
-            if (alerts is null)
-            {
-                continue; // repo has no scanning
-            }
+            if (alerts is null) continue; // repo has no scanning
 
             int matchesThisFixture = 0;
             foreach (var alert in alerts)
             {
-                if (!changedFiles.Contains(alert.FilePath))
-                {
-                    continue;
-                }
-
+                if (!changedFiles.Contains(alert.FilePath)) continue;
                 await WriteMatchAsync(db, fixture.FixtureId, alert, ct).ConfigureAwait(false);
                 matchesThisFixture++;
             }
@@ -113,16 +97,10 @@ public sealed class CodeScanningEnricher : IDisposable
 
         foreach (var line in File.ReadLines(diffPath))
         {
-            if (!line.StartsWith("+++ b/", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
+            if (!line.StartsWith("+++ b/", StringComparison.Ordinal)) continue;
             var path = line[6..]; // strip "+++ b/"
             if (path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase))
-            {
                 paths.Add(path);
-            }
         }
 
         return paths;
@@ -134,9 +112,7 @@ public sealed class CodeScanningEnricher : IDisposable
         string repo, CodeScanningEnrichmentResult result, Action<string>? progress, CancellationToken ct)
     {
         if (_alertCache.TryGetValue(repo, out var cached))
-        {
             return cached;
-        }
 
         progress?.Invoke($"[codescanning] Fetching CodeQL alerts for {repo}...");
         var alerts = await _client.GetAlertsAsync(repo, ct: ct).ConfigureAwait(false);
@@ -169,15 +145,15 @@ public sealed class CodeScanningEnricher : IDisposable
                  $state, $toolName, $severity, $startLine, $message)
             """;
         cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
-        cmd.Parameters.AddWithValue("$repo", alert.Repo);
-        cmd.Parameters.AddWithValue("$file", alert.FilePath);
-        cmd.Parameters.AddWithValue("$ruleId", alert.RuleId);
-        cmd.Parameters.AddWithValue("$ruleName", alert.RuleName);
-        cmd.Parameters.AddWithValue("$state", alert.State);
-        cmd.Parameters.AddWithValue("$toolName", alert.ToolName);
-        cmd.Parameters.AddWithValue("$severity", alert.Severity);
+        cmd.Parameters.AddWithValue("$repo",      alert.Repo);
+        cmd.Parameters.AddWithValue("$file",      alert.FilePath);
+        cmd.Parameters.AddWithValue("$ruleId",    alert.RuleId);
+        cmd.Parameters.AddWithValue("$ruleName",  alert.RuleName);
+        cmd.Parameters.AddWithValue("$state",     alert.State);
+        cmd.Parameters.AddWithValue("$toolName",  alert.ToolName);
+        cmd.Parameters.AddWithValue("$severity",  alert.Severity);
         cmd.Parameters.AddWithValue("$startLine", alert.StartLine);
-        cmd.Parameters.AddWithValue("$message", alert.Message);
+        cmd.Parameters.AddWithValue("$message",   alert.Message);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
@@ -185,28 +161,10 @@ public sealed class CodeScanningEnricher : IDisposable
 /// <summary>Summary statistics from a <see cref="CodeScanningEnricher.EnrichAsync"/> run.</summary>
 public sealed class CodeScanningEnrichmentResult
 {
-    public bool AuthMissing
-    {
-        get; set;
-    }
-    public int ReposWithScanning
-    {
-        get; set;
-    }
-    public int ReposWithoutScanning
-    {
-        get; set;
-    }
-    public int FixturesProcessed
-    {
-        get; set;
-    }
-    public int FixturesWithMatches
-    {
-        get; set;
-    }
-    public int TotalMatches
-    {
-        get; set;
-    }
+    public bool AuthMissing          { get; set; }
+    public int  ReposWithScanning    { get; set; }
+    public int  ReposWithoutScanning { get; set; }
+    public int  FixturesProcessed    { get; set; }
+    public int  FixturesWithMatches  { get; set; }
+    public int  TotalMatches         { get; set; }
 }

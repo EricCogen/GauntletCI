@@ -44,11 +44,7 @@ public class RoslynAnalyzer
             var filtered = diagnostics
                 .Where(d =>
                 {
-                    if (changedLines == null || changedLines.Count == 0)
-                    {
-                        return true;
-                    }
-
+                    if (changedLines == null || changedLines.Count == 0) return true;
                     var lineSpan = d.Location.GetLineSpan();
                     return changedLines.Contains(lineSpan.StartLinePosition.Line + 1);
                 })
@@ -91,9 +87,7 @@ public class RoslynAnalyzer
         {
             var path = Path.Combine(runtimeDir, dll);
             if (File.Exists(path))
-            {
                 refs.Add(MetadataReference.CreateFromFile(path));
-            }
         }
 
         return refs;

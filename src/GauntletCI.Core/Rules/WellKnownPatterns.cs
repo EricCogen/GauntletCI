@@ -33,10 +33,10 @@ internal static class WellKnownPatterns
     // ================= Module-Level Constants (Not Domain-Specific) =================
 
     /// <summary>Variable and field name fragments used to detect hardcoded secrets by name (GCI0010, GCI0012).</summary>
-    public static readonly string[] SecretNamePatterns = ["password", "passwd", "secret", "apikey", "api_key", "token", "credential", "private_key", "privatekey", "access_key", "auth_key"];
+    public static readonly string[] SecretNamePatterns = [ "password", "passwd", "secret", "apikey", "api_key", "token", "credential", "private_key", "privatekey", "access_key", "auth_key" ];
 
     /// <summary>Log-level keywords indicating high-severity log calls that warrant review (GCI0007, GCI0013).</summary>
-    public static readonly string[] HighSeverityLogKeywords = ["error", "exception", "critical", "fatal", "warn", "warning"];
+    public static readonly string[] HighSeverityLogKeywords = [ "error", "exception", "critical", "fatal", "warn", "warning" ];
 
     // ================= File Context Delegation =================
 
@@ -83,28 +83,28 @@ internal static class WellKnownPatterns
     /// NRT is enabled via: #nullable enable directive, project-wide settings, or modern .NET versions.
     /// Used by GCI0006 and GCI0043 to determine if 'string' parameters are non-nullable by default.
     /// </summary>
-    public static bool IsNullableReferenceTypeEnabled(string fileContent) =>
+    public static bool IsNullableReferenceTypeEnabled(string fileContent) => 
         NullabilityPatterns.IsNullableReferenceTypeEnabled(fileContent);
 
     /// <summary>
     /// Returns <c>true</c> when the parameter section contains explicitly non-nullable parameters
     /// (e.g., 'string param' without '?'). In NRT-enabled context, these don't need validation.
     /// </summary>
-    public static bool HasNonNullableParams(string paramSection) =>
+    public static bool HasNonNullableParams(string paramSection) => 
         NullabilityPatterns.HasNonNullableParams(paramSection);
 
     /// <summary>
     /// Returns <c>true</c> when the parameter list contains nullable parameters (e.g., 'string?' or 'object?').
     /// Used by GCI0006 to detect when public methods have nullable reference type parameters.
     /// </summary>
-    public static bool HasNullableReferenceParam(string paramSection) =>
+    public static bool HasNullableReferenceParam(string paramSection) => 
         NullabilityPatterns.HasNullableReferenceParam(paramSection);
 
     /// <summary>
     /// Returns <c>true</c> when the content contains Nullable&lt;T&gt; where T is a value type.
     /// In NRT context, Nullable&lt;int&gt;, Nullable&lt;string&gt;, etc. always have a value.
     /// </summary>
-    public static bool IsNullableOfNonNullableType(string content) =>
+    public static bool IsNullableOfNonNullableType(string content) => 
         NullabilityPatterns.IsNullableOfNonNullableType(content);
 
     /// <summary>
@@ -112,7 +112,7 @@ internal static class WellKnownPatterns
     /// Detects suppression of nullable reference type warnings (CS8600, CS8603, etc.).
     /// Used by GCI0043 to flag deliberate nullable warning suppression.
     /// </summary>
-    public static bool IsPragmaNullableDisable(string content) =>
+    public static bool IsPragmaNullableDisable(string content) => 
         NullabilityPatterns.IsPragmaNullableDisable(content);
 
     /// <summary>
@@ -120,7 +120,7 @@ internal static class WellKnownPatterns
     /// Patterns: .Select(x => x.Value), .Where(x => x.Value != null), etc.
     /// Used by GCI0006 to avoid flagging safe LINQ projections as unsafe dereferences.
     /// </summary>
-    public static bool IsLinqValueProjection(string content) =>
+    public static bool IsLinqValueProjection(string content) => 
         NullabilityPatterns.IsLinqValueProjection(content);
 
     // ================= HTTP/gRPC External Service Delegation =================
@@ -130,49 +130,49 @@ internal static class WellKnownPatterns
     /// gRPC channels manage timeouts at the channel/connection level, not per-HttpClient.
     /// Used by GCI0039 to skip false positive timeout checks in gRPC contexts.
     /// </summary>
-    public static bool IsGrpcRelatedFile(string path) =>
+    public static bool IsGrpcRelatedFile(string path) => 
         HttpExternalServicePatterns.IsGrpcRelatedFile(path);
 
     /// <summary>
     /// Returns <c>true</c> when the added lines indicate HttpClient configuration via IHttpClientFactory.
     /// Factory-managed clients configure timeout at the handler/channel level, not per-client.
     /// </summary>
-    public static bool IsHttpFactoryConfigured(List<DiffLine> addedLines) =>
+    public static bool IsHttpFactoryConfigured(List<DiffLine> addedLines) => 
         HttpExternalServicePatterns.IsHttpFactoryConfigured(addedLines);
 
     /// <summary>
     /// Returns <c>true</c> when the added lines indicate gRPC channel configuration.
     /// gRPC channels manage timeouts via GrpcChannelOptions at the connection level.
     /// </summary>
-    public static bool UsesGrpcChannel(List<DiffLine> addedLines) =>
+    public static bool UsesGrpcChannel(List<DiffLine> addedLines) => 
         HttpExternalServicePatterns.UsesGrpcChannel(addedLines);
 
     /// <summary>
     /// Returns <c>true</c> when the added lines indicate use of factory-managed or injected HTTP clients.
     /// Factory patterns, Polly policies, and DI-managed clients manage timeouts externally.
     /// </summary>
-    public static bool UsesFactoryManagedHttpClients(List<DiffLine> addedLines) =>
+    public static bool UsesFactoryManagedHttpClients(List<DiffLine> addedLines) => 
         HttpExternalServicePatterns.UsesFactoryManagedHttpClients(addedLines);
 
     /// <summary>
     /// Returns <c>true</c> when the content indicates an injected or static HttpClient is being used.
     /// Patterns like _httpClient.GetAsync() or this.client.PostAsync() are typically DI-managed.
     /// </summary>
-    public static bool IsInjectedOrStaticClient(string content) =>
+    public static bool IsInjectedOrStaticClient(string content) => 
         HttpExternalServicePatterns.IsInjectedOrStaticClient(content);
 
     /// <summary>
     /// Returns <c>true</c> when the file uses .NET 9+ modern patterns (checked operators, required members, etc).
     /// These patterns strongly indicate NRT is enabled in modern project contexts.
     /// </summary>
-    public static bool UsesModernDotNetPatterns(string fileContent) =>
+    public static bool UsesModernDotNetPatterns(string fileContent) => 
         HttpExternalServicePatterns.UsesModernDotNetPatterns(fileContent);
 
     /// <summary>
     /// Returns <c>true</c> when a method signature uses record type parameters or other modern patterns.
     /// Helps identify rules applied to modern code that typically has NRT enabled.
     /// </summary>
-    public static bool HasModernTypeParameters(string paramSection) =>
+    public static bool HasModernTypeParameters(string paramSection) => 
         HttpExternalServicePatterns.HasModernTypeParameters(paramSection);
 
     // ================= Security Patterns Delegation =================
@@ -211,7 +211,7 @@ internal static class WellKnownPatterns
     /// Prevents false positives from patterns like: _tokenField = SomeFactory("ui-element-id")
     /// Used by GCI0012 to find actual hardcoded credential values.
     /// </summary>
-    public static string? ExtractDirectlyAssignedLiteral(string content) =>
+    public static string? ExtractDirectlyAssignedLiteral(string content) => 
         SecurityPatterns.ExtractDirectlyAssignedLiteral(content);
 
     /// <summary>
@@ -305,14 +305,14 @@ internal static class WellKnownPatterns
     /// Regex to detect direct instantiation of injectable types.
     /// Matches patterns like: new UserService(...), new OrderRepository(...), new RequestHandler(...)
     /// </summary>
-    public static readonly System.Text.RegularExpressions.Regex DirectInstantiationRegex =
+    public static readonly System.Text.RegularExpressions.Regex DirectInstantiationRegex = 
         DomainSpecificPatterns.DependencyInjectionPatterns.DirectInstantiationRegex;
 
     /// <summary>
     /// Patterns to exclude from direct instantiation checks.
     /// Test doubles and event handlers are legitimate cases for direct instantiation.
     /// </summary>
-    public static readonly string[] DirectInstantiationExclusions =
+    public static readonly string[] DirectInstantiationExclusions = 
         DomainSpecificPatterns.DependencyInjectionPatterns.DirectInstantiationExclusions;
 
     /// <summary>
@@ -336,23 +336,13 @@ internal static class WellKnownPatterns
     {
         // Adding/removing modifier keywords (virtual, override, sealed, abstract, new) does not
         // break existing callers at the binary level.
-        if (NormalizeModifiers(removedSig) == NormalizeModifiers(addedSig))
-        {
-            return true;
-        }
+        if (NormalizeModifiers(removedSig) == NormalizeModifiers(addedSig)) return true;
 
         var removedParams = ExtractParenContent(removedSig)?.Trim() ?? "";
-        var addedParams = ExtractParenContent(addedSig)?.Trim() ?? "";
+        var addedParams   = ExtractParenContent(addedSig)?.Trim()   ?? "";
 
-        if (addedParams.Length <= removedParams.Length)
-        {
-            return false;
-        }
-
-        if (!addedParams.StartsWith(removedParams, StringComparison.Ordinal))
-        {
-            return false;
-        }
+        if (addedParams.Length <= removedParams.Length) return false;
+        if (!addedParams.StartsWith(removedParams, StringComparison.Ordinal)) return false;
 
         var extra = addedParams[removedParams.Length..].TrimStart(',').TrimStart();
         return !string.IsNullOrWhiteSpace(extra) && extra.Contains('=', StringComparison.Ordinal);
@@ -375,17 +365,14 @@ internal static class WellKnownPatterns
         s = Strip(s, " new ");
         // Collapse multiple spaces introduced by stripping
         while (s.Contains("  ", StringComparison.Ordinal))
-        {
             s = s.Replace("  ", " ", StringComparison.Ordinal);
-        }
-
         return s.Trim();
     }
 
     /// <summary>Extracts the parameter list content between the outermost parentheses of a method signature.</summary>
     public static string? ExtractParenContent(string sig)
     {
-        var open = sig.IndexOf('(');
+        var open  = sig.IndexOf('(');
         var close = sig.LastIndexOf(')');
         return open >= 0 && close > open ? sig[(open + 1)..close] : null;
     }
@@ -396,7 +383,7 @@ internal static class WellKnownPatterns
     /// Returns <c>true</c> if the given HTTP request content contains HTTP context signal patterns.
     /// Used by GCI0015 to determine whether mass-assignment and unsafe cast checks apply.
     /// </summary>
-    public static bool HasHttpContextSignal(string content) =>
+    public static bool HasHttpContextSignal(string content) => 
         DomainSpecificPatterns.HasHttpContextSignal(content);
 
     // ================= Nested Classes (Delegating to Domain-Specific) =================
@@ -532,10 +519,10 @@ internal static class WellKnownPatterns
         private static readonly System.Text.RegularExpressions.Regex ValueNullCheckRegex = new(
             @"\.Value\s*(is not null|is null|==\s*null|!=\s*null)", System.Text.RegularExpressions.RegexOptions.Compiled);
 
-        public static bool HasValueNullCheck(string content) =>
+        public static bool HasValueNullCheck(string content) => 
             !string.IsNullOrEmpty(content) && ValueNullCheckRegex.IsMatch(content);
 
-        public static bool IsKeyValuePairAccess(string content) =>
+        public static bool IsKeyValuePairAccess(string content) => 
             !string.IsNullOrEmpty(content) && content.Contains(".Key", StringComparison.Ordinal);
 
         public static bool IsLinqValueMapping(string content) =>
@@ -549,11 +536,7 @@ internal static class WellKnownPatterns
 
         public static bool IsExpressionBodied(string content)
         {
-            if (string.IsNullOrEmpty(content))
-            {
-                return false;
-            }
-
+            if (string.IsNullOrEmpty(content)) return false;
             var trimmed = content.TrimStart();
             return ((trimmed.StartsWith("public ", StringComparison.Ordinal) ||
                      trimmed.StartsWith("protected ", StringComparison.Ordinal)) &&
@@ -568,24 +551,16 @@ internal static class WellKnownPatterns
 
         public static bool HasAccessModifier(string content)
         {
-            if (string.IsNullOrEmpty(content))
-            {
-                return false;
-            }
-
+            if (string.IsNullOrEmpty(content)) return false;
             var trimmed = content.TrimStart();
-
+            
             while (trimmed.StartsWith("[", StringComparison.Ordinal))
             {
                 var closeIdx = trimmed.IndexOf(']');
-                if (closeIdx == -1)
-                {
-                    break;
-                }
-
+                if (closeIdx == -1) break;
                 trimmed = trimmed[(closeIdx + 1)..].TrimStart();
             }
-
+            
             return trimmed.StartsWith("public ", StringComparison.Ordinal) ||
                    trimmed.StartsWith("private ", StringComparison.Ordinal) ||
                    trimmed.StartsWith("protected ", StringComparison.Ordinal) ||
@@ -594,11 +569,7 @@ internal static class WellKnownPatterns
 
         public static bool IsAsyncMethod(string content)
         {
-            if (string.IsNullOrEmpty(content))
-            {
-                return false;
-            }
-
+            if (string.IsNullOrEmpty(content)) return false;
             var trimmed = content.TrimStart();
             return trimmed.StartsWith("async ", StringComparison.Ordinal) ||
                    trimmed.Contains(" async ", StringComparison.Ordinal) ||
@@ -607,11 +578,7 @@ internal static class WellKnownPatterns
 
         public static bool IsEventHandler(string content)
         {
-            if (string.IsNullOrEmpty(content))
-            {
-                return false;
-            }
-
+            if (string.IsNullOrEmpty(content)) return false;
             return content.Contains("EventHandler", StringComparison.Ordinal) ||
                    content.Contains("EventArgs", StringComparison.Ordinal) ||
                    content.Contains("+=", StringComparison.Ordinal) ||
@@ -620,22 +587,14 @@ internal static class WellKnownPatterns
 
         public static bool IsCryptographicBoundary(string content)
         {
-            if (string.IsNullOrEmpty(content))
-            {
-                return false;
-            }
-
+            if (string.IsNullOrEmpty(content)) return false;
             var cryptMethods = new[] { "ComputeHmac", "ComputeHash", "Encrypt", "Decrypt", "Sign", "Verify", "EncryptionAsync", "DecryptionAsync" };
             return cryptMethods.Any(m => content.Contains(m, StringComparison.Ordinal));
         }
 
         public static bool HasInjectionGuard(string content)
         {
-            if (string.IsNullOrEmpty(content))
-            {
-                return false;
-            }
-
+            if (string.IsNullOrEmpty(content)) return false;
             return content.Contains("@", StringComparison.Ordinal) ||
                    content.Contains("SqlParameter", StringComparison.Ordinal) ||
                    content.Contains("DbParameter", StringComparison.Ordinal) ||
@@ -647,22 +606,14 @@ internal static class WellKnownPatterns
 
         public static bool IsOverrideOrSealedMethod(string content)
         {
-            if (string.IsNullOrEmpty(content))
-            {
-                return false;
-            }
-
+            if (string.IsNullOrEmpty(content)) return false;
             return content.Contains(" override ", StringComparison.Ordinal) ||
                    content.Contains(" sealed ", StringComparison.Ordinal);
         }
 
         public static bool IsAbstractOrDelegateOrPartial(string content)
         {
-            if (string.IsNullOrEmpty(content))
-            {
-                return false;
-            }
-
+            if (string.IsNullOrEmpty(content)) return false;
             return content.Contains(" abstract ", StringComparison.Ordinal) ||
                    content.Contains(" delegate ", StringComparison.Ordinal) ||
                    content.Contains(" partial ", StringComparison.Ordinal);
@@ -672,23 +623,17 @@ internal static class WellKnownPatterns
         {
             if (filePath.Contains("Migrations/", StringComparison.OrdinalIgnoreCase) ||
                 filePath.Contains("\\Migrations\\", StringComparison.OrdinalIgnoreCase))
-            {
                 return true;
-            }
 
             if (filePath.EndsWith(".sql", StringComparison.OrdinalIgnoreCase) &&
                 (filePath.Contains("Migration", StringComparison.OrdinalIgnoreCase) ||
                  filePath.Contains("Seed", StringComparison.OrdinalIgnoreCase) ||
                  filePath.Contains("Setup", StringComparison.OrdinalIgnoreCase)))
-            {
                 return true;
-            }
 
             if (filePath.Contains("SeedData", StringComparison.OrdinalIgnoreCase) ||
                 filePath.Contains("DataSeeding", StringComparison.OrdinalIgnoreCase))
-            {
                 return true;
-            }
 
             return false;
         }
@@ -696,50 +641,22 @@ internal static class WellKnownPatterns
         public static bool IsUiEventHandler(string filePath)
         {
             var lower = filePath.ToLowerInvariant();
-            if (lower.EndsWith(".xaml.cs", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
-            if (lower.EndsWith(".razor.cs", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
+            if (lower.EndsWith(".xaml.cs", StringComparison.OrdinalIgnoreCase)) return true;
+            if (lower.EndsWith(".razor.cs", StringComparison.OrdinalIgnoreCase)) return true;
             if (lower.Contains("\\ui\\") || lower.Contains("/ui/") ||
                 lower.Contains("\\components\\") || lower.Contains("/components/") ||
                 lower.Contains("\\views\\") || lower.Contains("/views/") ||
-                lower.Contains("\\pages\\") || lower.Contains("/pages/"))
-            {
-                return true;
-            }
-
+                lower.Contains("\\pages\\") || lower.Contains("/pages/")) return true;
             return false;
         }
 
         public static bool IsDocumentationFile(string filePath)
         {
             var lower = filePath.ToLowerInvariant();
-            if (lower.Contains("snippet", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
-            if (lower.Contains("sample", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
-            if (lower.Contains("example", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
-            if (lower.Contains("demo", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-
+            if (lower.Contains("snippet", StringComparison.OrdinalIgnoreCase)) return true;
+            if (lower.Contains("sample", StringComparison.OrdinalIgnoreCase)) return true;
+            if (lower.Contains("example", StringComparison.OrdinalIgnoreCase)) return true;
+            if (lower.Contains("demo", StringComparison.OrdinalIgnoreCase)) return true;
             return false;
         }
 
@@ -749,10 +666,7 @@ internal static class WellKnownPatterns
             for (int j = idx - 1; j >= searchStart; j--)
             {
                 var trimmed = allLines[j].Content.Trim();
-                if (!trimmed.StartsWith("static ", StringComparison.Ordinal))
-                {
-                    continue;
-                }
+                if (!trimmed.StartsWith("static ", StringComparison.Ordinal)) continue;
 
                 var afterStatic = trimmed["static ".Length..].TrimStart();
                 if (afterStatic.StartsWith("void ", StringComparison.Ordinal) ||
@@ -766,14 +680,9 @@ internal static class WellKnownPatterns
                     afterStatic.StartsWith("IEnumerable", StringComparison.Ordinal) ||
                     afterStatic.StartsWith("List<", StringComparison.Ordinal) ||
                     afterStatic.StartsWith("Dictionary<", StringComparison.Ordinal))
-                {
                     continue;
-                }
 
-                if (afterStatic.Contains("()"))
-                {
-                    return true;
-                }
+                if (afterStatic.Contains("()")) return true;
             }
             return false;
         }
@@ -823,7 +732,7 @@ internal static class WellKnownPatterns
     /// </summary>
     public static bool IsOrmAsyncPattern(string content) =>
         !string.IsNullOrEmpty(content) &&
-        DomainSpecificPatterns.CodePatterns.OrmAsyncPatterns.Any(p =>
+        DomainSpecificPatterns.CodePatterns.OrmAsyncPatterns.Any(p => 
             content.Contains(p, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
@@ -834,9 +743,9 @@ internal static class WellKnownPatterns
         !string.IsNullOrEmpty(content) &&
         (content.Contains("UploadInBackground", StringComparison.OrdinalIgnoreCase) ||
          content.Contains("UploadAsync", StringComparison.OrdinalIgnoreCase) ||
-         (content.Contains("Task.Run", StringComparison.OrdinalIgnoreCase) &&
+         (content.Contains("Task.Run", StringComparison.OrdinalIgnoreCase) && 
           content.Contains("ContinueWith", StringComparison.OrdinalIgnoreCase)) ||
-         (content.Contains("Telemetry", StringComparison.OrdinalIgnoreCase) &&
+         (content.Contains("Telemetry", StringComparison.OrdinalIgnoreCase) && 
           content.Contains("Task.Run", StringComparison.OrdinalIgnoreCase)));
 
     /// <summary>
@@ -845,7 +754,7 @@ internal static class WellKnownPatterns
     /// </summary>
     public static bool IsBoundedSynchronization(string content) =>
         !string.IsNullOrEmpty(content) &&
-        DomainSpecificPatterns.CodePatterns.BoundedSynchronizationPatterns.Any(p =>
+        DomainSpecificPatterns.CodePatterns.BoundedSynchronizationPatterns.Any(p => 
             content.Contains(p, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
@@ -854,7 +763,7 @@ internal static class WellKnownPatterns
     /// </summary>
     public static bool IsInstanceScopedCache(string content) =>
         !string.IsNullOrEmpty(content) &&
-        DomainSpecificPatterns.CodePatterns.InstanceScopedCachePatterns.Any(p =>
+        DomainSpecificPatterns.CodePatterns.InstanceScopedCachePatterns.Any(p => 
             content.Contains(p, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
@@ -864,20 +773,14 @@ internal static class WellKnownPatterns
     /// </summary>
     public static bool IsBlockingAsyncWithoutTimeout(string content)
     {
-        if (string.IsNullOrEmpty(content))
-        {
-            return false;
-        }
+        if (string.IsNullOrEmpty(content)) return false;
 
         // Check for blocking patterns
         bool isBlocking = content.Contains(".Result", StringComparison.Ordinal) ||
                           content.Contains(".Wait()", StringComparison.Ordinal) ||
                           content.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal);
 
-        if (!isBlocking)
-        {
-            return false;
-        }
+        if (!isBlocking) return false;
 
         // Check for timeout/bound protection
         bool hasTimeout = TimeoutPatterns.Any(p => content.Contains(p, StringComparison.OrdinalIgnoreCase)) ||
@@ -895,10 +798,7 @@ internal static class WellKnownPatterns
     /// </summary>
     public static bool IsDataTransformedWithBoundary(string content)
     {
-        if (string.IsNullOrEmpty(content))
-        {
-            return false;
-        }
+        if (string.IsNullOrEmpty(content)) return false;
 
         // Precise transformation patterns with word boundaries or method context
         string[] patterns = new[]
@@ -929,9 +829,7 @@ internal static class WellKnownPatterns
         foreach (var pattern in patterns)
         {
             if (content.Contains(pattern, StringComparison.OrdinalIgnoreCase))
-            {
                 return true;
-            }
         }
 
         // Reflection guards (from DomainSpecificPatterns)
@@ -950,9 +848,7 @@ internal static class WellKnownPatterns
         foreach (var guard in reflectionGuards)
         {
             if (content.Contains(guard, StringComparison.Ordinal))
-            {
                 return true;
-            }
         }
 
         return false;

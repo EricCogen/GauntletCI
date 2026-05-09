@@ -56,14 +56,9 @@ public static class AuditCommand
 
             // Apply filters
             if (since.HasValue)
-            {
                 entries = [.. entries.Where(e => e.Timestamp >= since.Value)];
-            }
-
             if (last.HasValue)
-            {
                 entries = [.. entries.TakeLast(last.Value)];
-            }
 
             if (entries.Count == 0)
             {
@@ -74,13 +69,9 @@ public static class AuditCommand
 
             string output;
             if (format.Equals("csv", StringComparison.OrdinalIgnoreCase))
-            {
                 output = ToCsv(entries);
-            }
             else
-            {
                 output = JsonSerializer.Serialize(entries, new JsonSerializerOptions { WriteIndented = true });
-            }
 
             if (outputFile is not null)
             {
@@ -113,9 +104,7 @@ public static class AuditCommand
             var entries = await AuditLog.LoadAllAsync(ctx.GetCancellationToken());
 
             if (since.HasValue)
-            {
                 entries = [.. entries.Where(e => e.Timestamp >= since.Value)];
-            }
 
             if (entries.Count == 0)
             {
@@ -139,10 +128,7 @@ public static class AuditCommand
             if (totalFindings > 0)
             {
                 Console.WriteLine("[audit] Top rules:");
-                foreach (var r in topRules)
-                {
-                    Console.WriteLine(r);
-                }
+                foreach (var r in topRules) Console.WriteLine(r);
             }
         });
 
@@ -165,9 +151,7 @@ public static class AuditCommand
             else
             {
                 foreach (var f in e.Findings)
-                {
                     sb.AppendLine(CsvRow(e, f));
-                }
             }
         }
         return sb.ToString();
@@ -194,10 +178,7 @@ public static class AuditCommand
     private static string CsvEscape(string value)
     {
         if (value.Contains(',') || value.Contains('"') || value.Contains('\n'))
-        {
             return $"\"{value.Replace("\"", "\"\"")}\"";
-        }
-
         return value;
     }
 }

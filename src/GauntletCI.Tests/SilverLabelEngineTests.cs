@@ -184,9 +184,7 @@ public sealed class SilverLabelEngineTests
 
         // Assert: every expected rule is present and the set has the expected total
         foreach (var ruleId in expected)
-        {
             Assert.Contains(ruleId, SilverLabelEngine.RulesWithHeuristics);
-        }
 
         Assert.Equal(27, SilverLabelEngine.RulesWithHeuristics.Count);
     }
@@ -346,9 +344,7 @@ public sealed class SilverLabelEngineTests
         sb.AppendLine("+++ b/src/Large.cs");
         sb.AppendLine("@@ -1,3 +1,10003 @@");
         for (int i = 0; i < 10000; i++)
-        {
             sb.AppendLine($"+    int field{i} = {i};");
-        }
 
         var ex = await Record.ExceptionAsync(() => _engine.InferLabelsAsync("large", sb.ToString()));
 
@@ -457,7 +453,7 @@ public sealed class SilverLabelEngineTests
 
         // Assert: GCI0016 should definitely trigger on .Result
         Assert.Contains(labels, l => l.RuleId == "GCI0016" && l.ShouldTrigger);
-
+        
         // GCI0039 should trigger on new HttpClient() in non-test file
         var gci0039 = labels.FirstOrDefault(l => l.RuleId == "GCI0039");
         if (gci0039 != null)
@@ -666,12 +662,12 @@ public sealed class SilverLabelEngineTests
         // Assert: If GCI0044 is detected, it should NOT be boosted (no coordination without GCI0035)
         var gci0044 = labels.FirstOrDefault(l => l.RuleId == "GCI0044" && l.ShouldTrigger);
         var gci0035 = labels.FirstOrDefault(l => l.RuleId == "GCI0035" && l.ShouldTrigger);
-
+        
         // Either GCI0044 not fired (null is ok) or it fired without coordination
         if (gci0044 != null && gci0035 == null)
         {
             // GCI0044 fired alone - confidence should NOT be coordination-boosted
-            Assert.True(gci0044.ExpectedConfidence <= 0.60,
+            Assert.True(gci0044.ExpectedConfidence <= 0.60, 
                 "GCI0044 alone should not be boosted to 0.75+");
         }
     }
@@ -704,8 +700,8 @@ public sealed class SilverLabelEngineTests
             if (gci0044.ExpectedConfidence >= 0.50 && gci0035.ExpectedConfidence >= 0.50)
             {
                 // Coordination should apply
-                Assert.Contains(labels, l =>
-                    l.Reason != null && l.Reason.Contains("[coordination]"));
+                Assert.NotEmpty(labels.Where(l => 
+                    l.Reason != null && l.Reason.Contains("[coordination]")));
             }
         }
     }
@@ -727,23 +723,17 @@ public sealed class SilverLabelEngineTests
         var labels = await _engine.InferLabelsAsync("p23-p4-partial", diff);
 
         // Assert: No coordination boost when only one rule or confidence too low
-        var coordinationLabels = labels.Where(l =>
+        var coordinationLabels = labels.Where(l => 
             l.Reason != null && l.Reason.Contains("[coordination]")).ToList();
-
+        
         // If GCI0044 and GCI0035 both trigger with high confidence, coordination applies
         // Otherwise, no coordination marker expected
         var gci0044Coor = coordinationLabels.FirstOrDefault(l => l.RuleId == "GCI0044");
         var gci0035Coor = coordinationLabels.FirstOrDefault(l => l.RuleId == "GCI0035");
-
+        
         // Either both coordinated or neither (no single coordination)
-        if (gci0044Coor != null)
-        {
-            Assert.NotNull(gci0035Coor);
-        }
-        if (gci0035Coor != null)
-        {
-            Assert.NotNull(gci0044Coor);
-        }
+        if (gci0044Coor != null) Assert.NotNull(gci0035Coor);
+        if (gci0035Coor != null) Assert.NotNull(gci0044Coor);
     }
 
     // --- Phase 23.2 P5 (Serialization Safety Coordination) Tests ---
@@ -767,12 +757,12 @@ public sealed class SilverLabelEngineTests
         // Assert: If GCI0039 is detected, it should NOT be boosted (no coordination without GCI0048)
         var gci0039 = labels.FirstOrDefault(l => l.RuleId == "GCI0039" && l.ShouldTrigger);
         var gci0048 = labels.FirstOrDefault(l => l.RuleId == "GCI0048" && l.ShouldTrigger);
-
+        
         // Either GCI0039 not fired (null is ok) or it fired without coordination
         if (gci0039 != null && gci0048 == null)
         {
             // GCI0039 fired alone - confidence should NOT be coordination-boosted
-            Assert.True(gci0039.ExpectedConfidence <= 0.65,
+            Assert.True(gci0039.ExpectedConfidence <= 0.65, 
                 "GCI0039 alone should not be boosted to 0.85+");
         }
     }
@@ -805,9 +795,9 @@ public sealed class SilverLabelEngineTests
             if (gci0039.ExpectedConfidence >= 0.55 && gci0048.ExpectedConfidence >= 0.60)
             {
                 // Coordination should apply
-                Assert.Contains(labels, l =>
-                    l.Reason != null && l.Reason.Contains("[coordination]") &&
-                    (l.RuleId == "GCI0039" || l.RuleId == "GCI0048"));
+                Assert.NotEmpty(labels.Where(l => 
+                    l.Reason != null && l.Reason.Contains("[coordination]") && 
+                    (l.RuleId == "GCI0039" || l.RuleId == "GCI0048")));
             }
         }
     }
@@ -829,23 +819,17 @@ public sealed class SilverLabelEngineTests
         var labels = await _engine.InferLabelsAsync("p23-p5-partial", diff);
 
         // Assert: No coordination boost when only one rule or confidence too low
-        var coordinationLabels = labels.Where(l =>
+        var coordinationLabels = labels.Where(l => 
             l.Reason != null && l.Reason.Contains("[coordination]")).ToList();
-
+        
         // If GCI0039 and GCI0048 both trigger with high confidence, coordination applies
         // Otherwise, no coordination marker expected
         var gci0039Coor = coordinationLabels.FirstOrDefault(l => l.RuleId == "GCI0039");
         var gci0048Coor = coordinationLabels.FirstOrDefault(l => l.RuleId == "GCI0048");
-
+        
         // Either both coordinated or neither (no single coordination)
-        if (gci0039Coor != null)
-        {
-            Assert.NotNull(gci0048Coor);
-        }
-        if (gci0048Coor != null)
-        {
-            Assert.NotNull(gci0039Coor);
-        }
+        if (gci0039Coor != null) Assert.NotNull(gci0048Coor);
+        if (gci0048Coor != null) Assert.NotNull(gci0039Coor);
     }
 
     // --- Phase 23.3 P6 (Dependency Injection Coordination) Tests ---
@@ -869,12 +853,12 @@ public sealed class SilverLabelEngineTests
         // Assert: If GCI0045 is detected, it should NOT be boosted (no coordination without GCI0016)
         var gci0045 = labels.FirstOrDefault(l => l.RuleId == "GCI0045" && l.ShouldTrigger);
         var gci0016 = labels.FirstOrDefault(l => l.RuleId == "GCI0016" && l.ShouldTrigger);
-
+        
         // Either GCI0045 not fired (null is ok) or it fired without coordination
         if (gci0045 != null && gci0016 == null)
         {
             // GCI0045 fired alone - confidence should NOT be coordination-boosted
-            Assert.True(gci0045.ExpectedConfidence <= 0.65,
+            Assert.True(gci0045.ExpectedConfidence <= 0.65, 
                 "GCI0045 alone should not be boosted to 0.75+");
         }
     }
@@ -906,9 +890,9 @@ public sealed class SilverLabelEngineTests
             if (gci0045.ExpectedConfidence >= 0.60 && gci0016.ExpectedConfidence >= 0.55)
             {
                 // Coordination should apply
-                Assert.Contains(labels, l =>
-                    l.Reason != null && l.Reason.Contains("[coordination]") &&
-                    (l.RuleId == "GCI0045" || l.RuleId == "GCI0016"));
+                Assert.NotEmpty(labels.Where(l => 
+                    l.Reason != null && l.Reason.Contains("[coordination]") && 
+                    (l.RuleId == "GCI0045" || l.RuleId == "GCI0016")));
             }
         }
     }
@@ -930,22 +914,16 @@ public sealed class SilverLabelEngineTests
         var labels = await _engine.InferLabelsAsync("p23-p6-partial", diff);
 
         // Assert: No coordination boost when only one rule or confidence too low
-        var coordinationLabels = labels.Where(l =>
+        var coordinationLabels = labels.Where(l => 
             l.Reason != null && l.Reason.Contains("[coordination]")).ToList();
-
+        
         // If GCI0045 and GCI0016 both trigger with high confidence, coordination applies
         // Otherwise, no coordination marker expected
         var gci0045Coor = coordinationLabels.FirstOrDefault(l => l.RuleId == "GCI0045");
         var gci0016Coor = coordinationLabels.FirstOrDefault(l => l.RuleId == "GCI0016");
-
+        
         // Either both coordinated or neither (no single coordination)
-        if (gci0045Coor != null)
-        {
-            Assert.NotNull(gci0016Coor);
-        }
-        if (gci0016Coor != null)
-        {
-            Assert.NotNull(gci0045Coor);
-        }
+        if (gci0045Coor != null) Assert.NotNull(gci0016Coor);
+        if (gci0016Coor != null) Assert.NotNull(gci0045Coor);
     }
 }

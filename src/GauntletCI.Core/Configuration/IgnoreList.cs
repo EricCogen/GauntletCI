@@ -15,26 +15,18 @@ public class IgnoreList
 {
     private readonly List<(string RuleId, string? PathGlob)> _entries = [];
 
-    private IgnoreList()
-    {
-    }
+    private IgnoreList() { }
 
     public static IgnoreList Load(string repoPath)
     {
         var list = new IgnoreList();
         var path = Path.Combine(repoPath, ".gauntletci-ignore");
-        if (!File.Exists(path))
-        {
-            return list;
-        }
+        if (!File.Exists(path)) return list;
 
         foreach (var raw in File.ReadAllLines(path))
         {
             var line = raw.Trim();
-            if (string.IsNullOrEmpty(line) || line.StartsWith('#'))
-            {
-                continue;
-            }
+            if (string.IsNullOrEmpty(line) || line.StartsWith('#')) continue;
 
             var parts = line.Split(':', 2);
             var ruleId = parts[0].Trim().ToUpperInvariant();
@@ -52,25 +44,10 @@ public class IgnoreList
     {
         foreach (var (id, glob) in _entries)
         {
-            if (!id.Equals(ruleId, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            if (glob is null)
-            {
-                return true;
-            }
-
-            if (filePath is null)
-            {
-                continue;
-            }
-
-            if (GlobMatches(glob, filePath))
-            {
-                return true;
-            }
+            if (!id.Equals(ruleId, StringComparison.OrdinalIgnoreCase)) continue;
+            if (glob is null) return true;
+            if (filePath is null) continue;
+            if (GlobMatches(glob, filePath)) return true;
         }
         return false;
     }

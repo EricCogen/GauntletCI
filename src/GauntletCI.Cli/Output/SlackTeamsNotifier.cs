@@ -37,37 +37,31 @@ public static class SlackTeamsNotifier
     {
         var blockFindings = result.Findings.Where(f => f.Severity == RuleSeverity.Block).ToList();
         if (blockFindings.Count == 0)
-        {
             return;
-        }
 
-        var repo = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
-        var sha = Environment.GetEnvironmentVariable("GITHUB_SHA");
+        var repo  = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
+        var sha   = Environment.GetEnvironmentVariable("GITHUB_SHA");
         var prNum = ResolvePrNumber();
         var shortSha = !string.IsNullOrEmpty(sha) && sha.Length >= 8 ? sha[..8] : sha ?? "unknown";
         var prNumStr = prNum?.ToString(); // Convert int? to string?
 
         var tasks = new List<Task>();
-
+        
         if (slackUrl is not null)
-        {
             tasks.Add(SendSlackNotificationAsync(result, repo, prNumStr, shortSha, slackUrl, ct));
-        }
-
+        
         if (teamsUrl is not null)
-        {
             tasks.Add(SendTeamsNotificationAsync(result, repo, prNumStr, shortSha, teamsUrl, ct));
-        }
-
+        
         // Send notifications in parallel (both at once if both URLs exist)
         await Task.WhenAll(tasks);
     }
 
     private static async Task SendSlackNotificationAsync(
-        EvaluationResult result,
-        string? repo,
-        string? prNum,
-        string shortSha,
+        EvaluationResult result, 
+        string? repo, 
+        string? prNum, 
+        string shortSha, 
         string slackUrl,
         CancellationToken ct)
     {
@@ -89,10 +83,10 @@ public static class SlackTeamsNotifier
     }
 
     private static async Task SendTeamsNotificationAsync(
-        EvaluationResult result,
-        string? repo,
-        string? prNum,
-        string shortSha,
+        EvaluationResult result, 
+        string? repo, 
+        string? prNum, 
+        string shortSha, 
         string teamsUrl,
         CancellationToken ct)
     {
@@ -121,9 +115,7 @@ public static class SlackTeamsNotifier
     {
         var blockFindings = result.Findings.Where(f => f.Severity == RuleSeverity.Block).ToList();
         if (blockFindings.Count == 0)
-        {
             return string.Empty;
-        }
 
         var blocks = new List<object>
         {
@@ -135,34 +127,14 @@ public static class SlackTeamsNotifier
         var top3 = blockFindings.Take(3).ToList();
         foreach (var f in top3)
         {
-            blocks.Add(new
-            {
-                type = "section",
-                text = new
-                {
-                    type = "mrkdwn",
-                    text = $"*[{f.RuleId}]* {f.RuleName}\n_{f.Summary}_\n> {f.Evidence}"
-                }
-            });
-            blocks.Add(new
-            {
-                type = "divider"
-            });
+            blocks.Add(new { type = "section", text = new { type = "mrkdwn", text = $"*[{f.RuleId}]* {f.RuleName}\n_{f.Summary}_\n> {f.Evidence}" } });
+            blocks.Add(new { type = "divider" });
         }
 
         if (blockFindings.Count > 3)
-        {
-            blocks.Add(new
-            {
-                type = "context",
-                elements = new[] { new { type = "mrkdwn", text = $"...and {blockFindings.Count - 3} more Block findings" } }
-            });
-        }
+            blocks.Add(new { type = "context", elements = new[] { new { type = "mrkdwn", text = $"...and {blockFindings.Count - 3} more Block findings" } } });
 
-        return JsonSerializer.Serialize(new
-        {
-            blocks
-        });
+        return JsonSerializer.Serialize(new { blocks });
     }
 
     internal static string BuildTeamsPayload(
@@ -176,11 +148,11 @@ public static class SlackTeamsNotifier
 
         var payload = new
         {
-            @type = "MessageCard",
+            @type    = "MessageCard",
             @context = "https://schema.org/extensions",
             themeColor = "FF0000",
-            summary = "GauntletCI Alert",
-            title = "🚨 GauntletCI: High-Risk PR",
+            summary  = "GauntletCI Alert",
+            title    = "🚨 GauntletCI: High-Risk PR",
             sections = new[]
             {
                 new
@@ -203,18 +175,14 @@ public static class SlackTeamsNotifier
     {
         var explicit_ = Environment.GetEnvironmentVariable("GAUNTLETCI_PR_NUMBER");
         if (!string.IsNullOrEmpty(explicit_))
-        {
             return explicit_;
-        }
 
         var ghRef = Environment.GetEnvironmentVariable("GITHUB_REF");
         if (!string.IsNullOrEmpty(ghRef))
         {
             var parts = ghRef.Split('/');
             if (parts.Length >= 4 && parts[1] == "pull")
-            {
                 return parts[2];
-            }
         }
 
         return null;

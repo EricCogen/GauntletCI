@@ -41,11 +41,9 @@ public class EnrichmentPipeline
             foreach (var dep in enricher.DependsOn)
             {
                 if (!_enrichersByName.ContainsKey(dep))
-                {
                     throw new InvalidOperationException(
                         $"Enricher '{enricher.StageName}' depends on '{dep}' which is not registered. " +
                         $"Available: {string.Join(", ", _enrichersByName.Keys.OrderBy(k => k))}");
-                }
             }
         }
 
@@ -85,14 +83,8 @@ public class EnrichmentPipeline
                 try
                 {
                     var enriched = await enricher.EnrichAsync(finding, ct).ConfigureAwait(false);
-                    if (enriched)
-                    {
-                        successCount++;
-                    }
-                    else
-                    {
-                        skipCount++;
-                    }
+                    if (enriched) successCount++;
+                    else skipCount++;
                 }
                 catch (Exception ex)
                 {
@@ -146,18 +138,14 @@ public class EnrichmentPipeline
             {
                 inDegree[neighbor]--;
                 if (inDegree[neighbor] == 0)
-                {
                     queue.Enqueue(neighbor);
-                }
             }
         }
 
         if (result.Count != _enrichers.Count)
-        {
             throw new InvalidOperationException(
                 $"Circular dependency detected in enrichment pipeline. " +
                 $"Enrichers with cycles: {string.Join(", ", inDegree.Where(kv => kv.Value > 0).Select(kv => kv.Key).OrderBy(k => k))}");
-        }
 
         return result;
     }
@@ -202,34 +190,19 @@ public class StageMetric
     }
 
     /// <summary>Name of the enricher stage.</summary>
-    public string StageName
-    {
-        get;
-    }
+    public string StageName { get; }
 
     /// <summary>Time spent in this stage (milliseconds).</summary>
-    public long ElapsedMilliseconds
-    {
-        get;
-    }
+    public long ElapsedMilliseconds { get; }
 
     /// <summary>Number of findings successfully enriched by this stage.</summary>
-    public int SuccessCount
-    {
-        get;
-    }
+    public int SuccessCount { get; }
 
     /// <summary>Number of findings skipped by this stage (e.g., already enriched, not applicable).</summary>
-    public int SkipCount
-    {
-        get;
-    }
+    public int SkipCount { get; }
 
     /// <summary>Total findings processed by this stage.</summary>
-    public int FindingCount
-    {
-        get;
-    }
+    public int FindingCount { get; }
 
     /// <summary>Success rate as a percentage (0-100).</summary>
     public decimal SuccessRate => FindingCount == 0 ? 0 : (SuccessCount * 100m) / FindingCount;

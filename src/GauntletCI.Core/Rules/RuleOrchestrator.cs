@@ -85,7 +85,7 @@ public class RuleOrchestrator
     {
         config ??= new GauntletConfig();
         var configService = new ConfigurationService(config, repoPath);
-
+        
         // GCI0024 Suppression: DefaultPatternProvider is stateless and non-disposable.
         // No resources allocated; safe to create without using statement.
         var patternProvider = new DefaultPatternProvider();
@@ -121,9 +121,7 @@ public class RuleOrchestrator
 
         // Wire config into rules that need it
         foreach (var rule in rules.OfType<IConfigurableRule>())
-        {
             rule.Configure(config);
-        }
 
         return new RuleOrchestrator(rules, config, ruleTimeout, configService: configService);
     }
@@ -152,44 +150,41 @@ public class RuleOrchestrator
             .Where(r => r.IsEligible &&
                         r.Extension.Equals(".cs", StringComparison.OrdinalIgnoreCase))
             .ToList();
-        var skippedRecords = allRecords
+        var skippedRecords  = allRecords
             .Where(r => !r.IsEligible ||
                         !r.Extension.Equals(".cs", StringComparison.OrdinalIgnoreCase))
             .ToList();
-        var fileStatistics = FileEligibilityStatistics.From(allRecords);
+        var fileStatistics  = FileEligibilityStatistics.From(allRecords);
 
         var eligibleFilePaths = eligibleRecords.Select(r => r.FilePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var filteredDiff = new DiffContext
         {
-            RawDiff = diff.RawDiff,
-            CommitSha = diff.CommitSha,
+            RawDiff       = diff.RawDiff,
+            CommitSha     = diff.CommitSha,
             CommitMessage = diff.CommitMessage,
-            Files = diff.Files.Where(f => eligibleFilePaths.Contains(f.NewPath)).ToList(),
+            Files         = diff.Files.Where(f => eligibleFilePaths.Contains(f.NewPath)).ToList(),
         };
 
         var context = new AnalysisContext
         {
-            EligibleFiles = eligibleRecords,
-            SkippedFiles = skippedRecords,
-            FileStatistics = fileStatistics,
-            Diff = filteredDiff,
-            StaticAnalysis = staticAnalysis,
-            Syntax = staticAnalysis?.Syntax,
+            EligibleFiles   = eligibleRecords,
+            SkippedFiles    = skippedRecords,
+            FileStatistics  = fileStatistics,
+            Diff            = filteredDiff,
+            StaticAnalysis  = staticAnalysis,
+            Syntax          = staticAnalysis?.Syntax,
             TargetFramework = staticAnalysis?.TargetFramework,
         };
 
         var allFindings = new List<Finding>();
-        var metrics = new List<RuleExecutionMetric>();
+        var metrics     = new List<RuleExecutionMetric>();
 
         foreach (var rule in _rules)
         {
             ct.ThrowIfCancellationRequested();
 
             var severity = _configService.GetEffectiveSeverity(rule.Id);
-            if (severity == RuleSeverity.None)
-            {
-                continue;  // rule disabled via config
-            }
+            if (severity == RuleSeverity.None) continue;  // rule disabled via config
 
             using var ruleCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
             ruleCts.CancelAfter(_ruleTimeout);
@@ -199,16 +194,9 @@ public class RuleOrchestrator
             try
             {
                 var findings = await rule.EvaluateAsync(context, ruleCts.Token).ConfigureAwait(false);
-                foreach (var f in findings)
-                {
-                    f.Severity = severity;
-                }
-
+                foreach (var f in findings) f.Severity = severity;
                 allFindings.AddRange(findings);
-                if (findings.Count > 0)
-                {
-                    outcome = RuleOutcome.Triggered;
-                }
+                if (findings.Count > 0) outcome = RuleOutcome.Triggered;
             }
             catch (OperationCanceledException) when (!ct.IsCancellationRequested)
             {
@@ -216,14 +204,14 @@ public class RuleOrchestrator
                 Console.Error.WriteLine($"[GauntletCI] Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s: analysis truncated.");
                 allFindings.Add(new Finding
                 {
-                    RuleId = rule.Id,
-                    RuleName = rule.Name,
-                    Summary = $"Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s: results may be incomplete.",
-                    Evidence = $"Analysis exceeded the {_ruleTimeout.TotalSeconds:0}-second per-rule time limit.",
-                    WhyItMatters = "A timeout may indicate pathologically complex diff input (Roslyn Bomb) or a hung analyzer.",
+                    RuleId          = rule.Id,
+                    RuleName        = rule.Name,
+                    Summary         = $"Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s: results may be incomplete.",
+                    Evidence        = $"Analysis exceeded the {_ruleTimeout.TotalSeconds:0}-second per-rule time limit.",
+                    WhyItMatters    = "A timeout may indicate pathologically complex diff input (Roslyn Bomb) or a hung analyzer.",
                     SuggestedAction = "Investigate the diff for unusual patterns or report this as a GauntletCI issue.",
-                    Confidence = Confidence.Medium,
-                    Severity = RuleSeverity.Warn,
+                    Confidence      = Confidence.Medium,
+                    Severity        = RuleSeverity.Warn,
                 });
             }
             catch (Exception ex)
@@ -232,14 +220,14 @@ public class RuleOrchestrator
                 Console.Error.WriteLine($"[GauntletCI] Rule {rule.Id} threw an exception: {ex.Message}");
                 allFindings.Add(new Finding
                 {
-                    RuleId = rule.Id,
-                    RuleName = rule.Name,
-                    Summary = $"Rule {rule.Id} encountered an internal error and could not complete analysis.",
-                    Evidence = ex.GetType().Name + ": " + ex.Message,
-                    WhyItMatters = "An errored rule may have missed real issues in this diff.",
+                    RuleId          = rule.Id,
+                    RuleName        = rule.Name,
+                    Summary         = $"Rule {rule.Id} encountered an internal error and could not complete analysis.",
+                    Evidence        = ex.GetType().Name + ": " + ex.Message,
+                    WhyItMatters    = "An errored rule may have missed real issues in this diff.",
                     SuggestedAction = "Report this error at https://github.com/EricCogen/GauntletCI/issues.",
-                    Confidence = Confidence.Low,
-                    Severity = RuleSeverity.Warn,
+                    Confidence      = Confidence.Low,
+                    Severity        = RuleSeverity.Warn,
                 });
             }
             finally
@@ -254,10 +242,10 @@ public class RuleOrchestrator
 
         return new EvaluationResult
         {
-            CommitSha = diff.CommitSha,
-            Findings = allFindings,
+            CommitSha      = diff.CommitSha,
+            Findings       = allFindings,
             RulesEvaluated = _rules.Count,
-            RuleMetrics = metrics,
+            RuleMetrics    = metrics,
             FileStatistics = fileStatistics,
         };
     }
@@ -266,20 +254,14 @@ public class RuleOrchestrator
     {
         // Explicit Enabled=false in config always wins
         if (config.Rules.TryGetValue(ruleId, out var rc) && !rc.Enabled)
-        {
             return false;
-        }
         // Severity==None also disables the rule
         return configService.GetEffectiveSeverity(ruleId) != RuleSeverity.None;
     }
 
     private static void ApplyIgnoreList(List<Finding> findings, IgnoreList? ignoreList)
     {
-        if (ignoreList is null || ignoreList.IsEmpty)
-        {
-            return;
-        }
-
+        if (ignoreList is null || ignoreList.IsEmpty) return;
         findings.RemoveAll(f => ignoreList.IsSuppressed(f.RuleId, f.FilePath));
     }
 
@@ -296,10 +278,7 @@ public class RuleOrchestrator
             foreach (var processor in _rules.OfType<IPostProcessor>())
             {
                 var finding = processor.PostProcess(diff);
-                if (finding != null)
-                {
-                    allFindings.Add(finding);
-                }
+                if (finding != null) allFindings.Add(finding);
             }
         }
         catch (Exception ex)
@@ -317,10 +296,7 @@ public class EvaluationResult
     /// <summary>All findings raised by any rule during this evaluation run.</summary>
     public List<Finding> Findings { get; init; } = [];
     /// <summary>The total number of rules that were executed.</summary>
-    public int RulesEvaluated
-    {
-        get; init;
-    }
+    public int RulesEvaluated { get; init; }
     /// <summary>Per-rule timing and outcome metrics for diagnostics and reporting.</summary>
     public IReadOnlyList<RuleExecutionMetric> RuleMetrics { get; init; } = [];
     /// <summary>Summary of how each changed file was classified for eligibility.</summary>
@@ -342,10 +318,7 @@ public class EvaluationResult
 }
 
 /// <summary>The outcome of a single rule's execution within a run.</summary>
-public enum RuleOutcome
-{
-    Passed, Triggered, TimedOut, Errored
-}
+public enum RuleOutcome { Passed, Triggered, TimedOut, Errored }
 
 /// <summary>Per-rule execution timing and outcome, attached to every <see cref="EvaluationResult"/>.</summary>
 public record RuleExecutionMetric(string RuleId, long DurationMs, RuleOutcome Outcome, int FindingCount);

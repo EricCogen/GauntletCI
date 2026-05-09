@@ -34,11 +34,7 @@ public sealed class SyntaxContext
     {
         ArgumentNullException.ThrowIfNull(filePath);
         ArgumentNullException.ThrowIfNull(typeName);
-        if (!TryGetTree(filePath, out var tree))
-        {
-            return true;
-        }
-
+        if (!TryGetTree(filePath, out var tree)) return true;
         return SyntaxGuard.HasObjectCreation(tree!, lineNumber, typeName);
     }
 
@@ -49,20 +45,13 @@ public sealed class SyntaxContext
     public bool IsInCommentOrStringLiteral(string filePath, int lineNumber, int columnOffset = 0)
     {
         ArgumentNullException.ThrowIfNull(filePath);
-        if (!TryGetTree(filePath, out var tree))
-        {
-            return false;
-        }
-
+        if (!TryGetTree(filePath, out var tree)) return false;
         return SyntaxGuard.IsInCommentOrStringLiteral(tree!, lineNumber, columnOffset);
     }
 
     private bool TryGetTree(string filePath, out SyntaxTree? tree)
     {
-        if (_trees.TryGetValue(filePath, out tree))
-        {
-            return true;
-        }
+        if (_trees.TryGetValue(filePath, out tree)) return true;
 
         // Normalize separators for cross-platform path matching
         var normalized = filePath.Replace('\\', '/');

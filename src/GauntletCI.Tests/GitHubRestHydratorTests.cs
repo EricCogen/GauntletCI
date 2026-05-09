@@ -13,9 +13,7 @@ public class GitHubRestHydratorTests : IDisposable
     public void Dispose()
     {
         if (Directory.Exists(_tempDir))
-        {
             Directory.Delete(_tempDir, recursive: true);
-        }
     }
 
     // ── Hand-rolled HTTP double ───────────────────────────────────────────────
@@ -33,10 +31,7 @@ public class GitHubRestHydratorTests : IDisposable
     }
 
     private static HttpResponseMessage Ok(string json)
-        => new(HttpStatusCode.OK)
-        {
-            Content = new StringContent(json)
-        };
+        => new(HttpStatusCode.OK) { Content = new StringContent(json) };
 
     // ── ParsePrUrl ────────────────────────────────────────────────────────────
 
@@ -122,9 +117,9 @@ public class GitHubRestHydratorTests : IDisposable
     {
         // Arrange
         using var handler = new FakeHttpHandler(_ => Ok("{}"));
-        using var http = new HttpClient(handler);
-        var store = new RawSnapshotStore(_tempDir);
-        using var sut = new GitHubRestHydrator(http, store);
+        using var http    = new HttpClient(handler);
+        var store         = new RawSnapshotStore(_tempDir);
+        using var sut     = new GitHubRestHydrator(http, store);
 
         // Act / Assert
         await Assert.ThrowsAsync<ArgumentException>(
@@ -137,43 +132,27 @@ public class GitHubRestHydratorTests : IDisposable
         // Arrange
         const string prJson =
             """{"title":"Test PR","body":"Closes #1","state":"merged","base":{"sha":"abc"},"head":{"sha":"def"},"merge_commit_sha":"ghi","changed_files":2,"additions":10,"deletions":5}""";
-        const string filesJson = "[]";
+        const string filesJson    = "[]";
         const string commentsJson = "[]";
-        const string commitsJson = """[{"sha":"def123"}]""";
-        const string diffText = "+++ some diff text";
+        const string commitsJson  = """[{"sha":"def123"}]""";
+        const string diffText     = "+++ some diff text";
 
         using var handler = new FakeHttpHandler(req =>
         {
-            var path = req.RequestUri!.PathAndQuery;
+            var path   = req.RequestUri!.PathAndQuery;
             var accept = req.Headers.Accept.ToString();
 
-            if (accept.Contains("diff"))
-            {
-                return Ok(diffText);
-            }
-
-            if (path.Contains("/files"))
-            {
-                return Ok(filesJson);
-            }
-
-            if (path.Contains("/comments"))
-            {
-                return Ok(commentsJson);
-            }
-
-            if (path.Contains("/commits"))
-            {
-                return Ok(commitsJson);
-            }
-
+            if (accept.Contains("diff"))        return Ok(diffText);
+            if (path.Contains("/files"))        return Ok(filesJson);
+            if (path.Contains("/comments"))     return Ok(commentsJson);
+            if (path.Contains("/commits"))      return Ok(commitsJson);
             return Ok(prJson);
         });
 
         using var http = new HttpClient(handler);
         http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Test");
 
-        var store = new RawSnapshotStore(_tempDir);
+        var store    = new RawSnapshotStore(_tempDir);
         using var sut = new GitHubRestHydrator(http, store);
 
         // Act
@@ -182,15 +161,15 @@ public class GitHubRestHydratorTests : IDisposable
 
         // Assert
         Assert.Equal("owner", result.RepoOwner);
-        Assert.Equal("repo", result.RepoName);
-        Assert.Equal(1234, result.PullRequestNumber);
+        Assert.Equal("repo",  result.RepoName);
+        Assert.Equal(1234,    result.PullRequestNumber);
         Assert.Equal("Test PR", result.Title);
         Assert.Equal("abc", result.BaseSha);
         Assert.Equal("def", result.HeadSha);
         Assert.Equal("ghi", result.MergeCommitSha);
-        Assert.Equal(2, result.FilesChangedCount);
+        Assert.Equal(2,  result.FilesChangedCount);
         Assert.Equal(10, result.Additions);
-        Assert.Equal(5, result.Deletions);
+        Assert.Equal(5,  result.Deletions);
         Assert.Equal(diffText, result.DiffText);
         var commit = Assert.Single(result.Commits);
         Assert.Equal("def123", commit);

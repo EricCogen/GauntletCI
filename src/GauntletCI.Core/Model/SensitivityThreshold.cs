@@ -35,9 +35,7 @@ public static class SensitivityFilter
     public static bool Passes(RuleSeverity severity, Confidence confidence, SensitivityThreshold threshold)
     {
         if (severity is RuleSeverity.Advisory or RuleSeverity.Info or RuleSeverity.None)
-        {
             return true;
-        }
 
         return threshold switch
         {

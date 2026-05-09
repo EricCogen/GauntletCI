@@ -10,16 +10,16 @@ public class GitHubAnnotationWriterBuildMessageTests
         string summary = "test finding",
         string? llmExplanation = null,
         ExpertFact? expertContext = null) => new()
-        {
-            RuleId = "GCI0001",
-            RuleName = "Test Rule",
-            Summary = summary,
-            Evidence = "some code",
-            WhyItMatters = "it matters",
-            SuggestedAction = "fix it",
-            LlmExplanation = llmExplanation,
-            ExpertContext = expertContext,
-        };
+    {
+        RuleId = "GCI0001",
+        RuleName = "Test Rule",
+        Summary = summary,
+        Evidence = "some code",
+        WhyItMatters = "it matters",
+        SuggestedAction = "fix it",
+        LlmExplanation = llmExplanation,
+        ExpertContext = expertContext,
+    };
 
     [Fact]
     public void BuildMessage_SummaryOnly_ReturnsSanitizedSummary()

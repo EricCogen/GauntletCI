@@ -7,6 +7,4 @@ namespace GauntletCI.Tests;
 /// concurrently causes cross-test output capture races.
 /// </summary>
 [CollectionDefinition("ConsoleOut", DisableParallelization = true)]
-public class ConsoleOutCollection
-{
-}
+public class ConsoleOutCollection { }

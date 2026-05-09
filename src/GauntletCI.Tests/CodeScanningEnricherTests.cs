@@ -129,7 +129,7 @@ public sealed class CodeScanningEnricherTests
         Assert.Equal("", alert.State);
         Assert.Equal("", alert.ToolName);
         Assert.Equal("", alert.Message);
-        Assert.Equal(0, alert.StartLine);
+        Assert.Equal(0,  alert.StartLine);
     }
 
     [Fact]
@@ -137,26 +137,26 @@ public sealed class CodeScanningEnricherTests
     {
         var alert = new CodeScanningAlert
         {
-            Repo = "dotnet/runtime",
-            FilePath = "src/libraries/Foo.cs",
-            RuleId = "cs/sql-injection",
-            RuleName = "Database query from user input",
-            Severity = "error",
-            State = "open",
-            ToolName = "CodeQL",
-            Message = "This query is vulnerable.",
+            Repo      = "dotnet/runtime",
+            FilePath  = "src/libraries/Foo.cs",
+            RuleId    = "cs/sql-injection",
+            RuleName  = "Database query from user input",
+            Severity  = "error",
+            State     = "open",
+            ToolName  = "CodeQL",
+            Message   = "This query is vulnerable.",
             StartLine = 42,
         };
 
-        Assert.Equal("dotnet/runtime", alert.Repo);
-        Assert.Equal("src/libraries/Foo.cs", alert.FilePath);
-        Assert.Equal("cs/sql-injection", alert.RuleId);
-        Assert.Equal("Database query from user input", alert.RuleName);
-        Assert.Equal("error", alert.Severity);
-        Assert.Equal("open", alert.State);
-        Assert.Equal("CodeQL", alert.ToolName);
-        Assert.Equal("This query is vulnerable.", alert.Message);
-        Assert.Equal(42, alert.StartLine);
+        Assert.Equal("dotnet/runtime",                  alert.Repo);
+        Assert.Equal("src/libraries/Foo.cs",            alert.FilePath);
+        Assert.Equal("cs/sql-injection",                alert.RuleId);
+        Assert.Equal("Database query from user input",  alert.RuleName);
+        Assert.Equal("error",                           alert.Severity);
+        Assert.Equal("open",                            alert.State);
+        Assert.Equal("CodeQL",                          alert.ToolName);
+        Assert.Equal("This query is vulnerable.",       alert.Message);
+        Assert.Equal(42,                                alert.StartLine);
     }
 
     // ── helpers ───────────────────────────────────────────────────────────────

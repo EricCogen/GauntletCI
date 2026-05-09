@@ -9,10 +9,7 @@ namespace GauntletCI.Tests.Rules;
 public class GCI0035Tests
 {
     private static GCI0035_ArchitectureLayerGuard CreateRule() =>
-        CreateRule(new()
-        {
-            ["Domain"] = ["Infrastructure"]
-        });
+        CreateRule(new() { ["Domain"] = ["Infrastructure"] });
 
     private static GCI0035_ArchitectureLayerGuard CreateRule(Dictionary<string, List<string>> imports)
     {
@@ -122,10 +119,7 @@ public class GCI0035Tests
             """;
 
         var diff = DiffParser.Parse(raw);
-        var rule = CreateRule(new()
-        {
-            ["Application"] = ["Infrastructure"]
-        });
+        var rule = CreateRule(new() { ["Application"] = ["Infrastructure"] });
         var findings = await rule.EvaluateAsync(diff, null);
 
         Assert.Contains(findings, f => f.Summary.Contains("Infrastructure") && f.Summary.Contains("Application"));

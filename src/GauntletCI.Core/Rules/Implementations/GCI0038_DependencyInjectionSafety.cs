@@ -43,25 +43,15 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
 
     private void CheckServiceLocator(DiffFile file, List<Finding> findings)
     {
-        if (IsInfrastructureFile(file.NewPath))
-        {
-            return;
-        }
-
-        if (IsTestFile(file.NewPath))
-        {
-            return;
-        }
+        if (IsInfrastructureFile(file.NewPath)) return;
+        if (IsTestFile(file.NewPath)) return;
 
         foreach (var line in file.AddedLines)
         {
             var matched = WellKnownPatterns.DependencyInjectionPatterns.ServiceLocatorPatterns.FirstOrDefault(
                 p => line.Content.Contains(p, StringComparison.Ordinal));
 
-            if (matched is null)
-            {
-                continue;
-            }
+            if (matched is null) continue;
 
             findings.Add(CreateFinding(
                 file,
@@ -76,53 +66,32 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
 
     private void CheckDirectInstantiation(DiffFile file, List<Finding> findings)
     {
-        if (IsTestFile(file.NewPath))
-        {
-            return;
-        }
-
-        if (IsInfrastructureFile(file.NewPath))
-        {
-            return;
-        }
+        if (IsTestFile(file.NewPath)) return;
+        if (IsInfrastructureFile(file.NewPath)) return;
 
         foreach (var line in file.AddedLines)
         {
             var lineContent = line.Content;
-
+            
             // Skip test mock objects
-            if (WellKnownPatterns.HasMockPattern(lineContent))
-            {
-                continue;
-            }
-
+            if (WellKnownPatterns.HasMockPattern(lineContent)) continue;
+            
             // Skip if this is in a DI composition root (factory, service registration)
-            if (WellKnownPatterns.IsDiCompositionRoot(lineContent))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.IsDiCompositionRoot(lineContent)) continue;
 
             // Early exit for common exclusions
-            if (WellKnownPatterns.DependencyInjectionPatterns.DirectInstantiationExclusions.Any(e =>
+            if (WellKnownPatterns.DependencyInjectionPatterns.DirectInstantiationExclusions.Any(e => 
                 lineContent.Contains(e, StringComparison.OrdinalIgnoreCase)))
-            {
                 continue;
-            }
 
-            if (!WellKnownPatterns.DependencyInjectionPatterns.DirectInstantiationRegex.IsMatch(lineContent))
-            {
-                continue;
-            }
+            if (!WellKnownPatterns.DependencyInjectionPatterns.DirectInstantiationRegex.IsMatch(lineContent)) continue;
 
             // Additional context guards
             var trimmed = lineContent.Trim();
-
+            
             // Skip if it's a bare return statement (likely factory method)
-            if (trimmed.StartsWith("return", StringComparison.Ordinal) &&
-                trimmed.Contains("new ", StringComparison.Ordinal))
-            {
-                continue;
-            }
+            if (trimmed.StartsWith("return", StringComparison.Ordinal) && 
+                trimmed.Contains("new ", StringComparison.Ordinal)) continue;
 
             findings.Add(CreateFinding(
                 file,
@@ -137,15 +106,8 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
 
     private void CheckCaptiveDependency(DiffFile file, List<Finding> findings)
     {
-        if (IsInfrastructureFile(file.NewPath))
-        {
-            return;
-        }
-
-        if (IsTestFile(file.NewPath))
-        {
-            return;
-        }
+        if (IsInfrastructureFile(file.NewPath)) return;
+        if (IsTestFile(file.NewPath)) return;
 
         var addedLines = file.AddedLines.ToList();
 
@@ -155,10 +117,7 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
             l.Content.Contains("AddScoped<", StringComparison.Ordinal) ||
             l.Content.Contains("AddTransient<", StringComparison.Ordinal));
 
-        if (!hasSingleton || !hasScopedOrTransient)
-        {
-            return;
-        }
+        if (!hasSingleton || !hasScopedOrTransient) return;
 
         var firstEvidence = addedLines
             .Where(l =>

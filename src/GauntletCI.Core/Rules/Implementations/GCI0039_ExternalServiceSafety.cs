@@ -25,10 +25,7 @@ public class GCI0039_ExternalServiceSafety : RuleBase
 
         foreach (var file in diff.Files)
         {
-            if (WellKnownPatterns.IsTestFile(file.NewPath))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.IsTestFile(file.NewPath)) continue;
 
             CheckHttpClientInstantiation(file, findings);
             CheckMissingTimeout(file, findings);
@@ -45,35 +42,20 @@ public class GCI0039_ExternalServiceSafety : RuleBase
     private void CheckHttpClientInstantiation(DiffFile file, List<Finding> findings)
     {
         // Skip gRPC files entirely - gRPC Channel initialization IS the timeout mechanism
-        if (WellKnownPatterns.IsGrpcRelatedFile(file.NewPath))
-        {
-            return;
-        }
+        if (WellKnownPatterns.IsGrpcRelatedFile(file.NewPath)) return;
 
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            if (content.TrimStart().StartsWith("//"))
-            {
-                continue;
-            }
-
+            if (content.TrimStart().StartsWith("//")) continue;
+            
             // Skip mock HTTP clients in test code
-            if (WellKnownPatterns.HasMockPattern(content))
-            {
-                continue;
-            }
-
+            if (WellKnownPatterns.HasMockPattern(content)) continue;
+            
             // Phase 16 Guard: ORM async patterns
-            if (WellKnownPatterns.IsOrmAsyncPattern(content))
-            {
-                continue;
-            }
-
-            if (!content.Contains("new HttpClient("))
-            {
-                continue;
-            }
+            if (WellKnownPatterns.IsOrmAsyncPattern(content)) continue;
+            
+            if (!content.Contains("new HttpClient(")) continue;
 
             findings.Add(CreateFinding(
                 file,
@@ -95,30 +77,21 @@ public class GCI0039_ExternalServiceSafety : RuleBase
         bool hasNewHttpClient = addedLines.Any(l =>
             l.Content.Contains("new HttpClient(", StringComparison.Ordinal));
 
-        if (!hasNewHttpClient)
-        {
-            return;
-        }
+        if (!hasNewHttpClient) return;
 
         // Code that configures HttpClient via factory (IHttpClientFactory / AddHttpClient)
         // manages timeout at the channel/handler level: not via client.Timeout directly.
         if (WellKnownPatterns.IsHttpFactoryConfigured(addedLines))
-        {
             return;
-        }
 
         // gRPC channels manage timeouts at the channel/connection level via GrpcChannelOptions.
         // HttpClient is typically wrapping a gRPC handler, so per-client timeout is not applicable.
         if (WellKnownPatterns.UsesGrpcChannel(addedLines))
-        {
             return;
-        }
 
         // Skip if Polly resilience policies already handle timeouts
         if (HasPollyTimeoutPolicy(addedLines))
-        {
             return;
-        }
 
         bool hasTimeoutConfig = addedLines.Any(l =>
             l.Content.Contains(".Timeout =")
@@ -144,35 +117,23 @@ public class GCI0039_ExternalServiceSafety : RuleBase
         // If this file uses factory-managed or injected HTTP clients, skip CancellationToken checks
         // (timeout is managed at factory/handler level, not per-call)
         if (UsesFactoryManagedClients(addedLines))
-        {
             return;
-        }
 
         foreach (var line in addedLines)
         {
             var content = line.Content;
-            if (content.TrimStart().StartsWith("//"))
-            {
-                continue;
-            }
+            if (content.TrimStart().StartsWith("//")) continue;
 
             bool hasHttpCall = WellKnownPatterns.ExternalServicePatterns.CtCheckHttpMethods.Any(m => content.Contains(m));
-            if (!hasHttpCall)
-            {
-                continue;
-            }
+            if (!hasHttpCall) continue;
 
             // Skip if this is a static/injected client being reused (pattern: _client.GetAsync)
             if (IsInjectedOrStaticClient(content))
-            {
                 continue;
-            }
 
             // Skip fire-and-forget patterns (intentional ignoring of async result)
             if (IsFireAndForgetPattern(content))
-            {
                 continue;
-            }
 
             bool hasCancellationToken =
                 content.Contains("cancellationToken")
