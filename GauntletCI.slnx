@@ -8,6 +8,7 @@
     <Project Path="src/GauntletCI.BenchmarkReporter/GauntletCI.BenchmarkReporter.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/GauntletCI.Core.Tests/GauntletCI.Core.Tests.csproj" />
     <Project Path="tests/GauntletCI.Benchmarks/GauntletCI.Benchmarks.csproj" />
   </Folder>
 </Solution>

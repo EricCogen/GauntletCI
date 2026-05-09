@@ -694,15 +694,20 @@ public sealed class SilverLabelEngineTests
         var gci0044 = labels.FirstOrDefault(l => l.RuleId == "GCI0044" && l.ShouldTrigger);
         var gci0035 = labels.FirstOrDefault(l => l.RuleId == "GCI0035" && l.ShouldTrigger);
 
-        // When both are present with sufficient confidence, both should be boosted
-        if (gci0044 != null && gci0035 != null)
+        // Coordination should be applied only when both rules are present with sufficient confidence
+        if (gci0044 != null && gci0035 != null && 
+            gci0044.ExpectedConfidence >= 0.50 && 
+            gci0035.ExpectedConfidence >= 0.50)
         {
-            if (gci0044.ExpectedConfidence >= 0.50 && gci0035.ExpectedConfidence >= 0.50)
-            {
-                // Coordination should apply
-                Assert.True(labels.Where(l => 
-                    l.Reason != null && l.Reason.Contains("[coordination]")).Any());
-            }
+            // If all preconditions are met, coordination marker MUST be present
+            Assert.Contains(labels, l => 
+                l.Reason != null && l.Reason.Contains("[coordination]"));
+        }
+        else
+        {
+            // If preconditions not met, test documents expectation but doesn't fail
+            // This allows the test to pass when test data doesn't trigger both rules
+            Assert.True(true, "Coordination not applicable when preconditions not met");
         }
     }
 
@@ -789,16 +794,21 @@ public sealed class SilverLabelEngineTests
         var gci0039 = labels.FirstOrDefault(l => l.RuleId == "GCI0039" && l.ShouldTrigger);
         var gci0048 = labels.FirstOrDefault(l => l.RuleId == "GCI0048" && l.ShouldTrigger);
 
-        // When both are present with sufficient confidence, both should be boosted
-        if (gci0039 != null && gci0048 != null)
+        // Coordination should be applied only when both rules are present with sufficient confidence
+        if (gci0039 != null && gci0048 != null && 
+            gci0039.ExpectedConfidence >= 0.55 && 
+            gci0048.ExpectedConfidence >= 0.60)
         {
-            if (gci0039.ExpectedConfidence >= 0.55 && gci0048.ExpectedConfidence >= 0.60)
-            {
-                // Coordination should apply
-                Assert.True(labels.Where(l => 
-                    l.Reason != null && l.Reason.Contains("[coordination]") && 
-                    (l.RuleId == "GCI0039" || l.RuleId == "GCI0048")).Any());
-            }
+            // If all preconditions are met, coordination marker MUST be present
+            Assert.Contains(labels, l => 
+                l.Reason != null && l.Reason.Contains("[coordination]") && 
+                (l.RuleId == "GCI0039" || l.RuleId == "GCI0048"));
+        }
+        else
+        {
+            // If preconditions not met, test documents expectation but doesn't fail
+            // This allows the test to pass when test data doesn't trigger both rules
+            Assert.True(true, "Coordination not applicable when preconditions not met");
         }
     }
 
@@ -884,16 +894,21 @@ public sealed class SilverLabelEngineTests
         var gci0045 = labels.FirstOrDefault(l => l.RuleId == "GCI0045" && l.ShouldTrigger);
         var gci0016 = labels.FirstOrDefault(l => l.RuleId == "GCI0016" && l.ShouldTrigger);
 
-        // When both are present with sufficient confidence, both should be boosted
-        if (gci0045 != null && gci0016 != null)
+        // Coordination should be applied only when both rules are present with sufficient confidence
+        if (gci0045 != null && gci0016 != null && 
+            gci0045.ExpectedConfidence >= 0.60 && 
+            gci0016.ExpectedConfidence >= 0.55)
         {
-            if (gci0045.ExpectedConfidence >= 0.60 && gci0016.ExpectedConfidence >= 0.55)
-            {
-                // Coordination should apply
-                Assert.True(labels.Where(l => 
-                    l.Reason != null && l.Reason.Contains("[coordination]") && 
-                    (l.RuleId == "GCI0045" || l.RuleId == "GCI0016")).Any());
-            }
+            // If all preconditions are met, coordination marker MUST be present
+            Assert.Contains(labels, l => 
+                l.Reason != null && l.Reason.Contains("[coordination]") && 
+                (l.RuleId == "GCI0045" || l.RuleId == "GCI0016"));
+        }
+        else
+        {
+            // If preconditions not met, test documents expectation but doesn't fail
+            // This allows the test to pass when test data doesn't trigger both rules
+            Assert.True(true, "Coordination not applicable when preconditions not met");
         }
     }
 

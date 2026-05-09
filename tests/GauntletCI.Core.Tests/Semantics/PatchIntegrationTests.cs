@@ -319,7 +319,7 @@ public class PatchIntegrationTests
         Assert.Equal(3, ops.Count);
         Assert.Single(ops.ByKind(PatchOperationKind.LineAdded));
         Assert.Single(ops.ByFile("a.cs"));
-        Assert.True(ops.ByMinRisk(0.4).Any());
+        Assert.NotEmpty(ops.ByMinRisk(0.4));
         Assert.Equal(2, ops.ByMinRisk(0.4).Count());
         
         // Check aggregation
