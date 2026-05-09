@@ -11,6 +11,9 @@ namespace GauntletCI.Benchmarks;
 [Orderer(BenchmarkDotNet.Order.SummaryOrderPolicy.FastestToSlowest)]
 public class PerformanceBenchmarks
 {
+    private string _smallRawDiff = null!;
+    private string _mediumRawDiff = null!;
+    private string _largeRawDiff = null!;
     private DiffContext _smallDiff = null!;
     private DiffContext _mediumDiff = null!;
     private DiffContext _largeDiff = null!;
@@ -20,108 +23,133 @@ public class PerformanceBenchmarks
     public void Setup()
     {
         _orchestrator = RuleOrchestrator.CreateDefault();
-        _smallDiff = DiffParser.Parse(GenerateDiff(1, 5, 20));      // 1 file, 5 hunks, ~100 lines
-        _mediumDiff = DiffParser.Parse(GenerateDiff(5, 20, 25));    // 5 files, 20 hunks each, ~2500 lines
-        _largeDiff = DiffParser.Parse(GenerateDiff(20, 50, 20));    // 20 files, 50 hunks each, ~20k lines
+        
+        // Pre-generate raw diffs outside of benchmark measurements
+        _smallRawDiff = GenerateDiff(1, 5, 20);
+        _mediumRawDiff = GenerateDiff(5, 20, 25);
+        _largeRawDiff = GenerateDiff(20, 50, 20);
+        
+        // Pre-parse diffs for rules-only benchmarks
+        _smallDiff = DiffParser.Parse(_smallRawDiff);
+        _mediumDiff = DiffParser.Parse(_mediumRawDiff);
+        _largeDiff = DiffParser.Parse(_largeRawDiff);
     }
 
-    [Benchmark(Description = "Parse small diff (1 file, 5 hunks, ~100 lines)")]
+    [Benchmark(Description = "Parse small diff (~100 lines)")]
     public DiffContext ParseSmallDiff()
     {
-        var rawDiff = GenerateDiff(1, 5, 20);
-        return DiffParser.Parse(rawDiff);
+        return DiffParser.Parse(_smallRawDiff);
     }
 
-    [Benchmark(Description = "Parse medium diff (5 files, 20 hunks, ~2500 lines)")]
+    [Benchmark(Description = "Parse medium diff (~2500 lines)")]
     public DiffContext ParseMediumDiff()
     {
-        var rawDiff = GenerateDiff(5, 20, 25);
-        return DiffParser.Parse(rawDiff);
+        return DiffParser.Parse(_mediumRawDiff);
     }
 
-    [Benchmark(Description = "Parse large diff (20 files, 50 hunks, ~20k lines)")]
+    [Benchmark(Description = "Parse large diff (~20k lines)")]
     public DiffContext ParseLargeDiff()
     {
-        var rawDiff = GenerateDiff(20, 50, 20);
-        return DiffParser.Parse(rawDiff);
+        return DiffParser.Parse(_largeRawDiff);
     }
 
-    [Benchmark(Description = "Analyze small diff (parse + rules execution)")]
-    public async Task AnalyzeSmallDiff()
+    [Benchmark(Description = "Rules only small diff (no parsing)")]
+    public async Task RulesOnlySmallDiff()
     {
         await _orchestrator.RunAsync(_smallDiff);
     }
 
-    [Benchmark(Description = "Analyze medium diff (parse + rules execution)")]
-    public async Task AnalyzeMediumDiff()
+    [Benchmark(Description = "Rules only medium diff (no parsing)")]
+    public async Task RulesOnlyMediumDiff()
     {
         await _orchestrator.RunAsync(_mediumDiff);
     }
 
-    [Benchmark(Description = "Analyze large diff (parse + rules execution)")]
-    public async Task AnalyzeLargeDiff()
+    [Benchmark(Description = "Rules only large diff (no parsing)")]
+    public async Task RulesOnlyLargeDiff()
     {
         await _orchestrator.RunAsync(_largeDiff);
     }
 
-    [Benchmark(Description = "End-to-end small (parse + rules, ~100 lines)")]
+    [Benchmark(Description = "End-to-end small (parse + rules)")]
     public async Task EndToEndSmall()
     {
-        var rawDiff = GenerateDiff(1, 5, 20);
-        var diff = DiffParser.Parse(rawDiff);
+        var diff = DiffParser.Parse(_smallRawDiff);
         await _orchestrator.RunAsync(diff);
     }
 
-    [Benchmark(Description = "End-to-end medium (parse + rules, ~2500 lines)")]
+    [Benchmark(Description = "End-to-end medium (parse + rules)")]
     public async Task EndToEndMedium()
     {
-        var rawDiff = GenerateDiff(5, 20, 25);
-        var diff = DiffParser.Parse(rawDiff);
+        var diff = DiffParser.Parse(_mediumRawDiff);
         await _orchestrator.RunAsync(diff);
     }
 
-    [Benchmark(Description = "End-to-end large (parse + rules, ~20k lines)")]
+    [Benchmark(Description = "End-to-end large (parse + rules)")]
     public async Task EndToEndLarge()
     {
-        var rawDiff = GenerateDiff(20, 50, 20);
-        var diff = DiffParser.Parse(rawDiff);
+        var diff = DiffParser.Parse(_largeRawDiff);
         await _orchestrator.RunAsync(diff);
     }
 
     private static string GenerateDiff(int fileCount, int hunksPerFile, int linesPerHunk)
     {
         var lines = new List<string>();
-        int lineNum = 0;
-
+        
         for (int f = 0; f < fileCount; f++)
         {
             var fileName = $"src/File{f}.cs";
             lines.Add($"diff --git a/{fileName} b/{fileName}");
-            lines.Add($"index 1234567..abcdefg 100644");
+            lines.Add($"index 1234567..abcdef00 100644");
             lines.Add($"--- a/{fileName}");
             lines.Add($"+++ b/{fileName}");
 
+            int oldStartLine = 1;
+            int newStartLine = 1;
+
             for (int h = 0; h < hunksPerFile; h++)
             {
-                int startLine = lineNum + 1;
-                lineNum += linesPerHunk;
-
-                lines.Add($"@@ -{startLine},{linesPerHunk} +{startLine},{linesPerHunk + 1} @@");
-                lines.Add(" public class TestClass");
-                lines.Add(" {");
-
+                // Track actual old/new line counts for this hunk
+                int oldLines = 0;
+                int newLines = 0;
+                var hunkBody = new List<string>();
+                
+                hunkBody.Add(" public class TestClass");
+                hunkBody.Add(" {");
+                oldLines++;
+                newLines++;
+                
                 // Generate balanced code changes
                 for (int i = 0; i < linesPerHunk - 2; i++)
                 {
                     if (i % 3 == 0)
-                        lines.Add($"-    // Line {lineNum - linesPerHunk + i}");
+                    {
+                        hunkBody.Add($"-    // Line {i}");
+                        oldLines++;
+                    }
                     else if (i % 3 == 1)
-                        lines.Add($"+    // Line {lineNum - linesPerHunk + i} (updated)");
+                    {
+                        hunkBody.Add($"+    // Line {i} (updated)");
+                        newLines++;
+                    }
                     else
-                        lines.Add($" public void Method{i}()");
+                    {
+                        hunkBody.Add($" public void Method{i}()");
+                        oldLines++;
+                        newLines++;
+                    }
                 }
-
-                lines.Add(" }");
+                
+                hunkBody.Add(" }");
+                oldLines++;
+                newLines++;
+                
+                // Emit hunk header with correct line counts and non-overlapping ranges
+                lines.Add($"@@ -{oldStartLine},{oldLines} +{newStartLine},{newLines} @@");
+                lines.AddRange(hunkBody);
+                
+                oldStartLine += oldLines;
+                newStartLine += newLines;
             }
         }
 
