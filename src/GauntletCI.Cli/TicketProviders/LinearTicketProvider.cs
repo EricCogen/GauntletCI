@@ -20,6 +20,8 @@ public sealed class LinearTicketProvider : ITicketProvider
         }
     }
 
+    public void Dispose() { /* HttpClient from factory is shared and managed globally */ }
+
     public async Task<TicketInfo?> FetchAsync(string issueKey, CancellationToken ct = default)
     {
         var apiKey = Environment.GetEnvironmentVariable("LINEAR_API_KEY");

@@ -14,6 +14,8 @@ public sealed class GitHubIssueProvider : ITicketProvider
         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_TOKEN")) &&
         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_REPOSITORY"));
 
+    public void Dispose() { /* HttpClient from factory is shared and managed globally */ }
+
     public async Task<TicketInfo?> FetchAsync(string issueKey, CancellationToken ct = default)
     {
         var token      = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
