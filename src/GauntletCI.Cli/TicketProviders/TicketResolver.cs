@@ -62,7 +62,7 @@ public static class TicketResolver
         var (key, providerName) = DetectIssueKey(branchName, prBody);
         if (key is null) return;
 
-        var provider = ResolveProvider(providerName);
+        using var provider = ResolveProvider(providerName);
         if (provider is null || !provider.IsAvailable)
         {
             Console.Error.WriteLine($"[ticket] Detected {providerName} key {key} but no credentials found for {providerName}.");
