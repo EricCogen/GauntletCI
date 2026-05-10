@@ -178,6 +178,23 @@ public static class AnalyzeCommand
                 config.Notifications ??= new();
                 config.TicketProvider ??= new();
 
+                // Show metadata before codebase scan so user understands the scope
+                if (codebase is not null)
+                {
+                    try
+                    {
+                        var metadata = await CodebaseAnalyzer.GetScanMetadataAsync(codebase.FullName, ct);
+                        var sizeMb = metadata.TotalBytes / (1024.0 * 1024.0);
+                        Console.Error.WriteLine(
+                            $"[GauntletCI] Full codebase scan: {metadata.FileCount} files ({sizeMb:F1} MB, " +
+                            $"~{metadata.EstimatedLinesOfCode:N0} lines), estimated {metadata.EstimatedSeconds:F1}s");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.Error.WriteLine($"[GauntletCI] Warning: could not estimate scan size: {ex.Message}");
+                    }
+                }
+
                 var diff = diffFile is not null
                     ? DiffParser.FromFile(diffFile.FullName)
                     : commit is not null
