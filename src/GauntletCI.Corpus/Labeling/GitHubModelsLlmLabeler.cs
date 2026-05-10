@@ -17,13 +17,15 @@ public sealed class GitHubModelsLlmLabeler : ILlmLabeler
 
     private readonly HttpClient _http;
     private readonly string     _model;
+    private readonly string     _githubToken;
 
     public GitHubModelsLlmLabeler(string githubToken, string model = "gpt-4o-mini")
     {
         _model = model;
+        _githubToken = githubToken;
         _http  = HttpClientFactory.GetLongTimeoutClient();
-        _http.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", githubToken);
+        // Do not add auth to DefaultRequestHeaders - use per-request HttpRequestMessage headers instead
+        // to avoid auth token bleed to other endpoints using the same factory client.
     }
 
     public async Task<LlmLabelResult?> ClassifyAsync(
@@ -51,6 +53,7 @@ public sealed class GitHubModelsLlmLabeler : ILlmLabeler
 
             using var request = new HttpRequestMessage(HttpMethod.Post, Endpoint);
             request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _githubToken);
 
             using var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode) return null;

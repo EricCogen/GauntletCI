@@ -45,10 +45,11 @@ public static class NetworkLicenseValidator
         {
             var http = HttpClientFactory.GetGenericClient();
             // Do not dispose: HttpClientFactory owns this shared, process-wide client.
-            http.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
-            using var response = await http.GetAsync(StatusEndpoint, ct);
+            
+            using var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, StatusEndpoint);
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            
+            using var response = await http.SendAsync(request, ct);
             var body = await response.Content.ReadAsStringAsync(ct);
             using var doc  = JsonDocument.Parse(body);
             var root       = doc.RootElement;

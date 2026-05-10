@@ -12,6 +12,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
     private const int ThrottleThreshold = 5;
 
     private readonly HttpClient _http;
+    private readonly string _githubToken;
     private readonly Action<string?, int?, string>? _errorCallback;
 
     public int? LastSearchRemaining { get; private set; }
@@ -25,7 +26,9 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
             throw new InvalidOperationException("GITHUB_TOKEN is required for gh-search provider");
 
         _http = HttpClientFactory.GetGitHubClient();
-        _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", githubToken);
+        _githubToken = githubToken;
+        // Do not add auth to DefaultRequestHeaders - use per-request HttpRequestMessage headers instead
+        // to avoid auth token bleed to other endpoints using the same factory client.
         _errorCallback = errorCallback;
     }
 
@@ -105,7 +108,10 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         CancellationToken cancellationToken,
         Action<string?, int?, string>? errorCallback = null)
     {
-        using var response = await _http.GetAsync(url, cancellationToken).ConfigureAwait(false);
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _githubToken);
+        
+        using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
         {
@@ -193,7 +199,10 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         var url = $"https://api.github.com/repos/{repoSpec}";
         try
         {
-            using var response = await _http.GetAsync(url, cancellationToken).ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _githubToken);
+            
+            using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
                 return "repo not found (deleted, private, or never existed)";
