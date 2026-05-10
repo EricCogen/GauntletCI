@@ -1,7 +1,12 @@
-// Extension: /adv-audit and /full-audit
-// Slash commands for Principal .NET Architect (Adversarial Edition) code audit
-// /adv-audit: Manual adversarial persona analysis
-// /full-audit: Adversarial persona + automatic codebase analyzer invocation
+// Extension: adversarial audit mode
+// Intercepts natural language audit requests and injects adversarial persona
+// Works via natural language (no custom slash commands supported by CLI)
+//
+// Usage examples (just type naturally):
+//   "adversarial audit on ./src"
+//   "full audit on ./src"
+//   "audit ./src with adversarial persona"
+//   "run full codebase audit of ./src"
 
 import { joinSession } from "@github/copilot-sdk/extension";
 
@@ -44,49 +49,44 @@ const session = await joinSession({
         onUserPromptSubmitted: async (input) => {
             const trimmed = input.prompt.trim();
             
-            // Match patterns like:
-            // /adv-audit <target>
-            // /full-audit <target>
-            // full audit on <target>
-            // adversarial audit on <target>
-            // audit <target>
+            // Match natural language audit requests (no slash commands)
+            // Examples:
+            //   "adversarial audit on ./src"
+            //   "full audit on ./src"
+            //   "audit ./src with adversarial persona"
+            //   "run full codebase audit of ./src"
             let target = null;
             let isFullAudit = false;
             
-            const adapterPatterns = [
-                /^\/adv-audit\s+(.+)$/i,
-                /^adversarial\s+audit\s+(?:on\s+)?(.+)$/i,
-            ];
+            // Pattern 1: "adversarial audit on <target>"
+            let match = trimmed.match(/adversarial\s+audit\s+(?:on\s+)?(.+?)(?:\s+with|$)/i);
+            if (match) {
+                target = match[1].trim();
+                isFullAudit = false;
+            }
             
-            const fullAuditPatterns = [
-                /^\/full-audit\s+(.+)$/i,
-                /^full\s+audit\s+(?:on\s+)?(.+)$/i,
-            ];
-            
-            for (const pattern of adapterPatterns) {
-                const match = trimmed.match(pattern);
+            // Pattern 2: "full audit on <target>" or "full codebase audit of <target>"
+            if (!match) {
+                match = trimmed.match(/full\s+(?:codebase\s+)?audit\s+(?:on|of)\s+(.+?)(?:\s+with|$)/i);
                 if (match) {
                     target = match[1].trim();
-                    isFullAudit = false;
-                    break;
+                    isFullAudit = true;
                 }
             }
             
-            if (!target) {
-                for (const pattern of fullAuditPatterns) {
-                    const match = trimmed.match(pattern);
-                    if (match) {
-                        target = match[1].trim();
-                        isFullAudit = true;
-                        break;
-                    }
+            // Pattern 3: "audit <target> with adversarial persona"
+            if (!match) {
+                match = trimmed.match(/audit\s+(.+?)\s+with\s+adversarial\s+persona/i);
+                if (match) {
+                    target = match[1].trim();
+                    isFullAudit = false;
                 }
             }
             
             if (target) {
                 let toolFindings = "";
                 
-                // If /full-audit, also run the codebase analyzer
+                // If full audit, also run the codebase analyzer
                 if (isFullAudit) {
                     try {
                         const { execSync } = require("child_process");
@@ -94,7 +94,7 @@ const session = await joinSession({
                         const result = execSync(cmd, { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] });
                         toolFindings = `\n\n## GauntletCI Codebase Analysis Results\n\n\`\`\`\n${result}\n\`\`\``;
                     } catch (error) {
-                        toolFindings = `\n\n## GauntletCI Codebase Analysis (attempt failed)\nNote: gauntletci CLI may not be in PATH. Ensure 'gauntletci' is available or run: gauntletci analyze --codebase "${target}" --severity info`;
+                        toolFindings = `\n\n## GauntletCI Codebase Analysis\nNote: Couldn't run gauntletci CLI. Ensure 'gauntletci' is in PATH. Manual run: gauntletci analyze --codebase "${target}" --severity info`;
                     }
                 }
                 
