@@ -12,6 +12,7 @@ namespace GauntletCI.Corpus.Discovery;
 public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
 {
     private readonly HttpClient _http;
+    private readonly string _token;
     private readonly string[] _labels;
     private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
     private static readonly string[] DefaultLabels = ["bug", "security", "vulnerability"];
@@ -23,7 +24,9 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
             : labelsFilter.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         _http = HttpClientFactory.GetGitHubClient();
-        _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        _token = token;
+        // Do not add auth to DefaultRequestHeaders - use per-request HttpRequestMessage headers instead
+        // to avoid auth token bleed to other endpoints using the same factory client.
     }
 
     public void Dispose()
@@ -100,6 +103,7 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
             var req = new HttpRequestMessage(HttpMethod.Get, url);
             req.Headers.Accept.Clear();
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.mockingbird-preview+json"));
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
             using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return null;
@@ -132,7 +136,10 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
 
         for (int attempt = 0; ; attempt++)
         {
-            using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
+            using var req = new HttpRequestMessage(HttpMethod.Get, url);
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+            
+            using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
 
             if (resp.IsSuccessStatusCode)
             {

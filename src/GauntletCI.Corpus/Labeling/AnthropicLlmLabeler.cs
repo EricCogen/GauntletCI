@@ -14,14 +14,17 @@ public sealed class AnthropicLlmLabeler : ILlmLabeler
 {
     private readonly HttpClient _http;
     private readonly string     _model;
+    private readonly string     _apiKey;
 
     public AnthropicLlmLabeler(string apiKey, string model = "claude-haiku-4-5")
     {
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new ArgumentException("Anthropic API key must not be empty.", nameof(apiKey));
         _model = model;
+        _apiKey = apiKey;
         _http  = HttpClientFactory.GetAnthropicClient();
-        _http.DefaultRequestHeaders.Add("x-api-key", apiKey);
+        // Do not add auth to DefaultRequestHeaders - use per-request HttpRequestMessage headers instead
+        // to avoid auth token bleed to other endpoints using the same factory client.
     }
 
     public async Task<LlmLabelResult?> ClassifyAsync(
@@ -49,6 +52,7 @@ public sealed class AnthropicLlmLabeler : ILlmLabeler
 
             using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages");
             request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
+            request.Headers.Add("x-api-key", _apiKey);
 
             using var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode) return null;

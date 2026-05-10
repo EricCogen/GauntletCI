@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using GauntletCI.Core;
@@ -24,10 +25,10 @@ public sealed class RemoteLlmEngine : ILlmEngine
     private readonly int _numCtx;
     private readonly HttpClient _http;
 
-    /// <summary>Initializes the engine and configures the <see cref="HttpClient"/> with auth headers.</summary>
+    /// <summary>Initializes the engine with endpoint and model configuration.</summary>
     /// <param name="endpoint">Full URL of the OpenAI-compatible chat completions endpoint.</param>
     /// <param name="model">Model identifier sent in each request body (e.g., <c>gpt-4o</c>).</param>
-    /// <param name="apiKey">Bearer token used for authorization.</param>
+    /// <param name="apiKey">Bearer token used for per-request authorization.</param>
     /// <param name="numCtx">Ollama context window in tokens (input + output). Default: 16384.</param>
     /// <param name="maxCompleteTokens">Max tokens the model may generate per call. Default: 2048.</param>
     public RemoteLlmEngine(string endpoint, string model, string apiKey,
@@ -39,7 +40,8 @@ public sealed class RemoteLlmEngine : ILlmEngine
         _numCtx             = numCtx;
         _maxCompleteTokens  = maxCompleteTokens;
         _http               = HttpClientFactory.GetLongTimeoutClient();
-        _http.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
+        // Do not add auth to DefaultRequestHeaders - use per-request HttpRequestMessage headers instead
+        // to avoid auth token bleed to other endpoints using the same factory client.
     }
 
     /// <summary>Always <see langword="true"/>; reachability of the remote endpoint is not pre-checked.</summary>
@@ -87,11 +89,17 @@ public sealed class RemoteLlmEngine : ILlmEngine
 
         try
         {
-            using var resp = await _http.PostAsJsonAsync(_endpoint, body, ct).ConfigureAwait(false);
+            var json = JsonSerializer.Serialize(body);
+            
+            using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint);
+            request.Content = new StringContent(json, Encoding.UTF8, "application/json");
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
+            
+            using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             resp.EnsureSuccessStatusCode();
 
-            var json = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
-            using var doc = JsonDocument.Parse(json);
+            var responseJson = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
+            using var doc = JsonDocument.Parse(responseJson);
             return doc.RootElement
                 .GetProperty("choices")[0]
                 .GetProperty("message")
@@ -106,6 +114,6 @@ public sealed class RemoteLlmEngine : ILlmEngine
         }
     }
 
-    /// <summary>Disposes the underlying <see cref="HttpClient"/>.</summary>
-    public void Dispose() => _http.Dispose();
+    /// <summary>No-op; the underlying <see cref="HttpClient"/> is owned by HttpClientFactory and must not be disposed.</summary>
+    public void Dispose() { /* HttpClientFactory owns this shared, process-wide client. */ }
 }

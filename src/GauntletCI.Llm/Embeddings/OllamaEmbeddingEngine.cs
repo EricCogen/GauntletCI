@@ -44,7 +44,7 @@ public sealed class OllamaEmbeddingEngine : IEmbeddingEngine, IDisposable
         else
         {
             _http = HttpClientFactory.GetLongTimeoutClient();
-            _ownsHttpClient = true;
+            _ownsHttpClient = false; // Factory clients are globally owned; never dispose them.
         }
     }
 
