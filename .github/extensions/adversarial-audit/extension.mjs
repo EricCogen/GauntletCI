@@ -1,5 +1,7 @@
 // Extension: /adv-audit and /full-audit
 // Slash commands for Principal .NET Architect (Adversarial Edition) code audit
+// /adv-audit: Manual adversarial persona analysis
+// /full-audit: Adversarial persona + automatic codebase analyzer invocation
 
 import { joinSession } from "@github/copilot-sdk/extension";
 
@@ -49,22 +51,53 @@ const session = await joinSession({
             // adversarial audit on <target>
             // audit <target>
             let target = null;
+            let isFullAudit = false;
             
-            const patterns = [
-                /^\/(?:adv-audit|full-audit)\s+(.+)$/i,
-                /^(?:full|adversarial)\s+audit\s+(?:on\s+)?(.+)$/i,
-                /^audit\s+(.+)$/i,
+            const adapterPatterns = [
+                /^\/adv-audit\s+(.+)$/i,
+                /^adversarial\s+audit\s+(?:on\s+)?(.+)$/i,
             ];
             
-            for (const pattern of patterns) {
+            const fullAuditPatterns = [
+                /^\/full-audit\s+(.+)$/i,
+                /^full\s+audit\s+(?:on\s+)?(.+)$/i,
+            ];
+            
+            for (const pattern of adapterPatterns) {
                 const match = trimmed.match(pattern);
                 if (match) {
                     target = match[1].trim();
+                    isFullAudit = false;
                     break;
                 }
             }
             
+            if (!target) {
+                for (const pattern of fullAuditPatterns) {
+                    const match = trimmed.match(pattern);
+                    if (match) {
+                        target = match[1].trim();
+                        isFullAudit = true;
+                        break;
+                    }
+                }
+            }
+            
             if (target) {
+                let toolFindings = "";
+                
+                // If /full-audit, also run the codebase analyzer
+                if (isFullAudit) {
+                    try {
+                        const { execSync } = require("child_process");
+                        const cmd = `gauntletci analyze --codebase "${target}" --severity info --ascii`;
+                        const result = execSync(cmd, { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] });
+                        toolFindings = `\n\n## GauntletCI Codebase Analysis Results\n\n\`\`\`\n${result}\n\`\`\``;
+                    } catch (error) {
+                        toolFindings = `\n\n## GauntletCI Codebase Analysis (attempt failed)\nNote: gauntletci CLI may not be in PATH. Ensure 'gauntletci' is available or run: gauntletci analyze --codebase "${target}" --severity info`;
+                    }
+                }
+                
                 const modifiedPrompt = `${ADVERSARIAL_PERSONA}
 
 Perform a comprehensive adversarial audit on: **${target}**
@@ -75,7 +108,7 @@ Apply all mandatory checks from the Three Laws and Audit Checklist. Provide resp
 3. The "It Depends" Challenge
 4. The Verdict
 
-Be nit-picky, pessimistic, and direct.`;
+Be nit-picky, pessimistic, and direct.${toolFindings}`;
 
                 return { modifiedPrompt };
             }
