@@ -54,7 +54,8 @@ public class ModelDownloader
         progress?.Report($"Downloading Phi-4 Mini (INT4 ONNX) to {_modelDir} ...");
         progress?.Report("Note: model.onnx.data is ~2 GB: this may take several minutes.");
 
-        using var http = HttpClientFactory.GetGenericClient();
+        var http = HttpClientFactory.GetGenericClient();
+        // Do not dispose: HttpClientFactory owns this shared, process-wide client.
 
         foreach (var file in RequiredFiles)
         {

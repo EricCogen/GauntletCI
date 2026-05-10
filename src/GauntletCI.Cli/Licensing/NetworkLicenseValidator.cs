@@ -43,7 +43,8 @@ public static class NetworkLicenseValidator
 
         try
         {
-            using var http = HttpClientFactory.GetGenericClient();
+            var http = HttpClientFactory.GetGenericClient();
+            // Do not dispose: HttpClientFactory owns this shared, process-wide client.
             http.DefaultRequestHeaders.Authorization =
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 

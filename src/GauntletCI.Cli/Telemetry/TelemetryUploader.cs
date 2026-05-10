@@ -38,12 +38,13 @@ public static class TelemetryUploader
             var pending = await TelemetryStore.GetPendingAsync();
             if (pending.Count == 0) return;
 
-            using var http = HttpClientFactory.GetGenericClient();
+            var http = HttpClientFactory.GetGenericClient();
+            // Do not dispose: HttpClientFactory owns this shared, process-wide client.
             http.DefaultRequestHeaders.Add("X-GauntletCI-Version",
                 System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0");
 
             var payload = new { events = pending };
-            var response = await http.PostAsJsonAsync(Endpoint, payload);
+            using var response = await http.PostAsJsonAsync(Endpoint, payload);
 
             if (response.IsSuccessStatusCode)
                 await TelemetryStore.MarkSentAsync(pending.Select(e => e.EventId));
