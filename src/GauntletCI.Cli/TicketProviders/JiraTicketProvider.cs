@@ -9,6 +9,7 @@ namespace GauntletCI.Cli.TicketProviders;
 public sealed class JiraTicketProvider : ITicketProvider
 {
     private static readonly HttpClient Http = HttpClientFactory.GetGenericClient();
+    // Do not dispose: HttpClientFactory owns this shared, process-wide client.
 
     public string ProviderName => "Jira";
 
@@ -16,8 +17,6 @@ public sealed class JiraTicketProvider : ITicketProvider
         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("JIRA_BASE_URL")) &&
         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("JIRA_API_TOKEN")) &&
         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("JIRA_USER_EMAIL"));
-
-    public void Dispose() { /* HttpClient from factory is shared and managed globally */ }
 
     public async Task<TicketInfo?> FetchAsync(string issueKey, CancellationToken ct = default)
     {

@@ -8,13 +8,12 @@ namespace GauntletCI.Cli.TicketProviders;
 public sealed class GitHubIssueProvider : ITicketProvider
 {
     private static readonly HttpClient Http = HttpClientFactory.GetGitHubClient();
+    // Do not dispose: HttpClientFactory owns this shared, process-wide client.
 
     public string ProviderName => "GitHub";
     public bool IsAvailable =>
         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_TOKEN")) &&
         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_REPOSITORY"));
-
-    public void Dispose() { /* HttpClient from factory is shared and managed globally */ }
 
     public async Task<TicketInfo?> FetchAsync(string issueKey, CancellationToken ct = default)
     {

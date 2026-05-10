@@ -9,6 +9,7 @@ namespace GauntletCI.Cli.TicketProviders;
 public sealed class LinearTicketProvider : ITicketProvider
 {
     private static readonly HttpClient Http = HttpClientFactory.GetGenericClient();
+    // Do not dispose: HttpClientFactory owns this shared, process-wide client.
 
     public string ProviderName => "Linear";
     public bool IsAvailable
@@ -19,8 +20,6 @@ public sealed class LinearTicketProvider : ITicketProvider
             return !string.IsNullOrEmpty(key);
         }
     }
-
-    public void Dispose() { /* HttpClient from factory is shared and managed globally */ }
 
     public async Task<TicketInfo?> FetchAsync(string issueKey, CancellationToken ct = default)
     {

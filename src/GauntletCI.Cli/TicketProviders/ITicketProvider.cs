@@ -2,7 +2,7 @@
 using GauntletCI.Core.Model;
 namespace GauntletCI.Cli.TicketProviders;
 
-public interface ITicketProvider : IDisposable
+public interface ITicketProvider
 {
     string ProviderName { get; }
     /// <summary>Returns true if required env vars/tokens are present.</summary>
