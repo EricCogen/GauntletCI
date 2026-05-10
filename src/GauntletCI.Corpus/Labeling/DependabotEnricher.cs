@@ -30,9 +30,10 @@ public sealed class DependabotEnricher : IDisposable
     }
 
     private readonly HttpClient _http = HttpClientFactory.GetGitHubClient();
+    private readonly string? _token = GitHubTokenResolver.Resolve();
 
     public bool IsAuthenticated =>
-        _http.DefaultRequestHeaders.Contains("Authorization");
+        !string.IsNullOrEmpty(_token);
 
     /// <summary>
     /// For each fixture, calls the GitHub PR API to check whether the PR was authored by Dependabot.
@@ -91,7 +92,11 @@ public sealed class DependabotEnricher : IDisposable
         var url = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}";
         try
         {
-            using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            if (!string.IsNullOrEmpty(_token))
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+            
+            using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return null;
 
             await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);

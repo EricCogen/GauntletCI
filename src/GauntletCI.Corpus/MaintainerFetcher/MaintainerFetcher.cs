@@ -14,6 +14,7 @@ public sealed class MaintainerFetcher : IDisposable
 {
     private readonly HttpClient _http;
     private readonly bool _ownsHttpClient;
+    private readonly string? _token = GitHubTokenResolver.Resolve();
 
     private static readonly JsonSerializerOptions JsonOpts =
         new() { PropertyNameCaseInsensitive = true };
@@ -149,6 +150,9 @@ public sealed class MaintainerFetcher : IDisposable
         for (int attempt = 0; ; attempt++)
         {
             using var req  = new HttpRequestMessage(HttpMethod.Get, url);
+            if (!string.IsNullOrEmpty(_token))
+                req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+            
             using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
 
             if (resp.IsSuccessStatusCode)

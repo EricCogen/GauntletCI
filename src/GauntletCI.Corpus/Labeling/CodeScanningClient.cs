@@ -14,13 +14,13 @@ public sealed class CodeScanningClient
     private const string BaseUrl = "https://api.github.com";
 
     private readonly HttpClient _http = HttpClientFactory.GetGitHubClient();
+    private readonly string? _token = GitHubTokenResolver.Resolve();
 
     /// <summary>
     /// Returns whether this client has a GitHub token configured.
     /// Code scanning alerts require authentication.
     /// </summary>
-    public bool IsAuthenticated =>
-        _http.DefaultRequestHeaders.Contains("Authorization");
+    public bool IsAuthenticated => !string.IsNullOrEmpty(_token);
 
     /// <summary>
     /// Fetches all open code scanning alerts for <paramref name="repo"/> (format: "owner/repo").
@@ -45,7 +45,11 @@ public sealed class CodeScanningClient
 
             try
             {
-                using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
+                using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                if (!string.IsNullOrEmpty(_token))
+                    request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+                
+                using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
 
                 // 404 = code scanning not enabled; 403 = token lacks security_events scope
                 if (resp.StatusCode == System.Net.HttpStatusCode.NotFound ||

@@ -24,8 +24,9 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
         new(@"""([A-Za-z][A-Za-z0-9._-]+)""\s*:\s*\{", RegexOptions.Compiled);
 
     private readonly HttpClient _http = HttpClientFactory.GetGitHubClient();
+    private readonly string? _token = GitHubTokenResolver.Resolve();
 
-    public bool IsAuthenticated => _http.DefaultRequestHeaders.Contains("Authorization");
+    public bool IsAuthenticated => !string.IsNullOrEmpty(_token);
 
     public void Dispose()
     {
@@ -169,7 +170,12 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
 
         try
         {
-            using var resp = await _http.PostAsync("https://api.github.com/graphql", content, ct).ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.github.com/graphql");
+            if (!string.IsNullOrEmpty(_token))
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+            request.Content = content;
+            
+            using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return [];
 
             await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);

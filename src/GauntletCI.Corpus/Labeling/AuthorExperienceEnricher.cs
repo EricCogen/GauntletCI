@@ -17,11 +17,12 @@ public sealed class AuthorExperienceEnricher : IDisposable
     private const int CommitCountCap = 1000;
 
     private readonly HttpClient _http = HttpClientFactory.GetGitHubClient();
+    private readonly string? _token = GitHubTokenResolver.Resolve();
     // In-memory cache: repo -> set of contributor logins
     private readonly Dictionary<string, HashSet<string>> _contributorCache =
         new(StringComparer.OrdinalIgnoreCase);
 
-    public bool IsAuthenticated => _http.DefaultRequestHeaders.Contains("Authorization");
+    public bool IsAuthenticated => !string.IsNullOrEmpty(_token);
 
     public void Dispose()
     {
@@ -94,7 +95,11 @@ public sealed class AuthorExperienceEnricher : IDisposable
         var url = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}";
         try
         {
-            using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            if (!string.IsNullOrEmpty(_token))
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+            
+            using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return null;
             await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
             using var doc = await JsonDocument.ParseAsync(stream, cancellationToken: ct).ConfigureAwait(false);
@@ -114,7 +119,11 @@ public sealed class AuthorExperienceEnricher : IDisposable
         var url = $"https://api.github.com/repos/{owner}/{repo}/commits?author={Uri.EscapeDataString(login)}&per_page=1";
         try
         {
-            using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            if (!string.IsNullOrEmpty(_token))
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+            
+            using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return 0;
 
             // Try to parse total from Link header
@@ -147,7 +156,11 @@ public sealed class AuthorExperienceEnricher : IDisposable
         var url = $"https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100";
         try
         {
-            using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            if (!string.IsNullOrEmpty(_token))
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+            
+            using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (resp.IsSuccessStatusCode)
             {
                 await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
