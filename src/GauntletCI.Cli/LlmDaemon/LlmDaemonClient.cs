@@ -105,8 +105,14 @@ internal sealed class LlmDaemonClient : ILlmEngine
             return new LlmDaemonClient(
                 (NamedPipeClientStream)reader.BaseStream, reader, writer);
         }
-        catch
+        catch (OperationCanceledException)
         {
+            pipe?.Dispose();
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[GauntletCI] Failed to connect to LLM daemon: {ex.Message}");
             pipe?.Dispose();
             return null;
         }
@@ -135,8 +141,9 @@ internal sealed class LlmDaemonClient : ILlmEngine
             using var proc = Process.Start(psi);
             return proc is not null;
         }
-        catch
+        catch (Exception ex)
         {
+            Console.Error.WriteLine($"[GauntletCI] Failed to spawn LLM daemon: {ex.Message}");
             return false;
         }
     }
@@ -168,8 +175,13 @@ internal sealed class LlmDaemonClient : ILlmEngine
             var line = await _reader.ReadLineAsync(ct);
             return line is null ? null : JsonSerializer.Deserialize<DaemonResponse>(line);
         }
-        catch
+        catch (OperationCanceledException)
         {
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[GauntletCI] LLM daemon communication error: {ex.Message}");
             return null;
         }
     }

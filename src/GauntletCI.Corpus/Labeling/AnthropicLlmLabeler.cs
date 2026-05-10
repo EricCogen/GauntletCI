@@ -67,6 +67,14 @@ public sealed class AnthropicLlmLabeler : ILlmLabeler
             var text = content[0].GetProperty("text").GetString();
             return string.IsNullOrWhiteSpace(text) ? null : LlmLabelerHelpers.ParseJson(text);
         }
-        catch { return null; }
+        catch (OperationCanceledException)
+        {
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[GauntletCI] Anthropic API error: {ex.Message}");
+            return null;
+        }
     }
 }
