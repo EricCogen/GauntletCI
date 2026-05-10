@@ -19,6 +19,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
     private readonly HttpClient _http;
     private readonly RawSnapshotStore _rawStore;
     private readonly bool _ownsHttpClient;
+    private readonly string? _token = GitHubTokenResolver.Resolve();
 
     private static readonly JsonSerializerOptions JsonOpts =
         new() { PropertyNameCaseInsensitive = true };
@@ -166,7 +167,11 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
     public async Task<string?> GetPermanentRepoRejectReasonAsync(
         string owner, string repo, CancellationToken ct = default)
     {
-        using var response = await _http.GetAsync($"https://api.github.com/repos/{owner}/{repo}", ct).ConfigureAwait(false);
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{owner}/{repo}");
+        if (!string.IsNullOrEmpty(_token))
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+        
+        using var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
             return "repo not found (deleted, private, or never existed)";
@@ -204,7 +209,13 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
 
     private async Task<T> GetJsonAsync<T>(string url, CancellationToken ct)
     {
-        var json = await FetchWithBackoffAsync(() => new HttpRequestMessage(HttpMethod.Get, url), ct).ConfigureAwait(false);
+        var json = await FetchWithBackoffAsync(() => 
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, url);
+            if (!string.IsNullOrEmpty(_token))
+                req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+            return req;
+        }, ct).ConfigureAwait(false);
         return JsonSerializer.Deserialize<T>(json, JsonOpts)
             ?? throw new InvalidOperationException($"Null response from {url}");
     }
@@ -212,7 +223,13 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
     private async Task<List<T>> GetJsonListAsync<T>(string url, CancellationToken ct)
     {
         var pagedUrl = url.Contains('?') ? $"{url}&per_page=100" : $"{url}?per_page=100";
-        var json = await FetchWithBackoffAsync(() => new HttpRequestMessage(HttpMethod.Get, pagedUrl), ct).ConfigureAwait(false);
+        var json = await FetchWithBackoffAsync(() =>
+        {
+            var req = new HttpRequestMessage(HttpMethod.Get, pagedUrl);
+            if (!string.IsNullOrEmpty(_token))
+                req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+            return req;
+        }, ct).ConfigureAwait(false);
         return JsonSerializer.Deserialize<List<T>>(json, JsonOpts) ?? [];
     }
 
@@ -220,6 +237,8 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
         FetchWithBackoffAsync(() =>
         {
             var req = new HttpRequestMessage(HttpMethod.Get, prUrl);
+            if (!string.IsNullOrEmpty(_token))
+                req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
             req.Headers.Accept.Clear();
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3.diff"));
             return req;

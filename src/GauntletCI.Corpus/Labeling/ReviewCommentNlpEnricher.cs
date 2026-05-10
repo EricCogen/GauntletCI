@@ -31,8 +31,9 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
     ];
 
     private readonly HttpClient _http = HttpClientFactory.GetGitHubClient();
+    private readonly string? _token = GitHubTokenResolver.Resolve();
 
-    public bool IsAuthenticated => _http.DefaultRequestHeaders.Contains("Authorization");
+    public bool IsAuthenticated => !string.IsNullOrEmpty(_token);
 
     public void Dispose()
     {
@@ -139,7 +140,11 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
         var commentsUrl = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}/comments?per_page=100";
         try
         {
-            using var resp = await _http.GetAsync(commentsUrl, ct).ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Get, commentsUrl);
+            if (!string.IsNullOrEmpty(_token))
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+            
+            using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (resp.IsSuccessStatusCode)
             {
                 await using var stream = await resp.Content.ReadAsStreamAsync(ct);
@@ -164,7 +169,11 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
         var reviewsUrl = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}/reviews?per_page=100";
         try
         {
-            using var resp = await _http.GetAsync(reviewsUrl, ct).ConfigureAwait(false);
+            using var request = new HttpRequestMessage(HttpMethod.Get, reviewsUrl);
+            if (!string.IsNullOrEmpty(_token))
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+            
+            using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (resp.IsSuccessStatusCode)
             {
                 await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);

@@ -17,9 +17,10 @@ namespace GauntletCI.Corpus.Labeling;
 public sealed class SocialSignalEnricher : IDisposable
 {
     private readonly HttpClient _http = HttpClientFactory.GetGitHubClient();
+    private readonly string? _token = GitHubTokenResolver.Resolve();
 
     public bool IsAuthenticated =>
-        _http.DefaultRequestHeaders.Contains("Authorization");
+        !string.IsNullOrEmpty(_token);
 
     public void Dispose()
     {
@@ -84,7 +85,11 @@ public sealed class SocialSignalEnricher : IDisposable
         var prUrl = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}";
         try
         {
-            using var prResp = await _http.GetAsync(prUrl, ct).ConfigureAwait(false);
+            using var prRequest = new HttpRequestMessage(HttpMethod.Get, prUrl);
+            if (!string.IsNullOrEmpty(_token))
+                prRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+            
+            using var prResp = await _http.SendAsync(prRequest, ct).ConfigureAwait(false);
             if (!prResp.IsSuccessStatusCode) return null;
 
             await using var stream = await prResp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
@@ -112,7 +117,11 @@ public sealed class SocialSignalEnricher : IDisposable
 
         try
         {
-            using var revResp = await _http.GetAsync(reviewsUrl, ct).ConfigureAwait(false);
+            using var revRequest = new HttpRequestMessage(HttpMethod.Get, reviewsUrl);
+            if (!string.IsNullOrEmpty(_token))
+                revRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+            
+            using var revResp = await _http.SendAsync(revRequest, ct).ConfigureAwait(false);
             if (revResp.IsSuccessStatusCode)
             {
                 await using var stream = await revResp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
