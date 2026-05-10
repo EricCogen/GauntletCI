@@ -22,8 +22,8 @@ public static class CoverageCorrelator
     public static async Task AnnotateAsync(EvaluationResult result, CancellationToken ct = default)
     {
         var codecovToken = Environment.GetEnvironmentVariable("CODECOV_TOKEN");
-        var githubRepo   = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
-        var githubSha    = Environment.GetEnvironmentVariable("GITHUB_SHA");
+        var githubRepo = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
+        var githubSha = Environment.GetEnvironmentVariable("GITHUB_SHA");
 
         if (string.IsNullOrEmpty(codecovToken)
             || string.IsNullOrEmpty(githubRepo)
@@ -35,7 +35,7 @@ public static class CoverageCorrelator
             return;
 
         var owner = repoParts[0];
-        var repo  = repoParts[1];
+        var repo = repoParts[1];
 
         try
         {
@@ -82,13 +82,13 @@ public static class CoverageCorrelator
     {
         try
         {
-            using var doc  = JsonDocument.Parse(json);
-            var root       = doc.RootElement;
-            
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
             if (root.ValueKind == JsonValueKind.Undefined || root.ValueKind == JsonValueKind.Null)
                 return null;
-            
-            var result     = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
+
+            var result = new Dictionary<string, double>(StringComparer.OrdinalIgnoreCase);
 
             if (!root.TryGetProperty("files", out var filesEl)
                 || filesEl.ValueKind != JsonValueKind.Array)
@@ -99,7 +99,7 @@ public static class CoverageCorrelator
                 if (!file.TryGetProperty("name", out var nameEl))
                     continue;
 
-                var name   = nameEl.GetString() ?? string.Empty;
+                var name = nameEl.GetString() ?? string.Empty;
                 double cov = 0.0;
 
                 if (file.TryGetProperty("totals", out var totals)

@@ -52,11 +52,11 @@ public sealed class VectorStore : IDisposable
                 dim        = excluded.dim,
                 created_at = excluded.created_at;
             """;
-        cmd.Parameters.AddWithValue("$id",      id);
+        cmd.Parameters.AddWithValue("$id", id);
         cmd.Parameters.AddWithValue("$content", content);
-        cmd.Parameters.AddWithValue("$source",  source);
-        cmd.Parameters.AddWithValue("$blob",    FloatsToBytes(embedding));
-        cmd.Parameters.AddWithValue("$dim",     embedding.Length);
+        cmd.Parameters.AddWithValue("$source", source);
+        cmd.Parameters.AddWithValue("$blob", FloatsToBytes(embedding));
+        cmd.Parameters.AddWithValue("$dim", embedding.Length);
         cmd.ExecuteNonQuery();
     }
 
@@ -112,7 +112,7 @@ public sealed class VectorStore : IDisposable
         float dot = 0f, magA = 0f, magB = 0f;
         for (int i = 0; i < a.Length; i++)
         {
-            dot  += a[i] * b[i];
+            dot += a[i] * b[i];
             magA += a[i] * a[i];
             magB += b[i] * b[i];
         }

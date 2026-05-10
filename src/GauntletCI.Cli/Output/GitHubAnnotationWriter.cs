@@ -24,9 +24,9 @@ public static class GitHubAnnotationWriter
         {
             var level = group.Confidence switch
             {
-                Confidence.High   => "error",
+                Confidence.High => "error",
                 Confidence.Medium => "warning",
-                _                 => "notice",
+                _ => "notice",
             };
 
             var file = group.FilePath ?? string.Empty;

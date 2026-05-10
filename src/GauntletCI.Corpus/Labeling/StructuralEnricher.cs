@@ -87,7 +87,7 @@ public sealed class StructuralEnricher : IDisposable
             }
 
             var maxChurn = churnByFile.Count > 0 ? churnByFile.Values.Max() : 0;
-            var score    = ComputeScore(sensitiveFiles.Count > 0, maxChurn, changedFiles.Count);
+            var score = ComputeScore(sensitiveFiles.Count > 0, maxChurn, changedFiles.Count);
 
             var changedFilesJson = JsonSerializer.Serialize(changedFiles);
             await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo,
@@ -137,7 +137,7 @@ public sealed class StructuralEnricher : IDisposable
     {
         double score = 0.0;
         if (hasSensitivePath) score += 0.40;
-        if (maxChurn >= 10)   score += 0.30;
+        if (maxChurn >= 10) score += 0.30;
         else if (maxChurn >= 5) score += 0.20;
         if (changedFileCount >= 5) score += 0.10;
         return Math.Clamp(score, 0.0, 1.0);
@@ -155,7 +155,7 @@ public sealed class StructuralEnricher : IDisposable
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             if (!string.IsNullOrEmpty(_token))
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
-            
+
             using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return 0;
 
@@ -185,12 +185,12 @@ public sealed class StructuralEnricher : IDisposable
                 ($fixtureId, $repo, $changedFiles, $sensitiveCount,
                  $maxChurn, $score, datetime('now'))
             """;
-        cmd.Parameters.AddWithValue("$fixtureId",      fixtureId);
-        cmd.Parameters.AddWithValue("$repo",            repo);
-        cmd.Parameters.AddWithValue("$changedFiles",    changedFilesJson);
-        cmd.Parameters.AddWithValue("$sensitiveCount",  sensitiveFileCount);
-        cmd.Parameters.AddWithValue("$maxChurn",        maxChurn);
-        cmd.Parameters.AddWithValue("$score",           structuralRiskScore);
+        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$changedFiles", changedFilesJson);
+        cmd.Parameters.AddWithValue("$sensitiveCount", sensitiveFileCount);
+        cmd.Parameters.AddWithValue("$maxChurn", maxChurn);
+        cmd.Parameters.AddWithValue("$score", structuralRiskScore);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }

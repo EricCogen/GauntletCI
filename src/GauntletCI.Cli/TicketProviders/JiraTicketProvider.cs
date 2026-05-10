@@ -21,15 +21,15 @@ public sealed class JiraTicketProvider : ITicketProvider
     public async Task<TicketInfo?> FetchAsync(string issueKey, CancellationToken ct = default)
     {
         var baseUrl = Environment.GetEnvironmentVariable("JIRA_BASE_URL");
-        var token   = Environment.GetEnvironmentVariable("JIRA_API_TOKEN");
-        var email   = Environment.GetEnvironmentVariable("JIRA_USER_EMAIL");
+        var token = Environment.GetEnvironmentVariable("JIRA_API_TOKEN");
+        var email = Environment.GetEnvironmentVariable("JIRA_USER_EMAIL");
 
         if (string.IsNullOrEmpty(baseUrl) || string.IsNullOrEmpty(token) || string.IsNullOrEmpty(email))
         {
             return null;  // Not available
         }
 
-        var creds   = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{email}:{token}"));
+        var creds = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{email}:{token}"));
         var cleanUrl = baseUrl.TrimEnd('/');
 
         using var req = new HttpRequestMessage(HttpMethod.Get,
@@ -44,15 +44,15 @@ public sealed class JiraTicketProvider : ITicketProvider
         using var doc = JsonDocument.Parse(json);
         var fields = doc.RootElement.GetProperty("fields");
         var summary = fields.TryGetProperty("summary", out var s) ? s.GetString() : null;
-        var desc    = ExtractDescription(fields);
+        var desc = ExtractDescription(fields);
 
         return new TicketInfo
         {
-            Id          = issueKey,
-            Title       = summary ?? issueKey,
+            Id = issueKey,
+            Title = summary ?? issueKey,
             Description = desc,
-            Url         = $"{baseUrl}/browse/{issueKey}",
-            Provider    = "Jira",
+            Url = $"{baseUrl}/browse/{issueKey}",
+            Provider = "Jira",
         };
     }
 

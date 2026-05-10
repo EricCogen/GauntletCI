@@ -213,13 +213,13 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
                 probe.RuleId, probe.RuleName, probe.Summary, probe.Evidence);
 
             var baseOut = await engine.CompleteAsync(baselinePrompt);
-            var conOut  = await engine.CompleteAsync(constrainedPrompt);
+            var conOut = await engine.CompleteAsync(constrainedPrompt);
 
             var baseFlags = DetectFlags(probe, baseOut);
-            var conFlags  = DetectFlags(probe, conOut);
+            var conFlags = DetectFlags(probe, conOut);
 
             if (baseFlags.Count > 0) baselineHallucinated++;
-            if (conFlags.Count > 0)  constrainedHallucinated++;
+            if (conFlags.Count > 0) constrainedHallucinated++;
 
             sb.AppendLine();
             sb.AppendLine($"┌─ {probe.RuleId}: {probe.RuleName}");
@@ -237,8 +237,8 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
         }
 
         double baseRate = (double)baselineHallucinated / Probes.Length * 100;
-        double conRate  = (double)constrainedHallucinated / Probes.Length * 100;
-        double delta    = baseRate - conRate;
+        double conRate = (double)constrainedHallucinated / Probes.Length * 100;
+        double delta = baseRate - conRate;
 
         sb.AppendLine();
         sb.AppendLine("═══════════════════════════════════════════════════════════════════");
@@ -249,10 +249,10 @@ public class LocalLlmHallucinationTests(ITestOutputHelper output)
         sb.AppendLine();
         sb.AppendLine(delta switch
         {
-            > 10  => "  VERDICT: Constraints meaningfully reduced hallucination (>10pp improvement).",
-            > 0   => "  VERDICT: Constraints helped slightly but not decisively.",
-            0     => "  VERDICT: Constraints had no measurable effect on this model.",
-            _     => "  VERDICT: Constraints increased refusal/empty output: inspect APOLOGETIC_REFUSAL flags."
+            > 10 => "  VERDICT: Constraints meaningfully reduced hallucination (>10pp improvement).",
+            > 0 => "  VERDICT: Constraints helped slightly but not decisively.",
+            0 => "  VERDICT: Constraints had no measurable effect on this model.",
+            _ => "  VERDICT: Constraints increased refusal/empty output: inspect APOLOGETIC_REFUSAL flags."
         });
         sb.AppendLine("═══════════════════════════════════════════════════════════════════");
         output.WriteLine(sb.ToString());

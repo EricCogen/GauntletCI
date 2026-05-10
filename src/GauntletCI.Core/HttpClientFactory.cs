@@ -15,19 +15,19 @@ public static class HttpClientFactory
 {
     // GitHub API client: uses auth token if available, 30-60 second timeout depending on use case
     private static readonly Lazy<HttpClient> GithubClient = new(() => CreateGitHubClient());
-    
+
     // SonarCloud client: unauthenticated, public API only, 30 second timeout
     private static readonly Lazy<HttpClient> SonarCloudClientInstance = new(() => CreateSonarCloudClient());
-    
+
     // Generic client: no auth, 30 second default timeout
     private static readonly Lazy<HttpClient> GenericClient = new(() => CreateGenericClient());
-    
+
     // Anthropic client: API key auth, 120 second timeout for inference calls
     private static readonly Lazy<HttpClient> AnthropicClientInstance = new(() => CreateAnthropicClient());
-    
+
     // Codecov client: Bearer token auth, 15 second timeout
     private static readonly Lazy<HttpClient> CodecovClientInstance = new(() => CreateCodecovClient());
-    
+
     // Long-timeout client: for expensive operations, 120 second timeout
     private static readonly Lazy<HttpClient> LongTimeoutClient = new(() => CreateLongTimeoutClient());
 
@@ -74,21 +74,21 @@ public static class HttpClientFactory
     /// </summary>
     private static HttpClient CreateGitHubClient()
     {
-        var client = new HttpClient(new SocketsHttpHandler 
-        { 
-            PooledConnectionLifetime = TimeSpan.FromMinutes(5) 
+        var client = new HttpClient(new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5)
         })
         {
             Timeout = TimeSpan.FromSeconds(60)
         };
-        
+
         client.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
         client.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
-        
+
         // Do NOT inject auth here. Auth tokens must be added per-request to avoid bleed to other endpoints.
         // Components must add Authorization header via HttpRequestMessage.Headers per request.
-        
+
         return client;
     }
 
@@ -97,18 +97,18 @@ public static class HttpClientFactory
     /// </summary>
     private static HttpClient CreateSonarCloudClient()
     {
-        var client = new HttpClient(new SocketsHttpHandler 
-        { 
-            PooledConnectionLifetime = TimeSpan.FromMinutes(5) 
+        var client = new HttpClient(new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5)
         })
         {
             Timeout = TimeSpan.FromSeconds(30)
         };
-        
+
         client.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
         client.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/json"));
-        
+
         return client;
     }
 
@@ -117,16 +117,16 @@ public static class HttpClientFactory
     /// </summary>
     private static HttpClient CreateGenericClient()
     {
-        var client = new HttpClient(new SocketsHttpHandler 
-        { 
-            PooledConnectionLifetime = TimeSpan.FromMinutes(5) 
+        var client = new HttpClient(new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5)
         })
         {
             Timeout = TimeSpan.FromSeconds(30)
         };
-        
+
         client.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
-        
+
         return client;
     }
 
@@ -137,20 +137,20 @@ public static class HttpClientFactory
     /// </summary>
     private static HttpClient CreateAnthropicClient()
     {
-        var handler = new SocketsHttpHandler 
-        { 
+        var handler = new SocketsHttpHandler
+        {
             PooledConnectionLifetime = TimeSpan.FromMinutes(5),
             AllowAutoRedirect = false
         };
-        
+
         var client = new HttpClient(handler)
         {
             Timeout = TimeSpan.FromSeconds(120)
         };
-        
+
         client.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/json"));
-        
+
         return client;
     }
 
@@ -159,16 +159,16 @@ public static class HttpClientFactory
     /// </summary>
     private static HttpClient CreateCodecovClient()
     {
-        var client = new HttpClient(new SocketsHttpHandler 
-        { 
-            PooledConnectionLifetime = TimeSpan.FromMinutes(5) 
+        var client = new HttpClient(new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5)
         })
         {
             Timeout = TimeSpan.FromSeconds(15)
         };
-        
+
         client.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
-        
+
         return client;
     }
 
@@ -177,16 +177,16 @@ public static class HttpClientFactory
     /// </summary>
     private static HttpClient CreateLongTimeoutClient()
     {
-        var client = new HttpClient(new SocketsHttpHandler 
-        { 
-            PooledConnectionLifetime = TimeSpan.FromMinutes(5) 
+        var client = new HttpClient(new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5)
         })
         {
             Timeout = TimeSpan.FromSeconds(120)
         };
-        
+
         client.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
-        
+
         return client;
     }
 }

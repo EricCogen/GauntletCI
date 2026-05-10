@@ -48,7 +48,7 @@ public sealed class CodeScanningClient
                 using var request = new HttpRequestMessage(HttpMethod.Get, url);
                 if (!string.IsNullOrEmpty(_token))
                     request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
-                
+
                 using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
 
                 // 404 = code scanning not enabled; 403 = token lacks security_events scope
@@ -94,8 +94,8 @@ public sealed class CodeScanningClient
         var filePath = pathEl.GetString() ?? "";
         if (string.IsNullOrEmpty(filePath)) return null;
 
-        alert.TryGetProperty("rule",  out var rule);
-        alert.TryGetProperty("tool",  out var tool);
+        alert.TryGetProperty("rule", out var rule);
+        alert.TryGetProperty("tool", out var tool);
         alert.TryGetProperty("state", out var stateEl);
 
         var startLine = 0;
@@ -109,14 +109,14 @@ public sealed class CodeScanningClient
 
         return new CodeScanningAlert
         {
-            Repo      = repo,
-            FilePath  = filePath,
-            RuleId    = rule.ValueKind != JsonValueKind.Undefined && rule.TryGetProperty("id",   out var rid)  ? rid.GetString()  ?? "" : "",
-            RuleName  = rule.ValueKind != JsonValueKind.Undefined && rule.TryGetProperty("name", out var rn)   ? rn.GetString()   ?? "" : "",
-            Severity  = rule.ValueKind != JsonValueKind.Undefined && rule.TryGetProperty("severity", out var sv) ? sv.GetString() ?? "" : "",
-            State     = stateEl.ValueKind != JsonValueKind.Undefined ? stateEl.GetString() ?? "" : "",
-            ToolName  = tool.ValueKind != JsonValueKind.Undefined && tool.TryGetProperty("name", out var tn)  ? tn.GetString()   ?? "" : "",
-            Message   = message,
+            Repo = repo,
+            FilePath = filePath,
+            RuleId = rule.ValueKind != JsonValueKind.Undefined && rule.TryGetProperty("id", out var rid) ? rid.GetString() ?? "" : "",
+            RuleName = rule.ValueKind != JsonValueKind.Undefined && rule.TryGetProperty("name", out var rn) ? rn.GetString() ?? "" : "",
+            Severity = rule.ValueKind != JsonValueKind.Undefined && rule.TryGetProperty("severity", out var sv) ? sv.GetString() ?? "" : "",
+            State = stateEl.ValueKind != JsonValueKind.Undefined ? stateEl.GetString() ?? "" : "",
+            ToolName = tool.ValueKind != JsonValueKind.Undefined && tool.TryGetProperty("name", out var tn) ? tn.GetString() ?? "" : "",
+            Message = message,
             StartLine = startLine,
         };
     }

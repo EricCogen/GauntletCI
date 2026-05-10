@@ -17,7 +17,7 @@ public static class DiffToPatchAdapter
     /// <param name="diffContext">The existing diff context to convert.</param>
     /// <param name="source">Optional source identifier (defaults to "git diff").</param>
     /// <returns>A new PatchModel with equivalent structure and metadata.</returns>
-    public static PatchModel FromDiffContext(Diff.DiffContext diffContext, string source = "git diff")
+    public static PatchModel FromDiffContext(DiffContext diffContext, string source = "git diff")
     {
         ArgumentNullException.ThrowIfNull(diffContext, nameof(diffContext));
 
@@ -37,7 +37,7 @@ public static class DiffToPatchAdapter
     /// <summary>
     /// Converts a single DiffFile to a PatchFile, including file change kind detection.
     /// </summary>
-    private static PatchFile ConvertFile(Diff.DiffFile diffFile)
+    private static PatchFile ConvertFile(DiffFile diffFile)
     {
         var changeKind = DeterminePatchFileChangeKind(diffFile);
         var fileExtension = ExtractFileExtension(diffFile.NewPath);
@@ -64,7 +64,7 @@ public static class DiffToPatchAdapter
     /// <summary>
     /// Determines the semantic change kind for a file.
     /// </summary>
-    private static PatchFileChangeKind DeterminePatchFileChangeKind(Diff.DiffFile diffFile)
+    private static PatchFileChangeKind DeterminePatchFileChangeKind(DiffFile diffFile)
     {
         if (diffFile.IsAdded)
             return PatchFileChangeKind.Added;
@@ -131,7 +131,7 @@ public static class DiffToPatchAdapter
     /// <summary>
     /// Converts a single DiffHunk to a PatchHunk.
     /// </summary>
-    private static PatchHunk ConvertHunk(Diff.DiffHunk diffHunk)
+    private static PatchHunk ConvertHunk(DiffHunk diffHunk)
     {
         var lines = diffHunk.Lines
             .Select(ConvertLine)
@@ -152,13 +152,13 @@ public static class DiffToPatchAdapter
     /// <summary>
     /// Converts a single DiffLine to a PatchLine, translating line kinds.
     /// </summary>
-    private static PatchLine ConvertLine(Diff.DiffLine diffLine)
+    private static PatchLine ConvertLine(DiffLine diffLine)
     {
         var patchLineKind = diffLine.Kind switch
         {
-            Diff.DiffLineKind.Added => PatchLineKind.Added,
-            Diff.DiffLineKind.Removed => PatchLineKind.Removed,
-            Diff.DiffLineKind.Context => PatchLineKind.Context,
+            DiffLineKind.Added => PatchLineKind.Added,
+            DiffLineKind.Removed => PatchLineKind.Removed,
+            DiffLineKind.Context => PatchLineKind.Context,
             _ => PatchLineKind.Metadata
         };
 

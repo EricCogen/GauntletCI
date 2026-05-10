@@ -98,14 +98,14 @@ public static class DiffParser
             {
                 var oldStartLineStr = hunkMatch.Groups[1].Value;
                 var newStartLineStr = hunkMatch.Groups[2].Value;
-                
-                if (!int.TryParse(oldStartLineStr, out var oldStartLine) || 
+
+                if (!int.TryParse(oldStartLineStr, out var oldStartLine) ||
                     !int.TryParse(newStartLineStr, out var newStartLine))
                 {
                     // Malformed hunk header - skip this hunk
                     continue;
                 }
-                
+
                 currentHunk = new DiffHunk
                 {
                     OldStartLine = oldStartLine,

@@ -39,7 +39,7 @@ public static class IncidentClient
             'd' => now.AddDays(-value),
             'm' => now.AddMinutes(-value),
             'w' => now.AddDays(-value * 7),
-            _   => now.AddHours(-24),
+            _ => now.AddHours(-24),
         };
     }
 
@@ -77,7 +77,7 @@ public static class IncidentClient
             {
                 foreach (var item in arr.EnumerateArray())
                 {
-                    var id    = item.TryGetProperty("id",    out var p) ? p.GetString() ?? "" : "";
+                    var id = item.TryGetProperty("id", out var p) ? p.GetString() ?? "" : "";
                     var title = item.TryGetProperty("title", out var t) ? t.GetString() ?? "" : "";
                     string? desc = null;
                     if (item.TryGetProperty("description", out var d))
@@ -164,7 +164,7 @@ public static class IncidentClient
             {
                 foreach (var item in arr.EnumerateArray())
                 {
-                    var id      = item.TryGetProperty("id",      out var p) ? p.GetString() ?? "" : "";
+                    var id = item.TryGetProperty("id", out var p) ? p.GetString() ?? "" : "";
                     var message = item.TryGetProperty("message", out var m) ? m.GetString() ?? "" : "";
                     string? desc = null;
                     if (item.TryGetProperty("description", out var d))
@@ -243,8 +243,8 @@ public static class IncidentClient
             .GroupBy(f => f.FilePath!, StringComparer.OrdinalIgnoreCase)
             .Select(g =>
             {
-                var filePath   = g.Key;
-                var maxSev     = g.Max(f => f.Severity);
+                var filePath = g.Key;
+                var maxSev = g.Max(f => f.Severity);
                 var correlated = correlations.TryGetValue(filePath, out var incs) ? incs : [];
                 return new
                 {

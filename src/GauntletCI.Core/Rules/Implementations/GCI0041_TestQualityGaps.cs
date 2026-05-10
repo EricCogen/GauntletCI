@@ -75,12 +75,12 @@ public class GCI0041_TestQualityGaps : RuleBase
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
-            
+
             // Guard: skip if this is a decorator/attribute for non-test purposes
             if (content.Contains("[SkipLocalsInit]", StringComparison.OrdinalIgnoreCase) ||
                 content.Contains("[SkipOn", StringComparison.OrdinalIgnoreCase))
                 continue;
-            
+
             foreach (var pattern in SilencePatterns)
             {
                 if (!content.Contains(pattern, StringComparison.OrdinalIgnoreCase)) continue;

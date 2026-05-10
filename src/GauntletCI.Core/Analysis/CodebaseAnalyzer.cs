@@ -48,7 +48,7 @@ public static class CodebaseAnalyzer
             {
                 var info = new FileInfo(file.FullName);
                 totalBytes += info.Length;
-                
+
                 // Estimate LOC by reading first 1KB (or entire file if smaller)
                 var header = await File.ReadAllTextAsync(file.FullName, ct);
                 var locEstimate = header.Count(c => c == '\n') + 1;
@@ -178,7 +178,8 @@ public static class CodebaseAnalyzer
     {
         var pathLower = path.ToLowerInvariant();
         return ExcludePatterns.Any(pattern => pathLower.Contains($"{Path.DirectorySeparatorChar}{pattern}{Path.DirectorySeparatorChar}") ||
-                                             pathLower.Contains($"{Path.DirectorySeparatorChar}{pattern}")); }
+                                             pathLower.Contains($"{Path.DirectorySeparatorChar}{pattern}"));
+    }
 
     /// <summary>
     /// Converts an absolute file path to a relative path from the root directory.

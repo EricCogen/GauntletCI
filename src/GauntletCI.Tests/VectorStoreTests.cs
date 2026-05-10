@@ -15,7 +15,7 @@ public sealed class VectorStoreTests : IDisposable
     public VectorStoreTests()
     {
         _dbPath = Path.Combine(Path.GetTempPath(), $"gauntlet-test-{Guid.NewGuid():N}.db");
-        _store  = new VectorStore(_dbPath);
+        _store = new VectorStore(_dbPath);
     }
 
     public void Dispose()
@@ -68,9 +68,9 @@ public sealed class VectorStoreTests : IDisposable
     [Fact]
     public void FloatsBytesRoundTrip_PreservesValues()
     {
-        var orig  = new float[] { 1.5f, -0.3f, 42.0f, float.Epsilon };
+        var orig = new float[] { 1.5f, -0.3f, 42.0f, float.Epsilon };
         var bytes = VectorStore.FloatsToBytes(orig);
-        var back  = VectorStore.BytesToFloats(bytes);
+        var back = VectorStore.BytesToFloats(bytes);
         Assert.Equal(orig, back);
     }
 
@@ -87,7 +87,7 @@ public sealed class VectorStoreTests : IDisposable
     public void Upsert_DuplicateId_UpdatesRecord()
     {
         _store.Upsert("rec1", "original", "test", [1f, 0f]);
-        _store.Upsert("rec1", "updated",  "test", [0f, 1f]);
+        _store.Upsert("rec1", "updated", "test", [0f, 1f]);
         Assert.Equal(1, _store.Count());
 
         var result = _store.Search([0f, 1f], topK: 1);
@@ -98,9 +98,9 @@ public sealed class VectorStoreTests : IDisposable
     [Fact]
     public void Search_ReturnsClosestVector()
     {
-        _store.Upsert("a", "performance tip",   "dotnet/runtime", [1f, 0f, 0f]);
+        _store.Upsert("a", "performance tip", "dotnet/runtime", [1f, 0f, 0f]);
         _store.Upsert("b", "memory allocation", "dotnet/runtime", [0f, 1f, 0f]);
-        _store.Upsert("c", "thread safety",     "dotnet/runtime", [0f, 0f, 1f]);
+        _store.Upsert("c", "thread safety", "dotnet/runtime", [0f, 0f, 1f]);
 
         var results = _store.Search([1f, 0f, 0f], topK: 1);
 
@@ -137,7 +137,7 @@ public sealed class VectorStoreTests : IDisposable
     [Fact]
     public void Search_DifferentDimVectorsIgnored()
     {
-        _store.Upsert("2d", "two dim",   "test", [1f, 0f]);
+        _store.Upsert("2d", "two dim", "test", [1f, 0f]);
         _store.Upsert("3d", "three dim", "test", [1f, 0f, 0f]);
 
         // Query with 2D vector: 3D record should be ignored (dim mismatch)
@@ -168,7 +168,7 @@ public sealed class VectorStoreTests : IDisposable
     {
         var fakeResponse = JsonSerializer.Serialize(new { embedding = new float[] { 0.1f, 0.2f, 0.3f } });
         var handler = new FakeEmbedHandler(fakeResponse);
-        var http    = new HttpClient(handler);
+        var http = new HttpClient(handler);
 
         using var engine = new OllamaEmbeddingEngine("nomic-embed-text", "http://localhost:11434", http);
         var result = await engine.EmbedAsync("test input");

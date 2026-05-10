@@ -118,7 +118,7 @@ public sealed class FileChurnEnricher : IDisposable
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             if (!string.IsNullOrEmpty(_token))
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
-            
+
             using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return 0;
             await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
@@ -143,10 +143,10 @@ public sealed class FileChurnEnricher : IDisposable
                 ($fixtureId, $repo, $filePath, $churn, $score, datetime('now'))
             """;
         cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
-        cmd.Parameters.AddWithValue("$repo",       repo);
-        cmd.Parameters.AddWithValue("$filePath",   filePath);
-        cmd.Parameters.AddWithValue("$churn",      churn90d);
-        cmd.Parameters.AddWithValue("$score",      hotspotScore);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$filePath", filePath);
+        cmd.Parameters.AddWithValue("$churn", churn90d);
+        cmd.Parameters.AddWithValue("$score", hotspotScore);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }

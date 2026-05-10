@@ -12,13 +12,13 @@ public class ChangedFileAnalyzerTests
         string newPath,
         string oldPath = "",
         bool isDeleted = false,
-        bool hasHunks  = true)
+        bool hasHunks = true)
     {
         var file = new DiffFile
         {
-            NewPath   = newPath,
-            OldPath   = oldPath,
-            IsAdded   = false,
+            NewPath = newPath,
+            OldPath = oldPath,
+            IsAdded = false,
             IsDeleted = isDeleted,
         };
         if (hasHunks)
@@ -93,9 +93,9 @@ public class ChangedFileAnalyzerTests
     {
         var file = new DiffFile
         {
-            NewPath   = "src/NewName.cs",
-            OldPath   = "src/OldName.cs",
-            IsAdded   = false,
+            NewPath = "src/NewName.cs",
+            OldPath = "src/OldName.cs",
+            IsAdded = false,
             IsDeleted = false,
             // no hunks → no content changes
         };
@@ -180,7 +180,7 @@ public class ChangedFileAnalyzerTests
         };
 
         var records = files.Select(f => Analyzer.Analyze(f)).ToList();
-        var stats   = FileEligibilityStatistics.From(records);
+        var stats = FileEligibilityStatistics.From(records);
 
         Assert.Equal(8, stats.TotalFiles);
         Assert.Equal(2, stats.EligibleFiles);
@@ -200,9 +200,9 @@ public class ChangedFileAnalyzerTests
     {
         var file = new DiffFile
         {
-            NewPath   = "src/NewName.cs",
-            OldPath   = "src/OldName.cs",
-            IsAdded   = false,
+            NewPath = "src/NewName.cs",
+            OldPath = "src/OldName.cs",
+            IsAdded = false,
             IsDeleted = false,
         };
         file.Hunks.Add(new DiffHunk { Lines = [new DiffLine { Kind = DiffLineKind.Added, Content = "// change" }] });

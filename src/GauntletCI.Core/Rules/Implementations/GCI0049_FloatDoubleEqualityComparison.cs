@@ -18,7 +18,7 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
     public GCI0049_FloatDoubleEqualityComparison(IPatternProvider patterns) : base(patterns)
     {
     }
-    public override string Id   => "GCI0049";
+    public override string Id => "GCI0049";
     public override string Name => "Float/Double Equality Comparison";
 
     public override Task<List<Finding>> EvaluateAsync(
@@ -75,8 +75,8 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
     private static int GetFirstOperatorIndex(string content)
     {
         int min = int.MaxValue;
-        UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatLiteralOnRightRegex,   content, ref min);
-        UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatLiteralOnLeftRegex,    content, ref min);
+        UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatLiteralOnRightRegex, content, ref min);
+        UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatLiteralOnLeftRegex, content, ref min);
         UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatCastWithEqualityRegex, content, ref min);
         UpdateMinOperator(WellKnownPatterns.FloatingPointPatterns.FloatTypeWithEqualityRegex, content, ref min);
         return min == int.MaxValue ? 0 : min;

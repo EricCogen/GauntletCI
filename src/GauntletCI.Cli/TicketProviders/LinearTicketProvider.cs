@@ -28,17 +28,17 @@ public sealed class LinearTicketProvider : ITicketProvider
         {
             return null;  // Provider not available
         }
-        var query  = new { query = "query($id:String!){issue(id:$id){id title description url}}", variables = new { id = issueKey } };
-        var body   = JsonSerializer.Serialize(query);
+        var query = new { query = "query($id:String!){issue(id:$id){id title description url}}", variables = new { id = issueKey } };
+        var body = JsonSerializer.Serialize(query);
 
         using var req = new HttpRequestMessage(HttpMethod.Post, "https://api.linear.app/graphql")
         {
             Content = new StringContent(body, Encoding.UTF8, "application/json")
         };
-        
+
         if (string.IsNullOrWhiteSpace(apiKey))
             return null;  // Defensive: apiKey cleared after earlier check
-            
+
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
         using var resp = await Http.SendAsync(req, ct);
@@ -50,16 +50,16 @@ public sealed class LinearTicketProvider : ITicketProvider
         if (!data.TryGetProperty("issue", out var issue) || issue.ValueKind == JsonValueKind.Null) return null;
 
         var title = issue.TryGetProperty("title", out var t) ? t.GetString() : null;
-        var desc  = issue.TryGetProperty("description", out var d) ? d.GetString() : null;
-        var url   = issue.TryGetProperty("url", out var u) ? u.GetString() : null;
+        var desc = issue.TryGetProperty("description", out var d) ? d.GetString() : null;
+        var url = issue.TryGetProperty("url", out var u) ? u.GetString() : null;
 
         return new TicketInfo
         {
-            Id          = issueKey,
-            Title       = title ?? issueKey,
+            Id = issueKey,
+            Title = title ?? issueKey,
             Description = desc?.Length > 500 ? desc[..500] : desc,
-            Url         = url,
-            Provider    = "Linear",
+            Url = url,
+            Provider = "Linear",
         };
     }
 }

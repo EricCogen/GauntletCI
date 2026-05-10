@@ -321,11 +321,11 @@ public class PatchIntegrationTests
         Assert.Single(ops.ByFile("a.cs"));
         Assert.True(ops.ByMinRisk(0.4).Any());
         Assert.Equal(2, ops.ByMinRisk(0.4).Count());
-        
+
         // Check aggregation
         var maxRisk = ops.AggregateRisk("max");
         Assert.Equal(0.9, maxRisk);
-        
+
         var meanRisk = ops.AggregateRisk("mean");
         Assert.Equal((0.1 + 0.9 + 0.5) / 3, meanRisk, 2);
     }
@@ -377,13 +377,13 @@ public class PatchIntegrationTests
 
         // Act & Assert
         Assert.Equal(3, transforms.Count);
-        
+
         var extracts = transforms.ByKind(PatchTransformationKind.ExtractMethod).ToList();
         Assert.Equal(2, extracts.Count);
-        
+
         var serviceTransforms = transforms.ByFile("Service.cs").ToList();
         Assert.Equal(2, serviceTransforms.Count);
-        
+
         var highRisk = transforms.ByMinRisk(0.5).ToList();
         Assert.Equal(2, highRisk.Count);
 
@@ -419,13 +419,13 @@ public class PatchIntegrationTests
 
         // Act & Assert
         Assert.Equal(3, evidence.Count);
-        
+
         var byKind = evidence.ByKind(PatchEvidenceKind.AddedLine).ToList();
         Assert.Single(byKind);
-        
+
         var highConfidence = evidence.ByMinConfidence(0.8).ToList();
         Assert.Equal(2, highConfidence.Count);
-        
+
         var meanConfidence = evidence.AggregateConfidence("mean");
         Assert.Equal((1.0 + 0.85 + 0.6) / 3, meanConfidence, 2);
     }
@@ -522,7 +522,7 @@ public class PatchIntegrationTests
         Assert.Equal("src/Service.cs", patchModel.Files[0].NewPath);
         Assert.Equal(1, patchModel.CountAddedLines());
         Assert.Equal(1, patchModel.CountRemovedLines());
-        
+
         Assert.Equal(2, operations.Count);
         Assert.Equal(1, transformations.Count);
         Assert.Equal(2, evidence.Count);

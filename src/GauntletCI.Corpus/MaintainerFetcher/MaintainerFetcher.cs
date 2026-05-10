@@ -73,7 +73,7 @@ public sealed class MaintainerFetcher : IDisposable
 
             foreach (var label in target.Labels)
             {
-                var prs    = await SearchItemsAsync(target.Owner, target.Repo, "pr",    label, topLogins, maxPerLabel, ct).ConfigureAwait(false);
+                var prs = await SearchItemsAsync(target.Owner, target.Repo, "pr", label, topLogins, maxPerLabel, ct).ConfigureAwait(false);
                 var issues = await SearchItemsAsync(target.Owner, target.Repo, "issue", label, topLogins, maxPerLabel, ct).ConfigureAwait(false);
 
                 foreach (var rec in prs.Concat(issues))
@@ -93,13 +93,13 @@ public sealed class MaintainerFetcher : IDisposable
         string owner, string repo, CancellationToken ct)
     {
         // GitHub returns contributors sorted by contributions desc (first page = highest)
-        var url  = $"https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100&anon=0";
+        var url = $"https://api.github.com/repos/{owner}/{repo}/contributors?per_page=100&anon=0";
         var json = await FetchWithBackoffAsync(url, ct).ConfigureAwait(false);
         var contributors = JsonSerializer.Deserialize<List<GhContributor>>(json, JsonOpts) ?? [];
 
-        var total   = contributors.Count;
+        var total = contributors.Count;
         // Top-5% threshold: at minimum 10 contributors, ceil to avoid fractional counts
-        var takeN   = Math.Max(MinTopCount, (int)Math.Ceiling(total * TopPercentile));
+        var takeN = Math.Max(MinTopCount, (int)Math.Ceiling(total * TopPercentile));
         return contributors.Take(takeN).Select(c => c.Login).ToList();
     }
 
@@ -116,7 +116,7 @@ public sealed class MaintainerFetcher : IDisposable
                   $"?q=repo:{owner}/{repo}+{qualifier}+label:{encodedLabel}" +
                   $"&sort=reactions&order=desc&per_page={Math.Min(max, 100)}";
 
-        var json     = await FetchWithBackoffAsync(url, ct).ConfigureAwait(false);
+        var json = await FetchWithBackoffAsync(url, ct).ConfigureAwait(false);
         var response = JsonSerializer.Deserialize<GhSearchResponse>(json, JsonOpts);
         if (response?.Items is null) return [];
 
@@ -127,15 +127,15 @@ public sealed class MaintainerFetcher : IDisposable
             var itemType = item.PullRequest is not null ? "pr" : "issue";
             records.Add(new MaintainerRecord
             {
-                Owner     = owner,
-                Repo      = repo,
-                Number    = item.Number,
-                Type      = itemType,
-                Author    = item.User.Login,
-                Title     = item.Title,
-                Body      = item.Body ?? "",
-                Labels    = item.Labels.Select(l => l.Name).ToArray(),
-                Url       = item.HtmlUrl,
+                Owner = owner,
+                Repo = repo,
+                Number = item.Number,
+                Type = itemType,
+                Author = item.User.Login,
+                Title = item.Title,
+                Body = item.Body ?? "",
+                Labels = item.Labels.Select(l => l.Name).ToArray(),
+                Url = item.HtmlUrl,
                 CreatedAt = item.CreatedAt,
                 Reactions = item.Reactions?.TotalCount ?? 0,
             });
@@ -150,10 +150,10 @@ public sealed class MaintainerFetcher : IDisposable
 
         for (int attempt = 0; ; attempt++)
         {
-            using var req  = new HttpRequestMessage(HttpMethod.Get, url);
+            using var req = new HttpRequestMessage(HttpMethod.Get, url);
             if (!string.IsNullOrEmpty(_token))
                 req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
-            
+
             using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
 
             if (resp.IsSuccessStatusCode)
@@ -189,8 +189,8 @@ public sealed class MaintainerFetcher : IDisposable
 
     private sealed class GhContributor
     {
-        [JsonPropertyName("login")]        public string Login         { get; init; } = "";
-        [JsonPropertyName("contributions")] public int Contributions   { get; init; }
+        [JsonPropertyName("login")] public string Login { get; init; } = "";
+        [JsonPropertyName("contributions")] public int Contributions { get; init; }
     }
 
     private sealed class GhSearchResponse
@@ -200,19 +200,19 @@ public sealed class MaintainerFetcher : IDisposable
 
     private sealed class GhSearchItem
     {
-        [JsonPropertyName("number")]       public int Number           { get; init; }
-        [JsonPropertyName("title")]        public string Title         { get; init; } = "";
-        [JsonPropertyName("body")]         public string? Body         { get; init; }
-        [JsonPropertyName("html_url")]     public string HtmlUrl       { get; init; } = "";
-        [JsonPropertyName("created_at")]   public DateTimeOffset CreatedAt { get; init; }
-        [JsonPropertyName("user")]         public GhUser User          { get; init; } = new();
-        [JsonPropertyName("labels")]       public List<GhLabel> Labels { get; init; } = [];
-        [JsonPropertyName("reactions")]    public GhReactions? Reactions { get; init; }
+        [JsonPropertyName("number")] public int Number { get; init; }
+        [JsonPropertyName("title")] public string Title { get; init; } = "";
+        [JsonPropertyName("body")] public string? Body { get; init; }
+        [JsonPropertyName("html_url")] public string HtmlUrl { get; init; } = "";
+        [JsonPropertyName("created_at")] public DateTimeOffset CreatedAt { get; init; }
+        [JsonPropertyName("user")] public GhUser User { get; init; } = new();
+        [JsonPropertyName("labels")] public List<GhLabel> Labels { get; init; } = [];
+        [JsonPropertyName("reactions")] public GhReactions? Reactions { get; init; }
         [JsonPropertyName("pull_request")] public GhPrRef? PullRequest { get; init; }
     }
 
-    private sealed class GhUser    { [JsonPropertyName("login")] public string Login { get; init; } = ""; }
-    private sealed class GhLabel   { [JsonPropertyName("name")]  public string Name  { get; init; } = ""; }
+    private sealed class GhUser { [JsonPropertyName("login")] public string Login { get; init; } = ""; }
+    private sealed class GhLabel { [JsonPropertyName("name")] public string Name { get; init; } = ""; }
     private sealed class GhReactions { [JsonPropertyName("total_count")] public int TotalCount { get; init; } }
-    private sealed class GhPrRef   { [JsonPropertyName("url")]   public string Url   { get; init; } = ""; }
+    private sealed class GhPrRef { [JsonPropertyName("url")] public string Url { get; init; } = ""; }
 }

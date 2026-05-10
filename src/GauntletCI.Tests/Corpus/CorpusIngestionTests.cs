@@ -15,10 +15,10 @@ namespace GauntletCI.Tests.Corpus;
 public class FixtureIdHelperTests
 {
     [Theory]
-    [InlineData("torvalds", "linux",          4321, "torvalds_linux_pr4321")]
-    [InlineData("MyOrg",    "MyRepo",         1,    "myorg_myrepo_pr1")]
-    [InlineData("owner",    "repo/sub",       99,   "owner_repo_sub_pr99")]
-    [InlineData("owner",    "repo with space", 5,   "owner_repo-with-space_pr5")]
+    [InlineData("torvalds", "linux", 4321, "torvalds_linux_pr4321")]
+    [InlineData("MyOrg", "MyRepo", 1, "myorg_myrepo_pr1")]
+    [InlineData("owner", "repo/sub", 99, "owner_repo_sub_pr99")]
+    [InlineData("owner", "repo with space", 5, "owner_repo-with-space_pr5")]
     public void Build_ReturnsExpectedFixtureId(string owner, string repo, int prNumber, string expected)
     {
         var result = FixtureIdHelper.Build(owner, repo, prNumber);
@@ -27,8 +27,8 @@ public class FixtureIdHelperTests
 
     [Theory]
     [InlineData(FixtureTier.Discovery, "owner_repo_pr1", "discovery/owner_repo_pr1")]
-    [InlineData(FixtureTier.Silver,    "owner_repo_pr1", "silver/owner_repo_pr1")]
-    [InlineData(FixtureTier.Gold,      "owner_repo_pr1", "gold/owner_repo_pr1")]
+    [InlineData(FixtureTier.Silver, "owner_repo_pr1", "silver/owner_repo_pr1")]
+    [InlineData(FixtureTier.Gold, "owner_repo_pr1", "gold/owner_repo_pr1")]
     public void GetFixturePath_ReturnsCorrectPathForEachTier(
         FixtureTier tier, string fixtureId, string expectedSuffix)
     {
@@ -40,7 +40,7 @@ public class FixtureIdHelperTests
     public void GetRawPath_AppendsRawSegment()
     {
         var fixturePath = Path.Combine("base", "discovery", "fixture1");
-        var rawPath     = FixtureIdHelper.GetRawPath(fixturePath);
+        var rawPath = FixtureIdHelper.GetRawPath(fixturePath);
         Assert.Equal(Path.Combine(fixturePath, "raw"), rawPath);
     }
 
@@ -77,16 +77,16 @@ public class FixtureIdHelperTests
 public class PrSizeBucketClassifierTests
 {
     [Theory]
-    [InlineData(0,   PrSizeBucket.Tiny)]   // lower boundary
-    [InlineData(1,   PrSizeBucket.Tiny)]
-    [InlineData(2,   PrSizeBucket.Tiny)]   // upper boundary (<= 2)
-    [InlineData(3,   PrSizeBucket.Small)]  // lower boundary
-    [InlineData(7,   PrSizeBucket.Small)]  // upper boundary (<= 7)
-    [InlineData(8,   PrSizeBucket.Medium)] // lower boundary
-    [InlineData(20,  PrSizeBucket.Medium)] // upper boundary (<= 20)
-    [InlineData(21,  PrSizeBucket.Large)]  // lower boundary
-    [InlineData(75,  PrSizeBucket.Large)]  // upper boundary (<= 75)
-    [InlineData(76,  PrSizeBucket.Huge)]   // lower boundary
+    [InlineData(0, PrSizeBucket.Tiny)]   // lower boundary
+    [InlineData(1, PrSizeBucket.Tiny)]
+    [InlineData(2, PrSizeBucket.Tiny)]   // upper boundary (<= 2)
+    [InlineData(3, PrSizeBucket.Small)]  // lower boundary
+    [InlineData(7, PrSizeBucket.Small)]  // upper boundary (<= 7)
+    [InlineData(8, PrSizeBucket.Medium)] // lower boundary
+    [InlineData(20, PrSizeBucket.Medium)] // upper boundary (<= 20)
+    [InlineData(21, PrSizeBucket.Large)]  // lower boundary
+    [InlineData(75, PrSizeBucket.Large)]  // upper boundary (<= 75)
+    [InlineData(76, PrSizeBucket.Huge)]   // lower boundary
     [InlineData(500, PrSizeBucket.Huge)]
     public void Classify_ReturnsCorrectBucket(int filesChanged, PrSizeBucket expected)
     {
@@ -148,7 +148,7 @@ public sealed class FixtureFolderStoreTests : IDisposable
     {
         _tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(_tempDir);
-        _db    = new CorpusDb(Path.Combine(_tempDir, "corpus.db"));
+        _db = new CorpusDb(Path.Combine(_tempDir, "corpus.db"));
         _db.InitializeAsync().GetAwaiter().GetResult();
         _store = new FixtureFolderStore(_db, _tempDir);
     }
@@ -163,24 +163,24 @@ public sealed class FixtureFolderStoreTests : IDisposable
 
     private static FixtureMetadata MakeMetadata(
         string fixtureId = "testowner_testrepo_pr1",
-        FixtureTier tier  = FixtureTier.Discovery) =>
+        FixtureTier tier = FixtureTier.Discovery) =>
         new()
         {
-            FixtureId         = fixtureId,
-            Tier              = tier,
-            Repo              = "testowner/testrepo",
+            FixtureId = fixtureId,
+            Tier = tier,
+            Repo = "testowner/testrepo",
             PullRequestNumber = 1,
-            Language          = "C#",
-            RuleIds           = [],
-            Tags              = [],
-            PrSizeBucket      = PrSizeBucket.Tiny,
-            FilesChanged      = 1,
-            HasTestsChanged   = false,
+            Language = "C#",
+            RuleIds = [],
+            Tags = [],
+            PrSizeBucket = PrSizeBucket.Tiny,
+            FilesChanged = 1,
+            HasTestsChanged = false,
             HasReviewComments = false,
-            BaseSha           = "abc123",
-            HeadSha           = "def456",
-            Source            = "test",
-            CreatedAtUtc      = DateTime.UtcNow,
+            BaseSha = "abc123",
+            HeadSha = "def456",
+            Source = "test",
+            CreatedAtUtc = DateTime.UtcNow,
         };
 
     [Fact]
@@ -236,7 +236,7 @@ public sealed class FixtureFolderStoreTests : IDisposable
     {
         await _store.SaveMetadataAsync(MakeMetadata());
 
-        const string runId   = "run-001";
+        const string runId = "run-001";
         var findings = new List<ActualFinding>
         {
             new() { RuleId = "GCI0001", DidTrigger = true },
@@ -292,14 +292,14 @@ public sealed class NormalizationPipelineTests : IDisposable
     private static HydratedPullRequest MakePr(string owner, string repo, int number, int filesChanged = 1) =>
         new()
         {
-            RepoOwner         = owner,
-            RepoName          = repo,
+            RepoOwner = owner,
+            RepoName = repo,
             PullRequestNumber = number,
             FilesChangedCount = filesChanged,
-            ChangedFiles      = [],
-            ReviewComments    = [],
-            DiffText          = "",
-            HydratedAtUtc     = DateTime.UtcNow,
+            ChangedFiles = [],
+            ReviewComments = [],
+            DiffText = "",
+            HydratedAtUtc = DateTime.UtcNow,
         };
 
     [Fact]
@@ -370,9 +370,9 @@ public sealed class RuleCorpusRunnerTests : IDisposable
     {
         _tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
         Directory.CreateDirectory(_tempDir);
-        _db     = new CorpusDb(Path.Combine(_tempDir, "corpus.db"));
+        _db = new CorpusDb(Path.Combine(_tempDir, "corpus.db"));
         _db.InitializeAsync().GetAwaiter().GetResult();
-        _store  = new FixtureFolderStore(_db, _tempDir);
+        _store = new FixtureFolderStore(_db, _tempDir);
         _runner = new RuleCorpusRunner(_store, _db);
     }
 
@@ -387,19 +387,19 @@ public sealed class RuleCorpusRunnerTests : IDisposable
     private static FixtureMetadata MinimalMetadata(string fixtureId) =>
         new()
         {
-            FixtureId         = fixtureId,
-            Tier              = FixtureTier.Discovery,
-            Repo              = "owner/repo",
+            FixtureId = fixtureId,
+            Tier = FixtureTier.Discovery,
+            Repo = "owner/repo",
             PullRequestNumber = 1,
-            Language          = "C#",
-            RuleIds           = [],
-            Tags              = [],
-            PrSizeBucket      = PrSizeBucket.Tiny,
-            FilesChanged      = 1,
-            HasTestsChanged   = false,
+            Language = "C#",
+            RuleIds = [],
+            Tags = [],
+            PrSizeBucket = PrSizeBucket.Tiny,
+            FilesChanged = 1,
+            HasTestsChanged = false,
             HasReviewComments = false,
-            Source            = "test",
-            CreatedAtUtc      = DateTime.UtcNow,
+            Source = "test",
+            CreatedAtUtc = DateTime.UtcNow,
         };
 
     [Fact]
@@ -445,7 +445,7 @@ public sealed class RuleCorpusRunnerTests : IDisposable
         var config = new GauntletConfig();
         config.Rules["GCI0001"] = new RuleConfig { Enabled = false };
 
-        var runner   = new RuleCorpusRunner(_store, _db, config);
+        var runner = new RuleCorpusRunner(_store, _db, config);
         var findings = await runner.RunAsync(fixtureId, MixedScopeDiff);
 
         Assert.DoesNotContain(findings, f => f.RuleId == "GCI0001");
@@ -518,10 +518,10 @@ public sealed class CandidateDeduplicationTests : IDisposable
         {
             using var cmd = _db.Connection.CreateCommand();
             cmd.CommandText = insertSql;
-            cmd.Parameters.AddWithValue("$id",    Guid.NewGuid().ToString());
+            cmd.Parameters.AddWithValue("$id", Guid.NewGuid().ToString());
             cmd.Parameters.AddWithValue("$owner", owner);
-            cmd.Parameters.AddWithValue("$repo",  repo);
-            cmd.Parameters.AddWithValue("$pr",    pr);
+            cmd.Parameters.AddWithValue("$repo", repo);
+            cmd.Parameters.AddWithValue("$pr", pr);
             await cmd.ExecuteNonQueryAsync();
         }
 

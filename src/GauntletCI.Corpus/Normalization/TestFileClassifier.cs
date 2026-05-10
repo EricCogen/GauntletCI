@@ -7,8 +7,8 @@ namespace GauntletCI.Corpus.Normalization;
 public static class TestFileClassifier
 {
     private static readonly string[] PathSegments = ["/test/", "/tests/", "\\test\\", "\\tests\\"];
-    private static readonly string[] NameSuffixes  = [".tests.cs", ".test.cs", "tests.cs", "test.cs"];
-    private static readonly string[] ProjectHints  = ["test", "tests"];
+    private static readonly string[] NameSuffixes = [".tests.cs", ".test.cs", "tests.cs", "test.cs"];
+    private static readonly string[] ProjectHints = ["test", "tests"];
 
     public static bool IsTestFile(string filePath)
     {

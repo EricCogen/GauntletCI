@@ -30,12 +30,12 @@ public class TelemetryDbTests : IDisposable
     {
         var evt = new TelemetryEvent
         {
-            EventType    = "rule_metric",
-            InstallId    = "test-install",
-            RepoHash     = "abc12345",
-            RuleId       = "GCI0001",
-            DurationMs   = 42,
-            Outcome      = "Triggered",
+            EventType = "rule_metric",
+            InstallId = "test-install",
+            RepoHash = "abc12345",
+            RuleId = "GCI0001",
+            DurationMs = 42,
+            Outcome = "Triggered",
             FindingCount = 1,
         };
 

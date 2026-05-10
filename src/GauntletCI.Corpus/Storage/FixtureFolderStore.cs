@@ -37,7 +37,7 @@ public sealed class FixtureFolderStore : IFixtureStore
     public async Task SaveMetadataAsync(FixtureMetadata metadata, CancellationToken ct = default)
     {
         var fixturePath = EnsureFixtureDir(metadata.Tier, metadata.FixtureId);
-        var metaPath    = Path.Combine(fixturePath, "metadata.json");
+        var metaPath = Path.Combine(fixturePath, "metadata.json");
 
         await File.WriteAllTextAsync(metaPath, JsonSerializer.Serialize(metadata, JsonOpts), ct).ConfigureAwait(false);
         EnsureNotesTemplate(fixturePath, metadata);

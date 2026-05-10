@@ -37,7 +37,7 @@ public class GCI0029_PiiLoggingLeak : RuleBase
 
                 // XML documentation comments are never runtime log calls
                 if (trimmed.StartsWith("///")) continue;
-                
+
                 // Skip comment lines entirely (// or *)
                 if (trimmed.StartsWith("//") || trimmed.StartsWith("*")) continue;
 
@@ -93,10 +93,10 @@ public class GCI0029_PiiLoggingLeak : RuleBase
             return true;
 
         // If it's just a field declaration ending with semicolon (no logger, no assignment)
-        if (content.EndsWith(';') && 
+        if (content.EndsWith(';') &&
             !content.Contains("_logger") && !content.Contains("logger") &&
             !content.Contains(" = ") &&
-            (content.Contains("public ") || content.Contains("private ") || content.Contains("protected "))&&
+            (content.Contains("public ") || content.Contains("private ") || content.Contains("protected ")) &&
             !content.Contains("("))  // not a method call
             return true;
 

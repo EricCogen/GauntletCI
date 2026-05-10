@@ -32,7 +32,7 @@ public static class LicenseCommand
                 Environment.SetEnvironmentVariable("GAUNTLETCI_OFFLINE", "1");
 
             const string EnvVar = "GAUNTLETCI_LICENSE";
-            var license  = LicenseService.Load(EnvVar);
+            var license = LicenseService.Load(EnvVar);
             var rawToken = LicenseService.ReadRawToken(EnvVar);
 
             AnsiConsole.MarkupLine("[bold cyan]GauntletCI License[/]");
@@ -41,11 +41,11 @@ public static class LicenseCommand
 
             var tierColor = license.Tier switch
             {
-                LicenseTier.Community  => "dim",
-                LicenseTier.Pro        => "cyan",
-                LicenseTier.Teams      => "green",
+                LicenseTier.Community => "dim",
+                LicenseTier.Pro => "cyan",
+                LicenseTier.Teams => "green",
                 LicenseTier.Enterprise => "yellow",
-                _                      => "dim",
+                _ => "dim",
             };
 
             AnsiConsole.MarkupLine($"  Tier    : [{tierColor}]{license.Tier}[/]");

@@ -38,9 +38,9 @@ public static class GitHubTokenResolver
             var psi = new ProcessStartInfo("gh", "auth token")
             {
                 RedirectStandardOutput = true,
-                RedirectStandardError  = true,
-                UseShellExecute        = false,
-                CreateNoWindow         = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
             };
 
             using var proc = Process.Start(psi);

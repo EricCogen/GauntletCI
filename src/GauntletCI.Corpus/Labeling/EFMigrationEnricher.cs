@@ -55,7 +55,7 @@ public sealed class EFMigrationEnricher
             }
 
             var diffLines = await File.ReadAllLinesAsync(diffPath, ct).ConfigureAwait(false);
-            var signals   = Detect(diffLines);
+            var signals = Detect(diffLines);
 
             await WriteEnrichmentAsync(db, fixture.FixtureId, fixture.Repo, signals, ct).ConfigureAwait(false);
 
@@ -82,11 +82,11 @@ public sealed class EFMigrationEnricher
     /// </summary>
     internal static EfMigrationSignals Detect(IEnumerable<string> diffLines)
     {
-        bool hasMigrationFile   = false;
-        bool hasSqlFile         = false;
-        bool hasSnapshot        = false;
-        bool hasEfContent       = false;
-        bool hasDdlContent      = false;
+        bool hasMigrationFile = false;
+        bool hasSqlFile = false;
+        bool hasSnapshot = false;
+        bool hasEfContent = false;
+        bool hasDdlContent = false;
         bool hasSchemaAnnotation = false;
 
         string? currentFile = null;
@@ -96,9 +96,9 @@ public sealed class EFMigrationEnricher
             // Track current file path
             if (line.StartsWith("diff --git a/", StringComparison.Ordinal))
             {
-                var rest   = line[13..];
+                var rest = line[13..];
                 var spaceB = rest.IndexOf(" b/", StringComparison.Ordinal);
-                currentFile    = spaceB >= 0 ? rest[..spaceB] : rest;
+                currentFile = spaceB >= 0 ? rest[..spaceB] : rest;
 
                 // Rule 1: EF migration file - path contains /Migrations/ and filename matches timestamp pattern
                 if (IsMigrationFilePath(currentFile))
@@ -209,25 +209,25 @@ public sealed class EFMigrationEnricher
                 ($fixtureId, $repo, $detected, $migFile, $sqlFile,
                  $efContent, $ddlContent, $confidence)
             """;
-        cmd.Parameters.AddWithValue("$fixtureId",   fixtureId);
-        cmd.Parameters.AddWithValue("$repo",         repo);
-        cmd.Parameters.AddWithValue("$detected",     s.MigrationDetected ? 1 : 0);
-        cmd.Parameters.AddWithValue("$migFile",      s.HasMigrationFile  ? 1 : 0);
-        cmd.Parameters.AddWithValue("$sqlFile",      s.HasSqlFile        ? 1 : 0);
-        cmd.Parameters.AddWithValue("$efContent",    s.HasEfContent      ? 1 : 0);
-        cmd.Parameters.AddWithValue("$ddlContent",   s.HasDdlContent     ? 1 : 0);
-        cmd.Parameters.AddWithValue("$confidence",   s.MigrationConfidence);
+        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$detected", s.MigrationDetected ? 1 : 0);
+        cmd.Parameters.AddWithValue("$migFile", s.HasMigrationFile ? 1 : 0);
+        cmd.Parameters.AddWithValue("$sqlFile", s.HasSqlFile ? 1 : 0);
+        cmd.Parameters.AddWithValue("$efContent", s.HasEfContent ? 1 : 0);
+        cmd.Parameters.AddWithValue("$ddlContent", s.HasDdlContent ? 1 : 0);
+        cmd.Parameters.AddWithValue("$confidence", s.MigrationConfidence);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
 
 /// <summary>Detection signals for a single fixture diff.</summary>
 internal record EfMigrationSignals(
-    bool   MigrationDetected,
-    bool   HasMigrationFile,
-    bool   HasSqlFile,
-    bool   HasEfContent,
-    bool   HasDdlContent,
+    bool MigrationDetected,
+    bool HasMigrationFile,
+    bool HasSqlFile,
+    bool HasEfContent,
+    bool HasDdlContent,
     double MigrationConfidence);
 
 /// <summary>Summary statistics from a <see cref="EFMigrationEnricher.EnrichAsync"/> run.</summary>

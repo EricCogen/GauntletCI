@@ -16,7 +16,7 @@ public static class PostmortemCommand
     public static Command Create()
     {
         var commitOption = new Option<string>("--commit", "Commit SHA to analyse (required)")
-            { IsRequired = true };
+        { IsRequired = true };
         var repoOption = new Option<DirectoryInfo>(
             "--repo",
             () => new DirectoryInfo(Directory.GetCurrentDirectory()),
@@ -36,11 +36,11 @@ public static class PostmortemCommand
 
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
         {
-            var commit   = ctx.ParseResult.GetValueForOption(commitOption)!;
-            var repo     = ctx.ParseResult.GetValueForOption(repoOption)!;
-            var output   = ctx.ParseResult.GetValueForOption(outputOption)!;
+            var commit = ctx.ParseResult.GetValueForOption(commitOption)!;
+            var repo = ctx.ParseResult.GetValueForOption(repoOption)!;
+            var output = ctx.ParseResult.GetValueForOption(outputOption)!;
             var noBanner = ctx.ParseResult.GetValueForOption(noBannerOption);
-            var ascii    = ctx.ParseResult.GetValueForOption(asciiFlag);
+            var ascii = ctx.ParseResult.GetValueForOption(asciiFlag);
 
             CliBanner.PrintIfEnabled(new BannerContext { NoBanner = noBanner, OutputFormat = output });
 

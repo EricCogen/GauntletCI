@@ -69,7 +69,7 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
     private void CheckBlockingAsyncCall(DiffLine line, List<Finding> findings)
     {
         var content = line.Content;
-        
+
         // Skip dev-only code (test utilities, profiling, temporary debug)
         if (WellKnownPatterns.HasDevOnlyMarker(content)) return;
 
@@ -88,12 +88,12 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
         bool hasWait = content.Contains(".Wait()", StringComparison.Ordinal);
         bool hasGetAwaiterGetResult = content.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal) ||
                                       System.Text.RegularExpressions.Regex.IsMatch(content, @"\.ConfigureAwait\s*\([^)]*\)\s*\.GetAwaiter\s*\(\s*\)\s*\.GetResult\s*\(\s*\)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
-        
+
         if (hasWait || hasGetAwaiterGetResult)
         {
             // Phase 17b: Use high confidence for unb ounded blocking (GCI0016 + GCI0020 coordination)
             findings.Add(CreateFinding(
-                summary: isUnboundedBlocking 
+                summary: isUnboundedBlocking
                     ? "Blocking async call (.Wait() / .GetAwaiter().GetResult()) without timeout - deadlock + resource exhaustion risk."
                     : "Blocking async call (.Wait() / .GetAwaiter().GetResult()) risks deadlock.",
                 evidence: $"Line {line.LineNumber}: {content.Trim()}",
@@ -119,7 +119,7 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
         if (beforeResult.Contains("await ", StringComparison.Ordinal)) return;
 
         bool isChainedOnCall = content[resultIdx - 1] == ')';
-        bool hasTaskContext  = beforeResult.Contains("Async(", StringComparison.Ordinal) ||
+        bool hasTaskContext = beforeResult.Contains("Async(", StringComparison.Ordinal) ||
                                beforeResult.Contains("Task.", StringComparison.Ordinal) ||
                                beforeResult.Contains("Task<", StringComparison.Ordinal);
 
@@ -175,7 +175,7 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
         if (string.IsNullOrEmpty(content)) return false;
 
         // Fire-and-forget pattern: _ = Task, _ = MethodAsync()
-        if (content.Contains("_ =", StringComparison.Ordinal) && 
+        if (content.Contains("_ =", StringComparison.Ordinal) &&
             (content.Contains("Task", StringComparison.Ordinal) ||
              content.Contains("Async(", StringComparison.OrdinalIgnoreCase)))
             return true;

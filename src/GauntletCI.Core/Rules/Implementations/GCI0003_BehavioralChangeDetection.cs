@@ -33,7 +33,7 @@ internal class BehavioralChangeContextAnalyzer
 
     private static bool HasSecurityTestChanges(DiffContext diff)
     {
-        var testFiles = diff.Files.Where(f => 
+        var testFiles = diff.Files.Where(f =>
             WellKnownPatterns.IsTestFile(f.NewPath ?? f.OldPath)).ToList();
 
         if (testFiles.Count == 0) return false;
@@ -164,7 +164,7 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
     {
         // Accumulate per-file results; cross-file dedup prevents explosion on wide diffs.
         var fileIncompatible = new List<(DiffFile File, List<(string Name, DiffLine Removed, DiffLine Added)> Items)>();
-        var fileCompatible   = new List<(DiffFile File, List<(string Name, DiffLine Removed, DiffLine Added)> Items)>();
+        var fileCompatible = new List<(DiffFile File, List<(string Name, DiffLine Removed, DiffLine Added)> Items)>();
 
         foreach (var file in diff.Files)
         {
@@ -179,7 +179,7 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
                 .ToList();
 
             var incompatible = new List<(string Name, DiffLine RemovedLine, DiffLine AddedLine)>();
-            var compatible   = new List<(string Name, DiffLine RemovedLine, DiffLine AddedLine)>();
+            var compatible = new List<(string Name, DiffLine RemovedLine, DiffLine AddedLine)>();
 
             foreach (var removed in removedSigs)
             {
@@ -199,32 +199,32 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             }
 
             if (incompatible.Count > 0) fileIncompatible.Add((file, incompatible));
-            if (compatible.Count > 0)   fileCompatible.Add((file, compatible));
+            if (compatible.Count > 0) fileCompatible.Add((file, compatible));
         }
 
         EmitSigFindings(findings, fileIncompatible,
-            single1Summary:  (name, file) => $"Method signature changed: '{name}' in {file.NewPath}",
-            singleNSummary:  (count, file) => $"{count} method signatures changed (incompatible) in {file.NewPath}",
-            crossSummary:    (total, fcount) => $"{total} method signatures changed (incompatible) across {fcount} files",
-            whyItMatters:    "Signature changes can break callers that haven't been updated.",
+            single1Summary: (name, file) => $"Method signature changed: '{name}' in {file.NewPath}",
+            singleNSummary: (count, file) => $"{count} method signatures changed (incompatible) in {file.NewPath}",
+            crossSummary: (total, fcount) => $"{total} method signatures changed (incompatible) across {fcount} files",
+            whyItMatters: "Signature changes can break callers that haven't been updated.",
             suggestedAction: "Verify all callers are updated and consider adding an overload for backward compatibility.",
-            confidence:      Confidence.Medium);
+            confidence: Confidence.Medium);
 
         EmitSigFindings(findings, fileCompatible,
-            single1Summary:  (name, file) => $"Backward-compatible signature extension: '{name}' in {file.NewPath}",
-            singleNSummary:  (count, file) => $"{count} backward-compatible signature extensions in {file.NewPath}",
-            crossSummary:    (total, fcount) => $"{total} backward-compatible signature extensions across {fcount} files",
-            whyItMatters:    "New parameters have default values (backward-compatible), but callers using positional arguments may need review.",
+            single1Summary: (name, file) => $"Backward-compatible signature extension: '{name}' in {file.NewPath}",
+            singleNSummary: (count, file) => $"{count} backward-compatible signature extensions in {file.NewPath}",
+            crossSummary: (total, fcount) => $"{total} backward-compatible signature extensions across {fcount} files",
+            whyItMatters: "New parameters have default values (backward-compatible), but callers using positional arguments may need review.",
             suggestedAction: "Confirm all existing callers still compile and behave correctly with the new defaults.",
-            confidence:      Confidence.Low);
+            confidence: Confidence.Low);
     }
 
     private void EmitSigFindings(
         List<Finding> findings,
         List<(DiffFile File, List<(string Name, DiffLine Removed, DiffLine Added)> Items)> perFile,
         Func<string, DiffFile, string> single1Summary,
-        Func<int, DiffFile, string>    singleNSummary,
-        Func<int, int, string>         crossSummary,
+        Func<int, DiffFile, string> singleNSummary,
+        Func<int, int, string> crossSummary,
         string whyItMatters,
         string suggestedAction,
         Confidence confidence)
@@ -254,11 +254,11 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             int total = perFile.Sum(x => x.Items.Count);
             var fileList = FormatFileList(perFile.Select(x => (x.File, x.Items.Count)));
             findings.Add(CreateFinding(
-                summary:         crossSummary(total, perFile.Count),
-                evidence:        $"Files: {fileList}",
-                whyItMatters:    whyItMatters,
+                summary: crossSummary(total, perFile.Count),
+                evidence: $"Files: {fileList}",
+                whyItMatters: whyItMatters,
                 suggestedAction: suggestedAction,
-                confidence:      confidence));
+                confidence: confidence));
         }
     }
 
@@ -422,15 +422,15 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
     {
         // Check if the file contains test-related patterns in the path or content
         var filePath = file.NewPath ?? file.OldPath;
-        
+
         // Patterns from corpus analysis showing high FP rates in test code
-        var testIndicators = new[] { 
-            "/test/", ".test/", "/tests/", ".tests/", 
-            ".Tests/", "/Tests/", "/UnitTests/", 
-            "Mock", "Fake", "Builder", "Factory" 
+        var testIndicators = new[] {
+            "/test/", ".test/", "/tests/", ".tests/",
+            ".Tests/", "/Tests/", "/UnitTests/",
+            "Mock", "Fake", "Builder", "Factory"
         };
 
-        bool isTestRelated = testIndicators.Any(indicator => 
+        bool isTestRelated = testIndicators.Any(indicator =>
             filePath.Contains(indicator, StringComparison.OrdinalIgnoreCase));
 
         // Patterns indicating refactored test helpers (low behavioral risk)

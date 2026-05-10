@@ -70,7 +70,7 @@ public class GCI0012_SecurityRisk : RuleBase
     private void CheckSqlInjection(DiffLine line, List<Finding> findings)
     {
         var content = line.Content;
-        
+
         // Skip mock objects in unit tests (even if test file guard wasn't applied)
         if (WellKnownPatterns.HasMockPattern(content)) return;
 
@@ -109,7 +109,7 @@ public class GCI0012_SecurityRisk : RuleBase
     private void CheckWeakCrypto(DiffLine line, List<Finding> findings)
     {
         var content = line.Content;
-        
+
         // Skip test code (cryptography unit tests may intentionally use weak algos for comparison)
         if (WellKnownPatterns.HasMockPattern(content)) return;
 

@@ -59,7 +59,7 @@ public class LlmLabelerFactoryTests
         {
             Environment.SetEnvironmentVariable("GITHUB_TOKEN", null);
             var hasToken = GauntletCI.Corpus.GitHubTokenResolver.IsAvailable;
-            var labeler  = LlmLabelerFactory.Create("github-models");
+            var labeler = LlmLabelerFactory.Create("github-models");
             if (hasToken)
                 Assert.IsType<GitHubModelsLlmLabeler>(labeler);
             else

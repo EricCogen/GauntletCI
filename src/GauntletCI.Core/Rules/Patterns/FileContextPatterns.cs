@@ -52,13 +52,13 @@ internal static class FileContextPatterns
 
         // File name: use original casing to distinguish PascalCase "Tests"/"Test"/"Spec" suffix
         // from English words that embed "test" (e.g. "Contest.cs", "Latest.cs", "Protest.cs").
-        var origFile  = lastSlash >= 0 ? normPath[(lastSlash + 1)..] : normPath;
+        var origFile = lastSlash >= 0 ? normPath[(lastSlash + 1)..] : normPath;
         var origNoExt = origFile.Contains('.') ? origFile[..origFile.LastIndexOf('.')] : origFile;
         return origNoExt.StartsWith("test", StringComparison.OrdinalIgnoreCase)
             || origNoExt.EndsWith("Tests", StringComparison.Ordinal)
-            || origNoExt.EndsWith("Test",  StringComparison.Ordinal)
-            || origNoExt.EndsWith("Spec",  StringComparison.OrdinalIgnoreCase)
-            || origNoExt.EndsWith("Benchmark",  StringComparison.OrdinalIgnoreCase)
+            || origNoExt.EndsWith("Test", StringComparison.Ordinal)
+            || origNoExt.EndsWith("Spec", StringComparison.OrdinalIgnoreCase)
+            || origNoExt.EndsWith("Benchmark", StringComparison.OrdinalIgnoreCase)
             || origNoExt.EndsWith("Benchmarks", StringComparison.OrdinalIgnoreCase);
     }
 
@@ -128,7 +128,7 @@ internal static class FileContextPatterns
     /// </summary>
     public static bool IsInfrastructureFile(string path)
     {
-        var fileName = System.IO.Path.GetFileName(path);
+        var fileName = Path.GetFileName(path);
         return string.Equals(fileName, "Program.cs", StringComparison.OrdinalIgnoreCase)
             || string.Equals(fileName, "Startup.cs", StringComparison.OrdinalIgnoreCase)
             || fileName.EndsWith("Extensions.cs", StringComparison.OrdinalIgnoreCase)

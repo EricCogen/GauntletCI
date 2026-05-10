@@ -95,7 +95,7 @@ public sealed class DependabotEnricher : IDisposable
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             if (!string.IsNullOrEmpty(_token))
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
-            
+
             using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return null;
 
@@ -133,12 +133,12 @@ public sealed class DependabotEnricher : IDisposable
             VALUES
                 ($fixtureId, $repo, $prNumber, $isDependabot, $title, $login)
             """;
-        cmd.Parameters.AddWithValue("$fixtureId",   fixtureId);
-        cmd.Parameters.AddWithValue("$repo",         repo);
-        cmd.Parameters.AddWithValue("$prNumber",     prNumber);
+        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$prNumber", prNumber);
         cmd.Parameters.AddWithValue("$isDependabot", isDependabot ? 1 : 0);
-        cmd.Parameters.AddWithValue("$title",        prTitle);
-        cmd.Parameters.AddWithValue("$login",        authorLogin);
+        cmd.Parameters.AddWithValue("$title", prTitle);
+        cmd.Parameters.AddWithValue("$login", authorLogin);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
@@ -146,7 +146,7 @@ public sealed class DependabotEnricher : IDisposable
 /// <summary>Summary statistics from a <see cref="DependabotEnricher.EnrichAsync"/> run.</summary>
 public sealed class DependabotEnrichmentResult
 {
-    public bool AuthMissing        { get; set; }
-    public int  FixturesProcessed  { get; set; }
-    public int  DependabotFixtures { get; set; }
+    public bool AuthMissing { get; set; }
+    public int FixturesProcessed { get; set; }
+    public int DependabotFixtures { get; set; }
 }

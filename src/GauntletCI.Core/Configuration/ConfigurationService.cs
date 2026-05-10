@@ -77,7 +77,7 @@ public sealed class ConfigurationService
                 if (!m.Success) continue;
 
                 var ruleId = m.Groups[1].Value;
-                var level  = m.Groups[2].Value;
+                var level = m.Groups[2].Value;
                 result[ruleId] = MapEditorConfigLevel(level);
             }
         }
@@ -92,11 +92,11 @@ public sealed class ConfigurationService
     private static RuleSeverity MapEditorConfigLevel(string level) =>
         level.ToLowerInvariant() switch
         {
-            "error"      => RuleSeverity.Block,
-            "warning"    => RuleSeverity.Warn,
+            "error" => RuleSeverity.Block,
+            "warning" => RuleSeverity.Warn,
             "suggestion" => RuleSeverity.Info,
-            "none"       => RuleSeverity.None,
-            _            => RuleSeverity.Info,
+            "none" => RuleSeverity.None,
+            _ => RuleSeverity.Info,
         };
 
     /// <summary>
@@ -107,11 +107,11 @@ public sealed class ConfigurationService
     {
         severity = value.ToLowerInvariant() switch
         {
-            "block" or "high"            => RuleSeverity.Block,
-            "warn"  or "warning" or "medium" => RuleSeverity.Warn,
-            "info"  or "suggestion" or "low" => RuleSeverity.Info,
-            "none"                       => RuleSeverity.None,
-            _                            => RuleSeverity.Info,
+            "block" or "high" => RuleSeverity.Block,
+            "warn" or "warning" or "medium" => RuleSeverity.Warn,
+            "info" or "suggestion" or "low" => RuleSeverity.Info,
+            "none" => RuleSeverity.None,
+            _ => RuleSeverity.Info,
         };
         return true;
     }

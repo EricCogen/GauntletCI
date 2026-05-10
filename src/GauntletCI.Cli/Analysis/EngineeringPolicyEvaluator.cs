@@ -82,7 +82,7 @@ internal static class EngineeringPolicyEvaluator
             return [];
         }
 
-        var diffText  = rawDiffText.Length > maxDiffChars
+        var diffText = rawDiffText.Length > maxDiffChars
             ? rawDiffText[..maxDiffChars] + "\n... (truncated)"
             : rawDiffText;
         var fileNames = ExtractFileNames(diffText);
@@ -136,8 +136,8 @@ internal static class EngineeringPolicyEvaluator
             if (IsTestFile(path)) continue;  // test files never ship; skip entirely
             sb.AppendLine($"// FILE: {path}");
             foreach (var hunk in file.Hunks)
-            foreach (var line in hunk.Lines.Where(l => l.Kind == DiffLineKind.Added))
-                sb.AppendLine(line.Content);
+                foreach (var line in hunk.Lines.Where(l => l.Kind == DiffLineKind.Added))
+                    sb.AppendLine(line.Content);
             sb.AppendLine();
         }
         return sb.ToString();
@@ -193,7 +193,7 @@ internal static class EngineeringPolicyEvaluator
 
             // Extract JSON array regardless of preamble text or markdown fences
             var start = trimmed.IndexOf('[');
-            var end   = trimmed.LastIndexOf(']');
+            var end = trimmed.LastIndexOf(']');
             if (start >= 0 && end > start)
                 trimmed = trimmed[start..(end + 1)];
 
@@ -218,14 +218,14 @@ internal static class EngineeringPolicyEvaluator
                     var normalizedId = NormalizeRuleId(r.RuleId!.TrimEnd(':', ' '));
                     return new Finding
                     {
-                        RuleId          = normalizedId,
-                        RuleName        = CanonicalRuleNames[normalizedId],
-                        Summary         = r.Summary!,
-                        Evidence        = evidenceBullets,
-                        WhyItMatters    = r.WhyItMatters ?? string.Empty,
+                        RuleId = normalizedId,
+                        RuleName = CanonicalRuleNames[normalizedId],
+                        Summary = r.Summary!,
+                        Evidence = evidenceBullets,
+                        WhyItMatters = r.WhyItMatters ?? string.Empty,
                         SuggestedAction = r.SuggestedAction ?? string.Empty,
-                        Severity        = RuleSeverity.Advisory,
-                        Confidence      = Confidence.Medium,
+                        Severity = RuleSeverity.Advisory,
+                        Confidence = Confidence.Medium,
                     };
                 }).ToList();
         }

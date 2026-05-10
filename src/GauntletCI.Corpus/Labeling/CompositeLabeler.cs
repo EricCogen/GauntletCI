@@ -25,16 +25,16 @@ namespace GauntletCI.Corpus.Labeling;
 /// </summary>
 public sealed class CompositeLabeler
 {
-    public const string LabelDependabotFix            = "DEPENDABOT_FIX";
-    public const string LabelHighRiskGhost            = "HIGH_RISK_GHOST";
-    public const string LabelSilentLogicChange        = "SILENT_LOGIC_CHANGE";
+    public const string LabelDependabotFix = "DEPENDABOT_FIX";
+    public const string LabelHighRiskGhost = "HIGH_RISK_GHOST";
+    public const string LabelSilentLogicChange = "SILENT_LOGIC_CHANGE";
     public const string LabelUnvalidatedBehavioralRisk = "UNVALIDATED_BEHAVIORAL_RISK";
-    public const string LabelStandardChange           = "STANDARD_CHANGE";
-    public const string LabelHotPathUnreviewed        = "HOT_PATH_UNREVIEWED";
-    public const string LabelInsufficientData         = "INSUFFICIENT_DATA";
+    public const string LabelStandardChange = "STANDARD_CHANGE";
+    public const string LabelHotPathUnreviewed = "HOT_PATH_UNREVIEWED";
+    public const string LabelInsufficientData = "INSUFFICIENT_DATA";
 
     // Guide thresholds
-    private const double LowValidationThreshold  = 0.3;
+    private const double LowValidationThreshold = 0.3;
     private const double HighValidationThreshold = 0.6;
 
     // Rule targets written to expected_findings when updateExpectedFindings = true
@@ -83,8 +83,8 @@ public sealed class CompositeLabeler
         {
             ct.ThrowIfCancellationRequested();
 
-            var signals    = await ReadSignalsAsync(db, fixture.FixtureId, ct).ConfigureAwait(false);
-            var label      = ClassifyLabel(signals);
+            var signals = await ReadSignalsAsync(db, fixture.FixtureId, ct).ConfigureAwait(false);
+            var label = ClassifyLabel(signals);
             var confidence = ComputeConfidence(signals, label);
 
             await WriteCompositeLabelAsync(db, fixture.FixtureId, label, confidence, signals, ct).ConfigureAwait(false);
@@ -129,13 +129,13 @@ public sealed class CompositeLabeler
         if (s.HasNuGetAdvisoryData && s.NuGetAdvisoryCount > 0 && !s.IsDependabot)
             return LabelHighRiskGhost;
 
-        var hasScannerMatch  = s.SonarMatchCount > 0 || s.CodeQlMatchCount > 0
+        var hasScannerMatch = s.SonarMatchCount > 0 || s.CodeQlMatchCount > 0
                             || (s.HasSemgrepData && s.SemgrepFindingCount > 0);
         var hasLowValidation = s.HasSocialSignalData && s.SocialSignalScore < LowValidationThreshold;
         var hasHighValidation = s.HasSocialSignalData && s.SocialSignalScore >= HighValidationThreshold;
 
         // Guide: Sonar(Complexity Up) + GitHub(No Review) -> HIGH_RISK_GHOST
-        if (hasScannerMatch && hasLowValidation)  return LabelHighRiskGhost;
+        if (hasScannerMatch && hasLowValidation) return LabelHighRiskGhost;
 
         // Scanner match but well-reviewed is still a real finding
         if (hasScannerMatch && hasHighValidation) return LabelHighRiskGhost;
@@ -195,28 +195,28 @@ public sealed class CompositeLabeler
 
     private static double ComputeConfidence(FixtureSignals s, string label) => label switch
     {
-        LabelDependabotFix             => 0.95,
-        LabelHighRiskGhost             => s.SonarMatchCount > 0 || s.CodeQlMatchCount > 0 ? 0.80
+        LabelDependabotFix => 0.95,
+        LabelHighRiskGhost => s.SonarMatchCount > 0 || s.CodeQlMatchCount > 0 ? 0.80
                                         : s.HasNuGetAdvisoryData && s.NuGetAdvisoryCount > 0 ? 0.85
                                         : 0.60,
-        LabelSilentLogicChange         => 0.55,
+        LabelSilentLogicChange => 0.55,
         LabelUnvalidatedBehavioralRisk => s.HasPrDescriptionData && s.HasLinkedIssue ? 0.40 : 0.50,
-        LabelHotPathUnreviewed         => 0.65,
-        LabelStandardChange            => s.ReviewerCount >= 2 ? 0.75 : 0.60,
-        _                              => 0.0,
+        LabelHotPathUnreviewed => 0.65,
+        LabelStandardChange => s.ReviewerCount >= 2 ? 0.75 : 0.60,
+        _ => 0.0,
     };
 
     private static void IncrementBucket(CompositeLabelerResult r, string label)
     {
         switch (label)
         {
-            case LabelDependabotFix:            r.DependabotFix++;            break;
-            case LabelHighRiskGhost:            r.HighRiskGhost++;            break;
-            case LabelSilentLogicChange:        r.SilentLogicChange++;        break;
+            case LabelDependabotFix: r.DependabotFix++; break;
+            case LabelHighRiskGhost: r.HighRiskGhost++; break;
+            case LabelSilentLogicChange: r.SilentLogicChange++; break;
             case LabelUnvalidatedBehavioralRisk: r.UnvalidatedBehavioralRisk++; break;
-            case LabelHotPathUnreviewed:        r.HotPathUnreviewed++;        break;
-            case LabelStandardChange:           r.StandardChange++;           break;
-            default:                            r.InsufficientData++;         break;
+            case LabelHotPathUnreviewed: r.HotPathUnreviewed++; break;
+            case LabelStandardChange: r.StandardChange++; break;
+            default: r.InsufficientData++; break;
         }
     }
 
@@ -247,7 +247,7 @@ public sealed class CompositeLabeler
             cmd.Parameters.AddWithValue("$id", fixtureId);
             var val = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
             s.HasDependabotData = val is not null;
-            s.IsDependabot      = val is not null && Convert.ToInt32(val) == 1;
+            s.IsDependabot = val is not null && Convert.ToInt32(val) == 1;
         }
 
         using (var cmd = db.Connection.CreateCommand())
@@ -261,9 +261,9 @@ public sealed class CompositeLabeler
             using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
             if (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
-                s.SocialSignalScore   = reader.GetDouble(0);
-                s.ReviewTimeMinutes   = reader.GetDouble(1);
-                s.ReviewerCount       = reader.GetInt32(2);
+                s.SocialSignalScore = reader.GetDouble(0);
+                s.ReviewTimeMinutes = reader.GetDouble(1);
+                s.ReviewerCount = reader.GetInt32(2);
                 s.HasSocialSignalData = true;
             }
         }
@@ -279,7 +279,7 @@ public sealed class CompositeLabeler
             var val = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
             if (val is not null)
             {
-                s.HasSemgrepData      = true;
+                s.HasSemgrepData = true;
                 s.SemgrepFindingCount = Convert.ToInt32(val);
             }
         }
@@ -295,8 +295,8 @@ public sealed class CompositeLabeler
             using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
             if (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
-                s.HasStructuralData   = true;
-                s.HasSensitivePath    = reader.GetInt32(0) > 0;
+                s.HasStructuralData = true;
+                s.HasSensitivePath = reader.GetInt32(0) > 0;
                 s.StructuralRiskScore = reader.GetDouble(1);
             }
         }
@@ -309,7 +309,7 @@ public sealed class CompositeLabeler
             if (val is not null)
             {
                 s.HasNuGetAdvisoryData = true;
-                s.NuGetAdvisoryCount   = Convert.ToInt32(val);
+                s.NuGetAdvisoryCount = Convert.ToInt32(val);
             }
         }
 
@@ -324,7 +324,7 @@ public sealed class CompositeLabeler
             var val = await cmd.ExecuteScalarAsync(ct).ConfigureAwait(false);
             if (val is not null)
             {
-                s.HasChurnData    = true;
+                s.HasChurnData = true;
                 s.MaxHotspotScore = Convert.ToDouble(val);
             }
         }
@@ -353,8 +353,8 @@ public sealed class CompositeLabeler
             if (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
                 s.HasTestCoverageData = true;
-                s.TestCoverageGap     = reader.GetInt32(0) == 1;
-                s.TestToProdRatio     = reader.GetDouble(1);
+                s.TestCoverageGap = reader.GetInt32(0) == 1;
+                s.TestToProdRatio = reader.GetDouble(1);
             }
         }
 
@@ -369,9 +369,9 @@ public sealed class CompositeLabeler
             using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
             if (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
-                s.HasEntropyData    = true;
+                s.HasEntropyData = true;
                 s.NormalizedEntropy = reader.GetDouble(0);
-                s.ChangeFileCount   = reader.GetInt32(1);
+                s.ChangeFileCount = reader.GetInt32(1);
             }
         }
 
@@ -386,8 +386,8 @@ public sealed class CompositeLabeler
             using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
             if (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
-                s.HasEfMigrationData  = true;
-                s.MigrationDetected   = reader.GetInt32(0) == 1;
+                s.HasEfMigrationData = true;
+                s.MigrationDetected = reader.GetInt32(0) == 1;
                 s.MigrationConfidence = reader.GetDouble(1);
             }
         }
@@ -404,9 +404,9 @@ public sealed class CompositeLabeler
             if (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
                 s.HasPrDescriptionData = true;
-                s.IsEmptyPrBody        = reader.GetInt32(0) == 1;
-                s.HasLinkedIssue       = reader.GetInt32(1) == 1;
-                s.HasWipKeywords       = reader.GetInt32(2) == 1;
+                s.IsEmptyPrBody = reader.GetInt32(0) == 1;
+                s.HasLinkedIssue = reader.GetInt32(1) == 1;
+                s.HasWipKeywords = reader.GetInt32(2) == 1;
             }
         }
 
@@ -421,8 +421,8 @@ public sealed class CompositeLabeler
             using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
             if (await reader.ReadAsync(ct).ConfigureAwait(false))
             {
-                s.HasAuthorData        = true;
-                s.IsFirstContributor   = reader.GetInt32(0) == 1;
+                s.HasAuthorData = true;
+                s.IsFirstContributor = reader.GetInt32(0) == 1;
                 s.AuthorExperienceTier = reader.GetString(1);
             }
         }
@@ -438,24 +438,24 @@ public sealed class CompositeLabeler
     {
         var signalsJson = JsonSerializer.Serialize(new
         {
-            sonar_matches          = signals.SonarMatchCount,
-            codeql_matches         = signals.CodeQlMatchCount,
-            is_dependabot          = signals.IsDependabot,
-            social_score           = signals.HasSocialSignalData ? signals.SocialSignalScore : (double?)null,
-            review_time_min        = signals.ReviewTimeMinutes,
-            reviewer_count         = signals.ReviewerCount,
-            semgrep_findings       = signals.HasSemgrepData ? signals.SemgrepFindingCount : (int?)null,
-            structural_risk_score  = signals.HasStructuralData ? signals.StructuralRiskScore : (double?)null,
-            has_sensitive_path     = signals.HasStructuralData ? signals.HasSensitivePath : (bool?)null,
-            nuget_advisories       = signals.HasNuGetAdvisoryData ? signals.NuGetAdvisoryCount : (int?)null,
-            max_hotspot_score      = signals.HasChurnData ? signals.MaxHotspotScore : (double?)null,
-            nlp_matched_rules      = signals.HasNlpData ? signals.NlpMatchedRuleIds.Count : (int?)null,
-            test_coverage_gap      = signals.HasTestCoverageData ? (bool?)signals.TestCoverageGap : null,
-            normalized_entropy     = signals.HasEntropyData ? (double?)signals.NormalizedEntropy : null,
-            migration_detected     = signals.HasEfMigrationData ? (bool?)signals.MigrationDetected : null,
-            is_empty_pr_body       = signals.HasPrDescriptionData ? (bool?)signals.IsEmptyPrBody : null,
-            has_linked_issue       = signals.HasPrDescriptionData ? (bool?)signals.HasLinkedIssue : null,
-            is_first_contributor   = signals.HasAuthorData ? (bool?)signals.IsFirstContributor : null,
+            sonar_matches = signals.SonarMatchCount,
+            codeql_matches = signals.CodeQlMatchCount,
+            is_dependabot = signals.IsDependabot,
+            social_score = signals.HasSocialSignalData ? signals.SocialSignalScore : (double?)null,
+            review_time_min = signals.ReviewTimeMinutes,
+            reviewer_count = signals.ReviewerCount,
+            semgrep_findings = signals.HasSemgrepData ? signals.SemgrepFindingCount : (int?)null,
+            structural_risk_score = signals.HasStructuralData ? signals.StructuralRiskScore : (double?)null,
+            has_sensitive_path = signals.HasStructuralData ? signals.HasSensitivePath : (bool?)null,
+            nuget_advisories = signals.HasNuGetAdvisoryData ? signals.NuGetAdvisoryCount : (int?)null,
+            max_hotspot_score = signals.HasChurnData ? signals.MaxHotspotScore : (double?)null,
+            nlp_matched_rules = signals.HasNlpData ? signals.NlpMatchedRuleIds.Count : (int?)null,
+            test_coverage_gap = signals.HasTestCoverageData ? (bool?)signals.TestCoverageGap : null,
+            normalized_entropy = signals.HasEntropyData ? (double?)signals.NormalizedEntropy : null,
+            migration_detected = signals.HasEfMigrationData ? (bool?)signals.MigrationDetected : null,
+            is_empty_pr_body = signals.HasPrDescriptionData ? (bool?)signals.IsEmptyPrBody : null,
+            has_linked_issue = signals.HasPrDescriptionData ? (bool?)signals.HasLinkedIssue : null,
+            is_first_contributor = signals.HasAuthorData ? (bool?)signals.IsFirstContributor : null,
             author_experience_tier = signals.HasAuthorData ? signals.AuthorExperienceTier : null,
         });
 
@@ -466,9 +466,9 @@ public sealed class CompositeLabeler
             VALUES
                 ($id, $label, $conf, $signals)
             """;
-        cmd.Parameters.AddWithValue("$id",      fixtureId);
-        cmd.Parameters.AddWithValue("$label",   label);
-        cmd.Parameters.AddWithValue("$conf",    confidence);
+        cmd.Parameters.AddWithValue("$id", fixtureId);
+        cmd.Parameters.AddWithValue("$label", label);
+        cmd.Parameters.AddWithValue("$conf", confidence);
         cmd.Parameters.AddWithValue("$signals", signalsJson);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
@@ -489,11 +489,11 @@ public sealed class CompositeLabeler
                 VALUES
                     ($id, $fixtureId, $ruleId, 1, $conf, $reason, 'composite-labeler')
                 """;
-            cmd.Parameters.AddWithValue("$id",        id);
+            cmd.Parameters.AddWithValue("$id", id);
             cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
-            cmd.Parameters.AddWithValue("$ruleId",    ruleId);
-            cmd.Parameters.AddWithValue("$conf",      confidence);
-            cmd.Parameters.AddWithValue("$reason",    reason);
+            cmd.Parameters.AddWithValue("$ruleId", ruleId);
+            cmd.Parameters.AddWithValue("$conf", confidence);
+            cmd.Parameters.AddWithValue("$reason", reason);
             await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
         }
     }
@@ -501,7 +501,7 @@ public sealed class CompositeLabeler
     private static async Task WriteEfMigrationFindingAsync(
         CorpusDb db, string fixtureId, double confidence, CancellationToken ct)
     {
-        var id     = $"{fixtureId}_GCI0021_ef-migration";
+        var id = $"{fixtureId}_GCI0021_ef-migration";
         var reason = "EF Core migration or SQL DDL change detected in diff - schema change risk";
 
         using var cmd = db.Connection.CreateCommand();
@@ -511,10 +511,10 @@ public sealed class CompositeLabeler
             VALUES
                 ($id, $fixtureId, 'GCI0021', 1, $conf, $reason, 'ef-migration-enricher')
             """;
-        cmd.Parameters.AddWithValue("$id",        id);
+        cmd.Parameters.AddWithValue("$id", id);
         cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
-        cmd.Parameters.AddWithValue("$conf",      confidence);
-        cmd.Parameters.AddWithValue("$reason",    reason);
+        cmd.Parameters.AddWithValue("$conf", confidence);
+        cmd.Parameters.AddWithValue("$reason", reason);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
@@ -522,51 +522,51 @@ public sealed class CompositeLabeler
 
     private sealed class FixtureSignals
     {
-        public int    SonarMatchCount     { get; set; }
-        public int    CodeQlMatchCount    { get; set; }
-        public bool   IsDependabot        { get; set; }
-        public bool   HasDependabotData   { get; set; }
-        public double SocialSignalScore   { get; set; }
-        public double ReviewTimeMinutes   { get; set; }
-        public int    ReviewerCount       { get; set; }
-        public bool   HasSocialSignalData { get; set; }
-        public bool   HasSemgrepData      { get; set; }
-        public int    SemgrepFindingCount { get; set; }
-        public bool   HasStructuralData   { get; set; }
+        public int SonarMatchCount { get; set; }
+        public int CodeQlMatchCount { get; set; }
+        public bool IsDependabot { get; set; }
+        public bool HasDependabotData { get; set; }
+        public double SocialSignalScore { get; set; }
+        public double ReviewTimeMinutes { get; set; }
+        public int ReviewerCount { get; set; }
+        public bool HasSocialSignalData { get; set; }
+        public bool HasSemgrepData { get; set; }
+        public int SemgrepFindingCount { get; set; }
+        public bool HasStructuralData { get; set; }
         public double StructuralRiskScore { get; set; }
-        public bool   HasSensitivePath    { get; set; }
-        public int    NuGetAdvisoryCount  { get; set; }
-        public bool   HasNuGetAdvisoryData { get; set; }
-        public bool   HasChurnData        { get; set; }
-        public double MaxHotspotScore     { get; set; }
+        public bool HasSensitivePath { get; set; }
+        public int NuGetAdvisoryCount { get; set; }
+        public bool HasNuGetAdvisoryData { get; set; }
+        public bool HasChurnData { get; set; }
+        public double MaxHotspotScore { get; set; }
         public HashSet<string> NlpMatchedRuleIds { get; set; } = new(StringComparer.Ordinal);
-        public bool   HasNlpData          { get; set; }
+        public bool HasNlpData { get; set; }
 
         // Test coverage enrichment signals
-        public bool   HasTestCoverageData { get; set; }
-        public bool   TestCoverageGap     { get; set; }
-        public double TestToProdRatio     { get; set; }
+        public bool HasTestCoverageData { get; set; }
+        public bool TestCoverageGap { get; set; }
+        public double TestToProdRatio { get; set; }
 
         // Diff entropy enrichment signals
-        public bool   HasEntropyData      { get; set; }
-        public double NormalizedEntropy   { get; set; }
-        public int    ChangeFileCount     { get; set; }
+        public bool HasEntropyData { get; set; }
+        public double NormalizedEntropy { get; set; }
+        public int ChangeFileCount { get; set; }
 
         // EF migration enrichment signals
-        public bool   HasEfMigrationData  { get; set; }
-        public bool   MigrationDetected   { get; set; }
+        public bool HasEfMigrationData { get; set; }
+        public bool MigrationDetected { get; set; }
         public double MigrationConfidence { get; set; }
 
         // PR description enrichment signals
-        public bool   HasPrDescriptionData { get; set; }
-        public bool   IsEmptyPrBody        { get; set; }
-        public bool   HasLinkedIssue       { get; set; }
-        public bool   HasWipKeywords       { get; set; }
+        public bool HasPrDescriptionData { get; set; }
+        public bool IsEmptyPrBody { get; set; }
+        public bool HasLinkedIssue { get; set; }
+        public bool HasWipKeywords { get; set; }
 
         // Author experience enrichment signals
-        public bool   HasAuthorData           { get; set; }
-        public bool   IsFirstContributor      { get; set; }
-        public string AuthorExperienceTier    { get; set; } = "unknown";
+        public bool HasAuthorData { get; set; }
+        public bool IsFirstContributor { get; set; }
+        public string AuthorExperienceTier { get; set; } = "unknown";
 
         // Alias used in ClassifyLabel for readability
         public double SocialScore => SocialSignalScore;
@@ -576,12 +576,12 @@ public sealed class CompositeLabeler
 /// <summary>Summary statistics from a <see cref="CompositeLabeler.ApplyAsync"/> run.</summary>
 public sealed class CompositeLabelerResult
 {
-    public int FixturesLabeled           { get; set; }
-    public int DependabotFix             { get; set; }
-    public int HighRiskGhost             { get; set; }
-    public int SilentLogicChange         { get; set; }
+    public int FixturesLabeled { get; set; }
+    public int DependabotFix { get; set; }
+    public int HighRiskGhost { get; set; }
+    public int SilentLogicChange { get; set; }
     public int UnvalidatedBehavioralRisk { get; set; }
-    public int HotPathUnreviewed         { get; set; }
-    public int StandardChange            { get; set; }
-    public int InsufficientData          { get; set; }
+    public int HotPathUnreviewed { get; set; }
+    public int StandardChange { get; set; }
+    public int InsufficientData { get; set; }
 }

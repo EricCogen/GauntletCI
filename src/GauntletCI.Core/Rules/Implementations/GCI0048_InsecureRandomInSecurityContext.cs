@@ -20,7 +20,7 @@ public class GCI0048_InsecureRandomInSecurityContext : RuleBase
     public GCI0048_InsecureRandomInSecurityContext(IPatternProvider patterns) : base(patterns)
     {
     }
-    public override string Id   => "GCI0048";
+    public override string Id => "GCI0048";
     public override string Name => "Insecure Random in Security Context";
 
     private static readonly Regex NewRandomRegex = new(
@@ -70,7 +70,7 @@ public class GCI0048_InsecureRandomInSecurityContext : RuleBase
 
                 // Check ±5 surrounding added lines for security-sensitive identifiers
                 int start = Math.Max(0, i - 5);
-                int end   = Math.Min(addedLines.Count - 1, i + 5);
+                int end = Math.Min(addedLines.Count - 1, i + 5);
 
                 bool nearSecurityTerm = false;
                 for (int j = start; j <= end && !nearSecurityTerm; j++)

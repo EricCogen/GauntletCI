@@ -328,7 +328,7 @@ public class DiffParserExtendedTests
 
         var file = ctx.Files[0];
         var hunk = file.Hunks[0];
-        var contextLines = hunk.Lines.Where(l => l.Kind == GauntletCI.Core.Diff.DiffLineKind.Context).ToList();
+        var contextLines = hunk.Lines.Where(l => l.Kind == DiffLineKind.Context).ToList();
 
         Assert.Equal(4, contextLines.Count);
     }

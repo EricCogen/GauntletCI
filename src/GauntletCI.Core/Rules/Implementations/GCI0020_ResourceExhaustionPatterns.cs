@@ -48,9 +48,9 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
 
             // Look for removed timeout-related lines
             var removedTimeouts = file.RemovedLines
-                .Where(l => WellKnownPatterns.TimeoutPatterns.Any(p => 
+                .Where(l => WellKnownPatterns.TimeoutPatterns.Any(p =>
                     l.Content.Contains(p, StringComparison.OrdinalIgnoreCase) &&
-                    (l.Content.Contains("=", StringComparison.Ordinal) || 
+                    (l.Content.Contains("=", StringComparison.Ordinal) ||
                      l.Content.Contains("(", StringComparison.Ordinal))))
                 .ToList();
 
@@ -58,7 +58,7 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
 
             // Check if timeout is replaced with MaxValue or removed without replacement
             var hasTimeoutInAdded = file.AddedLines
-                .Any(l => WellKnownPatterns.TimeoutPatterns.Any(p => 
+                .Any(l => WellKnownPatterns.TimeoutPatterns.Any(p =>
                     l.Content.Contains(p, StringComparison.OrdinalIgnoreCase)));
 
             if (!hasTimeoutInAdded)

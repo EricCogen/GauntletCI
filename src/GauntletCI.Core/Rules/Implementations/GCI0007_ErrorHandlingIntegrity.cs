@@ -251,19 +251,20 @@ public class GCI0007_ErrorHandlingIntegrity : RuleBase
         // "catch {" or "catch{": no type at all
         if (!catchLine.Contains('(')) return true;
 
-        var open  = catchLine.IndexOf('(');
+        var open = catchLine.IndexOf('(');
         var close = catchLine.IndexOf(')', open + 1);
         if (open < 0 || close <= open) return true; // malformed: treat conservatively
 
         var typePart = catchLine[(open + 1)..close].Trim();
         // Strip variable name: "Exception e" → "Exception"
-        var space    = typePart.IndexOf(' ');
+        var space = typePart.IndexOf(' ');
         var typeName = space > 0 ? typePart[..space] : typePart;
 
         return typeName is "Exception" or "System.Exception";
     }
 
-    private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)    {
+    private static void AddRoslynFindings(AnalyzerResult? staticAnalysis, List<Finding> findings)
+    {
         if (staticAnalysis is null) return;
         // CA2000 (don't dispose objects) and CA1001 (types owning disposable) are owned by GCI0024
         // (Resource Lifecycle): see DiagnosticMapper. GCI0007 keeps only CA1031 (catch generic

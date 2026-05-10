@@ -143,7 +143,7 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
             using var request = new HttpRequestMessage(HttpMethod.Get, commentsUrl);
             if (!string.IsNullOrEmpty(_token))
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
-            
+
             using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (resp.IsSuccessStatusCode)
             {
@@ -175,7 +175,7 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
             using var request = new HttpRequestMessage(HttpMethod.Get, reviewsUrl);
             if (!string.IsNullOrEmpty(_token))
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
-            
+
             using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (resp.IsSuccessStatusCode)
             {
@@ -212,11 +212,11 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
             VALUES
                 ($fixtureId, $repo, $ruleId, $keyword, $confidence, datetime('now'))
             """;
-        cmd.Parameters.AddWithValue("$fixtureId",  fixtureId);
-        cmd.Parameters.AddWithValue("$repo",        repo);
-        cmd.Parameters.AddWithValue("$ruleId",      ruleId);
-        cmd.Parameters.AddWithValue("$keyword",     keyword);
-        cmd.Parameters.AddWithValue("$confidence",  confidence);
+        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$ruleId", ruleId);
+        cmd.Parameters.AddWithValue("$keyword", keyword);
+        cmd.Parameters.AddWithValue("$confidence", confidence);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }

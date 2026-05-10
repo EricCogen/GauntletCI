@@ -167,10 +167,10 @@ public sealed class TestCoverageEnricher
             VALUES
                 ($fixtureId, $repo, $prodCsCount, $testCsCount, $testCoverageGap, $testToProdRatio)
             """;
-        cmd.Parameters.AddWithValue("$fixtureId",      fixtureId);
-        cmd.Parameters.AddWithValue("$repo",           repo);
-        cmd.Parameters.AddWithValue("$prodCsCount",    prodCsCount);
-        cmd.Parameters.AddWithValue("$testCsCount",    testCsCount);
+        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$prodCsCount", prodCsCount);
+        cmd.Parameters.AddWithValue("$testCsCount", testCsCount);
         cmd.Parameters.AddWithValue("$testCoverageGap", testCoverageGap ? 1 : 0);
         cmd.Parameters.AddWithValue("$testToProdRatio", testToProdRatio);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);

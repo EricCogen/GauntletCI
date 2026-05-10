@@ -59,7 +59,7 @@ public sealed class RoundRobinLlmLabelerTests
     [Fact]
     public async Task Disables_endpoint_after_consecutive_failures()
     {
-        var bad  = new FakeLabeler(null) { Name = "bad" };   // always fails
+        var bad = new FakeLabeler(null) { Name = "bad" };   // always fails
         var good = new FakeLabeler(SomeResult()) { Name = "good" };
 
         // threshold=2: bad is disabled after 2 consecutive failures.
@@ -96,7 +96,7 @@ public sealed class RoundRobinLlmLabelerTests
     public async Task Resets_consecutive_failures_on_disable()
     {
         // Use a very short cooldown so we can test re-entry in-process.
-        var bad  = new FakeLabeler(null) { Name = "bad" };
+        var bad = new FakeLabeler(null) { Name = "bad" };
         var good = new FakeLabeler(SomeResult()) { Name = "good" };
 
         // threshold=2; drive bad to disable via 3 calls (bad hit on calls 1 and 3).
@@ -163,7 +163,7 @@ public sealed class RoundRobinLlmLabelerTests
     public async Task Does_not_throw_when_internal_counter_wraps_around()
     {
         var labeler = new FakeLabeler(SomeResult());
-        var rr = new RoundRobinLlmLabeler([ new LlmEndpoint("e", labeler) ]);
+        var rr = new RoundRobinLlmLabeler([new LlmEndpoint("e", labeler)]);
 
         // Force _nextIndex close to int.MaxValue by reflection so the very
         // next Increment wraps to int.MinValue, previously triggering Math.Abs overflow.
@@ -185,7 +185,7 @@ public sealed class RoundRobinLlmLabelerTests
     public void Constructor_throws_when_failureThreshold_is_zero()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() =>
-            new RoundRobinLlmLabeler([ new LlmEndpoint("e", new FakeLabeler()) ], failureThreshold: 0));
+            new RoundRobinLlmLabeler([new LlmEndpoint("e", new FakeLabeler())], failureThreshold: 0));
     }
 
     [Fact]
@@ -206,7 +206,7 @@ public sealed class RoundRobinLlmLabelerTests
     public void Convenience_constructor_throws_when_labelers_is_null()
     {
         Assert.Throws<ArgumentNullException>(() =>
-            new RoundRobinLlmLabeler((IEnumerable<ILlmLabeler>)null!));
+            new RoundRobinLlmLabeler(null!));
     }
 
     [Fact]
@@ -224,7 +224,7 @@ public sealed class RoundRobinLlmLabelerTests
     public void Dispose_disposes_underlying_labelers()
     {
         var disposableLabeler = new DisposableFakeLabeler();
-        var rr = new RoundRobinLlmLabeler([ new LlmEndpoint("e", disposableLabeler) ]);
+        var rr = new RoundRobinLlmLabeler([new LlmEndpoint("e", disposableLabeler)]);
         rr.Dispose();
         Assert.True(disposableLabeler.Disposed);
     }

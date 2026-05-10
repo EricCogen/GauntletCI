@@ -16,7 +16,7 @@ namespace GauntletCI.Cli.Licensing;
 public static class NetworkLicenseValidator
 {
     private const string StatusEndpoint = "https://gauntletci-license-worker.patient-water-71dd.workers.dev/license/status";
-    private static readonly TimeSpan CacheTtl       = TimeSpan.FromHours(24);
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(24);
 
     private static readonly string CachePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
@@ -45,16 +45,16 @@ public static class NetworkLicenseValidator
         {
             var http = HttpClientFactory.GetGenericClient();
             // Do not dispose: HttpClientFactory owns this shared, process-wide client.
-            
-            using var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, StatusEndpoint);
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, StatusEndpoint);
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            
+
             using var response = await http.SendAsync(request, ct);
             var body = await response.Content.ReadAsStringAsync(ct);
-            using var doc  = JsonDocument.Parse(body);
-            var root       = doc.RootElement;
-            var valid      = root.GetProperty("valid").GetBoolean();
-            var reason     = root.TryGetProperty("reason", out var r) ? r.GetString() : null;
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+            var valid = root.GetProperty("valid").GetBoolean();
+            var reason = root.TryGetProperty("reason", out var r) ? r.GetString() : null;
 
             WriteCache(token, valid, reason);
             return (valid, reason);
@@ -80,8 +80,8 @@ public static class NetworkLicenseValidator
                 return null;
 
             using var stream = File.OpenRead(CachePath);
-            using var doc    = JsonDocument.Parse(stream);
-            var root         = doc.RootElement;
+            using var doc = JsonDocument.Parse(stream);
+            var root = doc.RootElement;
 
             // Invalidate if the token has changed since the cache was written.
             var cachedHash = root.TryGetProperty("tokenHash", out var h) ? h.GetString() : null;
@@ -93,7 +93,7 @@ public static class NetworkLicenseValidator
             if (DateTimeOffset.UtcNow - cachedAt > CacheTtl)
                 return null;
 
-            var valid  = root.GetProperty("valid").GetBoolean();
+            var valid = root.GetProperty("valid").GetBoolean();
             var reason = root.TryGetProperty("reason", out var rv) ? rv.GetString() : null;
             return (valid, reason);
         }

@@ -22,8 +22,8 @@ public sealed class DiffEntropyEnricherTests
         var m = DiffEntropyEnricher.ComputeMetrics(diff);
 
         Assert.Equal(1, m.FileCount);
-        Assert.Equal(0.0, m.ChangeEntropy,      precision: 10);
-        Assert.Equal(0.0, m.NormalizedEntropy,  precision: 10);
+        Assert.Equal(0.0, m.ChangeEntropy, precision: 10);
+        Assert.Equal(0.0, m.NormalizedEntropy, precision: 10);
     }
 
     // ── two files equal changes -> entropy = 1 bit ───────────────────────────
@@ -44,8 +44,8 @@ public sealed class DiffEntropyEnricherTests
         var m = DiffEntropyEnricher.ComputeMetrics(diff);
 
         Assert.Equal(2, m.FileCount);
-        Assert.Equal(1.0, m.ChangeEntropy,      precision: 10);
-        Assert.Equal(1.0, m.NormalizedEntropy,  precision: 10);
+        Assert.Equal(1.0, m.ChangeEntropy, precision: 10);
+        Assert.Equal(1.0, m.NormalizedEntropy, precision: 10);
     }
 
     // ── two files, one file has all changes -> entropy = 0 ───────────────────
@@ -67,7 +67,7 @@ public sealed class DiffEntropyEnricherTests
         var m = DiffEntropyEnricher.ComputeMetrics(diff);
 
         // B has 0 lines changed, entropy contribution is 0
-        Assert.Equal(0.0, m.ChangeEntropy,     precision: 10);
+        Assert.Equal(0.0, m.ChangeEntropy, precision: 10);
         Assert.Equal(0.0, m.NormalizedEntropy, precision: 10);
     }
 
@@ -95,7 +95,7 @@ public sealed class DiffEntropyEnricherTests
         var m = DiffEntropyEnricher.ComputeMetrics(diff);
 
         Assert.Equal(4, m.FileCount);
-        Assert.Equal(2.0, m.ChangeEntropy,     precision: 10);
+        Assert.Equal(2.0, m.ChangeEntropy, precision: 10);
         Assert.Equal(1.0, m.NormalizedEntropy, precision: 10);
     }
 

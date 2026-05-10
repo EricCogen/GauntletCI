@@ -42,15 +42,15 @@ public static class TelemetryUploader
 
             var http = HttpClientFactory.GetGenericClient();
             // Do not dispose: HttpClientFactory owns this shared, process-wide client.
-            
+
             var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "0.0.0";
             var payload = new { events = pending };
             var json = JsonSerializer.Serialize(payload);
-            
+
             using var request = new HttpRequestMessage(HttpMethod.Post, Endpoint);
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
             request.Headers.Add("X-GauntletCI-Version", version);
-            
+
             using var response = await http.SendAsync(request);
 
             if (response.IsSuccessStatusCode)

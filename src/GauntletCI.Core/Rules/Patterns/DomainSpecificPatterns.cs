@@ -19,7 +19,7 @@ namespace GauntletCI.Core.Rules.Patterns;
 internal static class DomainSpecificPatterns
 {
     // ===== Module-level properties delegating to ResourceTimeoutPatterns =====
-    
+
     public static string[] TimeoutPatterns => ResourceTimeoutPatterns.TimeoutPatterns;
     public static string[] IterationLimitPatterns => ResourceTimeoutPatterns.IterationLimitPatterns;
     public static string[] ResourceLimitPatterns => ResourceTimeoutPatterns.ResourceLimitPatterns;
@@ -28,9 +28,9 @@ internal static class DomainSpecificPatterns
 
     // ===== Module-level properties delegating to TestSilencePatterns =====
 
-    public static string[] TestSilencePatterns => global::GauntletCI.Core.Rules.Patterns.TestSilencePatterns.Silence;
-    public static string[] TestAttributeMarkers => global::GauntletCI.Core.Rules.Patterns.TestSilencePatterns.AttributeMarkers;
-    public static string[] TestAssertionKeywords => global::GauntletCI.Core.Rules.Patterns.TestSilencePatterns.AssertionKeywords;
+    public static string[] TestSilencePatterns => Patterns.TestSilencePatterns.Silence;
+    public static string[] TestAttributeMarkers => Patterns.TestSilencePatterns.AttributeMarkers;
+    public static string[] TestAssertionKeywords => Patterns.TestSilencePatterns.AssertionKeywords;
 
     // ===== Module-level helper methods (delegate to CodePatterns and other domains) =====
 
@@ -63,132 +63,132 @@ internal static class DomainSpecificPatterns
 
     public static class DataIntegrityPatterns
     {
-        public static string[] HttpContextSignals => global::GauntletCI.Core.Rules.Patterns.DataIntegrityPatterns.HttpContextSignals;
-        public static string[] SqlIgnorePatterns => global::GauntletCI.Core.Rules.Patterns.DataIntegrityPatterns.SqlIgnorePatterns;
-        public static string[] UncheckedCastPatterns => global::GauntletCI.Core.Rules.Patterns.DataIntegrityPatterns.UncheckedCastPatterns;
-        public static bool HasHttpContextSignal(string content) => global::GauntletCI.Core.Rules.Patterns.DataIntegrityPatterns.HasHttpContextSignal(content);
+        public static string[] HttpContextSignals => Patterns.DataIntegrityPatterns.HttpContextSignals;
+        public static string[] SqlIgnorePatterns => Patterns.DataIntegrityPatterns.SqlIgnorePatterns;
+        public static string[] UncheckedCastPatterns => Patterns.DataIntegrityPatterns.UncheckedCastPatterns;
+        public static bool HasHttpContextSignal(string content) => Patterns.DataIntegrityPatterns.HasHttpContextSignal(content);
     }
 
     public static class PiiDetectionPatterns
     {
-        public static string[] PiiTerms => global::GauntletCI.Core.Rules.Patterns.PiiDetectionPatterns.PiiTerms;
-        public static string[] LogPrefixes => global::GauntletCI.Core.Rules.Patterns.PiiDetectionPatterns.LogPrefixes;
-        public static string[] TransformationPatterns => global::GauntletCI.Core.Rules.Patterns.PiiDetectionPatterns.TransformationPatterns;
-        public static string[] ReflectionGuards => global::GauntletCI.Core.Rules.Patterns.PiiDetectionPatterns.ReflectionGuards;
-        public static bool IsDataTransformed(string content) => global::GauntletCI.Core.Rules.Patterns.PiiDetectionPatterns.IsDataTransformed(content);
+        public static string[] PiiTerms => Patterns.PiiDetectionPatterns.PiiTerms;
+        public static string[] LogPrefixes => Patterns.PiiDetectionPatterns.LogPrefixes;
+        public static string[] TransformationPatterns => Patterns.PiiDetectionPatterns.TransformationPatterns;
+        public static string[] ReflectionGuards => Patterns.PiiDetectionPatterns.ReflectionGuards;
+        public static bool IsDataTransformed(string content) => Patterns.PiiDetectionPatterns.IsDataTransformed(content);
     }
 
     public static class IdempotencyPatterns
     {
-        public static string[] IdempotencySignals => global::GauntletCI.Core.Rules.Patterns.IdempotencyPatterns.IdempotencySignals;
-        public static string[] UpsertPatterns => global::GauntletCI.Core.Rules.Patterns.IdempotencyPatterns.UpsertPatterns;
+        public static string[] IdempotencySignals => Patterns.IdempotencyPatterns.IdempotencySignals;
+        public static string[] UpsertPatterns => Patterns.IdempotencyPatterns.UpsertPatterns;
     }
 
     public static class ResourcePatterns
     {
-        public static string[] DisposableTypes => global::GauntletCI.Core.Rules.Patterns.ResourcePatterns.DisposableTypes;
-        public static string[] DisposableSuffixes => global::GauntletCI.Core.Rules.Patterns.ResourcePatterns.DisposableSuffixes;
-        public static HashSet<string> OwnedByOtherRules => global::GauntletCI.Core.Rules.Patterns.ResourcePatterns.OwnedByOtherRules;
-        public static HashSet<string> KnownNonDisposableTypes => global::GauntletCI.Core.Rules.Patterns.ResourcePatterns.KnownNonDisposableTypes;
-        public static Regex NewTypeRegex => global::GauntletCI.Core.Rules.Patterns.ResourcePatterns.NewTypeRegex;
+        public static string[] DisposableTypes => Patterns.ResourcePatterns.DisposableTypes;
+        public static string[] DisposableSuffixes => Patterns.ResourcePatterns.DisposableSuffixes;
+        public static HashSet<string> OwnedByOtherRules => Patterns.ResourcePatterns.OwnedByOtherRules;
+        public static HashSet<string> KnownNonDisposableTypes => Patterns.ResourcePatterns.KnownNonDisposableTypes;
+        public static Regex NewTypeRegex => Patterns.ResourcePatterns.NewTypeRegex;
     }
 
     public static class ExternalServicePatterns
     {
-        public static string[] HttpCallMethods => global::GauntletCI.Core.Rules.Patterns.ExternalServicePatterns.HttpCallMethods;
-        public static string[] CtCheckHttpMethods => global::GauntletCI.Core.Rules.Patterns.ExternalServicePatterns.CtCheckHttpMethods;
-        public static string[] PollyPatterns => global::GauntletCI.Core.Rules.Patterns.ExternalServicePatterns.PollyPatterns;
-        public static string[] FactoryConfigPatterns => global::GauntletCI.Core.Rules.Patterns.ExternalServicePatterns.FactoryConfigPatterns;
-        public static string[] FireAndForgetPatterns => global::GauntletCI.Core.Rules.Patterns.ExternalServicePatterns.FireAndForgetPatterns;
+        public static string[] HttpCallMethods => Patterns.ExternalServicePatterns.HttpCallMethods;
+        public static string[] CtCheckHttpMethods => Patterns.ExternalServicePatterns.CtCheckHttpMethods;
+        public static string[] PollyPatterns => Patterns.ExternalServicePatterns.PollyPatterns;
+        public static string[] FactoryConfigPatterns => Patterns.ExternalServicePatterns.FactoryConfigPatterns;
+        public static string[] FireAndForgetPatterns => Patterns.ExternalServicePatterns.FireAndForgetPatterns;
     }
 
     public static class PerformancePatterns
     {
-        public static string[] LinqMethods => global::GauntletCI.Core.Rules.Patterns.PerformancePatterns.LinqMethods;
-        public static string[] LoopKeywords => global::GauntletCI.Core.Rules.Patterns.PerformancePatterns.LoopKeywords;
-        public static string[] UnboundedLoopKeywords => global::GauntletCI.Core.Rules.Patterns.PerformancePatterns.UnboundedLoopKeywords;
-        public static bool HasLinqCall(string content) => global::GauntletCI.Core.Rules.Patterns.PerformancePatterns.HasLinqCall(content);
-        public static bool HasLoopConstruct(string content) => global::GauntletCI.Core.Rules.Patterns.PerformancePatterns.HasLoopConstruct(content);
-        public static bool IsRuleImplementationFile(string path) => global::GauntletCI.Core.Rules.Patterns.PerformancePatterns.IsRuleImplementationFile(path);
+        public static string[] LinqMethods => Patterns.PerformancePatterns.LinqMethods;
+        public static string[] LoopKeywords => Patterns.PerformancePatterns.LoopKeywords;
+        public static string[] UnboundedLoopKeywords => Patterns.PerformancePatterns.UnboundedLoopKeywords;
+        public static bool HasLinqCall(string content) => Patterns.PerformancePatterns.HasLinqCall(content);
+        public static bool HasLoopConstruct(string content) => Patterns.PerformancePatterns.HasLoopConstruct(content);
+        public static bool IsRuleImplementationFile(string path) => Patterns.PerformancePatterns.IsRuleImplementationFile(path);
     }
 
     public static class FloatingPointPatterns
     {
-        public static Regex FloatLiteralOnRightRegex => global::GauntletCI.Core.Rules.Patterns.FloatingPointPatterns.FloatLiteralOnRightRegex;
-        public static Regex FloatLiteralOnLeftRegex => global::GauntletCI.Core.Rules.Patterns.FloatingPointPatterns.FloatLiteralOnLeftRegex;
-        public static Regex FloatCastWithEqualityRegex => global::GauntletCI.Core.Rules.Patterns.FloatingPointPatterns.FloatCastWithEqualityRegex;
-        public static Regex FloatTypeWithEqualityRegex => global::GauntletCI.Core.Rules.Patterns.FloatingPointPatterns.FloatTypeWithEqualityRegex;
-        public static Regex IntegerZeroGuardRegex => global::GauntletCI.Core.Rules.Patterns.FloatingPointPatterns.IntegerZeroGuardRegex;
-        public static bool IsGuardedIntegerZeroCheck(string content) => global::GauntletCI.Core.Rules.Patterns.FloatingPointPatterns.IsGuardedIntegerZeroCheck(content);
+        public static Regex FloatLiteralOnRightRegex => Patterns.FloatingPointPatterns.FloatLiteralOnRightRegex;
+        public static Regex FloatLiteralOnLeftRegex => Patterns.FloatingPointPatterns.FloatLiteralOnLeftRegex;
+        public static Regex FloatCastWithEqualityRegex => Patterns.FloatingPointPatterns.FloatCastWithEqualityRegex;
+        public static Regex FloatTypeWithEqualityRegex => Patterns.FloatingPointPatterns.FloatTypeWithEqualityRegex;
+        public static Regex IntegerZeroGuardRegex => Patterns.FloatingPointPatterns.IntegerZeroGuardRegex;
+        public static bool IsGuardedIntegerZeroCheck(string content) => Patterns.FloatingPointPatterns.IsGuardedIntegerZeroCheck(content);
     }
 
     public static class DataSchemaPatterns
     {
-        public static string[] SerializationAttributes => global::GauntletCI.Core.Rules.Patterns.DataSchemaPatterns.SerializationAttributes;
+        public static string[] SerializationAttributes => Patterns.DataSchemaPatterns.SerializationAttributes;
     }
 
     public static class ExceptionPatterns
     {
-        public static string[] ThrowAssertions => global::GauntletCI.Core.Rules.Patterns.ExceptionPatterns.ThrowAssertions;
-        public static string[] GuardClauseThrows => global::GauntletCI.Core.Rules.Patterns.ExceptionPatterns.GuardClauseThrows;
+        public static string[] ThrowAssertions => Patterns.ExceptionPatterns.ThrowAssertions;
+        public static string[] GuardClauseThrows => Patterns.ExceptionPatterns.GuardClauseThrows;
     }
 
     public static class DependencyInjectionPatterns
     {
-        public static string[] ServiceLocatorPatterns => global::GauntletCI.Core.Rules.Patterns.DependencyInjectionPatterns.ServiceLocatorPatterns;
-        public static string[] DirectInstantiationExclusions => global::GauntletCI.Core.Rules.Patterns.DependencyInjectionPatterns.DirectInstantiationExclusions;
-        public static Regex DirectInstantiationRegex => global::GauntletCI.Core.Rules.Patterns.DependencyInjectionPatterns.DirectInstantiationRegex;
-        public static bool IsInfrastructureFile(string path) => global::GauntletCI.Core.Rules.Patterns.DependencyInjectionPatterns.IsInfrastructureFile(path);
+        public static string[] ServiceLocatorPatterns => Patterns.DependencyInjectionPatterns.ServiceLocatorPatterns;
+        public static string[] DirectInstantiationExclusions => Patterns.DependencyInjectionPatterns.DirectInstantiationExclusions;
+        public static Regex DirectInstantiationRegex => Patterns.DependencyInjectionPatterns.DirectInstantiationRegex;
+        public static bool IsInfrastructureFile(string path) => Patterns.DependencyInjectionPatterns.IsInfrastructureFile(path);
     }
 
     public static class StubDetectionPatterns
     {
-        public static string[] StubKeywords => global::GauntletCI.Core.Rules.Patterns.StubDetectionPatterns.StubKeywords;
+        public static string[] StubKeywords => Patterns.StubDetectionPatterns.StubKeywords;
     }
 
     public static class ArchitecturePatterns
     {
-        public static Regex UsingRegex => global::GauntletCI.Core.Rules.Patterns.ArchitecturePatterns.UsingRegex;
+        public static Regex UsingRegex => Patterns.ArchitecturePatterns.UsingRegex;
     }
 
     public static class FrameworkPatterns
     {
-        public static string[] MvvmPatterns => global::GauntletCI.Core.Rules.Patterns.FrameworkPatterns.MvvmPatterns;
-        public static string[] DiContainerPatterns => global::GauntletCI.Core.Rules.Patterns.FrameworkPatterns.DiContainerPatterns;
-        public static string[] HttpBindingPatterns => global::GauntletCI.Core.Rules.Patterns.FrameworkPatterns.HttpBindingPatterns;
-        public static string[] ExceptionHandlingPatterns => global::GauntletCI.Core.Rules.Patterns.FrameworkPatterns.ExceptionHandlingPatterns;
+        public static string[] MvvmPatterns => Patterns.FrameworkPatterns.MvvmPatterns;
+        public static string[] DiContainerPatterns => Patterns.FrameworkPatterns.DiContainerPatterns;
+        public static string[] HttpBindingPatterns => Patterns.FrameworkPatterns.HttpBindingPatterns;
+        public static string[] ExceptionHandlingPatterns => Patterns.FrameworkPatterns.ExceptionHandlingPatterns;
     }
 
     public static class TestPatterns
     {
-        public static string[] SetupTeardownAttributes => global::GauntletCI.Core.Rules.Patterns.TestPatterns.SetupTeardownAttributes;
-        public static string[] MockObjectPatterns => global::GauntletCI.Core.Rules.Patterns.TestPatterns.MockObjectPatterns;
-        public static string[] TestFixturePatterns => global::GauntletCI.Core.Rules.Patterns.TestPatterns.TestFixturePatterns;
-        public static string[] AssertionLibraryPatterns => global::GauntletCI.Core.Rules.Patterns.TestPatterns.AssertionLibraryPatterns;
+        public static string[] SetupTeardownAttributes => Patterns.TestPatterns.SetupTeardownAttributes;
+        public static string[] MockObjectPatterns => Patterns.TestPatterns.MockObjectPatterns;
+        public static string[] TestFixturePatterns => Patterns.TestPatterns.TestFixturePatterns;
+        public static string[] AssertionLibraryPatterns => Patterns.TestPatterns.AssertionLibraryPatterns;
     }
 
     public static class CodePatterns
     {
-        public static string[] DevOnlyMarkers => global::GauntletCI.Core.Rules.Patterns.CodePatterns.DevOnlyMarkers;
-        public static string[] FrameworkInitializationPatterns => global::GauntletCI.Core.Rules.Patterns.CodePatterns.FrameworkInitializationPatterns;
-        public static string[] OrmAutoMapPatterns => global::GauntletCI.Core.Rules.Patterns.CodePatterns.OrmAutoMapPatterns;
-        public static string[] DtoMapperPatterns => global::GauntletCI.Core.Rules.Patterns.CodePatterns.DtoMapperPatterns;
-        public static string[] RetryPolicyPatterns => global::GauntletCI.Core.Rules.Patterns.CodePatterns.RetryPolicyPatterns;
-        public static string[] BuilderPatterns => global::GauntletCI.Core.Rules.Patterns.CodePatterns.BuilderPatterns;
-        public static string[] InterfaceImplementationPatterns => global::GauntletCI.Core.Rules.Patterns.CodePatterns.InterfaceImplementationPatterns;
-        public static string[] InfrastructureMarkers => global::GauntletCI.Core.Rules.Patterns.CodePatterns.InfrastructureMarkers;
-        public static string[] InternalMarkers => global::GauntletCI.Core.Rules.Patterns.CodePatterns.InternalMarkers;
-        public static string[] DiCompositionRootMarkers => global::GauntletCI.Core.Rules.Patterns.CodePatterns.DiCompositionRootMarkers;
-        public static string[] OrmAsyncPatterns => global::GauntletCI.Core.Rules.Patterns.CodePatterns.OrmAsyncPatterns;
-        public static string[] FireAndForgetBackgroundPatterns => global::GauntletCI.Core.Rules.Patterns.CodePatterns.FireAndForgetBackgroundPatterns;
-        public static string[] BoundedSynchronizationPatterns => global::GauntletCI.Core.Rules.Patterns.CodePatterns.BoundedSynchronizationPatterns;
-        public static string[] InstanceScopedCachePatterns => global::GauntletCI.Core.Rules.Patterns.CodePatterns.InstanceScopedCachePatterns;
+        public static string[] DevOnlyMarkers => Patterns.CodePatterns.DevOnlyMarkers;
+        public static string[] FrameworkInitializationPatterns => Patterns.CodePatterns.FrameworkInitializationPatterns;
+        public static string[] OrmAutoMapPatterns => Patterns.CodePatterns.OrmAutoMapPatterns;
+        public static string[] DtoMapperPatterns => Patterns.CodePatterns.DtoMapperPatterns;
+        public static string[] RetryPolicyPatterns => Patterns.CodePatterns.RetryPolicyPatterns;
+        public static string[] BuilderPatterns => Patterns.CodePatterns.BuilderPatterns;
+        public static string[] InterfaceImplementationPatterns => Patterns.CodePatterns.InterfaceImplementationPatterns;
+        public static string[] InfrastructureMarkers => Patterns.CodePatterns.InfrastructureMarkers;
+        public static string[] InternalMarkers => Patterns.CodePatterns.InternalMarkers;
+        public static string[] DiCompositionRootMarkers => Patterns.CodePatterns.DiCompositionRootMarkers;
+        public static string[] OrmAsyncPatterns => Patterns.CodePatterns.OrmAsyncPatterns;
+        public static string[] FireAndForgetBackgroundPatterns => Patterns.CodePatterns.FireAndForgetBackgroundPatterns;
+        public static string[] BoundedSynchronizationPatterns => Patterns.CodePatterns.BoundedSynchronizationPatterns;
+        public static string[] InstanceScopedCachePatterns => Patterns.CodePatterns.InstanceScopedCachePatterns;
     }
 
     // ===== Helper Method Delegations =====
 
-    public static bool HasHttpContextSignal(string content) => 
-        global::GauntletCI.Core.Rules.Patterns.DataIntegrityPatterns.HasHttpContextSignal(content);
+    public static bool HasHttpContextSignal(string content) =>
+        Patterns.DataIntegrityPatterns.HasHttpContextSignal(content);
 }
 
 

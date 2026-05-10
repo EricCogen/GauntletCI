@@ -79,13 +79,13 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
 
             candidates.Add(new PullRequestCandidate
             {
-                Source            = "github-issue-discovery",
-                RepoOwner         = owner,
-                RepoName          = repo!,
+                Source = "github-issue-discovery",
+                RepoOwner = owner,
+                RepoName = repo!,
                 PullRequestNumber = pr.Value,
-                Url               = $"https://github.com/{owner}/{repo}/pull/{pr.Value}",
-                Language          = query.Languages.Count > 0 ? query.Languages[0] : "C#",
-                CandidateReason   = $"Closes issue #{issueNumber}: {issue.Title}",
+                Url = $"https://github.com/{owner}/{repo}/pull/{pr.Value}",
+                Language = query.Languages.Count > 0 ? query.Languages[0] : "C#",
+                CandidateReason = $"Closes issue #{issueNumber}: {issue.Title}",
             });
 
             Console.WriteLine($"[corpus/issues] Found PR {owner}/{repo}#{pr.Value} via issue #{issueNumber}");
@@ -146,7 +146,7 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
         {
             using var req = new HttpRequestMessage(HttpMethod.Get, url);
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);
-            
+
             using var resp = await _http.SendAsync(req, ct).ConfigureAwait(false);
 
             if (resp.IsSuccessStatusCode)
@@ -193,7 +193,7 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
     {
         try
         {
-            var uri  = new Uri(htmlUrl);
+            var uri = new Uri(htmlUrl);
             var segs = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
             if (segs.Length >= 4 && int.TryParse(segs[3], out var num))
                 return (segs[0], segs[1], num);

@@ -230,7 +230,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
 
                 // Skip IHostEnvironment fluent calls: IsProduction() etc. are the correct pattern
                 if (content.Contains(".IsProduction()", StringComparison.OrdinalIgnoreCase) ||
-                    content.Contains(".IsStaging()",    StringComparison.OrdinalIgnoreCase) ||
+                    content.Contains(".IsStaging()", StringComparison.OrdinalIgnoreCase) ||
                     content.Contains(".IsDevelopment()", StringComparison.OrdinalIgnoreCase))
                     continue;
 

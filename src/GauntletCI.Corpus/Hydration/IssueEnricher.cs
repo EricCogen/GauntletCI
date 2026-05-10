@@ -132,7 +132,7 @@ public sealed class IssueEnricher : IDisposable
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         if (!string.IsNullOrEmpty(_token))
             request.Headers.Authorization = new AuthenticationHeaderValue("token", _token);
-        
+
         using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
         if (!resp.IsSuccessStatusCode) return null;
         var json = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
@@ -143,16 +143,16 @@ public sealed class IssueEnricher : IDisposable
 
         return new GithubIssue
         {
-            Id          = $"github:{owner}/{repo}#{number}",
-            RepoOwner   = owner,
-            RepoName    = repo,
-            Number      = number,
-            Title       = gh.Title,
-            Body        = gh.Body,
-            Labels      = gh.Labels.Select(l => l.Name).ToList(),
-            State       = gh.State,
+            Id = $"github:{owner}/{repo}#{number}",
+            RepoOwner = owner,
+            RepoName = repo,
+            Number = number,
+            Title = gh.Title,
+            Body = gh.Body,
+            Labels = gh.Labels.Select(l => l.Name).ToList(),
+            State = gh.State,
             ClosedAtUtc = gh.ClosedAt,
-            Url         = gh.HtmlUrl,
+            Url = gh.HtmlUrl,
         };
     }
 
@@ -166,17 +166,17 @@ public sealed class IssueEnricher : IDisposable
                 title=excluded.title, body=excluded.body, labels_json=excluded.labels_json,
                 state=excluded.state, closed_at_utc=excluded.closed_at_utc, fetched_at_utc=datetime('now')
             """;
-        cmd.Parameters.AddWithValue("$id",       issue.Id);
-        cmd.Parameters.AddWithValue("$owner",    issue.RepoOwner);
-        cmd.Parameters.AddWithValue("$repo",     issue.RepoName);
-        cmd.Parameters.AddWithValue("$number",   issue.Number);
-        cmd.Parameters.AddWithValue("$title",    issue.Title);
-        cmd.Parameters.AddWithValue("$body",     (object?)issue.Body ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("$labels",   JsonSerializer.Serialize(issue.Labels));
-        cmd.Parameters.AddWithValue("$state",    issue.State);
+        cmd.Parameters.AddWithValue("$id", issue.Id);
+        cmd.Parameters.AddWithValue("$owner", issue.RepoOwner);
+        cmd.Parameters.AddWithValue("$repo", issue.RepoName);
+        cmd.Parameters.AddWithValue("$number", issue.Number);
+        cmd.Parameters.AddWithValue("$title", issue.Title);
+        cmd.Parameters.AddWithValue("$body", (object?)issue.Body ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$labels", JsonSerializer.Serialize(issue.Labels));
+        cmd.Parameters.AddWithValue("$state", issue.State);
         cmd.Parameters.AddWithValue("$closedAt", issue.ClosedAtUtc.HasValue
-            ? (object)issue.ClosedAtUtc.Value.ToString("O") : DBNull.Value);
-        cmd.Parameters.AddWithValue("$url",      issue.Url);
+            ? issue.ClosedAtUtc.Value.ToString("O") : DBNull.Value);
+        cmd.Parameters.AddWithValue("$url", issue.Url);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
@@ -189,8 +189,8 @@ public sealed class IssueEnricher : IDisposable
             VALUES ($fixtureId, $issueId, $source)
             """;
         cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
-        cmd.Parameters.AddWithValue("$issueId",   issueId);
-        cmd.Parameters.AddWithValue("$source",    source);
+        cmd.Parameters.AddWithValue("$issueId", issueId);
+        cmd.Parameters.AddWithValue("$source", source);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }

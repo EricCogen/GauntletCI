@@ -21,18 +21,18 @@ public sealed class FileEligibilityStatistics
     {
         return new FileEligibilityStatistics
         {
-            TotalFiles              = records.Count,
-            EligibleFiles           = records.Count(r => r.IsEligible),
-            SkippedFiles            = records.Count(r => !r.IsEligible),
-            EligibleSourceCount     = records.Count(r => r.Classification == FileEligibilityClassification.EligibleSource),
-            KnownNonSourceCount     = records.Count(r => r.Classification == FileEligibilityClassification.KnownNonSource),
+            TotalFiles = records.Count,
+            EligibleFiles = records.Count(r => r.IsEligible),
+            SkippedFiles = records.Count(r => !r.IsEligible),
+            EligibleSourceCount = records.Count(r => r.Classification == FileEligibilityClassification.EligibleSource),
+            KnownNonSourceCount = records.Count(r => r.Classification == FileEligibilityClassification.KnownNonSource),
             UnknownUnsupportedCount = records.Count(r => r.Classification == FileEligibilityClassification.UnknownUnsupported),
-            BinaryCount             = records.Count(r => r.Classification == FileEligibilityClassification.Binary),
-            GeneratedCount          = records.Count(r => r.Classification == FileEligibilityClassification.Generated),
-            DeletedCount            = records.Count(r => r.Classification == FileEligibilityClassification.Deleted),
-            RenamedOnlyCount        = records.Count(r => r.Classification == FileEligibilityClassification.RenamedOnly),
-            EmptyPathCount          = records.Count(r => r.Classification == FileEligibilityClassification.EmptyPath),
-            MissingExtensionCount   = records.Count(r => r.Classification == FileEligibilityClassification.MissingExtension),
+            BinaryCount = records.Count(r => r.Classification == FileEligibilityClassification.Binary),
+            GeneratedCount = records.Count(r => r.Classification == FileEligibilityClassification.Generated),
+            DeletedCount = records.Count(r => r.Classification == FileEligibilityClassification.Deleted),
+            RenamedOnlyCount = records.Count(r => r.Classification == FileEligibilityClassification.RenamedOnly),
+            EmptyPathCount = records.Count(r => r.Classification == FileEligibilityClassification.EmptyPath),
+            MissingExtensionCount = records.Count(r => r.Classification == FileEligibilityClassification.MissingExtension),
         };
     }
 }

@@ -35,10 +35,6 @@ public class GCI0039_ExternalServiceSafety : RuleBase
         return Task.FromResult(findings);
     }
 
-    private static bool IsTestFile(string path) =>
-        path.Contains("test", StringComparison.OrdinalIgnoreCase)
-        || path.Contains("spec", StringComparison.OrdinalIgnoreCase);
-
     private void CheckHttpClientInstantiation(DiffFile file, List<Finding> findings)
     {
         // Skip gRPC files entirely - gRPC Channel initialization IS the timeout mechanism
@@ -48,13 +44,13 @@ public class GCI0039_ExternalServiceSafety : RuleBase
         {
             var content = line.Content;
             if (content.TrimStart().StartsWith("//")) continue;
-            
+
             // Skip mock HTTP clients in test code
             if (WellKnownPatterns.HasMockPattern(content)) continue;
-            
+
             // Phase 16 Guard: ORM async patterns
             if (WellKnownPatterns.IsOrmAsyncPattern(content)) continue;
-            
+
             if (!content.Contains("new HttpClient(")) continue;
 
             findings.Add(CreateFinding(
@@ -181,11 +177,6 @@ public class GCI0039_ExternalServiceSafety : RuleBase
     private static bool IsInjectedOrStaticClient(string content)
     {
         return WellKnownPatterns.IsInjectedOrStaticClient(content);
-    }
-
-    private static bool IsGrpcRelatedFile(string path)
-    {
-        return WellKnownPatterns.IsGrpcRelatedFile(path);
     }
 }
 

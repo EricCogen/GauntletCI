@@ -150,9 +150,9 @@ public class GCI0036_PureContextMutation : RuleBase
             scanned++;
 
             if (prev.Contains(lhsName, StringComparison.Ordinal) &&
-                (prev.Contains("== null",   StringComparison.Ordinal) ||
-                 prev.Contains("is null",   StringComparison.Ordinal) ||
-                 prev.Contains("!= null",   StringComparison.Ordinal) ||
+                (prev.Contains("== null", StringComparison.Ordinal) ||
+                 prev.Contains("is null", StringComparison.Ordinal) ||
+                 prev.Contains("!= null", StringComparison.Ordinal) ||
                  prev.Contains("is not null", StringComparison.Ordinal)))
             {
                 return true;
@@ -161,7 +161,8 @@ public class GCI0036_PureContextMutation : RuleBase
         return false;
     }
 
-    private static bool IsFieldOrPropertyAssignment(string trimmed)    {
+    private static bool IsFieldOrPropertyAssignment(string trimmed)
+    {
         ArgumentNullException.ThrowIfNull(trimmed);
         // Skip local variable declarations and loop variables
         if (trimmed.StartsWith("var ", StringComparison.Ordinal)) return false;

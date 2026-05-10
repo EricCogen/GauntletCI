@@ -11,7 +11,7 @@ namespace GauntletCI.Corpus.Labeling.Strategies;
 public sealed class SecurityPatternStrategy : IInferenceStrategy
 {
     private static readonly Regex SqlStringLiteralStart = new(@"\bSELECT\b|\bINSERT\b|\bUPDATE\b|\bDELETE\b|\bFROM\b", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-    
+
     private static readonly string[] CredentialKeywords =
     [
         "password", "passwd", "secret", "apikey", "api_key", "token",
@@ -65,7 +65,7 @@ public sealed class SecurityPatternStrategy : IInferenceStrategy
             return false;
 
         var lower = line.ToLowerInvariant();
-        
+
         // Must contain a credential keyword
         if (!CredentialKeywords.Any(keyword => lower.Contains(keyword)))
             return false;
@@ -80,10 +80,10 @@ public sealed class SecurityPatternStrategy : IInferenceStrategy
             return false;
 
         var afterEq = line[(eqIdx + 1)..].TrimStart();
-        
+
         // Check for string literal assignment
-        return afterEq.StartsWith("\"") || 
-               afterEq.StartsWith("@\"") || 
+        return afterEq.StartsWith("\"") ||
+               afterEq.StartsWith("@\"") ||
                afterEq.StartsWith("$\"");
     }
 

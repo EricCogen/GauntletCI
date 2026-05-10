@@ -60,7 +60,7 @@ public class GCI0051_NumericCoercionRisks : RuleBase
             foreach (Match match in matches)
             {
                 var castType = match.Groups[1].Value.ToLower();
-                
+
                 // Check if preceded by a large type that could overflow
                 bool isPrecisionRisk = false;
                 var beforeCast = content[..match.Index];
@@ -114,9 +114,9 @@ public class GCI0051_NumericCoercionRisks : RuleBase
                     var lhs = parts[0];
                     var rhs = parts[1];
 
-                    bool lhsSmallHint = lhs.Contains("short") || lhs.Contains("byte") || 
+                    bool lhsSmallHint = lhs.Contains("short") || lhs.Contains("byte") ||
                                        lhs.Contains("capacity") || lhs.Contains("count");
-                    bool rhsLargeHint = rhs.Contains("long") || rhs.Contains(".Length") || 
+                    bool rhsLargeHint = rhs.Contains("long") || rhs.Contains(".Length") ||
                                        rhs.Contains(".Count");
 
                     if (lhsSmallHint && rhsLargeHint && !content.Contains("checked"))

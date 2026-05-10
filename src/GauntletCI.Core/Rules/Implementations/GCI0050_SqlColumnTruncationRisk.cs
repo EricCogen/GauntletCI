@@ -19,7 +19,7 @@ public class GCI0050_SqlColumnTruncationRisk : RuleBase
     public GCI0050_SqlColumnTruncationRisk(IPatternProvider patterns) : base(patterns)
     {
     }
-    public override string Id   => "GCI0050";
+    public override string Id => "GCI0050";
     public override string Name => "SQL Column Truncation Risk";
 
     // nvarchar(N) or varchar(N) with N captured
@@ -88,13 +88,13 @@ public class GCI0050_SqlColumnTruncationRisk : RuleBase
             var match = regex.Match(content);
             if (match.Success && int.TryParse(match.Groups[1].Value, out int n) && n < TruncationThreshold)
             {
-                length  = n;
+                length = n;
                 pattern = match.Value.Trim();
                 return true;
             }
         }
 
-        length  = 0;
+        length = 0;
         pattern = string.Empty;
         return false;
     }

@@ -10,15 +10,15 @@ internal static class CorpusStringHelpers
         var ext = Path.GetExtension(path).ToLowerInvariant();
         return ext switch
         {
-            ".cs"   => "C#",
-            ".ts"   => "TypeScript",
-            ".js"   => "JavaScript",
-            ".py"   => "Python",
-            ".go"   => "Go",
+            ".cs" => "C#",
+            ".ts" => "TypeScript",
+            ".js" => "JavaScript",
+            ".py" => "Python",
+            ".go" => "Go",
             ".java" => "Java",
-            ".rs"   => "Rust",
-            ".rb"   => "Ruby",
-            _       => "",
+            ".rs" => "Rust",
+            ".rb" => "Ruby",
+            _ => "",
         };
     }
 

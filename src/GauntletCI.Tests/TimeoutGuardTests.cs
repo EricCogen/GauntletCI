@@ -62,7 +62,7 @@ public class GCI0038TimeoutGuardTests
 
     private sealed class SlowRule : IRule
     {
-        public string Id   => "SlowRule";
+        public string Id => "SlowRule";
         public string Name => "SlowRule";
 
         public async Task<List<Finding>> EvaluateAsync(

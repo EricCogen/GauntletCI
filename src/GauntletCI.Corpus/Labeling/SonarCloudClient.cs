@@ -99,7 +99,7 @@ public sealed class SonarCloudClient
                 // SonarCloud paging: stop when we have all items
                 if (doc.RootElement.TryGetProperty("paging", out var paging))
                 {
-                    var total    = paging.TryGetProperty("total",    out var t)  ? t.GetInt32()  : 0;
+                    var total = paging.TryGetProperty("total", out var t) ? t.GetInt32() : 0;
                     var pageSize = paging.TryGetProperty("pageSize", out var ps) ? ps.GetInt32() : 500;
                     if (results.Count >= total || pageSize == 0) break;
                 }
@@ -144,11 +144,11 @@ public sealed class SonarCloudClient
         return new SonarIssue
         {
             ProjectKey = projectKey,
-            FilePath   = filePath,
-            Rule       = issue.TryGetProperty("rule",     out var r)  ? r.GetString()  ?? "" : "",
-            Severity   = issue.TryGetProperty("severity", out var s)  ? s.GetString()  ?? "" : "",
-            Type       = issue.TryGetProperty("type",     out var tp) ? tp.GetString() ?? "" : "",
-            Message    = issue.TryGetProperty("message",  out var m)  ? m.GetString()  ?? "" : "",
+            FilePath = filePath,
+            Rule = issue.TryGetProperty("rule", out var r) ? r.GetString() ?? "" : "",
+            Severity = issue.TryGetProperty("severity", out var s) ? s.GetString() ?? "" : "",
+            Type = issue.TryGetProperty("type", out var tp) ? tp.GetString() ?? "" : "",
+            Message = issue.TryGetProperty("message", out var m) ? m.GetString() ?? "" : "",
         };
     }
 }

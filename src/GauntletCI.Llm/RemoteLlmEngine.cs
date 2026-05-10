@@ -15,7 +15,7 @@ namespace GauntletCI.Llm;
 /// </summary>
 public sealed class RemoteLlmEngine : ILlmEngine
 {
-    private const int MaxEnrichTokens  = 256;    // single-sentence enrichment
+    private const int MaxEnrichTokens = 256;    // single-sentence enrichment
     private static readonly TimeSpan RequestTimeout = TimeSpan.FromSeconds(120);
 
     private readonly string _endpoint;
@@ -34,12 +34,12 @@ public sealed class RemoteLlmEngine : ILlmEngine
     public RemoteLlmEngine(string endpoint, string model, string apiKey,
         int numCtx = 16_384, int maxCompleteTokens = 2_048)
     {
-        _endpoint           = endpoint;
-        _model              = model;
-        _apiKey             = apiKey;
-        _numCtx             = numCtx;
-        _maxCompleteTokens  = maxCompleteTokens;
-        _http               = HttpClientFactory.GetLongTimeoutClient();
+        _endpoint = endpoint;
+        _model = model;
+        _apiKey = apiKey;
+        _numCtx = numCtx;
+        _maxCompleteTokens = maxCompleteTokens;
+        _http = HttpClientFactory.GetLongTimeoutClient();
         // Do not add auth to DefaultRequestHeaders - use per-request HttpRequestMessage headers instead
         // to avoid auth token bleed to other endpoints using the same factory client.
     }
@@ -79,22 +79,22 @@ public sealed class RemoteLlmEngine : ILlmEngine
 
         var body = new
         {
-            model       = _model,
-            max_tokens  = maxTokens,
+            model = _model,
+            max_tokens = maxTokens,
             temperature = 0,
-            seed        = 42,
+            seed = 42,
             messages,
-            options     = new { num_ctx = _numCtx, repeat_penalty = 1.1, top_k = 1 },
+            options = new { num_ctx = _numCtx, repeat_penalty = 1.1, top_k = 1 },
         };
 
         try
         {
             var json = JsonSerializer.Serialize(body);
-            
+
             using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint);
             request.Content = new StringContent(json, Encoding.UTF8, "application/json");
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
-            
+
             using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             resp.EnsureSuccessStatusCode();
 

@@ -88,7 +88,7 @@ public class CorpusAnalyzer
             metrics.FalsePositives = falsePositives;
             metrics.FalseNegatives = falseNegatives;
             metrics.Unknowns = unknowns;
-            metrics.Precision = truePositives.Count > 0 
+            metrics.Precision = truePositives.Count > 0
                 ? (double)truePositives.Count / (truePositives.Count + falsePositives.Count)
                 : 0;
             metrics.Recall = (truePositives.Count + falseNegatives.Count) > 0
@@ -121,9 +121,9 @@ public class CorpusAnalyzer
 
         cluster.Patterns = fpByPattern
             .OrderByDescending(x => x.Value.Count)
-            .Select(x => new PatternGroup 
-            { 
-                Pattern = x.Key, 
+            .Select(x => new PatternGroup
+            {
+                Pattern = x.Key,
                 Count = x.Value.Count,
                 Examples = x.Value.Take(3).ToList()
             })
@@ -150,9 +150,9 @@ public class CorpusAnalyzer
 
         cluster.Patterns = fnByContext
             .OrderByDescending(x => x.Value.Count)
-            .Select(x => new PatternGroup 
-            { 
-                Pattern = x.Key, 
+            .Select(x => new PatternGroup
+            {
+                Pattern = x.Key,
                 Count = x.Value.Count,
                 Examples = x.Value.Take(3).ToList()
             })
@@ -207,8 +207,8 @@ public class CorpusAnalyzer
         if (metrics.Precision < 0.8)
         {
             report.Priority = "HIGH";
-            report.Issues.Add(new RefinementIssue 
-            { 
+            report.Issues.Add(new RefinementIssue
+            {
                 Type = "HighFalsePositiveRate",
                 Message = $"Precision {metrics.Precision:P} is below 80%. Rule flags safe code too frequently.",
                 Recommendation = "Tighten detection logic with additional context guards."
@@ -218,8 +218,8 @@ public class CorpusAnalyzer
         if (metrics.Recall < 0.6)
         {
             report.Priority = "HIGH";
-            report.Issues.Add(new RefinementIssue 
-            { 
+            report.Issues.Add(new RefinementIssue
+            {
                 Type = "LowRecall",
                 Message = $"Recall {metrics.Recall:P} is below 60%. Rule misses {metrics.FalseNegatives.Count} risky patterns.",
                 Recommendation = "Expand detection patterns to catch missing cases."
@@ -229,8 +229,8 @@ public class CorpusAnalyzer
         if (metrics.FalsePositives.Count == 0 && metrics.TruePositives.Count == 0)
         {
             report.Priority = "CRITICAL";
-            report.Issues.Add(new RefinementIssue 
-            { 
+            report.Issues.Add(new RefinementIssue
+            {
                 Type = "NoSignal",
                 Message = "Rule has no corpus signal (0 TPs, 0 FPs). Rule may be dead or too restrictive.",
                 Recommendation = "Audit rule logic. Consider deprecation if orphaned."
@@ -243,9 +243,9 @@ public class CorpusAnalyzer
     private static string ExtractPattern(string evidence)
     {
         var lines = evidence.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-        return lines.Length > 0 
-            ? lines[0].Length > 50 
-                ? lines[0][..50] + "..." 
+        return lines.Length > 0
+            ? lines[0].Length > 50
+                ? lines[0][..50] + "..."
                 : lines[0]
             : "unknown";
     }

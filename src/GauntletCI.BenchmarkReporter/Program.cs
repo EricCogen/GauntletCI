@@ -149,7 +149,10 @@ var ruleStatsList = ruleAccumulators
         {
             RuleId = kv.Key,
             Description = desc,
-            Tp = tp, Fp = fp, Fn = fn, Tn = tn,
+            Tp = tp,
+            Fp = fp,
+            Fn = fn,
+            Tn = tn,
             Precision = CalcPrecision(tp, fp),
             Recall = CalcRecall(tp, fn),
             F1 = CalcF1(tp, fp, fn)
@@ -159,7 +162,10 @@ var ruleStatsList = ruleAccumulators
 var aggregate = new AggregateStats
 {
     TotalFixtures = allEntries.Count,
-    Tp = aggTp, Fp = aggFp, Fn = aggFn, Tn = aggTn,
+    Tp = aggTp,
+    Fp = aggFp,
+    Fn = aggFn,
+    Tn = aggTn,
     Precision = CalcPrecision(aggTp, aggFp),
     Recall = CalcRecall(aggTp, aggFn),
     F1 = CalcF1(aggTp, aggFp, aggFn)

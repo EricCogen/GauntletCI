@@ -67,9 +67,12 @@ public class GitHubAnnotationWriterTests
         Confidence confidence = Confidence.High) =>
         new()
         {
-            RuleId = ruleId, RuleName = ruleName,
-            Summary = summary, Evidence = evidence,
-            WhyItMatters = "It matters.", SuggestedAction = "Fix it.",
+            RuleId = ruleId,
+            RuleName = ruleName,
+            Summary = summary,
+            Evidence = evidence,
+            WhyItMatters = "It matters.",
+            SuggestedAction = "Fix it.",
             Confidence = confidence,
         };
 
@@ -117,9 +120,12 @@ public class GitHubAnnotationWriterTests
         // file= and line= come from structured FilePath/Line fields now
         var f = new Finding
         {
-            RuleId = "GCI0001", RuleName = "Diff Integrity",
-            Summary = "Something risky", Evidence = "x = secret",
-            WhyItMatters = "It matters.", SuggestedAction = "Fix it.",
+            RuleId = "GCI0001",
+            RuleName = "Diff Integrity",
+            Summary = "Something risky",
+            Evidence = "x = secret",
+            WhyItMatters = "It matters.",
+            SuggestedAction = "Fix it.",
             Confidence = Confidence.High,
             FilePath = "src/Auth.cs",
             Line = 77,
@@ -149,7 +155,7 @@ public class GitHubAnnotationWriterTests
     public void Write_WithExpertContext_IncludesExpertContent()
     {
         var f = MakeFinding();
-        f.ExpertContext = new GauntletCI.Core.Model.ExpertFact(
+        f.ExpertContext = new ExpertFact(
             "IDisposable fields must be disposed.", "https://github.com/dotnet/runtime/issues/358", 0.92f);
         var output = CaptureAnnotations(MakeResult(f));
         Assert.Contains("IDisposable fields must be disposed.", output);
@@ -160,7 +166,7 @@ public class GitHubAnnotationWriterTests
     public void Write_WithExpertContext_IncludesGitHubSourceUrl()
     {
         var f = MakeFinding();
-        f.ExpertContext = new GauntletCI.Core.Model.ExpertFact(
+        f.ExpertContext = new ExpertFact(
             "Some content.", "https://github.com/dotnet/runtime/issues/358", 0.85f);
         var output = CaptureAnnotations(MakeResult(f));
         Assert.Contains("https://github.com/dotnet/runtime/issues/358", output);
@@ -188,7 +194,7 @@ public class GitHubAnnotationWriterTests
     {
         var f = MakeFinding();
         f.LlmExplanation = "Async deadlock risk here.";
-        f.ExpertContext  = new GauntletCI.Core.Model.ExpertFact(
+        f.ExpertContext = new ExpertFact(
             "SemaphoreSlim preferred over lock.", "https://github.com/dotnet/runtime/issues/22144", 0.78f);
         var output = CaptureAnnotations(MakeResult(f));
         Assert.Contains("LLM:", output);
@@ -209,7 +215,7 @@ public class GitHubAnnotationWriterTests
     public void BuildMessage_ExpertContextNewlines_AreEscaped()
     {
         var f = MakeFinding();
-        f.ExpertContext = new GauntletCI.Core.Model.ExpertFact(
+        f.ExpertContext = new ExpertFact(
             "Line one\nLine two.", "https://github.com/dotnet/runtime/issues/1", 0.5f);
         var msg = GitHubAnnotationWriter.BuildMessage(f);
         Assert.DoesNotContain("\n", msg);
@@ -258,9 +264,12 @@ public class GitHubAnnotationWriterTests
     {
         var f = new Finding
         {
-            RuleId = "GCI0001", RuleName = "Diff Integrity",
-            Summary = "Something risky", Evidence = "x = secret",
-            WhyItMatters = "It matters.", SuggestedAction = "Fix it.",
+            RuleId = "GCI0001",
+            RuleName = "Diff Integrity",
+            Summary = "Something risky",
+            Evidence = "x = secret",
+            WhyItMatters = "It matters.",
+            SuggestedAction = "Fix it.",
             Confidence = Confidence.High,
             FilePath = "",
             Line = 77,
@@ -274,9 +283,12 @@ public class GitHubAnnotationWriterTests
     {
         var f = new Finding
         {
-            RuleId = "GCI0001", RuleName = "Diff Integrity",
-            Summary = "Something risky", Evidence = "x = secret",
-            WhyItMatters = "It matters.", SuggestedAction = "Fix it.",
+            RuleId = "GCI0001",
+            RuleName = "Diff Integrity",
+            Summary = "Something risky",
+            Evidence = "x = secret",
+            WhyItMatters = "It matters.",
+            SuggestedAction = "Fix it.",
             Confidence = Confidence.High,
             FilePath = "src/Test.cs",
             Line = null,

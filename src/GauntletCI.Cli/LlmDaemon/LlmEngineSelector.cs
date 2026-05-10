@@ -45,9 +45,9 @@ internal static class LlmEngineSelector
             }
             else
             {
-                var model    = config.Llm?.Model ?? LlmDefaults.OllamaModel;
-                var numCtx   = config.Llm?.NumCtx ?? 16_384;
-                var maxTok   = config.Llm?.MaxCompleteTokens ?? 2_048;
+                var model = config.Llm?.Model ?? LlmDefaults.OllamaModel;
+                var numCtx = config.Llm?.NumCtx ?? 16_384;
+                var maxTok = config.Llm?.MaxCompleteTokens ?? 2_048;
                 return new RemoteLlmEngine(endpoint, model, apiKey: "ollama", numCtx, maxTok);
             }
         }

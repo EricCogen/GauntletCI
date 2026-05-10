@@ -36,7 +36,7 @@ public class GCI0021_DataSchemaCompatibility : RuleBase
     private void CheckRemovedSerializationAttributes(DiffFile file, List<Finding> findings)
     {
         if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) return;
-        
+
         // Skip migration/infrastructure files (schema migration scripts)
         if (WellKnownPatterns.DependencyInjectionPatterns.IsInfrastructureFile(file.NewPath)) return;
 

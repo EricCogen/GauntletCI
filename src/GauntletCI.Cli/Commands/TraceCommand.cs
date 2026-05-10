@@ -79,19 +79,19 @@ public static class TraceCommand
 
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
         {
-            var deployTag   = ctx.ParseResult.GetValueForOption(deployTagOption);
-            var fromCommit  = ctx.ParseResult.GetValueForOption(fromCommitOption);
-            var since       = ctx.ParseResult.GetValueForOption(sinceOption)!;
-            var repo        = ctx.ParseResult.GetValueForOption(repoOption)!;
-            var output      = ctx.ParseResult.GetValueForOption(outputOption)!;
-            var pdToken     = ctx.ParseResult.GetValueForOption(pdTokenOption)
+            var deployTag = ctx.ParseResult.GetValueForOption(deployTagOption);
+            var fromCommit = ctx.ParseResult.GetValueForOption(fromCommitOption);
+            var since = ctx.ParseResult.GetValueForOption(sinceOption)!;
+            var repo = ctx.ParseResult.GetValueForOption(repoOption)!;
+            var output = ctx.ParseResult.GetValueForOption(outputOption)!;
+            var pdToken = ctx.ParseResult.GetValueForOption(pdTokenOption)
                            ?? Environment.GetEnvironmentVariable("PAGERDUTY_TOKEN");
-            var ogToken     = ctx.ParseResult.GetValueForOption(ogTokenOption)
+            var ogToken = ctx.ParseResult.GetValueForOption(ogTokenOption)
                            ?? Environment.GetEnvironmentVariable("OPSGENIE_TOKEN");
-            var postToPd    = ctx.ParseResult.GetValueForOption(postToPdOption);
-            var noBanner    = ctx.ParseResult.GetValueForOption(noBannerOption);
-            var ascii       = ctx.ParseResult.GetValueForOption(asciiFlag);
-            var ct          = ctx.GetCancellationToken();
+            var postToPd = ctx.ParseResult.GetValueForOption(postToPdOption);
+            var noBanner = ctx.ParseResult.GetValueForOption(noBannerOption);
+            var ascii = ctx.ParseResult.GetValueForOption(asciiFlag);
+            var ct = ctx.GetCancellationToken();
 
             var isJson = output.Equals("json", StringComparison.OrdinalIgnoreCase);
             CliBanner.PrintIfEnabled(new BannerContext { NoBanner = noBanner, OutputFormat = output });
@@ -114,21 +114,21 @@ public static class TraceCommand
 
             try
             {
-                var now      = DateTimeOffset.UtcNow;
+                var now = DateTimeOffset.UtcNow;
                 var sinceDto = IncidentClient.ParseSince(since, now);
 
                 // Step 1: get diff from base ref to HEAD using three-dot range
                 var rangeRef = $"{baseRef}...HEAD";
-                var config      = ConfigLoader.Load(repo.FullName);
-                var diff     = await DiffParser.FromGitAsync(repo.FullName, rangeRef, config.DiffContextLines, ct);
+                var config = ConfigLoader.Load(repo.FullName);
+                var diff = await DiffParser.FromGitAsync(repo.FullName, rangeRef, config.DiffContextLines, ct);
 
                 // Step 2: run rule orchestrator
-                var ignoreList  = IgnoreList.Load(repo.FullName);
+                var ignoreList = IgnoreList.Load(repo.FullName);
                 var orchestrator = RuleOrchestrator.CreateDefault(config, repoPath: repo.FullName);
-                var result       = await orchestrator.RunAsync(diff, ignoreList: ignoreList);
+                var result = await orchestrator.RunAsync(diff, ignoreList: ignoreList);
 
                 // Step 3: fetch incidents (soft-fail)
-                var allIncidents = new List<IncidentCorrelation.IncidentSummary>();
+                var allIncidents = new List<IncidentSummary>();
 
                 if (!string.IsNullOrWhiteSpace(pdToken))
                 {
@@ -200,9 +200,9 @@ public static class TraceCommand
         string baseRef,
         DateTimeOffset since,
         DateTimeOffset now,
-        GauntletCI.Core.Rules.EvaluationResult result,
-        Dictionary<string, List<IncidentCorrelation.IncidentSummary>> correlations,
-        List<IncidentCorrelation.IncidentSummary> allIncidents,
+        EvaluationResult result,
+        Dictionary<string, List<IncidentSummary>> correlations,
+        List<IncidentSummary> allIncidents,
         bool ascii)
     {
         var hr = ascii
@@ -239,12 +239,12 @@ public static class TraceCommand
         foreach (var grp in byFile.OrderByDescending(g => g.Max(f => f.Severity)))
         {
             var filePath = grp.Key;
-            var maxSev   = grp.Max(f => f.Severity);
+            var maxSev = grp.Max(f => f.Severity);
             var sevColor = maxSev switch
             {
                 RuleSeverity.Block => "red",
-                RuleSeverity.Warn  => "yellow",
-                _                  => "grey",
+                RuleSeverity.Warn => "yellow",
+                _ => "grey",
             };
 
             var findingsSummary = string.Join(", ", grp.Select(f => f.RuleId).Distinct());
@@ -266,9 +266,9 @@ public static class TraceCommand
 
     private static string BuildHeatmapText(
         string baseRef,
-        GauntletCI.Core.Rules.EvaluationResult result,
-        Dictionary<string, List<IncidentCorrelation.IncidentSummary>> correlations,
-        List<IncidentCorrelation.IncidentSummary> allIncidents)
+        EvaluationResult result,
+        Dictionary<string, List<IncidentSummary>> correlations,
+        List<IncidentSummary> allIncidents)
     {
         var sb = new StringBuilder();
         sb.AppendLine($"Base ref: {baseRef}");
@@ -282,7 +282,7 @@ public static class TraceCommand
         foreach (var grp in byFile.OrderByDescending(g => g.Max(f => f.Severity)))
         {
             var filePath = grp.Key;
-            var maxSev   = grp.Max(f => f.Severity);
+            var maxSev = grp.Max(f => f.Severity);
             correlations.TryGetValue(filePath, out var correlated);
 
             sb.AppendLine($"  {filePath} [{maxSev}]");

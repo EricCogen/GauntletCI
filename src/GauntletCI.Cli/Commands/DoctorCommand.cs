@@ -29,7 +29,7 @@ public static class DoctorCommand
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
         {
             var repo = ctx.ParseResult.GetValueForOption(repoOption)!;
-            var ct   = ctx.GetCancellationToken();
+            var ct = ctx.GetCancellationToken();
 
             var repoRoot = FindGitRoot(repo.FullName);
 
@@ -77,11 +77,11 @@ public static class DoctorCommand
 
             // ── 3. Rules ─────────────────────────────────────────────────────
             AnsiConsole.MarkupLine("[bold]Rules[/]");
-            var allIds   = RuleOrchestrator.GetAllRuleIds();
+            var allIds = RuleOrchestrator.GetAllRuleIds();
             var disabled = allIds
                 .Where(id => config.Rules.TryGetValue(id, out var rc) && !rc.Enabled)
                 .ToList();
-            var enabled  = allIds.Count - disabled.Count;
+            var enabled = allIds.Count - disabled.Count;
 
             AnsiConsole.MarkupLine($"  Total       : {allIds.Count}");
             AnsiConsole.MarkupLine($"  Enabled     : [green]{enabled}[/]");
@@ -102,7 +102,7 @@ public static class DoctorCommand
             var ollamaUrl = config.Llm?.EmbeddingOllamaUrl ?? "http://localhost:11434";
             try
             {
-                using var http = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+                using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
                 var response = await http.GetAsync(ollamaUrl, ct);
                 if (response.IsSuccessStatusCode)
                     AnsiConsole.MarkupLine($"[green]  ✓[/] Reachable at {Markup.Escape(ollamaUrl)}");

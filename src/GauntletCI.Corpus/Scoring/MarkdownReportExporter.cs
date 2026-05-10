@@ -18,8 +18,8 @@ public sealed class MarkdownReportExporter
     {
         var scorecards = await _aggregator.ScoreAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
 
-        var gold      = scorecards.Where(s => s.Tier == FixtureTier.Gold).OrderBy(s => s.RuleId).ToList();
-        var silver    = scorecards.Where(s => s.Tier == FixtureTier.Silver).OrderBy(s => s.RuleId).ToList();
+        var gold = scorecards.Where(s => s.Tier == FixtureTier.Gold).OrderBy(s => s.RuleId).ToList();
+        var silver = scorecards.Where(s => s.Tier == FixtureTier.Silver).OrderBy(s => s.RuleId).ToList();
         var discovery = scorecards.Where(s => s.Tier == FixtureTier.Discovery).OrderBy(s => s.RuleId).ToList();
 
         var sb = new StringBuilder();

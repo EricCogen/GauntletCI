@@ -80,7 +80,7 @@ public static class LicenseService
         try
         {
             var dataToVerify = Encoding.ASCII.GetBytes($"{parts[0]}.{parts[1]}");
-            var signature    = Base64UrlDecode(parts[2]);
+            var signature = Base64UrlDecode(parts[2]);
 
             using var rsa = RSA.Create();
             rsa.ImportFromPem(EmbeddedPublicKey);
@@ -90,8 +90,8 @@ public static class LicenseService
                     "License signature is invalid. The token may be tampered or was not issued by GauntletCI.");
 
             var payloadJson = Encoding.UTF8.GetString(Base64UrlDecode(parts[1]));
-            using var doc   = JsonDocument.Parse(payloadJson);
-            var root        = doc.RootElement;
+            using var doc = JsonDocument.Parse(payloadJson);
+            var root = doc.RootElement;
 
             if (!root.TryGetProperty("iss", out var iss) || iss.GetString() != "gauntletci.com")
                 return LicenseInfo.Invalid("License issuer is invalid.");
@@ -107,10 +107,10 @@ public static class LicenseService
             var tierStr = root.TryGetProperty("tier", out var tierProp) ? tierProp.GetString() : null;
             var tier = tierStr?.ToLowerInvariant() switch
             {
-                "pro"        => LicenseTier.Pro,
-                "teams"      => LicenseTier.Teams,
+                "pro" => LicenseTier.Pro,
+                "teams" => LicenseTier.Teams,
                 "enterprise" => LicenseTier.Enterprise,
-                _            => LicenseTier.Community,
+                _ => LicenseTier.Community,
             };
 
             var email = root.TryGetProperty("email", out var emailProp) ? emailProp.GetString() : null;

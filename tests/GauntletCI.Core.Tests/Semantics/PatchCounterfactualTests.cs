@@ -91,9 +91,9 @@ public class PatchCounterfactualCollectionTests
     {
         var collection = new PatchCounterfactualCollection();
         var cf = PatchCounterfactualFactory.BoundaryValue("test");
-        
+
         collection.Add(cf);
-        
+
         Assert.Equal(1, collection.Count);
     }
 

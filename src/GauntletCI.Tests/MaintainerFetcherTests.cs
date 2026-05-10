@@ -161,7 +161,7 @@ public sealed class MaintainerFetcherTests
         var results = await fetcher.FetchAsync(targets, 100, default);
 
         Assert.Equal(99, results[0].Reactions);
-        Assert.Equal(3,  results[^1].Reactions);
+        Assert.Equal(3, results[^1].Reactions);
     }
 
     [Fact]

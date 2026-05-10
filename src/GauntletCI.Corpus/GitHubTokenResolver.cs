@@ -4,7 +4,7 @@ using GauntletCI.Core;
 namespace GauntletCI.Corpus;
 
 /// <summary>
-/// Compatibility wrapper for <see cref="GauntletCI.Core.GitHubTokenResolver"/>.
+/// Compatibility wrapper for <see cref="Core.GitHubTokenResolver"/>.
 /// The implementation has been moved to GauntletCI.Core to avoid circular dependencies.
 /// </summary>
 public static class GitHubTokenResolver

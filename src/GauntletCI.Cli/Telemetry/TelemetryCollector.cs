@@ -32,21 +32,21 @@ public static class TelemetryCollector
             if (mode == TelemetryMode.Off) return;
 
             var installId = TelemetryConsent.InstallId;
-            var repoHash  = await TelemetryHasher.HashRepoAsync(repoRoot, ct);
-            var linesAdded   = diff.Files.Sum(f => f.Hunks.Sum(h => h.Lines.Count(l => l.Kind == DiffLineKind.Added)));
+            var repoHash = await TelemetryHasher.HashRepoAsync(repoRoot, ct);
+            var linesAdded = diff.Files.Sum(f => f.Hunks.Sum(h => h.Lines.Count(l => l.Kind == DiffLineKind.Added)));
             var linesRemoved = diff.Files.Sum(f => f.Hunks.Sum(h => h.Lines.Count(l => l.Kind == DiffLineKind.Removed)));
 
             // 1 summary event per analysis run
             await AppendAsync(new TelemetryEvent
             {
-                EventType      = "analysis",
-                InstallId      = installId,
-                RepoHash       = repoHash,
-                FindingCount   = result.Findings.Count,
-                FilesChanged   = diff.Files.Count,
+                EventType = "analysis",
+                InstallId = installId,
+                RepoHash = repoHash,
+                FindingCount = result.Findings.Count,
+                FilesChanged = diff.Files.Count,
                 RulesEvaluated = result.RulesEvaluated,
-                LinesAdded     = linesAdded,
-                LinesRemoved   = linesRemoved,
+                LinesAdded = linesAdded,
+                LinesRemoved = linesRemoved,
             });
 
             // 1 event per finding (rule signal: most valuable for the model)
@@ -54,12 +54,12 @@ public static class TelemetryCollector
             {
                 await AppendAsync(new TelemetryEvent
                 {
-                    EventType  = "finding",
-                    InstallId  = installId,
-                    RepoHash   = repoHash,
-                    RuleId     = finding.RuleId,
+                    EventType = "finding",
+                    InstallId = installId,
+                    RepoHash = repoHash,
+                    RuleId = finding.RuleId,
                     Confidence = finding.Confidence.ToString(),
-                    FileExt    = ExtractExt(finding.Evidence),
+                    FileExt = ExtractExt(finding.Evidence),
                 });
             }
 
@@ -68,12 +68,12 @@ public static class TelemetryCollector
             {
                 await AppendAsync(new TelemetryEvent
                 {
-                    EventType    = "rule_metric",
-                    InstallId    = installId,
-                    RepoHash     = repoHash,
-                    RuleId       = metric.RuleId,
-                    DurationMs   = metric.DurationMs,
-                    Outcome      = metric.Outcome.ToString(),
+                    EventType = "rule_metric",
+                    InstallId = installId,
+                    RepoHash = repoHash,
+                    RuleId = metric.RuleId,
+                    DurationMs = metric.DurationMs,
+                    Outcome = metric.Outcome.ToString(),
                     FindingCount = metric.FindingCount,
                 });
             }

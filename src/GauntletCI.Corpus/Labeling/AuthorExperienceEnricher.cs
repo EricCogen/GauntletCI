@@ -51,7 +51,7 @@ public sealed class AuthorExperienceEnricher : IDisposable
             var parts = fixture.Repo.Split('/', 2);
             if (parts.Length < 2) continue;
             var owner = parts[0];
-            var repo  = parts[1];
+            var repo = parts[1];
 
             // Step 1: get author login from PR API
             var authorLogin = await FetchAuthorLoginAsync(owner, repo, fixture.PullRequestNumber, ct).ConfigureAwait(false);
@@ -98,7 +98,7 @@ public sealed class AuthorExperienceEnricher : IDisposable
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             if (!string.IsNullOrEmpty(_token))
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
-            
+
             using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return null;
             await using var stream = await resp.Content.ReadAsStreamAsync(ct).ConfigureAwait(false);
@@ -122,7 +122,7 @@ public sealed class AuthorExperienceEnricher : IDisposable
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             if (!string.IsNullOrEmpty(_token))
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
-            
+
             using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return 0;
 
@@ -159,7 +159,7 @@ public sealed class AuthorExperienceEnricher : IDisposable
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             if (!string.IsNullOrEmpty(_token))
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
-            
+
             using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (resp.IsSuccessStatusCode)
             {
@@ -198,12 +198,12 @@ public sealed class AuthorExperienceEnricher : IDisposable
             VALUES
                 ($fixtureId, $repo, $authorLogin, $commitCount, $isFirstContributor, $experienceTier)
             """;
-        cmd.Parameters.AddWithValue("$fixtureId",          fixtureId);
-        cmd.Parameters.AddWithValue("$repo",               repo);
-        cmd.Parameters.AddWithValue("$authorLogin",        authorLogin);
-        cmd.Parameters.AddWithValue("$commitCount",        commitCount);
+        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$authorLogin", authorLogin);
+        cmd.Parameters.AddWithValue("$commitCount", commitCount);
         cmd.Parameters.AddWithValue("$isFirstContributor", isFirstContributor ? 1 : 0);
-        cmd.Parameters.AddWithValue("$experienceTier",     experienceTier);
+        cmd.Parameters.AddWithValue("$experienceTier", experienceTier);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
@@ -211,10 +211,10 @@ public sealed class AuthorExperienceEnricher : IDisposable
 
     internal static string ClassifyExperienceTier(int commitCount) => commitCount switch
     {
-        0    => "none",
+        0 => "none",
         <= 5 => "low",
         <= 50 => "medium",
-        _    => "high",
+        _ => "high",
     };
 
     /// <summary>
@@ -244,7 +244,7 @@ public sealed class AuthorExperienceEnricher : IDisposable
 
 /// <summary>Summary statistics from a <see cref="AuthorExperienceEnricher.EnrichAsync"/> run.</summary>
 public record AuthorExperienceResult(
-    int  FixturesProcessed,
-    int  FirstContributors,
-    int  LowExperienceCount,
+    int FixturesProcessed,
+    int FirstContributors,
+    int LowExperienceCount,
     bool AuthMissing);

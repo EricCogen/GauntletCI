@@ -10,7 +10,7 @@ namespace GauntletCI.Core.Domain;
 public readonly record struct RuleIdentifier : IEquatable<RuleIdentifier>, IComparable<RuleIdentifier>
 {
     private static readonly Regex RuleIdPattern = new(@"^GCI\d{4}$", RegexOptions.Compiled);
-    
+
     /// <summary>Gets the raw rule ID value (e.g., "GCI0001").</summary>
     public string Value { get; }
 

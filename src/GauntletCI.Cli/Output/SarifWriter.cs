@@ -72,9 +72,9 @@ public static class SarifWriter
     {
         var level = finding.Severity switch
         {
-            RuleSeverity.Block    => "error",
-            RuleSeverity.Warn     => "warning",
-            _                     => "note",
+            RuleSeverity.Block => "error",
+            RuleSeverity.Warn => "warning",
+            _ => "note",
         };
 
         var message = string.IsNullOrWhiteSpace(finding.WhyItMatters)
@@ -86,13 +86,13 @@ public static class SarifWriter
 
         // Build properties dict for enriched fields
         var properties = new Dictionary<string, object>();
-        
+
         if (!string.IsNullOrWhiteSpace(finding.CodeSnippet))
             properties["codeSnippet"] = finding.CodeSnippet;
-            
+
         if (!string.IsNullOrWhiteSpace(finding.LlmExplanation))
             properties["llmExplanation"] = finding.LlmExplanation;
-            
+
         if (finding.ExpertContext is { } expert)
         {
             properties["expertContextContent"] = expert.Content;
@@ -123,7 +123,7 @@ public static class SarifWriter
                     }
                 },
             };
-            
+
             // Only include properties if there are enriched fields
             if (properties.Count > 0)
                 return new
@@ -148,7 +148,7 @@ public static class SarifWriter
                     },
                     properties = (object)properties,
                 };
-            
+
             return result;
         }
 
@@ -158,7 +158,7 @@ public static class SarifWriter
             message = new { text = message },
             level,
         };
-        
+
         if (properties.Count > 0)
             return new
             {

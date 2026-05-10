@@ -17,9 +17,9 @@ public sealed class Distillery
     /// <param name="store">Vector store where embedded facts are persisted.</param>
     public Distillery(ILlmEngine llm, IEmbeddingEngine embedding, VectorStore store)
     {
-        _llm       = llm;
+        _llm = llm;
         _embedding = embedding;
-        _store     = store;
+        _store = store;
     }
 
     /// <summary>

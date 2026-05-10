@@ -20,8 +20,8 @@ public sealed class LlmAdjudicator
     public LlmAdjudicator(IEmbeddingEngine embedding, VectorStore store, float minScore = 0.40f)
     {
         _embedding = embedding;
-        _store     = store;
-        _minScore  = minScore;
+        _store = store;
+        _minScore = minScore;
     }
 
     /// <summary>
@@ -40,7 +40,7 @@ public sealed class LlmAdjudicator
             ct.ThrowIfCancellationRequested();
             try
             {
-                var query     = BuildQuery(finding);
+                var query = BuildQuery(finding);
                 var embedding = await _embedding.EmbedAsync(query, ct);
                 if (embedding.Length == 0) continue;
 

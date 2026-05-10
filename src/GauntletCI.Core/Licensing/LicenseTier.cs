@@ -3,8 +3,8 @@ namespace GauntletCI.Core.Licensing;
 
 public enum LicenseTier
 {
-    Community  = 0,
-    Pro        = 1,
-    Teams      = 2,
+    Community = 0,
+    Pro = 1,
+    Teams = 2,
     Enterprise = 3,
 }

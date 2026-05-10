@@ -32,10 +32,10 @@ public static class CorpusLabelingFactory
     /// </summary>
     public static Command CreateLabel()
     {
-        var fixtureOpt   = new Option<string>("--fixture",   "Fixture ID to label") { IsRequired = true };
-        var overwriteOpt = new Option<bool>  ("--overwrite", () => false, "Overwrite existing HumanReview/Seed labels with heuristic labels");
-        var dbOpt        = new Option<string>("--db",        () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt  = new Option<string>("--fixtures",  () => "./data/fixtures",             "Path to fixtures root directory");
+        var fixtureOpt = new Option<string>("--fixture", "Fixture ID to label") { IsRequired = true };
+        var overwriteOpt = new Option<bool>("--overwrite", () => false, "Overwrite existing HumanReview/Seed labels with heuristic labels");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Path to fixtures root directory");
 
         var cmd = new Command("label", "Apply silver heuristic labels to a single corpus fixture");
         cmd.AddOption(fixtureOpt);
@@ -47,9 +47,9 @@ public static class CorpusLabelingFactory
         {
             var fixtureId = ctx.ParseResult.GetValueForOption(fixtureOpt)!;
             var overwrite = ctx.ParseResult.GetValueForOption(overwriteOpt);
-            var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var fixtures  = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var ct        = ctx.GetCancellationToken();
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct = ctx.GetCancellationToken();
 
             var (db, store, _) = await CorpusCommandHelpers.BuildPipeline(dbPath, fixtures, ct);
             using (db)
@@ -80,7 +80,7 @@ public static class CorpusLabelingFactory
                     }
 
                     var diffText = await File.ReadAllTextAsync(diffPath!, ct);
-                    var engine   = new SilverLabelEngine(store);
+                    var engine = new SilverLabelEngine(store);
 
                     var labelsWritten = await engine.ApplyToFixtureAsync(fixtureId, diffText, overwrite, ct);
 
@@ -103,15 +103,15 @@ public static class CorpusLabelingFactory
     /// </summary>
     public static Command CreateLabelAll()
     {
-        var tierOpt         = new Option<string>("--tier",         () => "discovery", "Fixture tier to process (gold|silver|discovery)");
-        var overwriteOpt    = new Option<bool>  ("--overwrite",    () => false,       "Overwrite existing HumanReview/Seed labels with heuristic labels");
-        var verboseOpt      = new Option<bool>  ("--verbose",      () => false,       "Print per-rule label breakdown for each fixture");
-        var llmLabelOpt     = new Option<bool>  ("--llm-label",    () => false,       "Enable LLM-based Tier 3 labeling");
-        var llmProviderOpt  = new Option<string>("--llm-provider", () => "ollama",    "LLM provider: ollama | anthropic | github-models | none");
-        var llmModelOpt     = new Option<string>("--llm-model",    () => "",          "Model override (provider default used if empty)");
-        var llmUrlOpt       = new Option<string[]>("--llm-url",    () => [], "Ollama base URL(s). Repeat the flag or pass a comma-separated list");
-        var dbOpt           = new Option<string>("--db",           () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt     = new Option<string>("--fixtures",     () => "./data/fixtures",             "Path to fixtures root directory");
+        var tierOpt = new Option<string>("--tier", () => "discovery", "Fixture tier to process (gold|silver|discovery)");
+        var overwriteOpt = new Option<bool>("--overwrite", () => false, "Overwrite existing HumanReview/Seed labels with heuristic labels");
+        var verboseOpt = new Option<bool>("--verbose", () => false, "Print per-rule label breakdown for each fixture");
+        var llmLabelOpt = new Option<bool>("--llm-label", () => false, "Enable LLM-based Tier 3 labeling");
+        var llmProviderOpt = new Option<string>("--llm-provider", () => "ollama", "LLM provider: ollama | anthropic | github-models | none");
+        var llmModelOpt = new Option<string>("--llm-model", () => "", "Model override (provider default used if empty)");
+        var llmUrlOpt = new Option<string[]>("--llm-url", () => [], "Ollama base URL(s). Repeat the flag or pass a comma-separated list");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Path to fixtures root directory");
 
         var cmd = new Command("label-all", "Apply silver labels to all fixtures in a tier, with optional LLM refinement");
         cmd.AddOption(tierOpt);
@@ -126,16 +126,16 @@ public static class CorpusLabelingFactory
 
         cmd.SetHandler(async (ctx) =>
         {
-            var tierStr      = ctx.ParseResult.GetValueForOption(tierOpt)!;
-            var overwrite    = ctx.ParseResult.GetValueForOption(overwriteOpt);
-            var verbose      = ctx.ParseResult.GetValueForOption(verboseOpt);
-            var llmLabel     = ctx.ParseResult.GetValueForOption(llmLabelOpt);
-            var llmProvider  = ctx.ParseResult.GetValueForOption(llmProviderOpt)!;
-            var llmModel     = ctx.ParseResult.GetValueForOption(llmModelOpt)!;
-            var llmUrls      = ctx.ParseResult.GetValueForOption(llmUrlOpt) ?? [];
-            var dbPath       = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var fixtures     = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var ct           = ctx.GetCancellationToken();
+            var tierStr = ctx.ParseResult.GetValueForOption(tierOpt)!;
+            var overwrite = ctx.ParseResult.GetValueForOption(overwriteOpt);
+            var verbose = ctx.ParseResult.GetValueForOption(verboseOpt);
+            var llmLabel = ctx.ParseResult.GetValueForOption(llmLabelOpt);
+            var llmProvider = ctx.ParseResult.GetValueForOption(llmProviderOpt)!;
+            var llmModel = ctx.ParseResult.GetValueForOption(llmModelOpt)!;
+            var llmUrls = ctx.ParseResult.GetValueForOption(llmUrlOpt) ?? [];
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct = ctx.GetCancellationToken();
 
             if (!Enum.TryParse<FixtureTier>(tierStr, ignoreCase: true, out var tier))
             {
@@ -226,12 +226,12 @@ public static class CorpusLabelingFactory
     /// </summary>
     public static Command CreateResetStats()
     {
-        var fixtureOpt   = new Option<string?>("--fixture",  "Single fixture ID to reset (or use --tier for batch)");
-        var tierOpt      = new Option<string?>("--tier",     "Tier to reset (gold|silver|discovery) (or use --fixture for single)");
-        var dryRunOpt    = new Option<bool>   ("--dry-run",  () => false, "Print what would be reset without making changes");
-        var confirmOpt   = new Option<bool>   ("--confirm",  () => false, "Confirm destructive operation (required when not dry-run)");
-        var dbOpt        = new Option<string> ("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt  = new Option<string> ("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
+        var fixtureOpt = new Option<string?>("--fixture", "Single fixture ID to reset (or use --tier for batch)");
+        var tierOpt = new Option<string?>("--tier", "Tier to reset (gold|silver|discovery) (or use --fixture for single)");
+        var dryRunOpt = new Option<bool>("--dry-run", () => false, "Print what would be reset without making changes");
+        var confirmOpt = new Option<bool>("--confirm", () => false, "Confirm destructive operation (required when not dry-run)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Path to fixtures root directory");
 
         var cmd = new Command("reset-stats", "Clear fixture statistics and analysis results for recomputation (destructive)");
         cmd.AddOption(fixtureOpt);
@@ -244,12 +244,12 @@ public static class CorpusLabelingFactory
         cmd.SetHandler(async (ctx) =>
         {
             var fixtureId = ctx.ParseResult.GetValueForOption(fixtureOpt);
-            var tierStr   = ctx.ParseResult.GetValueForOption(tierOpt);
-            var dryRun    = ctx.ParseResult.GetValueForOption(dryRunOpt);
-            var confirm   = ctx.ParseResult.GetValueForOption(confirmOpt);
-            var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var fixtures  = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var ct        = ctx.GetCancellationToken();
+            var tierStr = ctx.ParseResult.GetValueForOption(tierOpt);
+            var dryRun = ctx.ParseResult.GetValueForOption(dryRunOpt);
+            var confirm = ctx.ParseResult.GetValueForOption(confirmOpt);
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct = ctx.GetCancellationToken();
 
             if (string.IsNullOrEmpty(fixtureId) && string.IsNullOrEmpty(tierStr))
             {

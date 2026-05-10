@@ -23,12 +23,12 @@ public class PerformanceBenchmarks
     public void Setup()
     {
         _orchestrator = RuleOrchestrator.CreateDefault();
-        
+
         // Pre-generate raw diffs outside of benchmark measurements
         _smallRawDiff = GenerateDiff(1, 5, 20);
         _mediumRawDiff = GenerateDiff(5, 20, 25);
         _largeRawDiff = GenerateDiff(20, 50, 20);
-        
+
         // Pre-parse diffs for rules-only benchmarks
         _smallDiff = DiffParser.Parse(_smallRawDiff);
         _mediumDiff = DiffParser.Parse(_mediumRawDiff);
@@ -95,7 +95,7 @@ public class PerformanceBenchmarks
     private static string GenerateDiff(int fileCount, int hunksPerFile, int linesPerHunk)
     {
         var lines = new List<string>();
-        
+
         for (int f = 0; f < fileCount; f++)
         {
             var fileName = $"src/File{f}.cs";
@@ -113,12 +113,12 @@ public class PerformanceBenchmarks
                 int oldLines = 0;
                 int newLines = 0;
                 var hunkBody = new List<string>();
-                
+
                 hunkBody.Add(" public class TestClass");
                 hunkBody.Add(" {");
                 oldLines++;
                 newLines++;
-                
+
                 // Generate balanced code changes
                 for (int i = 0; i < linesPerHunk - 2; i++)
                 {
@@ -139,15 +139,15 @@ public class PerformanceBenchmarks
                         newLines++;
                     }
                 }
-                
+
                 hunkBody.Add(" }");
                 oldLines++;
                 newLines++;
-                
+
                 // Emit hunk header with correct line counts and non-overlapping ranges
                 lines.Add($"@@ -{oldStartLine},{oldLines} +{newStartLine},{newLines} @@");
                 lines.AddRange(hunkBody);
-                
+
                 oldStartLine += oldLines;
                 newStartLine += newLines;
             }

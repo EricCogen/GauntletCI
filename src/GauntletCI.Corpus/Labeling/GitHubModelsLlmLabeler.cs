@@ -16,14 +16,14 @@ public sealed class GitHubModelsLlmLabeler : ILlmLabeler
     private const string Endpoint = "https://models.inference.ai.azure.com/chat/completions";
 
     private readonly HttpClient _http;
-    private readonly string     _model;
-    private readonly string     _githubToken;
+    private readonly string _model;
+    private readonly string _githubToken;
 
     public GitHubModelsLlmLabeler(string githubToken, string model = "gpt-4o-mini")
     {
         _model = model;
         _githubToken = githubToken;
-        _http  = HttpClientFactory.GetLongTimeoutClient();
+        _http = HttpClientFactory.GetLongTimeoutClient();
         // Do not add auth to DefaultRequestHeaders - use per-request HttpRequestMessage headers instead
         // to avoid auth token bleed to other endpoints using the same factory client.
     }
@@ -46,8 +46,8 @@ public sealed class GitHubModelsLlmLabeler : ILlmLabeler
 
             var requestBody = JsonSerializer.Serialize(new
             {
-                model      = _model,
-                messages   = new[] { new { role = "user", content = prompt } },
+                model = _model,
+                messages = new[] { new { role = "user", content = prompt } },
                 max_tokens = 150,
             });
 

@@ -92,15 +92,15 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
             if (IsCommentOrDocstringLine(line.Content)) continue;
 
             var lineContent = line.Content;
-            
+
             // Skip test mock objects
             if (WellKnownPatterns.HasMockPattern(lineContent)) continue;
-            
+
             // Skip if this is in a DI composition root (factory, service registration)
             if (WellKnownPatterns.IsDiCompositionRoot(lineContent)) continue;
 
             // Early exit for common exclusions
-            if (WellKnownPatterns.DependencyInjectionPatterns.DirectInstantiationExclusions.Any(e => 
+            if (WellKnownPatterns.DependencyInjectionPatterns.DirectInstantiationExclusions.Any(e =>
                 lineContent.Contains(e, StringComparison.OrdinalIgnoreCase)))
                 continue;
 
@@ -108,9 +108,9 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
 
             // Additional context guards
             var trimmed = lineContent.Trim();
-            
+
             // Skip if it's a bare return statement (likely factory method)
-            if (trimmed.StartsWith("return", StringComparison.Ordinal) && 
+            if (trimmed.StartsWith("return", StringComparison.Ordinal) &&
                 trimmed.Contains("new ", StringComparison.Ordinal)) continue;
 
             findings.Add(CreateFinding(

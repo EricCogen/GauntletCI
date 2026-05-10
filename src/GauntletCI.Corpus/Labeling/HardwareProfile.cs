@@ -10,14 +10,14 @@ namespace GauntletCI.Corpus.Labeling;
 /// </summary>
 public sealed record HardwareProfile
 {
-    public long TotalRamBytes  { get; init; }
-    public int  CpuCores       { get; init; }
-    public long GpuVramBytes   { get; init; }   // 0 = no dedicated GPU detected
+    public long TotalRamBytes { get; init; }
+    public int CpuCores { get; init; }
+    public long GpuVramBytes { get; init; }   // 0 = no dedicated GPU detected
     public bool IsAppleSilicon { get; init; }   // unified memory: Metal acceleration
 
     // Convenience in GB
     public double TotalRamGb => TotalRamBytes / 1_073_741_824.0;
-    public double GpuVramGb  => GpuVramBytes  / 1_073_741_824.0;
+    public double GpuVramGb => GpuVramBytes / 1_073_741_824.0;
 
     /// <summary>
     /// Whether any GPU acceleration is available (dedicated VRAM or Apple unified memory).
@@ -37,7 +37,7 @@ public sealed record HardwareProfile
             {
                 if (TotalRamGb >= 32) return "llama3";       // 8B, ~5GB quantized
                 if (TotalRamGb >= 16) return "mistral";      // 7B, ~4.5GB quantized
-                if (TotalRamGb >= 8)  return LlmDefaults.OllamaModel; // 3.8B, ~2.5GB quantized
+                if (TotalRamGb >= 8) return LlmDefaults.OllamaModel; // 3.8B, ~2.5GB quantized
                 return "tinyllama";
             }
 
@@ -45,16 +45,16 @@ public sealed record HardwareProfile
             if (GpuVramBytes > 0)
             {
                 if (GpuVramGb >= 10) return "llama3";        // 8B fits in 10GB VRAM
-                if (GpuVramGb >= 6)  return "mistral";       // 7B Q4 fits in 6GB
-                if (GpuVramGb >= 4)  return LlmDefaults.OllamaModel; // 3.8B fits in 4GB (~2.5GB)
+                if (GpuVramGb >= 6) return "mistral";       // 7B Q4 fits in 6GB
+                if (GpuVramGb >= 4) return LlmDefaults.OllamaModel; // 3.8B fits in 4GB (~2.5GB)
                 return "tinyllama";
             }
 
             // CPU-only: system RAM must hold the model + OS overhead (assume 3GB OS headroom)
             var usableGb = TotalRamGb - 3.0;
-            if (usableGb >= 8)  return "mistral";            // 7B Q4 needs ~4.5GB
-            if (usableGb >= 4)  return LlmDefaults.OllamaModel;      // 3.8B Q4 needs ~2.5GB
-            if (usableGb >= 2)  return "tinyllama";          // 1.1B needs ~0.7GB
+            if (usableGb >= 8) return "mistral";            // 7B Q4 needs ~4.5GB
+            if (usableGb >= 4) return LlmDefaults.OllamaModel;      // 3.8B Q4 needs ~2.5GB
+            if (usableGb >= 2) return "tinyllama";          // 1.1B needs ~0.7GB
             return "tinyllama";
         }
     }
@@ -66,16 +66,16 @@ public sealed record HardwareProfile
     /// <summary>Detects the current machine's hardware profile.</summary>
     public static HardwareProfile Detect()
     {
-        var ram           = DetectTotalRam();
-        var cores         = Environment.ProcessorCount;
-        var isApple       = DetectAppleSilicon();
-        var vram          = isApple ? 0L : DetectGpuVram();
+        var ram = DetectTotalRam();
+        var cores = Environment.ProcessorCount;
+        var isApple = DetectAppleSilicon();
+        var vram = isApple ? 0L : DetectGpuVram();
 
         return new HardwareProfile
         {
-            TotalRamBytes  = ram,
-            CpuCores       = cores,
-            GpuVramBytes   = vram,
+            TotalRamBytes = ram,
+            CpuCores = cores,
+            GpuVramBytes = vram,
             IsAppleSilicon = isApple,
         };
     }
@@ -125,9 +125,9 @@ public sealed record HardwareProfile
                 "--query-gpu=memory.total --format=csv,noheader,nounits")
             {
                 RedirectStandardOutput = true,
-                RedirectStandardError  = true,
-                UseShellExecute        = false,
-                CreateNoWindow         = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
             };
             using var proc = Process.Start(psi);
             var output = proc?.StandardOutput.ReadToEnd().Trim();
@@ -150,9 +150,9 @@ public sealed record HardwareProfile
             var psi = new ProcessStartInfo("powershell", $"-NoProfile -Command \"{script}\"")
             {
                 RedirectStandardOutput = true,
-                RedirectStandardError  = true,
-                UseShellExecute        = false,
-                CreateNoWindow         = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true,
             };
             using var proc = Process.Start(psi);
             var output = proc?.StandardOutput.ReadToEnd().Trim();
@@ -168,9 +168,9 @@ public sealed record HardwareProfile
     /// <summary>Returns a human-readable summary for display in CLI output.</summary>
     public string ToSummaryString()
     {
-        var ram  = $"{TotalRamGb:F1} GB RAM";
-        var cpu  = $"{CpuCores} cores";
-        var gpu  = IsAppleSilicon
+        var ram = $"{TotalRamGb:F1} GB RAM";
+        var cpu = $"{CpuCores} cores";
+        var gpu = IsAppleSilicon
                        ? "Apple Silicon (unified memory)"
                        : GpuVramBytes > 0
                            ? $"GPU {GpuVramGb:F1} GB VRAM"

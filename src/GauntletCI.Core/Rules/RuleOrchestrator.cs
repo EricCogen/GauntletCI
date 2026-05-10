@@ -85,7 +85,7 @@ public class RuleOrchestrator
     {
         config ??= new GauntletConfig();
         var configService = new ConfigurationService(config, repoPath);
-        
+
         // GCI0024 Suppression: DefaultPatternProvider is stateless and non-disposable.
         // No resources allocated; safe to create without using statement.
         var patternProvider = new DefaultPatternProvider();
@@ -150,34 +150,34 @@ public class RuleOrchestrator
             .Where(r => r.IsEligible &&
                         r.Extension.Equals(".cs", StringComparison.OrdinalIgnoreCase))
             .ToList();
-        var skippedRecords  = allRecords
+        var skippedRecords = allRecords
             .Where(r => !r.IsEligible ||
                         !r.Extension.Equals(".cs", StringComparison.OrdinalIgnoreCase))
             .ToList();
-        var fileStatistics  = FileEligibilityStatistics.From(allRecords);
+        var fileStatistics = FileEligibilityStatistics.From(allRecords);
 
         var eligibleFilePaths = eligibleRecords.Select(r => r.FilePath).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var filteredDiff = new DiffContext
         {
-            RawDiff       = diff.RawDiff,
-            CommitSha     = diff.CommitSha,
+            RawDiff = diff.RawDiff,
+            CommitSha = diff.CommitSha,
             CommitMessage = diff.CommitMessage,
-            Files         = diff.Files.Where(f => eligibleFilePaths.Contains(f.NewPath)).ToList(),
+            Files = diff.Files.Where(f => eligibleFilePaths.Contains(f.NewPath)).ToList(),
         };
 
         var context = new AnalysisContext
         {
-            EligibleFiles   = eligibleRecords,
-            SkippedFiles    = skippedRecords,
-            FileStatistics  = fileStatistics,
-            Diff            = filteredDiff,
-            StaticAnalysis  = staticAnalysis,
-            Syntax          = staticAnalysis?.Syntax,
+            EligibleFiles = eligibleRecords,
+            SkippedFiles = skippedRecords,
+            FileStatistics = fileStatistics,
+            Diff = filteredDiff,
+            StaticAnalysis = staticAnalysis,
+            Syntax = staticAnalysis?.Syntax,
             TargetFramework = staticAnalysis?.TargetFramework,
         };
 
         var allFindings = new List<Finding>();
-        var metrics     = new List<RuleExecutionMetric>();
+        var metrics = new List<RuleExecutionMetric>();
 
         foreach (var rule in _rules)
         {
@@ -204,14 +204,14 @@ public class RuleOrchestrator
                 Console.Error.WriteLine($"[GauntletCI] Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s: analysis truncated.");
                 allFindings.Add(new Finding
                 {
-                    RuleId          = rule.Id,
-                    RuleName        = rule.Name,
-                    Summary         = $"Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s: results may be incomplete.",
-                    Evidence        = $"Analysis exceeded the {_ruleTimeout.TotalSeconds:0}-second per-rule time limit.",
-                    WhyItMatters    = "A timeout may indicate pathologically complex diff input (Roslyn Bomb) or a hung analyzer.",
+                    RuleId = rule.Id,
+                    RuleName = rule.Name,
+                    Summary = $"Rule {rule.Id} timed out after {_ruleTimeout.TotalSeconds:0}s: results may be incomplete.",
+                    Evidence = $"Analysis exceeded the {_ruleTimeout.TotalSeconds:0}-second per-rule time limit.",
+                    WhyItMatters = "A timeout may indicate pathologically complex diff input (Roslyn Bomb) or a hung analyzer.",
                     SuggestedAction = "Investigate the diff for unusual patterns or report this as a GauntletCI issue.",
-                    Confidence      = Confidence.Medium,
-                    Severity        = RuleSeverity.Warn,
+                    Confidence = Confidence.Medium,
+                    Severity = RuleSeverity.Warn,
                 });
             }
             catch (Exception ex)
@@ -220,14 +220,14 @@ public class RuleOrchestrator
                 Console.Error.WriteLine($"[GauntletCI] Rule {rule.Id} threw an exception: {ex.Message}");
                 allFindings.Add(new Finding
                 {
-                    RuleId          = rule.Id,
-                    RuleName        = rule.Name,
-                    Summary         = $"Rule {rule.Id} encountered an internal error and could not complete analysis.",
-                    Evidence        = ex.GetType().Name + ": " + ex.Message,
-                    WhyItMatters    = "An errored rule may have missed real issues in this diff.",
+                    RuleId = rule.Id,
+                    RuleName = rule.Name,
+                    Summary = $"Rule {rule.Id} encountered an internal error and could not complete analysis.",
+                    Evidence = ex.GetType().Name + ": " + ex.Message,
+                    WhyItMatters = "An errored rule may have missed real issues in this diff.",
                     SuggestedAction = "Report this error at https://github.com/EricCogen/GauntletCI/issues.",
-                    Confidence      = Confidence.Low,
-                    Severity        = RuleSeverity.Warn,
+                    Confidence = Confidence.Low,
+                    Severity = RuleSeverity.Warn,
                 });
             }
             finally
@@ -242,10 +242,10 @@ public class RuleOrchestrator
 
         return new EvaluationResult
         {
-            CommitSha      = diff.CommitSha,
-            Findings       = allFindings,
+            CommitSha = diff.CommitSha,
+            Findings = allFindings,
             RulesEvaluated = _rules.Count,
-            RuleMetrics    = metrics,
+            RuleMetrics = metrics,
             FileStatistics = fileStatistics,
         };
     }

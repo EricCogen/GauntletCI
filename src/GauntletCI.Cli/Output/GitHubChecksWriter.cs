@@ -22,9 +22,9 @@ public static class GitHubChecksWriter
     /// <summary>Posts findings as a GitHub Checks API check run. Soft-fails on any error.</summary>
     public static async Task WriteAsync(EvaluationResult result, CancellationToken ct = default)
     {
-        var token      = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+        var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
         var repository = Environment.GetEnvironmentVariable("GITHUB_REPOSITORY");
-        var sha        = Environment.GetEnvironmentVariable("GITHUB_SHA");
+        var sha = Environment.GetEnvironmentVariable("GITHUB_SHA");
 
         if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(repository) || string.IsNullOrEmpty(sha))
         {
@@ -33,11 +33,11 @@ public static class GitHubChecksWriter
             return;
         }
 
-        var conclusion  = BuildConclusion(result);
+        var conclusion = BuildConclusion(result);
         var annotations = BuildAnnotations(result);
 
         var blockCount = result.Findings.Count(f => f.Severity == RuleSeverity.Block);
-        var warnCount  = result.Findings.Count(f => f.Severity == RuleSeverity.Warn);
+        var warnCount = result.Findings.Count(f => f.Severity == RuleSeverity.Warn);
         var groupCount = FindingGrouper.Group(result.Findings).Count;
 
         var titleText = result.Findings.Count == 0
@@ -46,21 +46,21 @@ public static class GitHubChecksWriter
 
         var payload = new
         {
-            name       = "GauntletCI Risk Analysis",
-            head_sha   = sha,
-            status     = "completed",
+            name = "GauntletCI Risk Analysis",
+            head_sha = sha,
+            status = "completed",
             conclusion,
-            output     = new
+            output = new
             {
-                title       = titleText,
-                summary     = BuildSummaryMarkdown(result),
+                title = titleText,
+                summary = BuildSummaryMarkdown(result),
                 annotations,
             }
         };
 
-        var json    = JsonSerializer.Serialize(payload, _jsonOpts);
+        var json = JsonSerializer.Serialize(payload, _jsonOpts);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var url     = $"https://api.github.com/repos/{repository}/check-runs";
+        var url = $"https://api.github.com/repos/{repository}/check-runs";
 
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -115,20 +115,20 @@ public static class GitHubChecksWriter
             {
                 var filePath = g.FilePath ?? throw new InvalidOperationException("FilePath must not be null in annotation.");
                 var lineNumber = g.PrimaryLine!.Value;  // Safe: already checked HasValue in Where clause
-                
+
                 var lineLabel = g.Lines.Count > 1
                     ? $" (lines {string.Join(", ", g.Lines)})"
                     : string.Empty;
                 var rawDetails = BuildRawDetails(g);
                 return (object)new
                 {
-                    path             = filePath,
-                    start_line       = lineNumber,
-                    end_line         = lineNumber,
+                    path = filePath,
+                    start_line = lineNumber,
+                    end_line = lineNumber,
                     annotation_level = ToAnnotationLevel(g.Severity),
-                    title            = $"{g.RuleId}: {g.RuleName}{lineLabel}",
-                    message          = g.Summary,
-                    raw_details      = rawDetails,
+                    title = $"{g.RuleId}: {g.RuleName}{lineLabel}",
+                    message = g.Summary,
+                    raw_details = rawDetails,
                 };
             })
             .ToList();
@@ -241,16 +241,16 @@ public static class GitHubChecksWriter
     // Block=0 (highest priority), Warn=1, Info=2, Advisory=3: enum values cannot be relied on.
     private static int SeverityPriority(RuleSeverity s) => s switch
     {
-        RuleSeverity.Block    => 0,
-        RuleSeverity.Warn     => 1,
-        RuleSeverity.Info     => 2,
-        _                     => 3,   // Advisory, None
+        RuleSeverity.Block => 0,
+        RuleSeverity.Warn => 1,
+        RuleSeverity.Info => 2,
+        _ => 3,   // Advisory, None
     };
 
     private static string ToAnnotationLevel(RuleSeverity severity) => severity switch
     {
         RuleSeverity.Block => "failure",
-        RuleSeverity.Warn  => "warning",
-        _                  => "notice",
+        RuleSeverity.Warn => "warning",
+        _ => "notice",
     };
 }

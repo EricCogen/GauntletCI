@@ -43,7 +43,7 @@ public static class StaticAnalysisRunner
             return tfm is null ? null : new AnalyzerResult { TargetFramework = tfm, Success = true };
 
         var allDiagnostics = new List<AnalyzerDiagnostic>();
-        var syntaxTrees    = new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>();
+        var syntaxTrees = new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>();
         var anySuccess = false;
 
         foreach (var file in csFiles)
@@ -85,11 +85,11 @@ public static class StaticAnalysisRunner
 
         return new AnalyzerResult
         {
-            AnalyzedFile  = $"[{csFiles.Count} file(s)]",
-            Success       = anySuccess,
-            Diagnostics   = allDiagnostics,
+            AnalyzedFile = $"[{csFiles.Count} file(s)]",
+            Success = anySuccess,
+            Diagnostics = allDiagnostics,
             TargetFramework = tfm,
-            Syntax        = syntaxTrees.Count > 0 ? new SyntaxContext(syntaxTrees) : null,
+            Syntax = syntaxTrees.Count > 0 ? new SyntaxContext(syntaxTrees) : null,
         };
     }
 }

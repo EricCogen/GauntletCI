@@ -13,7 +13,7 @@ namespace GauntletCI.Corpus.Labeling;
 public sealed class SonarCloudEnricher : IDisposable
 {
     private readonly SonarCloudClient _client;
-    private readonly Dictionary<string, string?> _projectKeyCache  = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, string?> _projectKeyCache = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, IReadOnlyList<SonarIssue>> _issuesCache = new(StringComparer.OrdinalIgnoreCase);
 
     public SonarCloudEnricher()
@@ -153,13 +153,13 @@ public sealed class SonarCloudEnricher : IDisposable
             VALUES
                 ($fixtureId, $projectKey, $file, $rule, $severity, $type, $message)
             """;
-        cmd.Parameters.AddWithValue("$fixtureId",  fixtureId);
+        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
         cmd.Parameters.AddWithValue("$projectKey", issue.ProjectKey);
-        cmd.Parameters.AddWithValue("$file",       issue.FilePath);
-        cmd.Parameters.AddWithValue("$rule",       issue.Rule);
-        cmd.Parameters.AddWithValue("$severity",   issue.Severity);
-        cmd.Parameters.AddWithValue("$type",       issue.Type);
-        cmd.Parameters.AddWithValue("$message",    issue.Message);
+        cmd.Parameters.AddWithValue("$file", issue.FilePath);
+        cmd.Parameters.AddWithValue("$rule", issue.Rule);
+        cmd.Parameters.AddWithValue("$severity", issue.Severity);
+        cmd.Parameters.AddWithValue("$type", issue.Type);
+        cmd.Parameters.AddWithValue("$message", issue.Message);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
@@ -167,9 +167,9 @@ public sealed class SonarCloudEnricher : IDisposable
 /// <summary>Summary statistics from a <see cref="SonarCloudEnricher.EnrichAsync"/> run.</summary>
 public sealed class SonarEnrichmentResult
 {
-    public int ProjectsFound       { get; set; }
-    public int ProjectsNotFound    { get; set; }
-    public int FixturesProcessed   { get; set; }
+    public int ProjectsFound { get; set; }
+    public int ProjectsNotFound { get; set; }
+    public int FixturesProcessed { get; set; }
     public int FixturesWithMatches { get; set; }
-    public int TotalMatches        { get; set; }
+    public int TotalMatches { get; set; }
 }

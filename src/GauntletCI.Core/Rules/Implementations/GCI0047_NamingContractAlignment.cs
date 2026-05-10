@@ -92,7 +92,7 @@ public class GCI0047_NamingContractAlignment : RuleBase
         if (addedMethods.Count == 0) return;
 
         // Build lookup sets for the both-sides guard (method wasn't renamed if it still exists post-change).
-        var addedVerbSuffixes   = new HashSet<(string, string)>(addedMethods.Select(m => (m.Verb, m.Suffix)));
+        var addedVerbSuffixes = new HashSet<(string, string)>(addedMethods.Select(m => (m.Verb, m.Suffix)));
         var removedVerbSuffixes = new HashSet<(string, string)>(removedMethods.Select(m => (m.Verb, m.Suffix)));
 
         // Accumulate counts per unique (removedVerb, addedVerb) pair to avoid N×M explosion.
@@ -135,7 +135,7 @@ public class GCI0047_NamingContractAlignment : RuleBase
     private void CheckBooleanNamingInversion(DiffFile file, List<Finding> findings)
     {
         var removedContent = string.Join("\n", file.RemovedLines.Select(l => l.Content));
-        var addedContent   = string.Join("\n", file.AddedLines.Select(l => l.Content));
+        var addedContent = string.Join("\n", file.AddedLines.Select(l => l.Content));
 
         if (string.IsNullOrEmpty(removedContent) || string.IsNullOrEmpty(addedContent)) return;
 
@@ -175,8 +175,8 @@ public class GCI0047_NamingContractAlignment : RuleBase
             if (!match.Success) continue;
 
             var fullName = match.Groups[1].Value;
-            var suffix   = match.Groups[2].Value;
-            var verb     = fullName[..^suffix.Length];
+            var suffix = match.Groups[2].Value;
+            var verb = fullName[..^suffix.Length];
             result.Add((verb, suffix));
         }
         return result;

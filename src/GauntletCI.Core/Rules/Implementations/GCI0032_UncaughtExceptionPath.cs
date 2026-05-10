@@ -39,7 +39,7 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
                          !l.Content.Contains("throw new NotImplementedException", StringComparison.Ordinal) &&
                          !WellKnownPatterns.ExceptionPatterns.GuardClauseThrows.Any(g => l.Content.Contains(g, StringComparison.Ordinal))))
             .ToList();
-        
+
         if (nonTestFilesWithThrows.Any())
         {
             // Only non-removed lines: a deleted assertion is evidence that coverage was removed, not added.
@@ -61,7 +61,7 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
                     .Count(l => l.Content.Contains("throw new", StringComparison.Ordinal) &&
                                !l.Content.Contains("throw new NotImplementedException", StringComparison.Ordinal) &&
                                !WellKnownPatterns.ExceptionPatterns.GuardClauseThrows.Any(g => l.Content.Contains(g, StringComparison.Ordinal)));
-                
+
                 // Attribute to the first file with throws
                 findings.Add(CreateFinding(
                     nonTestFilesWithThrows[0],
@@ -78,7 +78,7 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
             .Where(f => !f.AddedLines.Any(l => WellKnownPatterns.HasMockPattern(l.Content))) // Skip test mocks
             .Where(f => CountEmptyCatchesInFile(f) > 0)
             .ToList();
-        
+
         if (filesWithEmptyCatches.Any())
         {
             var totalEmptyCatches = filesWithEmptyCatches.Sum(f => CountEmptyCatchesInFile(f));
@@ -100,19 +100,6 @@ public class GCI0032_UncaughtExceptionPath : RuleBase
     {
         var addedLines = file.AddedLines.Select(l => l.Content).ToList();
         return CountEmptyCatchesInLines(addedLines);
-    }
-
-    // Counts catch blocks in added lines whose bodies contain no executable statements
-    // (empty braces, or only whitespace and comments).
-    private static int CountEmptyCatches(IEnumerable<DiffFile> nonTestFiles)
-    {
-        int count = 0;
-        foreach (var file in nonTestFiles)
-        {
-            var addedLines = file.AddedLines.Select(l => l.Content).ToList();
-            count += CountEmptyCatchesInLines(addedLines);
-        }
-        return count;
     }
 
     private static int CountEmptyCatchesInLines(List<string> lines)

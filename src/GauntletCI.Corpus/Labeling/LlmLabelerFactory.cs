@@ -18,12 +18,12 @@ public static class LlmLabelerFactory
     {
         return provider.ToLowerInvariant() switch
         {
-            "ollama"         => CreateOllama(model, baseUrl),
-            "anthropic"      => CreateAnthropic(model),
-            "github-models"  => CreateGitHubModels(model),
-            "github"         => CreateGitHubModels(model),
+            "ollama" => CreateOllama(model, baseUrl),
+            "anthropic" => CreateAnthropic(model),
+            "github-models" => CreateGitHubModels(model),
+            "github" => CreateGitHubModels(model),
             "none" or "null" => new NullLlmLabeler(),
-            _                => new NullLlmLabeler(),
+            _ => new NullLlmLabeler(),
         };
     }
 

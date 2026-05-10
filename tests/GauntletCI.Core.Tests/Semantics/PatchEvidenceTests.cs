@@ -92,9 +92,9 @@ public class PatchEvidenceCollectionTests
     {
         var collection = new PatchEvidenceCollection();
         var e = new PatchEvidence { Kind = PatchEvidenceKind.AddedLine };
-        
+
         collection.Add(e);
-        
+
         Assert.Equal(1, collection.Count);
     }
 
@@ -107,9 +107,9 @@ public class PatchEvidenceCollectionTests
             new PatchEvidence { Kind = PatchEvidenceKind.AddedLine },
             new PatchEvidence { Kind = PatchEvidenceKind.OperatorChange }
         };
-        
+
         collection.AddRange(evidence);
-        
+
         Assert.Equal(2, collection.Count);
     }
 
@@ -120,9 +120,9 @@ public class PatchEvidenceCollectionTests
         collection.Add(new PatchEvidence { Kind = PatchEvidenceKind.AddedLine });
         collection.Add(new PatchEvidence { Kind = PatchEvidenceKind.AddedLine });
         collection.Add(new PatchEvidence { Kind = PatchEvidenceKind.RemovedLine });
-        
+
         var added = collection.ByKind(PatchEvidenceKind.AddedLine).ToList();
-        
+
         Assert.Equal(2, added.Count);
     }
 
@@ -133,9 +133,9 @@ public class PatchEvidenceCollectionTests
         collection.Add(new PatchEvidence { KnowledgeLevel = PatchKnowledgeLevel.KnownFromPatch });
         collection.Add(new PatchEvidence { KnowledgeLevel = PatchKnowledgeLevel.KnownFromPatch });
         collection.Add(new PatchEvidence { KnowledgeLevel = PatchKnowledgeLevel.WeaklyInferred });
-        
+
         var known = collection.ByKnowledgeLevel(PatchKnowledgeLevel.KnownFromPatch).ToList();
-        
+
         Assert.Equal(2, known.Count);
     }
 
@@ -146,9 +146,9 @@ public class PatchEvidenceCollectionTests
         collection.Add(new PatchEvidence { FilePath = "a.cs" });
         collection.Add(new PatchEvidence { FilePath = "a.cs" });
         collection.Add(new PatchEvidence { FilePath = "b.cs" });
-        
+
         var fromA = collection.ByFile("a.cs").ToList();
-        
+
         Assert.Equal(2, fromA.Count);
     }
 
@@ -159,9 +159,9 @@ public class PatchEvidenceCollectionTests
         collection.Add(new PatchEvidence { Confidence = 0.5 });
         collection.Add(new PatchEvidence { Confidence = 0.8 });
         collection.Add(new PatchEvidence { Confidence = 0.9 });
-        
+
         var confident = collection.ByMinConfidence(0.75).ToList();
-        
+
         Assert.Equal(2, confident.Count);
     }
 
@@ -172,9 +172,9 @@ public class PatchEvidenceCollectionTests
         collection.Add(new PatchEvidence { KnowledgeLevel = PatchKnowledgeLevel.KnownFromPatch });
         collection.Add(new PatchEvidence { KnowledgeLevel = PatchKnowledgeLevel.StronglyInferred });
         collection.Add(new PatchEvidence { KnowledgeLevel = PatchKnowledgeLevel.WeaklyInferred });
-        
+
         var known = collection.KnownEvidence().ToList();
-        
+
         Assert.Equal(2, known.Count);
     }
 
@@ -185,9 +185,9 @@ public class PatchEvidenceCollectionTests
         collection.Add(new PatchEvidence { KnowledgeLevel = PatchKnowledgeLevel.KnownFromPatch });
         collection.Add(new PatchEvidence { KnowledgeLevel = PatchKnowledgeLevel.WeaklyInferred });
         collection.Add(new PatchEvidence { KnowledgeLevel = PatchKnowledgeLevel.UnknownFromPatchAlone });
-        
+
         var inferred = collection.InferredEvidence().ToList();
-        
+
         Assert.Equal(2, inferred.Count);
     }
 
@@ -198,9 +198,9 @@ public class PatchEvidenceCollectionTests
         collection.Add(new PatchEvidence { NewLineNumber = 10 });
         collection.Add(new PatchEvidence { OldLineNumber = 10 });
         collection.Add(new PatchEvidence { NewLineNumber = 20 });
-        
+
         var atLine10 = collection.ByLineNumber(10).ToList();
-        
+
         Assert.Equal(2, atLine10.Count);
     }
 
@@ -211,9 +211,9 @@ public class PatchEvidenceCollectionTests
         collection.Add(new PatchEvidence { Kind = PatchEvidenceKind.AddedLine });
         collection.Add(new PatchEvidence { Kind = PatchEvidenceKind.AddedLine });
         collection.Add(new PatchEvidence { Kind = PatchEvidenceKind.OperatorChange });
-        
+
         var counts = collection.CountByKind();
-        
+
         Assert.Equal(2, counts[PatchEvidenceKind.AddedLine]);
         Assert.Equal(1, counts[PatchEvidenceKind.OperatorChange]);
     }
@@ -225,9 +225,9 @@ public class PatchEvidenceCollectionTests
         collection.Add(new PatchEvidence { KnowledgeLevel = PatchKnowledgeLevel.KnownFromPatch });
         collection.Add(new PatchEvidence { KnowledgeLevel = PatchKnowledgeLevel.KnownFromPatch });
         collection.Add(new PatchEvidence { KnowledgeLevel = PatchKnowledgeLevel.WeaklyInferred });
-        
+
         var counts = collection.CountByKnowledgeLevel();
-        
+
         Assert.Equal(2, counts[PatchKnowledgeLevel.KnownFromPatch]);
         Assert.Equal(1, counts[PatchKnowledgeLevel.WeaklyInferred]);
     }
@@ -239,9 +239,9 @@ public class PatchEvidenceCollectionTests
         collection.Add(new PatchEvidence { Confidence = 0.5 });
         collection.Add(new PatchEvidence { Confidence = 0.6 });
         collection.Add(new PatchEvidence { Confidence = 0.7 });
-        
+
         var meanConfidence = collection.AggregateConfidence("mean");
-        
+
         Assert.Equal(0.6, meanConfidence);
     }
 
@@ -252,9 +252,9 @@ public class PatchEvidenceCollectionTests
         collection.Add(new PatchEvidence { Confidence = 0.5 });
         collection.Add(new PatchEvidence { Confidence = 0.8 });
         collection.Add(new PatchEvidence { Confidence = 0.9 });
-        
+
         var minConfidence = collection.AggregateConfidence("min");
-        
+
         Assert.Equal(0.5, minConfidence);
     }
 
@@ -265,9 +265,9 @@ public class PatchEvidenceCollectionTests
         collection.Add(new PatchEvidence { Confidence = 0.5 });
         collection.Add(new PatchEvidence { Confidence = 0.8 });
         collection.Add(new PatchEvidence { Confidence = 0.9 });
-        
+
         var maxConfidence = collection.AggregateConfidence("max");
-        
+
         Assert.Equal(0.9, maxConfidence);
     }
 
@@ -275,9 +275,9 @@ public class PatchEvidenceCollectionTests
     public void AggregateConfidence_OnEmpty_ReturnsZero()
     {
         var collection = new PatchEvidenceCollection();
-        
+
         var confidence = collection.AggregateConfidence("mean");
-        
+
         Assert.Equal(0, confidence);
     }
 
@@ -287,9 +287,9 @@ public class PatchEvidenceCollectionTests
         var collection = new PatchEvidenceCollection();
         collection.Add(new PatchEvidence());
         collection.Add(new PatchEvidence());
-        
+
         collection.Clear();
-        
+
         Assert.Equal(0, collection.Count);
     }
 }
@@ -300,7 +300,7 @@ public class PatchEvidenceFactoryTests
     public void AddedLine_CreatesCorrectEvidence()
     {
         var e = PatchEvidenceFactory.AddedLine(42, "file.cs", "int x = 5;");
-        
+
         Assert.Equal(PatchEvidenceKind.AddedLine, e.Kind);
         Assert.Equal(PatchKnowledgeLevel.KnownFromPatch, e.KnowledgeLevel);
         Assert.Equal(42, e.NewLineNumber);
@@ -313,7 +313,7 @@ public class PatchEvidenceFactoryTests
     public void RemovedLine_CreatesCorrectEvidence()
     {
         var e = PatchEvidenceFactory.RemovedLine(42, "file.cs", "int x = 5;");
-        
+
         Assert.Equal(PatchEvidenceKind.RemovedLine, e.Kind);
         Assert.Equal(PatchKnowledgeLevel.KnownFromPatch, e.KnowledgeLevel);
         Assert.Equal(42, e.OldLineNumber);
@@ -324,7 +324,7 @@ public class PatchEvidenceFactoryTests
     public void OperatorChange_CreatesCorrectEvidence()
     {
         var e = PatchEvidenceFactory.OperatorChange("+", "-", 42, "file.cs");
-        
+
         Assert.Equal(PatchEvidenceKind.OperatorChange, e.Kind);
         Assert.Equal(PatchKnowledgeLevel.KnownFromPatch, e.KnowledgeLevel);
         Assert.Equal("+ → -", e.Text);
@@ -335,7 +335,7 @@ public class PatchEvidenceFactoryTests
     public void KeywordChange_CreatesCorrectEvidence()
     {
         var e = PatchEvidenceFactory.KeywordChange("if", true, 42, "file.cs");
-        
+
         Assert.Equal(PatchEvidenceKind.KeywordChange, e.Kind);
         Assert.Equal(PatchKnowledgeLevel.KnownFromPatch, e.KnowledgeLevel);
         Assert.Equal("if", e.Text);
@@ -345,7 +345,7 @@ public class PatchEvidenceFactoryTests
     public void IdentifierChange_CreatesCorrectEvidence()
     {
         var e = PatchEvidenceFactory.IdentifierChange("count", "total", 42, "file.cs");
-        
+
         Assert.Equal(PatchEvidenceKind.IdentifierChange, e.Kind);
         Assert.Equal(PatchKnowledgeLevel.KnownFromPatch, e.KnowledgeLevel);
         Assert.Equal("count → total", e.Text);
@@ -359,7 +359,7 @@ public class PatchEvidenceFactoryTests
             "builder-pattern",
             "Builder pattern detected",
             "file.cs");
-        
+
         Assert.Equal(PatchEvidenceKind.PatternOccurrence, e.Kind);
         Assert.Equal(PatchKnowledgeLevel.StronglyInferred, e.KnowledgeLevel);
         Assert.Equal(0.8, e.Confidence);
@@ -372,7 +372,7 @@ public class PatchEvidenceFactoryTests
             "extract-method",
             "Extract method refactoring detected",
             new[] { "file1.cs", "file2.cs" });
-        
+
         Assert.Equal(PatchEvidenceKind.RefactoringPattern, e.Kind);
         Assert.Equal(PatchKnowledgeLevel.StronglyInferred, e.KnowledgeLevel);
         Assert.Equal("extract-method", e.Text);
@@ -386,7 +386,7 @@ public class PatchEvidenceFactoryTests
             "input-validation",
             "Input validation pattern detected",
             "file.cs");
-        
+
         Assert.Equal(PatchEvidenceKind.SecurityPattern, e.Kind);
         Assert.Equal(PatchKnowledgeLevel.StronglyInferred, e.KnowledgeLevel);
         Assert.Equal(0.75, e.Confidence);
@@ -399,7 +399,7 @@ public class PatchEvidenceFactoryTests
             "mutation-detector",
             "Heuristic match for behavioral change",
             "file.cs");
-        
+
         Assert.Equal(PatchEvidenceKind.HeuristicMatch, e.Kind);
         Assert.Equal(PatchKnowledgeLevel.WeaklyInferred, e.KnowledgeLevel);
         Assert.Equal(0.6, e.Confidence);
@@ -412,7 +412,7 @@ public class PatchEvidenceFactoryTests
             "unusual-pattern",
             "Anomaly detected in patch",
             "file.cs");
-        
+
         Assert.Equal(PatchEvidenceKind.AnomalyDetected, e.Kind);
         Assert.Equal(PatchKnowledgeLevel.WeaklyInferred, e.KnowledgeLevel);
         Assert.Equal(0.7, e.Confidence);
@@ -422,7 +422,7 @@ public class PatchEvidenceFactoryTests
     public void Factory_CanOverrideConfidence()
     {
         var e = PatchEvidenceFactory.AddedLine(42, "file.cs", "code", confidence: 0.5);
-        
+
         Assert.Equal(0.5, e.Confidence);
     }
 }

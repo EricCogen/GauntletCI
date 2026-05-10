@@ -13,8 +13,8 @@ namespace GauntletCI.Corpus.Labeling;
 public sealed class AnthropicLlmLabeler : ILlmLabeler
 {
     private readonly HttpClient _http;
-    private readonly string     _model;
-    private readonly string     _apiKey;
+    private readonly string _model;
+    private readonly string _apiKey;
 
     public AnthropicLlmLabeler(string apiKey, string model = "claude-haiku-4-5")
     {
@@ -22,7 +22,7 @@ public sealed class AnthropicLlmLabeler : ILlmLabeler
             throw new ArgumentException("Anthropic API key must not be empty.", nameof(apiKey));
         _model = model;
         _apiKey = apiKey;
-        _http  = HttpClientFactory.GetAnthropicClient();
+        _http = HttpClientFactory.GetAnthropicClient();
         // Do not add auth to DefaultRequestHeaders - use per-request HttpRequestMessage headers instead
         // to avoid auth token bleed to other endpoints using the same factory client.
     }
@@ -45,9 +45,9 @@ public sealed class AnthropicLlmLabeler : ILlmLabeler
 
             var requestBody = JsonSerializer.Serialize(new
             {
-                model      = _model,
+                model = _model,
                 max_tokens = 150,
-                messages   = new[] { new { role = "user", content = prompt } },
+                messages = new[] { new { role = "user", content = prompt } },
             });
 
             using var request = new HttpRequestMessage(HttpMethod.Post, "https://api.anthropic.com/v1/messages");

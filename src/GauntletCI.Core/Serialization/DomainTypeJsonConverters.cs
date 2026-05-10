@@ -16,10 +16,10 @@ public class RuleIdentifierJsonConverter : JsonConverter<RuleIdentifier>
         var value = reader.GetString();
         if (string.IsNullOrWhiteSpace(value))
             throw new JsonException("RuleIdentifier cannot be null or empty");
-        
+
         if (!RuleIdentifier.TryParse(value, out var result))
             throw new JsonException($"Invalid RuleIdentifier format: {value}");
-        
+
         return result;
     }
 
@@ -42,10 +42,10 @@ public class CodeFilePathJsonConverter : JsonConverter<CodeFilePath>
         var value = reader.GetString();
         if (string.IsNullOrWhiteSpace(value))
             throw new JsonException("CodeFilePath cannot be null or empty");
-        
+
         if (!CodeFilePath.TryParse(value, out var result))
             throw new JsonException($"Invalid CodeFilePath: {value}");
-        
+
         return result;
     }
 
@@ -67,14 +67,14 @@ public class NullableCodeFilePathJsonConverter : JsonConverter<CodeFilePath?>
     {
         if (reader.TokenType == JsonTokenType.Null)
             return null;
-        
+
         var value = reader.GetString();
         if (string.IsNullOrWhiteSpace(value))
             return null;
-        
+
         if (!CodeFilePath.TryParse(value, out var result))
             throw new JsonException($"Invalid CodeFilePath: {value}");
-        
+
         return result;
     }
 
@@ -119,7 +119,7 @@ public class NullableLlmExplanationJsonConverter : JsonConverter<LlmExplanation?
     {
         if (reader.TokenType == JsonTokenType.Null)
             return null;
-        
+
         var value = reader.GetString();
         return LlmExplanation.Create(value);
     }

@@ -109,14 +109,14 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
                 if (_tokenizer == null || _model == null || _tokenizerStream == null)
                     return string.Empty;
             }
-            
+
             try
             {
                 var sw = Stopwatch.StartNew();
                 var tokenizer = _tokenizer!;
                 var model = _model!;
                 var tokenizerStream = _tokenizerStream!;
-                
+
                 var sequences = tokenizer.Encode(prompt);
                 using var generatorParams = new GeneratorParams(model);
                 generatorParams.SetSearchOption("max_length", MaxOutputTokens);
@@ -134,7 +134,7 @@ public sealed class LocalLlmEngine : ILlmEngine, IDisposable
 
                     var tokens = generator.GetNextTokens();
                     if (tokens.Length == 0) break;
-                    
+
                     var token = tokens[0];
                     sb.Append(tokenizerStream.Decode(token));
 

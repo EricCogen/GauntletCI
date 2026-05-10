@@ -92,9 +92,9 @@ public class PatchOperationCollectionTests
     {
         var collection = new PatchOperationCollection();
         var op = new PatchOperation { Kind = PatchOperationKind.LineAdded };
-        
+
         collection.Add(op);
-        
+
         Assert.Equal(1, collection.Count);
         Assert.Single(collection.All);
     }
@@ -105,10 +105,10 @@ public class PatchOperationCollectionTests
         var collection = new PatchOperationCollection();
         var op1 = new PatchOperation { Kind = PatchOperationKind.LineAdded };
         var op2 = new PatchOperation { Kind = PatchOperationKind.LineRemoved };
-        
+
         collection.Add(op1);
         collection.Add(op2);
-        
+
         Assert.Equal(2, collection.Count);
     }
 
@@ -122,9 +122,9 @@ public class PatchOperationCollectionTests
             new PatchOperation { Kind = PatchOperationKind.OperatorChanged },
             new PatchOperation { Kind = PatchOperationKind.IdentifierRenamed }
         };
-        
+
         collection.AddRange(ops);
-        
+
         Assert.Equal(3, collection.Count);
     }
 
@@ -135,9 +135,9 @@ public class PatchOperationCollectionTests
         collection.Add(new PatchOperation { Kind = PatchOperationKind.LineAdded });
         collection.Add(new PatchOperation { Kind = PatchOperationKind.LineAdded });
         collection.Add(new PatchOperation { Kind = PatchOperationKind.LineRemoved });
-        
+
         var added = collection.ByKind(PatchOperationKind.LineAdded).ToList();
-        
+
         Assert.Equal(2, added.Count);
     }
 
@@ -148,9 +148,9 @@ public class PatchOperationCollectionTests
         collection.Add(new PatchOperation { FilePath = "a.cs" });
         collection.Add(new PatchOperation { FilePath = "a.cs" });
         collection.Add(new PatchOperation { FilePath = "b.cs" });
-        
+
         var fromA = collection.ByFile("a.cs").ToList();
-        
+
         Assert.Equal(2, fromA.Count);
     }
 
@@ -161,9 +161,9 @@ public class PatchOperationCollectionTests
         collection.Add(new PatchOperation { Symbol = "myVar" });
         collection.Add(new PatchOperation { Symbol = "myVar" });
         collection.Add(new PatchOperation { Symbol = "otherVar" });
-        
+
         var myVarOps = collection.BySymbol("myVar").ToList();
-        
+
         Assert.Equal(2, myVarOps.Count);
     }
 
@@ -174,9 +174,9 @@ public class PatchOperationCollectionTests
         collection.Add(new PatchOperation { Category = "logic" });
         collection.Add(new PatchOperation { Category = "logic" });
         collection.Add(new PatchOperation { Category = "performance" });
-        
+
         var logic = collection.ByCategory("logic").ToList();
-        
+
         Assert.Equal(2, logic.Count);
     }
 
@@ -187,9 +187,9 @@ public class PatchOperationCollectionTests
         collection.Add(new PatchOperation { RiskLevel = 0.5 });
         collection.Add(new PatchOperation { RiskLevel = 0.8 });
         collection.Add(new PatchOperation { RiskLevel = 0.9 });
-        
+
         var highRisk = collection.ByMinRisk(0.75).ToList();
-        
+
         Assert.Equal(2, highRisk.Count);
     }
 
@@ -200,9 +200,9 @@ public class PatchOperationCollectionTests
         collection.Add(new PatchOperation { Confidence = 0.7 });
         collection.Add(new PatchOperation { Confidence = 0.9 });
         collection.Add(new PatchOperation { Confidence = 0.95 });
-        
+
         var confident = collection.ByMinConfidence(0.85).ToList();
-        
+
         Assert.Equal(2, confident.Count);
     }
 
@@ -213,9 +213,9 @@ public class PatchOperationCollectionTests
         collection.Add(new PatchOperation { Kind = PatchOperationKind.LineAdded });
         collection.Add(new PatchOperation { Kind = PatchOperationKind.LineAdded });
         collection.Add(new PatchOperation { Kind = PatchOperationKind.OperatorChanged });
-        
+
         var counts = collection.CountByKind();
-        
+
         Assert.Equal(2, counts[PatchOperationKind.LineAdded]);
         Assert.Equal(1, counts[PatchOperationKind.OperatorChanged]);
     }
@@ -227,9 +227,9 @@ public class PatchOperationCollectionTests
         collection.Add(new PatchOperation { RiskLevel = 0.5 });
         collection.Add(new PatchOperation { RiskLevel = 0.8 });
         collection.Add(new PatchOperation { RiskLevel = 0.6 });
-        
+
         var maxRisk = collection.AggregateRisk("max");
-        
+
         Assert.Equal(0.8, maxRisk);
     }
 
@@ -240,9 +240,9 @@ public class PatchOperationCollectionTests
         collection.Add(new PatchOperation { RiskLevel = 0.5 });
         collection.Add(new PatchOperation { RiskLevel = 0.6 });
         collection.Add(new PatchOperation { RiskLevel = 0.7 });
-        
+
         var meanRisk = collection.AggregateRisk("mean");
-        
+
         Assert.Equal(0.6, meanRisk);
     }
 
@@ -250,9 +250,9 @@ public class PatchOperationCollectionTests
     public void AggregateRisk_OnEmpty_ReturnsZero()
     {
         var collection = new PatchOperationCollection();
-        
+
         var risk = collection.AggregateRisk("max");
-        
+
         Assert.Equal(0, risk);
     }
 
@@ -262,9 +262,9 @@ public class PatchOperationCollectionTests
         var collection = new PatchOperationCollection();
         collection.Add(new PatchOperation());
         collection.Add(new PatchOperation());
-        
+
         collection.Clear();
-        
+
         Assert.Equal(0, collection.Count);
     }
 }
@@ -275,7 +275,7 @@ public class PatchOperationFactoryTests
     public void LineAdded_CreatesCorrectOperation()
     {
         var op = PatchOperationFactory.LineAdded(42, "file.cs", "int x = 5;");
-        
+
         Assert.Equal(PatchOperationKind.LineAdded, op.Kind);
         Assert.Equal(42, op.NewLineNumber);
         Assert.Equal("file.cs", op.FilePath);
@@ -287,7 +287,7 @@ public class PatchOperationFactoryTests
     public void LineRemoved_CreatesCorrectOperation()
     {
         var op = PatchOperationFactory.LineRemoved(42, "file.cs", "int x = 5;");
-        
+
         Assert.Equal(PatchOperationKind.LineRemoved, op.Kind);
         Assert.Equal(42, op.OldLineNumber);
         Assert.Equal("file.cs", op.FilePath);
@@ -299,7 +299,7 @@ public class PatchOperationFactoryTests
     public void IdentifierRenamed_CreatesCorrectOperation()
     {
         var op = PatchOperationFactory.IdentifierRenamed("count", "total", 42, "file.cs");
-        
+
         Assert.Equal(PatchOperationKind.IdentifierRenamed, op.Kind);
         Assert.Equal("count", op.Before);
         Assert.Equal("total", op.After);
@@ -311,7 +311,7 @@ public class PatchOperationFactoryTests
     public void OperatorChanged_CreatesCorrectOperation()
     {
         var op = PatchOperationFactory.OperatorChanged("+", "-", 42, "file.cs");
-        
+
         Assert.Equal(PatchOperationKind.OperatorChanged, op.Kind);
         Assert.Equal("+", op.Before);
         Assert.Equal("-", op.After);
@@ -322,7 +322,7 @@ public class PatchOperationFactoryTests
     public void LiteralChanged_CreatesCorrectOperation()
     {
         var op = PatchOperationFactory.LiteralChanged("10", "20", 42, "file.cs");
-        
+
         Assert.Equal(PatchOperationKind.LiteralChanged, op.Kind);
         Assert.Equal("10", op.Before);
         Assert.Equal("20", op.After);
@@ -333,7 +333,7 @@ public class PatchOperationFactoryTests
     public void FunctionSignatureChanged_CreatesCorrectOperation()
     {
         var op = PatchOperationFactory.FunctionSignatureChanged("Calculate", "int Calculate()", "int Calculate(int x)", 42, "file.cs");
-        
+
         Assert.Equal(PatchOperationKind.FunctionSignatureChanged, op.Kind);
         Assert.Equal("Calculate", op.Symbol);
         Assert.Equal(0.9, op.RiskLevel);
@@ -343,7 +343,7 @@ public class PatchOperationFactoryTests
     public void ConditionalModified_CreatesCorrectOperation()
     {
         var op = PatchOperationFactory.ConditionalModified("if condition changed", 42, "file.cs");
-        
+
         Assert.Equal(PatchOperationKind.ConditionalModified, op.Kind);
         Assert.Equal(0.85, op.RiskLevel);
     }
@@ -352,7 +352,7 @@ public class PatchOperationFactoryTests
     public void ParameterAdded_CreatesCorrectOperation()
     {
         var op = PatchOperationFactory.ParameterAdded("timeout", "int", 42, "file.cs");
-        
+
         Assert.Equal(PatchOperationKind.ParameterAdded, op.Kind);
         Assert.Equal("timeout", op.Symbol);
         Assert.Equal(0.75, op.RiskLevel);
@@ -362,7 +362,7 @@ public class PatchOperationFactoryTests
     public void ParameterRemoved_CreatesCorrectOperation()
     {
         var op = PatchOperationFactory.ParameterRemoved("legacyFlag", "bool", 42, "file.cs");
-        
+
         Assert.Equal(PatchOperationKind.ParameterRemoved, op.Kind);
         Assert.Equal("legacyFlag", op.Symbol);
         Assert.Equal(0.75, op.RiskLevel);
@@ -372,7 +372,7 @@ public class PatchOperationFactoryTests
     public void Factory_CanOverrideRiskLevel()
     {
         var op = PatchOperationFactory.LineAdded(42, "file.cs", "code", risk: 0.9);
-        
+
         Assert.Equal(0.9, op.RiskLevel);
     }
 }

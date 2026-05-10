@@ -24,7 +24,7 @@ public sealed class NullabilityPatternStrategy : IInferenceStrategy
         {
             if (l.TrimStart().StartsWith("//"))
                 return false;
-            
+
             // Pattern: variable = null without explicit nullable type annotation
             return l.Contains(" = null", StringComparison.Ordinal) &&
                    !l.Contains("?", StringComparison.Ordinal); // No ? for nullable

@@ -140,7 +140,7 @@ public class SyntaxGuardTests
         const string addedLine = "// var token = new Random(seed).Next(); // old insecure approach";
         // Parse with the same preceding "// existing" line so line 2 matches the diff's line 2
         var tree = Parse("// existing\n" + addedLine);
-        var ctx  = new SyntaxContext(new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>
+        var ctx = new SyntaxContext(new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>
         {
             ["src/Auth.cs"] = tree
         });
@@ -168,7 +168,7 @@ public class SyntaxGuardTests
     {
         const string addedLine = "// if (value == 0.0) return; // legacy check";
         var tree = Parse("// existing\n" + addedLine);
-        var ctx  = new SyntaxContext(new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>
+        var ctx = new SyntaxContext(new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>
         {
             ["src/Calc.cs"] = tree
         });

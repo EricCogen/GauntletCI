@@ -51,13 +51,13 @@ public static class SyntaxGuard
         if (line.Span.IsEmpty) return false;
         var position = line.Start + Math.Min(columnOffset, line.Span.Length - 1);
 
-        var root  = tree.GetRoot();
+        var root = tree.GetRoot();
         var token = root.FindToken(position, findInsideTrivia: true);
 
         // Direct string literal token at this position
-        if (token.IsKind(SyntaxKind.StringLiteralToken)             ||
-            token.IsKind(SyntaxKind.InterpolatedStringTextToken)    ||
-            token.IsKind(SyntaxKind.SingleLineRawStringLiteralToken)||
+        if (token.IsKind(SyntaxKind.StringLiteralToken) ||
+            token.IsKind(SyntaxKind.InterpolatedStringTextToken) ||
+            token.IsKind(SyntaxKind.SingleLineRawStringLiteralToken) ||
             token.IsKind(SyntaxKind.MultiLineRawStringLiteralToken))
             return true;
 
@@ -104,9 +104,9 @@ public static class SyntaxGuard
 
     private static string GetSimpleTypeName(TypeSyntax type) => type switch
     {
-        SimpleNameSyntax simple              => simple.Identifier.ValueText,
-        QualifiedNameSyntax qualified        => qualified.Right.Identifier.ValueText,
-        AliasQualifiedNameSyntax aliased     => GetSimpleTypeName(aliased.Name),
-        _                                    => string.Empty,
+        SimpleNameSyntax simple => simple.Identifier.ValueText,
+        QualifiedNameSyntax qualified => qualified.Right.Identifier.ValueText,
+        AliasQualifiedNameSyntax aliased => GetSimpleTypeName(aliased.Name),
+        _ => string.Empty,
     };
 }

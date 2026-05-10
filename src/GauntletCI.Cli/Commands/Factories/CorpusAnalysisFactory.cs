@@ -31,13 +31,13 @@ public static class CorpusAnalysisFactory
     /// </summary>
     public static Command CreateDiscover()
     {
-        var providerOpt    = new Option<string>("--provider",     "Discovery provider: gh-search or gh-archive") { IsRequired = true };
-        var limitOpt       = new Option<int>   ("--limit",        () => 100,           "Maximum candidates to fetch");
-        var languageOpt    = new Option<string?>("--language",    "Filter by programming language (e.g. cs, python)");
-        var minStarsOpt    = new Option<int>   ("--min-stars",    () => 0,             "Minimum stars on the repository");
-        var minCommentsOpt = new Option<int>   ("--min-comments", () => 0,             "Minimum review comment count");
-        var startDateOpt   = new Option<DateTime?>("--start-date","Filter by merge/event date (inclusive, UTC)");
-        var endDateOpt     = new Option<DateTime?>("--end-date",  "Filter by merge/event date upper bound (inclusive, UTC)");
+        var providerOpt = new Option<string>("--provider", "Discovery provider: gh-search or gh-archive") { IsRequired = true };
+        var limitOpt = new Option<int>("--limit", () => 100, "Maximum candidates to fetch");
+        var languageOpt = new Option<string?>("--language", "Filter by programming language (e.g. cs, python)");
+        var minStarsOpt = new Option<int>("--min-stars", () => 0, "Minimum stars on the repository");
+        var minCommentsOpt = new Option<int>("--min-comments", () => 0, "Minimum review comment count");
+        var startDateOpt = new Option<DateTime?>("--start-date", "Filter by merge/event date (inclusive, UTC)");
+        var endDateOpt = new Option<DateTime?>("--end-date", "Filter by merge/event date upper bound (inclusive, UTC)");
         var repoBlocklistOpt = new Option<string[]>("--repo-blocklist", "Repos to exclude in owner/repo format (repeatable)")
         {
             Arity = ArgumentArity.ZeroOrMore,
@@ -48,9 +48,9 @@ public static class CorpusAnalysisFactory
             Arity = ArgumentArity.ZeroOrMore,
             AllowMultipleArgumentsPerToken = true,
         };
-        var perRepoLimitOpt  = new Option<int>   ("--per-repo-limit", () => 0,              "Max candidates per repo when using allowlist");
-        var dbOpt          = new Option<string>("--db",           () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt    = new Option<string>("--fixtures",     () => "./data/fixtures",             "Path to fixtures root directory");
+        var perRepoLimitOpt = new Option<int>("--per-repo-limit", () => 0, "Max candidates per repo when using allowlist");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Path to fixtures root directory");
 
         var cmd = new Command("discover", "Discover pull request candidates and persist them to the corpus database");
         cmd.AddOption(providerOpt);
@@ -69,18 +69,18 @@ public static class CorpusAnalysisFactory
         cmd.SetHandler(async (ctx) =>
         {
             var providerName = ctx.ParseResult.GetValueForOption(providerOpt)!;
-            var limit        = ctx.ParseResult.GetValueForOption(limitOpt);
-            var language     = ctx.ParseResult.GetValueForOption(languageOpt);
-            var minStars     = ctx.ParseResult.GetValueForOption(minStarsOpt);
-            var minComments  = ctx.ParseResult.GetValueForOption(minCommentsOpt);
-            var startDate    = ctx.ParseResult.GetValueForOption(startDateOpt);
-            var endDate      = ctx.ParseResult.GetValueForOption(endDateOpt);
-            var repoBlocklist  = ctx.ParseResult.GetValueForOption(repoBlocklistOpt) ?? [];
-            var repoAllowlist  = ctx.ParseResult.GetValueForOption(repoAllowlistOpt) ?? [];
-            var perRepoLimit   = ctx.ParseResult.GetValueForOption(perRepoLimitOpt);
-            var dbPath         = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var fixtures       = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var ct             = ctx.GetCancellationToken();
+            var limit = ctx.ParseResult.GetValueForOption(limitOpt);
+            var language = ctx.ParseResult.GetValueForOption(languageOpt);
+            var minStars = ctx.ParseResult.GetValueForOption(minStarsOpt);
+            var minComments = ctx.ParseResult.GetValueForOption(minCommentsOpt);
+            var startDate = ctx.ParseResult.GetValueForOption(startDateOpt);
+            var endDate = ctx.ParseResult.GetValueForOption(endDateOpt);
+            var repoBlocklist = ctx.ParseResult.GetValueForOption(repoBlocklistOpt) ?? [];
+            var repoAllowlist = ctx.ParseResult.GetValueForOption(repoAllowlistOpt) ?? [];
+            var perRepoLimit = ctx.ParseResult.GetValueForOption(perRepoLimitOpt);
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct = ctx.GetCancellationToken();
 
             IDiscoveryProvider provider;
             var errorLog = new List<(string? Repo, int? Code, string Message)>();
@@ -122,15 +122,15 @@ public static class CorpusAnalysisFactory
 
             var query = new DiscoveryQuery
             {
-                Languages          = languages,
-                MinStars           = minStars,
-                MinReviewComments  = minComments,
-                StartDateUtc       = startDate,
-                EndDateUtc         = endDate,
-                MaxCandidates      = limit,
-                PerRepoLimit       = perRepoLimit,
-                RepoBlockList      = repoBlocklist,
-                RepoAllowList      = repoAllowlist,
+                Languages = languages,
+                MinStars = minStars,
+                MinReviewComments = minComments,
+                StartDateUtc = startDate,
+                EndDateUtc = endDate,
+                MaxCandidates = limit,
+                PerRepoLimit = perRepoLimit,
+                RepoBlockList = repoBlocklist,
+                RepoAllowList = repoAllowlist,
             };
 
             var db = new CorpusDb(dbPath);
@@ -212,9 +212,9 @@ public static class CorpusAnalysisFactory
     /// </summary>
     public static Command CreateRun()
     {
-        var fixtureOpt  = new Option<string>("--fixture",  "Fixture ID to run rules against") { IsRequired = true };
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
+        var fixtureOpt = new Option<string>("--fixture", "Fixture ID to run rules against") { IsRequired = true };
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Path to fixtures root directory");
 
         var cmd = new Command("run", "Run GCI rules against a single corpus fixture");
         cmd.AddOption(fixtureOpt);
@@ -224,12 +224,12 @@ public static class CorpusAnalysisFactory
         cmd.SetHandler(async (ctx) =>
         {
             var fixtureId = ctx.ParseResult.GetValueForOption(fixtureOpt)!;
-            var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var fixtures  = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var ct        = ctx.GetCancellationToken();
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct = ctx.GetCancellationToken();
 
             var configDir = CorpusCommandHelpers.FindGitRoot(Environment.CurrentDirectory) ?? Environment.CurrentDirectory;
-            var config    = ConfigLoader.Load(configDir);
+            var config = ConfigLoader.Load(configDir);
 
             var (db, store, _) = await CorpusCommandHelpers.BuildPipeline(dbPath, fixtures, ct);
             using (db)
@@ -263,12 +263,12 @@ public static class CorpusAnalysisFactory
                     Console.WriteLine($"[corpus] Running GCI rules against {fixtureId}");
 
                     var diffText = await File.ReadAllTextAsync(diffPath, ct);
-                    var runner   = new RuleCorpusRunner(store, db, config, configDir);
+                    var runner = new RuleCorpusRunner(store, db, config, configDir);
                     var findings = await runner.RunAsync(fixtureId, diffText, ct);
 
-                    int high   = findings.Count(f => f.ActualConfidence >= 1.0);
+                    int high = findings.Count(f => f.ActualConfidence >= 1.0);
                     int medium = findings.Count(f => f.ActualConfidence is >= 0.5 and < 1.0);
-                    int low    = findings.Count(f => f.ActualConfidence < 0.5);
+                    int low = findings.Count(f => f.ActualConfidence < 0.5);
 
                     Console.WriteLine($"[corpus] Run ID  : {runner.LastRunId}");
                     Console.WriteLine($"[corpus] Findings: {findings.Count} ({high} High, {medium} Medium, {low} Low)");
@@ -290,9 +290,9 @@ public static class CorpusAnalysisFactory
     /// </summary>
     public static Command CreateRunAll()
     {
-        var tierOpt     = new Option<string?>("--tier",     "Fixture tier to run (gold|silver|discovery)");
-        var dbOpt       = new Option<string> ("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string> ("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
+        var tierOpt = new Option<string?>("--tier", "Fixture tier to run (gold|silver|discovery)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Path to fixtures root directory");
 
         var cmd = new Command("run-all", "Run GCI rules against all fixtures in a tier");
         cmd.AddOption(tierOpt);
@@ -301,13 +301,13 @@ public static class CorpusAnalysisFactory
 
         cmd.SetHandler(async (ctx) =>
         {
-            var tierStr   = ctx.ParseResult.GetValueForOption(tierOpt);
-            var dbPath    = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var fixtures  = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var ct        = ctx.GetCancellationToken();
+            var tierStr = ctx.ParseResult.GetValueForOption(tierOpt);
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct = ctx.GetCancellationToken();
 
             var configDir = CorpusCommandHelpers.FindGitRoot(Environment.CurrentDirectory) ?? Environment.CurrentDirectory;
-            var config    = ConfigLoader.Load(configDir);
+            var config = ConfigLoader.Load(configDir);
 
             FixtureTier? tier = null;
             if (!string.IsNullOrEmpty(tierStr))
@@ -335,8 +335,8 @@ public static class CorpusAnalysisFactory
                     }
 
                     int totalFindings = 0;
-                    int completed     = 0;
-                    int failed        = 0;
+                    int completed = 0;
+                    int failed = 0;
 
                     var runner = new RuleCorpusRunner(store, db, config, configDir);
 
@@ -398,10 +398,10 @@ public static class CorpusAnalysisFactory
     /// </summary>
     public static Command CreateScore()
     {
-        var ruleOpt     = new Option<string?>("--rule",     "Filter by rule ID (e.g. GCI0001)");
-        var tierOpt     = new Option<string?>("--tier",     "Filter by tier (gold|silver|discovery)");
-        var dbOpt       = new Option<string> ("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string> ("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
+        var ruleOpt = new Option<string?>("--rule", "Filter by rule ID (e.g. GCI0001)");
+        var tierOpt = new Option<string?>("--tier", "Filter by tier (gold|silver|discovery)");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Path to fixtures root directory");
 
         var cmd = new Command("score", "Compute rule scorecards from corpus fixture results");
         cmd.AddOption(ruleOpt);
@@ -411,11 +411,11 @@ public static class CorpusAnalysisFactory
 
         cmd.SetHandler(async (ctx) =>
         {
-            var ruleId   = ctx.ParseResult.GetValueForOption(ruleOpt);
-            var tierStr  = ctx.ParseResult.GetValueForOption(tierOpt);
-            var dbPath   = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var ruleId = ctx.ParseResult.GetValueForOption(ruleOpt);
+            var tierStr = ctx.ParseResult.GetValueForOption(tierOpt);
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
             var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var ct       = ctx.GetCancellationToken();
+            var ct = ctx.GetCancellationToken();
 
             FixtureTier? tier = null;
             if (!string.IsNullOrEmpty(tierStr))
@@ -443,16 +443,16 @@ public static class CorpusAnalysisFactory
                         return;
                     }
 
-                    const int colRule      = 10;
-                    const int colTier      = 10;
-                    const int colFixtures  = 9;
-                    const int colTrigger   = 12;
+                    const int colRule = 10;
+                    const int colTier = 10;
+                    const int colFixtures = 9;
+                    const int colTrigger = 12;
                     const int colPrecision = 10;
-                    const int colRecall    = 8;
-                    const int colUseful    = 11;
+                    const int colRecall = 8;
+                    const int colUseful = 11;
 
                     var header = $"{"RuleId",-colRule}  {"Tier",-colTier}  {"Fixtures",-colFixtures}  {"TriggerRate",-colTrigger}  {"Precision",-colPrecision}  {"Recall",-colRecall}  {"Usefulness",-colUseful}";
-                    var sep    = new string('-', header.Length + 4);
+                    var sep = new string('-', header.Length + 4);
 
                     Console.WriteLine(sep);
                     Console.WriteLine(header);
@@ -486,9 +486,9 @@ public static class CorpusAnalysisFactory
     /// </summary>
     public static Command CreateReport()
     {
-        var outputOpt   = new Option<string>("--output",   () => "./corpus-report.md", "Output file path for the markdown report");
-        var dbOpt       = new Option<string>("--db",       () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
-        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures",             "Path to fixtures root directory");
+        var outputOpt = new Option<string>("--output", () => "./corpus-report.md", "Output file path for the markdown report");
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var fixturesOpt = new Option<string>("--fixtures", () => "./data/fixtures", "Path to fixtures root directory");
 
         var cmd = new Command("report", "Export a markdown scorecard report for all rules");
         cmd.AddOption(outputOpt);
@@ -498,9 +498,9 @@ public static class CorpusAnalysisFactory
         cmd.SetHandler(async (ctx) =>
         {
             var outputPath = ctx.ParseResult.GetValueForOption(outputOpt)!;
-            var dbPath     = ctx.ParseResult.GetValueForOption(dbOpt)!;
-            var fixtures   = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
-            var ct         = ctx.GetCancellationToken();
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var fixtures = ctx.ParseResult.GetValueForOption(fixturesOpt)!;
+            var ct = ctx.GetCancellationToken();
 
             var (db, store, _) = await CorpusCommandHelpers.BuildPipeline(dbPath, fixtures, ct);
             using (db)
@@ -508,8 +508,8 @@ public static class CorpusAnalysisFactory
                 try
                 {
                     var aggregator = new ScoreAggregator(store, db);
-                    var exporter   = new MarkdownReportExporter(aggregator);
-                    var markdown   = await exporter.ExportMarkdownAsync(ct);
+                    var exporter = new MarkdownReportExporter(aggregator);
+                    var markdown = await exporter.ExportMarkdownAsync(ct);
 
                     var dir = Path.GetDirectoryName(outputPath);
                     if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);

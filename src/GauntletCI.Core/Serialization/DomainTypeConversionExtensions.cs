@@ -17,7 +17,7 @@ public static class DomainTypeConversionExtensions
     {
         if (finding?.RuleId == null)
             return null;
-        
+
         return RuleIdentifier.TryParse(finding.RuleId, out var result) ? (RuleIdentifier?)result : null;
     }
 
@@ -29,7 +29,7 @@ public static class DomainTypeConversionExtensions
     {
         if (finding?.FilePath == null)
             return null;
-        
+
         return CodeFilePath.TryParse(finding.FilePath, out var result) ? (CodeFilePath?)result : null;
     }
 

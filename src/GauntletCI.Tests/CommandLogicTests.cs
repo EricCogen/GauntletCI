@@ -257,15 +257,15 @@ public class CommandLogicTests : IDisposable
         mode.Trim().ToLowerInvariant() switch
         {
             "shared" => TelemetryMode.Shared,
-            "local"  => TelemetryMode.Local,
-            "off"    => TelemetryMode.Off,
-            _        => (TelemetryMode?)null,
+            "local" => TelemetryMode.Local,
+            "off" => TelemetryMode.Off,
+            _ => null,
         };
 
     [Theory]
     [InlineData("shared", TelemetryMode.Shared)]
-    [InlineData("local",  TelemetryMode.Local)]
-    [InlineData("off",    TelemetryMode.Off)]
+    [InlineData("local", TelemetryMode.Local)]
+    [InlineData("off", TelemetryMode.Off)]
     public void ParseMode_ValidLowercase_ReturnsMappedEnum(string input, TelemetryMode expected)
     {
         Assert.Equal(expected, ParseMode(input));

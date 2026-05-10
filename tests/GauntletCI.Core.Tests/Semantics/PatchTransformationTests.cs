@@ -79,9 +79,9 @@ public class PatchTransformationCollectionTests
     {
         var collection = new PatchTransformationCollection();
         var t = new PatchTransformation { Kind = PatchTransformationKind.ExtractMethod };
-        
+
         collection.Add(t);
-        
+
         Assert.Equal(1, collection.Count);
     }
 
@@ -94,9 +94,9 @@ public class PatchTransformationCollectionTests
             new PatchTransformation { Kind = PatchTransformationKind.ExtractMethod },
             new PatchTransformation { Kind = PatchTransformationKind.RenameMethod }
         };
-        
+
         collection.AddRange(ts);
-        
+
         Assert.Equal(2, collection.Count);
     }
 
@@ -107,9 +107,9 @@ public class PatchTransformationCollectionTests
         collection.Add(new PatchTransformation { Kind = PatchTransformationKind.ExtractMethod });
         collection.Add(new PatchTransformation { Kind = PatchTransformationKind.ExtractMethod });
         collection.Add(new PatchTransformation { Kind = PatchTransformationKind.RenameMethod });
-        
+
         var extracted = collection.ByKind(PatchTransformationKind.ExtractMethod).ToList();
-        
+
         Assert.Equal(2, extracted.Count);
     }
 
@@ -120,9 +120,9 @@ public class PatchTransformationCollectionTests
         collection.Add(new PatchTransformation { AffectedFiles = ["a.cs"] });
         collection.Add(new PatchTransformation { AffectedFiles = ["a.cs", "b.cs"] });
         collection.Add(new PatchTransformation { AffectedFiles = ["b.cs"] });
-        
+
         var fromA = collection.ByFile("a.cs").ToList();
-        
+
         Assert.Equal(2, fromA.Count);
     }
 
@@ -133,9 +133,9 @@ public class PatchTransformationCollectionTests
         collection.Add(new PatchTransformation { TargetSymbol = "MyMethod" });
         collection.Add(new PatchTransformation { TargetSymbol = "MyMethod" });
         collection.Add(new PatchTransformation { TargetSymbol = "OtherMethod" });
-        
+
         var myMethod = collection.ByTargetSymbol("MyMethod").ToList();
-        
+
         Assert.Equal(2, myMethod.Count);
     }
 
@@ -146,9 +146,9 @@ public class PatchTransformationCollectionTests
         collection.Add(new PatchTransformation { RiskLevel = 0.3 });
         collection.Add(new PatchTransformation { RiskLevel = 0.7 });
         collection.Add(new PatchTransformation { RiskLevel = 0.9 });
-        
+
         var highRisk = collection.ByMinRisk(0.65).ToList();
-        
+
         Assert.Equal(2, highRisk.Count);
     }
 
@@ -159,9 +159,9 @@ public class PatchTransformationCollectionTests
         collection.Add(new PatchTransformation { BehavioralImpact = "Logic" });
         collection.Add(new PatchTransformation { BehavioralImpact = "Logic" });
         collection.Add(new PatchTransformation { BehavioralImpact = "Performance" });
-        
+
         var logic = collection.ByBehavioralImpact("Logic").ToList();
-        
+
         Assert.Equal(2, logic.Count);
     }
 
@@ -172,9 +172,9 @@ public class PatchTransformationCollectionTests
         collection.Add(new PatchTransformation { IsSafePattern = true });
         collection.Add(new PatchTransformation { IsSafePattern = true });
         collection.Add(new PatchTransformation { IsSafePattern = false });
-        
+
         var safe = collection.SafePatterns().ToList();
-        
+
         Assert.Equal(2, safe.Count);
     }
 
@@ -185,9 +185,9 @@ public class PatchTransformationCollectionTests
         collection.Add(new PatchTransformation { IsSafePattern = true });
         collection.Add(new PatchTransformation { IsSafePattern = false });
         collection.Add(new PatchTransformation { IsSafePattern = false });
-        
+
         var risky = collection.RiskyTransformations().ToList();
-        
+
         Assert.Equal(2, risky.Count);
     }
 
@@ -198,9 +198,9 @@ public class PatchTransformationCollectionTests
         collection.Add(new PatchTransformation { Kind = PatchTransformationKind.ExtractMethod });
         collection.Add(new PatchTransformation { Kind = PatchTransformationKind.ExtractMethod });
         collection.Add(new PatchTransformation { Kind = PatchTransformationKind.RenameMethod });
-        
+
         var counts = collection.CountByKind();
-        
+
         Assert.Equal(2, counts[PatchTransformationKind.ExtractMethod]);
         Assert.Equal(1, counts[PatchTransformationKind.RenameMethod]);
     }
@@ -212,9 +212,9 @@ public class PatchTransformationCollectionTests
         collection.Add(new PatchTransformation { BehavioralImpact = "Logic" });
         collection.Add(new PatchTransformation { BehavioralImpact = "Logic" });
         collection.Add(new PatchTransformation { BehavioralImpact = "Performance" });
-        
+
         var counts = collection.CountByBehavioralImpact();
-        
+
         Assert.Equal(2, counts["Logic"]);
         Assert.Equal(1, counts["Performance"]);
     }
@@ -226,9 +226,9 @@ public class PatchTransformationCollectionTests
         collection.Add(new PatchTransformation { RiskLevel = 0.3 });
         collection.Add(new PatchTransformation { RiskLevel = 0.8 });
         collection.Add(new PatchTransformation { RiskLevel = 0.5 });
-        
+
         var maxRisk = collection.AggregateRisk("max");
-        
+
         Assert.Equal(0.8, maxRisk);
     }
 
@@ -239,9 +239,9 @@ public class PatchTransformationCollectionTests
         collection.Add(new PatchTransformation { RiskLevel = 0.3 });
         collection.Add(new PatchTransformation { RiskLevel = 0.6 });
         collection.Add(new PatchTransformation { RiskLevel = 0.9 });
-        
+
         var meanRisk = collection.AggregateRisk("mean");
-        
+
         Assert.Equal(0.6, meanRisk);
     }
 
@@ -251,9 +251,9 @@ public class PatchTransformationCollectionTests
         var collection = new PatchTransformationCollection();
         collection.Add(new PatchTransformation());
         collection.Add(new PatchTransformation());
-        
+
         collection.Clear();
-        
+
         Assert.Equal(0, collection.Count);
     }
 }
@@ -265,7 +265,7 @@ public class PatchTransformationFactoryTests
     {
         var ops = new[] { new PatchOperation() };
         var t = PatchTransformationFactory.ExtractMethod("Calculate", "math.cs", ops);
-        
+
         Assert.Equal(PatchTransformationKind.ExtractMethod, t.Kind);
         Assert.Equal("Calculate", t.TargetSymbol);
         Assert.Equal("math.cs", t.AffectedFiles[0]);
@@ -277,12 +277,12 @@ public class PatchTransformationFactoryTests
     {
         var ops = new[] { new PatchOperation() };
         var t = PatchTransformationFactory.Rename(
-            PatchTransformationKind.RenameMethod, 
-            "OldName", 
-            "NewName", 
-            "file.cs", 
+            PatchTransformationKind.RenameMethod,
+            "OldName",
+            "NewName",
+            "file.cs",
             ops);
-        
+
         Assert.Equal(PatchTransformationKind.RenameMethod, t.Kind);
         Assert.Equal("OldName", t.SourceSymbol);
         Assert.Equal("NewName", t.TargetSymbol);
@@ -294,10 +294,10 @@ public class PatchTransformationFactoryTests
     {
         var ops = new[] { new PatchOperation() };
         var t = PatchTransformationFactory.LogicChanged(
-            "Condition modified", 
-            new[] { "file.cs" }, 
+            "Condition modified",
+            new[] { "file.cs" },
             ops);
-        
+
         Assert.Equal(PatchTransformationKind.LogicSimplified, t.Kind);
         Assert.False(t.IsSafePattern);
         Assert.Equal("Logic", t.BehavioralImpact);
@@ -313,7 +313,7 @@ public class PatchTransformationFactoryTests
             "public",
             "file.cs",
             ops);
-        
+
         Assert.Equal(PatchTransformationKind.AccessModifierChanged, t.Kind);
         Assert.Equal("MyProperty", t.TargetSymbol);
         Assert.Equal("Compatibility", t.BehavioralImpact);
@@ -329,7 +329,7 @@ public class PatchTransformationFactoryTests
             "13.0.1",
             new[] { "packages.config" },
             ops);
-        
+
         Assert.Equal(PatchTransformationKind.DependencyVersionChanged, t.Kind);
         Assert.Equal("Newtonsoft.Json", t.TargetSymbol);
         Assert.Equal("Compatibility", t.BehavioralImpact);
@@ -344,7 +344,7 @@ public class PatchTransformationFactoryTests
             "QueryCache",
             new[] { "cache.cs" },
             ops);
-        
+
         Assert.Equal(PatchTransformationKind.PerformanceOptimization, t.Kind);
         Assert.True(t.IsSafePattern);
         Assert.Equal("Performance", t.BehavioralImpact);

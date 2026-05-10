@@ -163,9 +163,9 @@ public static class TelemetryConsent
                 {
                     var migratedMode = legacy.OptedIn switch
                     {
-                        true  => "shared",
+                        true => "shared",
                         false => "off",
-                        null  => null,
+                        null => null,
                     };
                     var section = new TelemetrySection(legacy.InstallId, migratedMode, legacy.DecidedAt);
                     Save(section);

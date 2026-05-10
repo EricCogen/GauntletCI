@@ -84,31 +84,31 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
     public async Task<HydratedPullRequest> HydrateAsync(
         PullRequestCandidate candidate, CancellationToken ct = default)
     {
-        var owner    = candidate.RepoOwner;
-        var repo     = candidate.RepoName;
+        var owner = candidate.RepoOwner;
+        var repo = candidate.RepoName;
         var prNumber = candidate.PullRequestNumber;
         var fixtureId = FixtureIdHelper.Build(owner, repo, prNumber);
-        var base_    = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}";
+        var base_ = $"https://api.github.com/repos/{owner}/{repo}/pulls/{prNumber}";
 
         // Fetch all parts concurrently where safe
-        var prTask       = GetJsonAsync<GhPullRequest>(base_, ct);
-        var filesTask    = GetJsonListAsync<GhFile>($"{base_}/files", ct);
+        var prTask = GetJsonAsync<GhPullRequest>(base_, ct);
+        var filesTask = GetJsonListAsync<GhFile>($"{base_}/files", ct);
         var commentsTask = GetJsonListAsync<GhReviewComment>($"{base_}/comments", ct);
-        var commitsTask  = GetJsonListAsync<GhCommit>($"{base_}/commits", ct);
+        var commitsTask = GetJsonListAsync<GhCommit>($"{base_}/commits", ct);
 
         await Task.WhenAll(prTask, filesTask, commentsTask, commitsTask).ConfigureAwait(false);
 
-        var pr         = await prTask.ConfigureAwait(false);
-        var ghFiles    = await filesTask.ConfigureAwait(false);
+        var pr = await prTask.ConfigureAwait(false);
+        var ghFiles = await filesTask.ConfigureAwait(false);
         var ghComments = await commentsTask.ConfigureAwait(false);
-        var ghCommits  = await commitsTask.ConfigureAwait(false);
+        var ghCommits = await commitsTask.ConfigureAwait(false);
 
         // Diff requires a separate Accept header: serial request
         var diffText = await GetDiffAsync(base_, ct).ConfigureAwait(false);
 
         // Persist raw snapshots
-        var rawPrJson       = JsonSerializer.Serialize(pr, JsonOpts);
-        var rawFilesJson    = JsonSerializer.Serialize(ghFiles, JsonOpts);
+        var rawPrJson = JsonSerializer.Serialize(pr, JsonOpts);
+        var rawFilesJson = JsonSerializer.Serialize(ghFiles, JsonOpts);
         var rawCommentsJson = JsonSerializer.Serialize(ghComments, JsonOpts);
 
         await Task.WhenAll(
@@ -119,45 +119,45 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
         // Map to domain models
         var changedFiles = ghFiles.Select(f => new ChangedFile
         {
-            Path        = f.Filename,
-            Status      = f.Status,
-            Additions   = f.Additions,
-            Deletions   = f.Deletions,
-            Patch       = f.Patch ?? "",
-            IsTestFile  = TestFileClassifier.IsTestFile(f.Filename),
+            Path = f.Filename,
+            Status = f.Status,
+            Additions = f.Additions,
+            Deletions = f.Deletions,
+            Patch = f.Patch ?? "",
+            IsTestFile = TestFileClassifier.IsTestFile(f.Filename),
             LanguageHint = GuessLanguage(f.Filename),
         }).ToList();
 
         var reviewComments = ghComments.Select(c => new ReviewComment
         {
-            Author      = c.User.Login,
-            Body        = c.Body,
-            Path        = c.Path,
-            DiffHunk    = c.DiffHunk,
-            Position    = c.Position ?? 0,
+            Author = c.User.Login,
+            Body = c.Body,
+            Path = c.Path,
+            DiffHunk = c.DiffHunk,
+            Position = c.Position ?? 0,
             CreatedAtUtc = c.CreatedAt,
-            Url         = c.HtmlUrl,
+            Url = c.HtmlUrl,
         }).ToList();
 
         return new HydratedPullRequest
         {
-            RepoOwner          = owner,
-            RepoName           = repo,
-            PullRequestNumber  = prNumber,
-            Title              = pr.Title,
-            Body               = pr.Body ?? "",
-            BaseSha            = pr.Base.Sha,
-            HeadSha            = pr.Head.Sha,
-            MergeCommitSha     = pr.MergeCommitSha ?? "",
-            FilesChangedCount  = pr.ChangedFiles,
-            Additions          = pr.Additions,
-            Deletions          = pr.Deletions,
-            ChangedFiles       = changedFiles,
-            ReviewComments     = reviewComments,
-            Commits            = ghCommits.Select(c => c.Sha).ToList(),
-            DiffText           = diffText,
-            RawApiPayloadJson  = rawPrJson,
-            HydratedAtUtc      = DateTime.UtcNow,
+            RepoOwner = owner,
+            RepoName = repo,
+            PullRequestNumber = prNumber,
+            Title = pr.Title,
+            Body = pr.Body ?? "",
+            BaseSha = pr.Base.Sha,
+            HeadSha = pr.Head.Sha,
+            MergeCommitSha = pr.MergeCommitSha ?? "",
+            FilesChangedCount = pr.ChangedFiles,
+            Additions = pr.Additions,
+            Deletions = pr.Deletions,
+            ChangedFiles = changedFiles,
+            ReviewComments = reviewComments,
+            Commits = ghCommits.Select(c => c.Sha).ToList(),
+            DiffText = diffText,
+            RawApiPayloadJson = rawPrJson,
+            HydratedAtUtc = DateTime.UtcNow,
         };
     }
 
@@ -170,8 +170,8 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, $"https://api.github.com/repos/{owner}/{repo}");
         if (!string.IsNullOrEmpty(_token))
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
-        
+            request.Headers.Authorization = new AuthenticationHeaderValue("token", _token);
+
         using var response = await _http.SendAsync(request, ct).ConfigureAwait(false);
 
         if (response.StatusCode == HttpStatusCode.NotFound)
@@ -210,11 +210,11 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
 
     private async Task<T> GetJsonAsync<T>(string url, CancellationToken ct)
     {
-        var json = await FetchWithBackoffAsync(() => 
+        var json = await FetchWithBackoffAsync(() =>
         {
             var req = new HttpRequestMessage(HttpMethod.Get, url);
             if (!string.IsNullOrEmpty(_token))
-                req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+                req.Headers.Authorization = new AuthenticationHeaderValue("token", _token);
             return req;
         }, ct).ConfigureAwait(false);
         return JsonSerializer.Deserialize<T>(json, JsonOpts)
@@ -228,7 +228,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
         {
             var req = new HttpRequestMessage(HttpMethod.Get, pagedUrl);
             if (!string.IsNullOrEmpty(_token))
-                req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+                req.Headers.Authorization = new AuthenticationHeaderValue("token", _token);
             return req;
         }, ct).ConfigureAwait(false);
         return JsonSerializer.Deserialize<List<T>>(json, JsonOpts) ?? [];
@@ -239,7 +239,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
         {
             var req = new HttpRequestMessage(HttpMethod.Get, prUrl);
             if (!string.IsNullOrEmpty(_token))
-                req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
+                req.Headers.Authorization = new AuthenticationHeaderValue("token", _token);
             req.Headers.Accept.Clear();
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.v3.diff"));
             return req;
@@ -257,7 +257,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
 
         for (int attempt = 0; ; attempt++)
         {
-            using var req  = requestFactory();
+            using var req = requestFactory();
             using var resp = await _http.SendAsync(req, HttpCompletionOption.ResponseHeadersRead, ct).ConfigureAwait(false);
 
             if (resp.IsSuccessStatusCode)
@@ -291,7 +291,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
             long.TryParse(resetVals.FirstOrDefault(), out var epoch))
         {
             var resetAt = DateTimeOffset.FromUnixTimeSeconds(epoch);
-            var wait    = resetAt - DateTimeOffset.UtcNow + TimeSpan.FromSeconds(2); // small buffer
+            var wait = resetAt - DateTimeOffset.UtcNow + TimeSpan.FromSeconds(2); // small buffer
             if (wait > TimeSpan.Zero) return wait;
         }
 
@@ -303,7 +303,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
     internal static (string Owner, string Repo, int PrNumber) ParsePrUrl(string url)
     {
         // Handles: https://github.com/owner/repo/pull/1234
-        var uri  = new Uri(url.Trim());
+        var uri = new Uri(url.Trim());
         var segs = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
         if (segs.Length < 4 || !string.Equals(segs[2], "pull", StringComparison.OrdinalIgnoreCase))
             throw new ArgumentException($"Cannot parse PR URL: {url}");

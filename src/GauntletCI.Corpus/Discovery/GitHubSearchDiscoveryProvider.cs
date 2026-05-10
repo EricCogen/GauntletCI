@@ -44,7 +44,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
     public async Task<IReadOnlyList<PullRequestCandidate>> SearchCandidatesAsync(
         DiscoveryQuery query, CancellationToken cancellationToken = default)
     {
-        var seen    = new HashSet<(string Owner, string Repo, int Number)>();
+        var seen = new HashSet<(string Owner, string Repo, int Number)>();
         var results = new List<PullRequestCandidate>();
 
         if (query.RepoAllowList.Count == 0)
@@ -68,7 +68,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
                 continue;
             }
 
-            var q   = BuildRepoQuery(query, repoSpec);
+            var q = BuildRepoQuery(query, repoSpec);
             var url = $"https://api.github.com/search/issues?q={Uri.EscapeDataString(q)}&sort=updated&order=desc&per_page=100&page=1";
 
             var repoLimit = query.PerRepoLimit > 0
@@ -89,7 +89,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
                     422 => "QueryError",
                     404 => "NotFound",
                     403 => "IpBlockOrAbuse",
-                    _   => "HttpError"
+                    _ => "HttpError"
                 };
                 Console.Error.WriteLine($"[gh-search] {kind}: Skipping {repoSpec} ({code})");
                 _errorCallback?.Invoke(repoSpec, code, $"[gh-search] {kind}: Skipping {repoSpec} ({code})");
@@ -110,7 +110,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _githubToken);
-        
+
         using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
         if (!response.IsSuccessStatusCode)
@@ -201,7 +201,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _githubToken);
-            
+
             using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -279,7 +279,7 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
             404 => $"NotFound: 404 - {ghMessage ?? "resource not found"}",
             422 => $"QueryError: 422 - {ghMessage ?? "unprocessable query"}",
             429 => $"RateLimit: 429 - {ghMessage ?? "too many requests"}",
-            _   => $"HttpError: {code} - {ghMessage ?? body[..Math.Min(100, body.Length)]}",
+            _ => $"HttpError: {code} - {ghMessage ?? body[..Math.Min(100, body.Length)]}",
         };
     }
 
@@ -299,66 +299,44 @@ public sealed class GitHubSearchDiscoveryProvider : IDiscoveryProvider
         return string.Join(" ", parts);
     }
 
-    private static string BuildQuery(DiscoveryQuery query, string lang)
-    {
-        var parts = new List<string> { "is:pr", "is:merged" };
-
-        if (query.MinReviewComments > 0)
-            parts.Add($"comments:>{query.MinReviewComments}");
-
-        if (query.MinStars > 0)
-            parts.Add($"stars:>{query.MinStars}");
-
-        if (!string.IsNullOrEmpty(lang))
-            parts.Add($"language:{lang}");
-
-        if (query.StartDateUtc.HasValue)
-            parts.Add($"merged:>={query.StartDateUtc.Value:yyyy-MM-dd}");
-
-        if (query.EndDateUtc.HasValue)
-            parts.Add($"merged:<={query.EndDateUtc.Value:yyyy-MM-dd}");
-
-        return string.Join(" ", parts);
-    }
-
     private static PullRequestCandidate? MapToCandidate(JsonElement item, string lang)
     {
         if (!item.TryGetProperty("repository_url", out var repoUrlEl))
             return null;
 
-        var repoUrl  = repoUrlEl.GetString() ?? "";
+        var repoUrl = repoUrlEl.GetString() ?? "";
         var repoPath = repoUrl.Replace("https://api.github.com/repos/", "", StringComparison.Ordinal);
         var repoParts = repoPath.Split('/', 2);
         if (repoParts.Length < 2)
             return null;
 
         var owner = repoParts[0];
-        var repo  = repoParts[1];
+        var repo = repoParts[1];
 
         if (!item.TryGetProperty("number", out var numEl))
             return null;
 
-        var prNumber  = numEl.GetInt32();
-        var htmlUrl   = item.TryGetProperty("html_url",   out var urlEl)      ? urlEl.GetString()      ?? "" : "";
-        var createdAt = item.TryGetProperty("created_at", out var createdEl)  ? createdEl.GetDateTime()     : DateTime.UtcNow;
-        var updatedAt = item.TryGetProperty("updated_at", out var updatedEl)  ? updatedEl.GetDateTime()     : DateTime.UtcNow;
-        var comments  = item.TryGetProperty("comments",   out var commentsEl) ? commentsEl.GetInt32()       : 0;
-        var isDraft   = item.TryGetProperty("draft",      out var draftEl)    && draftEl.GetBoolean();
+        var prNumber = numEl.GetInt32();
+        var htmlUrl = item.TryGetProperty("html_url", out var urlEl) ? urlEl.GetString() ?? "" : "";
+        var createdAt = item.TryGetProperty("created_at", out var createdEl) ? createdEl.GetDateTime() : DateTime.UtcNow;
+        var updatedAt = item.TryGetProperty("updated_at", out var updatedEl) ? updatedEl.GetDateTime() : DateTime.UtcNow;
+        var comments = item.TryGetProperty("comments", out var commentsEl) ? commentsEl.GetInt32() : 0;
+        var isDraft = item.TryGetProperty("draft", out var draftEl) && draftEl.GetBoolean();
 
         return new PullRequestCandidate
         {
-            Source             = "gh-search",
-            RepoOwner          = owner,
-            RepoName           = repo,
-            PullRequestNumber  = prNumber,
-            Url                = htmlUrl,
-            Language           = lang,
-            CreatedAtUtc       = createdAt,
-            UpdatedAtUtc       = updatedAt,
+            Source = "gh-search",
+            RepoOwner = owner,
+            RepoName = repo,
+            PullRequestNumber = prNumber,
+            Url = htmlUrl,
+            Language = lang,
+            CreatedAtUtc = createdAt,
+            UpdatedAtUtc = updatedAt,
             ReviewCommentCount = comments,
-            IsDraft            = isDraft,
-            MergeState         = MergeState.Merged,
-            CandidateReason    = "gh-search",
+            IsDraft = isDraft,
+            MergeState = MergeState.Merged,
+            CandidateReason = "gh-search",
         };
     }
 }

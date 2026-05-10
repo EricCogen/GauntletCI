@@ -311,7 +311,7 @@ public class SupplementalCoverageTests
         Assert.Equal(1, result.RulesEvaluated);
     }
 
-    private sealed class ThrowingRule : GauntletCI.Core.Rules.IRule
+    private sealed class ThrowingRule : IRule
     {
         public string Id => "GCI_TEST";
         public string Name => "Throwing Test Rule";
@@ -387,7 +387,7 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0024_WithStaticAnalysis_CA2000_And_CA1001_ShouldAddFindings()
     {
-        var rule = new GauntletCI.Core.Rules.Implementations.GCI0024_ResourceLifecycle(new StubPatternProvider());
+        var rule = new GCI0024_ResourceLifecycle(new StubPatternProvider());
         var diff = DiffParser.Parse("""
             diff --git a/src/Foo.cs b/src/Foo.cs
             index abc..def 100644

@@ -112,7 +112,7 @@ public class GCI0006_EdgeCaseHandling : RuleBase
             var addedLines = file.AddedLines
                 .Where(l => !WellKnownPatterns.HasDevOnlyMarker(l.Content)) // Skip dev-only code
                 .ToList();
-            
+
             var fileContent = string.Join("\n", addedLines.Select(l => l.Content));
             var isNrtEnabled = WellKnownPatterns.IsNullableReferenceTypeEnabled(fileContent);
 
@@ -196,37 +196,6 @@ public class GCI0006_EdgeCaseHandling : RuleBase
         return firstSpace > 0 && (firstParen < 0 || firstSpace < firstParen);
     }
 
-    private static bool HasNullableReferenceParam(string paramSection)
-    {
-        // Walk character by character, tracking generic depth so we skip type arguments
-        // like Dictionary<string?, int> and only match top-level parameters.
-        int angleDepth = 0;
-        for (int i = 0; i < paramSection.Length; i++)
-        {
-            char c = paramSection[i];
-            if (c == '<') { angleDepth++; continue; }
-            if (c == '>') { angleDepth = Math.Max(0, angleDepth - 1); continue; }
-            if (angleDepth > 0) continue;
-
-            foreach (var keyword in new[] { "string?", "object?" })
-            {
-                if (i + keyword.Length > paramSection.Length) continue;
-                if (!paramSection.AsSpan(i).StartsWith(keyword, StringComparison.Ordinal)) continue;
-
-                // Leading boundary: must be preceded by a non-identifier char
-                bool leadOk = i == 0 || paramSection[i - 1] is ' ' or '(' or ',' or '<';
-                if (!leadOk) continue;
-
-                // Trailing boundary: must be followed by a non-identifier char
-                int after = i + keyword.Length;
-                bool trailOk = after >= paramSection.Length ||
-                               paramSection[after] is ' ' or '[' or ',' or ')' or '<';
-                if (trailOk) return true;
-            }
-        }
-        return false;
-    }
-
     // Returns true only when the .Success check in guardLine refers to the same root
     // identifier as the .Value access in valueLine (e.g. "match.Success" guards "match.Groups[1].Value").
     private static bool IsSuccessGuardFor(string valueLine, string guardLine)
@@ -307,25 +276,6 @@ public class GCI0006_EdgeCaseHandling : RuleBase
             }
 
             return true;
-        }
-        return false;
-    }
-
-    // Returns true when the line contains a `.Key` word-boundary access (not `.Keys`, `.KeyValues`, etc.)
-    // Used to detect KeyValuePair/Dictionary iterations where `.Value` is the entry value, not Nullable<T>.
-    private static bool HasDotKeyAccess(string content)
-    {
-        int pos = 0;
-        while (pos < content.Length)
-        {
-            int idx = content.IndexOf(".Key", pos, StringComparison.Ordinal);
-            if (idx < 0) return false;
-            int after = idx + 4;
-            // Ensure what follows is NOT a word character (avoids matching .Keys, .KeyValues, etc.)
-            if (after >= content.Length ||
-                (!char.IsLetterOrDigit(content[after]) && content[after] != '_'))
-                return true;
-            pos = after;
         }
         return false;
     }

@@ -88,7 +88,7 @@ public sealed class SocialSignalEnricher : IDisposable
             using var prRequest = new HttpRequestMessage(HttpMethod.Get, prUrl);
             if (!string.IsNullOrEmpty(_token))
                 prRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
-            
+
             using var prResp = await _http.SendAsync(prRequest, ct).ConfigureAwait(false);
             if (!prResp.IsSuccessStatusCode) return null;
 
@@ -120,7 +120,7 @@ public sealed class SocialSignalEnricher : IDisposable
             using var revRequest = new HttpRequestMessage(HttpMethod.Get, reviewsUrl);
             if (!string.IsNullOrEmpty(_token))
                 revRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
-            
+
             using var revResp = await _http.SendAsync(revRequest, ct).ConfigureAwait(false);
             if (revResp.IsSuccessStatusCode)
             {
@@ -147,9 +147,9 @@ public sealed class SocialSignalEnricher : IDisposable
         catch (OperationCanceledException) { throw; }
         catch { /* reviews are best-effort */ }
 
-        var humanReviewers  = Math.Max(0, reviewerLogins.Count - botReviewCount);
-        var isBotMerged     = humanReviewers == 0 && botReviewCount > 0;
-        var reviewTimeMin   = (createdAt.HasValue && mergedAt.HasValue)
+        var humanReviewers = Math.Max(0, reviewerLogins.Count - botReviewCount);
+        var isBotMerged = humanReviewers == 0 && botReviewCount > 0;
+        var reviewTimeMin = (createdAt.HasValue && mergedAt.HasValue)
             ? (mergedAt.Value - createdAt.Value).TotalMinutes
             : -1.0;
 
@@ -159,28 +159,28 @@ public sealed class SocialSignalEnricher : IDisposable
 
         if (reviewTimeMin >= 0)
         {
-            if      (reviewTimeMin <  10) score -= 0.30;
+            if (reviewTimeMin < 10) score -= 0.30;
             else if (reviewTimeMin >= 60) score += 0.15;
         }
 
-        if      (humanReviewers == 0) score -= 0.25;
+        if (humanReviewers == 0) score -= 0.25;
         else if (humanReviewers == 1) score += 0.10;
         else if (humanReviewers >= 2) score += 0.20;
 
-        if      (reviewCount == 0)   score -= 0.10;
-        else if (reviewCount >= 3)   score += 0.10;
+        if (reviewCount == 0) score -= 0.10;
+        else if (reviewCount >= 3) score += 0.10;
 
-        if (isBotMerged)             score -= 0.15;
+        if (isBotMerged) score -= 0.15;
 
         score = Math.Clamp(score, 0.0, 1.0);
 
         return new SocialSignalData
         {
-            ReviewTimeMinutes  = reviewTimeMin,
-            ReviewerCount      = humanReviewers,
+            ReviewTimeMinutes = reviewTimeMin,
+            ReviewerCount = humanReviewers,
             ReviewCommentCount = reviewCount,
-            IsBotMerged        = isBotMerged,
-            SocialSignalScore  = score,
+            IsBotMerged = isBotMerged,
+            SocialSignalScore = score,
         };
     }
 
@@ -199,31 +199,31 @@ public sealed class SocialSignalEnricher : IDisposable
                  $reviewTime, $reviewerCount, $commentCount,
                  $isBotMerged, $score)
             """;
-        cmd.Parameters.AddWithValue("$fixtureId",    fixtureId);
-        cmd.Parameters.AddWithValue("$repo",          repo);
-        cmd.Parameters.AddWithValue("$prNumber",      prNumber);
-        cmd.Parameters.AddWithValue("$reviewTime",    signals.ReviewTimeMinutes);
+        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$prNumber", prNumber);
+        cmd.Parameters.AddWithValue("$reviewTime", signals.ReviewTimeMinutes);
         cmd.Parameters.AddWithValue("$reviewerCount", signals.ReviewerCount);
-        cmd.Parameters.AddWithValue("$commentCount",  signals.ReviewCommentCount);
-        cmd.Parameters.AddWithValue("$isBotMerged",   signals.IsBotMerged ? 1 : 0);
-        cmd.Parameters.AddWithValue("$score",         signals.SocialSignalScore);
+        cmd.Parameters.AddWithValue("$commentCount", signals.ReviewCommentCount);
+        cmd.Parameters.AddWithValue("$isBotMerged", signals.IsBotMerged ? 1 : 0);
+        cmd.Parameters.AddWithValue("$score", signals.SocialSignalScore);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 
     private sealed record SocialSignalData
     {
-        public double ReviewTimeMinutes  { get; init; }
-        public int    ReviewerCount      { get; init; }
-        public int    ReviewCommentCount { get; init; }
-        public bool   IsBotMerged        { get; init; }
-        public double SocialSignalScore  { get; init; }
+        public double ReviewTimeMinutes { get; init; }
+        public int ReviewerCount { get; init; }
+        public int ReviewCommentCount { get; init; }
+        public bool IsBotMerged { get; init; }
+        public double SocialSignalScore { get; init; }
     }
 }
 
 /// <summary>Summary statistics from a <see cref="SocialSignalEnricher.EnrichAsync"/> run.</summary>
 public sealed class SocialSignalEnrichmentResult
 {
-    public bool AuthMissing           { get; set; }
-    public int  FixturesProcessed     { get; set; }
-    public int  LowValidationFixtures { get; set; }
+    public bool AuthMissing { get; set; }
+    public int FixturesProcessed { get; set; }
+    public int LowValidationFixtures { get; set; }
 }

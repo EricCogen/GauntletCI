@@ -128,11 +128,11 @@ internal static class NullabilityPatterns
         if (!match.Success) return false;
 
         var typeParam = match.Groups[1].Value;
-        
+
         // If T is a value type (int, bool, DateTime, etc.), Nullable<T> always has a value in NRT context
-        var valueTypes = new[] 
-        { 
-            "int", "long", "short", "byte", "double", "float", "decimal", "bool", 
+        var valueTypes = new[]
+        {
+            "int", "long", "short", "byte", "double", "float", "decimal", "bool",
             "uint", "ulong", "ushort", "ubyte", "char",
             "DateTime", "TimeSpan", "DateOnly", "TimeOnly", "Guid",
             "DateTimeOffset", "DateTimeKind"
@@ -154,7 +154,7 @@ internal static class NullabilityPatterns
     {
         if (!content.Contains("#pragma warning disable", StringComparison.OrdinalIgnoreCase))
             return false;
-        
+
         var nullableCodes = new[] { "nullable", "CS8600", "CS8601", "CS8602", "CS8603", "CS8604" };
         return nullableCodes.Any(code =>
             content.Contains(code, StringComparison.OrdinalIgnoreCase));
@@ -167,8 +167,8 @@ internal static class NullabilityPatterns
     /// </summary>
     public static bool IsLinqValueProjection(string content)
     {
-        var linqMethods = new[] { "Select", "SelectMany", "Where", "OrderBy", "OrderByDescending", 
-                                  "GroupBy", "All", "Any", "First", "FirstOrDefault", 
+        var linqMethods = new[] { "Select", "SelectMany", "Where", "OrderBy", "OrderByDescending",
+                                  "GroupBy", "All", "Any", "First", "FirstOrDefault",
                                   "Last", "LastOrDefault", "Single", "SingleOrDefault" };
 
         foreach (var method in linqMethods)

@@ -42,10 +42,10 @@ public static class TicketResolver
     {
         return providerName switch
         {
-            "Jira"   => new JiraTicketProvider(),
+            "Jira" => new JiraTicketProvider(),
             "Linear" => new LinearTicketProvider(),
             "GitHub" => new GitHubIssueProvider(),
-            _        => null
+            _ => null
         };
     }
 

@@ -43,14 +43,14 @@ public class EndToEndTests
     {
         var psi = new ProcessStartInfo("dotnet", $"\"{dll}\" {args}")
         {
-            RedirectStandardOutput  = true,
-            RedirectStandardError   = true,
-            RedirectStandardInput   = stdin is not null,
-            UseShellExecute         = false,
-            StandardOutputEncoding  = System.Text.Encoding.UTF8,
-            StandardErrorEncoding   = System.Text.Encoding.UTF8,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            RedirectStandardInput = stdin is not null,
+            UseShellExecute = false,
+            StandardOutputEncoding = System.Text.Encoding.UTF8,
+            StandardErrorEncoding = System.Text.Encoding.UTF8,
         };
-        psi.Environment["CI"]       = "true"; // suppress telemetry prompt + banner
+        psi.Environment["CI"] = "true"; // suppress telemetry prompt + banner
         psi.Environment["NO_COLOR"] = "1";
 
         var proc = Process.Start(psi)!;

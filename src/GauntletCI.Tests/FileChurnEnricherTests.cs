@@ -72,7 +72,7 @@ public sealed class FileChurnEnricherTests
     }
 
     [Theory]
-    [InlineData(0,  0.0)]
+    [InlineData(0, 0.0)]
     [InlineData(15, 0.5)]
     [InlineData(30, 1.0)]
     [InlineData(60, 1.0)]

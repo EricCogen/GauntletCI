@@ -19,7 +19,7 @@ public static class FixtureIdHelper
     public static string Build(string repoOwner, string repoName, int prNumber)
     {
         var owner = Sanitize(repoOwner);
-        var repo  = Sanitize(repoName);
+        var repo = Sanitize(repoName);
         return $"{owner}_{repo}_pr{prNumber}";
     }
 

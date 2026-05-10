@@ -53,7 +53,7 @@ public class GCI0024_ResourceLifecycle : RuleBase
             var line = allLines[i];
             if (line.Kind != DiffLineKind.Added) continue;
             var content = line.Content;
-            
+
             // Skip mock/fake resources in test code (even if test file guard was bypassed)
             if (WellKnownPatterns.HasMockPattern(content)) continue;
 
@@ -145,7 +145,7 @@ public class GCI0024_ResourceLifecycle : RuleBase
         int idx = content.IndexOf(needle, StringComparison.Ordinal);
         if (idx <= 0) return false;
         var before = content[..idx];
-        int opens  = 0;
+        int opens = 0;
         int closes = 0;
         foreach (char c in before) { if (c == '(') opens++; else if (c == ')') closes++; }
         return opens > closes;

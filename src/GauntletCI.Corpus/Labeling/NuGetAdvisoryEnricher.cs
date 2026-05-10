@@ -118,15 +118,15 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
     public static IReadOnlyList<string> ExtractPackageNames(string diffPath)
     {
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var inCsproj    = false;
-        var inLockFile  = false;
+        var inCsproj = false;
+        var inLockFile = false;
 
         foreach (var line in File.ReadLines(diffPath))
         {
             if (line.StartsWith("+++ b/", StringComparison.Ordinal))
             {
                 var path = line[6..].ToLowerInvariant();
-                inCsproj   = path.EndsWith(".csproj", StringComparison.Ordinal);
+                inCsproj = path.EndsWith(".csproj", StringComparison.Ordinal);
                 inLockFile = path.EndsWith("packages.lock.json", StringComparison.Ordinal);
                 continue;
             }
@@ -174,7 +174,7 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
             if (!string.IsNullOrEmpty(_token))
                 request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", _token);
             request.Content = content;
-            
+
             using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
             if (!resp.IsSuccessStatusCode) return [];
 
@@ -227,12 +227,12 @@ public sealed class NuGetAdvisoryEnricher : IDisposable
                 ($fixtureId, $repo, $packagesChecked, $advisoryCount,
                  $highestSeverity, $advisoriesJson, datetime('now'))
             """;
-        cmd.Parameters.AddWithValue("$fixtureId",       fixtureId);
-        cmd.Parameters.AddWithValue("$repo",             repo);
-        cmd.Parameters.AddWithValue("$packagesChecked",  packagesChecked);
-        cmd.Parameters.AddWithValue("$advisoryCount",    advisoryCount);
-        cmd.Parameters.AddWithValue("$highestSeverity",  (object?)highestSeverity ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("$advisoriesJson",   advisoriesJson);
+        cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
+        cmd.Parameters.AddWithValue("$repo", repo);
+        cmd.Parameters.AddWithValue("$packagesChecked", packagesChecked);
+        cmd.Parameters.AddWithValue("$advisoryCount", advisoryCount);
+        cmd.Parameters.AddWithValue("$highestSeverity", (object?)highestSeverity ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$advisoriesJson", advisoriesJson);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }

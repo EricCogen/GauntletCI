@@ -145,15 +145,15 @@ public sealed class CodeScanningEnricher : IDisposable
                  $state, $toolName, $severity, $startLine, $message)
             """;
         cmd.Parameters.AddWithValue("$fixtureId", fixtureId);
-        cmd.Parameters.AddWithValue("$repo",      alert.Repo);
-        cmd.Parameters.AddWithValue("$file",      alert.FilePath);
-        cmd.Parameters.AddWithValue("$ruleId",    alert.RuleId);
-        cmd.Parameters.AddWithValue("$ruleName",  alert.RuleName);
-        cmd.Parameters.AddWithValue("$state",     alert.State);
-        cmd.Parameters.AddWithValue("$toolName",  alert.ToolName);
-        cmd.Parameters.AddWithValue("$severity",  alert.Severity);
+        cmd.Parameters.AddWithValue("$repo", alert.Repo);
+        cmd.Parameters.AddWithValue("$file", alert.FilePath);
+        cmd.Parameters.AddWithValue("$ruleId", alert.RuleId);
+        cmd.Parameters.AddWithValue("$ruleName", alert.RuleName);
+        cmd.Parameters.AddWithValue("$state", alert.State);
+        cmd.Parameters.AddWithValue("$toolName", alert.ToolName);
+        cmd.Parameters.AddWithValue("$severity", alert.Severity);
         cmd.Parameters.AddWithValue("$startLine", alert.StartLine);
-        cmd.Parameters.AddWithValue("$message",   alert.Message);
+        cmd.Parameters.AddWithValue("$message", alert.Message);
         await cmd.ExecuteNonQueryAsync(ct).ConfigureAwait(false);
     }
 }
@@ -161,10 +161,10 @@ public sealed class CodeScanningEnricher : IDisposable
 /// <summary>Summary statistics from a <see cref="CodeScanningEnricher.EnrichAsync"/> run.</summary>
 public sealed class CodeScanningEnrichmentResult
 {
-    public bool AuthMissing          { get; set; }
-    public int  ReposWithScanning    { get; set; }
-    public int  ReposWithoutScanning { get; set; }
-    public int  FixturesProcessed    { get; set; }
-    public int  FixturesWithMatches  { get; set; }
-    public int  TotalMatches         { get; set; }
+    public bool AuthMissing { get; set; }
+    public int ReposWithScanning { get; set; }
+    public int ReposWithoutScanning { get; set; }
+    public int FixturesProcessed { get; set; }
+    public int FixturesWithMatches { get; set; }
+    public int TotalMatches { get; set; }
 }

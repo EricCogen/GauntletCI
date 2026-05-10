@@ -47,7 +47,7 @@ public sealed class EdgeCasePatternStrategy : IInferenceStrategy
         {
             if (l.TrimStart().StartsWith("//"))
                 return false;
-            
+
             // Check for cross-layer dependencies
             return (l.Contains("UI", StringComparison.OrdinalIgnoreCase) && l.Contains("Repository", StringComparison.Ordinal)) ||
                    (l.Contains("View", StringComparison.Ordinal) && l.Contains("Service", StringComparison.Ordinal)) ||
