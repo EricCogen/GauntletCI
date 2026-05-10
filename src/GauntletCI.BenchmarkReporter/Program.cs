@@ -51,7 +51,11 @@ foreach (var dir in Directory.GetDirectories(fixturesRoot).OrderBy(d => d))
         var json = File.ReadAllText(manifestPath);
         manifest = JsonSerializer.Deserialize<FixtureManifest>(json, jsonOpts);
     }
-    catch { continue; }
+    catch (Exception ex)
+    {
+        Console.Error.WriteLine($"[GauntletCI.BenchmarkReporter] Warning: Failed to parse fixture manifest {manifestPath}: {ex.Message}");
+        continue;
+    }
 
     if (manifest?.Fixtures is null) continue;
 

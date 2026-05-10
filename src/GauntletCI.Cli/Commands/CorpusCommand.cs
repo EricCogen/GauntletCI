@@ -1079,7 +1079,11 @@ public static class CorpusCommand
         var json = await resp.Content.ReadAsStringAsync(ct);
         System.Text.Json.JsonElement[] prs;
         try { prs = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement[]>(json) ?? []; }
-        catch { return 0; }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[corpus] Warning: Failed to parse GitHub API response: {ex.Message}");
+            return 0;
+        }
 
         int added = 0;
         foreach (var pr in prs.Take(limit))
@@ -1207,7 +1211,11 @@ public static class CorpusCommand
 
                         byte[]? compressed;
                         try { compressed = await http.GetByteArrayAsync(url, ct); }
-                        catch { continue; }
+                        catch (Exception ex)
+                        {
+                            Console.Error.WriteLine($"[corpus] Warning: Failed to download {url}: {ex.Message}");
+                            continue;
+                        }
 
                         using var mem    = new System.IO.MemoryStream(compressed);
                         using var gz     = new System.IO.Compression.GZipStream(mem, System.IO.Compression.CompressionMode.Decompress);

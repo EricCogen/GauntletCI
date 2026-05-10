@@ -41,6 +41,20 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
 
     private static bool IsTestFile(string path) => WellKnownPatterns.IsTestFile(path);
 
+    /// <summary>
+    /// Returns true if the line is primarily a comment or documentation line.
+    /// This prevents false positives when pattern strings appear in explanatory comments.
+    /// </summary>
+    private static bool IsCommentOrDocstringLine(string content)
+    {
+        var trimmed = content.Trim();
+        return trimmed.StartsWith("//", StringComparison.Ordinal) ||
+               trimmed.StartsWith("///", StringComparison.Ordinal) ||
+               trimmed.StartsWith("/*", StringComparison.Ordinal) ||
+               trimmed.StartsWith("*", StringComparison.Ordinal) ||
+               trimmed.StartsWith("\"\"\"", StringComparison.Ordinal);
+    }
+
     private void CheckServiceLocator(DiffFile file, List<Finding> findings)
     {
         if (IsInfrastructureFile(file.NewPath)) return;
@@ -48,6 +62,9 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
 
         foreach (var line in file.AddedLines)
         {
+            // Skip comment and documentation lines (false positives from explanatory text)
+            if (IsCommentOrDocstringLine(line.Content)) continue;
+
             var matched = WellKnownPatterns.DependencyInjectionPatterns.ServiceLocatorPatterns.FirstOrDefault(
                 p => line.Content.Contains(p, StringComparison.Ordinal));
 
@@ -71,6 +88,9 @@ public class GCI0038_DependencyInjectionSafety : RuleBase
 
         foreach (var line in file.AddedLines)
         {
+            // Skip comment and documentation lines (false positives from explanatory text)
+            if (IsCommentOrDocstringLine(line.Content)) continue;
+
             var lineContent = line.Content;
             
             // Skip test mock objects

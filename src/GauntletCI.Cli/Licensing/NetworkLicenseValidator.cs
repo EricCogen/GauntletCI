@@ -117,7 +117,11 @@ public static class NetworkLicenseValidator
             };
             File.WriteAllText(CachePath, JsonSerializer.Serialize(obj));
         }
-        catch { /* best effort */ }
+        catch (Exception ex)
+        {
+            // Cache write failure is non-critical but should be logged
+            System.Diagnostics.Debug.WriteLine($"[NetworkLicenseValidator] Warning: Failed to write license cache: {ex.Message}");
+        }
     }
 
     private static string TokenHash(string token)

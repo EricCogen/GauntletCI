@@ -64,7 +64,10 @@ public static class AuditLog
                 var entry = JsonSerializer.Deserialize<AuditLogEntry>(line, JsonOpts);
                 if (entry is not null) entries.Add(entry);
             }
-            catch { /* skip malformed lines */ }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[AuditLog] Warning: Skipping malformed audit line: {ex.Message}");
+            }
         }
         return entries;
     }

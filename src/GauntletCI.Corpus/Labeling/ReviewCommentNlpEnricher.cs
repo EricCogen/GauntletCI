@@ -161,7 +161,10 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
             }
         }
         catch (OperationCanceledException) { throw; }
-        catch { /* best effort */ }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[nlp] Warning: Failed to fetch inline review comments: {ex.Message}");
+        }
 
         await Task.Delay(150, ct).ConfigureAwait(false);
 
@@ -190,7 +193,10 @@ public sealed class ReviewCommentNlpEnricher : IDisposable
             }
         }
         catch (OperationCanceledException) { throw; }
-        catch { /* best effort */ }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[nlp] Warning: Failed to fetch review bodies: {ex.Message}");
+        }
 
         return sb.ToString();
     }

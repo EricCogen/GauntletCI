@@ -115,7 +115,10 @@ public static class LlmCommand
                         Reactions: root.TryGetProperty("reactions", out var r) ? r.GetInt32() : 0
                     ));
                 }
-                catch { /* skip malformed lines */ }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[llm] Warning: Skipping malformed line: {ex.Message}");
+                }
             }
 
             Console.WriteLine($"[llm] Loaded {records.Count} records, distilling top {max}…");
