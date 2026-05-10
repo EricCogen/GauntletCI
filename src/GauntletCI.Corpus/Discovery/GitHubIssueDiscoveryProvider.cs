@@ -124,7 +124,15 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
                     return (prNum);
             }
         }
-        catch { /* network error, skip */ }
+        catch (OperationCanceledException)
+        {
+            return null;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[GauntletCI] Failed to find closing PR for {owner}/{repo}#{issueNumber}: {ex.Message}");
+            return null;
+        }
 
         return null;
     }

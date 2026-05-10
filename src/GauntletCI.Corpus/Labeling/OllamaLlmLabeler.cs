@@ -53,7 +53,11 @@ public sealed class OllamaLlmLabeler : ILlmLabeler, IDisposable
             proc?.WaitForExit(3000);
             return proc?.ExitCode == 0;
         }
-        catch { return false; }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[GauntletCI] Failed to check Ollama installation: {ex.Message}");
+            return false;
+        }
     }
 
     /// <summary>Returns true if the Ollama HTTP server is responding.</summary>
@@ -64,7 +68,11 @@ public sealed class OllamaLlmLabeler : ILlmLabeler, IDisposable
             using var resp = await _http.GetAsync($"{_baseUrl}/api/tags", ct).ConfigureAwait(false);
             return resp.IsSuccessStatusCode;
         }
-        catch { return false; }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"[GauntletCI] Failed to check Ollama server: {ex.Message}");
+            return false;
+        }
     }
 
     /// <summary>
