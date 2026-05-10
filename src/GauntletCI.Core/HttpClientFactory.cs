@@ -84,9 +84,8 @@ public static class HttpClientFactory
         client.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/vnd.github.v3+json"));
         
-        var token = GitHubTokenResolver.Resolve();
-        if (!string.IsNullOrEmpty(token))
-            client.DefaultRequestHeaders.Add("Authorization", $"token {token}");
+        // Do NOT inject auth here. Auth tokens must be added per-request to avoid bleed to other endpoints.
+        // Components must add Authorization header via HttpRequestMessage.Headers per request.
         
         return client;
     }

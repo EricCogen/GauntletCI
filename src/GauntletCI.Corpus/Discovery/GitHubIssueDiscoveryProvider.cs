@@ -100,7 +100,7 @@ public sealed class GitHubIssueDiscoveryProvider : IDiscoveryProvider
         try
         {
             var url = $"https://api.github.com/repos/{owner}/{repo}/issues/{issueNumber}/timeline";
-            var req = new HttpRequestMessage(HttpMethod.Get, url);
+            using var req = new HttpRequestMessage(HttpMethod.Get, url);
             req.Headers.Accept.Clear();
             req.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.mockingbird-preview+json"));
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _token);

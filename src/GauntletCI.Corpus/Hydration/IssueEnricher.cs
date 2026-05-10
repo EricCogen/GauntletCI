@@ -15,6 +15,7 @@ public sealed class IssueEnricher : IDisposable
 {
     private readonly HttpClient _http;
     private readonly bool _ownsClient;
+    private readonly string? _token;
     private static readonly JsonSerializerOptions JsonOpts = new() { PropertyNameCaseInsensitive = true };
 
     // Matches: closes #123, fixes #456, resolves owner/repo#789
@@ -25,12 +26,14 @@ public sealed class IssueEnricher : IDisposable
     /// <summary>
     /// Initializes the enricher with an externally owned or injected HTTP client.
     /// </summary>
-    /// <param name="http">Pre-configured HTTP client (auth headers should already be set).</param>
+    /// <param name="http">Pre-configured HTTP client (auth headers should NOT be set; auth is per-request).</param>
     /// <param name="ownsClient">When true, disposes <paramref name="http"/> on <see cref="Dispose"/>.</param>
-    public IssueEnricher(HttpClient http, bool ownsClient = false)
+    /// <param name="token">Optional GitHub token for per-request authentication.</param>
+    public IssueEnricher(HttpClient http, bool ownsClient = false, string? token = null)
     {
         _http = http;
         _ownsClient = ownsClient;
+        _token = token;
     }
 
     /// <summary>
@@ -43,9 +46,8 @@ public sealed class IssueEnricher : IDisposable
         var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
         http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
         http.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
-        if (!string.IsNullOrEmpty(token))
-            http.DefaultRequestHeaders.Add("Authorization", $"token {token}");
-        return new IssueEnricher(http, ownsClient: true);
+        // Auth will be added per-request, not to DefaultRequestHeaders, to follow security best practices.
+        return new IssueEnricher(http, ownsClient: true, token);
     }
 
     public void Dispose() { if (_ownsClient) _http.Dispose(); }
@@ -127,7 +129,11 @@ public sealed class IssueEnricher : IDisposable
         string owner, string repo, int number, CancellationToken ct)
     {
         var url = $"https://api.github.com/repos/{owner}/{repo}/issues/{number}";
-        using var resp = await _http.GetAsync(url, ct).ConfigureAwait(false);
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        if (!string.IsNullOrEmpty(_token))
+            request.Headers.Authorization = new AuthenticationHeaderValue("token", _token);
+        
+        using var resp = await _http.SendAsync(request, ct).ConfigureAwait(false);
         if (!resp.IsSuccessStatusCode) return null;
         var json = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
         var gh = JsonSerializer.Deserialize<GhIssue>(json, JsonOpts);

@@ -269,15 +269,15 @@ public static class CorpusCommand
             Console.WriteLine("[corpus] Checking GitHub connectivity...");
 
             using var http = new System.Net.Http.HttpClient();
-            http.DefaultRequestHeaders.Authorization =
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI-Corpus/1.0");
             http.DefaultRequestHeaders.Add("Accept", "application/vnd.github+json");
 
             System.Net.Http.HttpResponseMessage rateLimitResponse;
             try
             {
-                rateLimitResponse = await http.GetAsync("https://api.github.com/rate_limit", ct);
+                using var request = new System.Net.Http.HttpRequestMessage(System.Net.Http.HttpMethod.Get, "https://api.github.com/rate_limit");
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                rateLimitResponse = await http.SendAsync(request, ct);
             }
             catch (Exception ex)
             {
@@ -851,7 +851,6 @@ public static class CorpusCommand
 
                 using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(60) };
                 http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
-                http.DefaultRequestHeaders.Add("Authorization", $"token {token}");
 
                 int success = 0, failed = 0, idx = 0;
                 foreach (var (fixtureId, repo, prNumber) in missing)
@@ -873,6 +872,7 @@ public static class CorpusCommand
                         using var req = new HttpRequestMessage(HttpMethod.Get, apiUrl);
                         req.Headers.Accept.Clear();
                         req.Headers.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/vnd.github.v3.diff"));
+                        req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", token);
 
                         using var resp = await http.SendAsync(req, ct);
                         if (!resp.IsSuccessStatusCode)
@@ -974,7 +974,6 @@ public static class CorpusCommand
 
                 using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(30) };
                 http.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
-                http.DefaultRequestHeaders.Add("Authorization", $"token {token}");
                 http.DefaultRequestHeaders.Add("Accept", "application/vnd.github.v3+json");
 
                 var enabled  = new List<string>();
@@ -986,7 +985,10 @@ public static class CorpusCommand
                     var url = $"https://api.github.com/repos/{repo}/actions/workflows?per_page=100";
                     try
                     {
-                        using var resp = await http.GetAsync(url, ct);
+                        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+                        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", token);
+                        
+                        using var resp = await http.SendAsync(request, ct);
                         if (resp.StatusCode == System.Net.HttpStatusCode.NotFound ||
                             resp.StatusCode == System.Net.HttpStatusCode.Forbidden)
                         {
