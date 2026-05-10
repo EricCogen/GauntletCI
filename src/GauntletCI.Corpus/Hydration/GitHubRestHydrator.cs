@@ -26,8 +26,9 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
 
     /// <summary>
     /// Initializes the hydrator with an externally owned or injected HTTP client.
+    /// Auth tokens are attached per-request, not pre-configured on the client.
     /// </summary>
-    /// <param name="http">The HTTP client pre-configured with auth headers.</param>
+    /// <param name="http">The HTTP client (auth must be added per-request via HttpRequestMessage.Headers).</param>
     /// <param name="rawStore">Store used to persist raw API snapshots alongside fixtures.</param>
     /// <param name="ownsHttpClient">When true, the hydrator disposes <paramref name="http"/> on <see cref="Dispose"/>.</param>
     public GitHubRestHydrator(HttpClient http, RawSnapshotStore rawStore, bool ownsHttpClient = false)
@@ -45,7 +46,7 @@ public sealed class GitHubRestHydrator : IPullRequestHydrator, IDisposable
 
     /// <summary>
     /// Creates a fully configured hydrator using the GITHUB_TOKEN environment variable for auth.
-    /// The returned instance owns its HTTP client and will dispose it on <see cref="Dispose"/>.
+    /// The returned instance does NOT own the HTTP client (it's managed by HttpClientFactory).
     /// </summary>
     /// <param name="fixturesBasePath">Root directory where raw fixture snapshots are stored.</param>
     public static GitHubRestHydrator CreateDefault(string fixturesBasePath = "./data/fixtures")

@@ -24,8 +24,9 @@ public sealed class MaintainerFetcher : IDisposable
 
     /// <summary>
     /// Initializes the fetcher with an externally owned or injected HTTP client.
+    /// Auth tokens are attached per-request, not pre-configured on the client.
     /// </summary>
-    /// <param name="http">Pre-configured HTTP client (auth headers should already be set).</param>
+    /// <param name="http">HTTP client (auth must be added per-request via HttpRequestMessage.Headers).</param>
     /// <param name="ownsHttpClient">When true, disposes <paramref name="http"/> on <see cref="Dispose"/>.</param>
     public MaintainerFetcher(HttpClient http, bool ownsHttpClient = false)
     {
@@ -35,7 +36,7 @@ public sealed class MaintainerFetcher : IDisposable
 
     /// <summary>
     /// Creates a fully configured fetcher using the GITHUB_TOKEN environment variable for auth.
-    /// The returned instance owns its HTTP client and will dispose it on <see cref="Dispose"/>.
+    /// The returned instance does NOT own the HTTP client (it's managed by HttpClientFactory).
     /// </summary>
     public static MaintainerFetcher CreateDefault()
     {
