@@ -11,6 +11,7 @@ using GauntletCI.Cli.Output;
 using GauntletCI.Cli.Presentation;
 using GauntletCI.Cli.Telemetry;
 using GauntletCI.Cli.TicketProviders;
+using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Licensing;
@@ -31,6 +32,7 @@ public static class AnalyzeCommand
         var stagedFlag = new Option<bool>("--staged", "Analyse staged changes (git diff --cached)");
         var unstagedFlag = new Option<bool>("--unstaged", "Analyse unstaged changes (git diff)");
         var allChangesFlag = new Option<bool>("--all-changes", "Analyse all local changes: staged + unstaged (git diff HEAD)");
+        var codebaseOption = new Option<DirectoryInfo?>("--codebase", "Full codebase scan: analyse all C# files in directory (e.g., ./src). Treats all code as new for rule evaluation.");
         var repoOption = new Option<DirectoryInfo>(
             "--repo",
             () => new DirectoryInfo(Directory.GetCurrentDirectory()),
@@ -74,6 +76,7 @@ public static class AnalyzeCommand
             stagedFlag,
             unstagedFlag,
             allChangesFlag,
+            codebaseOption,
             repoOption,
             outputOption,
             noLlmFlag,
@@ -103,6 +106,7 @@ public static class AnalyzeCommand
             var staged     = ctx.ParseResult.GetValueForOption(stagedFlag);
             var unstaged   = ctx.ParseResult.GetValueForOption(unstagedFlag);
             var allChanges = ctx.ParseResult.GetValueForOption(allChangesFlag);
+            var codebase   = ctx.ParseResult.GetValueForOption(codebaseOption);
             var repo       = ctx.ParseResult.GetValueForOption(repoOption)!;
             var output     = ctx.ParseResult.GetValueForOption(outputOption)!;
             var noLlm      = ctx.ParseResult.GetValueForOption(noLlmFlag);
@@ -141,10 +145,11 @@ public static class AnalyzeCommand
                             + (commit    is not null ? 1 : 0)
                             + (staged      ? 1 : 0)
                             + (unstaged    ? 1 : 0)
-                            + (allChanges  ? 1 : 0);
+                            + (allChanges  ? 1 : 0)
+                            + (codebase    is not null ? 1 : 0);
             if (sourceCount > 1)
             {
-                Console.Error.WriteLine("[GauntletCI] Error: multiple diff sources specified. Use exactly one of: --diff, --commit, --staged, --unstaged, --all-changes.");
+                Console.Error.WriteLine("[GauntletCI] Error: multiple diff sources specified. Use exactly one of: --diff, --commit, --staged, --unstaged, --all-changes, --codebase.");
                 ctx.ExitCode = 1;
                 return;
             }
@@ -183,7 +188,9 @@ public static class AnalyzeCommand
                                 ? await DiffParser.FromUnstagedAsync(repo.FullName, config.DiffContextLines, ct)
                                 : allChanges
                                     ? await DiffParser.FromAllChangesAsync(repo.FullName, config.DiffContextLines, ct)
-                                    : DiffParser.Parse(await Console.In.ReadToEndAsync(ct));
+                                    : codebase is not null
+                                        ? await CodebaseAnalyzer.ScanDirectoryAsync(codebase.FullName, ct)
+                                        : DiffParser.Parse(await Console.In.ReadToEndAsync(ct));
 
                 // Merge config defaults: CLI value wins when explicitly passed; config fills in the rest.
                 withLlm       = withLlm       || (config.Llm?.Enabled      == true);
