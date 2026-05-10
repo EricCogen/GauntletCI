@@ -7,7 +7,8 @@ namespace GauntletCI.Core;
 /// Centralized factory for creating and managing <see cref="HttpClient"/> instances.
 /// Prevents socket exhaustion by maintaining pooled, reusable clients instead of creating one per constructor.
 /// 
-/// Clients are static and long-lived. The factory manages configuration and header injection.
+/// Clients are static and long-lived. Credentials are NEVER injected into DefaultRequestHeaders.
+/// Callers must attach authentication per-request using HttpRequestMessage.Headers to avoid credential bleed.
 /// Callers should NOT dispose clients obtained from this factory.
 /// </summary>
 public static class HttpClientFactory
@@ -31,7 +32,7 @@ public static class HttpClientFactory
     private static readonly Lazy<HttpClient> LongTimeoutClient = new(() => CreateLongTimeoutClient());
 
     /// <summary>
-    /// Gets a GitHub API client pre-configured with auth headers (if token available).
+    /// Gets a GitHub API client. Credentials must be attached per-request via HttpRequestMessage.Headers.
     /// Do NOT dispose; client is managed by the factory.
     /// </summary>
     public static HttpClient GetGitHubClient() => GithubClient.Value;
@@ -49,13 +50,14 @@ public static class HttpClientFactory
     public static HttpClient GetGenericClient() => GenericClient.Value;
 
     /// <summary>
-    /// Gets an Anthropic API client pre-configured with auth headers.
+    /// Gets an Anthropic API client. API key must be attached per-request via HttpRequestMessage.Headers.
+    /// Disables automatic redirects to prevent credential leakage on unexpected redirects.
     /// Do NOT dispose; client is managed by the factory.
     /// </summary>
     public static HttpClient GetAnthropicClient() => AnthropicClientInstance.Value;
 
     /// <summary>
-    /// Gets a Codecov API client pre-configured with auth headers (if token available).
+    /// Gets a Codecov API client. Token must be attached per-request via HttpRequestMessage.Headers.
     /// Do NOT dispose; client is managed by the factory.
     /// </summary>
     public static HttpClient GetCodecovClient() => CodecovClientInstance.Value;
@@ -68,7 +70,7 @@ public static class HttpClientFactory
 
     /// <summary>
     /// Creates a new HttpClient with GitHub API configuration.
-    /// Includes auth token if GITHUB_TOKEN is set or gh auth is available.
+    /// Callers must attach GitHub token per-request via HttpRequestMessage.Headers to avoid credential bleed.
     /// </summary>
     private static HttpClient CreateGitHubClient()
     {
@@ -129,14 +131,19 @@ public static class HttpClientFactory
     }
 
     /// <summary>
-    /// Creates a new HttpClient for Anthropic API (requires api key to be set by caller).
+    /// Creates a new HttpClient for Anthropic API (requires api key to be set by caller per-request).
+    /// Disables automatic redirects to prevent custom sensitive headers (x-api-key) from leaking
+    /// to unintended endpoints on redirects.
     /// </summary>
     private static HttpClient CreateAnthropicClient()
     {
-        var client = new HttpClient(new SocketsHttpHandler 
+        var handler = new SocketsHttpHandler 
         { 
-            PooledConnectionLifetime = TimeSpan.FromMinutes(5) 
-        })
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            AllowAutoRedirect = false
+        };
+        
+        var client = new HttpClient(handler)
         {
             Timeout = TimeSpan.FromSeconds(120)
         };
