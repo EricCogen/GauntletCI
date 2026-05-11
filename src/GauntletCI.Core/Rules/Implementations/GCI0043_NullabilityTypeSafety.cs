@@ -62,7 +62,8 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
             .Where(l => !WellKnownPatterns.HasMvvmPattern(l.Content))
             // GetValueForOption(opt)! is System.CommandLine's idiomatic pattern for
             // required options: the value is always set, so the ! is safe.
-            .Where(l => !l.Content.Contains("GetValueForOption(", StringComparison.Ordinal))
+            .Where(
+                l => !l.Content.Contains("GetValueForOption(", StringComparison.Ordinal))
             .ToList();
 
         if (matchingLines.Count <= 1) return;
