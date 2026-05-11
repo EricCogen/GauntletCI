@@ -58,12 +58,8 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
     {
         var matchingLines = file.AddedLines
             .Where(l => IsNullForgivingLine(l.Content))
-            // Skip MVVM pattern null-forgiving (safe in ViewModels)
             .Where(l => !WellKnownPatterns.HasMvvmPattern(l.Content))
-            // GetValueForOption(opt)! is System.CommandLine's idiomatic pattern for
-            // required options: the value is always set, so the ! is safe.
-            .Where(
-                l => !l.Content.Contains("GetValueForOption(", StringComparison.Ordinal))
+            .Where(l => !IsSystemCommandLinePattern(l))
             .ToList();
 
         if (matchingLines.Count <= 1) return;
@@ -157,6 +153,16 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
                 confidence: Confidence.Low,
                 line: addedLines[i]));
         }
+    }
+
+    /// <summary>
+    /// Returns true if the line matches the System.CommandLine pattern for required options.
+    /// GetValueForOption(opt)! is idiomatic for required options where the value is always set,
+    /// so the null-forgiving operator is safe and shouldn't trigger this rule.
+    /// </summary>
+    private static bool IsSystemCommandLinePattern(DiffLine line)
+    {
+        return line.Content.Contains("GetValueForOption(", StringComparison.Ordinal);
     }
 
     /// <summary>
