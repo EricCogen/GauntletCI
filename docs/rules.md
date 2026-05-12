@@ -477,6 +477,24 @@ These rules examine how the application integrates with external systems, manage
 
 ---
 
+### GCI0056 · Missing Test Framework Detection
+
+**Confidence:** Medium
+**What it detects:** Scans the changed files to determine if the repository has production code without a corresponding test infrastructure. It counts the number of production source files, checks for the presence of test files (matching known test file patterns), and searches for test framework package references (xunit, NUnit, MSTest, Jest, pytest, etc.). If the repository contains 3+ production source files, has a project file (.csproj, package.json, pyproject.toml), but no test files and no test framework packages detected, it flags the gap. Exempt directories: samples/, examples/, docs/, tools/.
+**Why it matters:** Production code without any test infrastructure has zero protection against regressions. Every code change carries unknown risk. Automated tests are the primary defense against introducing bugs, and their absence signals a project that may be unmaintained or immature.
+**Suggested action:** Add a test project to your repository. Reference a testing framework appropriate to your language: xunit or NUnit for C#, Jest or Mocha for JavaScript, pytest for Python. Write tests for the critical paths of your application. Aim for high coverage of business logic.
+
+---
+
+### GCI0057 · Blocking Async Pattern Violation
+
+**Confidence:** High / Medium
+**What it detects:** Two patterns. **Pattern A (High confidence):** Detects synchronous blocking calls on async operations: `.Result`, `.Wait()`, `.GetAwaiter().GetResult()` on Tasks or Promises. These patterns block the current thread and can cause deadlocks in frameworks that depend on the blocked thread to continue execution (ASP.NET, Blazor, WPF). **Pattern B (High in async methods, Medium otherwise):** Detects synchronous file I/O operations: `File.ReadAllText`, `File.WriteAllText`, `File.ReadAllLines`, `File.WriteAllLines`, etc. Exempt files: Program.cs, Startup.cs, *Extensions.cs (infrastructure files). Also exempt: test files.
+**Why it matters:** Blocking on async operations is a leading cause of deadlocks in modern C# applications. Synchronous file I/O blocks the thread that initiated it, preventing other work from progressing during the I/O delay. In a server application handling many concurrent requests, blocking threads exhaust the thread pool, causing application-wide slowdown or hang.
+**Suggested action:** Use `await` instead of `.Result` or `.Wait()`. Replace synchronous file I/O with `await File.ReadAllTextAsync(...)` or `await File.WriteAllTextAsync(...)`. If blocking is truly unavoidable, add a code comment explaining why and consider using `.GetAwaiter().GetResult()` explicitly to signal intent.
+
+---
+
 ## Non-Active Rules
 
 ### Reserved IDs
@@ -516,11 +534,11 @@ The configuration file has two top-level sections:
 
 | Status | Count |
 |--------|-------|
-| Active | 30 |
+| Active | 32 |
 | Reserved / Consolidated | 2 (GCI0030, GCI0033) |
 | Unassigned | 1 (GCI0028) |
-| **Total IDs used** | **33** |
+| **Total IDs used** | **35** |
 
 ---
 
-*Last updated: 2026-04-13*
+*Last updated: 2026-05-12*
