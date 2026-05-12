@@ -39,7 +39,7 @@ public class Phase5IntegrationTests
 
         // Verify that behavioral change detection ran and context signals were evaluated
         Assert.NotNull(result);
-        Assert.Equal(34, result.RulesEvaluated);
+        Assert.Equal(36, result.RulesEvaluated);
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public class Phase5IntegrationTests
         var result = await orchestrator.RunAsync(diff);
 
         Assert.NotNull(result);
-        Assert.Equal(34, result.RulesEvaluated);
+        Assert.Equal(36, result.RulesEvaluated);
     }
 
     [Fact]
@@ -186,9 +186,9 @@ public class Phase5IntegrationTests
     }
 
     [Fact]
-    public async Task Orchestrator_AllRulesPresent_31RulesEvaluated()
+    public async Task Orchestrator_AllRulesPresent_36RulesEvaluated()
     {
-        // Verify Phase 6 brought total to 34 rules
+        // Verify Phase 6 brought total to 36 rules (GCI0056 and GCI0057 added)
         var orchestrator = RuleOrchestrator.CreateDefault();
         var cleanDiff = DiffParser.Parse("""
             diff --git a/src/Clean.cs b/src/Clean.cs
@@ -201,6 +201,6 @@ public class Phase5IntegrationTests
             """);
 
         var result = await orchestrator.RunAsync(cleanDiff);
-        Assert.Equal(34, result.RulesEvaluated);
+        Assert.Equal(36, result.RulesEvaluated);
     }
 }
