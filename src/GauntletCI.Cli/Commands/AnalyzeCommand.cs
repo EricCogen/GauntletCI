@@ -32,7 +32,7 @@ public static class AnalyzeCommand
         var stagedFlag = new Option<bool>("--staged", "Analyse staged changes (git diff --cached)");
         var unstagedFlag = new Option<bool>("--unstaged", "Analyse unstaged changes (git diff)");
         var allChangesFlag = new Option<bool>("--all-changes", "Analyse all local changes: staged + unstaged (git diff HEAD)");
-        var codebaseOption = new Option<DirectoryInfo?>("--codebase", "Full codebase scan: analyse all C# files in directory (e.g., ./src). Treats all code as new for rule evaluation.");
+        var codebaseOption = new Option<DirectoryInfo?>("--codebase", "Full codebase scan: analyse all C# files in directory (e.g., ./src). Treats all code as new for rule evaluation. This is the default when no other source is specified.");
         var repoOption = new Option<DirectoryInfo>(
             "--repo",
             () => new DirectoryInfo(Directory.GetCurrentDirectory()),
@@ -140,6 +140,13 @@ public static class AnalyzeCommand
                 output = Path.GetExtension(output).TrimStart('.').ToLowerInvariant();
             }
 
+            // Default to full codebase scan if no explicit source is provided and stdin is not redirected
+            if (diffFile is null && commit is null && !staged && !unstaged && !allChanges &&
+                codebase is null && !Console.IsInputRedirected)
+            {
+                codebase = repo;
+            }
+
             // Enforce single diff source
             int sourceCount = (diffFile is not null ? 1 : 0)
                             + (commit is not null ? 1 : 0)
@@ -150,13 +157,6 @@ public static class AnalyzeCommand
             if (sourceCount > 1)
             {
                 Console.Error.WriteLine("[GauntletCI] Error: multiple diff sources specified. Use exactly one of: --diff, --commit, --staged, --unstaged, --all-changes, --codebase.");
-                ctx.ExitCode = 1;
-                return;
-            }
-
-            if (sourceCount == 0 && !Console.IsInputRedirected)
-            {
-                Console.Error.WriteLine("[GauntletCI] Error: no diff source specified. Use --staged, --unstaged, --all-changes, --commit <sha>, --diff <file>, or pipe a diff to stdin.");
                 ctx.ExitCode = 1;
                 return;
             }
