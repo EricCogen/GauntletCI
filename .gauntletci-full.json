@@ -1,0 +1,73 @@
+{
+  "rules": {
+    "GCI0001": { "enabled": true },
+    "GCI0002": { "enabled": true },
+    "GCI0003": { "enabled": true },
+    "GCI0004": { "enabled": true },
+    "GCI0005": { "enabled": true },
+    "GCI0006": { "enabled": true },
+    "GCI0007": { "enabled": true },
+    "GCI0008": { "enabled": true },
+    "GCI0009": { "enabled": true },
+    "GCI0010": { "enabled": true },
+    "GCI0011": { "enabled": true },
+    "GCI0012": { "enabled": true },
+    "GCI0013": { "enabled": true },
+    "GCI0014": { "enabled": true },
+    "GCI0015": { "enabled": true },
+    "GCI0016": { "enabled": true },
+    "GCI0017": { "enabled": true },
+    "GCI0018": { "enabled": true },
+    "GCI0019": { "enabled": true },
+    "GCI0020": { "enabled": true },
+    "GCI0021": { "enabled": true },
+    "GCI0022": { "enabled": true },
+    "GCI0023": { "enabled": true },
+    "GCI0024": { "enabled": true },
+    "GCI0025": { "enabled": true },
+    "GCI0026": { "enabled": true },
+    "GCI0027": { "enabled": true },
+    "GCI0028": { "enabled": true },
+    "GCI0029": { "enabled": true },
+    "GCI0030": { "enabled": true },
+    "GCI0031": { "enabled": true },
+    "GCI0032": { "enabled": true },
+    "GCI0033": { "enabled": true },
+    "GCI0034": { "enabled": true },
+    "GCI0035": { "enabled": true },
+    "GCI0036": { "enabled": true },
+    "GCI0037": { "enabled": true },
+    "GCI0038": { "enabled": true },
+    "GCI0039": { "enabled": true },
+    "GCI0040": { "enabled": true },
+    "GCI0041": { "enabled": true },
+    "GCI0042": { "enabled": true },
+    "GCI0043": { "enabled": true },
+    "GCI0044": { "enabled": true },
+    "GCI0045": { "enabled": true },
+    "GCI0046": { "enabled": true },
+    "GCI0047": { "enabled": true },
+    "GCI0048": { "enabled": true },
+    "GCI0049": { "enabled": true },
+    "GCI0050": { "enabled": true },
+    "GCI0051": { "enabled": true },
+    "GCI0052": { "enabled": true },
+    "GCI0053": { "enabled": true },
+    "GCI0054": { "enabled": true },
+    "GCI0055": { "enabled": true }
+  },
+  "llm": {
+    "modelPath": "~/.gauntletci/models/phi4-mini",
+    "embeddingOllamaUrl": "http://10.0.0.5:11434",
+    "model": "phi4-mini:latest"
+  },
+  "corpus": {
+    "ollamaEndpoints": [{ "url": "http://10.0.0.5:11434", "enabled": true }]
+  },
+  "experimental": {
+    "engineeringPolicy": {
+      "enabled": true,
+      "path": "docs/core-engineering-rules.md"
+    }
+  }
+}
