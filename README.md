@@ -103,15 +103,27 @@ Five minutes from install to first finding. No configuration required.
 
 Want to see GauntletCI catch real bugs in real PRs before installing anything?
 
-The **[GauntletCI-Demo](https://github.com/EricCogen/GauntletCI-Demo)** repo is a realistic ASP.NET Core OrderService with **22 scenarios across 3 tiers**:
+The **[GauntletCI-Demo](https://github.com/EricCogen/GauntletCI-Demo)** repo is a realistic ASP.NET Core OrderService with **36 scenarios across 3 tiers**:
 
 - **Tier 1**: 6 headline scenarios covering core rules
 - **Tier 2**: 12 single-rule scenarios (one rule isolated per scenario)  
-- **Tier 3**: 4 behavioral regression scenarios demonstrating GauntletCI's competitive advantage
+- **Tier 3**: 18 behavioral regression scenarios demonstrating GauntletCI's competitive advantage
 
-The demo includes live GitHub Actions workflows running 5 analysis tools side-by-side (CodeQL, Semgrep, StyleCop, Snyk, GauntletCI). View the multi-tool findings comparison showing what each tool catches and misses:
+### Competitive Advantage
 
-**[→ Browse live demo PRs](https://github.com/EricCogen/GauntletCI-Demo/pulls)** | **[View Tier 3 multi-tool findings comparison](https://github.com/EricCogen/GauntletCI-Demo/blob/feature/add-4-scenarios/DEMO_FINDINGS.md)**
+GauntletCI detects all 18 Tier 3 behavioral regressions. Competitors (CodeQL, Semgrep, SonarQube, StyleCop, Snyk) detect 0/18 on average:
+
+| Category | Scenarios | GauntletCI | Others |
+| --- | --- | --- | --- |
+| Security & Access Control | S19, S23, S24 | 3/3 | 0/3 |
+| Concurrency & Async | S21, S25-S27 | 4/4 | 0/4 |
+| Data Integrity & Logic | S20, S28-S30 | 4/4 | 0/4 |
+| API Contracts & Versioning | S22, S31-S32 | 3/3 | 0/3 |
+| Performance & Resources | S33-S34 | 2/2 | 0/2 |
+| Dependency Injection | S35-S36 | 2/2 | 0/2 |
+| **TOTAL** | **18** | **18/18** | **0/18** |
+
+**[→ Browse live demo PRs](https://github.com/EricCogen/GauntletCI-Demo/pulls)** | **[View detailed multi-tool comparison](https://github.com/EricCogen/GauntletCI-Demo/blob/main/DEMO_FINDINGS.md)**
 
 Sample Tier 1 scenarios:
 
