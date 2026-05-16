@@ -14,9 +14,9 @@ Most of the bugs I've shipped in twenty years of .NET production reveal themselv
 
 In the third quarter of 2025, I received a new offer: a thirty percent pay increase, a greenfield codebase, and a chance to start clean. I walked in with no legacy debt, no inherited mess, and no excuses.
 
-Within weeks, the illusion of a fresh start shattered, and I found myself staring at the same recurring patterns of failure I had spent years trying to escape. 
+Within weeks, the illusion of a fresh start shattered, and I found myself staring at the same recurring patterns of mistakes that I had spent years trying to get past. 
 
-They weren't the same bugs, but they were the same shape of failure. These were changes that passed review and passed tests, then failed loudly in production. New codebase, new team, and a new stack in places, but the same postmortem. It was the guard clause that seemed redundant, the rename that looked like cleanup, or the exception path nobody thought to test. The code was different, but the outcome was identical.
+They weren't the same bugs, but they were the same shape of mistakes. These were changes that passed review and passed tests, then failed loudly in production. New codebase, new team, and a new stack in places, but the same postmortem. It was the guard clause that seemed redundant, the rename that looked like cleanup, or the exception path nobody thought to test. The code was different, but the outcome was identical.
 
 I was tired of being mediocre. I wanted to be better, and I knew I could be. It was time to step up my game.
 
