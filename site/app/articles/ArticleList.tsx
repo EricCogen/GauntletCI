@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { Pin } from "lucide-react";
 
 const PAGE_SIZE = 10;
 
@@ -36,9 +37,18 @@ export function ArticleList({ articles }: { articles: Article[] }) {
           <Link
             key={article.href}
             href={article.href}
-            className="group block rounded-xl border border-border bg-card/30 hover:bg-card/60 hover:border-cyan-500/30 transition-all p-6 relative"
+            className={`group block rounded-xl border bg-card/30 hover:bg-card/60 transition-all p-6 relative ${
+              article.pinned
+                ? "border-cyan-400/60 hover:border-cyan-400/80 bg-cyan-400/5 hover:bg-cyan-400/10"
+                : "border-border hover:border-cyan-500/30"
+            }`}
           >
-            {/* Pin indicator - removed */}
+            {/* Pinned indicator */}
+            {article.pinned && (
+              <div className="absolute bottom-4 right-4 text-cyan-400">
+                <Pin size={18} fill="currentColor" />
+              </div>
+            )}
 
             <div className="flex flex-wrap items-center gap-2 mb-3">
               {article.tags.map((tag) => (
