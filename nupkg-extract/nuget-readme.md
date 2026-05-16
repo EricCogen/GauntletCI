@@ -13,7 +13,7 @@ Your tests passed. Your PR was approved. Your change still broke production.
 Tests confirm existing behavior. Code review confirms intent.  
 Neither validates what your change actually does.
 
-**GauntletCI analyzes pull request diffs and flags unverified behavioral changes before they reach code review** — logic shifts, removed guards, silent regressions, and hidden contract breaks that pass tests and reviewers alike.
+**GauntletCI analyzes pull request diffs and flags unverified behavioral changes before they reach code review** - logic shifts, removed guards, silent regressions, and hidden contract breaks that pass tests and reviewers alike.
 
 - ⚡ Sub-second analysis: no compilation, no AST, no network
 - 🔒 Runs locally: no code leaves your machine
@@ -31,7 +31,7 @@ gauntletci analyze --staged
 
 Requires .NET 8+. Also available via [self-contained binaries](https://gauntletci.com/docs).
 
-> Running against StackExchange.Redis PR#2995 — GauntletCI flags a swallowed exception in production connection handling.
+> Running against StackExchange.Redis PR#2995 - GauntletCI flags a swallowed exception in production connection handling.
 
 [![GauntletCI terminal demo](https://raw.githubusercontent.com/EricCogen/GauntletCI/refs/heads/main/site/public/gauntletci-terminal-demo.gif)](https://github.com/EricCogen/GauntletCI)
 
@@ -64,7 +64,7 @@ NullReferenceException deeper in the call stack.
 
 ---
 
-## See it live — before installing anything
+## See it live - before installing anything
 
 The [GauntletCI-Demo repo](https://github.com/EricCogen/GauntletCI-Demo/pulls) is a realistic ASP.NET Core `OrderService` with 22 scenarios across 3 tiers:
 
