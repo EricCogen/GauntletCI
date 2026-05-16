@@ -253,8 +253,9 @@ export default function JellyfinArticle() {
             <h2 className="text-2xl font-bold tracking-tight">Try It Yourself</h2>
             <div className="space-y-4 text-muted-foreground leading-relaxed">
               <p>
-                The GauntletCI-Demo repo contains six always-open scenario PRs against a realistic ASP.NET Core OrderService. Each one buries a single risky change in a plausible multi-file diff. GauntletCI runs on every PR: you can read the workflow output without installing anything.
+                The GauntletCI-Demo repo contains 22 scenarios across 3 tiers: 6 headline scenarios (Tier 1), 12 single-rule scenarios (Tier 2), and 4 behavioral regression scenarios with multi-tool competitive analysis (Tier 3). All run automatically with live GitHub Actions results.
               </p>
+              <p>The Tier 3 scenarios show behavioral regressions that GauntletCI catches while CodeQL, Semgrep, SonarQube, StyleCop, and Snyk all miss. Open any demo PR to see what each tool finds side-by-side.</p>
               <p>If you want to run it locally:</p>
               <pre className="bg-muted border border-border rounded p-4 overflow-x-auto">
                 <code className="font-mono text-sm text-muted-foreground">{`dotnet tool install -g GauntletCI
@@ -270,7 +271,12 @@ gauntletci analyze --staged`}</code>
                 </li>
                 <li>
                   <Link href="https://github.com/EricCogen/GauntletCI-Demo/pulls" className="text-cyan-400 hover:text-cyan-300 font-semibold">
-                    Live demo PRs
+                    Live demo PRs (22 scenarios, 3 tiers)
+                  </Link>
+                </li>
+                <li>
+                  <Link href="https://github.com/EricCogen/GauntletCI-Demo/blob/feature/add-4-scenarios/DEMO_FINDINGS.md" className="text-cyan-400 hover:text-cyan-300 font-semibold">
+                    Multi-tool findings comparison (Tier 3)
                   </Link>
                 </li>
                 <li>
