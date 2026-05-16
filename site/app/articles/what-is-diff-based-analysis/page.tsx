@@ -543,6 +543,17 @@ export default function WhatIsDiffBasedAnalysisPage() {
                   overloads, and serialization breaks before they reach main.
                 </p>
               </Link>
+              <Link
+                href="/articles/can-ai-code-review-be-deterministic"
+                className="group rounded-xl border border-border bg-card p-5 hover:border-cyan-500/40 transition-colors"
+              >
+                <p className="text-sm font-semibold group-hover:text-cyan-400 transition-colors">
+                  Can AI code review tools ever be deterministic?
+                </p>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  Exploring the architectural question of separating deterministic evidence from AI-assisted interpretation in automated code review.
+                </p>
+              </Link>
             </div>
           </section>
 
