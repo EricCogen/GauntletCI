@@ -101,29 +101,45 @@ Five minutes from install to first finding. No configuration required.
 
 ## See It Live
 
-Want to see GauntletCI catch real bugs in real PRs before installing anything?
+Want to see GauntletCI's approach in action? Check out the live demo.
 
 The **[GauntletCI-Demo](https://github.com/EricCogen/GauntletCI-Demo)** repo is a realistic ASP.NET Core OrderService with **36 scenarios across 3 tiers**:
 
 - **Tier 1**: 6 headline scenarios covering core rules
 - **Tier 2**: 12 single-rule scenarios (one rule isolated per scenario)  
-- **Tier 3**: 18 behavioral regression scenarios demonstrating GauntletCI's competitive advantage
+- **Tier 3**: 18 behavioral regression scenarios showing GauntletCI's diff-based approach
 
-### Competitive Advantage
+### Understanding GauntletCI's Approach
 
-GauntletCI detects all 18 Tier 3 behavioral regressions. Competitors (CodeQL, Semgrep, SonarQube, StyleCop, Snyk) detect 0/18 on average:
+GauntletCI detects **behavioral change risks** by analyzing what changed in your git diff, not by scanning the whole codebase.
 
-| Category | Scenarios | GauntletCI | Others |
-| --- | --- | --- | --- |
-| Security & Access Control | S19, S23, S24 | 3/3 | 0/3 |
-| Concurrency & Async | S21, S25-S27 | 4/4 | 0/4 |
-| Data Integrity & Logic | S20, S28-S30 | 4/4 | 0/4 |
-| API Contracts & Versioning | S22, S31-S32 | 3/3 | 0/3 |
-| Performance & Resources | S33-S34 | 2/2 | 0/2 |
-| Dependency Injection | S35-S36 | 2/2 | 0/2 |
-| **TOTAL** | **18** | **18/18** | **0/18** |
+**Traditional tools** (CodeQL, Semgrep, SonarQube, Snyk, StyleCop) scan the entire codebase during CI, looking for known vulnerability signatures and code quality patterns. They excel at finding explicit anti-patterns.
 
-**[→ Browse live demo PRs](https://github.com/EricCogen/GauntletCI-Demo/pulls)** | **[View detailed multi-tool comparison](https://github.com/EricCogen/GauntletCI-Demo/blob/main/DEMO_FINDINGS.md)**
+**GauntletCI** analyzes the specific diff during pre-commit in sub-seconds, detecting:
+- Structural mutations (removed boundaries, changed sequences)
+- Execution order changes that compile cleanly
+- Behavioral regressions that pass all tests
+- Context propagation losses in async code
+- API contract drifts
+
+These are the gaps that whole-project snapshot analysis can't efficiently detect during CI.
+
+### The 18 Tier 3 Scenarios
+
+These demonstrate the **class of issues GauntletCI detects that whole-project snapshot tools cannot see**:
+
+| Category | Scenarios | What It Shows |
+| --- | --- | --- |
+| Architectural Access Control | S19, S23, S24 | Removal of boundary enforcement in the diff |
+| Execution Sequence Changes | S20, S28-S30 | State mutation/external call reordering |
+| Async Propagation Drops | S21, S25-S27 | CancellationToken context loss in call stacks |
+| Public Contract Drift | S22, S31-S32 | Method signature/default parameter changes in diffs |
+| Performance & Resource | S33-S34 | Configuration changes, pooling disablement |
+| Dependency Injection Scope | S35-S36 | Scope boundary mismatches in DI config |
+
+Each compiles cleanly, passes all tests, and would pass both SAST gates and linting checks—but introduces behavioral risk only visible in diff-level analysis.
+
+**[→ Browse live demo PRs](https://github.com/EricCogen/GauntletCI-Demo/pulls)** | **[View detailed analysis](https://github.com/EricCogen/GauntletCI-Demo/blob/main/DEMO_FINDINGS.md)**
 
 Sample Tier 1 scenarios:
 
