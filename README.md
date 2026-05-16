@@ -103,18 +103,26 @@ Five minutes from install to first finding. No configuration required.
 
 Want to see GauntletCI catch real bugs in real PRs before installing anything?
 
-The **[GauntletCI-Demo](https://github.com/EricCogen/GauntletCI-Demo)** repo is a realistic ASP.NET Core OrderService with **6 always-open scenario PRs**. Each PR makes a plausible multi-file change with a single risky line buried inside. GauntletCI runs on every PR: open one and read the workflow output:
+The **[GauntletCI-Demo](https://github.com/EricCogen/GauntletCI-Demo)** repo is a realistic ASP.NET Core OrderService with **22 scenarios across 3 tiers**:
+
+- **Tier 1**: 6 headline scenarios covering core rules
+- **Tier 2**: 12 single-rule scenarios (one rule isolated per scenario)  
+- **Tier 3**: 4 behavioral regression scenarios demonstrating GauntletCI's competitive advantage
+
+The demo includes live GitHub Actions workflows running 5 analysis tools side-by-side (CodeQL, Semgrep, StyleCop, Snyk, GauntletCI). View the multi-tool findings comparison showing what each tool catches and misses:
+
+**[→ Browse live demo PRs](https://github.com/EricCogen/GauntletCI-Demo/pulls)** | **[View Tier 3 multi-tool findings comparison](https://github.com/EricCogen/GauntletCI-Demo/blob/feature/add-4-scenarios/DEMO_FINDINGS.md)**
+
+Sample Tier 1 scenarios:
 
 | PR | Scenario | Expected verdict |
 | --- | --- | --- |
-| 01 | Safe typo fix | ✅ clean: no findings |
-| 02 | Silent `catch { }` around payment call | ❌ GCI0007 Error Handling Integrity |
-| 03 | Hardcoded API key in `Program.cs` | ❌ GCI0012 Secret Hygiene |
-| 04 | `CancellationToken` dropped from `IPaymentClient` | ❌ GCI0004 Public API Contract |
-| 05 | Customer email logged in `LogInformation` | ❌ GCI0029 PII Logging Leak |
-| 06 | Static counter mutated without sync | ❌ GCI0016 Concurrency Safety |
-
-**[→ Browse the live demo PRs](https://github.com/EricCogen/GauntletCI-Demo/pulls)**
+| 01 | Safe typo fix | clean: no findings |
+| 02 | Silent `catch { }` around payment call | GCI0007 Error Handling Integrity |
+| 03 | Hardcoded API key in `Program.cs` | GCI0012 Secret Hygiene |
+| 04 | `CancellationToken` dropped from `IPaymentClient` | GCI0004 Public API Contract |
+| 05 | Customer email logged in `LogInformation` | GCI0029 PII Logging Leak |
+| 06 | Static counter mutated without sync | GCI0016 Concurrency Safety |
 
 ---
 
