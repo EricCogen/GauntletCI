@@ -440,6 +440,23 @@ export default function WhyCodeReviewMissesBugsPage() {
                   produces faster, lower-noise findings that are directly actionable at commit time.
                 </p>
               </div>
+              <div className="border-t border-border pt-3">
+                <Link href="/articles/detect-breaking-changes-before-merge" className="text-sm font-medium text-cyan-400 hover:text-cyan-300 transition-colors">
+                  Detect breaking changes before merge
+                </Link>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                  API contract violations, removed overloads, and serialization breaks are invisible
+                  in code review. Diff-based structural rules surface these specific categories before merge.
+                </p>
+              </div>
+              <div className="border-t border-border pt-3">
+                <Link href="/articles/can-ai-code-review-be-deterministic" className="text-sm font-medium text-cyan-400 hover:text-cyan-300 transition-colors">
+                  Can AI code review tools ever be deterministic?
+                </Link>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                  Exploring the architectural question of separating deterministic evidence from AI-assisted interpretation when automating code review.
+                </p>
+              </div>
             </div>
           </section>
 

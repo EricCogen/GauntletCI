@@ -96,6 +96,14 @@ const articles = [
     tags: ["Case Study", "Analysis", "Real Bugs"],
     readTime: "8 min read",
   },
+  {
+    href: "/articles/sonarqube-alternative-behavioral-gating",
+    title: "Beyond SonarQube: Building a Behavioral Audit Layer for .NET PR Gating",
+    description:
+      "SonarQube catches code smells and security patterns. But it misses the semantic drift that breaks production systems. Explore how a deterministic Roslyn-based behavioral audit layer fills that gap.",
+    tags: ["SonarQube", ".NET", "Code Quality", "PR Gating"],
+    readTime: "9 min read",
+  },
 ];
 
 export default function ArticlesPage() {
