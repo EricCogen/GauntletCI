@@ -66,15 +66,15 @@ NullReferenceException deeper in the call stack.
 
 ## See it live - before installing anything
 
-The [GauntletCI-Demo repo](https://github.com/EricCogen/GauntletCI-Demo/pulls) is a realistic ASP.NET Core `OrderService` with 22 scenarios across 3 tiers:
+The [GauntletCI-Demo repo](https://github.com/EricCogen/GauntletCI-Demo/pulls) is a realistic ASP.NET Core `OrderService` with 36 scenarios across 3 tiers:
 
 - Tier 1: 6 headline scenarios (core rules)
 - Tier 2: 12 single-rule scenarios (one rule per scenario)
-- Tier 3: 4 behavioral regression scenarios with multi-tool competitive analysis
+- Tier 3: 18 behavioral regression scenarios with competitive analysis (GauntletCI 18/18 vs Competitors 0/18)
 
-View the live demo results and multi-tool findings comparison (CodeQL, Semgrep, StyleCop, Snyk, GauntletCI running side-by-side):
+View the live demo results showing GauntletCI catches behavioral changes that CodeQL, Semgrep, SonarQube, StyleCop, and Snyk all miss:
 
-[Browse live demo PRs](https://github.com/EricCogen/GauntletCI-Demo/pulls) | [View Tier 3 competitive analysis](https://github.com/EricCogen/GauntletCI-Demo/blob/feature/add-4-scenarios/DEMO_FINDINGS.md)
+[Browse live demo PRs](https://github.com/EricCogen/GauntletCI-Demo/pulls) | [View Tier 3 multi-tool comparison](https://github.com/EricCogen/GauntletCI-Demo/blob/main/DEMO_FINDINGS.md)
 
 | PR | Scenario | Expected verdict |
 |----|----------|-----------------|
