@@ -23,7 +23,7 @@ GauntletCI detects [**Behavioral Change Risk**](docs/change-risk-thesis.md) in p
 
 ## What is GauntletCI?
 
-GauntletCI is a diff-first, merge-time [**Behavioral Change Risk**](docs/change-risk-thesis.md) detector for .NET.
+GauntletCI is a diff-first, merge-time **Behavioral Change Risk** detector for .NET.
 
 It analyzes what changed, not the full codebase, and flags changes whose behavioral impact is unverified before they reach production.
 
@@ -224,7 +224,7 @@ Learn from real incidents how GauntletCI detects behavioral changes in productio
 
 ### Security & Data Integrity
 - **[GCI0029 - PII Logging Leak](docs/case-studies/gci0029-pii-exposure.md)** - 18 months of plaintext passwords exposed, $2.1M GDPR settlement
-- **[GCI0012 - Secret Hygiene](docs/rules/GCI0012-secret-hygiene.md)** - Hardcoded API keys permanently in Git history
+- **GCI0012 - Secret Hygiene** - Hardcoded API keys permanently in Git history
 - **[GCI0050 - SQL Column Truncation](docs/case-studies/gci0050-sql-truncation.md)** - Silent data loss during schema migrations
 - **[GCI0048 - Insecure Random](docs/case-studies/gci0048-insecure-random.md)** - Predictable tokens enable account takeover
 - **[GCI0039 - Insecure Deserialization](docs/case-studies/gci0039-insecure-serialization.md)** - Remote code execution via unsafe deserialization
@@ -232,7 +232,7 @@ Learn from real incidents how GauntletCI detects behavioral changes in productio
 ### Reliability & Concurrency
 - **[GCI0054 - Async Void Abuse](docs/case-studies/gci0054-async-void-abuse.md)** - Stack Overflow outages from unhandled exceptions
 - **[GCI0039 - Thread Exhaustion](docs/case-studies/gci0039-thread-exhaustion.md)** - Datadog outage: HTTP calls without timeouts hung entire service (45 min)
-- **[GCI0016 - Concurrency Safety](docs/rules/GCI0016-concurrency-safety.md)** - Race conditions cause non-deterministic data corruption
+- **GCI0016 - Concurrency Safety** - Race conditions cause non-deterministic data corruption
 
 ### API Design & Idempotency
 - **[GCI0055 - Method Signature Change](docs/case-studies/gci0055-method-signature-change.md)** - .NET 10 regression: breaking parameter changes
