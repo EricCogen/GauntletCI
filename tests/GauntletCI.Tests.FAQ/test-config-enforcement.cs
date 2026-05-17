@@ -47,7 +47,7 @@ public class ConfigDriftTest
 
             // Verify that .gauntletci.json contains rule enforcement configuration
             // (This is documentation verification, not an executable test)
-            Assert.NotNull((object)configDoc.RootElement);
+            Assert.NotEqual(default, configDoc.RootElement.ValueKind);
             
             // In a full integration test, we would:
             // 1. Mark rule GCI0032 as "Enforced: true" in .gauntletci.json
@@ -73,7 +73,7 @@ public class ConfigDriftTest
         var doc = JsonDocument.Parse(configContent);
 
         // Verify config has rules section (basic structure validation)
-        Assert.NotNull((object)doc.RootElement);
+        Assert.NotEqual(default, doc.RootElement.ValueKind);
         
         // This test passes as long as the config file is valid JSON
         // Full enforcement testing requires CLI integration
