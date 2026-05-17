@@ -14,9 +14,9 @@ Most of the bugs I've shipped in twenty years of .NET production reveal themselv
 
 In the third quarter of 2025, I received a new offer: a thirty percent pay increase, a greenfield codebase, and a chance to start clean. I walked in with no legacy debt, no inherited mess, and no excuses.
 
-Within weeks, the illusion of a fresh start shattered, and I found myself staring at the same recurring patterns of failure I had spent years trying to escape. 
+Within weeks, the illusion of a fresh start shattered, and I found myself staring at the same recurring patterns of mistakes that I had spent years trying to get past. 
 
-They weren't the same bugs, but they were the same shape of failure. These were changes that passed review and passed tests, then failed loudly in production. New codebase, new team, and a new stack in places, but the same postmortem. It was the guard clause that seemed redundant, the rename that looked like cleanup, or the exception path nobody thought to test. The code was different, but the outcome was identical.
+They weren't the same bugs, but they were the same shape of mistakes. These were changes that passed review and passed tests, then failed loudly in production. New codebase, new team, and a new stack in places, but the same postmortem. It was the guard clause that seemed redundant, the rename that looked like cleanup, or the exception path nobody thought to test. The code was different, but the outcome was identical.
 
 I was tired of being mediocre. I wanted to be better, and I knew I could be. It was time to step up my game.
 
@@ -54,7 +54,7 @@ Twenty rules total. Every one of them came from a production failure I either ca
 
 My first build was called PreCommitGuard. I took the checklist and turned it into a proof of concept, an LLM-evaluated gate that ran my rules against every diff before commit. 
 
-**It worked for me, really, really well, but it ended up falling apart the moment I stress-tested it seriously.**
+**It worked for me, really, really well, however I began to notice that it would "forget" to run some rules or behave in unexpexted ways.**
 
 The problem cuts to the core: LLMs are probabilistic, and thus may never be truly capable of being deterministic, which in software development is something that simply cannot be. Even their own documentation admits they are non-deterministic, but that is only half the problem. These models are trained on the entirety of the internet, a repository containing vast amounts of high-quality code, but also an ocean of misinformation, outdated patterns, and specious logic. 
 

@@ -66,15 +66,27 @@ NullReferenceException deeper in the call stack.
 
 ## See it live - before installing anything
 
-The [GauntletCI-Demo repo](https://github.com/EricCogen/GauntletCI-Demo/pulls) is a realistic ASP.NET Core `OrderService` with 22 scenarios across 3 tiers:
+The [GauntletCI-Demo repo](https://github.com/EricCogen/GauntletCI-Demo/pulls) is a realistic ASP.NET Core `OrderService` with 36 scenarios across 3 tiers:
 
 - Tier 1: 6 headline scenarios (core rules)
 - Tier 2: 12 single-rule scenarios (one rule per scenario)
-- Tier 3: 4 behavioral regression scenarios with multi-tool competitive analysis
+- Tier 3: 18 behavioral regression scenarios showing diff-based detection
 
-View the live demo results and multi-tool findings comparison (CodeQL, Semgrep, StyleCop, Snyk, GauntletCI running side-by-side):
+GauntletCI detects **behavioral change risks** by analyzing what changed in your git diff. Traditional SAST tools (CodeQL, Semgrep, SonarQube, etc.) scan whole-project snapshots during CI. Both approaches are valid—they answer different questions:
 
-[Browse live demo PRs](https://github.com/EricCogen/GauntletCI-Demo/pulls) | [View Tier 3 competitive analysis](https://github.com/EricCogen/GauntletCI-Demo/blob/feature/add-4-scenarios/DEMO_FINDINGS.md)
+- **SAST tools catch known vulnerability signatures** across the codebase
+- **GauntletCI catches behavioral deltas** (structural mutations, sequence changes, boundary drifts) in your specific change
+
+The 18 Tier 3 scenarios demonstrate the class of issues GauntletCI detects that whole-project analysis tools cannot efficiently catch during CI:
+- Authorization boundary removals in diffs
+- Execution order changes between valid statements
+- CancellationToken propagation loss in call stacks
+- API contract drifts in the specific change
+- Configuration changes and scope mismatches
+
+Each compiles cleanly, passes all tests, and would pass SAST gates—but introduces behavioral risk visible only in diff-level analysis.
+
+[Browse live demo PRs](https://github.com/EricCogen/GauntletCI-Demo/pulls) | [View detailed analysis](https://github.com/EricCogen/GauntletCI-Demo/blob/main/DEMO_FINDINGS.md)
 
 | PR | Scenario | Expected verdict |
 |----|----------|-----------------|
