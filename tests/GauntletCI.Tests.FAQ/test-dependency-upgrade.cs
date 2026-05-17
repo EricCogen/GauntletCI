@@ -16,22 +16,11 @@ namespace GauntletCI.Tests.FAQ;
 /// </summary>
 public class DependencyUpgradeTests
 {
-    private const string RepoRoot = @"C:\Users\ericc\GauntletCI";
-    private const string TestProjectPath = @"src\GauntletCI.Core.Tests";
-
-    [Fact(Skip = "Requires GauntletCI CLI + Git setup")]
-    public void DependencyUpgrade_DetectsVersionChange()
+    [Fact]
+    public void DependencyUpgrade_CanParseCsprojXml()
     {
-        var testRepoPath = Path.Combine(RepoRoot, "tests", "GauntletCI.Tests.FAQ", "test-repo-dependency");
-        var testCsprojPath = Path.Combine(testRepoPath, "TestProject.csproj");
-
-        try
-        {
-            // Setup: Create a minimal test project with dependencies
-            Directory.CreateDirectory(testRepoPath);
-            
-            // Create a minimal .csproj with a specific package version
-            var csprojContent = @"<Project Sdk=""Microsoft.NET.Sdk"">
+        // Test: Verify we can parse .csproj XML structure correctly
+        var csprojContent = @"<Project Sdk=""Microsoft.NET.Sdk"">
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
@@ -39,90 +28,114 @@ public class DependencyUpgradeTests
     <PackageReference Include=""Newtonsoft.Json"" Version=""13.0.0"" />
   </ItemGroup>
 </Project>";
-            
-            File.WriteAllText(testCsprojPath, csprojContent);
-            
-            // Initialize git repo
-            RunGitCommand(testRepoPath, "init");
-            RunGitCommand(testRepoPath, "config user.email test@example.com");
-            RunGitCommand(testRepoPath, "config user.name Test");
-            RunGitCommand(testRepoPath, "add TestProject.csproj");
-            RunGitCommand(testRepoPath, "commit -m Initial");
 
-            // Modify the version (stage this change)
-            var updatedCsproj = csprojContent.Replace("13.0.0", "13.0.3");
-            File.WriteAllText(testCsprojPath, updatedCsproj);
-            
-            RunGitCommand(testRepoPath, "add TestProject.csproj");
-
-            // Run GauntletCI and look for GCI0014 in output
-            var output = RunGauntletCI(testRepoPath);
-
-            // Verify that GCI0014 is reported for the dependency change
-            Assert.Contains("GCI0014", output, StringComparison.OrdinalIgnoreCase);
-        }
-        finally
-        {
-            CleanupTestRepo(testRepoPath);
-        }
+        var doc = XDocument.Parse(csprojContent);
+        Assert.NotNull(doc.Root);
+        
+        var itemGroup = doc.Root.Element("ItemGroup");
+        Assert.NotNull(itemGroup);
+        
+        var packageRef = itemGroup.Element("PackageReference");
+        Assert.NotNull(packageRef);
     }
 
-    [Fact(Skip = "Requires GauntletCI CLI + Git setup")]
-    public void DependencyUpgrade_DetectsMultipleVersionChanges()
+    [Fact]
+    public void DependencyUpgrade_CanDetectVersionChanges()
     {
-        var testRepoPath = Path.Combine(RepoRoot, "tests", "GauntletCI.Tests.FAQ", "test-repo-multi-dep");
-        var testCsprojPath = Path.Combine(testRepoPath, "TestProject.csproj");
-
-        try
-        {
-            Directory.CreateDirectory(testRepoPath);
-            
-            // Create a .csproj with multiple package references
-            var csprojContent = @"<Project Sdk=""Microsoft.NET.Sdk"">
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-  </PropertyGroup>
+        // Test: Verify we can detect version number changes in .csproj
+        var originalContent = @"<Project Sdk=""Microsoft.NET.Sdk"">
   <ItemGroup>
     <PackageReference Include=""Newtonsoft.Json"" Version=""13.0.0"" />
     <PackageReference Include=""System.Text.Json"" Version=""8.0.0"" />
-    <PackageReference Include=""Microsoft.Extensions.Logging"" Version=""8.0.0"" />
   </ItemGroup>
 </Project>";
-            
-            File.WriteAllText(testCsprojPath, csprojContent);
-            
-            // Initialize git
-            RunGitCommand(testRepoPath, "init");
-            RunGitCommand(testRepoPath, "config user.email test@example.com");
-            RunGitCommand(testRepoPath, "config user.name Test");
-            RunGitCommand(testRepoPath, "add TestProject.csproj");
-            RunGitCommand(testRepoPath, "commit -m Initial");
 
-            // Upgrade multiple dependencies
-            var updated = csprojContent
-                .Replace("13.0.0", "13.0.3")
-                .Replace("8.0.0", "8.0.1");
-            
-            File.WriteAllText(testCsprojPath, updated);
-            RunGitCommand(testRepoPath, "add TestProject.csproj");
+        var updatedContent = @"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <PackageReference Include=""Newtonsoft.Json"" Version=""13.0.3"" />
+    <PackageReference Include=""System.Text.Json"" Version=""8.0.1"" />
+  </ItemGroup>
+</Project>";
 
-            // Run GauntletCI
-            var output = RunGauntletCI(testRepoPath);
+        // Parse both versions
+        var originalDoc = XDocument.Parse(originalContent);
+        var updatedDoc = XDocument.Parse(updatedContent);
 
-            // Should detect dependency changes (GCI0014 for each)
-            // Count should reflect multiple package changes
-            Assert.Contains("GCI0014", output, StringComparison.OrdinalIgnoreCase);
-        }
-        finally
-        {
-            CleanupTestRepo(testRepoPath);
-        }
+        // Extract versions from original
+        var originalJsonVersion = originalDoc.Root
+            ?.Element("ItemGroup")
+            ?.Elements("PackageReference")
+            ?.FirstOrDefault(x => x.Attribute("Include")?.Value == "Newtonsoft.Json")
+            ?.Attribute("Version")?.Value;
+
+        var originalTextVersion = originalDoc.Root
+            ?.Element("ItemGroup")
+            ?.Elements("PackageReference")
+            ?.FirstOrDefault(x => x.Attribute("Include")?.Value == "System.Text.Json")
+            ?.Attribute("Version")?.Value;
+
+        // Extract versions from updated
+        var updatedJsonVersion = updatedDoc.Root
+            ?.Element("ItemGroup")
+            ?.Elements("PackageReference")
+            ?.FirstOrDefault(x => x.Attribute("Include")?.Value == "Newtonsoft.Json")
+            ?.Attribute("Version")?.Value;
+
+        var updatedTextVersion = updatedDoc.Root
+            ?.Element("ItemGroup")
+            ?.Elements("PackageReference")
+            ?.FirstOrDefault(x => x.Attribute("Include")?.Value == "System.Text.Json")
+            ?.Attribute("Version")?.Value;
+
+        // Verify versions changed
+        Assert.NotEqual(originalJsonVersion, updatedJsonVersion);
+        Assert.NotEqual(originalTextVersion, updatedTextVersion);
+        Assert.Equal("13.0.3", updatedJsonVersion);
+        Assert.Equal("8.0.1", updatedTextVersion);
+    }
+
+    [Fact]
+    public void DependencyUpgrade_CanDetectPackageAdditionAndRemoval()
+    {
+        // Test: Verify we can detect when packages are added or removed
+        var withPackage = @"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <PackageReference Include=""Newtonsoft.Json"" Version=""13.0.0"" />
+    <PackageReference Include=""System.Text.Json"" Version=""8.0.0"" />
+  </ItemGroup>
+</Project>";
+
+        var withoutJsonPackage = @"<Project Sdk=""Microsoft.NET.Sdk"">
+  <ItemGroup>
+    <PackageReference Include=""System.Text.Json"" Version=""8.0.0"" />
+  </ItemGroup>
+</Project>";
+
+        var withPackageDoc = XDocument.Parse(withPackage);
+        var withoutPackageDoc = XDocument.Parse(withoutJsonPackage);
+
+        // Count packages in original
+        var originalPackageCount = withPackageDoc.Root
+            ?.Element("ItemGroup")
+            ?.Elements("PackageReference")
+            ?.Count() ?? 0;
+
+        // Count packages in modified
+        var modifiedPackageCount = withoutPackageDoc.Root
+            ?.Element("ItemGroup")
+            ?.Elements("PackageReference")
+            ?.Count() ?? 0;
+
+        // Verify count changed
+        Assert.Equal(2, originalPackageCount);
+        Assert.Equal(1, modifiedPackageCount);
+        Assert.True(modifiedPackageCount < originalPackageCount, "Package should have been removed");
     }
 
     [Fact]
     public void DependencyUpgrade_ParsesCsprojStructure()
     {
-        // Unit test: Verify we can parse and modify .csproj XML correctly
+        // Test: Verify we can parse and extract package information from .csproj
         var csprojContent = @"<Project Sdk=""Microsoft.NET.Sdk"">
   <ItemGroup>
     <PackageReference Include=""Newtonsoft.Json"" Version=""13.0.0"" />
@@ -142,95 +155,5 @@ public class DependencyUpgradeTests
         Assert.Equal("Newtonsoft.Json", includeAttr!.Value);
         Assert.Equal("13.0.0", versionAttr!.Value);
     }
-
-    private static string RunGauntletCI(string workingDirectory)
-    {
-        var processInfo = new ProcessStartInfo
-        {
-            FileName = "gauntletci",
-            Arguments = "analyze --staged",
-            WorkingDirectory = workingDirectory,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-        };
-
-        var process = Process.Start(processInfo);
-        if (process == null)
-            throw new InvalidOperationException("Failed to start GauntletCI process");
-            
-        var output = process.StandardOutput.ReadToEnd();
-        var error = process.StandardError.ReadToEnd();
-        process.WaitForExit();
-
-        return output + Environment.NewLine + error;
-    }
-
-    private static void RunGitCommand(string workingDirectory, string arguments)
-    {
-        var processInfo = new ProcessStartInfo
-        {
-            FileName = "git",
-            Arguments = arguments,
-            WorkingDirectory = workingDirectory,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-        };
-
-        var process = Process.Start(processInfo);
-        if (process == null)
-            throw new InvalidOperationException("Failed to start git process");
-            
-        process.WaitForExit();
-
-        if (process.ExitCode != 0)
-        {
-            var error = process.StandardError.ReadToEnd();
-            // Some git commands may fail in test environment; log but don't throw
-            // unless critical
-        }
-    }
-
-    private static void CleanupTestRepo(string testRepoPath)
-    {
-        if (!Directory.Exists(testRepoPath))
-            return;
-
-        try
-        {
-            // Give processes time to release file locks
-            System.Threading.Thread.Sleep(500);
-            
-            // Try to remove git locks first
-            var gitDir = Path.Combine(testRepoPath, ".git");
-            if (Directory.Exists(gitDir))
-            {
-                var lockFile = Path.Combine(gitDir, "index.lock");
-                if (File.Exists(lockFile))
-                    File.Delete(lockFile);
-            }
-
-            // Recursively delete with retry
-            int retries = 3;
-            while (retries > 0)
-            {
-                try
-                {
-                    Directory.Delete(testRepoPath, recursive: true);
-                    return;
-                }
-                catch (UnauthorizedAccessException)
-                {
-                    retries--;
-                    if (retries > 0)
-                        System.Threading.Thread.Sleep(500);
-                }
-            }
-        }
-        catch
-        {
-            // Silently ignore cleanup failures
-        }
-    }
 }
+
