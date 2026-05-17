@@ -17,13 +17,13 @@ Code review confirms intent.
 
 **Neither validates what your change actually does.**
 
-GauntletCI detects **Behavioral Change Risk** in pull request diffs: logic shifts, missing validations, and hidden regressions that compile cleanly, pass every test, and survive code review.
+GauntletCI detects [**Behavioral Change Risk**](docs/change-risk-thesis.md) in pull request diffs: logic shifts, missing validations, and hidden regressions that compile cleanly, pass every test, and survive code review.
 
 ---
 
 ## What is GauntletCI?
 
-GauntletCI is a diff-first, merge-time **Behavioral Change Risk** detector for .NET.
+GauntletCI is a diff-first, merge-time [**Behavioral Change Risk**](docs/change-risk-thesis.md) detector for .NET.
 
 It analyzes what changed, not the full codebase, and flags changes whose behavioral impact is unverified before they reach production.
 
@@ -190,31 +190,56 @@ Sample Tier 1 scenarios:
 
 GauntletCI ships with detection rules organized across 8 production risk tiers. The rule set is actively maintained: rules are added, refined, and occasionally retired as the engine matures.
 
-### Tier 1: Structural & Scope Integrity
+### Tier 1: [Structural & Scope Integrity](docs/rules/README.md#tier-1)
 Changes that contaminate a diff with unrelated concerns, making behavioral review unreliable.
 
-### Tier 2: Behavioral & Correctness Risk
+### Tier 2: [Behavioral & Correctness Risk](docs/rules/README.md#tier-2)
 Control-flow removals without test coverage. Method signature changes without contract updates. These are the changes most likely to produce silent regressions.
 
-### Tier 3: Security & Compliance
-Hardcoded secrets and infrastructure values. SQL injection patterns. Deprecated cryptography. PII written to log output.
+### Tier 3: [Security & Compliance](docs/rules/README.md#tier-3)
+Hardcoded secrets and infrastructure values. SQL injection patterns. Deprecated cryptography. PII written to log output. Key rules: [GCI0012 - Secret Hygiene](docs/rules/GCI0012-secret-hygiene.md) | [GCI0029 - PII Logging Leak](docs/rules/GCI0029-pii-logging-leak.md)
 
-### Tier 4: Resource & Concurrency Safety
-Async deadlocks. Disposable leaks. Missing idempotency guarantees on retry-eligible endpoints. Unsafe shared state.
+### Tier 4: [Resource & Concurrency Safety](docs/rules/README.md#tier-4)
+Async deadlocks. Disposable leaks. Missing idempotency guarantees on retry-eligible endpoints. Unsafe shared state. Key rule: [GCI0016 - Concurrency Safety](docs/rules/GCI0016-concurrency-safety.md)
 
-### Tier 5: Observability & Failure Handling
+### Tier 5: [Observability & Failure Handling](docs/rules/README.md#tier-5)
 Swallowed exceptions. Removed error-level logging from error-handling paths. Silent failures that remove production visibility.
 
-### Tier 6: Evidence & Test Completeness
+### Tier 6: [Evidence & Test Completeness](docs/rules/README.md#tier-6)
 New exception-throwing paths with no corresponding throw-assertion test coverage. Changes where the risk exists but no test evidence supports it.
 
-### Tier 7: Architecture & Structural Contracts
+### Tier 7: [Architecture & Structural Contracts](docs/rules/README.md#tier-7)
 Forbidden layer dependency violations. State mutation inside property getters, silent bugs in caching layers and serializers.
 
-### Tier 8: Dependency & Integration Safety
+### Tier 8: [Dependency & Integration Safety](docs/rules/README.md#tier-8)
 Service locator anti-patterns. Direct HttpClient instantiation bypassing the connection pool. HTTP calls missing cancellation tokens. Test methods without assertions.
 
 Rule IDs are non-contiguous (GCI0001-GCI0050). The gaps reflect rules that were retired, merged, or replaced as the engine matured. Existing rule IDs are never renumbered so that baseline fingerprints and suppression annotations remain stable across upgrades.
+
+---
+
+## Real-World Case Studies
+
+Learn from real incidents how GauntletCI detects behavioral changes in production code:
+
+### Security & Data Integrity
+- **[GCI0029 - PII Logging Leak](docs/case-studies/gci0029-pii-exposure.md)** - 18 months of plaintext passwords exposed, $2.1M GDPR settlement
+- **[GCI0012 - Secret Hygiene](docs/rules/GCI0012-secret-hygiene.md)** - Hardcoded API keys permanently in Git history
+- **[GCI0050 - SQL Column Truncation](docs/case-studies/gci0050-sql-truncation.md)** - Silent data loss during schema migrations
+- **[GCI0048 - Insecure Random](docs/case-studies/gci0048-insecure-random.md)** - Predictable tokens enable account takeover
+- **[GCI0039 - Insecure Deserialization](docs/case-studies/gci0039-insecure-serialization.md)** - Remote code execution via unsafe deserialization
+
+### Reliability & Concurrency
+- **[GCI0054 - Async Void Abuse](docs/case-studies/gci0054-async-void-abuse.md)** - Stack Overflow outages from unhandled exceptions
+- **[GCI0039 - Thread Exhaustion](docs/case-studies/gci0039-thread-exhaustion.md)** - Datadog outage: HTTP calls without timeouts hung entire service (45 min)
+- **[GCI0016 - Concurrency Safety](docs/rules/GCI0016-concurrency-safety.md)** - Race conditions cause non-deterministic data corruption
+
+### API Design & Idempotency
+- **[GCI0055 - Method Signature Change](docs/case-studies/gci0055-method-signature-change.md)** - .NET 10 regression: breaking parameter changes
+- **[GCI0022 - Duplicate Charge](docs/case-studies/gci0022-duplicate-charge.md)** - 147 duplicate charges, $23K in refunds (missing idempotency)
+- **[GCI0045 - Service Locator](docs/case-studies/gci0045-service-locator.md)** - Enterprise app with 47% service locator adoption, circular dependencies discovered late
+
+**[View all case studies →](docs/case-studies/README.md)**
 
 ---
 
