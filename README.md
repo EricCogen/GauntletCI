@@ -243,6 +243,20 @@ Learn from real incidents how GauntletCI detects behavioral changes in productio
 
 ---
 
+## Real Code Examples
+
+See how GauntletCI detects these risky patterns in real, open-source projects:
+
+- **[AngleSharp - Enum Removal](docs/risky-diffs/anglesharp-enum-removal.md)** - Breaking change in public API
+- **[Dapper - Null Forgiving](docs/risky-diffs/dapper-null-forgiving.md)** - Nullable reference type handling
+- **[EF Core - LINQ Loop](docs/risky-diffs/efcore-linq-loop.md)** - Query optimization pitfall
+- **[SharpCompress - Buffer Overflow](docs/risky-diffs/sharpcompress-overflow.md)** - Memory safety regression
+- **[StackExchange.Redis - Context Mutation](docs/risky-diffs/stackexchange-redis-context-mutation.md)** - Shared state safety
+
+**[View all examples →](docs/risky-diffs/README.md)**
+
+---
+
 ## Add GauntletCI to GitHub Actions
 
 Start in advisory mode first so your team can review findings before blocking merges:
@@ -310,6 +324,24 @@ Optional LLM integration (via Ollama, runs locally) adds plain-English explanati
 
 ---
 
+## How It Works
+
+GauntletCI's analysis pipeline:
+
+1. **Diff Ingestion** - Reads the staged changes
+2. **Config Loading** - Applies repository rules and ignores
+3. **Static Analysis** - Roslyn AST walk over changed files
+4. **Rule Evaluation** - 50+ deterministic rules check for behavioral risk
+5. **Post-Processing** - Aggregates findings, applies baselines, formats output
+
+**[Read the full architecture →](docs/architecture.md)** for details on:
+- How Roslyn compilation works without a full build
+- Dependency and symbol resolution strategies
+- [Architecture Decision Records (ADRs)](docs/architecture/) for design trade-offs
+- [Coordination platform design](docs/architecture/coordination-platform-reference.md) for concurrent rule execution
+
+---
+
 ## What to do with a finding
 
 A GauntletCI finding is not a claim that code is definitely broken. It is a signal that behavioral impact is unverified.
@@ -347,6 +379,23 @@ No Behavioral Change Risk signals were identified in the diff. This does not gua
 - No code leaves your machine
 - Auto-redaction prevents sensitive data in finding output
 - Telemetry is opt-in
+
+---
+
+## Help & Troubleshooting
+
+Having issues with GauntletCI?
+
+**[Troubleshooting Guide](docs/TROUBLESHOOTING.md)** - Common problems and solutions:
+- Finding not appearing in output
+- Configuration not being read
+- False positives or false negatives
+- Performance tuning
+
+**[Advanced Tuning](docs/troubleshooting/phase-21-tuning.md)** - For operators:
+- Rule sensitivity configuration
+- Performance optimization
+- Integration with other CI tools
 
 ---
 
@@ -515,9 +564,17 @@ If a throw or architectural shift is intentionally designed to bubble up to a gl
 
 ## Documentation & Links
 
+### Getting Started
 - **[Documentation Hub](docs/)** - Full documentation index
+- **[CLI Reference](docs/cli-reference.md)** - Complete command-line usage
 - **[Contributing Guide](docs/contributing.md)** - How to contribute
+
+### Learn More
+- **[Features & Benefits](docs/features-benefits.md)** - Complete feature matrix
+- **[Behavioral Change Risk Research](docs/change-risk-research.md)** - Academic foundations
 - **[Project Information](docs/project/)** - Charter, history, governance
+
+### Deployment & Security
 - **[Security Policy](docs/security.md)** - Vulnerability reporting
 - **[Support](docs/support.md)** - Getting help
 - **[Release Notes](RELEASE_NOTES_v2.4.0-phase21-coordinations.md)** - Current version
