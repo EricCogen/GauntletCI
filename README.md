@@ -57,6 +57,38 @@ It does not replace static analysis, security scanning, tests, or code review. I
 
 ---
 
+## Technical Architecture: GauntletCI vs. Traditional CI
+
+To understand why GauntletCI is fast and private, it helps to see how it works fundamentally differently from post-commit pipelines:
+
+| Vector | Traditional CI Pipelines (Post-Commit) | GauntletCI (Pre-Commit Inner Loop) |
+| --- | --- | --- |
+| **Execution Trigger** | Push to remote branch / PR creation. | Local `git commit` hook or manual CLI invocation. |
+| **Analysis Scope** | Whole-project compilation and full test-suite execution. | Staged Git diff isolation via localized Roslyn AST parsing. |
+| **Feedback Loop** | 5 to 20+ minutes (Context switch required). | **Sub-second (<0.5s)** (Immediate local feedback). |
+| **Data Privacy** | Code is transmitted to third-party cloud runners. | **100% Local.** No external API calls, zero data exfiltration. |
+| **Target Risk** | Functional regressions (via unit/integration tests). | **Behavioral Change Risk (BCR)** (Silent exception paths, unverified logic). |
+
+### How It Works: The Diff-Isolation Engine
+
+Instead of executing a heavy build-and-scan pass, GauntletCI intercepts the inner loop at the syntax level:
+
+```
+[Staged Changes] ──> [Git Diff Extraction] ──> [Targeted Roslyn AST Parse] ──> [Deterministic Rule Evaluation]
+                                                                                       │
+  ┌─────────────────────────────────── COLD STOP ────────────────────────────────────────┤
+  ▼                                                                                      ▼
+[Risk Detected: Block Commit]                                                  [Clean: Pass to Git Engine]
+```
+
+1. **Extraction:** The engine queries the local Git index to isolate modified lines and files.
+2. **Targeted Parsing:** Only the affected source files are loaded into syntax trees, omitting unchanged projects or assemblies.
+3. **Rule Application:** 30+ deterministic rules (e.g., `GCI0003` for guard clause removal, `GCI0007` for swallowed exceptions) evaluate the structural delta between the pre-image and post-image of the code.
+
+This approach means GauntletCI runs before you push, gives instant feedback, and never sees your code outside your machine.
+
+---
+
 ## The Change That Looked Safe
 
 ```diff
