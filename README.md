@@ -567,7 +567,7 @@ If a throw or architectural shift is intentionally designed to bubble up to a gl
 ### Getting Started
 - **[Documentation Hub](docs/)** - Full documentation index
 - **[CLI Reference](docs/cli-reference.md)** - Complete command-line usage
-- **[Contributing Guide](docs/contributing.md)** - How to contribute
+- **[Contributing Guide](CONTRIBUTING.md)** - How to contribute
 
 ### Learn More
 - **[Features & Benefits](docs/features-benefits.md)** - Complete feature matrix
@@ -575,10 +575,9 @@ If a throw or architectural shift is intentionally designed to bubble up to a gl
 - **[Project Information](docs/project/)** - Charter, history, governance
 
 ### Deployment & Security
-- **[Security Policy](docs/security.md)** - Vulnerability reporting
-- **[Support](docs/support.md)** - Getting help
-- **[Release Notes](RELEASE_NOTES_v2.4.0-phase21-coordinations.md)** - Current version
-- **[Deployment Guide](DEPLOYMENT_CHECKLIST_v2.4.0.md)** - Deployment instructions
+- **[Security Policy](SECURITY.md)** - Vulnerability reporting
+- **[Support](SUPPORT.md)** - Getting help
+- **[Release Notes](docs/release-notes/RELEASE_NOTES_v2.4.0-phase21-coordinations.md)** - Current version
 
 ---
 
