@@ -347,6 +347,31 @@ Questions? Ideas? Found a false positive?
 
 ---
 
+## FAQ & Architectural Trade-offs
+
+### How can a diff-only tool have full context? Doesn't it miss the surrounding code?
+
+GauntletCI uses Git to isolate *which* files have staged modifications, but it does not evaluate those files as raw text snippets. The engine loads the **entire source file** into a local Roslyn `SyntaxTree`.
+
+This means rules have full structural context within the modified files. For example, if a rule flags a potential unhandled exception path introduced inside a modified code block, it automatically walks up the syntax tree node ancestors to check if an enclosing `try/catch` block further up the file already mitigates the risk.
+
+### What about cross-project or semantic breaking changes?
+
+Because GauntletCI optimizes for sub-second execution in the local pre-commit inner loop, it skips full project compilation and assembly linking.
+
+* **What it catches:** Behavioral Change Risk (BCR) within the logical units you are actively modifying—such as silent exception leaks, algorithmic shifts, or structural regressions lacking test coverage.
+* **What it leaves to your CI/Compiler:** Cross-assembly breaking changes (e.g., changing a method signature in Project A that breaks an uncompiled consumer in Project B).
+
+GauntletCI is designed to act as a fast, localized safety net *before* your compiler or remote CI pipeline handles whole-project verification.
+
+### We already use IDE Analyzers (SonarLint/Roslynators). Why do we need this?
+
+Traditional analyzers evaluate the **state** of an entire codebase, which frequently leads to massive warning fatigue on legacy systems—developers end up suppressing or ignoring them.
+
+GauntletCI evaluates the **delta**. It introduces a temporal constraint: it only executes rules against code that is actively being staged for a commit. It doesn't nag you about historical technical debt; it strictly prevents the introduction of *new, unvalidated behavioral risk paths*.
+
+---
+
 ## License
 
 Elastic License 2.0
