@@ -1,0 +1,33 @@
+Phase 5: Implement GCI0020 Resource Exhaustion Pattern Detection
+
+Detects common patterns leading to resource exhaustion vulnerabilities:
+
+Pattern 1: Timeout/Deadline Removal (80% confidence)
+  - Flags removed timeout/TimeSpan assignments
+  - Prevents indefinite operations
+
+Pattern 2: Iteration Limit Removal (80% confidence)
+  - Detects removed loop limits (maxIterations, etc.)
+  - Catches infinite loop vulnerabilities like CVE-2019-0981
+
+Pattern 3: Resource Allocation Increase (70% confidence)
+  - Flags significant increases in connection/thread limits
+  - 5x threshold to avoid over-flagging
+
+Pattern 4: Resource Cleanup Removal (75% confidence)
+  - Detects using statement / Dispose call removal
+  - Prevents resource leaks
+
+Pattern 5: Async Operation Addition (65% confidence)
+  - Flags new Task.Run/Task.Factory usage
+  - Warns about unbounded concurrency
+
+Test coverage:
+- 9 tests covering all 5 patterns
+- Tests for false positive avoidance
+- Tests for safe replacements (timeouts replaced, limits re-added)
+
+All 1212 tests passing.
+Rule count updated from 30 to 31.
+
+Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>

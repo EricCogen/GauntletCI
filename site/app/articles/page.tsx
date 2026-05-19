@@ -104,6 +104,64 @@ const articles = [
     tags: ["SonarQube", ".NET", "Code Quality", "PR Gating"],
     readTime: "9 min read",
   },
+  {
+    href: "/articles/corpus-report-2025",
+    title: "GauntletCI Corpus Analysis 2025: 610 Merged PRs, 40K+ Findings",
+    description:
+      "Comprehensive analysis of 610 enterprise .NET pull requests across 10 repositories. Documents the distribution of behavioral risks: signature changes, API exposure violations, null safety issues, and resource lifecycle problems.",
+    tags: ["Corpus Analysis", "Enterprise .NET", "Findings"],
+    readTime: "10 min read",
+    pinned: true,
+  },
+  {
+    href: "/articles/azure-sdk-pr-57223-risk-analysis",
+    title: "Azure SDK PR #57223: 6,650+ Unique Behavioral Risk Signals Across 3 Framework Versions",
+    description:
+      "Microsoft's Azure SDK PR #57223 generated 6,650+ unique behavioral risk signals across .NET 10.0, 8.0, and .NET Standard 2.0. Deep-dive into API exposure violations, breaking signature changes, and multiframework compatibility risks.",
+    tags: ["Azure SDK", ".NET", "API Design", "Breaking Changes"],
+    readTime: "12 min read",
+    pinned: true,
+  },
+  {
+    href: "/articles/log4net-pr-201-analysis",
+    title: "Apache log4net PR #201: 3,753+ Risk Signals in Logging Infrastructure",
+    description:
+      "Enterprise logging refactoring with 3,753 behavioral risk signals. Analyze signature changes, API exposure violations, and reflection-based access patterns in foundational logging library.",
+    tags: ["log4net", "Logging", "Infrastructure", "Enterprise"],
+    readTime: "9 min read",
+  },
+  {
+    href: "/articles/google-api-pr-3150-analysis",
+    title: "Google API .NET Client PR #3150: 3,548+ Risk Signals in Auto-Generated APIs",
+    description:
+      "Auto-generated API client regeneration with 3,548 behavioral risks. Resource lifecycle issues, API exposure changes, and null dereference risks in widely-used Google API bindings.",
+    tags: ["Google APIs", "Auto-Generated Code", "API Design"],
+    readTime: "9 min read",
+  },
+  {
+    href: "/articles/stackexchange-redis-pr-3028",
+    title: "StackExchange.Redis PR #3028: 3,097+ Risk Signals in Production Caching",
+    description:
+      "Major async/await refactoring in production caching library. Analysis of 1,300+ concurrent operation pattern changes, signature modifications, and null dereference risks.",
+    tags: ["StackExchange.Redis", "Caching", "Async", "Production Systems"],
+    readTime: "10 min read",
+  },
+  {
+    href: "/articles/grpc-dotnet-pr-2531",
+    title: "gRPC-dotnet PR #2531: 2,600+ Risk Signals in Distributed RPC Framework",
+    description:
+      "RPC service definition restructuring with 2,600 behavioral risks. Signature changes and API exposure modifications in framework used by millions of microservices.",
+    tags: ["gRPC", "Distributed Systems", "RPC", "Microservices"],
+    readTime: "9 min read",
+  },
+  {
+    href: "/articles/anglesharp-pr-1159-analysis",
+    title: "AngleSharp PR #1159: 1,793+ Risk Signals in HTML Parsing Engine",
+    description:
+      "HTML and CSS parser refactoring with 1,793 behavioral risks. Signature changes and DOM API modifications in web scraping and content processing library.",
+    tags: ["AngleSharp", "HTML Parsing", "Web", "API Design"],
+    readTime: "9 min read",
+  },
 ];
 
 export default function ArticlesPage() {
