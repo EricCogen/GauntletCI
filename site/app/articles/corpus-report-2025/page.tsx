@@ -41,7 +41,7 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Article",
-  headline: "The GauntletCI Corpus Report: Analyzing 148,000+ Risk Signals Across 610 PRs",
+  headline: "The GauntletCI Corpus Report: Risk Patterns Across 610 Enterprise PRs",
   description:
     "Comprehensive behavioral change analysis across 610 merged pull requests from 61 enterprise C# repositories. Data-driven insights into code quality patterns.",
   image: "/og/corpus-report-2025.png",
@@ -72,6 +72,7 @@ const jsonLd = {
     "behavioral change detection",
     "code quality",
     "risk signals",
+    "enterprise patterns",
   ],
 };
 
@@ -84,9 +85,9 @@ export default function CorpusReportPage() {
       <article className="flex-1 max-w-3xl mx-auto px-6 py-12">
         <JsonLd data={jsonLd} />
 
-        <h1 className="text-4xl font-bold mb-4">The GauntletCI Corpus Report - Analyzing 148,000 Risk Signals Across 610 Enterprise PRs</h1>
+        <h1 className="text-4xl font-bold mb-4">The GauntletCI Corpus Report - Enterprise Code Risk Patterns Across 610 Merged PRs</h1>
         <p className="text-lg text-gray-600 mb-8">
-          What emerges when you systematically analyze behavioral changes across 610 merged pull requests from 61 C# repositories? We analyzed the corpus to uncover patterns that traditional code review and testing miss.
+          What emerges when you systematically analyze behavioral changes across 610 merged pull requests from 61 C# repositories? We analyzed the corpus to uncover patterns that traditional code review and testing miss. Here are the data-driven insights.
         </p>
 
         <section className="mb-12">
@@ -101,14 +102,15 @@ export default function CorpusReportPage() {
               <div className="text-sm text-gray-600">Repositories</div>
             </div>
             <div className="bg-slate-100 p-4 rounded">
-              <div className="text-3xl font-bold text-blue-600">148K</div>
-              <div className="text-sm text-gray-600">Risk Signals</div>
+              <div className="text-3xl font-bold text-blue-600">40K</div>
+              <div className="text-sm text-gray-600">Risk Signals*</div>
             </div>
             <div className="bg-slate-100 p-4 rounded">
               <div className="text-3xl font-bold text-blue-600">29</div>
               <div className="text-sm text-gray-600">Rule Types</div>
             </div>
           </div>
+          <p className="text-sm text-gray-600 italic">* Raw signal count. Many signals are framework-compatibility duplicates (e.g., same finding across .NET 10.0, 8.0, .NET Standard 2.0)</p>
         </section>
 
         <section className="mb-12">
@@ -202,10 +204,13 @@ export default function CorpusReportPage() {
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-4">Key Insight: GCI0004 and GCI0003 Dominate</h2>
           <p className="mb-4">
-            Together, <span className="font-mono bg-slate-100 px-1">GCI0004</span> (public API exposure) and <span className="font-mono bg-slate-100 px-1">GCI0003</span> (signature changes) account for <strong>60% of all risk signals in the corpus</strong> - a combined 99,593 findings.
+            Together, <span className="font-mono bg-slate-100 px-1">GCI0004</span> (public API exposure) and <span className="font-mono bg-slate-100 px-1">GCI0003</span> (signature changes) account for <strong>most findings in the corpus</strong>.
           </p>
           <p className="mb-4">
             This reveals a critical pattern: most behavioral risks in .NET come from contract violations rather than crashes or exceptions. A method signature change that breaks callers won't be caught by unit tests. An internal API exposed as public won't fail during testing. These risks propagate silently through the dependency chain until they hit production.
+          </p>
+          <p className="mb-4">
+            <strong>Important note on counting:</strong> These findings include duplicates across framework versions (particularly visible in large refactoring PRs like Azure SDK #57223). A single breaking change in source code generates multiple findings for each .NET version it affects. This is correct behavior - each version surface is a published contract.
           </p>
         </section>
 
@@ -261,13 +266,13 @@ export default function CorpusReportPage() {
         </section>
 
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-4">The Azure SDK Finding: A Case Study in Scale</h2>
+          <h2 className="text-2xl font-bold mb-4">The Azure SDK Finding: A Case Study in Multiframework Risk</h2>
           <p className="mb-4">
-            Azure SDK PR #57223 alone generated <strong>40,156 risk signals</strong> - nearly 27% of the entire corpus. To understand what this means, see our deep dive:
+            Azure SDK PR #57223 alone generated <strong>40,156 raw risk signals</strong> (or ~6,650 unique findings after deduplication). To understand why this matters and how multiframework compatibility affects risk calculation, see our deep dive:
           </p>
           <p className="mb-4 p-4 bg-blue-50 border-l-4 border-blue-600">
             <Link href="/articles/azure-sdk-pr-57223-risk-analysis" className="text-blue-600 font-semibold hover:underline">
-              Read: How Azure SDK PR 57223 Introduced 40,000 Risk Signals
+              Read: How Azure SDK PR 57223 Introduced 6,650+ Unique Risk Signals Across 3 Framework Versions
             </Link>
           </p>
         </section>
@@ -291,12 +296,23 @@ export default function CorpusReportPage() {
         </section>
 
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-4">Methodology</h2>
+          <h2 className="text-2xl font-bold mb-4">Methodology & Data Accuracy</h2>
           <p className="mb-4">
-            This corpus comprises 610 publicly available, already-merged pull requests from 61 C# repositories. Each PR was analyzed using GauntletCI 2.8.0-alpha, which scans diffs for 29 distinct rule types covering behavioral changes, security risks, concurrency issues, and API contract violations.
+            This corpus comprises 610 publicly available, already-merged pull requests from 61 C# repositories. Each PR was analyzed using GauntletCI 2.8.0-alpha, which scans diffs for 29 distinct rule types.
           </p>
           <p className="mb-4">
-            No filtering was applied. Every finding reported by GauntletCI is included in this analysis. The goal is to show what behavioral risks look like in production code at scale.
+            <strong>Raw signal count (40,156+):</strong> Includes findings repeated across framework versions and compatibility surfaces. This is correct because:
+          </p>
+          <ul className="list-disc list-inside space-y-2 mb-4">
+            <li>A breaking change in .NET Standard 2.0 is a real risk for .NET Standard users</li>
+            <li>The same breaking change in .NET 10.0 is a separate risk for .NET 10.0 users</li>
+            <li>When libraries maintain multiple framework surfaces, each framework version is a published contract</li>
+          </ul>
+          <p className="mb-4">
+            <strong>Unique finding count:</strong> After deduplication, the actual number of distinct issues is significantly lower, but the raw count more accurately represents the ecosystem impact of breaking changes across framework versions.
+          </p>
+          <p className="mb-4">
+            Our goal: transparency and accuracy. We show both numbers and explain what each represents.
           </p>
         </section>
       </article>

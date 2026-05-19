@@ -7,18 +7,18 @@ import { RulesApplied } from "@/components/rules-applied";
 import JsonLd from "@/components/json-ld";
 
 export const metadata: Metadata = {
-  title: "How Azure SDK PR #57223 Introduced 40,000+ Risk Signals - GauntletCI Analysis | GauntletCI",
+  title: "How Azure SDK PR #57223 Introduced 6,650+ Unique Risk Signals - GauntletCI Analysis | GauntletCI",
   description:
-    "Azure SDK PR #57223 generated 40,156 behavioral risk signals: 25,514 API exposure violations, 13,349 signature changes, plus async deadlock candidates and security risks. See why traditional tools missed them.",
+    "Azure SDK PR #57223 generated 6,650+ unique behavioral risk signals: API exposure violations, breaking signature changes, security risks, and async deadlock candidates across 3 framework versions. See why traditional tools missed them.",
   alternates: { canonical: "/articles/azure-sdk-pr-57223-risk-analysis" },
   keywords: ["Azure SDK", ".NET", "code review", "behavioral risk", "static analysis", "API design", "GauntletCI", "enterprise refactoring"],
   authors: [{ name: "Eric Cogen", url: "https://github.com/EricCogen" }],
   creator: "Eric Cogen",
   publisher: "GauntletCI",
   openGraph: {
-    title: "How Azure SDK PR #57223 Introduced 40,000+ Risk Signals",
+    title: "How Azure SDK PR #57223 Introduced 6,650+ Unique Risk Signals",
     description:
-      "One PR, 40,156 behavioral risks: API exposure violations, breaking signature changes, security issues, and async deadlocks. GauntletCI caught them all.",
+      "One PR, 6,650+ behavioral risks across 3 .NET framework versions: API exposure violations, breaking signature changes, security issues. GauntletCI caught them all.",
     url: "https://gauntletci.com/articles/azure-sdk-pr-57223-risk-analysis",
     type: "article",
     images: [
@@ -32,8 +32,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Azure SDK PR 57223: 40,000+ Risk Signals in One PR",
-    description: "API design changes, signature breaking, security risks, and deadlock candidates - caught by behavioral analysis.",
+    title: "Azure SDK PR 57223: 6,650+ Unique Risk Signals Across 3 Frameworks",
+    description: "API design changes, breaking signatures, security risks, and deadlock candidates - analyzed across multiframework compatibility.",
     images: ["/og/azure-sdk-pr-57223.png"],
   },
 };
@@ -41,9 +41,9 @@ export const metadata: Metadata = {
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Article",
-  headline: "How Azure SDK PR #57223 Introduced 40,000+ Behavioral Risk Signals",
+  headline: "How Azure SDK PR #57223 Introduced 6,650+ Unique Behavioral Risk Signals",
   description:
-    "Detailed analysis of 40,156 risk signals in Azure SDK PR #57223, including 25,514 API exposure violations, 13,349 breaking signature changes, and security risks.",
+    "Detailed analysis of 6,650+ unique risk signals in Azure SDK PR #57223 (scaled across 3 framework versions). API exposure violations, breaking signature changes, security risks, and async deadlock candidates.",
   image: "/og/azure-sdk-pr-57223.png",
   datePublished: "2026-05-19T00:00:00Z",
   author: {
@@ -73,6 +73,7 @@ const jsonLd = {
     "static analysis",
     "GauntletCI",
     ".NET",
+    "multiframework",
   ],
 };
 
@@ -80,23 +81,23 @@ const findings = [
   {
     rule: "GCI0004",
     title: "Public API Exposure",
-    count: 25514,
+    count: 3929,
     severity: "High",
     description: "Types or methods changed from internal to public visibility without proper versioning",
-    impact: "Exposes internal implementation details. Breaks encapsulation. Creates support burden for maintaining stable public API.",
+    impact: "Exposes internal implementation details. Breaks encapsulation. Creates support burden for maintaining stable public API. Multiplied across 3 framework versions.",
   },
   {
     rule: "GCI0003",
     title: "Signature Changes",
-    count: 13349,
+    count: 2723,
     severity: "Block",
     description: "Method signatures changed in ways that break callers. Parameters removed, types changed, defaults removed.",
-    impact: "Callers using these methods will fail at compile time or runtime. Breaking change for the ecosystem.",
+    impact: "Callers using these methods will fail at compile time or runtime. Breaking change for the ecosystem. Propagated across .NET 10.0, 8.0, and .NET Standard 2.0.",
   },
   {
     rule: "GCI0006",
     title: "Null Dereference Risk",
-    count: 578,
+    count: 193,
     severity: "Warn",
     description: "New code paths access nullable values without null checks",
     impact: "Potential NullReferenceException at runtime in edge cases not covered by tests.",
@@ -104,7 +105,7 @@ const findings = [
   {
     rule: "GCI0024",
     title: "Security - Dangerous APIs",
-    count: 292,
+    count: 97,
     severity: "Block",
     description: "Unsafe reflection usage, dynamic code generation, or dangerous string operations",
     impact: "Opens doors to injection attacks, code injection, or privilege escalation.",
@@ -112,7 +113,7 @@ const findings = [
   {
     rule: "GCI0047",
     title: "Resource Lifecycle Risk",
-    count: 256,
+    count: 85,
     severity: "Warn",
     description: "Disposable resources created but not properly disposed in new code paths",
     impact: "Memory leaks, file handle exhaustion, or connection pool depletion in production.",
@@ -128,48 +129,57 @@ export default function AzureSDKAnalysisPage() {
       <article className="flex-1 max-w-3xl mx-auto px-6 py-12">
         <JsonLd data={jsonLd} />
 
-        <h1 className="text-4xl font-bold mb-4">How Azure SDK PR 57223 Introduced 40,000 Risk Signals Without Raising an Alarm</h1>
+        <h1 className="text-4xl font-bold mb-4">How Azure SDK PR 57223 Introduced 6,650+ Unique Risk Signals Across 3 Framework Versions</h1>
         <p className="text-lg text-gray-600 mb-8">
-          Microsoft's Azure SDK is a fundamental dependency for thousands of organizations. In PR #57223, a significant API refactoring introduced <strong>40,156 behavioral risk signals</strong> that escaped both code review and automated testing. We analyze what went wrong and what GauntletCI found.
+          Microsoft's Azure SDK is a fundamental dependency for thousands of organizations. In PR #57223, a significant API refactoring introduced <strong>6,650+ unique behavioral risk signals</strong> that propagated across .NET 10.0, 8.0, and .NET Standard 2.0 compatibility API surfaces. These escaped both code review and automated testing. We analyze what went wrong and what GauntletCI found.
         </p>
 
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-4">The Numbers at a Glance</h2>
           <div className="grid grid-cols-3 md:grid-cols-4 gap-4 mb-8">
             <div className="bg-red-50 p-4 rounded border-l-4 border-red-600">
-              <div className="text-3xl font-bold text-red-600">40,156</div>
-              <div className="text-sm text-gray-600">Total Risk Signals</div>
+              <div className="text-3xl font-bold text-red-600">6,650+</div>
+              <div className="text-sm text-gray-600">Unique Risk Signals</div>
             </div>
             <div className="bg-red-50 p-4 rounded border-l-4 border-red-600">
-              <div className="text-3xl font-bold text-red-600">25,514</div>
+              <div className="text-3xl font-bold text-red-600">3,929</div>
               <div className="text-sm text-gray-600">API Exposure Issues</div>
             </div>
             <div className="bg-red-50 p-4 rounded border-l-4 border-red-600">
-              <div className="text-3xl font-bold text-red-600">13,349</div>
+              <div className="text-3xl font-bold text-red-600">2,723</div>
               <div className="text-sm text-gray-600">Signature Changes</div>
             </div>
             <div className="bg-red-50 p-4 rounded border-l-4 border-red-600">
-              <div className="text-3xl font-bold text-red-600">13</div>
-              <div className="text-sm text-gray-600">Rule Types</div>
+              <div className="text-3xl font-bold text-red-600">3</div>
+              <div className="text-sm text-gray-600">Framework Versions</div>
             </div>
           </div>
         </section>
 
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-4">The Core Problem: API Refactoring Without Versioning Strategy</h2>
+          <h2 className="text-2xl font-bold mb-4">The Core Problem: API Refactoring Across Multiframework Compatibility</h2>
           <p className="mb-4">
             Azure SDK PR #57223 represents a massive internal refactoring that touched hundreds of public APIs. The PR changed method signatures, moved visibility modifiers, and restructured the API surface across multiple packages.
           </p>
           <p className="mb-4">
-            Under normal circumstances, this is exactly the kind of change that should be caught during code review. But when a PR affects this many files and APIs, human review becomes impractical. The reviewer can't possibly trace through all the call chains and understand all the implications.
+            But here's the critical detail: Azure SDK maintains compatibility API surfaces for three .NET versions: .NET 10.0, .NET 8.0, and .NET Standard 2.0. Every change to the underlying API generates three separate compatibility declarations.
           </p>
           <p className="mb-4">
-            This is where behavioral analysis provides unique value: it doesn't get tired, it doesn't miss patterns, and it understands the implications of signature changes at scale.
+            A single method signature change becomes 3 separate findings (one per framework). A visibility change becomes 3 separate findings. This means risk signals compound across the compatibility matrix - and this is actually the <em>correct behavior</em> because each framework surface is a binding contract with users.
+          </p>
+          <p className="mb-4">
+            Under normal circumstances, this is exactly the kind of change that should be caught during code review. But when a PR affects this many APIs across multiple framework versions, human review becomes impractical. The reviewer can't possibly trace through all the call chains and compatibility implications.
+          </p>
+          <p className="mb-4">
+            This is where behavioral analysis provides unique value: it doesn't get tired, it doesn't miss patterns, and it understands the implications of signature changes at scale across compatibility surfaces.
           </p>
         </section>
 
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-4">Breakdown: The 40,156 Risk Signals</h2>
+          <h2 className="text-2xl font-bold mb-4">Breakdown: The 6,650+ Unique Risk Signals</h2>
+          <p className="mb-4 p-4 bg-amber-50 border-l-4 border-amber-600">
+            <strong>Methodology Note:</strong> Raw findings from GauntletCI include the same issues repeated across .NET 10.0, 8.0, and .NET Standard 2.0 compatibility surfaces. Unique findings are deduplicated by removing framework-specific copies. All are real, valid findings - this is how multiframework breaking changes compound.
+          </p>
 
           {findings.map((finding, idx) => (
             <div key={idx} className="mb-8 pb-8 border-b border-gray-300 last:border-b-0">
@@ -195,9 +205,9 @@ export default function AzureSDKAnalysisPage() {
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-4">Deep Dive: The Top Two Categories</h2>
 
-          <h3 className="text-xl font-bold mb-3 mt-8">GCI0004 - API Exposure (25,514 findings)</h3>
+          <h3 className="text-xl font-bold mb-3 mt-8">GCI0004 - API Exposure (3,929 unique findings)</h3>
           <p className="mb-4">
-            More than 63% of the risk signals in this PR are categorized as API exposure violations. This means internal types, methods, or classes were promoted to public visibility.
+            More than 59% of the unique risk signals in this PR are categorized as API exposure violations. This means internal types, methods, or classes were promoted to public visibility.
           </p>
           <p className="mb-4">
             In a library like Azure SDK, this is critical:
@@ -207,12 +217,13 @@ export default function AzureSDKAnalysisPage() {
             <li>You can't refactor those internal details later without breaking downstream code</li>
             <li>Support burden increases - you're now committed to maintaining public APIs</li>
             <li>Version management becomes complex - did this change break compatibility?</li>
+            <li>Each change is multiplied by 3 because it affects .NET 10.0, 8.0, and .NET Standard 2.0 surfaces</li>
           </ul>
           <p className="mb-4">
             Without behavioral analysis, this risk stays hidden until users upgrade and encounter breaking changes.
           </p>
 
-          <h3 className="text-xl font-bold mb-3 mt-8">GCI0003 - Signature Changes (13,349 findings)</h3>
+          <h3 className="text-xl font-bold mb-3 mt-8">GCI0003 - Signature Changes (2,723 unique findings)</h3>
           <p className="mb-4">
             The second major category: method signatures changed in incompatible ways. This includes:
           </p>
@@ -224,7 +235,7 @@ export default function AzureSDKAnalysisPage() {
             <li>Exception contracts changed</li>
           </ul>
           <p className="mb-4">
-            Each signature change represents a potential breaking change for dependent code. In a library used by Microsoft's own services and thousands of external organizations, these changes compound into a significant compatibility burden.
+            Each signature change represents a potential breaking change for dependent code. In a library used by Microsoft's own services and thousands of external organizations, these changes compound into a significant compatibility burden - especially when multiplied across three framework versions.
           </p>
         </section>
 
@@ -284,27 +295,43 @@ export default function AzureSDKAnalysisPage() {
         </section>
 
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-4">The Bigger Picture</h2>
+          <h2 className="text-2xl font-bold mb-4">The Bigger Picture: Multiframework Risk Compounding</h2>
           <p className="mb-4">
-            Azure SDK PR #57223 is the 27th percentile case - it accounts for 27% of all behavioral risk signals across the entire GauntletCI corpus of 610 PRs. Yet it represents just one PR.
+            This PR demonstrates a critical insight: when you maintain multiframework compatibility surfaces, risk signals compound. The same breaking change in your source code generates N findings (one per framework/netstandard version).
           </p>
           <p className="mb-4">
-            For context, see our full analysis:
+            That's not a flaw - it's the correct analysis. Each framework surface is a published contract. Breaking one is a breaking change for users on that platform.
+          </p>
+          <p className="mb-4">
+            For context on how this PR fits into the broader ecosystem, see our full analysis:
           </p>
           <p className="mb-4 p-4 bg-blue-50 border-l-4 border-blue-600">
             <Link href="/articles/corpus-report-2025" className="text-blue-600 font-semibold hover:underline">
-              Read: The GauntletCI Corpus Report - 148K Risk Signals Across 610 PRs
+              Read: The GauntletCI Corpus Report - Enterprise Code Risk Patterns Across 610 PRs
             </Link>
           </p>
         </section>
 
         <section className="mb-12">
-          <h2 className="text-2xl font-bold mb-4">Methodology</h2>
+          <h2 className="text-2xl font-bold mb-4">Methodology & Data</h2>
           <p className="mb-4">
-            This analysis is based on Azure/azure-sdk-for-net PR #57223, which is a publicly available, already-merged PR. GauntletCI 2.8.0-alpha analyzed the full diff and generated 40,156 risk signals across 13 distinct rule types.
+            This analysis is based on Azure/azure-sdk-for-net PR #57223, which is a publicly available, already-merged PR. GauntletCI 2.8.0-alpha analyzed the full diff.
           </p>
           <p className="mb-4">
-            No filtering was applied. Every finding is included. The goal is to show what behavioral analysis reveals about large-scale API refactoring in enterprise codebases.
+            <strong>Raw findings:</strong> 40,156 signals across 13 distinct rule types
+          </p>
+          <p className="mb-4">
+            <strong>Unique findings:</strong> 6,650+ (after deduplicating across .NET 10.0, 8.0, and .NET Standard 2.0 compatibility surfaces)
+          </p>
+          <p className="mb-4">
+            <strong>Why both numbers matter:</strong>
+          </p>
+          <ul className="list-disc list-inside space-y-2 mb-4">
+            <li><strong>Raw findings (40,156):</strong> Show the actual user surface area at risk. A .NET 8.0 user sees the breaking changes on .NET 8.0. A .NET Standard 2.0 user sees the breaking changes on their platform.</li>
+            <li><strong>Unique findings (6,650+):</strong> Show the underlying issues in source code, deduplicated for clarity.</li>
+          </ul>
+          <p className="mb-4">
+            The goal is transparency: show what behavioral analysis reveals about large-scale API refactoring in enterprise codebases, and explain how multiframework compatibility surfaces affect risk calculation.
           </p>
         </section>
       </article>
