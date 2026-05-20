@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { AuthorBio } from "@/components/author-bio";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import { RulesApplied } from "@/components/rules-applied";
 
 export const metadata: Metadata = {
   title: "Can AI Code Review Tools Ever Be Deterministic? | GauntletCI",
@@ -54,6 +55,8 @@ export default function DeterminismArticlePage() {
               <span className="text-sm text-muted-foreground">Founder, GauntletCI</span>
               <span className="text-muted-foreground/40 text-sm">·</span>
               <time className="text-sm text-muted-foreground" dateTime="2026-05-04">May 4, 2026</time>
+              <span className="text-muted-foreground/40 text-sm">·</span>
+              <span className="text-sm text-muted-foreground">8 min read</span>
             </div>
           </div>
 
@@ -308,6 +311,9 @@ export default function DeterminismArticlePage() {
           </div>
 
           {/* Author */}
+
+        <RulesApplied ids={[]} />
+
           <div className="border-t border-border pt-12">
             <AuthorBio variant="long" />
           </div>
