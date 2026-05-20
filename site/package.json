@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "node scripts/gen-favicon.mjs && next build && npx pagefind --site out",
+    "build": "node scripts/verify-corpus-report.mjs && node scripts/gen-favicon.mjs && next build && npx pagefind --site out",
     "gen-og": "node scripts/gen-og-images.mjs",
     "gen-inline": "node scripts/gen-inline-images.mjs",
     "gen-diagrams": "node scripts/gen-article-diagrams.mjs",
+    "verify:corpus": "node scripts/verify-corpus-report.mjs",
     "start": "next start",
     "lint": "eslint .",
     "test:e2e": "playwright test",

@@ -99,7 +99,7 @@ export default function AsymmetryOfChangePage() {
                 <strong className="text-foreground">Residual Bugs in Python:</strong> A dataset of roughly 5,000 residual Python bugs from prominent open-source projects catalogs defects that went undetected during traditional testing and surfaced only in production <sup><a href="#ref6">[6]</a></sup>.
               </li>
               <li className="pl-6 border-l-2 border-blue-500">
-                <strong className="text-foreground">Observations from the .NET Ecosystem:</strong> In an exploratory analysis of 598 pull requests across 57 open-source .NET repositories (including Polly, Dapper, Newtonsoft.Json, and dotnet/runtime), 71% of PRs submitted without test file modifications contained at least one behavioral risk indicator <sup><a href="#ref7">[7]</a></sup>. This is product research, not a peer-reviewed study, but it is directionally consistent with the broader literature: when production code changes and tests don't, risk accumulates silently.
+                <strong className="text-foreground">Observations from the .NET Ecosystem:</strong> In an exploratory analysis of 610 pull requests across 61 open-source .NET repositories (including Polly, Dapper, Newtonsoft.Json, and dotnet/runtime), 133 of 178 PRs submitted without test file modifications (74.7%) contained at least one behavioral risk indicator <sup><a href="#ref7">[7]</a></sup>. This is product research, not a peer-reviewed study, but it is directionally consistent with the broader literature: when production code changes and tests don't, risk accumulates silently.
               </li>
             </ul>
             <p className="text-muted-foreground leading-relaxed pt-4">
@@ -218,7 +218,7 @@ export default function AsymmetryOfChangePage() {
               Cotroneo, D., De Rosa, G., & Liguori, P. (2025). PyResBugs: A Dataset of Residual Python Bugs for Natural Language-Driven Fault Injection. <em>IEEE/ACM Forge 2025.</em> DOI: 10.1109/Forge66646.2025.00024
             </li>
             <li id="ref7" className="pl-2">
-              Cogen, E. (2025). GauntletCI Corpus Analysis. 598 pull requests across 57 open-source .NET repositories. Data published at: <a href="https://github.com/EricCogen/GauntletCI/blob/main/data/corpus-fixtures.csv" className="text-blue-600 dark:text-blue-400 hover:underline">corpus-fixtures.csv</a>
+              Cogen, E. (2025). GauntletCI Corpus Analysis. 610 pull requests across 61 open-source .NET repositories. Data published at: <a href="https://github.com/EricCogen/GauntletCI/blob/main/data/corpus-fixtures.csv" className="text-blue-600 dark:text-blue-400 hover:underline">corpus-fixtures.csv</a>
             </li>
           </ol>
         </div>

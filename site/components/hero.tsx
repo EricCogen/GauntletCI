@@ -39,6 +39,28 @@ export function Hero() {
             Built for .NET and C# teams running diff-aware validation before commit and before merge.
           </p>
 
+          <div className="mt-10 w-full max-w-2xl rounded-xl border border-border bg-zinc-950/90 text-left shadow-2xl shadow-black/30">
+            <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+              <span className="text-xs font-semibold uppercase tracking-widest text-cyan-400">
+                Local-first diff audit
+              </span>
+              <span className="text-xs text-muted-foreground">No account required</span>
+            </div>
+            <div className="space-y-3 px-5 py-5 font-mono text-sm">
+              <div>
+                <span className="text-muted-foreground">$ </span>
+                <span className="text-foreground">dotnet tool install -g GauntletCI</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">$ </span>
+                <span className="text-cyan-300">gauntletci analyze --staged</span>
+              </div>
+              <div className="text-muted-foreground">
+                scans the staged git diff, applies deterministic .NET rules, and reports only the risks introduced by this change
+              </div>
+            </div>
+          </div>
+
           <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl w-full text-left">
             <div className="rounded-lg border border-border bg-card p-5">
               <p className="text-xs font-semibold text-cyan-400 uppercase tracking-widest mb-2">The Problem: Diffs are Deceptive</p>

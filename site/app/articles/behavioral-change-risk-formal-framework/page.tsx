@@ -397,7 +397,7 @@ export default function BCRFormalFrameworkPage() {
               <div className="rounded-lg border border-border bg-card/40 p-5">
                 <p className="text-sm font-semibold text-foreground mb-2">Corpus construction</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  A corpus of <strong>598 pull requests from 57 open-source .NET repositories</strong> was assembled
+                  A corpus of <strong>610 pull requests from 61 open-source .NET repositories</strong> was assembled
                   using GauntletCI&apos;s corpus pipeline. Repositories were identified via GitHub code search across
                   the .NET ecosystem; the full set includes Polly, Dapper, Newtonsoft.Json, Avalonia, PowerShell,
                   dotnet/aspnetcore, dotnet/efcore, dotnet/maui, dotnet/roslyn, and dotnet/runtime, among others.
@@ -447,16 +447,16 @@ export default function BCRFormalFrameworkPage() {
             <p className="text-sm font-semibold text-foreground">Two findings emerge from this analysis:</p>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-5">
-                <p className="text-3xl font-bold text-cyan-400 mb-1">34.6%</p>
+                <p className="text-3xl font-bold text-cyan-400 mb-1">35.1%</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  of pull requests (207 of 598) contained at least one high-confidence behavioral risk indicator,
-                  spanning 11 distinct rule categories.
+                  of pull requests (214 of 610) contained at least one high-confidence behavioral risk indicator,
+                  spanning 15 distinct rule categories.
                 </p>
               </div>
               <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-5">
-                <p className="text-3xl font-bold text-cyan-400 mb-1">71%</p>
+                <p className="text-3xl font-bold text-cyan-400 mb-1">74.7%</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  of pull requests submitted without test file modifications (118 of 166) contained at least one
+                  of pull requests submitted without test file modifications (133 of 178) contained at least one
                   behavioral risk indicator. When test authorship effort is absent, risk patterns are not merely
                   possible; they are prevalent.
                 </p>

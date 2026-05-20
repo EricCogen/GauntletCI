@@ -175,12 +175,12 @@ export const articles: Article[] = [
   {
     slug: "corpus-report-2025",
     href: "/articles/corpus-report-2025",
-    title: "GauntletCI Corpus Report 2025: 40K+ Risk Signals Across 610 Enterprise PRs",
+    title: "State of Behavioral Change Risk in .NET",
     description:
-      "Comprehensive analysis of behavioral risk patterns across enterprise code changes.",
-    ruleIds: ["GCI0003", "GCI0004", "GCI0016"],
-    tags: ["Corpus", "Analysis", "Enterprise"],
-    readTime: "13 min read",
+      "A field report from 610 merged C# PRs across 61 repositories, with raw findings, high-confidence findings, and outlier disclosure.",
+    ruleIds: ["GCI0003", "GCI0004", "GCI0006", "GCI0015", "GCI0016", "GCI0024", "GCI0010", "GCI0036"],
+    tags: ["Corpus", "Analysis", ".NET"],
+    readTime: "11 min read",
   },
   {
     slug: "best-ai-code-review-tools",

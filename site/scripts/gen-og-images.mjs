@@ -108,6 +108,12 @@ const pages = [
     sub: 'Determinism vs probabilistic judgment in code review.',
   },
   {
+    slug: 'corpus-report-2025',
+    title: 'State of Behavioral\nChange Risk in .NET',
+    category: 'Corpus Evidence',
+    sub: '148,327 risk signals across 610 merged C# PRs.',
+  },
+  {
     slug: 'sonarqube-alternative',
     title: 'SonarQube Alternative\nfor PR Gating',
     category: 'Article',
