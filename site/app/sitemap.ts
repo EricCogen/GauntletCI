@@ -12,9 +12,15 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.7,
   }));
 
+  // Pagination pages
+  const paginationEntries: MetadataRoute.Sitemap = [
+    { url: `${BASE_URL}/articles/p/2`, changeFrequency: "weekly", priority: 0.8 },
+  ];
+
   return [
     { url: `${BASE_URL}/`,                                    changeFrequency: "weekly",  priority: 1.0 },
     { url: `${BASE_URL}/articles`,                            changeFrequency: "weekly",  priority: 0.9 },
+    ...paginationEntries,
     { url: `${BASE_URL}/docs`,                                changeFrequency: "weekly",  priority: 0.9 },
     { url: `${BASE_URL}/docs/rules`,                          changeFrequency: "weekly",  priority: 0.9 },
     { url: `${BASE_URL}/docs/cli-reference`,                  changeFrequency: "monthly", priority: 0.8 },
@@ -31,6 +37,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/articles/detect-breaking-changes-before-merge`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/articles/what-is-diff-based-analysis`,         changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/articles/behavioral-change-risk-formal-framework`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/articles/the-asymmetry-of-change`,             changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/articles/can-ai-code-review-be-deterministic`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/articles/jellyfin-pr-16062-post-mortem`,       changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/articles/corpus-report-2025`,                  changeFrequency: "monthly", priority: 0.9 },
+    { url: `${BASE_URL}/articles/azure-sdk-pr-57223-risk-analysis`,    changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/articles/sonarqube-alternative-behavioral-gating`, changeFrequency: "monthly", priority: 0.7 },
+    { url: `${BASE_URL}/articles/log4net-pr-201-analysis`,             changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/articles/google-api-pr-3150-analysis`,         changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/articles/stackexchange-redis-pr-3028`,         changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/articles/grpc-dotnet-pr-2531`,                 changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE_URL}/articles/anglesharp-pr-1159-analysis`,         changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/compare/gauntletci-vs-sonarqube`,     changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/compare/gauntletci-vs-codeql`,        changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/compare/gauntletci-vs-semgrep`,       changeFrequency: "monthly", priority: 0.8 },
