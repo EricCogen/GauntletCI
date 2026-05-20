@@ -44,6 +44,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${BASE_URL}/docs/local-llm`,                      changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/docs/custom-rules`,                    changeFrequency: "monthly", priority: 0.7 },
     { url: `${BASE_URL}/demo`,                                changeFrequency: "weekly",  priority: 0.9 },
+    { url: `${BASE_URL}/demo/github-checks-sarif`,             changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/detections`,                          changeFrequency: "monthly", priority: 0.9 },
     { url: `${BASE_URL}/pricing`,                             changeFrequency: "monthly", priority: 0.8 },
     { url: `${BASE_URL}/releases`,                            changeFrequency: "monthly", priority: 0.8 },

@@ -13,6 +13,8 @@ const ROUTE_LABELS: Record<string, string> = {
   "": "Home",
   "about": "About",
   "docs": "Documentation",
+  "demo": "Live Demo",
+  "github-checks-sarif": "GitHub Checks & SARIF",
   "pricing": "Pricing",
   "detections": "Detection Rules",
   "case-studies": "Case Studies",

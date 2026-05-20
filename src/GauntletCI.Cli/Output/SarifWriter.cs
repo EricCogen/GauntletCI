@@ -34,7 +34,7 @@ public static class SarifWriter
                 id = r.RuleId,
                 name = SanitizeName(r.RuleName),
                 shortDescription = new { text = r.RuleName },
-                helpUri = $"https://gauntletci.com/rules/{r.RuleId}",
+                helpUri = $"https://gauntletci.com/docs/rules/{r.RuleId}",
             })
             .ToList();
 

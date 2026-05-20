@@ -108,6 +108,12 @@ const pages = [
     sub: '36 public scenario PRs with GitHub Actions checks.',
   },
   {
+    slug: 'github-checks-sarif',
+    title: 'GitHub Checks\nand SARIF Preview',
+    category: 'Demo',
+    sub: 'See PR checks, annotations, and code scanning output.',
+  },
+  {
     slug: 'can-ai-code-review-be-deterministic',
     title: 'Can AI Code Review\nBe Deterministic?',
     category: 'Article',

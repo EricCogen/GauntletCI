@@ -189,6 +189,29 @@ public class SarifWriterTests
     }
 
     [Fact]
+    public void Serialize_RuleHelpUri_PointsToPublicRuleDocs()
+    {
+        var finding = new Finding
+        {
+            RuleId = "GCI0012",
+            RuleName = "Security Risk",
+            Summary = "s",
+            Evidence = "e",
+            WhyItMatters = "w",
+            SuggestedAction = "a",
+            Confidence = Confidence.High,
+            Severity = RuleSeverity.Block,
+        };
+
+        var json = SarifWriter.Serialize(BuildResult(finding));
+        var doc = JsonDocument.Parse(json);
+        var rule = doc.RootElement.GetProperty("runs")[0]
+            .GetProperty("tool").GetProperty("driver").GetProperty("rules")[0];
+
+        Assert.Equal("https://gauntletci.com/docs/rules/GCI0012", rule.GetProperty("helpUri").GetString());
+    }
+
+    [Fact]
     public void Serialize_EnrichedFinding_IncludesPropertiesInSarif()
     {
         var finding = new Finding

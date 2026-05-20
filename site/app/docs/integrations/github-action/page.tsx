@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { buildFaqSchema, softwareApplicationSchema } from "@/lib/schemas";
 
 export const metadata: Metadata = {
   title: "GitHub Action | GauntletCI Docs",
   description:
-    "Use GauntletCI in GitHub Actions. Block merges on high-risk changes, post inline PR review comments, and surface findings as GitHub Checks annotations.",
+    "Use GauntletCI in GitHub Actions. Block merges on high-risk changes and post inline PR review comments with the published composite action.",
   alternates: { canonical: "/docs/integrations/github-action" },
 };
 
@@ -251,8 +252,9 @@ export default function GithubActionPage() {
               <tbody className="divide-y divide-border">
                 {[
                   ["Basic analysis (no comments)", "None - uses default runner permissions"],
-                  ["GitHub Checks annotations", "checks: write (automatic on pull_request)"],
                   ["Inline PR review comments", "pull-requests: write (must be set explicitly)"],
+                  ["Direct CLI GitHub Checks", "checks: write plus GITHUB_TOKEN in the step environment"],
+                  ["Direct CLI SARIF upload", "security-events: write for github/codeql-action/upload-sarif"],
                 ].map(([feature, perm]) => (
                   <tr key={feature}>
                     <td className="px-4 py-2 text-muted-foreground">{feature}</td>
@@ -262,6 +264,18 @@ export default function GithubActionPage() {
               </tbody>
             </table>
           </div>
+        </section>
+
+        <section>
+          <h2 className="text-2xl font-semibold mb-3">GitHub Checks and SARIF preview</h2>
+          <p className="text-muted-foreground mb-3 text-sm">
+            The composite action is the shortest path for inline PR review comments. If you want
+            GitHub Checks API annotations or SARIF upload, use direct CLI workflow steps so you can
+            pass the required token, commit SHA, and permissions explicitly.
+          </p>
+          <Link href="/demo/github-checks-sarif" className="text-cyan-400 hover:underline text-sm">
+            Preview Checks and SARIF output →
+          </Link>
         </section>
 
         <section>
