@@ -7,18 +7,18 @@ import { RulesApplied } from "@/components/rules-applied";
 import JsonLd from "@/components/json-ld";
 
 export const metadata: Metadata = {
-  title: "The GauntletCI Corpus Report: 148,000+ Risk Signals Across 610 C# PRs | GauntletCI",
+  title: "The GauntletCI Corpus Report: 40K+ Unique Risk Signals Across 610 C# PRs | GauntletCI",
   description:
-    "Comprehensive analysis of 610 merged pull requests from 61 enterprise C# repositories. Discover patterns in code risk, behavioral changes, and the findings that static tools miss.",
+    "Comprehensive analysis of 610 merged pull requests from 61 enterprise C# repositories. 40K+ deduplicated behavioral risk signals reveal patterns that code review and testing miss.",
   alternates: { canonical: "/articles/corpus-report-2025" },
   keywords: ["code analysis", "C#", ".NET", "static analysis", "code review", "risk patterns", "GauntletCI", "behavioral change detection"],
   authors: [{ name: "Eric Cogen", url: "https://github.com/EricCogen" }],
   creator: "Eric Cogen",
   publisher: "GauntletCI",
   openGraph: {
-    title: "The GauntletCI Corpus Report: Analyzing 148,000+ Risk Signals Across 610 PRs",
+    title: "The GauntletCI Corpus Report: 40K+ Unique Risk Signals Across 610 PRs",
     description:
-      "What patterns emerge when you analyze behavioral changes across 61 enterprise repositories? Discover critical insights about .NET code quality.",
+      "What patterns emerge when you analyze behavioral changes across 61 enterprise repositories? Discover critical insights about .NET code quality and breaking changes.",
     url: "https://gauntletci.com/articles/corpus-report-2025",
     type: "article",
     images: [
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "GauntletCI Corpus Report: 610 PRs, 148K Risk Signals, 61 Repos",
+    title: "GauntletCI Corpus Report: 610 PRs, 40K+ Unique Signals, 61 Repos",
     description: "What behavioral risks hide in enterprise .NET codebases? Analysis of 610 merged PRs reveals the patterns that code review misses.",
     images: ["/og/corpus-report-2025.png"],
   },
@@ -102,15 +102,19 @@ export default function CorpusReportPage() {
               <div className="text-sm text-gray-600">Repositories</div>
             </div>
             <div className="bg-slate-100 p-4 rounded">
-              <div className="text-3xl font-bold text-blue-600">40K</div>
-              <div className="text-sm text-gray-600">Risk Signals*</div>
+              <div className="text-3xl font-bold text-blue-600">40K+</div>
+              <div className="text-sm text-gray-600">Unique Risk Signals</div>
             </div>
             <div className="bg-slate-100 p-4 rounded">
               <div className="text-3xl font-bold text-blue-600">29</div>
               <div className="text-sm text-gray-600">Rule Types</div>
             </div>
           </div>
-          <p className="text-sm text-gray-600 italic">* Raw signal count. Many signals are framework-compatibility duplicates (e.g., same finding across .NET 10.0, 8.0, .NET Standard 2.0)</p>
+          <div className="bg-cyan-50 border-l-4 border-cyan-600 p-4 mb-4">
+            <p className="text-sm text-gray-700">
+              <strong>On deduplication:</strong> The corpus contains ~40K deduplicated, unique risk signals. When the same behavioral change is detected across multiple framework targets (e.g., .NET 10.0, 8.0, and .NET Standard 2.0 all in one PR), each instance is counted separately in raw signal metrics but represents the same underlying risk. Our analysis collapses these framework-compatibility duplicates to focus on distinct behavioral patterns. Both metrics are valid: raw counts show ecosystem impact, deduplicated counts show true risk variety.
+            </p>
+          </div>
         </section>
 
         <section className="mb-12">
