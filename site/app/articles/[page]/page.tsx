@@ -7,14 +7,6 @@ import Link from "next/link";
 import { Pin } from "lucide-react";
 
 const PAGE_SIZE = 10;
-const CURRENT_PAGE = 1;
-
-export const metadata: Metadata = {
-  title: "Articles | GauntletCI -- .NET Change Risk and Code Review",
-  description:
-    "Technical articles on behavioral regressions in .NET, why code review and tests miss certain bugs, and how diff-based analysis catches what other tools skip.",
-  alternates: { canonical: "/articles" },
-};
 
 type Article = {
   href: string;
@@ -84,6 +76,14 @@ const articles: Article[] = [
       "The first principles of analyzing code by what changed, not by what exists. Why focusing on change is the only deterministic way to find certain classes of bugs.",
     tags: ["Analysis", "Methodology"],
     readTime: "9 min read",
+  },
+  {
+    href: "/articles/the-asymmetry-of-change",
+    title: "The Asymmetry of Change: Why Your Tests Are Looking the Wrong Way",
+    description:
+      "Why passing tests don't guarantee correct behavior. How diff-scanning can close the gap between code changes and test validation.",
+    tags: ["Testing", "CI", "Diff-Based Analysis"],
+    readTime: "12 min read",
   },
   {
     href: "/articles/jellyfin-pr-16062-post-mortem",
@@ -170,6 +170,28 @@ const articles: Article[] = [
   },
 ];
 
+export async function generateStaticParams() {
+  const sortedArticles = [...articles].reverse();
+  const totalArticles = sortedArticles.length;
+  const totalPages = Math.ceil(totalArticles / PAGE_SIZE);
+  
+  return Array.from({ length: totalPages }, (_, i) => ({
+    page: String(i + 1),
+  }));
+}
+
+export function generateMetadata({ params }: { params: { page: string } }): Metadata {
+  const pageNum = parseInt(params.page, 10) || 1;
+  const canonical = pageNum === 1 ? "/articles" : `/articles/${pageNum}`;
+  
+  return {
+    title: `Articles${pageNum > 1 ? ` - Page ${pageNum}` : ""} | GauntletCI -- .NET Change Risk and Code Review`,
+    description:
+      "Technical articles on behavioral regressions in .NET, why code review and tests miss certain bugs, and how diff-based analysis catches what other tools skip.",
+    alternates: { canonical },
+  };
+}
+
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "CollectionPage",
@@ -178,7 +200,10 @@ const jsonLd = {
   url: "https://gauntletci.com/articles",
 };
 
-export default function ArticlesPage() {
+export default function ArticlesPageRoute({ params }: { params: { page: string } }) {
+  const pageParam = parseInt(params.page, 10);
+  const currentPage = Math.max(1, pageParam || 1);
+
   // Sort: pinned first, then by order
   const sortedArticles = [...articles].reverse();
   const pinnedArticles = sortedArticles.filter((a) => a.pinned);
@@ -186,7 +211,8 @@ export default function ArticlesPage() {
   const allArticles = [...pinnedArticles, ...regularArticles];
 
   const totalPages = Math.ceil(allArticles.length / PAGE_SIZE);
-  const start = (CURRENT_PAGE - 1) * PAGE_SIZE;
+  const validPage = Math.min(currentPage, totalPages || 1);
+  const start = (validPage - 1) * PAGE_SIZE;
   const visible = allArticles.slice(start, start + PAGE_SIZE);
 
   return (
@@ -252,23 +278,32 @@ export default function ArticlesPage() {
             ))}
           </div>
 
-          {/* SEO-Friendly Pagination with Static Links */}
+          {/* SEO-Friendly Pagination with Links */}
           {totalPages > 1 && (
             <div className="flex flex-col items-center justify-center mt-12 pt-8 border-t border-border">
               <div className="flex items-center gap-2 flex-wrap justify-center mb-6">
-                {/* Previous link disabled on page 1 */}
-                <span className="px-4 py-2 text-sm font-medium rounded-lg border border-border bg-card/30 opacity-30 cursor-not-allowed">
-                  ← Previous
-                </span>
+                {/* Previous link */}
+                {validPage > 1 ? (
+                  <Link
+                    href={validPage === 2 ? "/articles" : `/articles/${validPage - 1}`}
+                    className="px-4 py-2 text-sm font-medium rounded-lg border border-border bg-card/30 hover:bg-card/60 hover:border-cyan-500/30 transition-all"
+                  >
+                    ← Previous
+                  </Link>
+                ) : (
+                  <span className="px-4 py-2 text-sm font-medium rounded-lg border border-border bg-card/30 opacity-30 cursor-not-allowed">
+                    ← Previous
+                  </span>
+                )}
 
                 {/* Page numbers */}
                 <div className="flex gap-1">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
                     <Link
                       key={pageNum}
-                      href={pageNum === 1 ? "/articles" : `/articles/p/${pageNum}`}
+                      href={pageNum === 1 ? "/articles" : `/articles/${pageNum}`}
                       className={`px-3 py-2 text-sm font-medium rounded-lg transition-all ${
-                        pageNum === CURRENT_PAGE
+                        pageNum === validPage
                           ? "bg-cyan-500/20 border border-cyan-500/50 text-cyan-400 font-semibold"
                           : "border border-border bg-card/30 hover:bg-card/60 hover:border-cyan-500/30"
                       }`}
@@ -279,16 +314,22 @@ export default function ArticlesPage() {
                 </div>
 
                 {/* Next link */}
-                <Link
-                  href={`/articles/p/${CURRENT_PAGE + 1}`}
-                  className="px-4 py-2 text-sm font-medium rounded-lg border border-border bg-card/30 hover:bg-card/60 hover:border-cyan-500/30 transition-all"
-                >
-                  Next →
-                </Link>
+                {validPage < totalPages ? (
+                  <Link
+                    href={`/articles/${validPage + 1}`}
+                    className="px-4 py-2 text-sm font-medium rounded-lg border border-border bg-card/30 hover:bg-card/60 hover:border-cyan-500/30 transition-all"
+                  >
+                    Next →
+                  </Link>
+                ) : (
+                  <span className="px-4 py-2 text-sm font-medium rounded-lg border border-border bg-card/30 opacity-30 cursor-not-allowed">
+                    Next →
+                  </span>
+                )}
               </div>
 
               <span className="text-sm text-muted-foreground">
-                Page {CURRENT_PAGE} of {totalPages}
+                Page {validPage} of {totalPages}
               </span>
             </div>
           )}
