@@ -168,6 +168,13 @@ export default function DemoPage() {
                   View demo repository
                   <Github className="h-4 w-4" />
                 </Link>
+                <Link
+                  href="/demo/before-after-diff"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-5 py-3 text-sm font-semibold hover:bg-card/80 transition-colors"
+                >
+                  See diff visualizer
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
             </div>
 
@@ -296,6 +303,13 @@ export default function DemoPage() {
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-semibold hover:border-cyan-500/40 hover:bg-card transition-colors"
               >
                 View GitHub Actions setup
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/demo/before-after-diff"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-semibold hover:border-cyan-500/40 hover:bg-card transition-colors"
+              >
+                See before/after diff
                 <ArrowRight className="h-4 w-4" />
               </Link>
               <Link

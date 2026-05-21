@@ -14,6 +14,7 @@ const ROUTE_LABELS: Record<string, string> = {
   "about": "About",
   "docs": "Documentation",
   "demo": "Live Demo",
+  "before-after-diff": "Before/After Diff",
   "github-checks-sarif": "GitHub Checks & SARIF",
   "pricing": "Pricing",
   "detections": "Detection Rules",

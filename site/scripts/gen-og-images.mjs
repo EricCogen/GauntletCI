@@ -108,6 +108,12 @@ const pages = [
     sub: '36 public scenario PRs with GitHub Actions checks.',
   },
   {
+    slug: 'before-after-diff',
+    title: 'Before/After\nDiff Visualizer',
+    category: 'Demo',
+    sub: 'See changed code, rule findings, and merge guidance.',
+  },
+  {
     slug: 'github-checks-sarif',
     title: 'GitHub Checks\nand SARIF Preview',
     category: 'Demo',
