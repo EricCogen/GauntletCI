@@ -212,7 +212,7 @@ export function CaseStudyLayout({
             </div>
 
             <div className="rounded-xl border border-border bg-card/40 p-6 space-y-4">
-              <h2 className="text-xl font-bold tracking-tight">What to review next</h2>
+              <h2 className="text-xl font-bold tracking-tight">Recommended review steps</h2>
               <ul className="space-y-3 text-sm text-muted-foreground leading-relaxed">
                 {nextActions.map((item) => (
                   <li key={item} className="flex gap-2">
