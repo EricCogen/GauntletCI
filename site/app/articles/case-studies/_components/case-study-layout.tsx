@@ -200,7 +200,7 @@ export function CaseStudyLayout({
 
           <section className="grid gap-6 md:grid-cols-2">
             <div className="rounded-xl border border-border bg-card/40 p-6 space-y-4">
-              <h2 className="text-xl font-bold tracking-tight">Caveats that keep this honest</h2>
+              <h2 className="text-xl font-bold tracking-tight">Important context</h2>
               <ul className="space-y-3 text-sm text-muted-foreground leading-relaxed">
                 {caveats.map((item) => (
                   <li key={item} className="flex gap-2">
@@ -212,7 +212,7 @@ export function CaseStudyLayout({
             </div>
 
             <div className="rounded-xl border border-border bg-card/40 p-6 space-y-4">
-              <h2 className="text-xl font-bold tracking-tight">Reviewer next actions</h2>
+              <h2 className="text-xl font-bold tracking-tight">What to review next</h2>
               <ul className="space-y-3 text-sm text-muted-foreground leading-relaxed">
                 {nextActions.map((item) => (
                   <li key={item} className="flex gap-2">
