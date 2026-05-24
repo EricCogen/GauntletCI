@@ -259,6 +259,27 @@ export default function AiCodeReviewComparePage() {
           </div>
         </div>
 
+        {/* Mythos positioning */}
+        <div className="rounded-xl border border-border bg-card/40 p-7 space-y-4">
+          <p className="text-xs font-semibold uppercase tracking-widest text-cyan-400">Bug-finding angle</p>
+          <h2 className="text-lg font-bold">Mythos finds security bugs. GauntletCI finds the risky changes that become production bugs.</h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Anthropic's Mythos Preview shows where AI-assisted bug finding is going: models can surface more candidate vulnerabilities, but those candidates still need human review before disclosure, patching, and advisories.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            GauntletCI is not a zero-day research system. It is aimed at the everyday bug pipeline: deleted guards, changed contracts, swallowed exceptions, data-loss paths, concurrency hazards, and other risky changes introduced in pull requests before they reach production.
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            The useful buyer question is simple: if tools can find bugs earlier, why wait until after merge? GauntletCI gives teams deterministic, diff-linked findings they can review, waive, fix, or turn into required checks.
+          </p>
+          <a
+            href="https://red.anthropic.com/2026/cvd/"
+            className="inline-flex text-sm font-semibold text-cyan-400 hover:text-cyan-300 underline underline-offset-2"
+          >
+            View Anthropic's disclosure dashboard
+          </a>
+        </div>
+
         {/* Feature comparison table */}
         <div className="space-y-4">
           <h2 className="text-2xl font-bold tracking-tight">Feature comparison</h2>

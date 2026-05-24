@@ -5,6 +5,7 @@ import { Footer } from "@/components/footer";
 import { AuthorBio } from "@/components/author-bio";
 import { Breadcrumbs } from "@/components/breadcrumbs";
 import { RulesApplied } from "@/components/rules-applied";
+import { SourcesSection } from "../_components/sources-section";
 
 export const metadata: Metadata = {
   title: "Can AI Code Review Tools Ever Be Deterministic? | GauntletCI",
@@ -25,6 +26,33 @@ const jsonLd = {
   author: { "@type": "Person", name: "Eric Cogen" },
   publisher: { "@type": "Organization", name: "GauntletCI", url: "https://gauntletci.com" },
 };
+
+const sources = [
+  {
+    label: "Anthropic coordinated vulnerability disclosure dashboard",
+    href: "https://red.anthropic.com/2026/cvd/",
+    description:
+      "Anthropic's May 22, 2026 dashboard for Mythos Preview findings, external triage, confirmed findings, maintainer disclosures, patches, advisories, and disclosure ledger.",
+  },
+  {
+    label: "GitHub CodeQL overview",
+    href: "https://codeql.github.com/",
+    description:
+      "GitHub describes CodeQL as a semantic code analysis engine that lets developers query code as though it were data.",
+  },
+  {
+    label: "Microsoft Roslyn analyzer overview",
+    href: "https://learn.microsoft.com/en-us/visualstudio/code-quality/roslyn-analyzers-overview?view=vs-2022",
+    description:
+      "Microsoft describes Roslyn analyzers as tools that inspect C# and Visual Basic code for style, quality, maintainability, design, and other issues.",
+  },
+  {
+    label: "OpenAI reproducible outputs",
+    href: "https://cookbook.openai.com/examples/reproducible_outputs_with_the_seed_parameter",
+    description:
+      "OpenAI documents seed-based controls as a way to receive mostly deterministic outputs when request parameters are held constant.",
+  },
+];
 
 export default function DeterminismArticlePage() {
   return (
@@ -255,6 +283,22 @@ export default function DeterminismArticlePage() {
               The future may not belong to pure static analysis or pure AI review. It may belong to tools that separate evidence from explanation.
             </p>
 
+            <section>
+              <h2 className="text-3xl font-bold mt-0 mb-4">What Mythos changes about the conversation</h2>
+
+              <p>
+                Anthropic's Mythos Preview work makes that separation harder to ignore. Its public coordinated vulnerability disclosure dashboard does not frame AI bug finding as a single model comment dropped into a pull request. It shows a pipeline: candidate findings, external human triage, confirmed findings, maintainer disclosure, patches, advisories, and a disclosure ledger.
+              </p>
+
+              <p>
+                The most important line is not the headline count. Anthropic says independent human triage and review are the rate-limiting step between candidate findings and disclosed vulnerabilities. That is the lesson for ordinary engineering teams too. As AI makes candidate discovery cheaper, the bottleneck moves to evidence, repeatability, triage, and accountable decisions.
+              </p>
+
+              <p>
+                GauntletCI is not trying to be Mythos and should not be described as a zero-day discovery system. The useful parallel is the workflow shape: a finding should carry enough evidence that a human can decide whether it is real, intentional, risky, patched, waived, or irrelevant. The AI may help explain the candidate. The engineering control should preserve the evidence trail.
+              </p>
+            </section>
+
             <p className="font-semibold text-center">
               Deterministic core.<br/>
               AI-assisted interpretation.<br/>
@@ -274,6 +318,11 @@ export default function DeterminismArticlePage() {
             </p>
 
           </article>
+
+          <SourcesSection
+            sources={sources}
+            intro="This article separates sourced vendor claims from GauntletCI positioning. The Mythos section relies on Anthropic's public disclosure dashboard; the GauntletCI architecture discussion is product analysis, not a claim that GauntletCI finds zero-day vulnerabilities."
+          />
 
           {/* Related Articles */}
           <div className="border-t border-border pt-12 mt-16">

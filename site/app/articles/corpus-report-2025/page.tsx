@@ -50,6 +50,12 @@ const sources = [
     description:
       "Internal methodology article defining the change-risk categories used throughout the corpus analysis.",
   },
+  {
+    label: "Anthropic coordinated vulnerability disclosure dashboard",
+    href: "https://red.anthropic.com/2026/cvd/",
+    description:
+      "Public example of a candidate finding, triage, disclosure, patch, advisory, and ledger workflow for AI-assisted vulnerability research.",
+  },
 ];
 
 const rawStats = [
@@ -296,6 +302,16 @@ export default function CorpusReportPage() {
               </p>
             </div>
           </div>
+        </section>
+
+        <section className="space-y-4 rounded-xl border border-border bg-card/50 p-6">
+          <h2 className="text-2xl font-bold">Toward a finding ledger</h2>
+          <p className="text-muted-foreground leading-relaxed">
+            The next credibility step is not a louder claim about what GauntletCI can find. It is a clearer public surface for how findings move from candidate signal to reviewer decision. Anthropic's Mythos Preview dashboard is useful here as a workflow reference: candidates are triaged, validated, disclosed, patched, and tied to ledger entries.
+          </p>
+          <p className="text-muted-foreground leading-relaxed">
+            A GauntletCI finding ledger would be narrower and product-specific: PR, rule ID, changed file, evidence snippet, confidence band, reviewer verdict, disposition, and follow-up outcome. That would make the corpus easier to audit and make it obvious that a finding is evidence for human review, not an automatic defect accusation.
+          </p>
         </section>
 
         <section className="space-y-4">
