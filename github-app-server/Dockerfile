@@ -10,7 +10,6 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-ENV NODE_ENV=production
 ENV PATH="/root/.dotnet/tools:${PATH}"
 
 COPY package*.json tsconfig.json ./
@@ -19,6 +18,8 @@ RUN npm ci
 COPY src ./src
 RUN npm run build \
     && npm prune --omit=dev
+
+ENV NODE_ENV=production
 
 EXPOSE 8787
 
