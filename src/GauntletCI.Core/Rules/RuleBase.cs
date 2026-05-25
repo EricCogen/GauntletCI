@@ -52,7 +52,8 @@ public abstract class RuleBase : IRule
         string evidence,
         string whyItMatters,
         string suggestedAction,
-        Confidence confidence)
+        Confidence confidence,
+        RuleSeverity? severityOverride = null)
     {
         var ruleId = RuleIdentifier.TryParse(Id, out var parsed) ? parsed.ToString() : Id;
         return new()
@@ -63,7 +64,8 @@ public abstract class RuleBase : IRule
             Evidence = evidence,
             WhyItMatters = whyItMatters,
             SuggestedAction = suggestedAction,
-            Confidence = confidence
+            Confidence = confidence,
+            SeverityOverride = severityOverride,
         };
     }
 
@@ -85,7 +87,8 @@ public abstract class RuleBase : IRule
         string whyItMatters,
         string suggestedAction,
         Confidence confidence,
-        DiffLine? line = null)
+        DiffLine? line = null,
+        RuleSeverity? severityOverride = null)
     {
         var ruleId = RuleIdentifier.TryParse(Id, out var parsed) ? parsed.ToString() : Id;
         return new()
@@ -99,6 +102,7 @@ public abstract class RuleBase : IRule
             Confidence = confidence,
             FilePath = file.NewPath,
             Line = (line?.LineNumber > 0) ? line.LineNumber : null,
+            SeverityOverride = severityOverride,
         };
     }
 }

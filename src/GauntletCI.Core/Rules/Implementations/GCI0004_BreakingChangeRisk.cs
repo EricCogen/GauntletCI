@@ -99,7 +99,8 @@ public class GCI0004_BreakingChangeRisk : RuleBase
                     evidence: $"Removed: {string.Join("; ", removedObsolete.Take(3).Select(l => l.Content.Trim()))}",
                     whyItMatters: "Removing [Obsolete] may indicate unintentional removal of a deprecation guard, or premature deletion of an API still consumed externally.",
                     suggestedAction: "Confirm the member is no longer referenced and remove only after verifying downstream consumers.",
-                    confidence: Confidence.Medium));
+                    confidence: Confidence.Medium,
+                    severityOverride: RuleSeverity.Block));
             }
         }
     }

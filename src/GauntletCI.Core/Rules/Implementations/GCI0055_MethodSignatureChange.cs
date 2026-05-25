@@ -7,9 +7,9 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0055, Method Signature Change Risk
-/// Detects breaking method signature changes: parameter additions without defaults,
-/// parameter type changes, and return type changes in public methods.
+/// GCI0055, Method Signature Change Risk (disabled by default)
+/// Regex-based signature change detection. Disabled via default severity None because GCI0003
+/// covers incompatible and compatible signature changes with cross-file deduplication.
 /// </summary>
 public class GCI0055_MethodSignatureChange : RuleBase
 {

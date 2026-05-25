@@ -40,6 +40,12 @@ public class Finding
     /// </summary>
     public RuleSeverity Severity { get; set; } = RuleSeverity.Info;
 
+    /// <summary>
+    /// When set, the orchestrator uses this instead of the rule-level configured severity.
+    /// Allows one rule to emit findings at different impact tiers (e.g. GCI0003 compatible vs incompatible signatures).
+    /// </summary>
+    public RuleSeverity? SeverityOverride { get; set; }
+
     /// <summary>The path of the file that contains the finding, if applicable.</summary>
     public string? FilePath { get; set; }
 

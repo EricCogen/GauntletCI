@@ -7,10 +7,9 @@ using GauntletCI.Core.Model;
 namespace GauntletCI.Core.Rules.Implementations;
 
 /// <summary>
-/// GCI0054, Async Void Abuse
-/// Detects public async methods that return void instead of Task, which prevents callers
-/// from awaiting and catching exceptions. Fire-and-forget async methods should only be
-/// used in event handlers where Task return is impossible.
+/// GCI0054, Async Void Abuse (disabled by default)
+/// Detects public async void methods. Disabled via default severity None because GCI0016 covers the same pattern.
+/// Re-enable in .gauntletci.json with severity Warn or Block if you want the stricter public-only filter.
 /// </summary>
 public class GCI0054_AsyncVoidAbuse : RuleBase
 {

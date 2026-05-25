@@ -194,7 +194,8 @@ public class RuleOrchestrator
             try
             {
                 var findings = await rule.EvaluateAsync(context, ruleCts.Token).ConfigureAwait(false);
-                foreach (var f in findings) f.Severity = severity;
+                foreach (var f in findings)
+                    f.Severity = f.SeverityOverride ?? severity;
                 allFindings.AddRange(findings);
                 if (findings.Count > 0) outcome = RuleOutcome.Triggered;
             }

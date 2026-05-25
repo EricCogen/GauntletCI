@@ -9,14 +9,9 @@ namespace GauntletCI.Core.Tests.Rules;
 
 public class GCI0057_BlockingAsyncViolationTests
 {
-    private GCI0057_BlockingAsyncViolation _rule;
+    private readonly GCI0057_BlockingAsyncViolation _rule = new(new DefaultPatternProvider());
 
-    public GCI0057_BlockingAsyncViolationTests()
-    {
-        _rule = new GCI0057_BlockingAsyncViolation(new DefaultPatternProvider());
-    }
-
-    private DiffContext CreateDiff(string filePath, params string[] addedLines)
+    private static DiffContext CreateDiff(string filePath, params string[] addedLines)
     {
         var lines = addedLines
             .Select((content, idx) => new DiffLine
@@ -45,62 +40,18 @@ public class GCI0057_BlockingAsyncViolationTests
         return new DiffContext { Files = new List<DiffFile> { file } };
     }
 
-    private AnalysisContext CreateContext(DiffContext diff)
+    private static AnalysisContext CreateContext(DiffContext diff) => new()
     {
-        return new AnalysisContext
-        {
-            EligibleFiles = [],
-            SkippedFiles = [],
-            Diff = diff
-        };
-    }
+        EligibleFiles = [],
+        SkippedFiles = [],
+        Diff = diff
+    };
 
     [Fact]
-    public async Task Finding_WhenUsingResult()
+    public async Task NoFinding_WhenBlockingAsyncOnly_GCI0016OwnsThatPattern()
     {
         var diff = CreateDiff("src/Service.cs", "var result = GetDataAsync().Result;");
-        var context = CreateContext(diff);
-
-        var findings = await _rule.EvaluateAsync(context);
-
-        Assert.NotEmpty(findings);
-        var finding = findings.First();
-        Assert.Equal("GCI0057", finding.RuleId);
-        Assert.Equal(Confidence.High, finding.Confidence);
-    }
-
-    [Fact]
-    public async Task Finding_WhenUsingWait()
-    {
-        var diff = CreateDiff("src/Service.cs", "GetDataAsync().Wait();");
-        var context = CreateContext(diff);
-
-        var findings = await _rule.EvaluateAsync(context);
-
-        Assert.NotEmpty(findings);
-        var finding = findings.First();
-        Assert.Equal(Confidence.High, finding.Confidence);
-    }
-
-    [Fact]
-    public async Task Finding_WhenUsingGetAwaiter()
-    {
-        var diff = CreateDiff("src/Service.cs", "var x = GetDataAsync().GetAwaiter().GetResult();");
-        var context = CreateContext(diff);
-
-        var findings = await _rule.EvaluateAsync(context);
-
-        Assert.NotEmpty(findings);
-    }
-
-    [Fact]
-    public async Task NoFinding_WhenUsingAwait()
-    {
-        var diff = CreateDiff("src/Service.cs", "var result = await GetDataAsync();");
-        var context = CreateContext(diff);
-
-        var findings = await _rule.EvaluateAsync(context);
-
+        var findings = await _rule.EvaluateAsync(CreateContext(diff));
         Assert.Empty(findings);
     }
 
@@ -108,34 +59,24 @@ public class GCI0057_BlockingAsyncViolationTests
     public async Task Finding_WhenUsingSyncFileRead()
     {
         var diff = CreateDiff("src/Service.cs", "var text = File.ReadAllText(path);");
-        var context = CreateContext(diff);
-
-        var findings = await _rule.EvaluateAsync(context);
-
+        var findings = await _rule.EvaluateAsync(CreateContext(diff));
         Assert.NotEmpty(findings);
+        Assert.Equal("GCI0057", findings[0].RuleId);
     }
 
     [Fact]
     public async Task NoFinding_WhenInProgramCs()
     {
         var diff = CreateDiff("Program.cs", "var text = File.ReadAllText(path);");
-        var context = CreateContext(diff);
-
-        var findings = await _rule.EvaluateAsync(context);
-
-        // Infrastructure files like Program.cs are exempt
+        var findings = await _rule.EvaluateAsync(CreateContext(diff));
         Assert.Empty(findings);
     }
 
     [Fact]
     public async Task NoFinding_WhenInTestFile()
     {
-        var diff = CreateDiff("tests/ServiceTests.cs", "var result = GetDataAsync().Result;");
-        var context = CreateContext(diff);
-
-        var findings = await _rule.EvaluateAsync(context);
-
-        // Test files are exempt
+        var diff = CreateDiff("tests/ServiceTests.cs", "var text = File.ReadAllText(path);");
+        var findings = await _rule.EvaluateAsync(CreateContext(diff));
         Assert.Empty(findings);
     }
 
@@ -143,10 +84,7 @@ public class GCI0057_BlockingAsyncViolationTests
     public async Task Finding_WhenUsingSyncFileWrite()
     {
         var diff = CreateDiff("src/Service.cs", "File.WriteAllText(path, content);");
-        var context = CreateContext(diff);
-
-        var findings = await _rule.EvaluateAsync(context);
-
+        var findings = await _rule.EvaluateAsync(CreateContext(diff));
         Assert.NotEmpty(findings);
     }
 
@@ -154,24 +92,7 @@ public class GCI0057_BlockingAsyncViolationTests
     public async Task NoFinding_WhenUsingAsyncFileRead()
     {
         var diff = CreateDiff("src/Service.cs", "var text = await File.ReadAllTextAsync(path);");
-        var context = CreateContext(diff);
-
-        var findings = await _rule.EvaluateAsync(context);
-
+        var findings = await _rule.EvaluateAsync(CreateContext(diff));
         Assert.Empty(findings);
     }
-
-    [Fact]
-    public async Task MultipleFindings_WhenMultipleViolations()
-    {
-        var diff = CreateDiff("src/Service.cs",
-            "var result = GetDataAsync().Result;",
-            "var text = File.ReadAllText(path);");
-        var context = CreateContext(diff);
-
-        var findings = await _rule.EvaluateAsync(context);
-
-        Assert.True(findings.Count >= 2);
-    }
 }
-

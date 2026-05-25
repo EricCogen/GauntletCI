@@ -11,11 +11,18 @@ public class ConfigurationServiceTests
     [Theory]
     [InlineData("GCI0001", RuleSeverity.Warn)]
     [InlineData("GCI0003", RuleSeverity.Block)]
+    [InlineData("GCI0004", RuleSeverity.Warn)]
     [InlineData("GCI0012", RuleSeverity.Block)]
+    [InlineData("GCI0020", RuleSeverity.Block)]
+    [InlineData("GCI0032", RuleSeverity.Warn)]
     [InlineData("GCI0039", RuleSeverity.Block)]
     [InlineData("GCI0006", RuleSeverity.Warn)]
     [InlineData("GCI0035", RuleSeverity.Warn)]
     [InlineData("GCI0041", RuleSeverity.Warn)]
+    [InlineData("GCI0048", RuleSeverity.Warn)]
+    [InlineData("GCI0054", RuleSeverity.None)]
+    [InlineData("GCI0055", RuleSeverity.None)]
+    [InlineData("GCI0057", RuleSeverity.Warn)]
     [InlineData("GCI0099", RuleSeverity.Info)]   // unknown → Info
     public void GetEffectiveSeverity_NoConfig_ReturnsDefault(string ruleId, RuleSeverity expected)
     {

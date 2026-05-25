@@ -156,7 +156,8 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
                 evidence: $"Removed logic: {string.Join(" | ", examples)}",
                 whyItMatters: "Removing control-flow logic without updating tests may silently break behaviour that was previously covered.",
                 suggestedAction: "Add or update tests to verify the removed logic paths are intentionally no longer needed.",
-                confidence: Confidence.Low));
+                confidence: Confidence.Low,
+                severityOverride: RuleSeverity.Warn));
         }
     }
 
@@ -208,7 +209,8 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             crossSummary: (total, fcount) => $"{total} method signatures changed (incompatible) across {fcount} files",
             whyItMatters: "Signature changes can break callers that haven't been updated.",
             suggestedAction: "Verify all callers are updated and consider adding an overload for backward compatibility.",
-            confidence: Confidence.Medium);
+            confidence: Confidence.Medium,
+            severityOverride: RuleSeverity.Block);
 
         EmitSigFindings(findings, fileCompatible,
             single1Summary: (name, file) => $"Backward-compatible signature extension: '{name}' in {file.NewPath}",
@@ -216,7 +218,8 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
             crossSummary: (total, fcount) => $"{total} backward-compatible signature extensions across {fcount} files",
             whyItMatters: "New parameters have default values (backward-compatible), but callers using positional arguments may need review.",
             suggestedAction: "Confirm all existing callers still compile and behave correctly with the new defaults.",
-            confidence: Confidence.Low);
+            confidence: Confidence.Low,
+            severityOverride: RuleSeverity.Info);
     }
 
     private void EmitSigFindings(
@@ -227,7 +230,8 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
         Func<int, int, string> crossSummary,
         string whyItMatters,
         string suggestedAction,
-        Confidence confidence)
+        Confidence confidence,
+        RuleSeverity? severityOverride = null)
     {
         if (perFile.Count == 0) return;
 
@@ -246,7 +250,7 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
                 var evidence = items.Count == 1
                     ? $"Was: {firstRemoved.Content.Trim()} | Now: {firstAdded.Content.Trim()}"
                     : $"Changed: {names} | e.g. Was: {firstRemoved.Content.Trim()} | Now: {firstAdded.Content.Trim()}";
-                findings.Add(CreateFinding(file, summary, evidence, whyItMatters, suggestedAction, adjustedConfidence, firstAdded));
+                findings.Add(CreateFinding(file, summary, evidence, whyItMatters, suggestedAction, adjustedConfidence, firstAdded, severityOverride));
             }
         }
         else
@@ -258,7 +262,8 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
                 evidence: $"Files: {fileList}",
                 whyItMatters: whyItMatters,
                 suggestedAction: suggestedAction,
-                confidence: confidence));
+                confidence: confidence,
+                severityOverride: severityOverride));
         }
     }
 

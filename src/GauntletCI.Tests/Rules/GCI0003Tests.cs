@@ -155,6 +155,7 @@ public class GCI0003Tests
 
         var f = Assert.Single(findings, f => f.Summary.Contains("Backward-compatible", StringComparison.Ordinal));
         Assert.Equal(Confidence.Low, f.Confidence);
+        Assert.Equal(RuleSeverity.Info, f.SeverityOverride);
     }
 
     [Fact]
@@ -175,6 +176,7 @@ public class GCI0003Tests
 
         var f = Assert.Single(findings, f => f.Summary.Contains("signature changed"));
         Assert.Equal(Confidence.Medium, f.Confidence);
+        Assert.Equal(RuleSeverity.Block, f.SeverityOverride);
     }
 
     [Fact]
