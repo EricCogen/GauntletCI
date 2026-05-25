@@ -86,7 +86,7 @@ const server = createServer(async (request, response) => {
   }
 });
 
-server.listen(env.port, () => {
+server.listen(env.port, "0.0.0.0", () => {
   console.log(`GauntletCI GitHub App server listening on :${env.port}`);
 });
 
