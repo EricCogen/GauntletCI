@@ -1,0 +1,88 @@
+---
+description: Agent workflow for working on GauntletCI — corpus, todos, checkpoints (not product defaults)
+alwaysApply: true
+---
+
+# GauntletCI agent workflow (databases & session state)
+
+These paths support **how agents work on GauntletCI**. They are **not** product defaults and must **not** be baked into CLI shipped defaults, config templates, or customer-facing docs.
+
+Repo `./data/gauntletci-corpus.db` stays an **empty schema shell** for fresh installs. Agent work uses **`~/.gauntletci/`** instead.
+
+---
+
+## Corpus (rule validation, FP/TP analysis)
+
+| Resource | Path | Notes |
+|----------|------|-------|
+| **Primary corpus** | `%USERPROFILE%\.gauntletci\corpus.db` | ~610 fixtures, labeled findings (Copilot-era ground truth) |
+| Backup | `%USERPROFILE%\.gauntletci\corpus-backup-20260501-180633.db` | May 1 snapshot |
+| **Not for agent work** | `./data/gauntletci-corpus.db` | Empty — do not confuse with primary |
+
+**When changing rules** (GCI0016, severities, coordinations, Phase 10/24):
+
+1. Always pass `--db` explicitly to corpus CLI commands:
+   ```powershell
+   $corpus = "$env:USERPROFILE\.gauntletci\corpus.db"
+   gauntletci corpus doctor --db $corpus
+   gauntletci corpus analyze --db $corpus ...
+   ```
+2. Prefer `ctx_execute` / `ctx_batch_execute` for fixture counts, rule FP breakdowns, and SQL aggregates — never Read large result sets into chat.
+3. Docs reference: `docs/PHASE_10_POST_LABEL_RULES.md`, `docs/PHASE_10C_RELABEL_PLAN.md`, `docs/phase-24-plan.md`.
+
+**GitHub auth** for corpus hydration: `GITHUB_TOKEN` or `gh auth token` (see `auth-tokens.mdc`).
+
+---
+
+## Todos (task tracking across sessions)
+
+| Resource | Path | Notes |
+|----------|------|-------|
+| **Todos DB** | `%USERPROFILE%\.gauntletci\copilot\todos.db` | Durable task list (~380+ items) |
+| Status script | `%USERPROFILE%\.gauntletci\copilot\sync-todos.py` | `--status`, `--upsert`, `--update` |
+| Seed / export | `todos-seed.sql`, `todos-export.json` | Restore in new agent sessions |
+| README | `%USERPROFILE%\.gauntletci\copilot\README.txt` | Session restore steps |
+
+**Session start (when resuming GauntletCI work):**
+
+```powershell
+python "$env:USERPROFILE\.gauntletci\copilot\sync-todos.py" --status
+```
+
+Or via `ctx_execute` (Python + sqlite3): `SELECT status, COUNT(*) FROM todos GROUP BY status`.
+
+**After completing agent tasks:** update todo status with `sync-todos.py --update <id> <status>` when Eric tracks work there.
+
+---
+
+## Checkpoints (where we left off)
+
+| Resource | Path |
+|----------|------|
+| Latest summaries | `%USERPROFILE%\.gauntletci\copilot\checkpoints\` |
+| Index | `checkpoints\index.md` |
+
+When Eric says "continue where we left off" or starts a multi-day rule/corpus task:
+
+1. Read the **latest** checkpoint markdown (filename sort / `index.md`).
+2. Run todos `--status`.
+3. Use graphify query for architecture before broad file reads.
+
+---
+
+## Other agent-local artifacts
+
+| Resource | Path | Use |
+|----------|------|-----|
+| Rule scores (Copilot era) | `%USERPROFILE%\.gauntletci\copilot\rules.db` | Prioritization context only |
+| Expert embeddings | `%USERPROFILE%\.gauntletci\expert-embeddings.db` | LLM helper data |
+| Audit log | `%USERPROFILE%\.gauntletci\audit-log.ndjson` | Local audit trail |
+| Graphify (legacy) | `%USERPROFILE%\.gauntletci\graphify\` | Stale; prefer repo `graphify-out/` |
+| Context-mode index | `.github/context-mode/` in repo | Session/tool memory (Cursor) |
+
+---
+
+## Boundaries (important)
+
+- **Do:** use `--db "$env:USERPROFILE\.gauntletci\corpus.db"` in agent-driven CLI invocations; query todos/checkpoints at session start; update todos when Eric uses that system.
+- **Do not:** change GauntletCI CLI default `--db` to home path; commit `*.db`; paste DB contents into chat; wire these paths into shipped `.gauntletci.json` templates.

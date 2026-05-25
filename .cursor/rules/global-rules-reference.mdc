@@ -11,4 +11,4 @@ User-global instructions live in:
 
 Always applied there: verification, writing/editing, engineering rules, GauntletCI user-global, context-mode, context-mode + graphify playbook, and the migration index (`copilot-instructions.mdc`).
 
-Repo-specific rules in this folder add GauntletCI build architecture, efficiency playbook, context-mode detail, and repo validation conventions.
+Repo-specific rules in this folder add GauntletCI build architecture, efficiency playbook, **agent workflow (corpus/todos)**, context-mode detail, and repo validation conventions.

@@ -11,7 +11,7 @@ alwaysApply: true
 
 Main repo path: `C:\Users\ericc\source\repos\GauntletCI` (under base `C:\Users\ericc\source`).
 
-**Also in this folder:** `gauntletci-build-instructions.mdc` (product architecture from Copilot), `gauntletci-efficiency-playbook.mdc` (batch prompts).
+**Also in this folder:** `gauntletci-build-instructions.mdc` (product architecture from Copilot), `gauntletci-efficiency-playbook.mdc` (batch prompts), **`gauntletci-agent-workflow.mdc`** (corpus/todos/checkpoints for agents — not product defaults).
 
 ## Product focus
 
