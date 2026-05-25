@@ -500,6 +500,9 @@ internal static class WellKnownPatterns
         public static bool IsExpressionBodied(string content) => GuardPatternsImpl.IsExpressionBodied(content);
         public static bool HasHasValueGuard(string content) => GuardPatternsImpl.HasHasValueGuard(content);
         public static bool IsCommentLine(string content) => GuardPatternsImpl.IsCommentLine(content);
+        public static string StripInlineComments(string content) => GuardPatternsImpl.StripInlineComments(content);
+        public static string StripStringLiterals(string content) => GuardPatternsImpl.StripStringLiterals(content);
+        public static string ForPatternScan(string content) => GuardPatternsImpl.ForPatternScan(content);
         public static bool HasAccessModifier(string content) => GuardPatternsImpl.HasAccessModifier(content);
         public static bool IsAsyncMethod(string content) => GuardPatternsImpl.IsAsyncMethod(content);
         public static bool IsEventHandler(string content) => GuardPatternsImpl.IsEventHandler(content);
@@ -548,6 +551,53 @@ internal static class WellKnownPatterns
 
         public static bool IsCommentLine(string content) =>
             !string.IsNullOrEmpty(content) && content.TrimStart().StartsWith("//", StringComparison.Ordinal);
+
+        /// <summary>
+        /// Returns the line with trailing <c>//</c> comments removed. Respects double-quoted string literals.
+        /// </summary>
+        public static string StripInlineComments(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return content;
+
+            var inString = false;
+            for (var i = 0; i < content.Length - 1; i++)
+            {
+                var c = content[i];
+                if (c == '"' && (i == 0 || content[i - 1] != '\\'))
+                    inString = !inString;
+
+                if (!inString && c == '/' && content[i + 1] == '/')
+                    return content[..i];
+            }
+
+            return content;
+        }
+
+        /// <summary>Masks double-quoted string literal contents so pattern scans skip string data.</summary>
+        public static string StripStringLiterals(string content)
+        {
+            if (string.IsNullOrEmpty(content)) return content;
+
+            var chars = content.ToCharArray();
+            var inString = false;
+            for (var i = 0; i < chars.Length; i++)
+            {
+                if (chars[i] == '"' && (i == 0 || chars[i - 1] != '\\'))
+                {
+                    inString = !inString;
+                    continue;
+                }
+
+                if (inString)
+                    chars[i] = ' ';
+            }
+
+            return new string(chars);
+        }
+
+        /// <summary>Code-only view: inline comments removed, string literals blanked.</summary>
+        public static string ForPatternScan(string content) =>
+            StripStringLiterals(StripInlineComments(content));
 
         public static bool HasAccessModifier(string content)
         {

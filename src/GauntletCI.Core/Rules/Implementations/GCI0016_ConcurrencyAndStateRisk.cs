@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Elastic-2.0
+using System.Text.RegularExpressions;
 using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
@@ -23,6 +24,9 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
     }
     public override string Id => "GCI0016";
     public override string Name => "Async Concurrency Risk";
+
+    private static readonly Regex AsyncVoidMethodRegex = new(
+        @"\basync\s+void\s+\w+\s*\(", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
@@ -52,8 +56,8 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
 
     private void CheckAsyncVoid(DiffLine line, List<Finding> findings)
     {
-        var content = line.Content;
-        if (!content.Contains("async void ", StringComparison.Ordinal)) return;
+        var content = WellKnownPatterns.GuardPatterns.ForPatternScan(line.Content);
+        if (!AsyncVoidMethodRegex.IsMatch(content)) return;
 
         // Event handlers: (object sender, ...EventArgs ...): legitimate use.
         if (WellKnownPatterns.GuardPatterns.IsEventHandler(content)) return;
@@ -68,7 +72,7 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
 
     private void CheckBlockingAsyncCall(DiffLine line, List<Finding> findings)
     {
-        var content = line.Content;
+        var content = WellKnownPatterns.GuardPatterns.ForPatternScan(line.Content);
 
         // Skip dev-only code (test utilities, profiling, temporary debug)
         if (WellKnownPatterns.HasDevOnlyMarker(content)) return;
@@ -143,8 +147,9 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
 
     private void CheckLockThis(DiffLine line, List<Finding> findings)
     {
-        if (!line.Content.Contains("lock(this)", StringComparison.Ordinal) &&
-            !line.Content.Contains("lock (this)", StringComparison.Ordinal)) return;
+        var content = WellKnownPatterns.GuardPatterns.ForPatternScan(line.Content);
+        if (!content.Contains("lock(this)", StringComparison.Ordinal) &&
+            !content.Contains("lock (this)", StringComparison.Ordinal)) return;
 
         findings.Add(CreateFinding(
             summary: "lock(this) antipattern: the lock object is visible to external callers.",
@@ -156,7 +161,8 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
 
     private void CheckThreadSleepInAsync(DiffLine line, List<Finding> findings)
     {
-        if (!line.Content.Contains("Thread.Sleep(", StringComparison.Ordinal)) return;
+        var content = WellKnownPatterns.GuardPatterns.ForPatternScan(line.Content);
+        if (!content.Contains("Thread.Sleep(", StringComparison.Ordinal)) return;
 
         findings.Add(CreateFinding(
             summary: "Thread.Sleep() blocks a thread pool thread.",

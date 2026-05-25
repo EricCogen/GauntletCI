@@ -53,6 +53,30 @@ public class GCI0016Tests
         Assert.DoesNotContain(findings, f => f.Summary.Contains("async void"));
     }
 
+    [Fact]
+    public async Task AsyncVoidMention_InInlineComment_ShouldNotFlag()
+    {
+        var diff = MakeDiff("    [\"GCI0054\"] = RuleSeverity.None, // async void — covered by GCI0016");
+        var findings = await Rule.EvaluateAsync(diff, null);
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("async void"));
+    }
+
+    [Fact]
+    public async Task AsyncVoidMention_InStringLiteral_ShouldNotFlag()
+    {
+        var diff = MakeDiff("    var guidance = \"avoid async void in services\";");
+        var findings = await Rule.EvaluateAsync(diff, null);
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("async void"));
+    }
+
+    [Fact]
+    public async Task DotWait_InInlineComment_ShouldNotFlag()
+    {
+        var diff = MakeDiff("    DoWork(); // legacy: task.Wait() removed");
+        var findings = await Rule.EvaluateAsync(diff, null);
+        Assert.DoesNotContain(findings, f => f.Summary.Contains(".Wait()"));
+    }
+
     // --- .Wait() / .GetAwaiter().GetResult() ---
 
     [Fact]
