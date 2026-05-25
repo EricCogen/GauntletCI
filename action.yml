@@ -38,7 +38,7 @@ inputs:
   gauntletci-version:
     description: "The GauntletCI NuGet tool version to install."
     required: false
-    default: "2.1.1"
+    default: "2.7.1"
 
 outputs:
   findings-count:
@@ -78,7 +78,8 @@ runs:
         gauntletci $args 2>&1 | tee "$TMPFILE"
         EXIT_CODE=$?
         set +o pipefail
-        FINDINGS=$(grep -cE 'GCI[0-9]{4}' "$TMPFILE" 2>/dev/null || echo "0")
+        FINDINGS=$(grep -cE 'GCI[0-9]{4}' "$TMPFILE" 2>/dev/null || true)
+        FINDINGS="${FINDINGS:-0}"
         rm -f "$TMPFILE"
         echo "findings-count=$FINDINGS" >> "$GITHUB_OUTPUT"
         [ "${{ inputs.fail-on-findings }}" = "true" ] && exit $EXIT_CODE

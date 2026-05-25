@@ -35,9 +35,12 @@ if [ $HAS_JQ -eq 1 ]; then
     MEDIUM_COUNT=$(echo "$OUTPUT" | jq '[.Findings[] | select(.Confidence == 1)] | length')
     LOW_COUNT=$(echo "$OUTPUT" | jq '[.Findings[] | select(.Confidence == 0)] | length')
 else
-    HIGH_COUNT=$(echo "$OUTPUT" | grep -c '"Confidence": 2' || echo 0)
-    MEDIUM_COUNT=$(echo "$OUTPUT" | grep -c '"Confidence": 1' || echo 0)
-    LOW_COUNT=$(echo "$OUTPUT" | grep -c '"Confidence": 0' || echo 0)
+    HIGH_COUNT=$(echo "$OUTPUT" | grep -c '"Confidence": 2' || true)
+    MEDIUM_COUNT=$(echo "$OUTPUT" | grep -c '"Confidence": 1' || true)
+    LOW_COUNT=$(echo "$OUTPUT" | grep -c '"Confidence": 0' || true)
+    HIGH_COUNT="${HIGH_COUNT:-0}"
+    MEDIUM_COUNT="${MEDIUM_COUNT:-0}"
+    LOW_COUNT="${LOW_COUNT:-0}"
 fi
 
 TOTAL=$((HIGH_COUNT + MEDIUM_COUNT + LOW_COUNT))
