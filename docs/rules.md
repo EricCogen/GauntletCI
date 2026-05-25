@@ -76,6 +76,7 @@ These rules examine the shape of the diff itself rather than the code it contain
 
 ### GCI0001 · Diff Integrity
 
+**Default severity:** Warn  
 **Confidence:** Medium / Low
 **What it detects:** Two separate checks. First, it looks for diffs that mix source code files with non-code files such as images, configuration, or documentation: a signal that two unrelated concerns have been bundled into one change. Second, it scans each file for lines where the only change is whitespace or blank lines; if more than 40% of the changed lines in a file are whitespace-only, it flags excessive formatting churn.
 **Why it matters:** Mixed-scope diffs force reviewers to context-switch and make it harder to spot logic changes hiding behind visual noise. Formatting churn obscures real intent.

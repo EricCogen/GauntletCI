@@ -114,7 +114,7 @@ export const rules: Rule[] = [
   {
     id: "GCI0001",
     name: "Diff Integrity",
-    severity: "Block",
+    severity: "Warn",
     categorySlug: "behavior",
     description:
       "Detects unrelated changes, formatting churn, and mixed scope within a single diff.",
