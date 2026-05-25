@@ -6,17 +6,12 @@ type Source = {
 
 type SourcesSectionProps = {
   sources: Source[];
-  intro?: string;
 };
 
-export function SourcesSection({ sources, intro }: SourcesSectionProps) {
+export function SourcesSection({ sources }: SourcesSectionProps) {
   return (
     <section className="space-y-4 rounded-xl border border-border bg-card/50 p-6">
-      <h2 className="text-2xl font-bold">Sources and scope</h2>
-      <p className="text-sm text-muted-foreground leading-relaxed">
-        {intro ??
-          "This article combines cited public documentation with GauntletCI's product positioning and engineering analysis. Tool capability claims are limited to the linked vendor documentation."}
-      </p>
+      <h2 className="text-2xl font-bold">Sources</h2>
       <ul className="space-y-3">
         {sources.map((source) => (
           <li key={source.href} className="text-sm text-muted-foreground leading-relaxed">

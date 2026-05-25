@@ -1,72 +1,41 @@
-import { Metadata } from 'next';
-import Link from 'next/link';
+import type { Metadata } from "next";
+import { ArticleLayout } from "../_components/article-layout";
+
+const slug = "the-asymmetry-of-change";
+const title = "The Asymmetry of Change: Why Your Tests Are Looking the Wrong Way";
+const description =
+  "Why passing tests don't guarantee correct behavior. How diff-scanning can close the gap between code changes and test validation.";
+const readingTime = "12 min read";
+const ruleIds = ["GCI0003", "GCI0041", "GCI0044"];
 
 export const metadata: Metadata = {
-  title: 'The Behavioral Gap: Why Your Tests Are Looking the Wrong Way',
-  description: 'Why passing tests don\'t guarantee correct behavior. How diff-scanning can close the gap between code changes and test validation.',
-  authors: [{ name: 'Eric Cogen' }],
-  keywords: ['testing', 'ci', 'code-review', 'diff-scanning', 'quality-gates', 'gittest', 'behavioral-testing'],
+  title: `${title} | GauntletCI`,
+  description,
+  alternates: { canonical: `/articles/${slug}` },
+  authors: [{ name: "Eric Cogen" }],
+  keywords: ["testing", "ci", "code-review", "diff-scanning", "quality-gates", "gittest", "behavioral-testing"],
   openGraph: {
-    title: 'The Behavioral Gap: Why Your Tests Are Looking the Wrong Way',
-    description: 'Why passing tests don\'t guarantee correct behavior. How diff-scanning can close the gap between code changes and test validation.',
-    type: 'article',
-    publishedTime: '2026-05-08T00:00:00Z',
-    authors: ['Eric Cogen'],
+    title,
+    description,
+    type: "article",
+    url: `https://gauntletci.com/articles/${slug}`,
+    publishedTime: "2026-05-08T00:00:00Z",
+    authors: ["Eric Cogen"],
   },
 };
 
 export default function AsymmetryOfChangePage() {
-  const publishDate = new Date('2026-05-08');
-  const readingTime = '12 min read';
-
   return (
-    <main className="min-h-screen bg-background pt-24">
-      <article className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-16 sm:py-20 space-y-16">
-        {/* Breadcrumbs */}
-        <nav className="flex items-center space-x-2 text-sm text-muted-foreground">
-          <Link href="/" className="hover:text-foreground transition-colors">
-            Home
-          </Link>
-          <span>/</span>
-          <Link href="/articles" className="hover:text-foreground transition-colors">
-            Articles
-          </Link>
-          <span>/</span>
-          <span className="text-foreground">The Behavioral Gap</span>
-        </nav>
-
-        {/* Hero Section */}
-        <div className="space-y-4">
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-foreground">
-            The Behavioral Gap: Why Your Tests Are Looking the Wrong Way
-          </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed">
-            Why passing tests don't guarantee correct behavior. How diff-scanning can close the gap between code changes and test validation.
-          </p>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 text-sm text-muted-foreground pt-4 border-t border-border">
-            <div>
-              <span className="font-semibold text-foreground">Eric Cogen</span> on{' '}
-              {publishDate.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </div>
-            <span className="hidden sm:inline">·</span>
-            <div>{readingTime}</div>
-          </div>
-        </div>
-
-        {/* Disclaimer */}
-        <div className="bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-900 rounded-lg p-6 space-y-3">
-          <p className="font-semibold text-blue-900 dark:text-blue-100">Disclaimer</p>
-          <p className="text-blue-800 dark:text-blue-200 text-sm leading-relaxed">
-            The following reflects observations from twenty years in .NET development and the problem space my tool, GauntletCI, is built to solve.
-          </p>
-        </div>
-
-        {/* Content */}
-        <div className="prose dark:prose-invert prose-lg max-w-none space-y-8">
+    <ArticleLayout
+      category="Article"
+      title={title}
+      intro={description}
+      dateTime="2026-05-08"
+      dateLabel="May 8, 2026"
+      readingTime={readingTime}
+      ruleIds={ruleIds}
+    >
+      <div className="prose dark:prose-invert prose-lg max-w-none space-y-8">
           <section className="space-y-6">
             <h2 className="text-3xl font-bold tracking-tight text-foreground">1. The "Wrong Question" Problem</h2>
             <p className="text-muted-foreground leading-relaxed">
@@ -193,43 +162,34 @@ export default function AsymmetryOfChangePage() {
               The goal is to move that realization to the local terminal, the millisecond a developer <strong>hits save and before they even hit commit</strong>. By catching unvalidated behavioral changes while the logic is still fresh in the developer's mind, we don't just keep the build green; we ensure the build is actually correct. We stop the "Time Machine" before it ever leaves the station.
             </p>
           </section>
-        </div>
+      </div>
 
-        {/* References */}
-        <div className="border-t border-border pt-12 space-y-6">
-          <h3 className="text-2xl font-bold text-foreground">References</h3>
-          <ol className="space-y-4 text-sm text-muted-foreground list-decimal list-inside">
-            <li id="ref1" className="pl-2">
-              Miranda, J. et al. (2025). Test Co-Evolution in Software Projects: A Large-Scale Empirical Study. <em>Journal of Software: Evolution and Process.</em> DOI: 10.1002/smr.70035
-            </li>
-            <li id="ref2" className="pl-2">
-              Sun, W. et al. (2021). Understanding and Facilitating the Co-Evolution of Production and Test Code. <em>IEEE International Conference on Software Engineering (ICSE).</em>
-            </li>
-            <li id="ref3" className="pl-2">
-              Gergely, T. et al. (2010). Studying the co-evolution of production and test code in open source and industrial developer test processes through repository mining. <em>Empirical Software Engineering.</em> DOI: 10.1007/s10664-010-9143-7
-            </li>
-            <li id="ref4" className="pl-2">
-              Haben, G., Habchi, S., Papadakis, M., Cordy, M., & Le Traon, Y. (2023). The Importance of Discerning Flaky from Fault-triggering Test Failures: A Case Study on the Chromium CI. <em>arXiv:2302.10594.</em>
-            </li>
-            <li id="ref5" className="pl-2">
-              Moreau, M. (2026). How a Single Test Revealed a Bug in Django 6.0. <em>Lincoln Loop.</em>
-            </li>
-            <li id="ref6" className="pl-2">
-              Cotroneo, D., De Rosa, G., & Liguori, P. (2025). PyResBugs: A Dataset of Residual Python Bugs for Natural Language-Driven Fault Injection. <em>IEEE/ACM Forge 2025.</em> DOI: 10.1109/Forge66646.2025.00024
-            </li>
-            <li id="ref7" className="pl-2">
-              Cogen, E. (2025). GauntletCI Corpus Analysis. 610 pull requests across 61 open-source .NET repositories. Data published at: <a href="https://github.com/EricCogen/GauntletCI/blob/main/data/corpus-fixtures.csv" className="text-blue-600 dark:text-blue-400 hover:underline">corpus-fixtures.csv</a>
-            </li>
-          </ol>
-        </div>
-
-        {/* Back Link */}
-        <div className="pt-8 border-t border-border">
-          <Link href="/articles" className="inline-flex items-center text-blue-600 dark:text-blue-400 hover:underline">
-            &larr; Back to articles
-          </Link>
-        </div>
-      </article>
-    </main>
+      <section className="border-t border-border pt-12 space-y-6">
+        <h2 className="text-2xl font-bold text-foreground">References</h2>
+        <ol className="space-y-4 text-sm text-muted-foreground list-decimal list-inside">
+          <li id="ref1" className="pl-2">
+            Miranda, J. et al. (2025). Test Co-Evolution in Software Projects: A Large-Scale Empirical Study. <em>Journal of Software: Evolution and Process.</em> DOI: 10.1002/smr.70035
+          </li>
+          <li id="ref2" className="pl-2">
+            Sun, W. et al. (2021). Understanding and Facilitating the Co-Evolution of Production and Test Code. <em>IEEE International Conference on Software Engineering (ICSE).</em>
+          </li>
+          <li id="ref3" className="pl-2">
+            Gergely, T. et al. (2010). Studying the co-evolution of production and test code in open source and industrial developer test processes through repository mining. <em>Empirical Software Engineering.</em> DOI: 10.1007/s10664-010-9143-7
+          </li>
+          <li id="ref4" className="pl-2">
+            Haben, G., Habchi, S., Papadakis, M., Cordy, M., & Le Traon, Y. (2023). The Importance of Discerning Flaky from Fault-triggering Test Failures: A Case Study on the Chromium CI. <em>arXiv:2302.10594.</em>
+          </li>
+          <li id="ref5" className="pl-2">
+            Moreau, M. (2026). How a Single Test Revealed a Bug in Django 6.0. <em>Lincoln Loop.</em>
+          </li>
+          <li id="ref6" className="pl-2">
+            Cotroneo, D., De Rosa, G., & Liguori, P. (2025). PyResBugs: A Dataset of Residual Python Bugs for Natural Language-Driven Fault Injection. <em>IEEE/ACM Forge 2025.</em> DOI: 10.1109/Forge66646.2025.00024
+          </li>
+          <li id="ref7" className="pl-2">
+            Cogen, E. (2025). GauntletCI Corpus Analysis. 610 pull requests across 61 open-source .NET repositories. Data published at: <a href="https://github.com/EricCogen/GauntletCI/blob/main/data/corpus-fixtures.csv" className="text-blue-600 dark:text-blue-400 hover:underline">corpus-fixtures.csv</a>
+          </li>
+        </ol>
+      </section>
+    </ArticleLayout>
   );
 }

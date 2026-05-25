@@ -324,10 +324,7 @@ export default function CorpusReportPage() {
           </p>
         </section>
 
-        <SourcesSection
-          sources={sources}
-          intro="This report is based on local GauntletCI corpus artifacts, public pull request sources, and internal methodology articles. Counts are reported from the local corpus database used during this update."
-        />
+        <SourcesSection sources={sources} />
       </ArticleLayout>
     </>
   );

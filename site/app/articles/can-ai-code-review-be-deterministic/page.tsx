@@ -319,10 +319,7 @@ export default function DeterminismArticlePage() {
 
           </article>
 
-          <SourcesSection
-            sources={sources}
-            intro="This article separates sourced vendor claims from GauntletCI positioning. The Mythos section relies on Anthropic's public disclosure dashboard; the GauntletCI architecture discussion is product analysis, not a claim that GauntletCI finds zero-day vulnerabilities."
-          />
+          <SourcesSection sources={sources} />
 
           {/* Related Articles */}
           <div className="border-t border-border pt-12 mt-16">
