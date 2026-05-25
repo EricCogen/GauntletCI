@@ -1,0 +1,57 @@
+---
+description: GauntletCI repository conventions and tooling
+alwaysApply: true
+---
+
+# GauntletCI
+
+**User-global rules:** `C:\Users\ericc\.cursor\rules\` (verification, engineering, writing, GauntletCI articles/SEO, context-mode). See `global-rules-reference.mdc`.
+
+**Token playbook (user-global):** `C:\Users\ericc\.cursor\rules\context-mode-graphify-playbook.mdc` — exact ctx_* and graphify instructions. GauntletCI paths below.
+
+Main repo path: `C:\Users\ericc\source\repos\GauntletCI` (under base `C:\Users\ericc\source`).
+
+**Also in this folder:** `gauntletci-build-instructions.mdc` (product architecture from Copilot), `gauntletci-efficiency-playbook.mdc` (batch prompts).
+
+## Product focus
+
+GauntletCI detects **behavioral change risk** in PR diffs — logic shifts, missing validations, and regressions that pass tests and review.
+
+## Code preferences
+
+- Prefer `string.Empty` over `""` for empty strings in C#.
+
+## Validation (before commit/push)
+
+- Whitespace: `git -c core.whitespace=cr-at-eol diff --check`
+- Site: `cd site; npm run build` (and `npm run test:e2e` when routes/content change)
+- .NET: focused `dotnet test` first, broader when shared behavior changes
+
+## Auth (`~/.tokens`)
+
+Local API keys and publish tokens live under `%USERPROFILE%\.tokens` (`~/.tokens`). **Never commit** token files or paste values into chat, rules, `mcp.json`, or hooks.
+
+| File (under `~/.tokens`) | Typical env var | Use |
+|--------------------------|-----------------|-----|
+| `dev.to.token` | `DEVTO_API_KEY` | Dev.to API (e.g. WatchTower publish) |
+| `gauntletci-vscode-publish token.token` | `VSCE_PAT` | VS Code Marketplace / `vsce publish` |
+
+**GitHub / `gh`:** not stored in `.tokens` here — use `gh auth login` or set `GITHUB_TOKEN` for corpus/CLI/API. GauntletCI resolves `GITHUB_TOKEN` then `gh auth token`.
+
+**Agents:** before a command needs a key, read the matching file in a subprocess (`ctx_execute` or shell), export the env var for that command only, and do not `ctx_index` or log file contents. Global details: user rule `auth-tokens.mdc`.
+
+**MCP:** `.cursor/mcp.json` has no secrets — only server names/commands.
+
+## Graphify (codebase knowledge graph)
+
+- **Repo root:** `C:\Users\ericc\source\repos\GauntletCI`
+- **Graph (query only, never Read raw):** `graphify-out/graph.json`
+- **Budgeted query:** `python -m graphify query "<question>" --budget 1500 --graph graphify-out/graph.json`
+- **Stale check:** `python -m graphify check-update .` then `/graphify --update` if pending
+- Full pipeline: **graphify** skill (`/graphify` or ask to build the knowledge graph)
+- Incremental watch: `.\scripts\start-graphify-watch.ps1`
+- Agents: graphify query/path/explain **before** broad Read/Grep for architecture questions (see user-global playbook)
+
+## Markdown policy
+
+Most `*.md` files are gitignored except an allowlist in `.gitignore`. Do not add new tracked markdown without updating `.gitignore` exceptions.
