@@ -245,9 +245,9 @@ export const rules: Rule[] = [
     severity: "Block",
     categorySlug: "concurrency",
     description:
-      "Detects async void methods, blocking async calls (.Result, .Wait()), static mutable state, and patterns that introduce deadlock risk.",
+      "Detects async void methods, blocking async calls (.Result, .Wait(), .GetAwaiter().GetResult()), lock(this), and Thread.Sleep in production code. Uses ForPatternScan to ignore matches inside // comments and string literals.",
     whyExists:
-      "async void cannot be awaited and crashes the process on unhandled exceptions. .Result on the request thread deadlocks under load. Static mutable state corrupts under parallel requests. All three pass unit tests and fail in production.",
+      "async void cannot be awaited and crashes the process on unhandled exceptions. Blocking on async in a SynchronizationContext deadlocks under load. lock(this) exposes the lock to callers. Thread.Sleep blocks thread-pool threads. Comment/string false positives are stripped before matching.",
     example: {
       language: "csharp",
       bad: "+ public async void HandleClick() { await SaveAsync(); }\n+ var data = httpClient.GetStringAsync(url).Result;",

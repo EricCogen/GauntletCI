@@ -1,0 +1,133 @@
+---
+description: Authoritative GauntletCI engineering master rules — charter, invariants, EP/BP checks, mandatory workflow
+alwaysApply: true
+---
+
+# GauntletCI Engineering Rules (Consolidated Master)
+
+**Authoritative source (read before non-trivial work):**
+
+`C:\Users\ericc\.gauntletci\ENGINEERING_RULES_CONSOLIDATED.md`
+
+User-global Cursor rules (`C:\Users\ericc\.cursor\rules\engineering-rules.mdc`, `verification-accountability.mdc`) are operational subsets for tool/git behavior. **This consolidated master overrides gaps** — especially branching, pre-commit gates, risk assessment, and adversarial review.
+
+---
+
+## I. System Charter
+
+Senior engineering collaborator; changes are **production-bound by default**.
+
+**Decision hierarchy:** Safety → Clarity → Long-term maintainability → Speed.
+
+---
+
+## II. Operating Principles
+
+| Area | Must do |
+|------|---------|
+| **Scope** | Surgical changes only; no opportunistic refactors; **every change gets its own branch** |
+| **Consistency** | Match existing architecture/style unless intentionally diverging |
+| **Observability** | Failures and state transitions must be diagnosable; structured logging; no secrets in logs |
+| **Ownership** | Explicit invariants; localize complexity; assume reputation is attached |
+| **Review** | Second-perspective review; docs aligned with runtime behavior |
+
+---
+
+## III. Engineering Invariants (Must-Hold)
+
+Each maps to policy checks EP001–EP015 in the master file.
+
+| Invariant | Key must-holds |
+|-----------|----------------|
+| **A. Correctness** (EP001) | No TODO/FIXME/HACK in prod; no `NotImplementedException`; no stub bodies |
+| **B. Contracts** (EP002–003) | Backward-compatible public APIs; names match external artifacts |
+| **C. Failure handling** (EP004) | No empty catch; no swallowed exceptions; exceptions logged with object |
+| **D. Data integrity** (EP005) | Atomic transitions; no partial writes |
+| **E. Environment** (EP006) | No fragile env assumptions; missing config fails fast |
+| **F. Performance** (EP007) | No `Thread.Sleep` in prod; no LINQ in loops; pre-allocate collections |
+| **G. Complexity** (EP008) | Simplest solution; no gratuitous abstractions |
+| **H. Architecture** (EP009) | Respect layer boundaries; DI not `new ConcreteService()` across layers |
+| **I. Resources** (EP010) | `using` for disposables; `IHttpClientFactory`; no bare `new HttpClient()` |
+| **J. Concurrency** (EP011) | No `.Result`/`.Wait()` in prod; no `async void` except event handlers; propagate `CancellationToken` |
+| **K. Nullability** (EP012) | No `!` without guard; no `#nullable disable` |
+| **L. Security** (EP013) | Validate input; no credential literals; auth on new endpoints |
+| **M. Testing** (EP015) | New public methods tested; assertions in every test; no deleted tests without replacement |
+
+---
+
+## IV. Risk Assessment (Before Commit)
+
+Classify **each behavioral change** from the **consumer's perspective**:
+
+| Level | Action |
+|-------|--------|
+| Critical | Mitigation + deployment prerequisites |
+| High | Concrete mitigation + verification step |
+| Medium | Document impact |
+| Low / Negligible | Note for reviewers |
+
+High+ items need actionable mitigations before merge-ready.
+
+---
+
+## V. Release Readiness
+
+Treat every change as deployable. Surface risks explicitly; Critical/High mitigations must be actionable.
+
+---
+
+## VI. Mandatory Operational Workflow
+
+### Branching
+
+- **Never commit directly to `main`**
+- Branch naming: `<type>/<short-description>` (`fix/…`, `rule/…`, `feat/…`, `docs/…`, `test/…`)
+- No fast-path exceptions
+
+### Pre-commit checks (all mandatory unless explicitly skipped with reason)
+
+1. **Build:** `dotnet build GauntletCI.slnx -v quiet --nologo`
+2. **Tests:** `dotnet test GauntletCI.slnx --no-build --nologo`
+3. **Whitespace:** `git -c core.whitespace=cr-at-eol diff --check`
+4. **GauntletCI on staged diff:**
+   ```powershell
+   git diff HEAD > $env:TEMP\gauntlet-audit.diff
+   dotnet run --project src/GauntletCI.Cli --no-build -- analyze --diff $env:TEMP\gauntlet-audit.diff --no-banner
+   ```
+   Address High/Critical findings or document intentional acceptance.
+5. **Risk assessment** (Section IV) written before commit
+6. **Adversarial review** (Principal .NET Architect — pessimistic, determinism/blast-radius/abstraction-tax) for rule-engine and behavioral changes
+7. **Format/style:**
+   ```powershell
+   dotnet format --verify-no-changes --verbosity diagnostic
+   dotnet build GauntletCI.slnx -v:minimal --nologo /p:EnforceCodeStyleInBuild=true
+   ```
+
+**Doc-only exception:** Steps 4, 6, and 7 may be skipped when the changeset touches only documentation and Cursor rules — state that explicitly.
+
+### Push / PR / merge gates
+
+- **Always ask** before `git push`: "Ready to push — shall I go ahead?"
+- **Always ask** before opening a PR
+- **Always ask** before merging (even with admin bypass)
+- PR body: what / why / side effects — no template scaffolding
+
+---
+
+## VII. Policy Checks EP001–EP015
+
+Quick reference — full detail in master file Section VII.
+
+EP001 Correctness · EP002 Contracts · EP003 Naming · EP004 Failures · EP005 Data integrity · EP006 Environment · EP007 Performance · EP008 Complexity · EP009 Architecture · EP010 Resources · EP011 Concurrency · EP012 Nullability · EP013 Security · EP014 Logging · EP015 Testing
+
+---
+
+## IX. C# Best Practices BP001–BP030
+
+30 Roslyn-oriented rules (naming, structure, exceptions, async, collections, performance, memory, security, DI, config, testing, logging, nullability). Complement Section III — see master file Section IX for full table.
+
+---
+
+## GauntletCI repo additions
+
+See also `gauntletci.mdc` (repo validation, graphify, tokens) and `gauntletci-agent-workflow.mdc` (agent corpus/todos — not product defaults).

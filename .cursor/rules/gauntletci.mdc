@@ -11,7 +11,7 @@ alwaysApply: true
 
 Main repo path: `C:\Users\ericc\source\repos\GauntletCI` (under base `C:\Users\ericc\source`).
 
-**Also in this folder:** `gauntletci-build-instructions.mdc` (product architecture from Copilot), `gauntletci-efficiency-playbook.mdc` (batch prompts), **`gauntletci-agent-workflow.mdc`** (corpus/todos/checkpoints for agents — not product defaults).
+**Also in this folder:** **`engineering-rules-consolidated.mdc`** (mandatory branch/pre-commit/push workflow + EP/BP invariants), `gauntletci-build-instructions.mdc` (product architecture from Copilot), `gauntletci-efficiency-playbook.mdc` (batch prompts), **`gauntletci-agent-workflow.mdc`** (corpus/todos/checkpoints for agents — not product defaults).
 
 ## Product focus
 
@@ -23,9 +23,13 @@ GauntletCI detects **behavioral change risk** in PR diffs — logic shifts, miss
 
 ## Validation (before commit/push)
 
-- Whitespace: `git -c core.whitespace=cr-at-eol diff --check`
-- Site: `cd site; npm run build` (and `npm run test:e2e` when routes/content change)
-- .NET: focused `dotnet test` first, broader when shared behavior changes
+Follow **`engineering-rules-consolidated.mdc`** Section VI for the full gate. Minimum for this repo:
+
+1. Whitespace: `git -c core.whitespace=cr-at-eol diff --check`
+2. Build + full test: `dotnet build GauntletCI.slnx -v quiet --nologo` then `dotnet test GauntletCI.slnx --no-build --nologo`
+3. GauntletCI on diff when C# / rule-engine code changes (see consolidated rules)
+4. Site: `cd site; npm run build` when `site/` or `docs/rules.md` changes (and `npm run test:e2e` when routes/content change)
+5. Focused `dotnet test --filter …` is fine **during iteration**; run full `GauntletCI.slnx` before commit
 
 ## Auth (`~/.tokens`)
 
