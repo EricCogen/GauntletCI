@@ -29,6 +29,7 @@ graphify-out/
 nupkg-local/
 nupkg-extract/
 nupkg/
+packaging/*.nupkg
 
 # Cursor agent config (optional commit — un-ignore rules under .cursor/)
 !.cursor/
