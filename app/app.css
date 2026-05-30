@@ -1,0 +1,1478 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600;1,700&display=swap");
+
+:root {
+  color-scheme: light dark;
+  --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+}
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+input,
+select,
+textarea,
+button {
+  font-family: inherit;
+}
+body {
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  background: transparent;
+}
+/* Iframe height is externally managed — host sets iframe.style.height to
+ * match body.getBoundingClientRect().height via postMessage. During the
+ * 1-frame lag (and the 0.25s initial transition), body > viewport triggers
+ * a transient scrollbar that steals ~15px width, reflowing flex content.
+ * Zero-width scrollbar = zero layout shift. Wheel/keyboard scroll still
+ * work if ever needed. */
+html,
+body {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+/* Short var aliases — saves ~5 tokens per reference */
+:root {
+  --p: var(--color-text-primary);
+  --s: var(--color-text-secondary);
+  --t: var(--color-text-tertiary);
+  --bg2: var(--color-background-secondary);
+  --b: var(--color-border-secondary);
+}
+
+/* SVG utility classes — use class="t" instead of repeating font/fill attrs */
+.t {
+  font-size: 14px;
+  fill: var(--p);
+}
+.ts {
+  font-size: 12px;
+  fill: var(--s);
+}
+.th {
+  font-size: 14px;
+  fill: var(--p);
+  font-weight: 500;
+}
+.box {
+  fill: var(--bg2);
+  stroke: var(--b);
+}
+.arr {
+  stroke: var(--t);
+  fill: none;
+  stroke-width: 1.5;
+}
+.node {
+  cursor: pointer;
+}
+.node:hover rect,
+.node:hover .box {
+  filter: brightness(0.97);
+}
+.node:hover text {
+  opacity: 0.8;
+}
+
+/* Form element defaults — model writes bare <input>, styling is automatic */
+/* :not(form.elicit *) — elicitation form provides its own
+ * input/button styling at (0,1,0). Without this exclusion, these
+ * generic rules at (0,3,1) / (1,0,2) clobber every .elicit-* class. */
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not(
+    form.elicit *
+  ),
+select:not(form.elicit *),
+textarea:not(form.elicit *) {
+  width: 100%;
+  height: 36px;
+  padding: 8px 12px;
+  font-size: 16px;
+  background: var(--color-background-primary);
+  color: var(--color-text-primary);
+  border: 0.5px solid var(--color-border-tertiary);
+  border-radius: 6px;
+  outline: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+textarea {
+  height: auto;
+  min-height: 80px;
+  resize: vertical;
+}
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not(
+    form.elicit *
+  ):hover,
+select:not(form.elicit *):hover,
+textarea:not(form.elicit *):hover {
+  border-color: var(--color-border-secondary);
+}
+input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not(
+    form.elicit *
+  ):focus,
+select:not(form.elicit *):focus,
+textarea:not(form.elicit *):focus {
+  border-color: var(--color-border-info);
+  box-shadow: 0 0 0 3px var(--color-background-info);
+}
+select {
+  cursor: pointer;
+}
+
+/* Range slider — model writes bare <input type="range">, styling automatic */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.1));
+  border-radius: 2px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-secondary);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    transform 0.15s;
+}
+input[type="range"]:hover::-webkit-slider-thumb {
+  border-color: var(--color-border-primary);
+  transform: scale(1.1);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-border-secondary);
+  cursor: pointer;
+}
+
+/* Button defaults — model writes bare <button>, interaction states automatic */
+button:not(#action-btns button):not(form.elicit button) {
+  padding: 8px 16px;
+  font-size: 14px;
+  background: transparent;
+  color: var(--color-text-primary);
+  border: 0.5px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    transform 0.1s;
+}
+button:not(#action-btns button):not(form.elicit button):hover {
+  background: var(--color-background-secondary);
+}
+button:not(#action-btns button):not(form.elicit button):active {
+  background: var(--color-border-tertiary);
+  transform: scale(0.98);
+}
+
+/* ===== Elicitation form — EA-878 =====
+ * Inert unless the host injects <form class="elicit">.
+ * Figma: AaGSDTRrOCNVhNa7LZaJVr node 5340:3930
+ * Conversational question prompts ("Which side are you on?"),
+ * pills for all choices.
+ */
+
+form.elicit {
+  background: var(--color-background-primary, #fff);
+  border: 0.5px solid var(--color-border-tertiary, rgba(31, 30, 29, 0.15));
+  border-radius: 16px;
+  /* Figma 5340:3930 — soft diffuse shadow, lighter than DS --shadow-md.
+   * Margin keeps the shadow from clipping at #vis-container's overflow:hidden
+   * edge: y-offset 4px + blur 20px ≈ 24px below, 20px sides. */
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.04);
+  margin: 4px 20px 24px;
+  overflow: hidden;
+  /* font-base = 14/1.4 sans — descendants inherit; only .elicit-question
+   * (serif 16/1.7), .name (12), .badge (9) override. */
+  font-family: var(--font-sans, system-ui, sans-serif);
+  font-size: 14px;
+  line-height: 1.4;
+  /* Match host rendering — without this the iframe uses subpixel AA and
+   * everything (notably weight-500 buttons) reads ~100 heavier on Retina
+   * than the same tokens outside the iframe. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Chrome props animate on the form→submitted-summary swap. */
+  transition:
+    background-color 200ms ease-out,
+    box-shadow 200ms ease-out,
+    border-radius 200ms ease-out,
+    padding 200ms ease-out,
+    margin 200ms ease-out;
+  /* Shared FileThumbnail tokens (border-border-300/25, shadow-sm/5). */
+  --elicit-border-faint: color-mix(
+    in srgb,
+    var(--color-border-tertiary, rgba(31, 30, 29, 0.15)) 25%,
+    transparent
+  );
+  --elicit-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+/* Form controls don't inherit font props from the UA sheet — pull from root.
+ * `font: inherit` shorthand so font-weight comes too; the individual-prop
+ * version left weight at the UA <button> default (bold-ish on some
+ * platforms) for any control that doesn't set its own weight. */
+form.elicit :is(button, input, textarea) {
+  font: inherit;
+}
+
+/* Header title and question prompts use serif body voice (16 / 400 / 1.7)
+ * so prompts read as conversation, not form chrome. */
+form.elicit .elicit-header,
+form.elicit .elicit-question {
+  font-family: var(--font-serif, "Source Serif 4", Georgia, serif);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.7;
+  color: var(--color-text-primary, #131313);
+}
+
+/* 44px total to match the suggested-connector widget spec.
+ * Fixed height + zero vertical padding lets align-items:center handle the rest;
+ * avoids the icon/text line-height arithmetic. */
+form.elicit .elicit-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 16px;
+  border-bottom: 0.5px solid
+    var(--color-border-tertiary, rgba(31, 30, 29, 0.15));
+}
+form.elicit .elicit-header > svg {
+  /* Header icon: 20px vector box. */
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+form.elicit .elicit-header > span {
+  flex: 1;
+}
+
+form.elicit .elicit-body {
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+form.elicit .elicit-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+form.elicit .elicit-question {
+  margin: 0;
+}
+
+/* Pills container — no horizontal padding. Previously had 0 8px which pushed
+ * pills 8px right of the question/textarea/date in the same .elicit-group. */
+form.elicit .elicit-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+form.elicit .elicit-pill {
+  /* Fully rounded + tighter padding — visually distinct from the rectangular
+   * text inputs (textarea/other/date stay at 8-12px radius). Pills and inputs
+   * don't match in height so the shape difference reads as intentional. */
+  padding: 8px 12px;
+  border: 0.5px solid var(--color-border-tertiary, rgba(31, 30, 29, 0.15));
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--color-text-secondary, #383835);
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+form.elicit .elicit-pill:hover {
+  border-color: var(--color-border-secondary, rgba(30, 30, 29, 0.3));
+}
+/* Semantic accents — same light-fill+soft-border recipe as the blue selected
+ * state, applied via attribute so inline style doesn't fight aria-pressed.
+ * Single-attr specificity; the [aria-pressed="true"] rule below wins on
+ * border+bg so selection remains visible on accented pills. */
+form.elicit .elicit-pill[data-accent="warning"] {
+  border-color: var(--color-text-warning, #5a4815);
+  background: color-mix(
+    in srgb,
+    var(--color-text-warning, #5a4815) 15%,
+    transparent
+  );
+  color: var(--color-text-warning, #5a4815);
+}
+form.elicit .elicit-pill[data-accent="danger"] {
+  border-color: var(--color-text-danger, #7f2c28);
+  background: color-mix(
+    in srgb,
+    var(--color-text-danger, #7f2c28) 15%,
+    transparent
+  );
+  color: var(--color-text-danger, #7f2c28);
+}
+form.elicit .elicit-pill[data-accent="success"] {
+  border-color: var(--color-text-success, #265b19);
+  background: color-mix(
+    in srgb,
+    var(--color-text-success, #265b19) 15%,
+    transparent
+  );
+  color: var(--color-text-success, #265b19);
+}
+form.elicit .elicit-pill[aria-pressed="true"] {
+  /* Figma: 0.5px #184f95 border + rgba(205,226,251,0.5) fill (approx via color-mix). */
+  border: 0.5px solid var(--color-text-info, #184f95);
+  background: color-mix(
+    in srgb,
+    var(--color-text-info, #184f95) 15%,
+    transparent
+  );
+  /* accent-000 — host bridge maps DS accent to --color-text-info (no
+   * --accent-* var injected into the iframe). Matches border + fill. */
+  color: var(--color-text-info, #184f95);
+}
+
+/* "Other" conditional text input.
+ * background/color explicit — generic input rule no longer provides
+ * these post-specificity-fix, UA Canvas/CanvasText mismatch in dark mode. */
+form.elicit .elicit-other {
+  margin-top: 8px;
+  height: 40px;
+  padding: 0 12px;
+  border: 0.5px solid var(--color-border-tertiary, rgba(31, 30, 29, 0.15));
+  border-radius: 8px;
+  background: var(--color-background-primary, #fff);
+  color: var(--color-text-primary, #131313);
+  width: 100%;
+  box-sizing: border-box;
+}
+form.elicit .elicit-other[hidden] {
+  display: none;
+}
+
+/* Textarea.
+ * background/color explicit — generic textarea rule no longer provides
+ * these post-specificity-fix, UA Canvas/CanvasText mismatch in dark mode. */
+form.elicit .elicit-textarea {
+  min-height: 84px;
+  padding: 12px;
+  border: 0.5px solid var(--color-border-tertiary, rgba(31, 30, 29, 0.15));
+  border-radius: 8px;
+  background: var(--color-background-primary, #fff);
+  color: var(--color-text-primary, #131313);
+  resize: vertical;
+  box-sizing: border-box;
+  width: 100%;
+}
+form.elicit .elicit-textarea::placeholder {
+  color: var(--color-text-tertiary, #7b7974);
+}
+
+/* Date input — pill-shaped, hugs content */
+form.elicit .elicit-date {
+  padding: 12px 16px;
+  border: 0.5px solid var(--color-border-tertiary, rgba(31, 30, 29, 0.15));
+  border-radius: 12px;
+  background: transparent;
+  color: var(--color-text-primary, #131313);
+  width: fit-content;
+  cursor: pointer;
+}
+/* Shared focus ring for all text inputs — info-blue border + soft glow */
+form.elicit .elicit-other:focus,
+form.elicit .elicit-textarea:focus,
+form.elicit .elicit-date:focus {
+  outline: none;
+  border-color: var(--color-border-info, #2a78d6);
+  box-shadow: 0 0 0 3px var(--color-background-info, rgba(42, 120, 214, 0.2));
+}
+
+/* File upload — dashed dropzone + filled tiles.
+ * Tile styling mirrors packages/chat/components/FileThumbnail.tsx (the
+ * thumbnail users already see in the chat input row) so a file picked here
+ * reads as the same object it becomes once attached. Dropzone is the first
+ * flex child; tiles append after it (flow right). */
+form.elicit .elicit-files {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+}
+form.elicit .elicit-dropzone {
+  /* 120×120 = FileThumbnail SIZE_MAP.normal. Dashed stays 1px — 0.5px
+   * dashed rasterizes to invisible gaps on non-retina. */
+  width: 120px;
+  height: 120px;
+  border: 1px dashed var(--color-border-tertiary, rgba(31, 30, 29, 0.15));
+  border-radius: 10px;
+  box-shadow: var(--elicit-shadow-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  /* Figma 5340:4071 — 2% text-000 wash over bg-000 */
+  background: color-mix(
+    in srgb,
+    var(--color-text-primary, #131313) 2%,
+    var(--color-background-primary, #fff)
+  );
+  color: var(--color-text-tertiary, #7b7974);
+  transition:
+    border-color 120ms ease,
+    background-color 120ms ease;
+}
+form.elicit .elicit-dropzone:hover {
+  border-color: var(--color-text-info, #184f95);
+  background: color-mix(
+    in srgb,
+    var(--color-text-info, #184f95) 4%,
+    transparent
+  );
+}
+form.elicit .elicit-dropzone svg {
+  width: 24px;
+  height: 24px;
+  fill: currentColor;
+}
+form.elicit .elicit-dropzone input[type="file"] {
+  display: none;
+}
+
+form.elicit .elicit-file-tile {
+  /* FileThumbnail ThumbnailInteractionContainer:
+   * rounded-lg border-0.5 border-border-300/25 shadow-sm shadow-always-black/5
+   * bg-bg-000 px-2.5 py-2 gap-2.5 → 8px radius, 0.5px border, 8/10px pad */
+  width: 120px;
+  height: 120px;
+  border: 0.5px solid var(--elicit-border-faint);
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--color-background-primary, #fff);
+  box-shadow: var(--elicit-shadow-sm);
+  box-sizing: border-box;
+  position: relative;
+}
+form.elicit .elicit-file-tile .name {
+  /* FileThumbnail title: text-[12px] text-text-100 break-words line-clamp-3 */
+  font-size: 12px;
+  color: var(--color-text-primary, #131313);
+  word-break: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+form.elicit .elicit-file-tile .badge {
+  /* FileThumbnail ThumbnailTagContainer:
+   * h-[18px] px-1 border-0.5 border-border-300/25 shadow-sm rounded
+   * bg-bg-000/70 font-medium + inner text-[9px] uppercase font-bold */
+  align-self: flex-start;
+  height: 18px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  border: 0.5px solid var(--elicit-border-faint);
+  border-radius: 4px;
+  background: color-mix(
+    in srgb,
+    var(--color-background-primary, #fff) 70%,
+    transparent
+  );
+  box-shadow: var(--elicit-shadow-sm);
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--color-text-tertiary, #7b7974);
+  text-transform: uppercase;
+}
+/* FileThumbnail RemoveButton: w-5 h-5 -top-2 -left-2 rounded-full
+ * border-0.5 border-border-300/25 bg-bg-000/90 backdrop-blur-sm.
+ * Always visible (no group-hover in iframe — touch + no Tailwind group). */
+form.elicit .elicit-file-tile .remove {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0.5px solid var(--elicit-border-faint);
+  border-radius: 9999px;
+  background: color-mix(
+    in srgb,
+    var(--color-background-primary, #fff) 90%,
+    transparent
+  );
+  backdrop-filter: blur(4px);
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--color-text-tertiary, #7b7974);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    color 120ms ease,
+    background-color 120ms ease;
+}
+form.elicit .elicit-file-tile .remove:hover {
+  color: var(--color-text-secondary, #383835);
+  background: color-mix(
+    in srgb,
+    var(--color-background-primary, #fff) 50%,
+    transparent
+  );
+}
+
+/* Footer — DS Button tokens transcribed (variant=secondary / variant=primary,
+ * size=default: h-9 px-4 rounded-lg min-w-[5rem] font-base-bold). */
+form.elicit .elicit-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  /* Explicit height (mirrors .elicit-header) so the submitted-state height:0
+   * transition can interpolate — auto→0 snaps. 36px buttons + 32px breathing room. */
+  height: 68px;
+  padding: 0 24px;
+  border-top: 0.5px solid var(--color-border-tertiary, rgba(31, 30, 29, 0.15));
+}
+form.elicit .elicit-skip,
+form.elicit .elicit-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  min-width: 80px;
+  padding: 0 16px;
+  border-radius: 8px;
+  /* DS Button primary/secondary = font-base-bold (tw-typography.js:26) */
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background-color 100ms ease-out,
+    border-color 100ms ease-out,
+    transform 150ms cubic-bezier(0.165, 0.85, 0.45, 1);
+}
+form.elicit .elicit-skip:active,
+form.elicit .elicit-submit:active {
+  transform: scale(0.96);
+}
+/* secondary */
+form.elicit .elicit-skip {
+  border: 0.5px solid
+    color-mix(
+      in srgb,
+      var(--color-border-secondary, rgba(30, 30, 29, 0.3)) 30%,
+      transparent
+    );
+  background: transparent;
+  color: var(--color-text-primary, #131313);
+}
+form.elicit .elicit-skip:hover {
+  background: var(--color-background-secondary, #f9f9f7);
+  border-color: transparent;
+}
+/* primary */
+form.elicit .elicit-submit {
+  border: none;
+  background: var(--color-text-primary, #131313);
+  color: var(--color-background-primary, #fff);
+}
+form.elicit .elicit-submit:hover {
+  transform: scaleX(1.005) scaleY(1.015);
+}
+/* :hover and :active are both true during a mouse click; equal specificity →
+ * source order wins, so without this the hover-grow above masks the press-down. */
+form.elicit .elicit-submit:hover:active {
+  transform: scale(0.96);
+}
+
+/* Post-submit — submitElicitation() adds .elicit-transitioning (body fades
+ * out), then after 150ms swaps the body for the Q/A summary and adds
+ * .elicit-submitted (chrome transitions to the bare card while body fades
+ * back in). Mirrors AskUserQuestion: outer card = AskUserQuestionToolUseCell
+ * .tsx:177 (rounded-xl border-0.5 border-border-300 p-4, no bg-bg-000 when
+ * submitted), rows = SubmittedResponses.tsx:14-36. */
+form.elicit .elicit-body {
+  transition: opacity 150ms ease-out;
+}
+form.elicit.elicit-transitioning .elicit-body {
+  opacity: 0;
+}
+form.elicit.elicit-submitted {
+  background: transparent;
+  border-radius: 12px;
+  box-shadow: none;
+  padding: 16px;
+  margin: 4px;
+}
+/* `display: none` can't transition — collapse to zero so the chrome animates
+ * away with the form's 200ms transition instead of snapping. */
+form.elicit .elicit-header,
+form.elicit .elicit-footer {
+  transition:
+    opacity 200ms ease-out,
+    height 200ms ease-out,
+    padding 200ms ease-out,
+    border-width 200ms ease-out,
+    /* step to hidden after the collapse so Skip/Submit leave the tab order +
+     * a11y tree (pointer-events:none alone doesn't). */
+    visibility 0s linear 200ms;
+}
+form.elicit.elicit-submitted .elicit-header,
+form.elicit.elicit-submitted .elicit-footer {
+  opacity: 0;
+  height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-width: 0;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+}
+form.elicit.elicit-submitted .elicit-body {
+  padding: 0;
+}
+/* Quota-fallback "1" sentinel restore: shape check skips renderSubmittedSummary
+ * so the body still has live inputs — dim them so the locked state reads. */
+form.elicit.elicit-submitted .elicit-body:not(:has(.elicit-summary)) {
+  pointer-events: none;
+  opacity: 0.5;
+}
+/* sessionStorage restore path adds this alongside .elicit-submitted so
+ * scroll-back/reload shows the summary immediately (no replayed crossfade). */
+form.elicit.elicit-restored,
+form.elicit.elicit-restored .elicit-body,
+form.elicit.elicit-restored .elicit-header,
+form.elicit.elicit-restored .elicit-footer {
+  transition: none;
+}
+form.elicit .elicit-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+form.elicit .elicit-summary-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+/* Submitted summary question line (serif 14 / 600 / 1.5). */
+form.elicit .elicit-summary-q {
+  font-family: var(--font-serif, "Source Serif 4", Georgia, serif);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--color-text-secondary, #383835);
+}
+/* SubmittedResponses answer: text-text-500 font-base (sans 14 / 430 / 1.4) */
+form.elicit .elicit-summary-a {
+  font-weight: 430;
+  color: var(--color-text-tertiary, #7b7974);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Headings — bare tags get correct color in both modes */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--color-text-primary);
+}
+
+.leader {
+  stroke: var(--t);
+  stroke-width: 0.5;
+  stroke-dasharray: 4 3;
+  fill: none;
+}
+
+/* Color ramp classes — apply to <g> or shape element (rect/ellipse/circle/polygon), never <path>.
+   light-dark() responds to ancestor color-scheme, not just OS preference. */
+g.c-purple > rect,
+g.c-purple > ellipse,
+g.c-purple > circle,
+g.c-purple > polygon,
+rect.c-purple,
+ellipse.c-purple,
+circle.c-purple,
+polygon.c-purple {
+  fill: light-dark(#eeedfe, #3c3489);
+  stroke: light-dark(#534ab7, #afa9ec);
+}
+.c-purple > .th,
+.c-purple > .t {
+  fill: light-dark(#3c3489, #cecbf6);
+}
+.c-purple > .ts {
+  fill: light-dark(#534ab7, #afa9ec);
+}
+g.c-teal > rect,
+g.c-teal > ellipse,
+g.c-teal > circle,
+g.c-teal > polygon,
+rect.c-teal,
+ellipse.c-teal,
+circle.c-teal,
+polygon.c-teal {
+  fill: light-dark(#e1f5ee, #085041);
+  stroke: light-dark(#0f6e56, #5dcaa5);
+}
+.c-teal > .th,
+.c-teal > .t {
+  fill: light-dark(#085041, #9fe1cb);
+}
+.c-teal > .ts {
+  fill: light-dark(#0f6e56, #5dcaa5);
+}
+g.c-coral > rect,
+g.c-coral > ellipse,
+g.c-coral > circle,
+g.c-coral > polygon,
+rect.c-coral,
+ellipse.c-coral,
+circle.c-coral,
+polygon.c-coral {
+  fill: light-dark(#faece7, #712b13);
+  stroke: light-dark(#993c1d, #f0997b);
+}
+.c-coral > .th,
+.c-coral > .t {
+  fill: light-dark(#712b13, #f5c4b3);
+}
+.c-coral > .ts {
+  fill: light-dark(#993c1d, #f0997b);
+}
+g.c-pink > rect,
+g.c-pink > ellipse,
+g.c-pink > circle,
+g.c-pink > polygon,
+rect.c-pink,
+ellipse.c-pink,
+circle.c-pink,
+polygon.c-pink {
+  fill: light-dark(#fbeaf0, #72243e);
+  stroke: light-dark(#993556, #ed93b1);
+}
+.c-pink > .th,
+.c-pink > .t {
+  fill: light-dark(#72243e, #f4c0d1);
+}
+.c-pink > .ts {
+  fill: light-dark(#993556, #ed93b1);
+}
+g.c-gray > rect,
+g.c-gray > ellipse,
+g.c-gray > circle,
+g.c-gray > polygon,
+rect.c-gray,
+ellipse.c-gray,
+circle.c-gray,
+polygon.c-gray {
+  fill: light-dark(#f1efe8, #444441);
+  stroke: light-dark(#5f5e5a, #b4b2a9);
+}
+.c-gray > .th,
+.c-gray > .t {
+  fill: light-dark(#444441, #d3d1c7);
+}
+.c-gray > .ts {
+  fill: light-dark(#5f5e5a, #b4b2a9);
+}
+g.c-blue > rect,
+g.c-blue > ellipse,
+g.c-blue > circle,
+g.c-blue > polygon,
+rect.c-blue,
+ellipse.c-blue,
+circle.c-blue,
+polygon.c-blue {
+  fill: light-dark(#e6f1fb, #0c447c);
+  stroke: light-dark(#185fa5, #85b7eb);
+}
+.c-blue > .th,
+.c-blue > .t {
+  fill: light-dark(#0c447c, #b5d4f4);
+}
+.c-blue > .ts {
+  fill: light-dark(#185fa5, #85b7eb);
+}
+g.c-green > rect,
+g.c-green > ellipse,
+g.c-green > circle,
+g.c-green > polygon,
+rect.c-green,
+ellipse.c-green,
+circle.c-green,
+polygon.c-green {
+  fill: light-dark(#eaf3de, #27500a);
+  stroke: light-dark(#3b6d11, #97c459);
+}
+.c-green > .th,
+.c-green > .t {
+  fill: light-dark(#27500a, #c0dd97);
+}
+.c-green > .ts {
+  fill: light-dark(#3b6d11, #97c459);
+}
+g.c-amber > rect,
+g.c-amber > ellipse,
+g.c-amber > circle,
+g.c-amber > polygon,
+rect.c-amber,
+ellipse.c-amber,
+circle.c-amber,
+polygon.c-amber {
+  fill: light-dark(#faeeda, #633806);
+  stroke: light-dark(#854f0b, #ef9f27);
+}
+.c-amber > .th,
+.c-amber > .t {
+  fill: light-dark(#633806, #fac775);
+}
+.c-amber > .ts {
+  fill: light-dark(#854f0b, #ef9f27);
+}
+g.c-red > rect,
+g.c-red > ellipse,
+g.c-red > circle,
+g.c-red > polygon,
+rect.c-red,
+ellipse.c-red,
+circle.c-red,
+polygon.c-red {
+  fill: light-dark(#fcebeb, #791f1f);
+  stroke: light-dark(#a32d2d, #f09595);
+}
+.c-red > .th,
+.c-red > .t {
+  fill: light-dark(#791f1f, #f7c1c1);
+}
+.c-red > .ts {
+  fill: light-dark(#a32d2d, #f09595);
+}
+
+/* Mermaid class/ER diagrams — match house aesthetic.
+   Mermaid v11 class/ER renderers use <path> (not <rect>) with inline stroke/fill
+   attrs that IGNORE themeVariables mainBkg/nodeBorder. Labels are
+   <foreignObject><div><span class="nodeLabel"><p>text</p> — NOT <text>. All style
+   fixes require !important to beat inline attrs + mermaid's inline <style>.
+   Selectors target .classDiagram/.erDiagram SVG root classes (always present)
+   rather than a .mermaid wrapper (which the model sometimes omits). */
+svg.classDiagram,
+svg.erDiagram {
+  font-size: 13px;
+  max-width: 100%;
+  height: auto;
+}
+/* Mermaid sizes foreignObject to fit measured text width. If we upsize post-render,
+   text clips. So: overflow visible on FO, and widen inner div past its max-width. */
+svg.classDiagram foreignObject,
+svg.erDiagram foreignObject {
+  overflow: visible;
+}
+svg.classDiagram foreignObject > div,
+svg.erDiagram foreignObject > div {
+  max-width: none !important;
+}
+/* Body text: members, methods, attribute rows */
+svg.classDiagram .nodeLabel,
+svg.erDiagram .nodeLabel,
+svg.classDiagram .label foreignObject div,
+svg.erDiagram .label foreignObject div {
+  font-family: var(--font-sans) !important;
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: var(--color-text-secondary) !important;
+}
+/* Titles: classDiagram wraps in .label-group; erDiagram wraps in .name */
+svg.classDiagram .label-group .nodeLabel,
+svg.erDiagram .name .nodeLabel {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--color-text-primary) !important;
+}
+/* Kill mermaid's inline style="font-weight: bolder" on the .label wrapper */
+svg.classDiagram .label-group .label {
+  font-weight: 500 !important;
+}
+/* Edge labels (relationship verbs + cardinality) */
+svg.classDiagram .edgeLabel,
+svg.classDiagram .edgeLabel span,
+svg.classDiagram .edgeTerminals foreignObject div,
+svg.erDiagram .edgeLabel,
+svg.erDiagram .edgeLabel span {
+  font-size: 11px !important;
+  color: var(--color-text-tertiary) !important;
+}
+/* Box outlines, row stripes, dividers — all rendered as <path> with inline attrs.
+   Mermaid's '#id .node path { fill:... }' CSS beats fill="none" attr — force fill:none. */
+svg.classDiagram .node path[stroke]:not([stroke="none"]),
+svg.classDiagram .divider path,
+svg.erDiagram .node path[stroke]:not([stroke="none"]),
+svg.erDiagram .divider path {
+  stroke: var(--color-border-tertiary) !important;
+  stroke-width: 0.5px !important;
+  fill: none !important;
+}
+/* classDiagram: box fill (inside .basic.label-container). Mermaid's inline CSS
+   '#id .node path { stroke:... }' beats the stroke="none" attr (SVG attrs have
+   lowest specificity), and the fill path is open (no Z) so the phantom stroke
+   only paints top/right/bottom — left edge looks darker. Kill the stroke. */
+svg.classDiagram .node .basic path[fill]:not([fill="none"]) {
+  fill: var(--color-background-primary) !important;
+  stroke: none !important;
+  stroke-width: 0 !important;
+}
+/* erDiagram: header row (anonymous first-child <g>) uses secondary bg */
+svg.erDiagram .node > g:first-child > path[fill]:not([fill="none"]) {
+  fill: var(--color-background-secondary) !important;
+}
+/* erDiagram: row stripes */
+svg.erDiagram .row-rect-odd path[fill]:not([fill="none"]) {
+  fill: var(--color-background-primary) !important;
+}
+svg.erDiagram .row-rect-even path[fill]:not([fill="none"]) {
+  fill: var(--color-background-secondary) !important;
+}
+/* Connector lines */
+svg.erDiagram .relationshipLine,
+svg.classDiagram .relation {
+  stroke: var(--color-text-tertiary) !important;
+  stroke-width: 1px !important;
+}
+svg.classDiagram .marker,
+svg.classDiagram marker path,
+svg.erDiagram .marker,
+svg.erDiagram marker path {
+  stroke: var(--color-text-tertiary) !important;
+  stroke-width: 1px !important;
+}
+svg.classDiagram marker path[fill]:not([fill="none"]):not([fill="transparent"]),
+svg.erDiagram marker path[fill]:not([fill="none"]):not([fill="transparent"]) {
+  fill: var(--color-text-tertiary) !important;
+}
+/* Relationship label background — kill default 0.7 opacity */
+svg.classDiagram .labelBkg,
+svg.erDiagram .labelBkg {
+  background-color: var(--color-background-primary) !important;
+  opacity: 1 !important;
+}
+
+body {
+  position: relative;
+}
+#vis-container {
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+#vis-container > svg {
+  display: block;
+  margin-inline: auto;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* Action buttons group.
+   hidden attr is removed on tool-input (final) so buttons never show during streaming.
+   Popover items: Copy to clipboard, Download file. */
+#action-btns {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2147483647;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+/* display:flex above would override UA [hidden] — restore it */
+#action-btns[hidden] {
+  display: none;
+}
+body:hover #action-btns {
+  opacity: 1;
+}
+/* Hide on touch-primary (mobile) devices — both the reveal above
+   (body:hover) and the popover open (#more-btn:hover) are hover-driven,
+   so on a device without hover the ⋯ trigger either never appears or
+   sticks visible after a stray tap with no way to open the menu. */
+@media (hover: none) and (pointer: coarse) {
+  #action-btns {
+    display: none;
+  }
+}
+/* 28×28 chip style for the ⋯ trigger.
+   bg-100 at rest (visible over widget content), bg-300 on hover.
+   No border — bg change is enough hover feedback. Transparent border stays
+   for layout stability. Fallback light-dark() values match the design-system
+   --bg-100/--bg-300 tokens (widget iframe doesn't receive them via host
+   context, only --color-background-* semantic vars). */
+#action-btns > button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-sm, 6px);
+  background: var(--bg-100, light-dark(#faf9f5, #262624));
+  border: 1px solid transparent;
+  color: var(--color-text-secondary, #3d3d3a);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+#action-btns > button:hover {
+  background: var(--bg-300, light-dark(#f0eee6, #141413));
+}
+/* Popover — drops down-left from the trigger.
+   Radix-style dropdown: white bg, backdrop blur, 0.5px border, subtle shadow.
+   Items are single-line icon + label. */
+#more-popover {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 8rem;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--color-background-primary, #fff);
+  border: 0.5px solid var(--color-border-secondary, rgba(0, 0, 0, 0.1));
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: 0 2px 8px light-dark(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.24));
+  font-family: var(--font-sans, system-ui);
+  color: var(--color-text-secondary, #3d3d3a);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0s linear 0.15s;
+}
+/* Reveal only when hovering the ⋯ trigger or the popover itself. A 4px
+   dead-zone between trigger and popover would close it, so
+   #more-popover:hover keeps it open during the crossing. */
+#more-btn:hover ~ #more-popover,
+#more-popover:hover {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease,
+    visibility 0s;
+}
+/* Popover items — single-line icon + label, matching native dropdown menu */
+.more-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-sans, system-ui) !important;
+  color: inherit;
+  transition: background 0.1s ease;
+  white-space: nowrap;
+}
+.more-item:hover {
+  background: var(--color-background-secondary, #f5f4ed);
+  color: var(--color-text-primary, #141413);
+}
+.more-item-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.more-item-icon svg {
+  width: 20px;
+  height: 20px;
+}
+.more-item-label {
+  font-family: var(--font-sans, system-ui) !important;
+  font-size: 14px;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+#copy-toast {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: var(--color-background-danger, #f7ecec);
+  color: var(--color-text-danger, #7f2c28);
+  border: 1px solid var(--color-border-danger, #a73d39);
+  font-family: var(--font-sans, system-ui);
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: var(--border-radius-md, 8px);
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  z-index: 2147483647;
+  white-space: nowrap;
+}
+#copy-toast.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* HTML scripts-loading shimmer */
+#vis-container.scripts-loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+#vis-container.scripts-loading::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 10000;
+  overflow: hidden;
+}
+#vis-container.scripts-loading::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  left: 0;
+  width: 60%;
+  height: 200%;
+  z-index: 10001;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    light-dark(rgba(0, 0, 0, 0.06), rgba(255, 255, 255, 0.08)) 50%,
+    transparent 100%
+  );
+  animation: scriptsShimmer 2s ease-in-out infinite;
+}
+@keyframes scriptsShimmer {
+  0% {
+    transform: translateX(-100%) rotate(25deg);
+  }
+  100% {
+    transform: translateX(200%) rotate(25deg);
+  }
+}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Entry animation for streaming SVG elements.
+   Scoped to #vis-container.streaming — widget-main.ts adds the class on first
+   tool-input-partial and removes it on tool-input. After streaming, scripts
+   that rebuild SVG via innerHTML (e.g. slider-driven charts) won't trigger this.
+   Uses CSS individual transform property (scale) to avoid conflicts with SVG transform attribute.
+   Excludes elements with transform/opacity attributes to prevent CSS overriding SVG values. */
+@keyframes svgFadeInScale {
+  from {
+    opacity: 0;
+    scale: 0.95;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+#vis-container.streaming
+  :where(
+    svg,
+    circle,
+    rect,
+    path,
+    polygon,
+    polyline,
+    line,
+    ellipse,
+    g,
+    text
+  ):not([transform]):not([opacity]) {
+  transition:
+    fill 0.4s ease-out,
+    stroke 0.4s ease-out,
+    opacity 0.4s ease-out;
+  animation: svgFadeInScale 0.5s ease-out;
+  transform-origin: center;
+}
+
+:root {
+  --color-background-primary: light-dark(rgba(255, 255, 255, 1), rgba(48, 48, 46, 1));
+  --color-background-secondary: light-dark(rgba(245, 244, 237, 1), rgba(38, 38, 36, 1));
+  --color-background-tertiary: light-dark(rgba(250, 249, 245, 1), rgba(20, 20, 19, 1));
+  --color-background-inverse: light-dark(rgba(20, 20, 19, 1), rgba(250, 249, 245, 1));
+  --color-background-ghost: light-dark(rgba(255, 255, 255, 0), rgba(48, 48, 46, 0));
+  --color-background-info: light-dark(rgba(214, 228, 246, 1), rgba(37, 62, 95, 1));
+  --color-background-danger: light-dark(rgba(247, 236, 236, 1), rgba(96, 42, 40, 1));
+  --color-background-success: light-dark(rgba(233, 241, 220, 1), rgba(27, 70, 20, 1));
+  --color-background-warning: light-dark(rgba(246, 238, 223, 1), rgba(72, 58, 15, 1));
+  --color-background-disabled: light-dark(rgba(255, 255, 255, 0.5), rgba(48, 48, 46, 0.5));
+  --color-text-primary: light-dark(rgba(20, 20, 19, 1), rgba(250, 249, 245, 1));
+  --color-text-secondary: light-dark(rgba(61, 61, 58, 1), rgba(194, 192, 182, 1));
+  --color-text-tertiary: light-dark(rgba(115, 114, 108, 1), rgba(156, 154, 146, 1));
+  --color-text-inverse: light-dark(rgba(255, 255, 255, 1), rgba(20, 20, 19, 1));
+  --color-text-info: light-dark(rgba(50, 102, 173, 1), rgba(128, 170, 221, 1));
+  --color-text-danger: light-dark(rgba(127, 44, 40, 1), rgba(238, 136, 132, 1));
+  --color-text-success: light-dark(rgba(38, 91, 25, 1), rgba(122, 185, 72, 1));
+  --color-text-warning: light-dark(rgba(90, 72, 21, 1), rgba(209, 160, 65, 1));
+  --color-text-disabled: light-dark(rgba(20, 20, 19, 0.5), rgba(250, 249, 245, 0.5));
+  --color-text-ghost: light-dark(rgba(115, 114, 108, 0.5), rgba(156, 154, 146, 0.5));
+  --color-border-primary: light-dark(rgba(31, 30, 29, 0.4), rgba(222, 220, 209, 0.4));
+  --color-border-secondary: light-dark(rgba(31, 30, 29, 0.3), rgba(222, 220, 209, 0.3));
+  --color-border-tertiary: light-dark(rgba(31, 30, 29, 0.15), rgba(222, 220, 209, 0.15));
+  --color-border-inverse: light-dark(rgba(255, 255, 255, 0.3), rgba(20, 20, 19, 0.15));
+  --color-border-ghost: light-dark(rgba(31, 30, 29, 0), rgba(222, 220, 209, 0));
+  --color-border-info: light-dark(rgba(70, 130, 213, 1), rgba(70, 130, 213, 1));
+  --color-border-danger: light-dark(rgba(167, 61, 57, 1), rgba(205, 92, 88, 1));
+  --color-border-success: light-dark(rgba(67, 116, 38, 1), rgba(89, 145, 48, 1));
+  --color-border-warning: light-dark(rgba(128, 92, 31, 1), rgba(168, 120, 41, 1));
+  --color-border-disabled: light-dark(rgba(31, 30, 29, 0.1), rgba(222, 220, 209, 0.1));
+  --color-ring-primary: light-dark(rgba(20, 20, 19, 0.7), rgba(250, 249, 245, 0.7));
+  --color-ring-secondary: light-dark(rgba(61, 61, 58, 0.7), rgba(194, 192, 182, 0.7));
+  --color-ring-inverse: light-dark(rgba(255, 255, 255, 0.7), rgba(20, 20, 19, 0.7));
+  --color-ring-info: light-dark(rgba(50, 102, 173, 0.5), rgba(128, 170, 221, 0.5));
+  --color-ring-danger: light-dark(rgba(167, 61, 57, 0.5), rgba(205, 92, 88, 0.5));
+  --color-ring-success: light-dark(rgba(67, 116, 38, 0.5), rgba(89, 145, 48, 0.5));
+  --color-ring-warning: light-dark(rgba(128, 92, 31, 0.5), rgba(168, 120, 41, 0.5));
+  --font-sans: Inter, sans-serif;
+  --font-mono: ui-monospace, monospace;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-text-xs-size: 12px;
+  --font-text-sm-size: 14px;
+  --font-text-md-size: 16px;
+  --font-text-lg-size: 20px;
+  --font-heading-xs-size: 12px;
+  --font-heading-sm-size: 14px;
+  --font-heading-md-size: 16px;
+  --font-heading-lg-size: 20px;
+  --font-heading-xl-size: 24px;
+  --font-heading-2xl-size: 28px;
+  --font-heading-3xl-size: 36px;
+  --font-text-xs-line-height: 1.4;
+  --font-text-sm-line-height: 1.4;
+  --font-text-md-line-height: 1.4;
+  --font-text-lg-line-height: 1.25;
+  --font-heading-xs-line-height: 1.4;
+  --font-heading-sm-line-height: 1.4;
+  --font-heading-md-line-height: 1.4;
+  --font-heading-lg-line-height: 1.25;
+  --font-heading-xl-line-height: 1.25;
+  --font-heading-2xl-line-height: 1.1;
+  --font-heading-3xl-line-height: 1;
+  --border-radius-xs: 4px;
+  --border-radius-sm: 6px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 10px;
+  --border-radius-xl: 12px;
+  --border-radius-full: 9999px;
+  --border-width-regular: 0.5px;
+  --shadow-hairline: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+
+*{box-sizing:border-box;margin:0;padding:0}
+.mockup-wrap{display:flex;flex-direction:column;max-width:100%}
+.mockup-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px 9px;border:0.5px solid var(--color-border-tertiary);border-bottom:none;border-radius:var(--border-radius-lg) var(--border-radius-lg) 0 0;background:var(--color-background-secondary)}
+.mockup-title{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.mockup-sub{font-size:10px;color:var(--color-text-secondary);margin-top:1px}
+.role-sel{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.role-lbl{font-size:10px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.6px;white-space:nowrap}
+.role-sel select{font-size:12px;padding:5px 9px;border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);border:0.5px solid var(--color-border-secondary);min-width:188px}
+.shell{display:flex;height:700px;border:0.5px solid var(--color-border-tertiary);border-radius:0 0 var(--border-radius-lg) var(--border-radius-lg);overflow:hidden;background:var(--color-background-primary)}
+.sidebar{width:196px;flex-shrink:0;background:var(--color-background-secondary);border-right:0.5px solid var(--color-border-tertiary);display:flex;flex-direction:column}
+.sb-top{padding:14px 14px 10px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.logo{font-size:13px;font-weight:500;color:var(--color-text-primary);display:flex;align-items:center;gap:7px}
+.logo-badge{background:#7F77DD;color:#fff;font-size:10px;font-weight:500;padding:2px 6px;border-radius:4px}
+.plan-tier{font-size:10px;font-weight:500;color:#534AB7;margin-top:6px;letter-spacing:.3px}
+.plan-tier-lbl{font-size:9px;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.5px;margin-top:5px}
+.plan-badge{font-size:9px;font-weight:500;color:#534AB7;background:#EEEDFE;padding:2px 7px;border-radius:20px;margin-left:6px;white-space:nowrap;vertical-align:middle}
+.preview-lbl{font-size:9px;color:var(--color-text-tertiary);font-weight:400}
+.nav-sec{padding:8px 0;flex:1;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:8px;padding:6px 14px;font-size:12px;cursor:pointer;color:var(--color-text-secondary);border-left:2px solid transparent;user-select:none}
+.nav-item:hover{background:var(--color-background-primary);color:var(--color-text-primary)}
+.nav-item.active{color:var(--color-text-primary);background:var(--color-background-primary);border-left:2px solid #7F77DD;font-weight:500}
+.nav-item.dim{opacity:.4}
+.nav-item i{font-size:14px;flex-shrink:0}
+.main{flex:1;overflow-y:auto;min-width:0}
+.page{display:none;flex-direction:column;min-height:100%}
+.page.active{display:flex}
+.ph{padding:13px 18px 10px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0}
+.pt{font-size:14px;font-weight:500;color:var(--color-text-primary)}
+.ps{font-size:11px;color:var(--color-text-secondary);margin-top:2px}
+.ha{display:flex;gap:7px;flex-shrink:0;margin-left:10px}
+.btn{font-size:11px;padding:4px 10px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;white-space:nowrap}
+.btn:hover{background:var(--color-background-secondary)}
+.btnp{background:#7F77DD;color:#fff;border-color:#7F77DD}
+.btnp:hover{background:#534AB7}
+.pc{padding:14px 18px;flex:1}
+.kg{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:14px}
+.kc{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:9px 11px}
+.kl{font-size:10px;color:var(--color-text-secondary);margin-bottom:3px;line-height:1.3}
+.kv{font-size:19px;font-weight:500;color:var(--color-text-primary);line-height:1}
+.kv.g{color:#0F6E56}.kv.w{color:#BA7517}.kv.r{color:#A32D2D}
+.sec{margin-bottom:14px}
+.stl{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);overflow:hidden}
+.mt{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}
+.mt th{text-align:left;padding:6px 9px;font-weight:500;color:var(--color-text-secondary);font-size:10px;border-bottom:0.5px solid var(--color-border-tertiary);background:var(--color-background-secondary)}
+.mt td{padding:7px 9px;border-bottom:0.5px solid var(--color-border-tertiary);color:var(--color-text-primary);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+.mt tr:last-child td{border-bottom:none}
+.mt tr:hover td{background:var(--color-background-secondary)}
+.badge{display:inline-flex;align-items:center;font-size:10px;font-weight:500;padding:2px 7px;border-radius:20px;white-space:nowrap}
+.bb{background:#FCEBEB;color:#A32D2D}
+.bw{background:#FAEEDA;color:#854F0B}
+.bp{background:#EAF3DE;color:#3B6D11}
+.bi{background:#E6F1FB;color:#185FA5}
+.bh{background:#EAF3DE;color:#3B6D11}
+.bmod{background:#FAEEDA;color:#854F0B}
+.bhigh{background:#FCEBEB;color:#A32D2D}
+.tc{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.tc3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.rbar{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:11px}
+.rbl{width:110px;color:var(--color-text-secondary);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rbt{flex:1;height:5px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden}
+.rbf{height:100%;border-radius:3px}
+.rbv{width:26px;text-align:right;color:var(--color-text-secondary);flex-shrink:0}
+.arow{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;font-size:11px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.arow:last-child{border-bottom:none}
+.irow{display:flex;align-items:center;justify-content:space-between;padding:8px 11px;font-size:11px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.irow:last-child{border-bottom:none}
+.iname{font-weight:500;color:var(--color-text-primary);font-size:12px}
+.imeta{font-size:10px;color:var(--color-text-secondary)}
+.dot-g{width:6px;height:6px;border-radius:50%;background:#1D9E75;display:inline-block;margin-right:4px}
+.dot-a{width:6px;height:6px;border-radius:50%;background:#EF9F27;display:inline-block;margin-right:4px}
+.dot-r{width:6px;height:6px;border-radius:50%;background:#E24B4A;display:inline-block;margin-right:4px}
+.det{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:#0F6E56;background:#E1F5EE;padding:2px 7px;border-radius:20px}
+.mono{font-family:var(--font-mono);font-size:10px}
+.clabel{font-size:10px;color:var(--color-text-secondary);margin-bottom:4px}
+.ck{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.chip{font-size:11px;padding:3px 9px;border-radius:20px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-secondary);color:var(--color-text-secondary);cursor:pointer;user-select:none}
+.chip.on{background:#EEEDFE;color:#534AB7;border-color:#AFA9EC}
+.sform{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.sform input{flex:1;font-size:12px;padding:5px 9px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary)}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:12px}
+.toggle-row:last-child{border-bottom:none}
+.tinfo{color:var(--color-text-primary)}
+.tsub{font-size:10px;color:var(--color-text-secondary);margin-top:2px}
+.tgl{width:32px;height:18px;border-radius:9px;background:#7F77DD;cursor:pointer;position:relative;flex-shrink:0}
+.tgl.off{background:var(--color-border-secondary)}
+.tgl:after{content:'';position:absolute;width:12px;height:12px;border-radius:50%;background:#fff;top:3px;right:3px;transition:right .15s}
+.tgl.off:after{right:17px}
+.sev-block{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:500;padding:2px 7px;border-radius:3px;background:#FCEBEB;color:#A32D2D}
+.sev-warn{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:500;padding:2px 7px;border-radius:3px;background:#FAEEDA;color:#854F0B}
+.pr-detail{padding:12px 14px}
+.pr-finding{border-left:3px solid #E24B4A;padding:8px 10px;margin-bottom:8px;background:var(--color-background-secondary);border-radius:0}
+.pr-warn-finding{border-left:3px solid #EF9F27;padding:8px 10px;margin-bottom:8px;background:var(--color-background-secondary);border-radius:0}
+.pr-detail-grid{display:grid;grid-template-columns:1fr minmax(260px,32%)}
+.pr-detail-main{min-width:0}
+.ai-panel{background:#F8F7FE;border-left:0.5px solid var(--color-border-tertiary);padding:11px 12px;font-size:11px;line-height:1.45}
+.ai-badge{font-size:9px;color:#534AB7;background:#EEEDFE;padding:3px 8px;border-radius:20px;margin-bottom:10px;display:inline-block;line-height:1.3}
+.ai-row{margin-bottom:9px}
+.ai-lbl{font-size:10px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.ai-val{color:var(--color-text-primary)}
+.ai-list{margin:4px 0 0;padding-left:14px;color:var(--color-text-secondary)}
+.ai-list li{margin-bottom:3px}
+.bpart{background:#FAEEDA;color:#854F0B}
+.bdrift{background:#EEEDFE;color:#534AB7}
+.intent-preview .card{padding:11px 13px}
+.ic-name{font-weight:500;color:var(--color-text-primary)}
+.ic-sub{font-size:10px;color:var(--color-text-secondary);margin-top:1px}
+.exec-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-bottom:14px}
+.exec-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+.exec-chart{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:10px 12px 8px}
+.exec-chart .stl{margin-bottom:8px}
+.chart-legend{display:flex;flex-wrap:wrap;gap:10px;padding-top:6px;font-size:10px;color:var(--color-text-secondary)}
+.chart-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:3px;vertical-align:middle;font-style:normal}
+.chart-axis{display:flex;justify-content:space-between;font-size:9px;color:var(--color-text-tertiary);margin-top:4px;padding:0 2px}
+.spark-line{display:flex;align-items:flex-end;gap:3px;height:58px}
+.spark-bar{flex:1;border-radius:2px 2px 0 0;min-width:5px}
+.donut-wrap{display:flex;align-items:center;gap:12px;min-height:72px}
+.donut{position:relative;width:68px;height:68px;border-radius:50%;flex-shrink:0}
+.donut-hole{position:absolute;inset:12px;border-radius:50%;background:var(--color-background-primary);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.donut-meta{font-size:10px;color:var(--color-text-secondary);line-height:1.55}
+.donut-meta div{margin-bottom:3px}
+.donut-dot{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:4px}
+.hbar-row{display:flex;align-items:center;gap:8px;margin-bottom:7px;font-size:10px}
+.hbar-lbl{width:76px;color:var(--color-text-secondary);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbar-track{flex:1;height:7px;background:var(--color-background-secondary);border-radius:4px;overflow:hidden}
+.hbar-fill{height:100%;border-radius:4px}
+.hbar-val{width:28px;text-align:right;color:var(--color-text-primary);font-weight:500;flex-shrink:0}
+.chart-caption{font-size:10px;color:var(--color-text-secondary);margin-top:6px;line-height:1.4}
+.fid{font-size:10px;font-weight:500;color:#534AB7;font-family:var(--font-mono);margin-bottom:2px}
+.ftitle{font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:2px}
+.ffile{font-size:10px;color:var(--color-text-secondary);font-family:var(--font-mono);margin-bottom:4px}
+.fdesc{font-size:11px;color:var(--color-text-secondary);line-height:1.5}
+.repo-health{display:flex;align-items:center;gap:10px;padding:9px 11px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.repo-health:last-child{border-bottom:none}
+.rh-score{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0}
+.rh-info{flex:1;min-width:0}
+.rh-name{font-size:12px;font-weight:500;color:var(--color-text-primary)}
+.rh-sub{font-size:10px;color:var(--color-text-secondary);margin-top:1px}
+.audit-evt{display:flex;align-items:center;gap:8px;padding:7px 11px;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px}
+.audit-evt:last-child{border-bottom:none}
+.ae-icon{width:24px;height:24px;border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px}
+.ae-body{flex:1;min-width:0}
+.ae-title{color:var(--color-text-primary);font-weight:500}
+.ae-meta{color:var(--color-text-secondary);font-size:10px;margin-top:1px}
+.ae-time{color:var(--color-text-tertiary);font-size:10px;flex-shrink:0}
+.rule-row{display:flex;align-items:center;gap:8px;padding:8px 11px;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px}
+.rule-row:last-child{border-bottom:none}
+.rule-id{font-family:var(--font-mono);font-size:10px;color:#534AB7;width:58px;flex-shrink:0}
+.rule-name{flex:1;color:var(--color-text-primary);font-weight:500;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rule-cat{width:80px;color:var(--color-text-secondary);font-size:10px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rule-cnt{width:36px;text-align:right;color:var(--color-text-secondary);flex-shrink:0}
+.settings-section{margin-bottom:18px}
+.settings-label{font-size:11px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;padding-bottom:6px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.field-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;font-size:12px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.field-row:last-child{border-bottom:none}
+.field-lbl{color:var(--color-text-primary)}
+.field-sub{font-size:10px;color:var(--color-text-secondary);margin-top:2px}
+.field-val{color:var(--color-text-secondary);font-size:11px}
+.trend-wrap{display:flex;align-items:flex-end;gap:3px;height:70px}
+.tbar-g{flex:1;display:flex;align-items:flex-end;gap:1px}
+.tbar{flex:1;border-radius:2px 2px 0 0;min-width:4px}
