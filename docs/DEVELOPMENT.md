@@ -105,7 +105,13 @@ After building, run the CLI directly from the output directory:
 dotnet run --project src/GauntletCI.Cli -- analyze --staged
 ```
 
-Or install as a local tool:
+Or install as a global tool from a local pack:
+
+```bash
+./scripts/install-gauntletci-global-tool.ps1 -AddToPath
+```
+
+Manual equivalent:
 
 ```bash
 dotnet pack src/GauntletCI.Cli -o ./nupkg
