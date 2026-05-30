@@ -1,0 +1,2607 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-05-30T01:04:50.686035+00:00",
+  "corpus_path": "%USERPROFILE%\\.gauntletci\\corpus.db",
+  "corpus_loaded": true,
+  "rule_count": 36,
+  "pattern_taxonomy": {
+    "P1": "Added-line substring scan",
+    "P2": "Removed-line substring scan",
+    "P3": "File/diff aggregate (weak line anchor)",
+    "P4": "Token/regex without method context",
+    "P5": "Cross-entity compare (partial or required)",
+    "P6": "Web/DI/HTTP/DB domain-specific",
+    "P7": "Roslyn or syntax-guard augmented",
+    "P8": "Removed+added pair compare",
+    "P9": "Hunk-local removed vs added"
+  },
+  "root_cause_taxonomy": {
+    "RC-1": "Added-line treated as new risk (diff artifact blindness)",
+    "RC-2": "Line-local pattern without method/control-flow scope",
+    "RC-3": "No cross-entity reasoning (sibling methods, guard+use)",
+    "RC-4": "Domain assumptions (web/DI/EF) on all repos",
+    "RC-5": "Unbounded per-line fanout on large diffs",
+    "RC-6": "Confidence/severity does not gate delivery",
+    "RC-7": "Roslyn/semantics underused",
+    "RC-8": "Success metric is pattern fire, not adjudicated defect"
+  },
+  "fn_class_taxonomy": [
+    "inverted-condition",
+    "sibling-implementation-drift",
+    "guard-deletion-remote-use",
+    "logic-bug-no-token",
+    "cross-file-contract",
+    "intentional-pattern"
+  ],
+  "fp_class_taxonomy": [
+    "refactor-restructure",
+    "library-factory-new",
+    "intentional-swallow",
+    "test-fixture-context",
+    "framework-exempt-pair",
+    "benign-token-use",
+    "large-feature-volume"
+  ],
+  "platform_gaps": [
+    {
+      "gap_id": "PG-RELATION",
+      "title": "Sibling / paired-implementation compare",
+      "root_cause": "RC-3",
+      "rules_blocked": [
+        "GCI0022",
+        "GCI0029",
+        "GCI0038",
+        "GCI0042",
+        "GCI0043",
+        "GCI0044",
+        "GCI0046",
+        "GCI0003",
+        "GCI0004",
+        "GCI0016",
+        "GCI0020",
+        "GCI0024",
+        "GCI0032",
+        "GCI0035",
+        "GCI0036",
+        "GCI0039",
+        "GCI0045",
+        "GCI0050",
+        "GCI0051",
+        "GCI0054",
+        "GCI0057",
+        "GCI0001",
+        "GCI0007",
+        "GCI0010",
+        "GCI0012",
+        "GCI0015",
+        "GCI0021",
+        "GCI0041",
+        "GCI0048",
+        "GCI0049",
+        "GCI0052",
+        "GCI0053",
+        "GCI0055",
+        "GCI0056"
+      ],
+      "fix": "New cross-method layer: same override name, opposite boolean polarity, method name vs condition"
+    },
+    {
+      "gap_id": "PG-PROVENANCE",
+      "title": "Line provenance (move vs net-new)",
+      "root_cause": "RC-1",
+      "rules_blocked": [
+        "GCI0022",
+        "GCI0029",
+        "GCI0038",
+        "GCI0042",
+        "GCI0043",
+        "GCI0044",
+        "GCI0046",
+        "GCI0003",
+        "GCI0004",
+        "GCI0016",
+        "GCI0020",
+        "GCI0024",
+        "GCI0032",
+        "GCI0035",
+        "GCI0036",
+        "GCI0039",
+        "GCI0045",
+        "GCI0047",
+        "GCI0050",
+        "GCI0051",
+        "GCI0054",
+        "GCI0057",
+        "GCI0001",
+        "GCI0007",
+        "GCI0010",
+        "GCI0012",
+        "GCI0015",
+        "GCI0021",
+        "GCI0041",
+        "GCI0048",
+        "GCI0049",
+        "GCI0052",
+        "GCI0055",
+        "GCI0006"
+      ],
+      "fix": "Similarity match added hunks to removed hunks before firing"
+    },
+    {
+      "gap_id": "PG-DOMAIN",
+      "title": "Repo/domain classifier",
+      "root_cause": "RC-4",
+      "rules_blocked": [
+        "GCI0022",
+        "GCI0038",
+        "GCI0046",
+        "GCI0024",
+        "GCI0035"
+      ],
+      "fix": "Suppress or downgrade DI/HTTP rules on library/infrastructure repos"
+    },
+    {
+      "gap_id": "PG-DELIVERY",
+      "title": "Ranked actionable output",
+      "root_cause": "RC-5, RC-6",
+      "rules_blocked": [
+        "ALL"
+      ],
+      "fix": "Per-rule caps + move SilverLabel coordinations to RuleOrchestrator post-process"
+    },
+    {
+      "gap_id": "PG-SEMANTICS",
+      "title": "Method-scoped Roslyn + counterfactuals",
+      "root_cause": "RC-7",
+      "rules_blocked": [
+        "GCI0022",
+        "GCI0029",
+        "GCI0038",
+        "GCI0042",
+        "GCI0043",
+        "GCI0044",
+        "GCI0046",
+        "GCI0003",
+        "GCI0004",
+        "GCI0016",
+        "GCI0020",
+        "GCI0032",
+        "GCI0035",
+        "GCI0036",
+        "GCI0039",
+        "GCI0045",
+        "GCI0047",
+        "GCI0050",
+        "GCI0051",
+        "GCI0054",
+        "GCI0057",
+        "GCI0001",
+        "GCI0021",
+        "GCI0041",
+        "GCI0052",
+        "GCI0053",
+        "GCI0055",
+        "GCI0056"
+      ],
+      "fix": "Wire PatchCounterfactualGenerator; bind P4 tokens to control-flow sites"
+    }
+  ],
+  "core_issues_from_corpus": [
+    {
+      "issue": "high_labeled_false_positives",
+      "rule_id": "GCI0004",
+      "name": "Breaking Change Risk",
+      "labeled_fp": 9,
+      "labeled_precision": 0.775,
+      "actual_triggers": null,
+      "primary_patterns": [
+        "P1",
+        "P2",
+        "P4"
+      ]
+    },
+    {
+      "issue": "structural_fn_risk_cross_method_without_p5",
+      "rule_count": 25,
+      "rule_ids": [
+        "GCI0022",
+        "GCI0029",
+        "GCI0038",
+        "GCI0042",
+        "GCI0043",
+        "GCI0044",
+        "GCI0003",
+        "GCI0004",
+        "GCI0016",
+        "GCI0020",
+        "GCI0024",
+        "GCI0032",
+        "GCI0035",
+        "GCI0036",
+        "GCI0039",
+        "GCI0050",
+        "GCI0051",
+        "GCI0054",
+        "GCI0057",
+        "GCI0007",
+        "GCI0010",
+        "GCI0012",
+        "GCI0015",
+        "GCI0048",
+        "GCI0056"
+      ],
+      "description": "Rules touching control-flow semantics but lacking cross-entity compare (Redis MultiNode class)"
+    },
+    {
+      "issue": "web_di_domain_mismatch_on_general_repos",
+      "rules": [],
+      "description": "DI/HTTP rules firing heavily on non-web corpus fixtures (library/infra PRs)"
+    }
+  ],
+  "priority_fix_order": [
+    {
+      "rank": 1,
+      "rule_id": "GCI0022",
+      "name": "Idempotency & Retry Safety",
+      "head_to_head_risk": "critical",
+      "priority_tier": 1,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-4"
+      ],
+      "corpus_fp": 0,
+      "corpus_precision": null,
+      "corpus_recall": null,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 86
+    },
+    {
+      "rank": 2,
+      "rule_id": "GCI0029",
+      "name": "PII Entity Logging Leak",
+      "head_to_head_risk": "critical",
+      "priority_tier": 1,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5"
+      ],
+      "corpus_fp": null,
+      "corpus_precision": 0.0,
+      "corpus_recall": 0.0,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 236
+    },
+    {
+      "rank": 3,
+      "rule_id": "GCI0038",
+      "name": "Dependency Injection Safety",
+      "head_to_head_risk": "critical",
+      "priority_tier": 1,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-4"
+      ],
+      "corpus_fp": 0,
+      "corpus_precision": null,
+      "corpus_recall": null,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 727
+    },
+    {
+      "rank": 4,
+      "rule_id": "GCI0042",
+      "name": "TODO/Stub Detection",
+      "head_to_head_risk": "critical",
+      "priority_tier": 1,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5"
+      ],
+      "corpus_fp": null,
+      "corpus_precision": 0.0,
+      "corpus_recall": 0.0,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 152
+    },
+    {
+      "rank": 5,
+      "rule_id": "GCI0043",
+      "name": "Nullability and Type Safety",
+      "head_to_head_risk": "critical",
+      "priority_tier": 1,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5"
+      ],
+      "corpus_fp": null,
+      "corpus_precision": 0.0,
+      "corpus_recall": 0.0,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 470
+    },
+    {
+      "rank": 6,
+      "rule_id": "GCI0044",
+      "name": "Performance Hotpath Risk",
+      "head_to_head_risk": "critical",
+      "priority_tier": 1,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5"
+      ],
+      "corpus_fp": null,
+      "corpus_precision": 0.0,
+      "corpus_recall": 0.0,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 350
+    },
+    {
+      "rank": 7,
+      "rule_id": "GCI0046",
+      "name": "Pattern Consistency Deviation",
+      "head_to_head_risk": "critical",
+      "priority_tier": 1,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-4",
+        "RC-6"
+      ],
+      "corpus_fp": null,
+      "corpus_precision": 0.0,
+      "corpus_recall": 0.0,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 128
+    },
+    {
+      "rank": 8,
+      "rule_id": "GCI0003",
+      "name": "Behavioral Change Detection",
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5"
+      ],
+      "corpus_fp": 0,
+      "corpus_precision": 1.0,
+      "corpus_recall": null,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 39628
+    },
+    {
+      "rank": 9,
+      "rule_id": "GCI0004",
+      "name": "Breaking Change Risk",
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-6"
+      ],
+      "corpus_fp": 9,
+      "corpus_precision": 0.775,
+      "corpus_recall": null,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 59965
+    },
+    {
+      "rank": 10,
+      "rule_id": "GCI0016",
+      "name": "Async Concurrency Risk",
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5"
+      ],
+      "corpus_fp": 0,
+      "corpus_precision": null,
+      "corpus_recall": null,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 4040
+    },
+    {
+      "rank": 11,
+      "rule_id": "GCI0020",
+      "name": "Resource Exhaustion Pattern Detection",
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5"
+      ],
+      "corpus_fp": 0,
+      "corpus_precision": null,
+      "corpus_recall": null,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 10
+    },
+    {
+      "rank": 12,
+      "rule_id": "GCI0024",
+      "name": "Resource Lifecycle",
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "top_root_causes": [
+        "RC-1",
+        "RC-3",
+        "RC-4",
+        "RC-6"
+      ],
+      "corpus_fp": 0,
+      "corpus_precision": null,
+      "corpus_recall": null,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 3435
+    },
+    {
+      "rank": 13,
+      "rule_id": "GCI0032",
+      "name": "Uncaught Exception Path",
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-6"
+      ],
+      "corpus_fp": 0,
+      "corpus_precision": null,
+      "corpus_recall": null,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 836
+    },
+    {
+      "rank": 14,
+      "rule_id": "GCI0035",
+      "name": "Architecture Layer Guard",
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-4"
+      ],
+      "corpus_fp": 0,
+      "corpus_precision": null,
+      "corpus_recall": null,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": null
+    },
+    {
+      "rank": 15,
+      "rule_id": "GCI0036",
+      "name": "Pure Context Mutation",
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-6"
+      ],
+      "corpus_fp": 0,
+      "corpus_precision": null,
+      "corpus_recall": null,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 2524
+    },
+    {
+      "rank": 16,
+      "rule_id": "GCI0039",
+      "name": "External Service Safety",
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5"
+      ],
+      "corpus_fp": 0,
+      "corpus_precision": null,
+      "corpus_recall": null,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 211
+    },
+    {
+      "rank": 17,
+      "rule_id": "GCI0045",
+      "name": "Complexity Control",
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-5",
+        "RC-6"
+      ],
+      "corpus_fp": null,
+      "corpus_precision": 0.0,
+      "corpus_recall": 0.0,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 195
+    },
+    {
+      "rank": 18,
+      "rule_id": "GCI0047",
+      "name": "Naming/Contract Alignment",
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-6",
+        "RC-7"
+      ],
+      "corpus_fp": null,
+      "corpus_precision": 0.0,
+      "corpus_recall": 0.0,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": 1450
+    },
+    {
+      "rank": 19,
+      "rule_id": "GCI0050",
+      "name": "SQL Column Truncation Risk",
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5"
+      ],
+      "corpus_fp": null,
+      "corpus_precision": null,
+      "corpus_recall": null,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": null
+    },
+    {
+      "rank": 20,
+      "rule_id": "GCI0051",
+      "name": "Numeric Coercion Risks",
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "top_root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5"
+      ],
+      "corpus_fp": null,
+      "corpus_precision": null,
+      "corpus_recall": null,
+      "fixtures_triggered": null,
+      "actual_triggers_all_runs": null
+    }
+  ],
+  "rules": [
+    {
+      "rule_id": "GCI0022",
+      "name": "Idempotency & Retry Safety",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0022_IdempotencyRetrySafety.cs",
+      "primary_patterns": [
+        "P1",
+        "P4",
+        "P6"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context",
+        "P6": "Web/DI/HTTP/DB domain-specific"
+      },
+      "domain": "web-di",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-4",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "framework-exempt-pair",
+        "large-feature-volume",
+        "library-factory-new",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "critical",
+      "priority_tier": 1,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "actual_triggers_all_runs": 86
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0029",
+      "name": "PII Entity Logging Leak",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0029_PiiLoggingLeak.cs",
+      "primary_patterns": [
+        "P1",
+        "P4"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "critical",
+      "priority_tier": 1,
+      "corpus": {
+        "tier": "Discovery",
+        "trigger_rate": 0.01870748299319728,
+        "precision": 0.0,
+        "recall": 0.0,
+        "usefulness": 0.0,
+        "actual_triggers_all_runs": 236
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0038",
+      "name": "Dependency Injection Safety",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0038_DependencyInjectionSafety.cs",
+      "primary_patterns": [
+        "P1",
+        "P4",
+        "P6"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context",
+        "P6": "Web/DI/HTTP/DB domain-specific"
+      },
+      "domain": "web-di",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-4",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "large-feature-volume",
+        "library-factory-new",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "critical",
+      "priority_tier": 1,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "actual_triggers_all_runs": 727
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0042",
+      "name": "TODO/Stub Detection",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0042_TodoStubDetection.cs",
+      "primary_patterns": [
+        "P1",
+        "P4"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "critical",
+      "priority_tier": 1,
+      "corpus": {
+        "tier": "Discovery",
+        "trigger_rate": 0.05952380952380952,
+        "precision": 0.0,
+        "recall": 0.0,
+        "usefulness": 0.0,
+        "actual_triggers_all_runs": 152
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0043",
+      "name": "Nullability and Type Safety",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0043_NullabilityTypeSafety.cs",
+      "primary_patterns": [
+        "P1",
+        "P4"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "critical",
+      "priority_tier": 1,
+      "corpus": {
+        "tier": "Discovery",
+        "trigger_rate": 0.12414965986394558,
+        "precision": 0.0,
+        "recall": 0.0,
+        "usefulness": 0.0,
+        "actual_triggers_all_runs": 470
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0044",
+      "name": "Performance Hotpath Risk",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0044_PerformanceHotpathRisk.cs",
+      "primary_patterns": [
+        "P1",
+        "P2",
+        "P4"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P2": "Removed-line substring scan",
+        "P4": "Token/regex without method context"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": false,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "guard-deletion-remote-use",
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "critical",
+      "priority_tier": 1,
+      "corpus": {
+        "tier": "Discovery",
+        "trigger_rate": 0.08843537414965986,
+        "precision": 0.0,
+        "recall": 0.0,
+        "usefulness": 0.0,
+        "actual_triggers_all_runs": 350
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0046",
+      "name": "Pattern Consistency Deviation",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0046_PatternConsistencyDeviation.cs",
+      "primary_patterns": [
+        "P1",
+        "P4",
+        "P5",
+        "P6"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context",
+        "P5": "Cross-entity compare (partial or required)",
+        "P6": "Web/DI/HTTP/DB domain-specific"
+      },
+      "domain": "web-di",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "low",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-4",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "framework-exempt-pair",
+        "large-feature-volume",
+        "library-factory-new",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "critical",
+      "priority_tier": 1,
+      "corpus": {
+        "tier": "Discovery",
+        "trigger_rate": 0.03741496598639456,
+        "precision": 0.0,
+        "recall": 0.0,
+        "usefulness": 0.0,
+        "actual_triggers_all_runs": 128
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0003",
+      "name": "Behavioral Change Detection",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0003_BehavioralChangeDetection.cs",
+      "primary_patterns": [
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P2": "Removed-line substring scan",
+        "P3": "File/diff aggregate (weak line anchor)",
+        "P4": "Token/regex without method context"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": false,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "medium",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "guard-deletion-remote-use",
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.125,
+        "precision": 1.0,
+        "recall": 1.0,
+        "usefulness": 0.0,
+        "tp": 1,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 1,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": 1.0,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "expected_triggers": 27,
+        "actual_triggers_all_runs": 39628
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0004",
+      "name": "Breaking Change Risk",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0004_BreakingChangeRisk.cs",
+      "primary_patterns": [
+        "P1",
+        "P2",
+        "P4"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P2": "Removed-line substring scan",
+        "P4": "Token/regex without method context"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": false,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "low",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "guard-deletion-remote-use",
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.6595744680851063,
+        "precision": 0.775,
+        "recall": 1.0,
+        "usefulness": 0.0,
+        "tp": 31,
+        "fp": 9,
+        "fn": 0,
+        "labeled_tp": 31,
+        "labeled_fp": 9,
+        "labeled_fn": 0,
+        "labeled_precision": 0.775,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "expected_triggers": 34,
+        "actual_triggers_all_runs": 59965
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0016",
+      "name": "Async Concurrency Risk",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0016_ConcurrencyAndStateRisk.cs",
+      "primary_patterns": [
+        "P1",
+        "P4"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "expected_triggers": 6,
+        "actual_triggers_all_runs": 4040
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0020",
+      "name": "Resource Exhaustion Pattern Detection",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0020_ResourceExhaustionPatterns.cs",
+      "primary_patterns": [
+        "P1",
+        "P2",
+        "P4"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P2": "Removed-line substring scan",
+        "P4": "Token/regex without method context"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": false,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "medium",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "guard-deletion-remote-use",
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "actual_triggers_all_runs": 10
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0024",
+      "name": "Resource Lifecycle",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0024_ResourceLifecycle.cs",
+      "primary_patterns": [
+        "P1",
+        "P4",
+        "P6",
+        "P7"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context",
+        "P6": "Web/DI/HTTP/DB domain-specific",
+        "P7": "Roslyn or syntax-guard augmented"
+      },
+      "domain": "web-di",
+      "uses_roslyn": true,
+      "added_lines_only": false,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "low",
+      "root_causes": [
+        "RC-1",
+        "RC-3",
+        "RC-4",
+        "RC-6",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "large-feature-volume",
+        "library-factory-new",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "expected_triggers": 2,
+        "actual_triggers_all_runs": 3435
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0032",
+      "name": "Uncaught Exception Path",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0032_UncaughtExceptionPath.cs",
+      "primary_patterns": [
+        "P1",
+        "P2",
+        "P4",
+        "P9"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P2": "Removed-line substring scan",
+        "P4": "Token/regex without method context",
+        "P9": "Hunk-local removed vs added"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": true,
+      "typical_fanout": "low",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "guard-deletion-remote-use",
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "actual_triggers_all_runs": 836
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0035",
+      "name": "Architecture Layer Guard",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0035_ArchitectureLayerGuard.cs",
+      "primary_patterns": [
+        "P1",
+        "P4"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context"
+      },
+      "domain": "layered-app",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-4",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0036",
+      "name": "Pure Context Mutation",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0036_PureContextMutation.cs",
+      "primary_patterns": [
+        "P1",
+        "P4"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": false,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "low",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "expected_triggers": 4,
+        "actual_triggers_all_runs": 2524
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0039",
+      "name": "External Service Safety",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0039_ExternalServiceSafety.cs",
+      "primary_patterns": [
+        "P1",
+        "P4"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "actual_triggers_all_runs": 211
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0045",
+      "name": "Complexity Control",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0045_ComplexityControl.cs",
+      "primary_patterns": [
+        "P1",
+        "P2",
+        "P4",
+        "P5",
+        "P9"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P2": "Removed-line substring scan",
+        "P4": "Token/regex without method context",
+        "P5": "Cross-entity compare (partial or required)",
+        "P9": "Hunk-local removed vs added"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": true,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "guard-deletion-remote-use",
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "corpus": {
+        "tier": "Discovery",
+        "trigger_rate": 0.0663265306122449,
+        "precision": 0.0,
+        "recall": 0.0,
+        "usefulness": 0.0,
+        "actual_triggers_all_runs": 195
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0047",
+      "name": "Naming/Contract Alignment",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0047_NamingContractAlignment.cs",
+      "primary_patterns": [
+        "P1",
+        "P2",
+        "P4",
+        "P5",
+        "P8"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P2": "Removed-line substring scan",
+        "P4": "Token/regex without method context",
+        "P5": "Cross-entity compare (partial or required)",
+        "P8": "Removed+added pair compare"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": false,
+      "requires_cross_method": false,
+      "requires_removed_added_pair": true,
+      "typical_fanout": "low",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [],
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "corpus": {
+        "tier": "Discovery",
+        "trigger_rate": 0.017006802721088437,
+        "precision": 0.0,
+        "recall": 0.0,
+        "usefulness": 0.0,
+        "actual_triggers_all_runs": 1450
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0050",
+      "name": "SQL Column Truncation Risk",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0050_SqlColumnTruncationRisk.cs",
+      "primary_patterns": [
+        "P1",
+        "P4"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "corpus": {},
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0051",
+      "name": "Numeric Coercion Risks",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0051_NumericCoercionRisks.cs",
+      "primary_patterns": [
+        "P1",
+        "P4"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "corpus": {},
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0054",
+      "name": "Async Void Abuse",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0054_AsyncVoidAbuse.cs",
+      "primary_patterns": [
+        "P1",
+        "P4"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "corpus": {},
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0057",
+      "name": "Synchronous File I/O",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0057_BlockingAsyncViolation.cs",
+      "primary_patterns": [
+        "P1",
+        "P4"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-3",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "high",
+      "priority_tier": 2,
+      "corpus": {
+        "actual_triggers_all_runs": 10
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0001",
+      "name": "Diff Integrity",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0001_DiffIntegrity.cs",
+      "primary_patterns": [
+        "P1",
+        "P2",
+        "P4",
+        "P5"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P2": "Removed-line substring scan",
+        "P4": "Token/regex without method context",
+        "P5": "Cross-entity compare (partial or required)"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": false,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "low",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "guard-deletion-remote-use",
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "medium",
+      "priority_tier": 3,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "actual_triggers_all_runs": 2674
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0007",
+      "name": "Error Handling Integrity",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0007_ErrorHandlingIntegrity.cs",
+      "primary_patterns": [
+        "P1",
+        "P2",
+        "P4",
+        "P7"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P2": "Removed-line substring scan",
+        "P4": "Token/regex without method context",
+        "P7": "Roslyn or syntax-guard augmented"
+      },
+      "domain": "general",
+      "uses_roslyn": true,
+      "added_lines_only": false,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "low",
+      "root_causes": [
+        "RC-1",
+        "RC-3",
+        "RC-6",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "intentional-swallow",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "guard-deletion-remote-use",
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "medium",
+      "priority_tier": 3,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "expected_triggers": 1,
+        "actual_triggers_all_runs": 1279
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0010",
+      "name": "Hardcoding and Configuration",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0010_HardcodingAndConfiguration.cs",
+      "primary_patterns": [
+        "P1",
+        "P4",
+        "P7"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context",
+        "P7": "Roslyn or syntax-guard augmented"
+      },
+      "domain": "general",
+      "uses_roslyn": true,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-3",
+        "RC-5",
+        "RC-6",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "medium",
+      "priority_tier": 3,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "expected_triggers": 2,
+        "actual_triggers_all_runs": 3225
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0012",
+      "name": "Security Risk",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0012_SecurityRisk.cs",
+      "primary_patterns": [
+        "P1",
+        "P2",
+        "P4",
+        "P7"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P2": "Removed-line substring scan",
+        "P4": "Token/regex without method context",
+        "P7": "Roslyn or syntax-guard augmented"
+      },
+      "domain": "general",
+      "uses_roslyn": true,
+      "added_lines_only": false,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-3",
+        "RC-5",
+        "RC-6",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "guard-deletion-remote-use",
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "medium",
+      "priority_tier": 3,
+      "corpus": {
+        "tier": "Discovery",
+        "trigger_rate": 0.01870748299319728,
+        "precision": 0.455,
+        "recall": 0.062,
+        "usefulness": 0.0,
+        "actual_triggers_all_runs": 762
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0015",
+      "name": "Data Integrity Risk",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0015_DataIntegrityRisk.cs",
+      "primary_patterns": [
+        "P1",
+        "P4",
+        "P7"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context",
+        "P7": "Roslyn or syntax-guard augmented"
+      },
+      "domain": "general",
+      "uses_roslyn": true,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-3",
+        "RC-5",
+        "RC-6",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "medium",
+      "priority_tier": 3,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "expected_triggers": 11,
+        "actual_triggers_all_runs": 10389
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0021",
+      "name": "Data & Schema Compatibility",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0021_DataSchemaCompatibility.cs",
+      "primary_patterns": [
+        "P1",
+        "P2",
+        "P4",
+        "P5",
+        "P9"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P2": "Removed-line substring scan",
+        "P4": "Token/regex without method context",
+        "P5": "Cross-entity compare (partial or required)",
+        "P9": "Hunk-local removed vs added"
+      },
+      "domain": "db",
+      "uses_roslyn": false,
+      "added_lines_only": false,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": true,
+      "typical_fanout": "low",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "guard-deletion-remote-use",
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "medium",
+      "priority_tier": 3,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "expected_triggers": 1,
+        "actual_triggers_all_runs": 998
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0041",
+      "name": "Test Quality Gaps",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0041_TestQualityGaps.cs",
+      "primary_patterns": [
+        "P1",
+        "P2",
+        "P4",
+        "P5",
+        "P9"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P2": "Removed-line substring scan",
+        "P4": "Token/regex without method context",
+        "P5": "Cross-entity compare (partial or required)",
+        "P9": "Hunk-local removed vs added"
+      },
+      "domain": "repo-meta",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": true,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "guard-deletion-remote-use",
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "medium",
+      "priority_tier": 3,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "expected_triggers": 2,
+        "actual_triggers_all_runs": 1325
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0048",
+      "name": "Insecure Random in Security Context",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0048_InsecureRandomInSecurityContext.cs",
+      "primary_patterns": [
+        "P1",
+        "P4",
+        "P7"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context",
+        "P7": "Roslyn or syntax-guard augmented"
+      },
+      "domain": "general",
+      "uses_roslyn": true,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "low",
+      "root_causes": [
+        "RC-1",
+        "RC-3",
+        "RC-6",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "medium",
+      "priority_tier": 3,
+      "corpus": {},
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0049",
+      "name": "Float/Double Equality Comparison",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0049_FloatDoubleEqualityComparison.cs",
+      "primary_patterns": [
+        "P1",
+        "P4",
+        "P5",
+        "P7"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context",
+        "P5": "Cross-entity compare (partial or required)",
+        "P7": "Roslyn or syntax-guard augmented"
+      },
+      "domain": "general",
+      "uses_roslyn": true,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-5",
+        "RC-6",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "medium",
+      "priority_tier": 3,
+      "corpus": {
+        "tier": "Discovery",
+        "trigger_rate": 0.008503401360544218,
+        "precision": 0.0,
+        "recall": 0.0,
+        "usefulness": 0.0,
+        "actual_triggers_all_runs": 12
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0052",
+      "name": "Dependency Bot API Drift",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0052_DependencyBotApiDrift.cs",
+      "primary_patterns": [
+        "P1",
+        "P4",
+        "P5"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P4": "Token/regex without method context",
+        "P5": "Cross-entity compare (partial or required)"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": true,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "medium",
+      "priority_tier": 3,
+      "corpus": {},
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0053",
+      "name": "Lockfile Changed Without Source Review",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0053_LockfileChangedWithoutSource.cs",
+      "primary_patterns": [
+        "P4",
+        "P5"
+      ],
+      "pattern_notes": {
+        "P4": "Token/regex without method context",
+        "P5": "Cross-entity compare (partial or required)"
+      },
+      "domain": "repo-meta",
+      "uses_roslyn": false,
+      "added_lines_only": false,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "low",
+      "root_causes": [
+        "RC-2",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "medium",
+      "priority_tier": 3,
+      "corpus": {},
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0055",
+      "name": "Method Signature Change Risk",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0055_MethodSignatureChange.cs",
+      "primary_patterns": [
+        "P1",
+        "P2",
+        "P4",
+        "P5"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P2": "Removed-line substring scan",
+        "P4": "Token/regex without method context",
+        "P5": "Cross-entity compare (partial or required)"
+      },
+      "domain": "general",
+      "uses_roslyn": false,
+      "added_lines_only": false,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "high",
+      "root_causes": [
+        "RC-1",
+        "RC-2",
+        "RC-5",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [
+        "guard-deletion-remote-use",
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "medium",
+      "priority_tier": 3,
+      "corpus": {
+        "actual_triggers_all_runs": 1
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0056",
+      "name": "Missing Test Framework",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0056_MissingTestFramework.cs",
+      "primary_patterns": [
+        "P4"
+      ],
+      "pattern_notes": {
+        "P4": "Token/regex without method context"
+      },
+      "domain": "repo-meta",
+      "uses_roslyn": false,
+      "added_lines_only": false,
+      "requires_cross_method": true,
+      "requires_removed_added_pair": false,
+      "typical_fanout": "low",
+      "root_causes": [
+        "RC-2",
+        "RC-3",
+        "RC-6",
+        "RC-7",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use"
+      ],
+      "known_fn_classes": [
+        "inverted-condition",
+        "logic-bug-no-token",
+        "sibling-implementation-drift"
+      ],
+      "head_to_head_risk": "medium",
+      "priority_tier": 3,
+      "corpus": {},
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": true
+    },
+    {
+      "rule_id": "GCI0006",
+      "name": "Edge Case Handling",
+      "source_file": "src/GauntletCI.Core/Rules/Implementations/GCI0006_EdgeCaseHandling.cs",
+      "primary_patterns": [
+        "P1",
+        "P2",
+        "P4",
+        "P5",
+        "P7",
+        "P8",
+        "P9"
+      ],
+      "pattern_notes": {
+        "P1": "Added-line substring scan",
+        "P2": "Removed-line substring scan",
+        "P4": "Token/regex without method context",
+        "P5": "Cross-entity compare (partial or required)",
+        "P7": "Roslyn or syntax-guard augmented",
+        "P8": "Removed+added pair compare",
+        "P9": "Hunk-local removed vs added"
+      },
+      "domain": "general",
+      "uses_roslyn": true,
+      "added_lines_only": true,
+      "requires_cross_method": false,
+      "requires_removed_added_pair": true,
+      "typical_fanout": "medium",
+      "root_causes": [
+        "RC-1",
+        "RC-5",
+        "RC-6",
+        "RC-8"
+      ],
+      "known_fp_classes": [
+        "benign-token-use",
+        "refactor-restructure"
+      ],
+      "known_fn_classes": [],
+      "head_to_head_risk": "low",
+      "priority_tier": 4,
+      "corpus": {
+        "tier": "all",
+        "trigger_rate": 0.0,
+        "precision": null,
+        "recall": null,
+        "usefulness": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0,
+        "labeled_tp": 0,
+        "labeled_fp": 0,
+        "labeled_fn": 0,
+        "labeled_precision": null,
+        "labeled_recall": null,
+        "snapshot_usefulness": null,
+        "expected_triggers": 17,
+        "actual_triggers_all_runs": 10978
+      },
+      "fixture_trigger_count": 0,
+      "audit_status": "auto-tagged",
+      "human_review_required": false
+    }
+  ],
+  "eval_notes": {
+    "regenerate": "python scripts/build-rule-audit.py",
+    "regenerate_full_labeled_metrics": "python scripts/build-rule-audit.py --full-corpus",
+    "corpus_default": "%USERPROFILE%\\.gauntletci\\corpus.db",
+    "metrics_sources": [
+      "aggregates (precision/recall/usefulness)",
+      "audit_snapshot_rows (labeled tp/fp/fn when snapshot exists)",
+      "fixtures_triggered_latest_run (distinct fixtures, latest completed run)"
+    ],
+    "redis_2995_regression": {
+      "adjudicated_defect": "MultiNodeSubscription.RemoveDisconnectedEndpoints inverted IsSubscriberConnected",
+      "miss_pattern": "P5 sibling-implementation (gap PG-RELATION)",
+      "noise_example_rules": [
+        "GCI0038",
+        "GCI0006",
+        "GCI0043"
+      ]
+    },
+    "audit_checklist_per_rule": [
+      "Tag P1-P9",
+      "Set requires_cross_method",
+      "Record corpus precision/fp",
+      "Add TP/FP/FN fixture triple",
+      "Score head_to_head_risk after human review"
+    ]
+  }
+}
