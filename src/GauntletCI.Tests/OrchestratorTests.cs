@@ -22,7 +22,7 @@ public class OrchestratorTests
             +var x = 1;
             """);
         var result = await orchestrator.RunAsync(diff);
-        Assert.Equal(35, result.RulesEvaluated);
+        Assert.Equal(36, result.RulesEvaluated);
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public class OrchestratorTests
             """);
         var result = await orchestrator.RunAsync(diff);
         Assert.NotNull(result);
-        Assert.Equal(35, result.RulesEvaluated);
+        Assert.Equal(36, result.RulesEvaluated);
     }
 
     [Fact]

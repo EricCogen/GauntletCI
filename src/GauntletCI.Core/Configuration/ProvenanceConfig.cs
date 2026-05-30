@@ -17,5 +17,6 @@ public class ProvenanceConfig
     [
         "GCI0003",
         "GCI0058",
+        "GCI0059",
     ];
 }

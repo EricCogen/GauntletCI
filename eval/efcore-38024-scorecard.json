@@ -1,0 +1,37 @@
+{
+  "benchmark_id": "dotnet-efcore-pr-38024",
+  "source_pr": "https://github.com/dotnet/efcore/pull/38024",
+  "generated_at_utc": "2026-05-30T02:00:00Z",
+  "gauntletci_version": "platform-phases-1-5",
+  "ground_truth_defect": {
+    "summary": "Cosmos write pipeline modernization adds public Obsolete surface, internal signature churn, and JSON preservation risk",
+    "competitors_that_caught": ["manual review", "API compat tooling"],
+    "primary_rules": ["GCI0004", "GCI0003", "GCI0015"]
+  },
+  "runs": [
+    {
+      "label": "platform_phases_1_5_library_profile",
+      "config": {
+        "domain": { "profile": "library" },
+        "output": { "delivery": { "globalMaxFindings": 25 } },
+        "provenance": { "enabled": true },
+        "semantics": { "enabled": true }
+      },
+      "required_rules": ["GCI0004"],
+      "max_delivered_findings": 25,
+      "notes": "GCI0004 must fire for Obsolete/public API changes; delivery cap enforced in CI"
+    }
+  ],
+  "competitive_advantage_claims": [
+    {
+      "claim": "Breaking change detection on large framework PRs (GCI0004)",
+      "vs": ["Greptile", "CodeRabbit", "Copilot Review"],
+      "differentiator": "Deterministic Obsolete and public contract diff scan with delivery budget"
+    },
+    {
+      "claim": "Domain-aware gating for library repos (PG-DOMAIN)",
+      "vs": ["SonarQube", "Codacy"],
+      "differentiator": "Web/DI rules suppressed on EF Core-scale library diffs"
+    }
+  ]
+}

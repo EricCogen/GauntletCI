@@ -53,6 +53,7 @@ internal static class DefaultSeverities
             ["GCI0049"] = RuleSeverity.Info,
             ["GCI0056"] = RuleSeverity.Info,
             ["GCI0058"] = RuleSeverity.Block,
+            ["GCI0059"] = RuleSeverity.Block,
 
             // None: disabled by default (duplicate coverage elsewhere)
             ["GCI0054"] = RuleSeverity.None, // duplicate coverage — see GCI0016

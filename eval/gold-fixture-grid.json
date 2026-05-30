@@ -1,0 +1,43 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Gold corpus fixtures mapped to adjudicated FN classes and primary rules.",
+  "fixtures": [
+    {
+      "fixture_id": "redis-2995-multinode-inverted",
+      "fn_class": "sibling-implementation-drift",
+      "primary_rule": "GCI0058",
+      "repo": "StackExchange/StackExchange.Redis",
+      "pr_number": 2995,
+      "seed_script": "scripts/seed-redis-2995-gci0058-fixture.py",
+      "oss_benchmark": "scripts/run-redis-benchmark.ps1",
+      "scorecard": "eval/redis-2995-scorecard.json"
+    },
+    {
+      "fixture_id": "guard-deletion-remote-use",
+      "fn_class": "guard-deletion-remote-use",
+      "primary_rule": "GCI0059",
+      "repo": "GauntletCI/regression-fixtures",
+      "pr_number": 0,
+      "seed_script": "scripts/seed-guard-deletion-remote-use-fixture.py",
+      "oss_benchmark": null,
+      "scorecard": null,
+      "notes": "Synthetic focused diff; validated via corpus run and GCI0059 unit tests"
+    }
+  ],
+  "oss_benchmarks": [
+    {
+      "benchmark_id": "stackexchange-redis-pr-2995",
+      "repo": "StackExchange/StackExchange.Redis",
+      "pr_number": 2995,
+      "primary_rule": "GCI0058",
+      "workflow": ".github/workflows/redis-benchmark.yml"
+    },
+    {
+      "benchmark_id": "dotnet-efcore-pr-38024",
+      "repo": "dotnet/efcore",
+      "pr_number": 38024,
+      "primary_rules": ["GCI0004", "GCI0003", "GCI0015"],
+      "workflow": ".github/workflows/efcore-benchmark.yml"
+    }
+  ]
+}
