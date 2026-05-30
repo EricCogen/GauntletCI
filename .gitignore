@@ -21,8 +21,14 @@ artifacts/
 .tmp-tools/
 .misc/
 
-# Graphify knowledge graph (regenerable analysis artifact, stored in ~/.gauntletci/graphify/)
+# Graphify knowledge graph (regenerable; entire tree — cache/, obsidian/, graph.json, …)
+# Legacy copy may also exist under %USERPROFILE%\.gauntletci\graphify\
 graphify-out/
+
+# Local NuGet pack outputs (see scripts/install-gauntletci-global-tool.ps1 → nupkg-local/)
+nupkg-local/
+nupkg-extract/
+nupkg/
 
 # Cursor agent config (optional commit — un-ignore rules under .cursor/)
 !.cursor/
