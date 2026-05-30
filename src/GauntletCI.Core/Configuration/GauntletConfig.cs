@@ -46,6 +46,9 @@ public class GauntletConfig
     /// <summary>Default output and display settings.</summary>
     public OutputConfig Output { get; set; } = new();
 
+    /// <summary>Repository domain classifier for suppressing web/DI rules on libraries.</summary>
+    public RepoDomainConfig Domain { get; set; } = new();
+
     /// <summary>Ticket provider integration settings (Jira, Linear, GitHub Issues).</summary>
     public TicketProviderConfig TicketProvider { get; set; } = new();
 
@@ -277,6 +280,9 @@ public class OutputConfig
 
     /// <summary>Output format: text, json, or sarif. Defaults to text. Equivalent to --output.</summary>
     public string Format { get; set; } = "text";
+
+    /// <summary>Finding delivery caps, ranking, and coordination for the analyze path.</summary>
+    public FindingDeliveryConfig Delivery { get; set; } = new();
 }
 
 /// <summary>Ticket provider integration settings.</summary>
