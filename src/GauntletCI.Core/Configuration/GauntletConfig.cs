@@ -49,6 +49,9 @@ public class GauntletConfig
     /// <summary>Repository domain classifier for suppressing web/DI rules on libraries.</summary>
     public RepoDomainConfig Domain { get; set; } = new();
 
+    /// <summary>Diff provenance filter for suppressing findings on relocated lines (PG-PROVENANCE).</summary>
+    public ProvenanceConfig Provenance { get; set; } = new();
+
     /// <summary>Ticket provider integration settings (Jira, Linear, GitHub Issues).</summary>
     public TicketProviderConfig TicketProvider { get; set; } = new();
 

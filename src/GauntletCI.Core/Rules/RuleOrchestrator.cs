@@ -23,7 +23,6 @@ public class RuleOrchestrator
     private readonly ConfigurationService _configService;
     private readonly TimeSpan _ruleTimeout;
     private readonly IChangedFileAnalyzer _fileAnalyzer;
-    private readonly string? _repoPath;
 
     /// <summary>
     /// Initializes the orchestrator with an explicit set of rules and optional configuration.
@@ -33,21 +32,13 @@ public class RuleOrchestrator
     /// <param name="ruleTimeout">Per-rule evaluation time limit; defaults to 30 seconds when null.</param>
     /// <param name="fileAnalyzer">File eligibility classifier; defaults to <see cref="ChangedFileAnalyzer"/> when null.</param>
     /// <param name="configService">Severity resolver; created from <paramref name="config"/> when null.</param>
-    /// <param name="repoPath">Repository root for domain classification and severity resolution.</param>
-    public RuleOrchestrator(
-        IEnumerable<IRule> rules,
-        GauntletConfig? config = null,
-        TimeSpan? ruleTimeout = null,
-        IChangedFileAnalyzer? fileAnalyzer = null,
-        ConfigurationService? configService = null,
-        string? repoPath = null)
+    public RuleOrchestrator(IEnumerable<IRule> rules, GauntletConfig? config = null, TimeSpan? ruleTimeout = null, IChangedFileAnalyzer? fileAnalyzer = null, ConfigurationService? configService = null)
     {
         _rules = [.. rules.OrderBy(r => r.Id)];
         _config = config ?? new GauntletConfig();
         _configService = configService ?? new ConfigurationService(_config);
         _ruleTimeout = ruleTimeout ?? TimeSpan.FromSeconds(30);
         _fileAnalyzer = fileAnalyzer ?? new ChangedFileAnalyzer();
-        _repoPath = repoPath;
     }
 
     /// <summary>The rules registered with this orchestrator, ordered by ID.</summary>
@@ -133,7 +124,7 @@ public class RuleOrchestrator
         foreach (var rule in rules.OfType<IConfigurableRule>())
             rule.Configure(config);
 
-        return new RuleOrchestrator(rules, config, ruleTimeout, configService: configService, repoPath: repoPath);
+        return new RuleOrchestrator(rules, config, ruleTimeout, configService: configService);
     }
 
     /// <summary>
@@ -251,12 +242,17 @@ public class RuleOrchestrator
         ApplyIgnoreList(allFindings, ignoreList);
         PostProcess(filteredDiff, allFindings);
 
-        var domainProfile = RepoDomainClassifier.Classify(_repoPath, filteredDiff, _config.Domain);
+        var provenanceIndex = DiffProvenanceAnalyzer.Build(filteredDiff);
+        var provenance = ProvenanceFindingProcessor.Apply(allFindings, provenanceIndex, _config.Provenance);
+        allFindings.Clear();
+        allFindings.AddRange(provenance.Findings);
+
+        var domainProfile = RepoDomainClassifier.Classify(_configService.RepoPath, filteredDiff, _config.Domain);
         var domain = DomainFindingProcessor.Apply(allFindings, domainProfile, _config.Domain);
         allFindings.Clear();
         allFindings.AddRange(domain.Findings);
 
-        var delivery = ApplyDelivery(allFindings, domain.DroppedCount);
+        var delivery = ApplyDelivery(allFindings, provenance.DroppedCount, domain.DroppedCount);
         var finalFindings = delivery.Findings.ToList();
 
         return new EvaluationResult
@@ -308,12 +304,15 @@ public class RuleOrchestrator
         }
     }
 
-    private FindingDeliveryProcessor.Result ApplyDelivery(List<Finding> allFindings, int droppedByDomain)
+    private FindingDeliveryProcessor.Result ApplyDelivery(
+        List<Finding> allFindings,
+        int droppedByProvenance,
+        int droppedByDomain)
     {
         var deliveryConfig = _config.Output.Delivery;
         var result = FindingDeliveryProcessor.Apply(allFindings, deliveryConfig);
 
-        if (droppedByDomain <= 0)
+        if (droppedByProvenance <= 0 && droppedByDomain <= 0)
             return result;
 
         var summary = result.Summary;
@@ -328,6 +327,7 @@ public class RuleOrchestrator
                 DroppedByPerRuleCap = summary.DroppedByPerRuleCap,
                 DroppedByGlobalCap = summary.DroppedByGlobalCap,
                 CoordinationBoostsApplied = summary.CoordinationBoostsApplied,
+                DroppedByProvenanceFilter = droppedByProvenance,
                 DroppedByDomainFilter = droppedByDomain,
             },
         };

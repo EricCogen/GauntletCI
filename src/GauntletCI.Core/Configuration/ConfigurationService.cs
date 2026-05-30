@@ -24,9 +24,13 @@ public sealed class ConfigurationService
         @"^\s*dotnet_diagnostic\.(GCI\d+)\.severity\s*=\s*(\w+)",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    /// <summary>Repository root passed at construction; used for domain classification and .editorconfig resolution.</summary>
+    public string? RepoPath { get; }
+
     public ConfigurationService(GauntletConfig config, string? repoPath = null)
     {
         _config = config;
+        RepoPath = repoPath;
         _editorConfigOverrides = repoPath is not null
             ? ParseEditorConfig(repoPath)
             : new Dictionary<string, RuleSeverity>();

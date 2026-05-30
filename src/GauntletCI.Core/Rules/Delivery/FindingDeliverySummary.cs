@@ -22,6 +22,9 @@ public sealed class FindingDeliverySummary
     /// <summary>Number of findings whose confidence was boosted by rule coordination.</summary>
     public int CoordinationBoostsApplied { get; init; }
 
+    /// <summary>Findings removed because the anchored added line matches a removed line (relocated code).</summary>
+    public int DroppedByProvenanceFilter { get; init; }
+
     /// <summary>Findings removed because the repo was classified as a class library.</summary>
     public int DroppedByDomainFilter { get; init; }
 }

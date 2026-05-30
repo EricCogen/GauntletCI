@@ -118,7 +118,12 @@ public static class RepoDomainClassifier
                     continue;
 
                 string xml;
-                try { xml = File.ReadAllText(csproj); }
+                try
+                {
+                    using var stream = File.OpenRead(csproj);
+                    using var reader = new StreamReader(stream);
+                    xml = reader.ReadToEnd();
+                }
                 catch (IOException) { continue; }
 
                 if (WebProjectMarkers.Any(m => xml.Contains(m, StringComparison.OrdinalIgnoreCase)))

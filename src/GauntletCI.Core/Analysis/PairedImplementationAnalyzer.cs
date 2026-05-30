@@ -45,11 +45,11 @@ internal static class PairedImplementationAnalyzer
             var content = line.Content;
             var classMatch = ClassDeclarationRegex.Match(content);
             if (classMatch.Success)
-                currentClass = classMatch.Groups[1].Value;
+                currentClass = classMatch.Groups[1].Value!;
 
             var methodMatch = MethodDeclarationRegex.Match(content);
             if (methodMatch.Success)
-                currentMethod = methodMatch.Groups[1].Value;
+                currentMethod = methodMatch.Groups[1].Value!;
 
             if (currentClass is null || currentMethod is null)
                 continue;
@@ -89,12 +89,13 @@ internal static class PairedImplementationAnalyzer
                 .Select(g => g.OrderByDescending(o => o.IsAddedLine).ThenByDescending(o => o.LineNumber).First())
                 .ToList();
 
-            for (var i = 0; i < byClass.Count; i++)
+            var n = byClass.Count;
+            for (var a = 0; a < n; a++)
             {
-                for (var j = i + 1; j < byClass.Count; j++)
+                for (var b = a + 1; b < n; b++)
                 {
-                    var left = byClass[i];
-                    var right = byClass[j];
+                    var left = byClass[a];
+                    var right = byClass[b];
                     if (left.IsNegated == right.IsNegated)
                         continue;
 
@@ -114,22 +115,22 @@ internal static class PairedImplementationAnalyzer
         if (!ifMatch.Success)
             yield break;
 
-        var condition = ifMatch.Groups[1].Value.Trim();
+        var condition = ifMatch.Groups[1].Value!.Trim();
         var seen = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (Match pattern in Regex.Matches(condition, @"(\w+)\s*:\s*(true|false)\b", RegexOptions.IgnoreCase))
         {
-            var member = pattern.Groups[1].Value;
+            var member = pattern.Groups[1].Value!;
             if (!IsBooleanMember(member) || !seen.Add(member))
                 continue;
 
-            var expectsTrue = pattern.Groups[2].Value.Equals("true", StringComparison.OrdinalIgnoreCase);
+            var expectsTrue = pattern.Groups[2].Value!.Equals("true", StringComparison.OrdinalIgnoreCase);
             yield return (condition, member, !expectsTrue);
         }
 
         foreach (Match call in Regex.Matches(condition, @"(!)?\s*([A-Za-z_][A-Za-z0-9_]*)\s*\("))
         {
-            var callee = call.Groups[2].Value;
+            var callee = call.Groups[2].Value!;
             if (!IsBooleanMember(callee) || !seen.Add(callee))
                 continue;
 
@@ -141,7 +142,7 @@ internal static class PairedImplementationAnalyzer
 
         foreach (Match prop in Regex.Matches(condition, @"\.(?<member>Is[A-Z]\w+)\b"))
         {
-            var member = prop.Groups["member"].Value;
+            var member = prop.Groups["member"].Value!;
             if (!seen.Add(member))
                 continue;
 
