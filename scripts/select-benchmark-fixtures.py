@@ -14,6 +14,7 @@ from benchmark_lib import REPO, corpus_diff_exists
 
 DEFAULT_DB = Path(os.environ.get("USERPROFILE", "")) / ".gauntletci" / "corpus.db"
 DEFAULT_OUT = REPO / "eval" / "benchmark-suite.json"
+GROUND_TRUTH_DIR = REPO / "eval" / "ground-truth"
 ANCHOR_ID = "stackexchange-redis-pr-2995"
 NO_LIMIT = 999_999
 
@@ -100,6 +101,36 @@ def pick(
     return chosen
 
 
+def enrich_primary_rules_from_ground_truth(fixtures: list[dict]) -> None:
+    """Backfill primary_rules from eval/ground-truth when promote has run."""
+    for entry in fixtures:
+        if entry.get("primary_rules"):
+            continue
+        gt_path = GROUND_TRUTH_DIR / f"{entry['fixture_id']}.json"
+        if not gt_path.exists():
+            continue
+        gt = json.loads(gt_path.read_text(encoding="utf-8"))
+        rules = list(gt.get("primary_rules") or [])
+        if not rules and gt.get("defects"):
+            rules = sorted(
+                {
+                    d["primary_rule"]
+                    for d in gt["defects"]
+                    if d.get("primary_rule") and d.get("ci_required", True)
+                }
+            )
+        else:
+            required = {
+                d["primary_rule"]
+                for d in gt.get("defects", [])
+                if d.get("primary_rule") and d.get("ci_required", True)
+            }
+            if required:
+                rules = sorted(required)
+        if rules:
+            entry["primary_rules"] = rules
+
+
 def to_entry(c: dict, suite_tier: str) -> dict:
     scorable = c.get("scorable_labels", 0) >= 1 or c.get("positive_labels", 0) >= 1
     return {
@@ -160,7 +191,7 @@ def main() -> None:
         "pr_number": 2995,
         "suite_tier": "anchor",
         "domain_profile": "library",
-        "primary_rules": ["GCI0058", "GCI0007"],
+        "primary_rules": ["GCI0058", "GCI0032"],
         "defect_ids": ["paired-implementation-inversion", "swallowed-handler-exception"],
         "competitor_harvest": "anchor",
         "ci_regression": True,
@@ -202,6 +233,7 @@ def main() -> None:
     fixtures += [to_entry(c, "gold") for c in gold]
     fixtures += [to_entry(c, "silver") for c in silver]
     fixtures += [to_entry(c, "smoke") for c in smoke]
+    enrich_primary_rules_from_ground_truth(fixtures)
 
     gold_scorable = sum(1 for f in fixtures if f.get("suite_tier") == "gold" and f.get("scoring_eligible"))
     report = {

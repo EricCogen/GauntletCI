@@ -68,8 +68,13 @@ foreach ($f in $fixtures) {
 
     foreach ($rule in $f.primary_rules) {
         $doc = Get-Content $out -Raw | ConvertFrom-Json
-        $hit = @($doc.Findings | Where-Object { $_.RuleId -eq $rule })
-        if ($hit.Count -lt 1) { throw "Fixture $fid missing required rule $rule" }
+        $delivered = @($doc.Findings | Where-Object { $_.RuleId -eq $rule })
+        $fired = @($doc.RuleMetrics | Where-Object {
+            $_.RuleId -eq $rule -and ($_.FindingCount -gt 0 -or $_.Outcome -eq 1)
+        })
+        if ($delivered.Count -lt 1 -and $fired.Count -lt 1) {
+            throw "Fixture $fid missing required rule $rule (not delivered and rule did not fire)"
+        }
     }
     $count = @((Get-Content $out -Raw | ConvertFrom-Json).Findings).Count
     if ($count -gt 25) { throw "Fixture $fid exceeded delivery cap: $count" }

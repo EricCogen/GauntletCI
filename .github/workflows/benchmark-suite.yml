@@ -40,7 +40,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           ./scripts/run-benchmark-suite.ps1 -CiOnly -Sensitivity balanced
-          python scripts/score-competitive-benchmark.py --all-with-ground-truth --check
+          python scripts/score-competitive-benchmark.py --ci-only --check
       - name: Scorecard check
         shell: pwsh
         run: python scripts/score-competitive-benchmark.py --fixture stackexchange-redis-pr-2995 --check

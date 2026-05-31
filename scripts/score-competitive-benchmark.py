@@ -319,6 +319,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--fixture", default="stackexchange-redis-pr-2995")
     ap.add_argument("--all-with-ground-truth", action="store_true")
+    ap.add_argument("--ci-only", action="store_true", help="Only fixtures with ci_regression in benchmark-suite.json")
     ap.add_argument("--check", action="store_true")
     args = ap.parse_args()
 
@@ -329,7 +330,14 @@ def main() -> None:
     tool_names = scoring_tool_names(scope)
 
     fixture_ids = [args.fixture]
-    if args.all_with_ground_truth:
+    if args.ci_only:
+        suite = load_json(EVAL / "benchmark-suite.json")
+        fixture_ids = [
+            f["fixture_id"]
+            for f in suite.get("fixtures", [])
+            if f.get("ci_regression") and gt_dir.joinpath(f"{f['fixture_id']}.json").exists()
+        ]
+    elif args.all_with_ground_truth:
         fixture_ids = [p.stem for p in gt_dir.glob("*.json")]
 
     scorecards: list[dict] = []

@@ -4,7 +4,7 @@
   "repo": "apache/logging-log4net",
   "pr_number": 201,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T20:52:30.371953+00:00",
+  "generated_at_utc": "2026-05-31T21:10:40.889339+00:00",
   "upstream_pr_url": "https://github.com/apache/logging-log4net/pull/201",
   "eval_lab_pr_url": null,
   "defects": [
@@ -49,7 +49,7 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 16,
+      "finding_count": 13,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0004": {
@@ -61,7 +61,7 @@
           "caught_ground_truth": true,
           "evidence": [
             "GCI0006",
-            "Added: for (int i = 0; i < files.Length; i++)"
+            "Line 205: public int CompareTo(object? obj) => Compare(this, obj.EnsureIs<Level>());"
           ],
           "notes": ""
         }

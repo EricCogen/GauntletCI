@@ -4,7 +4,7 @@
   "repo": "DevToys-app/DevToys",
   "pr_number": 139,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T20:52:30.406860+00:00",
+  "generated_at_utc": "2026-05-31T21:10:40.922595+00:00",
   "upstream_pr_url": "https://github.com/DevToys-app/DevToys/pull/139",
   "eval_lab_pr_url": null,
   "defects": [
@@ -16,7 +16,7 @@
       "file": "src/dev/impl/DevToys/ViewModels/Tools/Graphic/ImageConverter/ImageConverterToolViewModel.cs",
       "line": 189,
       "adjudication_confidence": "medium",
-      "ci_required": true,
+      "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0006",
@@ -34,16 +34,13 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 4,
+      "finding_count": 3,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0006": {
-          "caught_ground_truth": true,
-          "evidence": [
-            "GCI0006",
-            "Added: for (int i = 0; i < SupportedFileExtensions.Length; i++)"
-          ],
-          "notes": ""
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
         }
       }
     },

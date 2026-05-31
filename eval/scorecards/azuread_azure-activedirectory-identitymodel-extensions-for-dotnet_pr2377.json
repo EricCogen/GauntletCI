@@ -4,7 +4,7 @@
   "repo": "AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
   "pr_number": 2377,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T20:52:30.374974+00:00",
+  "generated_at_utc": "2026-05-31T21:10:40.871623+00:00",
   "upstream_pr_url": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/pull/2377",
   "eval_lab_pr_url": null,
   "defects": [
@@ -42,7 +42,7 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 3,
+      "finding_count": 0,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0036": {

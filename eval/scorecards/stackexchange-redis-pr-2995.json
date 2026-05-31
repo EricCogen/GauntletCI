@@ -4,7 +4,7 @@
   "repo": "StackExchange/StackExchange.Redis",
   "pr_number": 2995,
   "suite_tier": "anchor",
-  "generated_at_utc": "2026-05-31T20:52:30.528913+00:00",
+  "generated_at_utc": "2026-05-31T21:10:40.822504+00:00",
   "upstream_pr_url": "https://github.com/StackExchange/StackExchange.Redis/pull/2995",
   "eval_lab_pr_url": "https://github.com/EricCogen/ai-review-eval-stackexchange-redis/pull/7",
   "defects": [
@@ -45,7 +45,7 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 14,
+      "finding_count": 11,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "paired-implementation-inversion": {

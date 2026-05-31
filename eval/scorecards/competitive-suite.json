@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0.0",
-  "generated_at_utc": "2026-05-31T20:52:30.540911+00:00",
-  "sample_size": 34,
-  "fixtures_scored": 58,
-  "gold_fixtures_in_scorecards": 57,
-  "gold_with_ci_required": 29,
+  "generated_at_utc": "2026-05-31T21:10:40.991859+00:00",
+  "sample_size": 31,
+  "fixtures_scored": 56,
+  "gold_fixtures_in_scorecards": 55,
+  "gold_with_ci_required": 26,
   "repos_represented": 28,
   "evidence_tier": "measured",
   "recall_denominator_note": "ci_required defects on fixtures with ground-truth only; large gold cohort may include unscored fixtures until promote",
@@ -42,30 +42,52 @@
       }
     },
     "gold_cross_repo": {
-      "fixtures": 57,
+      "fixtures": 55,
       "recall_by_tool": {
         "GauntletCI": {
-          "caught": 33,
-          "total": 33,
+          "caught": 30,
+          "total": 30,
           "rate": 1.0
         },
         "CodeQL": {
           "caught": 0,
-          "total": 33,
+          "total": 30,
           "rate": 0.0
         },
         "SonarCloud": {
           "caught": 0,
-          "total": 33,
+          "total": 30,
           "rate": 0.0
         },
         "Semgrep": {
           "caught": 0,
-          "total": 33,
+          "total": 30,
           "rate": 0.0
         }
       },
       "recall_by_fn_class": {
+        "edge-case-handling": {
+          "GauntletCI": {
+            "caught": 9,
+            "total": 9,
+            "rate": 1.0
+          },
+          "CodeQL": {
+            "caught": 0,
+            "total": 9,
+            "rate": 0.0
+          },
+          "SonarCloud": {
+            "caught": 0,
+            "total": 9,
+            "rate": 0.0
+          },
+          "Semgrep": {
+            "caught": 0,
+            "total": 9,
+            "rate": 0.0
+          }
+        },
         "logic-bug-no-token": {
           "GauntletCI": {
             "caught": 15,
@@ -85,50 +107,6 @@
           "Semgrep": {
             "caught": 0,
             "total": 15,
-            "rate": 0.0
-          }
-        },
-        "breaking-change": {
-          "GauntletCI": {
-            "caught": 5,
-            "total": 5,
-            "rate": 1.0
-          },
-          "CodeQL": {
-            "caught": 0,
-            "total": 5,
-            "rate": 0.0
-          },
-          "SonarCloud": {
-            "caught": 0,
-            "total": 5,
-            "rate": 0.0
-          },
-          "Semgrep": {
-            "caught": 0,
-            "total": 5,
-            "rate": 0.0
-          }
-        },
-        "edge-case-handling": {
-          "GauntletCI": {
-            "caught": 11,
-            "total": 11,
-            "rate": 1.0
-          },
-          "CodeQL": {
-            "caught": 0,
-            "total": 11,
-            "rate": 0.0
-          },
-          "SonarCloud": {
-            "caught": 0,
-            "total": 11,
-            "rate": 0.0
-          },
-          "Semgrep": {
-            "caught": 0,
-            "total": 11,
             "rate": 0.0
           }
         },
@@ -154,34 +132,34 @@
             "rate": 0.0
           }
         },
-        "sibling-implementation-drift": {
+        "breaking-change": {
           "GauntletCI": {
-            "caught": 1,
-            "total": 1,
+            "caught": 5,
+            "total": 5,
             "rate": 1.0
           },
           "CodeQL": {
             "caught": 0,
-            "total": 1,
+            "total": 5,
             "rate": 0.0
           },
           "SonarCloud": {
             "caught": 0,
-            "total": 1,
+            "total": 5,
             "rate": 0.0
           },
           "Semgrep": {
             "caught": 0,
-            "total": 1,
+            "total": 5,
             "rate": 0.0
           }
         }
       },
       "gauntletci_noise": {
-        "fixture_count": 57,
-        "mean_findings": 7.4,
-        "median_findings": 4,
-        "at_delivery_cap_25": 4
+        "fixture_count": 55,
+        "mean_findings": 5.02,
+        "median_findings": 0,
+        "at_delivery_cap_25": 3
       }
     }
   }

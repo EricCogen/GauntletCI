@@ -4,7 +4,7 @@
   "repo": "npgsql/npgsql",
   "pr_number": 6316,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T20:52:30.501331+00:00",
+  "generated_at_utc": "2026-05-31T21:10:40.892373+00:00",
   "upstream_pr_url": "https://github.com/npgsql/npgsql/pull/6316",
   "eval_lab_pr_url": null,
   "defects": [
@@ -49,7 +49,7 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 9,
+      "finding_count": 6,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0004": {

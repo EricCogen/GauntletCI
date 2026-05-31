@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at_utc": "2026-05-31T20:33:58.456169+00:00",
+  "generated_at_utc": "2026-05-31T21:10:43.642377+00:00",
   "description": "Cross-repo competitive benchmark manifest",
   "corpus_db": "C:\\Users\\ericc\\.gauntletci\\corpus.db",
   "selection_report": {
@@ -24,7 +24,7 @@
       "domain_profile": "library",
       "primary_rules": [
         "GCI0058",
-        "GCI0007"
+        "GCI0032"
       ],
       "defect_ids": [
         "paired-implementation-inversion",
@@ -40,7 +40,10 @@
       "pr_number": 1950,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0006",
+        "GCI0036"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -55,7 +58,9 @@
       "pr_number": 3028,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0006"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -85,7 +90,9 @@
       "pr_number": 1078,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0006"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -100,7 +107,10 @@
       "pr_number": 746,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0003",
+        "GCI0016"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -115,7 +125,9 @@
       "pr_number": 3410,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0003"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -130,7 +142,9 @@
       "pr_number": 2980,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0003"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -145,7 +159,10 @@
       "pr_number": 38024,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0004",
+        "GCI0006"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -175,7 +192,10 @@
       "pr_number": 6503,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0003",
+        "GCI0006"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -190,7 +210,9 @@
       "pr_number": 9983,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0006"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -205,7 +227,9 @@
       "pr_number": 2531,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0003"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -220,7 +244,9 @@
       "pr_number": 1159,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0003"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -265,7 +291,9 @@
       "pr_number": 1928,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0006"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -310,7 +338,9 @@
       "pr_number": 1211,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0003"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -325,7 +355,9 @@
       "pr_number": 1239,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0003"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -340,7 +372,9 @@
       "pr_number": 201,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0006"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -355,7 +389,9 @@
       "pr_number": 2182,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0003"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -370,7 +406,9 @@
       "pr_number": 126276,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0006"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -400,7 +438,9 @@
       "pr_number": 6316,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0004"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -415,7 +455,9 @@
       "pr_number": 1779,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0003"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -430,7 +472,9 @@
       "pr_number": 57223,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0003"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -475,7 +519,9 @@
       "pr_number": 1910,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0003"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -520,7 +566,9 @@
       "pr_number": 1046,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0003"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -535,7 +583,9 @@
       "pr_number": 1888,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0004"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -655,7 +705,9 @@
       "pr_number": 138,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0004"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -805,7 +857,9 @@
       "pr_number": 592,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0004"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,
@@ -820,7 +874,9 @@
       "pr_number": 6504,
       "suite_tier": "gold",
       "domain_profile": "library",
-      "primary_rules": [],
+      "primary_rules": [
+        "GCI0041"
+      ],
       "defect_ids": [],
       "competitor_harvest": "none",
       "ci_regression": true,

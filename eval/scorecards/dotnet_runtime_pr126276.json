@@ -4,7 +4,7 @@
   "repo": "dotnet/runtime",
   "pr_number": 126276,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T20:52:30.436881+00:00",
+  "generated_at_utc": "2026-05-31T21:10:40.892373+00:00",
   "upstream_pr_url": "https://github.com/dotnet/runtime/pull/126276",
   "eval_lab_pr_url": null,
   "defects": [
@@ -49,14 +49,14 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 25,
+      "finding_count": 18,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0006": {
           "caught_ground_truth": true,
           "evidence": [
             "GCI0006",
-            "Added: break;"
+            "Line 33: var valueBlob = reader.GetBlobReader(constant.Value);"
           ],
           "notes": ""
         },

@@ -4,7 +4,7 @@
   "repo": "StackExchange/StackExchange.Redis",
   "pr_number": 2995,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T20:52:30.535912+00:00",
+  "generated_at_utc": "2026-05-31T21:03:32.113632+00:00",
   "upstream_pr_url": "https://github.com/StackExchange/StackExchange.Redis/pull/2995",
   "eval_lab_pr_url": null,
   "defects": [

@@ -4,7 +4,7 @@
   "repo": "DevToys-app/DevToys",
   "pr_number": 1078,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T20:52:30.406860+00:00",
+  "generated_at_utc": "2026-05-31T21:10:40.823222+00:00",
   "upstream_pr_url": "https://github.com/DevToys-app/DevToys/pull/1078",
   "eval_lab_pr_url": null,
   "defects": [
@@ -64,7 +64,7 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 12,
+      "finding_count": 10,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0004": {
@@ -76,7 +76,7 @@
           "caught_ground_truth": true,
           "evidence": [
             "GCI0006",
-            "Added: for (int i = 0; i < decorations.Length; i++)"
+            "Line 126: return jsonElement.Value;"
           ],
           "notes": ""
         },
