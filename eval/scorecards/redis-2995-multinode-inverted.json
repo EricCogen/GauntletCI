@@ -4,7 +4,7 @@
   "repo": "StackExchange/StackExchange.Redis",
   "pr_number": 2995,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T21:03:32.095442+00:00",
+  "generated_at_utc": "2026-05-31T21:39:17.149756+00:00",
   "upstream_pr_url": "https://github.com/StackExchange/StackExchange.Redis/pull/2995",
   "eval_lab_pr_url": null,
   "defects": [
@@ -16,7 +16,7 @@
       "file": "src/StackExchange.Redis/Subscription.cs",
       "line": 267,
       "adjudication_confidence": "medium",
-      "ci_required": true,
+      "ci_required": false,
       "label_source": "Manual",
       "match_keywords": [
         "GCI0058",
@@ -34,16 +34,13 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 16,
+      "finding_count": 0,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0058": {
-          "caught_ground_truth": true,
-          "evidence": [
-            "GCI0058",
-            "src/StackExchange.Redis/Subscription.cs:267 \u2014 SingleNodeSubscription.RemoveDisconnectedEndpoints uses `server is { IsSub"
-          ],
-          "notes": ""
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
         }
       }
     },

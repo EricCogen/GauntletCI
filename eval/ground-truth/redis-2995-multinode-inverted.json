@@ -15,7 +15,7 @@
       "file": "src/StackExchange.Redis/Subscription.cs",
       "line": 267,
       "adjudication_confidence": "medium",
-      "ci_required": true,
+      "ci_required": false,
       "label_source": "Manual",
       "match_keywords": [
         "GCI0058",

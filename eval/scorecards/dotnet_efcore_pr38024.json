@@ -4,7 +4,7 @@
   "repo": "dotnet/efcore",
   "pr_number": 38024,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T21:10:40.840562+00:00",
+  "generated_at_utc": "2026-05-31T21:39:17.049692+00:00",
   "upstream_pr_url": "https://github.com/dotnet/efcore/pull/38024",
   "eval_lab_pr_url": null,
   "defects": [

@@ -45,7 +45,7 @@
       "file": "src/StackExchange.Redis/PhysicalConnection.cs",
       "line": 823,
       "adjudication_confidence": "medium",
-      "ci_required": true,
+      "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0006",

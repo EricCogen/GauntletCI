@@ -4,7 +4,7 @@
   "repo": "StackExchange/StackExchange.Redis",
   "pr_number": 2995,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T21:03:32.113632+00:00",
+  "generated_at_utc": "2026-05-31T21:39:17.171524+00:00",
   "upstream_pr_url": "https://github.com/StackExchange/StackExchange.Redis/pull/2995",
   "eval_lab_pr_url": null,
   "defects": [
@@ -46,7 +46,7 @@
       "file": "src/StackExchange.Redis/PhysicalConnection.cs",
       "line": 823,
       "adjudication_confidence": "medium",
-      "ci_required": true,
+      "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0006",
@@ -64,7 +64,7 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 16,
+      "finding_count": 0,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0004": {
@@ -78,12 +78,9 @@
           "notes": "no_match"
         },
         "corpus-gci0006": {
-          "caught_ground_truth": true,
-          "evidence": [
-            "GCI0006",
-            "Line 823: => WriteUnifiedPrefixedBlob(_ioPipe?.Output, channel.IgnoreChannelPrefix ? null : ChannelPrefix, channel.Value"
-          ],
-          "notes": ""
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
         }
       }
     },

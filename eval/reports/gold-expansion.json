@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at_utc": "2026-05-31T20:52:30.686511+00:00",
+  "generated_at_utc": "2026-05-31T21:39:30.769947+00:00",
   "comparison_scope": "diff_behavioral_review",
   "gauntletci_promise": [
     "Diff-scoped review of a changeset (staged commit or pull request)",
@@ -11,7 +11,7 @@
   ],
   "gold_fixture_count": 569,
   "gold_scoring_eligible": 55,
-  "gold_with_primary_rules": 0,
+  "gold_with_primary_rules": 26,
   "repos_in_gold": 56,
   "selection_report": {
     "candidates_with_diff": 569,
@@ -28,23 +28,23 @@
   "scale_note": "Full gold cohort includes fixtures without corpus labels; measured ci_required recall applies only after ground-truth promotion.",
   "measured_recall": {
     "GauntletCI": {
-      "caught": 33,
-      "total": 33,
+      "caught": 30,
+      "total": 30,
       "rate": 1.0
     },
     "CodeQL": {
       "caught": 0,
-      "total": 33,
+      "total": 30,
       "rate": 0.0
     },
     "SonarCloud": {
       "caught": 0,
-      "total": 33,
+      "total": 30,
       "rate": 0.0
     },
     "Semgrep": {
       "caught": 0,
-      "total": 33,
+      "total": 30,
       "rate": 0.0
     }
   },
@@ -95,23 +95,23 @@
     },
     "edge-case-handling": {
       "GauntletCI": {
-        "caught": 11,
-        "total": 11,
+        "caught": 9,
+        "total": 9,
         "rate": 1.0
       },
       "CodeQL": {
         "caught": 0,
-        "total": 11,
+        "total": 9,
         "rate": 0.0
       },
       "SonarCloud": {
         "caught": 0,
-        "total": 11,
+        "total": 9,
         "rate": 0.0
       },
       "Semgrep": {
         "caught": 0,
-        "total": 11,
+        "total": 9,
         "rate": 0.0
       }
     },
@@ -136,35 +136,13 @@
         "total": 1,
         "rate": 0.0
       }
-    },
-    "sibling-implementation-drift": {
-      "GauntletCI": {
-        "caught": 1,
-        "total": 1,
-        "rate": 1.0
-      },
-      "CodeQL": {
-        "caught": 0,
-        "total": 1,
-        "rate": 0.0
-      },
-      "SonarCloud": {
-        "caught": 0,
-        "total": 1,
-        "rate": 0.0
-      },
-      "Semgrep": {
-        "caught": 0,
-        "total": 1,
-        "rate": 0.0
-      }
     }
   },
   "gauntletci_noise": {
     "fixture_count": 57,
-    "mean_findings": 7.4,
-    "median_findings": 4,
-    "at_delivery_cap_25": 4
+    "mean_findings": 6.37,
+    "median_findings": 3,
+    "at_delivery_cap_25": 3
   },
   "gold_noise_sweep": {
     "strict": {
@@ -177,7 +155,6 @@
       "recall_failures": [
         "azure_azure-sdk-for-net_pr57223",
         "dapperlib_dapper_pr1910",
-        "devtoys-app_devtoys_pr139",
         "fluentvalidation_fluentvalidation_pr1888",
         "apache_logging-log4net_pr138",
         "icsharpcode_sharpziplib_pr592",
@@ -187,10 +164,10 @@
     "balanced": {
       "fixture_count": 569,
       "data_available": true,
-      "mean_findings": 2.04,
+      "mean_findings": 1.87,
       "median_findings": 1,
       "max_findings": 25,
-      "at_delivery_cap": 5,
+      "at_delivery_cap": 4,
       "recall_failures": []
     },
     "permissive": {
@@ -203,7 +180,6 @@
       "recall_failures": [
         "azure_azure-sdk-for-net_pr57223",
         "dapperlib_dapper_pr1910",
-        "devtoys-app_devtoys_pr139",
         "fluentvalidation_fluentvalidation_pr1888",
         "apache_logging-log4net_pr138",
         "icsharpcode_sharpziplib_pr592",
@@ -213,18 +189,11 @@
   },
   "top_noisy_rules_balanced": [
     {
-      "rule_id": "GCI0006",
-      "gold_finding_count": 270,
-      "ci_required_hits": 82,
-      "likely_noise_on_gold": true,
-      "noise_findings": 188
-    },
-    {
       "rule_id": "GCI0001",
-      "gold_finding_count": 163,
+      "gold_finding_count": 171,
       "ci_required_hits": 0,
       "likely_noise_on_gold": true,
-      "noise_findings": 163
+      "noise_findings": 171
     },
     {
       "rule_id": "GCI0003",
@@ -234,18 +203,25 @@
       "noise_findings": 140
     },
     {
+      "rule_id": "GCI0006",
+      "gold_finding_count": 143,
+      "ci_required_hits": 54,
+      "likely_noise_on_gold": true,
+      "noise_findings": 89
+    },
+    {
       "rule_id": "GCI0043",
-      "gold_finding_count": 78,
+      "gold_finding_count": 84,
       "ci_required_hits": 0,
       "likely_noise_on_gold": true,
-      "noise_findings": 78
+      "noise_findings": 84
     },
     {
       "rule_id": "GCI0045",
-      "gold_finding_count": 70,
+      "gold_finding_count": 80,
       "ci_required_hits": 0,
       "likely_noise_on_gold": true,
-      "noise_findings": 70
+      "noise_findings": 80
     }
   ],
   "recommended_gate_sensitivity": "balanced",
@@ -277,7 +253,7 @@
     }
   },
   "evidence_tier": "measured",
-  "headline": "GauntletCI 33/33 ci_required recall; CodeQL 0/33; SonarCloud 0/33; Semgrep 0/33",
+  "headline": "GauntletCI 30/30 ci_required recall; CodeQL 0/30; SonarCloud 0/30; Semgrep 0/30",
   "angles_covered": [
     "same_defect_recall_ci_required",
     "recall_by_fn_class",

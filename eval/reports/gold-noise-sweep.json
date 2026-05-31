@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at_utc": "2026-05-31T20:52:30.169900+00:00",
+  "generated_at_utc": "2026-05-31T21:39:31.952221+00:00",
   "gold_fixture_count": 569,
   "delivery_cap": 25,
   "recommended_gate_sensitivity": "balanced",
@@ -15,7 +15,6 @@
       "recall_failures": [
         "azure_azure-sdk-for-net_pr57223",
         "dapperlib_dapper_pr1910",
-        "devtoys-app_devtoys_pr139",
         "fluentvalidation_fluentvalidation_pr1888",
         "apache_logging-log4net_pr138",
         "icsharpcode_sharpziplib_pr592",
@@ -25,10 +24,10 @@
     "balanced": {
       "fixture_count": 569,
       "data_available": true,
-      "mean_findings": 2.04,
+      "mean_findings": 1.87,
       "median_findings": 1,
       "max_findings": 25,
-      "at_delivery_cap": 5,
+      "at_delivery_cap": 4,
       "recall_failures": []
     },
     "permissive": {
@@ -41,7 +40,6 @@
       "recall_failures": [
         "azure_azure-sdk-for-net_pr57223",
         "dapperlib_dapper_pr1910",
-        "devtoys-app_devtoys_pr139",
         "fluentvalidation_fluentvalidation_pr1888",
         "apache_logging-log4net_pr138",
         "icsharpcode_sharpziplib_pr592",
@@ -51,18 +49,11 @@
   },
   "balanced_global_rule_histogram": [
     {
-      "rule_id": "GCI0006",
-      "gold_finding_count": 270,
-      "ci_required_hits": 82,
-      "likely_noise_on_gold": true,
-      "noise_findings": 188
-    },
-    {
       "rule_id": "GCI0001",
-      "gold_finding_count": 163,
+      "gold_finding_count": 171,
       "ci_required_hits": 0,
       "likely_noise_on_gold": true,
-      "noise_findings": 163
+      "noise_findings": 171
     },
     {
       "rule_id": "GCI0003",
@@ -72,18 +63,32 @@
       "noise_findings": 140
     },
     {
+      "rule_id": "GCI0006",
+      "gold_finding_count": 143,
+      "ci_required_hits": 54,
+      "likely_noise_on_gold": true,
+      "noise_findings": 89
+    },
+    {
       "rule_id": "GCI0043",
-      "gold_finding_count": 78,
+      "gold_finding_count": 84,
       "ci_required_hits": 0,
       "likely_noise_on_gold": true,
-      "noise_findings": 78
+      "noise_findings": 84
     },
     {
       "rule_id": "GCI0045",
-      "gold_finding_count": 70,
+      "gold_finding_count": 80,
       "ci_required_hits": 0,
       "likely_noise_on_gold": true,
-      "noise_findings": 70
+      "noise_findings": 80
+    },
+    {
+      "rule_id": "GCI0051",
+      "gold_finding_count": 57,
+      "ci_required_hits": 0,
+      "likely_noise_on_gold": true,
+      "noise_findings": 57
     },
     {
       "rule_id": "GCI0020",
@@ -91,13 +96,6 @@
       "ci_required_hits": 0,
       "likely_noise_on_gold": true,
       "noise_findings": 54
-    },
-    {
-      "rule_id": "GCI0051",
-      "gold_finding_count": 52,
-      "ci_required_hits": 0,
-      "likely_noise_on_gold": true,
-      "noise_findings": 52
     },
     {
       "rule_id": "GCI0016",
@@ -108,10 +106,10 @@
     },
     {
       "rule_id": "GCI0004",
-      "gold_finding_count": 47,
+      "gold_finding_count": 49,
       "ci_required_hits": 23,
       "likely_noise_on_gold": true,
-      "noise_findings": 24
+      "noise_findings": 26
     },
     {
       "rule_id": "GCI0041",
@@ -207,18 +205,11 @@
   ],
   "top_noisy_rules_balanced": [
     {
-      "rule_id": "GCI0006",
-      "gold_finding_count": 270,
-      "ci_required_hits": 82,
-      "likely_noise_on_gold": true,
-      "noise_findings": 188
-    },
-    {
       "rule_id": "GCI0001",
-      "gold_finding_count": 163,
+      "gold_finding_count": 171,
       "ci_required_hits": 0,
       "likely_noise_on_gold": true,
-      "noise_findings": 163
+      "noise_findings": 171
     },
     {
       "rule_id": "GCI0003",
@@ -228,18 +219,32 @@
       "noise_findings": 140
     },
     {
+      "rule_id": "GCI0006",
+      "gold_finding_count": 143,
+      "ci_required_hits": 54,
+      "likely_noise_on_gold": true,
+      "noise_findings": 89
+    },
+    {
       "rule_id": "GCI0043",
-      "gold_finding_count": 78,
+      "gold_finding_count": 84,
       "ci_required_hits": 0,
       "likely_noise_on_gold": true,
-      "noise_findings": 78
+      "noise_findings": 84
     },
     {
       "rule_id": "GCI0045",
-      "gold_finding_count": 70,
+      "gold_finding_count": 80,
       "ci_required_hits": 0,
       "likely_noise_on_gold": true,
-      "noise_findings": 70
+      "noise_findings": 80
+    },
+    {
+      "rule_id": "GCI0051",
+      "gold_finding_count": 57,
+      "ci_required_hits": 0,
+      "likely_noise_on_gold": true,
+      "noise_findings": 57
     },
     {
       "rule_id": "GCI0020",
@@ -247,13 +252,6 @@
       "ci_required_hits": 0,
       "likely_noise_on_gold": true,
       "noise_findings": 54
-    },
-    {
-      "rule_id": "GCI0051",
-      "gold_finding_count": 52,
-      "ci_required_hits": 0,
-      "likely_noise_on_gold": true,
-      "noise_findings": 52
     },
     {
       "rule_id": "GCI0016",
@@ -285,10 +283,10 @@
     },
     {
       "rule_id": "GCI0004",
-      "gold_finding_count": 47,
+      "gold_finding_count": 49,
       "ci_required_hits": 23,
       "likely_noise_on_gold": true,
-      "noise_findings": 24
+      "noise_findings": 26
     },
     {
       "rule_id": "GCI0042",
@@ -313,12 +311,6 @@
     }
   ],
   "corpus_fp_for_top_noisy": {
-    "GCI0006": {
-      "fp": 949,
-      "tp": 4029,
-      "fn": 0,
-      "precision": 0.809
-    },
     "GCI0001": {
       "fp": 0,
       "tp": 0,
@@ -330,10 +322,16 @@
       "tp": 26808,
       "fn": 0,
       "precision": 0.871
+    },
+    "GCI0006": {
+      "fp": 949,
+      "tp": 4029,
+      "fn": 0,
+      "precision": 0.809
     }
   },
   "next_actions": [
-    "Tune delivery/rules starting with: GCI0006, GCI0001, GCI0003",
+    "Tune delivery/rules starting with: GCI0001, GCI0003, GCI0006",
     "Hold recall: every gold ci_required rule must appear in balanced ci_required_fired",
     "CI benchmark: run-benchmark-suite.ps1 -GoldOnly -Sensitivity balanced"
   ],
@@ -1261,14 +1259,10 @@
         "finding_count": 0,
         "at_cap": false,
         "rule_histogram": {},
-        "ci_required_rules": [
-          "GCI0006"
-        ],
+        "ci_required_rules": [],
         "ci_required_fired": [],
-        "ci_required_missing": [
-          "GCI0006"
-        ],
-        "recall_ok": false,
+        "ci_required_missing": [],
+        "recall_ok": true,
         "noise_rule_count": 0,
         "top_noise_rules": []
       },
@@ -8895,8 +8889,10 @@
           "GCI0007": 1,
           "GCI0020": 1,
           "GCI0016": 3,
-          "GCI0006": 15,
-          "GCI0051": 5
+          "GCI0006": 3,
+          "GCI0051": 10,
+          "GCI0004": 2,
+          "GCI0043": 5
         },
         "ci_required_rules": [
           "GCI0006"
@@ -8906,14 +8902,14 @@
         ],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 10,
+        "noise_rule_count": 22,
         "top_noise_rules": [
           [
-            "GCI0006",
-            15
+            "GCI0051",
+            10
           ],
           [
-            "GCI0051",
+            "GCI0043",
             5
           ],
           [
@@ -8921,12 +8917,12 @@
             3
           ],
           [
-            "GCI0007",
-            1
+            "GCI0006",
+            3
           ],
           [
-            "GCI0020",
-            1
+            "GCI0004",
+            2
           ]
         ]
       },
@@ -8965,10 +8961,10 @@
         "fixture_id": "devtoys-app_devtoys_pr1078",
         "repo": "DevToys-app/DevToys",
         "sensitivity": "balanced",
-        "finding_count": 12,
+        "finding_count": 10,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 6,
+          "GCI0006": 4,
           "GCI0042": 1,
           "GCI0043": 5
         },
@@ -8983,12 +8979,12 @@
         "noise_rule_count": 6,
         "top_noise_rules": [
           [
-            "GCI0006",
-            6
-          ],
-          [
             "GCI0043",
             5
+          ],
+          [
+            "GCI0006",
+            4
           ],
           [
             "GCI0042",
@@ -9000,12 +8996,11 @@
         "fixture_id": "icsharpcode_sharpziplib_pr746",
         "repo": "icsharpcode/SharpZipLib",
         "sensitivity": "balanced",
-        "finding_count": 15,
+        "finding_count": 14,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 3,
           "GCI0016": 5,
-          "GCI0006": 1,
           "GCI0051": 5,
           "GCI0032": 1
         },
@@ -9019,7 +9014,7 @@
         ],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 7,
+        "noise_rule_count": 6,
         "top_noise_rules": [
           [
             "GCI0016",
@@ -9032,10 +9027,6 @@
           [
             "GCI0003",
             3
-          ],
-          [
-            "GCI0006",
-            1
           ],
           [
             "GCI0032",
@@ -9144,10 +9135,9 @@
         "fixture_id": "dotnet_efcore_pr38038",
         "repo": "dotnet/efcore",
         "sensitivity": "balanced",
-        "finding_count": 7,
+        "finding_count": 5,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 2,
           "GCI0057": 1,
           "GCI0043": 1,
           "GCI0045": 3
@@ -9156,15 +9146,11 @@
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 7,
+        "noise_rule_count": 5,
         "top_noise_rules": [
           [
             "GCI0045",
             3
-          ],
-          [
-            "GCI0006",
-            2
           ],
           [
             "GCI0057",
@@ -9180,12 +9166,12 @@
         "fixture_id": "dotnet_orleans_pr6503",
         "repo": "dotnet/orleans",
         "sensitivity": "balanced",
-        "finding_count": 17,
+        "finding_count": 16,
         "at_cap": false,
         "rule_histogram": {
           "GCI0020": 2,
           "GCI0016": 1,
-          "GCI0006": 5,
+          "GCI0006": 4,
           "GCI0032": 1,
           "GCI0041": 1,
           "GCI0003": 2,
@@ -9204,12 +9190,12 @@
         "noise_rule_count": 10,
         "top_noise_rules": [
           [
-            "GCI0006",
+            "GCI0045",
             5
           ],
           [
-            "GCI0045",
-            5
+            "GCI0006",
+            4
           ],
           [
             "GCI0020",
@@ -9289,9 +9275,10 @@
         "rule_histogram": {
           "GCI0010": 1,
           "GCI0016": 1,
-          "GCI0006": 17,
+          "GCI0006": 7,
           "GCI0003": 2,
-          "GCI0043": 4
+          "GCI0043": 5,
+          "GCI0045": 9
         },
         "ci_required_rules": [
           "GCI0003"
@@ -9304,12 +9291,16 @@
         "noise_rule_count": 23,
         "top_noise_rules": [
           [
+            "GCI0045",
+            9
+          ],
+          [
             "GCI0006",
-            17
+            7
           ],
           [
             "GCI0043",
-            4
+            5
           ],
           [
             "GCI0003",
@@ -9317,10 +9308,6 @@
           ],
           [
             "GCI0010",
-            1
-          ],
-          [
-            "GCI0016",
             1
           ]
         ]
@@ -9381,11 +9368,11 @@
         "fixture_id": "dapperlib_dapper_pr1928",
         "repo": "DapperLib/Dapper",
         "sensitivity": "balanced",
-        "finding_count": 16,
+        "finding_count": 15,
         "at_cap": false,
         "rule_histogram": {
           "GCI0012": 1,
-          "GCI0006": 5,
+          "GCI0006": 4,
           "GCI0044": 1,
           "GCI0003": 1,
           "GCI0043": 8
@@ -9406,7 +9393,7 @@
           ],
           [
             "GCI0006",
-            5
+            4
           ],
           [
             "GCI0012",
@@ -9447,12 +9434,12 @@
         "fixture_id": "ricosuter_namotion.reflection_pr62",
         "repo": "RicoSuter/Namotion.Reflection",
         "sensitivity": "balanced",
-        "finding_count": 12,
+        "finding_count": 11,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 2,
           "GCI0016": 3,
-          "GCI0006": 2,
+          "GCI0006": 1,
           "GCI0044": 2,
           "GCI0049": 1,
           "GCI0042": 1,
@@ -9462,7 +9449,7 @@
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 12,
+        "noise_rule_count": 11,
         "top_noise_rules": [
           [
             "GCI0016",
@@ -9473,12 +9460,12 @@
             2
           ],
           [
-            "GCI0006",
+            "GCI0044",
             2
           ],
           [
-            "GCI0044",
-            2
+            "GCI0006",
+            1
           ],
           [
             "GCI0049",
@@ -9545,10 +9532,10 @@
         "fixture_id": "apache_logging-log4net_pr201",
         "repo": "apache/logging-log4net",
         "sensitivity": "balanced",
-        "finding_count": 16,
+        "finding_count": 13,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 5,
+          "GCI0006": 2,
           "GCI0032": 2,
           "GCI0044": 1,
           "GCI0043": 8
@@ -9569,7 +9556,7 @@
           ],
           [
             "GCI0006",
-            5
+            2
           ],
           [
             "GCI0032",
@@ -9615,15 +9602,15 @@
         "fixture_id": "dotnet_runtime_pr126276",
         "repo": "dotnet/runtime",
         "sensitivity": "balanced",
-        "finding_count": 25,
-        "at_cap": true,
+        "finding_count": 18,
+        "at_cap": false,
         "rule_histogram": {
           "GCI0016": 1,
-          "GCI0006": 10,
+          "GCI0006": 2,
           "GCI0032": 1,
           "GCI0043": 3,
           "GCI0042": 9,
-          "GCI0045": 1
+          "GCI0045": 2
         },
         "ci_required_rules": [
           "GCI0006"
@@ -9633,12 +9620,8 @@
         ],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 15,
+        "noise_rule_count": 16,
         "top_noise_rules": [
-          [
-            "GCI0006",
-            10
-          ],
           [
             "GCI0042",
             9
@@ -9648,11 +9631,15 @@
             3
           ],
           [
-            "GCI0016",
-            1
+            "GCI0006",
+            2
           ],
           [
-            "GCI0032",
+            "GCI0045",
+            2
+          ],
+          [
+            "GCI0016",
             1
           ]
         ]
@@ -9687,10 +9674,10 @@
         "fixture_id": "npgsql_npgsql_pr6316",
         "repo": "npgsql/npgsql",
         "sensitivity": "balanced",
-        "finding_count": 9,
+        "finding_count": 6,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 7,
+          "GCI0006": 4,
           "GCI0004": 1,
           "GCI0045": 1
         },
@@ -9702,11 +9689,11 @@
         ],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 8,
+        "noise_rule_count": 5,
         "top_noise_rules": [
           [
             "GCI0006",
-            7
+            4
           ],
           [
             "GCI0004",
@@ -9818,10 +9805,10 @@
         "fixture_id": "closedxml_closedxml_pr2093",
         "repo": "ClosedXML/ClosedXML",
         "sensitivity": "balanced",
-        "finding_count": 6,
+        "finding_count": 4,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 3,
+          "GCI0006": 1,
           "GCI0044": 1,
           "GCI0003": 1,
           "GCI0045": 1
@@ -9830,11 +9817,11 @@
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 6,
+        "noise_rule_count": 4,
         "top_noise_rules": [
           [
             "GCI0006",
-            3
+            1
           ],
           [
             "GCI0044",
@@ -9894,19 +9881,14 @@
         "fixture_id": "devtoys-app_devtoys_pr139",
         "repo": "DevToys-app/DevToys",
         "sensitivity": "balanced",
-        "finding_count": 4,
+        "finding_count": 3,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 1,
           "GCI0044": 2,
           "GCI0056": 1
         },
-        "ci_required_rules": [
-          "GCI0006"
-        ],
-        "ci_required_fired": [
-          "GCI0006"
-        ],
+        "ci_required_rules": [],
+        "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
         "noise_rule_count": 3,
@@ -9914,10 +9896,6 @@
           [
             "GCI0044",
             2
-          ],
-          [
-            "GCI0006",
-            1
           ],
           [
             "GCI0056",
@@ -9929,10 +9907,10 @@
         "fixture_id": "devtoys-app_devtoys_pr1009",
         "repo": "DevToys-app/DevToys",
         "sensitivity": "balanced",
-        "finding_count": 6,
+        "finding_count": 5,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 4,
+          "GCI0006": 3,
           "GCI0043": 1,
           "GCI0045": 1
         },
@@ -9940,11 +9918,11 @@
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 6,
+        "noise_rule_count": 5,
         "top_noise_rules": [
           [
             "GCI0006",
-            4
+            3
           ],
           [
             "GCI0043",
@@ -10101,7 +10079,7 @@
         "finding_count": 1,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 1
+          "GCI0001": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
@@ -10110,7 +10088,7 @@
         "noise_rule_count": 1,
         "top_noise_rules": [
           [
-            "GCI0006",
+            "GCI0001",
             1
           ]
         ]
@@ -10119,11 +10097,11 @@
         "fixture_id": "stackexchange_stackexchange.redis_pr2939",
         "repo": "StackExchange/StackExchange.Redis",
         "sensitivity": "balanced",
-        "finding_count": 7,
+        "finding_count": 5,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 1,
-          "GCI0006": 3,
+          "GCI0006": 1,
           "GCI0004": 1,
           "GCI0049": 1,
           "GCI0045": 1
@@ -10132,14 +10110,14 @@
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 7,
+        "noise_rule_count": 5,
         "top_noise_rules": [
           [
-            "GCI0006",
-            3
+            "GCI0003",
+            1
           ],
           [
-            "GCI0003",
+            "GCI0006",
             1
           ],
           [
@@ -10784,25 +10762,20 @@
         "fixture_id": "anglesharp_anglesharp_pr1206",
         "repo": "AngleSharp/AngleSharp",
         "sensitivity": "balanced",
-        "finding_count": 3,
+        "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 1,
-          "GCI0006": 1,
           "GCI0043": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 3,
+        "noise_rule_count": 2,
         "top_noise_rules": [
           [
             "GCI0003",
-            1
-          ],
-          [
-            "GCI0006",
             1
           ],
           [
@@ -10836,22 +10809,15 @@
         "fixture_id": "app-vnext_polly_pr1145",
         "repo": "App-vNext/Polly",
         "sensitivity": "balanced",
-        "finding_count": 1,
+        "finding_count": 0,
         "at_cap": false,
-        "rule_histogram": {
-          "GCI0001": 1
-        },
+        "rule_histogram": {},
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 1,
-        "top_noise_rules": [
-          [
-            "GCI0001",
-            1
-          ]
-        ]
+        "noise_rule_count": 0,
+        "top_noise_rules": []
       },
       {
         "fixture_id": "app-vnext_polly_pr1522",
@@ -11053,10 +11019,9 @@
         "fixture_id": "avaloniaui_avalonia_pr21030",
         "repo": "AvaloniaUI/Avalonia",
         "sensitivity": "balanced",
-        "finding_count": 9,
+        "finding_count": 7,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 2,
           "GCI0051": 5,
           "GCI0044": 1,
           "GCI0043": 1
@@ -11065,15 +11030,11 @@
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 9,
+        "noise_rule_count": 7,
         "top_noise_rules": [
           [
             "GCI0051",
             5
-          ],
-          [
-            "GCI0006",
-            2
           ],
           [
             "GCI0044",
@@ -11491,20 +11452,20 @@
         "fixture_id": "azure_azure-sdk-for-net_pr58314",
         "repo": "Azure/azure-sdk-for-net",
         "sensitivity": "balanced",
-        "finding_count": 2,
+        "finding_count": 1,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 2
+          "GCI0006": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 2,
+        "noise_rule_count": 1,
         "top_noise_rules": [
           [
             "GCI0006",
-            2
+            1
           ]
         ]
       },
@@ -11512,10 +11473,9 @@
         "fixture_id": "azuread_azure-activedirectory-identitymodel-extensions-for-dotnet_pr2804",
         "repo": "AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
         "sensitivity": "balanced",
-        "finding_count": 4,
+        "finding_count": 3,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 1,
           "GCI0004": 1,
           "GCI0043": 2
         },
@@ -11523,15 +11483,11 @@
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 4,
+        "noise_rule_count": 3,
         "top_noise_rules": [
           [
             "GCI0043",
             2
-          ],
-          [
-            "GCI0006",
-            1
           ],
           [
             "GCI0004",
@@ -11543,20 +11499,20 @@
         "fixture_id": "azuread_azure-activedirectory-identitymodel-extensions-for-dotnet_pr3220",
         "repo": "AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
         "sensitivity": "balanced",
-        "finding_count": 4,
+        "finding_count": 1,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 4
+          "GCI0001": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 4,
+        "noise_rule_count": 1,
         "top_noise_rules": [
           [
-            "GCI0006",
-            4
+            "GCI0001",
+            1
           ]
         ]
       },
@@ -11782,12 +11738,12 @@
         "fixture_id": "closedxml_closedxml_pr1649",
         "repo": "ClosedXML/ClosedXML",
         "sensitivity": "balanced",
-        "finding_count": 8,
+        "finding_count": 6,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 1,
           "GCI0020": 1,
-          "GCI0006": 4,
+          "GCI0006": 2,
           "GCI0044": 1,
           "GCI0043": 1
         },
@@ -11795,11 +11751,11 @@
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 8,
+        "noise_rule_count": 6,
         "top_noise_rules": [
           [
             "GCI0006",
-            4
+            2
           ],
           [
             "GCI0003",
@@ -12006,20 +11962,20 @@
         "fixture_id": "devtoys-app_devtoys_pr1007",
         "repo": "DevToys-app/DevToys",
         "sensitivity": "balanced",
-        "finding_count": 4,
+        "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 4
+          "GCI0006": 2
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 4,
+        "noise_rule_count": 2,
         "top_noise_rules": [
           [
             "GCI0006",
-            4
+            2
           ]
         ]
       },
@@ -12095,18 +12051,18 @@
         "fixture_id": "devtoys-app_devtoys_pr1102",
         "repo": "DevToys-app/DevToys",
         "sensitivity": "balanced",
-        "finding_count": 5,
+        "finding_count": 4,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 2,
-          "GCI0006": 2,
+          "GCI0006": 1,
           "GCI0044": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 5,
+        "noise_rule_count": 4,
         "top_noise_rules": [
           [
             "GCI0003",
@@ -12114,7 +12070,7 @@
           ],
           [
             "GCI0006",
-            2
+            1
           ],
           [
             "GCI0044",
@@ -12192,22 +12148,15 @@
         "fixture_id": "fluentvalidation_fluentvalidation_pr2158",
         "repo": "FluentValidation/FluentValidation",
         "sensitivity": "balanced",
-        "finding_count": 1,
+        "finding_count": 0,
         "at_cap": false,
-        "rule_histogram": {
-          "GCI0006": 1
-        },
+        "rule_histogram": {},
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 1,
-        "top_noise_rules": [
-          [
-            "GCI0006",
-            1
-          ]
-        ]
+        "noise_rule_count": 0,
+        "top_noise_rules": []
       },
       {
         "fixture_id": "fluentvalidation_fluentvalidation_pr2184",
@@ -12405,8 +12354,8 @@
         "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0001": 1,
-          "GCI0003": 1
+          "GCI0003": 1,
+          "GCI0001": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
@@ -12415,11 +12364,11 @@
         "noise_rule_count": 2,
         "top_noise_rules": [
           [
-            "GCI0001",
+            "GCI0003",
             1
           ],
           [
-            "GCI0003",
+            "GCI0001",
             1
           ]
         ]
@@ -12702,21 +12651,21 @@
         "fixture_id": "joshclose_csvhelper_pr2145",
         "repo": "JoshClose/CsvHelper",
         "sensitivity": "balanced",
-        "finding_count": 3,
+        "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 2,
+          "GCI0006": 1,
           "GCI0032": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 3,
+        "noise_rule_count": 2,
         "top_noise_rules": [
           [
             "GCI0006",
-            2
+            1
           ],
           [
             "GCI0032",
@@ -12742,22 +12691,17 @@
         "fixture_id": "joshclose_csvhelper_pr2317",
         "repo": "JoshClose/CsvHelper",
         "sensitivity": "balanced",
-        "finding_count": 2,
+        "finding_count": 1,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 1,
           "GCI0044": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 2,
+        "noise_rule_count": 1,
         "top_noise_rules": [
-          [
-            "GCI0006",
-            1
-          ],
           [
             "GCI0044",
             1
@@ -12768,24 +12712,19 @@
         "fixture_id": "nlog_nlog_pr6094",
         "repo": "NLog/NLog",
         "sensitivity": "balanced",
-        "finding_count": 4,
+        "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0003": 2,
-          "GCI0006": 2
+          "GCI0003": 2
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 4,
+        "noise_rule_count": 2,
         "top_noise_rules": [
           [
             "GCI0003",
-            2
-          ],
-          [
-            "GCI0006",
             2
           ]
         ]
@@ -12969,22 +12908,15 @@
         "fixture_id": "powershell_powershell_pr24912",
         "repo": "PowerShell/PowerShell",
         "sensitivity": "balanced",
-        "finding_count": 1,
+        "finding_count": 0,
         "at_cap": false,
-        "rule_histogram": {
-          "GCI0003": 1
-        },
+        "rule_histogram": {},
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 1,
-        "top_noise_rules": [
-          [
-            "GCI0003",
-            1
-          ]
-        ]
+        "noise_rule_count": 0,
+        "top_noise_rules": []
       },
       {
         "fixture_id": "powershell_powershell_pr24965",
@@ -13402,22 +13334,17 @@
         "fixture_id": "sixlabors_imagesharp_pr2740",
         "repo": "SixLabors/ImageSharp",
         "sensitivity": "balanced",
-        "finding_count": 3,
+        "finding_count": 1,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0003": 1,
-          "GCI0006": 2
+          "GCI0003": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 3,
+        "noise_rule_count": 1,
         "top_noise_rules": [
-          [
-            "GCI0006",
-            2
-          ],
           [
             "GCI0003",
             1
@@ -13431,7 +13358,7 @@
         "finding_count": 1,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 1
+          "GCI0001": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
@@ -13440,7 +13367,7 @@
         "noise_rule_count": 1,
         "top_noise_rules": [
           [
-            "GCI0006",
+            "GCI0001",
             1
           ]
         ]
@@ -13470,10 +13397,24 @@
         "fixture_id": "sixlabors_imagesharp_pr3047",
         "repo": "SixLabors/ImageSharp",
         "sensitivity": "balanced",
+        "finding_count": 0,
+        "at_cap": false,
+        "rule_histogram": {},
+        "ci_required_rules": [],
+        "ci_required_fired": [],
+        "ci_required_missing": [],
+        "recall_ok": true,
+        "noise_rule_count": 0,
+        "top_noise_rules": []
+      },
+      {
+        "fixture_id": "sixlabors_imagesharp_pr3051",
+        "repo": "SixLabors/ImageSharp",
+        "sensitivity": "balanced",
         "finding_count": 1,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 1
+          "GCI0001": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
@@ -13482,29 +13423,8 @@
         "noise_rule_count": 1,
         "top_noise_rules": [
           [
-            "GCI0006",
+            "GCI0001",
             1
-          ]
-        ]
-      },
-      {
-        "fixture_id": "sixlabors_imagesharp_pr3051",
-        "repo": "SixLabors/ImageSharp",
-        "sensitivity": "balanced",
-        "finding_count": 3,
-        "at_cap": false,
-        "rule_histogram": {
-          "GCI0006": 3
-        },
-        "ci_required_rules": [],
-        "ci_required_fired": [],
-        "ci_required_missing": [],
-        "recall_ok": true,
-        "noise_rule_count": 3,
-        "top_noise_rules": [
-          [
-            "GCI0006",
-            3
           ]
         ]
       },
@@ -13533,24 +13453,24 @@
         "fixture_id": "sixlabors_imagesharp_pr3055",
         "repo": "SixLabors/ImageSharp",
         "sensitivity": "balanced",
-        "finding_count": 5,
+        "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 1,
-          "GCI0006": 4
+          "GCI0006": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 5,
+        "noise_rule_count": 2,
         "top_noise_rules": [
           [
-            "GCI0006",
-            4
+            "GCI0003",
+            1
           ],
           [
-            "GCI0003",
+            "GCI0006",
             1
           ]
         ]
@@ -13580,24 +13500,24 @@
         "fixture_id": "sixlabors_imagesharp_pr3070",
         "repo": "SixLabors/ImageSharp",
         "sensitivity": "balanced",
-        "finding_count": 3,
+        "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 2,
-          "GCI0032": 1
+          "GCI0032": 1,
+          "GCI0001": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 3,
+        "noise_rule_count": 2,
         "top_noise_rules": [
           [
-            "GCI0006",
-            2
+            "GCI0032",
+            1
           ],
           [
-            "GCI0032",
+            "GCI0001",
             1
           ]
         ]
@@ -13808,7 +13728,7 @@
         "finding_count": 1,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 1
+          "GCI0001": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
@@ -13817,7 +13737,7 @@
         "noise_rule_count": 1,
         "top_noise_rules": [
           [
-            "GCI0006",
+            "GCI0001",
             1
           ]
         ]
@@ -14009,23 +13929,18 @@
         "fixture_id": "adamhathcock_sharpcompress_pr1229",
         "repo": "adamhathcock/sharpcompress",
         "sensitivity": "balanced",
-        "finding_count": 15,
+        "finding_count": 8,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 2,
-          "GCI0006": 7,
           "GCI0051": 6
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 15,
+        "noise_rule_count": 8,
         "top_noise_rules": [
-          [
-            "GCI0006",
-            7
-          ],
           [
             "GCI0051",
             6
@@ -14214,24 +14129,29 @@
         "fixture_id": "akkadotnet_akka.net_pr8042",
         "repo": "akkadotnet/akka.net",
         "sensitivity": "balanced",
-        "finding_count": 3,
+        "finding_count": 4,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 1,
+          "GCI0003": 1,
+          "GCI0001": 1,
           "GCI0045": 2
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 3,
+        "noise_rule_count": 4,
         "top_noise_rules": [
           [
             "GCI0045",
             2
           ],
           [
-            "GCI0006",
+            "GCI0003",
+            1
+          ],
+          [
+            "GCI0001",
             1
           ]
         ]
@@ -14326,8 +14246,8 @@
         "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0001": 1,
-          "GCI0041": 1
+          "GCI0041": 1,
+          "GCI0001": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
@@ -14336,11 +14256,11 @@
         "noise_rule_count": 2,
         "top_noise_rules": [
           [
-            "GCI0001",
+            "GCI0041",
             1
           ],
           [
-            "GCI0041",
+            "GCI0001",
             1
           ]
         ]
@@ -14398,25 +14318,20 @@
         "fixture_id": "akkadotnet_akka.net_pr8108",
         "repo": "akkadotnet/akka.net",
         "sensitivity": "balanced",
-        "finding_count": 6,
+        "finding_count": 5,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0016": 5,
-          "GCI0001": 1
+          "GCI0016": 5
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 6,
+        "noise_rule_count": 5,
         "top_noise_rules": [
           [
             "GCI0016",
             5
-          ],
-          [
-            "GCI0001",
-            1
           ]
         ]
       },
@@ -14621,8 +14536,8 @@
         "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0001": 1,
-          "GCI0042": 1
+          "GCI0042": 1,
+          "GCI0001": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
@@ -14631,11 +14546,11 @@
         "noise_rule_count": 2,
         "top_noise_rules": [
           [
-            "GCI0001",
+            "GCI0042",
             1
           ],
           [
-            "GCI0042",
+            "GCI0001",
             1
           ]
         ]
@@ -14738,11 +14653,11 @@
         "fixture_id": "aws_aws-sdk-net_pr4327",
         "repo": "aws/aws-sdk-net",
         "sensitivity": "balanced",
-        "finding_count": 11,
+        "finding_count": 10,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 4,
-          "GCI0006": 2,
+          "GCI0006": 1,
           "GCI0044": 3,
           "GCI0042": 1,
           "GCI0045": 1
@@ -14751,7 +14666,7 @@
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 11,
+        "noise_rule_count": 10,
         "top_noise_rules": [
           [
             "GCI0003",
@@ -14763,7 +14678,7 @@
           ],
           [
             "GCI0006",
-            2
+            1
           ],
           [
             "GCI0042",
@@ -14779,20 +14694,20 @@
         "fixture_id": "aws_aws-sdk-net_pr4331",
         "repo": "aws/aws-sdk-net",
         "sensitivity": "balanced",
-        "finding_count": 2,
+        "finding_count": 1,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 2
+          "GCI0006": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 2,
+        "noise_rule_count": 1,
         "top_noise_rules": [
           [
             "GCI0006",
-            2
+            1
           ]
         ]
       },
@@ -15858,7 +15773,7 @@
         "finding_count": 1,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 1
+          "GCI0001": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
@@ -15867,7 +15782,7 @@
         "noise_rule_count": 1,
         "top_noise_rules": [
           [
-            "GCI0006",
+            "GCI0001",
             1
           ]
         ]
@@ -16382,8 +16297,8 @@
         "at_cap": false,
         "rule_histogram": {
           "GCI0016": 1,
-          "GCI0001": 1,
           "GCI0004": 1,
+          "GCI0001": 1,
           "GCI0045": 1
         },
         "ci_required_rules": [],
@@ -16397,11 +16312,11 @@
             1
           ],
           [
-            "GCI0001",
+            "GCI0004",
             1
           ],
           [
-            "GCI0004",
+            "GCI0001",
             1
           ],
           [
@@ -16461,24 +16376,24 @@
         "fixture_id": "dotnet_reactive_pr2308",
         "repo": "dotnet/reactive",
         "sensitivity": "balanced",
-        "finding_count": 3,
+        "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 1,
-          "GCI0006": 2
+          "GCI0006": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 3,
+        "noise_rule_count": 2,
         "top_noise_rules": [
           [
-            "GCI0006",
-            2
+            "GCI0003",
+            1
           ],
           [
-            "GCI0003",
+            "GCI0006",
             1
           ]
         ]
@@ -16558,12 +16473,11 @@
         "fixture_id": "dotnet_roslyn_pr82881",
         "repo": "dotnet/roslyn",
         "sensitivity": "balanced",
-        "finding_count": 13,
+        "finding_count": 12,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 4,
           "GCI0016": 2,
-          "GCI0006": 1,
           "GCI0057": 5,
           "GCI0032": 1
         },
@@ -16571,7 +16485,7 @@
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 13,
+        "noise_rule_count": 12,
         "top_noise_rules": [
           [
             "GCI0057",
@@ -16584,10 +16498,6 @@
           [
             "GCI0016",
             2
-          ],
-          [
-            "GCI0006",
-            1
           ],
           [
             "GCI0032",
@@ -16847,18 +16757,17 @@
         "fixture_id": "dotnet_runtime_pr126091",
         "repo": "dotnet/runtime",
         "sensitivity": "balanced",
-        "finding_count": 6,
+        "finding_count": 5,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 2,
-          "GCI0016": 3,
-          "GCI0006": 1
+          "GCI0016": 3
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 6,
+        "noise_rule_count": 5,
         "top_noise_rules": [
           [
             "GCI0016",
@@ -16867,10 +16776,6 @@
           [
             "GCI0003",
             2
-          ],
-          [
-            "GCI0006",
-            1
           ]
         ]
       },
@@ -16930,8 +16835,8 @@
         "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0001": 1,
-          "GCI0041": 1
+          "GCI0041": 1,
+          "GCI0001": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
@@ -16940,11 +16845,11 @@
         "noise_rule_count": 2,
         "top_noise_rules": [
           [
-            "GCI0001",
+            "GCI0041",
             1
           ],
           [
-            "GCI0041",
+            "GCI0001",
             1
           ]
         ]
@@ -16953,22 +16858,15 @@
         "fixture_id": "dotnet_runtime_pr126807",
         "repo": "dotnet/runtime",
         "sensitivity": "balanced",
-        "finding_count": 1,
+        "finding_count": 0,
         "at_cap": false,
-        "rule_histogram": {
-          "GCI0006": 1
-        },
+        "rule_histogram": {},
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 1,
-        "top_noise_rules": [
-          [
-            "GCI0006",
-            1
-          ]
-        ]
+        "noise_rule_count": 0,
+        "top_noise_rules": []
       },
       {
         "fixture_id": "dotnet_runtime_pr126856",
@@ -17058,10 +16956,9 @@
         "fixture_id": "files-community_files_pr18061",
         "repo": "files-community/Files",
         "sensitivity": "balanced",
-        "finding_count": 7,
+        "finding_count": 6,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 1,
           "GCI0051": 5,
           "GCI0045": 1
         },
@@ -17069,15 +16966,11 @@
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 7,
+        "noise_rule_count": 6,
         "top_noise_rules": [
           [
             "GCI0051",
             5
-          ],
-          [
-            "GCI0006",
-            1
           ],
           [
             "GCI0045",
@@ -17138,25 +17031,20 @@
         "fixture_id": "files-community_files_pr18270",
         "repo": "files-community/Files",
         "sensitivity": "balanced",
-        "finding_count": 4,
+        "finding_count": 3,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 1,
           "GCI0044": 3
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 4,
+        "noise_rule_count": 3,
         "top_noise_rules": [
           [
             "GCI0044",
             3
-          ],
-          [
-            "GCI0006",
-            1
           ]
         ]
       },
@@ -17246,23 +17134,18 @@
         "fixture_id": "fluentassertions_fluentassertions_pr3133",
         "repo": "fluentassertions/fluentassertions",
         "sensitivity": "balanced",
-        "finding_count": 4,
+        "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 1,
-          "GCI0006": 2,
           "GCI0041": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 4,
+        "noise_rule_count": 2,
         "top_noise_rules": [
-          [
-            "GCI0006",
-            2
-          ],
           [
             "GCI0003",
             1
@@ -17417,22 +17300,17 @@
         "fixture_id": "fluentassertions_fluentassertions_pr3188",
         "repo": "fluentassertions/fluentassertions",
         "sensitivity": "balanced",
-        "finding_count": 4,
+        "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 2,
           "GCI0044": 2
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 4,
+        "noise_rule_count": 2,
         "top_noise_rules": [
-          [
-            "GCI0006",
-            2
-          ],
           [
             "GCI0044",
             2
@@ -18423,10 +18301,9 @@
         "fixture_id": "microsoft_powertoys_pr46377",
         "repo": "microsoft/PowerToys",
         "sensitivity": "balanced",
-        "finding_count": 8,
+        "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 6,
           "GCI0044": 1,
           "GCI0043": 1
         },
@@ -18434,12 +18311,8 @@
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 8,
+        "noise_rule_count": 2,
         "top_noise_rules": [
-          [
-            "GCI0006",
-            6
-          ],
           [
             "GCI0044",
             1
@@ -18475,12 +18348,12 @@
         "fixture_id": "microsoft_powertoys_pr46489",
         "repo": "microsoft/PowerToys",
         "sensitivity": "balanced",
-        "finding_count": 9,
+        "finding_count": 8,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 2,
           "GCI0021": 1,
-          "GCI0006": 3,
+          "GCI0006": 2,
           "GCI0057": 2,
           "GCI0056": 1
         },
@@ -18488,14 +18361,14 @@
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 9,
+        "noise_rule_count": 8,
         "top_noise_rules": [
           [
-            "GCI0006",
-            3
+            "GCI0003",
+            2
           ],
           [
-            "GCI0003",
+            "GCI0006",
             2
           ],
           [
@@ -19042,22 +18915,17 @@
         "fixture_id": "morelinq_morelinq_pr327",
         "repo": "morelinq/MoreLINQ",
         "sensitivity": "balanced",
-        "finding_count": 2,
+        "finding_count": 1,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 1,
           "GCI0041": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 2,
+        "noise_rule_count": 1,
         "top_noise_rules": [
-          [
-            "GCI0006",
-            1
-          ],
           [
             "GCI0041",
             1
@@ -19651,30 +19519,30 @@
         "fixture_id": "open-telemetry_opentelemetry-dotnet_pr6379",
         "repo": "open-telemetry/opentelemetry-dotnet",
         "sensitivity": "balanced",
-        "finding_count": 8,
+        "finding_count": 6,
         "at_cap": false,
         "rule_histogram": {
           "GCI0020": 2,
           "GCI0016": 3,
-          "GCI0006": 3
+          "GCI0006": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 8,
+        "noise_rule_count": 6,
         "top_noise_rules": [
           [
             "GCI0016",
             3
           ],
           [
-            "GCI0006",
-            3
-          ],
-          [
             "GCI0020",
             2
+          ],
+          [
+            "GCI0006",
+            1
           ]
         ]
       },
@@ -19682,25 +19550,20 @@
         "fixture_id": "open-telemetry_opentelemetry-dotnet_pr7017",
         "repo": "open-telemetry/opentelemetry-dotnet",
         "sensitivity": "balanced",
-        "finding_count": 5,
+        "finding_count": 3,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 1,
-          "GCI0016": 2,
-          "GCI0006": 2
+          "GCI0016": 2
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 5,
+        "noise_rule_count": 3,
         "top_noise_rules": [
           [
             "GCI0016",
-            2
-          ],
-          [
-            "GCI0006",
             2
           ],
           [
@@ -19716,7 +19579,7 @@
         "finding_count": 1,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 1
+          "GCI0001": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
@@ -19725,7 +19588,7 @@
         "noise_rule_count": 1,
         "top_noise_rules": [
           [
-            "GCI0006",
+            "GCI0001",
             1
           ]
         ]
@@ -19748,20 +19611,20 @@
         "fixture_id": "open-telemetry_opentelemetry-dotnet_pr7061",
         "repo": "open-telemetry/opentelemetry-dotnet",
         "sensitivity": "balanced",
-        "finding_count": 3,
+        "finding_count": 1,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 3
+          "GCI0001": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 3,
+        "noise_rule_count": 1,
         "top_noise_rules": [
           [
-            "GCI0006",
-            3
+            "GCI0001",
+            1
           ]
         ]
       },
@@ -20245,18 +20108,17 @@
         "fixture_id": "serilog_serilog_pr2055",
         "repo": "serilog/serilog",
         "sensitivity": "balanced",
-        "finding_count": 3,
+        "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
           "GCI0020": 1,
-          "GCI0016": 1,
-          "GCI0006": 1
+          "GCI0016": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 3,
+        "noise_rule_count": 2,
         "top_noise_rules": [
           [
             "GCI0020",
@@ -20264,10 +20126,6 @@
           ],
           [
             "GCI0016",
-            1
-          ],
-          [
-            "GCI0006",
             1
           ]
         ]
@@ -20290,22 +20148,15 @@
         "fixture_id": "serilog_serilog_pr2090",
         "repo": "serilog/serilog",
         "sensitivity": "balanced",
-        "finding_count": 1,
+        "finding_count": 0,
         "at_cap": false,
-        "rule_histogram": {
-          "GCI0006": 1
-        },
+        "rule_histogram": {},
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 1,
-        "top_noise_rules": [
-          [
-            "GCI0006",
-            1
-          ]
-        ]
+        "noise_rule_count": 0,
+        "top_noise_rules": []
       },
       {
         "fixture_id": "serilog_serilog_pr2108",
@@ -20337,22 +20188,17 @@
         "fixture_id": "serilog_serilog_pr2132",
         "repo": "serilog/serilog",
         "sensitivity": "balanced",
-        "finding_count": 3,
+        "finding_count": 1,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 2,
           "GCI0044": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 3,
+        "noise_rule_count": 1,
         "top_noise_rules": [
-          [
-            "GCI0006",
-            2
-          ],
           [
             "GCI0044",
             1
@@ -20433,20 +20279,20 @@
         "fixture_id": "spectreconsole_spectre.console_pr2008",
         "repo": "spectreconsole/spectre.console",
         "sensitivity": "balanced",
-        "finding_count": 5,
+        "finding_count": 4,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 5
+          "GCI0006": 4
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 5,
+        "noise_rule_count": 4,
         "top_noise_rules": [
           [
             "GCI0006",
-            5
+            4
           ]
         ]
       },
@@ -20475,20 +20321,20 @@
         "fixture_id": "spectreconsole_spectre.console_pr2025",
         "repo": "spectreconsole/spectre.console",
         "sensitivity": "balanced",
-        "finding_count": 3,
+        "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
-          "GCI0006": 3
+          "GCI0006": 2
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 3,
+        "noise_rule_count": 2,
         "top_noise_rules": [
           [
             "GCI0006",
-            3
+            2
           ]
         ]
       },
@@ -20792,25 +20638,20 @@
         "fixture_id": "sshnet_ssh.net_pr1733",
         "repo": "sshnet/SSH.NET",
         "sensitivity": "balanced",
-        "finding_count": 3,
+        "finding_count": 2,
         "at_cap": false,
         "rule_histogram": {
           "GCI0003": 1,
-          "GCI0006": 1,
           "GCI0032": 1
         },
         "ci_required_rules": [],
         "ci_required_fired": [],
         "ci_required_missing": [],
         "recall_ok": true,
-        "noise_rule_count": 3,
+        "noise_rule_count": 2,
         "top_noise_rules": [
           [
             "GCI0003",
-            1
-          ],
-          [
-            "GCI0006",
             1
           ],
           [
@@ -21893,14 +21734,10 @@
         "finding_count": 0,
         "at_cap": false,
         "rule_histogram": {},
-        "ci_required_rules": [
-          "GCI0006"
-        ],
+        "ci_required_rules": [],
         "ci_required_fired": [],
-        "ci_required_missing": [
-          "GCI0006"
-        ],
-        "recall_ok": false,
+        "ci_required_missing": [],
+        "recall_ok": true,
         "noise_rule_count": 0,
         "top_noise_rules": []
       },
