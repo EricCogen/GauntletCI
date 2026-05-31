@@ -1,10 +1,12 @@
 {
   "schema_version": "1.0.0",
-  "generated_at_utc": "2026-05-31T18:06:20.278044+00:00",
+  "generated_at_utc": "2026-05-31T18:31:51.089332+00:00",
   "sample_size": 16,
   "fixtures_scored": 16,
   "repos_represented": 10,
   "evidence_tier": "measured",
+  "comparison_scope": "diff_behavioral_review",
+  "scope_manifest": "eval/competitor-scope.json",
   "segments": {
     "anchor_only": {
       "fixtures": 1,
@@ -45,21 +47,6 @@
           "rate": 1.0
         },
         "CodeQL": {
-          "caught": 0,
-          "total": 15,
-          "rate": 0.0
-        },
-        "CodeRabbit": {
-          "caught": 0,
-          "total": 15,
-          "rate": 0.0
-        },
-        "Greptile": {
-          "caught": 0,
-          "total": 15,
-          "rate": 0.0
-        },
-        "Qodo": {
           "caught": 0,
           "total": 15,
           "rate": 0.0

@@ -1,6 +1,8 @@
 {
-  "matrix_version": "2026-05-31",
-  "purpose": "Head-to-head positioning for GauntletCI vs AI and static review tools",
+  "matrix_version": "2026-05-31-scope",
+  "comparison_scope": "diff_behavioral_review",
+  "scope_manifest": "eval/competitor-scope.json",
+  "purpose": "Positioning vs free tools that claim diff-scoped behavioral PR review (same promise as GauntletCI)",
   "evaluation_axes": [
     "deterministic_reproducibility",
     "line_anchored_evidence",
@@ -24,207 +26,27 @@
         "pre_commit_latency": 5,
         "cross_entity_reasoning": 4,
         "counterfactual_witness": 4
-      }
+      },
+      "positioning_only": false
     },
     {
-      "name": "Amazon CodeGuru",
-      "type": "cloud_ml_static",
+      "name": "CodeQL",
+      "type": "github_code_scanning",
       "scores": {
-        "deterministic_reproducibility": 3,
+        "deterministic_reproducibility": 5,
         "line_anchored_evidence": 4,
         "behavioral_logic_bugs": 2,
-        "noise_ratio_on_large_prs": 3,
-        "offline_no_api_key": 1,
-        "pre_commit_latency": 2,
-        "cross_entity_reasoning": 2,
-        "counterfactual_witness": 1
-      }
-    },
-    {
-      "name": "Atlassian Rovo",
-      "type": "llm_assistant",
-      "scores": {
-        "deterministic_reproducibility": 2,
-        "line_anchored_evidence": 3,
-        "behavioral_logic_bugs": 3,
-        "noise_ratio_on_large_prs": 3,
-        "offline_no_api_key": 1,
-        "pre_commit_latency": 2,
-        "cross_entity_reasoning": 3,
-        "counterfactual_witness": 2
-      }
-    },
-    {
-      "name": "Bito",
-      "type": "llm_review",
-      "scores": {
-        "deterministic_reproducibility": 2,
-        "line_anchored_evidence": 3,
-        "behavioral_logic_bugs": 3,
-        "noise_ratio_on_large_prs": 3,
-        "offline_no_api_key": 1,
-        "pre_commit_latency": 2,
-        "cross_entity_reasoning": 2,
-        "counterfactual_witness": 2
-      }
-    },
-    {
-      "name": "Claude Code Review",
-      "type": "llm_review",
-      "scores": {
-        "deterministic_reproducibility": 2,
-        "line_anchored_evidence": 4,
-        "behavioral_logic_bugs": 4,
-        "noise_ratio_on_large_prs": 3,
-        "offline_no_api_key": 1,
-        "pre_commit_latency": 2,
-        "cross_entity_reasoning": 4,
-        "counterfactual_witness": 3
-      }
-    },
-    {
-      "name": "Codacy",
-      "type": "static_platform",
-      "scores": {
-        "deterministic_reproducibility": 4,
-        "line_anchored_evidence": 4,
-        "behavioral_logic_bugs": 2,
-        "noise_ratio_on_large_prs": 3,
-        "offline_no_api_key": 2,
+        "noise_ratio_on_large_prs": 2,
+        "offline_no_api_key": 3,
         "pre_commit_latency": 3,
         "cross_entity_reasoning": 1,
         "counterfactual_witness": 1
-      }
-    },
-    {
-      "name": "CodeAnt AI",
-      "type": "llm_plus_static",
-      "scores": {
-        "deterministic_reproducibility": 2,
-        "line_anchored_evidence": 3,
-        "behavioral_logic_bugs": 3,
-        "noise_ratio_on_large_prs": 3,
-        "offline_no_api_key": 1,
-        "pre_commit_latency": 2,
-        "cross_entity_reasoning": 3,
-        "counterfactual_witness": 2
-      }
-    },
-    {
-      "name": "CodeRabbit",
-      "type": "llm_review",
-      "scores": {
-        "deterministic_reproducibility": 2,
-        "line_anchored_evidence": 4,
-        "behavioral_logic_bugs": 4,
-        "noise_ratio_on_large_prs": 3,
-        "offline_no_api_key": 1,
-        "pre_commit_latency": 2,
-        "cross_entity_reasoning": 3,
-        "counterfactual_witness": 3
-      }
-    },
-    {
-      "name": "CodeScene",
-      "type": "behavioral_static",
-      "scores": {
-        "deterministic_reproducibility": 4,
-        "line_anchored_evidence": 3,
-        "behavioral_logic_bugs": 3,
-        "noise_ratio_on_large_prs": 3,
-        "offline_no_api_key": 2,
-        "pre_commit_latency": 2,
-        "cross_entity_reasoning": 2,
-        "counterfactual_witness": 1
-      }
-    },
-    {
-      "name": "Cursor BugBot",
-      "type": "llm_review",
-      "scores": {
-        "deterministic_reproducibility": 2,
-        "line_anchored_evidence": 4,
-        "behavioral_logic_bugs": 4,
-        "noise_ratio_on_large_prs": 3,
-        "offline_no_api_key": 1,
-        "pre_commit_latency": 2,
-        "cross_entity_reasoning": 3,
-        "counterfactual_witness": 2
-      }
-    },
-    {
-      "name": "DeepSource",
-      "type": "static_platform",
-      "scores": {
-        "deterministic_reproducibility": 4,
-        "line_anchored_evidence": 4,
-        "behavioral_logic_bugs": 2,
-        "noise_ratio_on_large_prs": 3,
-        "offline_no_api_key": 2,
-        "pre_commit_latency": 3,
-        "cross_entity_reasoning": 1,
-        "counterfactual_witness": 1
-      }
-    },
-    {
-      "name": "Ellipsis",
-      "type": "llm_review",
-      "scores": {
-        "deterministic_reproducibility": 2,
-        "line_anchored_evidence": 3,
-        "behavioral_logic_bugs": 3,
-        "noise_ratio_on_large_prs": 3,
-        "offline_no_api_key": 1,
-        "pre_commit_latency": 2,
-        "cross_entity_reasoning": 2,
-        "counterfactual_witness": 2
-      }
-    },
-    {
-      "name": "GitHub Copilot Review",
-      "type": "llm_review",
-      "scores": {
-        "deterministic_reproducibility": 2,
-        "line_anchored_evidence": 4,
-        "behavioral_logic_bugs": 4,
-        "noise_ratio_on_large_prs": 3,
-        "offline_no_api_key": 1,
-        "pre_commit_latency": 2,
-        "cross_entity_reasoning": 3,
-        "counterfactual_witness": 2
-      }
-    },
-    {
-      "name": "GitLab Duo",
-      "type": "llm_assistant",
-      "scores": {
-        "deterministic_reproducibility": 2,
-        "line_anchored_evidence": 3,
-        "behavioral_logic_bugs": 3,
-        "noise_ratio_on_large_prs": 3,
-        "offline_no_api_key": 1,
-        "pre_commit_latency": 2,
-        "cross_entity_reasoning": 3,
-        "counterfactual_witness": 2
-      }
-    },
-    {
-      "name": "Graphite Agent",
-      "type": "llm_review",
-      "scores": {
-        "deterministic_reproducibility": 2,
-        "line_anchored_evidence": 3,
-        "behavioral_logic_bugs": 3,
-        "noise_ratio_on_large_prs": 3,
-        "offline_no_api_key": 1,
-        "pre_commit_latency": 2,
-        "cross_entity_reasoning": 2,
-        "counterfactual_witness": 2
-      }
+      },
+      "positioning_only": false
     },
     {
       "name": "Greptile",
-      "type": "llm_review",
+      "type": "llm_pr_review",
       "scores": {
         "deterministic_reproducibility": 2,
         "line_anchored_evidence": 4,
@@ -234,25 +56,12 @@
         "pre_commit_latency": 2,
         "cross_entity_reasoning": 4,
         "counterfactual_witness": 3
-      }
-    },
-    {
-      "name": "Manus",
-      "type": "llm_agent",
-      "scores": {
-        "deterministic_reproducibility": 1,
-        "line_anchored_evidence": 3,
-        "behavioral_logic_bugs": 3,
-        "noise_ratio_on_large_prs": 2,
-        "offline_no_api_key": 1,
-        "pre_commit_latency": 1,
-        "cross_entity_reasoning": 3,
-        "counterfactual_witness": 2
-      }
+      },
+      "positioning_only": false
     },
     {
       "name": "Qodo",
-      "type": "llm_review",
+      "type": "llm_pr_review",
       "scores": {
         "deterministic_reproducibility": 2,
         "line_anchored_evidence": 4,
@@ -262,11 +71,72 @@
         "pre_commit_latency": 2,
         "cross_entity_reasoning": 4,
         "counterfactual_witness": 3
-      }
+      },
+      "positioning_only": false
     },
     {
-      "name": "Repowise",
-      "type": "llm_review",
+      "name": "CodeRabbit",
+      "type": "llm_pr_review",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 4,
+        "behavioral_logic_bugs": 4,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 3,
+        "counterfactual_witness": 3
+      },
+      "positioning_only": false
+    },
+    {
+      "name": "GitHub Copilot Review",
+      "type": "llm_pr_review",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 4,
+        "behavioral_logic_bugs": 4,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 3,
+        "counterfactual_witness": 2
+      },
+      "positioning_only": true
+    },
+    {
+      "name": "Claude Code Review",
+      "type": "llm_pr_review",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 4,
+        "behavioral_logic_bugs": 4,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 4,
+        "counterfactual_witness": 3
+      },
+      "positioning_only": true
+    },
+    {
+      "name": "Cursor BugBot",
+      "type": "llm_pr_review",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 4,
+        "behavioral_logic_bugs": 4,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 3,
+        "counterfactual_witness": 2
+      },
+      "positioning_only": true
+    },
+    {
+      "name": "Ellipsis",
+      "type": "llm_pr_review",
       "scores": {
         "deterministic_reproducibility": 2,
         "line_anchored_evidence": 3,
@@ -276,11 +146,12 @@
         "pre_commit_latency": 2,
         "cross_entity_reasoning": 2,
         "counterfactual_witness": 2
-      }
+      },
+      "positioning_only": true
     },
     {
-      "name": "SonarQube",
-      "type": "static_platform",
+      "name": "SonarCloud",
+      "type": "pr_static_analysis",
       "scores": {
         "deterministic_reproducibility": 5,
         "line_anchored_evidence": 4,
@@ -290,21 +161,90 @@
         "pre_commit_latency": 3,
         "cross_entity_reasoning": 1,
         "counterfactual_witness": 1
-      }
+      },
+      "positioning_only": true
     },
     {
-      "name": "Sourcery",
-      "type": "refactor_static",
+      "name": "Semgrep",
+      "type": "pr_static_analysis",
       "scores": {
         "deterministic_reproducibility": 4,
         "line_anchored_evidence": 4,
-        "behavioral_logic_bugs": 2,
+        "behavioral_logic_bugs": 3,
         "noise_ratio_on_large_prs": 3,
-        "offline_no_api_key": 3,
-        "pre_commit_latency": 4,
-        "cross_entity_reasoning": 1,
+        "offline_no_api_key": 4,
+        "pre_commit_latency": 3,
+        "cross_entity_reasoning": 2,
         "counterfactual_witness": 1
-      }
+      },
+      "positioning_only": true
+    }
+  ],
+  "adjacent_not_comparable": [
+    {
+      "name": "Amazon CodeGuru",
+      "category": "paid_cloud_ml",
+      "reason": "Paid AWS service; not a free diff-review peer"
+    },
+    {
+      "name": "Atlassian Rovo",
+      "category": "suite_assistant",
+      "reason": "Work management assistant, not a PR behavioral gauntlet"
+    },
+    {
+      "name": "Bito",
+      "category": "llm_assistant",
+      "reason": "No free reproducible PR harvest in benchmark"
+    },
+    {
+      "name": "Codacy",
+      "category": "static_quality",
+      "reason": "Repo quality and coverage emphasis, not adjudicated logic defects on diff"
+    },
+    {
+      "name": "CodeAnt AI",
+      "category": "llm_plus_static",
+      "reason": "No free reproducible harness path"
+    },
+    {
+      "name": "CodeScene",
+      "category": "behavioral_architecture",
+      "reason": "Code health and evolution metrics, not PR gate on logic drift"
+    },
+    {
+      "name": "DeepSource",
+      "category": "static_quality",
+      "reason": "Static quality platform, different promise than diff behavioral risk"
+    },
+    {
+      "name": "GitLab Duo",
+      "category": "suite_assistant",
+      "reason": "GitLab suite AI, not a free standalone diff gauntlet"
+    },
+    {
+      "name": "Graphite Agent",
+      "category": "llm_review",
+      "reason": "No free reproducible PR harvest in benchmark"
+    },
+    {
+      "name": "Manus",
+      "category": "general_agent",
+      "reason": "General agent, not a pre-commit diff reviewer"
+    },
+    {
+      "name": "Repowise",
+      "category": "llm_review",
+      "reason": "No free reproducible PR harvest in benchmark"
+    },
+    {
+      "name": "SonarQube",
+      "category": "self_hosted_static",
+      "reason": "Self-hosted quality server; compare via SonarCloud when added to harness"
+    },
+    {
+      "name": "Sourcery",
+      "category": "refactor_suggestions",
+      "reason": "Refactoring and style, not behavioral defect detection"
     }
   ],
   "headline": "Measured benchmark: 16 fixtures, 10 repos (ci_required defects). Gold GauntletCI 15/15; CodeQL same-defect 0/15. Anchor Redis #2995: Greptile, Qodo, CodeRabbit, and GauntletCI (GCI0058) caught inversion; CodeQL did not.",
@@ -315,8 +255,8 @@
     "eval/redis-2995-scorecard.json"
   ],
   "honest_gaps": [
-    "Natural-language explanation quality still below Claude Code Review / Greptile on arbitrary repos",
-    "Breadth of language support narrower than SonarQube / Codacy",
+    "Natural-language explanation quality can trail top LLM reviewers on arbitrary repos",
+    "Measured recall is limited to adjudicated ci_required defects, not all corpus labels",
     "Requires rule corpus maintenance unlike pure-LLM tools"
   ],
   "evidence_tier": "measured",
@@ -380,6 +320,6 @@
       }
     }
   },
-  "llm_competitors_scope": "anchor_only until additional eval-lab harvests exist",
+  "llm_competitors_scope": "anchor_only per competitor-scope.json; gold is GauntletCI vs CodeQL same-defect",
   "fixtures_with_ground_truth": 16
 }

@@ -14,6 +14,7 @@ on:
       - "scripts/run-benchmark-suite.ps1"
       - "scripts/export-benchmark-diffs.ps1"
       - "scripts/score-competitive-benchmark.py"
+      - "eval/competitor-scope.json"
       - "eval/ground-truth/**"
 jobs:
   benchmark-suite:

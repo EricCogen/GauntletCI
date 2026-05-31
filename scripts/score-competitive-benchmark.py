@@ -10,10 +10,40 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[1]
 EVAL = REPO / "eval"
+SCOPE_PATH = EVAL / "competitor-scope.json"
 
 
 def load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8-sig"))
+
+
+def load_competitor_scope() -> dict:
+    return load_json(SCOPE_PATH)
+
+
+def scoring_tool_names(scope: dict) -> list[str]:
+    """Tool display names to score per eval/competitor-scope.json harness segments."""
+    segments = scope.get("harness_segments", {})
+    names: list[str] = []
+    for key in ("anchor_only", "gold_cross_repo"):
+        seg = segments.get(key, {})
+        for n in seg.get("tool_names", []):
+            if n not in names:
+                names.append(n)
+    return names or ["GauntletCI", "CodeQL", "CodeRabbit", "Greptile", "Qodo"]
+
+
+def harvest_artifact_path(competitor_dir: Path, tool_name: str, scope: dict) -> Path | None:
+    for entry in scope.get("comparable_tools", []):
+        if entry.get("name") != tool_name:
+            continue
+        artifact = entry.get("harvest_artifact")
+        if artifact:
+            return competitor_dir / artifact
+        return None
+    legacy = tool_name.lower().replace(" ", "")
+    legacy_path = competitor_dir / f"{legacy}.json"
+    return legacy_path if legacy_path.exists() else None
 
 
 def match_llm(text: str, defect: dict) -> tuple[bool, list[str]]:
@@ -71,6 +101,8 @@ def score_fixture(
     gci_path: Path | None,
     competitor_dir: Path,
     codescan_path: Path | None,
+    scope: dict,
+    tool_names: list[str],
 ) -> dict:
     defects = gt.get("defects", [])
     findings = []
@@ -78,15 +110,14 @@ def score_fixture(
         doc = load_json(gci_path)
         findings = doc.get("Findings") or []
 
-    tool_names = ["GauntletCI", "CodeQL", "CodeRabbit", "Greptile", "Qodo"]
     tools_out = []
     for name in tool_names:
         caught_by: dict = {}
         run_doc: dict = {}
-        tool_file = competitor_dir / f"{name.lower().replace(' ', '')}.json"
+        tool_file = harvest_artifact_path(competitor_dir, name, scope)
         if name == "GauntletCI" and gci_path:
             run_doc = {"finding_count": len(findings), "source": str(gci_path)}
-        elif tool_file.exists():
+        elif tool_file and tool_file.exists():
             run_doc = load_json(tool_file)
         elif name == "CodeQL" and codescan_path and codescan_path.exists():
             run_doc = load_json(codescan_path)
@@ -136,12 +167,13 @@ def score_fixture(
     }
 
 
-def rollup(scorecards: list[dict]) -> dict:
+def rollup(scorecards: list[dict], scope: dict) -> dict:
     anchor = [s for s in scorecards if s.get("suite_tier") == "anchor"]
     gold = [s for s in scorecards if s.get("suite_tier") == "gold"]
+    segments = scope.get("harness_segments", {})
 
-    def recall_segment(cards: list[dict]) -> dict:
-        tools = ["GauntletCI", "CodeQL", "CodeRabbit", "Greptile", "Qodo"]
+    def recall_segment(cards: list[dict], segment_key: str) -> dict:
+        tools = segments.get(segment_key, {}).get("tool_names", scoring_tool_names(scope))
         out: dict = {}
         for t in tools:
             caught = 0
@@ -168,9 +200,11 @@ def rollup(scorecards: list[dict]) -> dict:
         "fixtures_scored": len(scorecards),
         "repos_represented": len(repos),
         "evidence_tier": "measured" if len(gold) >= 15 and len(repos) >= 8 else "provisional",
+        "comparison_scope": scope.get("comparison_scope", "diff_behavioral_review"),
+        "scope_manifest": "eval/competitor-scope.json",
         "segments": {
-            "anchor_only": {"fixtures": len(anchor), "recall_by_tool": recall_segment(anchor)},
-            "gold_cross_repo": {"fixtures": len(gold), "recall_by_tool": recall_segment(gold)},
+            "anchor_only": {"fixtures": len(anchor), "recall_by_tool": recall_segment(anchor, "anchor_only")},
+            "gold_cross_repo": {"fixtures": len(gold), "recall_by_tool": recall_segment(gold, "gold_cross_repo")},
         },
     }
 
@@ -185,6 +219,8 @@ def main() -> None:
     gt_dir = EVAL / "ground-truth"
     score_dir = EVAL / "scorecards"
     score_dir.mkdir(parents=True, exist_ok=True)
+    scope = load_competitor_scope()
+    tool_names = scoring_tool_names(scope)
 
     fixture_ids = [args.fixture]
     if args.all_with_ground_truth:
@@ -203,14 +239,14 @@ def main() -> None:
             if fid == "stackexchange-redis-pr-2995" and latest.exists():
                 gci = latest
         codescan = comp_dir / "codeql.json"
-        card = score_fixture(fid, gt, gci if gci.exists() else None, comp_dir, codescan)
+        card = score_fixture(fid, gt, gci if gci.exists() else None, comp_dir, codescan, scope, tool_names)
         out_path = score_dir / f"{fid}.json"
         out_path.write_text(json.dumps(card, indent=2) + "\n", encoding="utf-8")
         scorecards.append(card)
         print(f"Wrote {out_path}")
 
     if scorecards:
-        rollup_doc = rollup(scorecards)
+        rollup_doc = rollup(scorecards, scope)
         rollup_path = score_dir / "competitive-suite.json"
         rollup_path.write_text(json.dumps(rollup_doc, indent=2) + "\n", encoding="utf-8")
         print(f"Wrote {rollup_path}")

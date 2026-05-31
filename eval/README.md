@@ -1,6 +1,26 @@
 # Competitive evaluation artifacts
 
-Public proof for GauntletCI vs CodeQL, CodeRabbit, Greptile, and Qodo.
+Public proof for GauntletCI vs **free tools that claim the same promise**: diff-scoped pull request review for behavioral and logic regression risk.
+
+**Scope manifest:** [`competitor-scope.json`](competitor-scope.json) (authoritative list of comparable vs adjacent tools).  
+**Positioning matrix:** [`competitive-matrix.json`](competitive-matrix.json) (subjective axes for comparable tools only).
+
+## Who we compare (and who we do not)
+
+| Include | Exclude (`adjacent_not_comparable`) |
+|---------|-----------------------------------|
+| Same claim: PR/diff review for bugs and behavioral risk | Paid-only clouds (e.g. CodeGuru) |
+| Free tier for OSS or local CLI in the harness | Repo-wide quality-only (Codacy, DeepSource) |
+| Harvest or API path documented | Suite assistants (Rovo, GitLab Duo), refactor bots (Sourcery) |
+
+**Measured harness today**
+
+| Segment | Tools |
+|---------|--------|
+| `anchor_only` | GauntletCI, CodeQL, CodeRabbit, Greptile, Qodo (eval-lab PR #7 harvest) |
+| `gold_cross_repo` | GauntletCI vs CodeQL same-defect on `ci_required` defects |
+
+LLM reviewers stay **anchor-only** until additional eval-lab mirrors exist. SonarCloud and Semgrep are listed as comparable with `planned_gold` when automation lands.
 
 ## Refresh workflow
 
@@ -28,10 +48,12 @@ Public proof for GauntletCI vs CodeQL, CodeRabbit, Greptile, and Qodo.
 
 | Path | Role |
 |------|------|
+| `competitor-scope.json` | Comparable vs adjacent tools; harness segment tool lists |
 | `benchmark-suite.json` | Cross-repo manifest (610-fixture pool) |
 | `ground-truth/*.json` | Adjudicated defects per fixture |
 | `competitor-runs/<fixture_id>/` | Harvested tool outputs |
 | `scorecards/*.json` | Per-fixture + `competitive-suite.json` rollup |
+| `competitive-matrix.json` | Subjective axis scores (comparable tools only) |
 | `redis-2995-scorecard.json` | Legacy summary + anchor pointer |
 
 CI runs anchor via `redis-benchmark.yml`; gold fixtures with `primary_rules` via `benchmark-suite.yml` (`-CiOnly` until ground truth expands).
