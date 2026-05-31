@@ -25,6 +25,8 @@ jobs:
           dotnet-version: 8.0.x
       - name: Export diffs
         shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: ./scripts/export-benchmark-diffs.ps1 -CiOnly
       - name: Run CI fixtures
         shell: pwsh

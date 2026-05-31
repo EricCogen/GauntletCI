@@ -50,8 +50,7 @@ function Export-PrDiff {
     }
     else {
         gh api "repos/$OwnerRepo/pulls/$PrNumber" `
-            --header "Accept: application/vnd.github.diff" `
-            -o $DestPath
+            -H "Accept: application/vnd.github.diff" | Set-Content -Path $DestPath -Encoding utf8
     }
     if (-not (Test-Path $DestPath) -or (Get-Item $DestPath).Length -lt 10) {
         throw "Failed to fetch diff for $OwnerRepo PR #$PrNumber"
