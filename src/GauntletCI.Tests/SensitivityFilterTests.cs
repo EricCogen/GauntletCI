@@ -5,18 +5,28 @@ namespace GauntletCI.Tests;
 
 public class SensitivityFilterTests
 {
-    // Advisory always passes, Info/None always pass (gated by minSeverity elsewhere)
-
     [Theory]
     [InlineData(RuleSeverity.Advisory, Confidence.Low)]
     [InlineData(RuleSeverity.Advisory, Confidence.High)]
-    [InlineData(RuleSeverity.Info, Confidence.Low)]
-    [InlineData(RuleSeverity.None, Confidence.Low)]
-    public void Passes_AdvisoryInfoNone_AlwaysTrue(RuleSeverity severity, Confidence confidence)
+    public void Passes_Advisory_AlwaysTrue(RuleSeverity severity, Confidence confidence)
     {
         Assert.True(SensitivityFilter.Passes(severity, confidence, SensitivityThreshold.Strict));
         Assert.True(SensitivityFilter.Passes(severity, confidence, SensitivityThreshold.Balanced));
         Assert.True(SensitivityFilter.Passes(severity, confidence, SensitivityThreshold.Permissive));
+    }
+
+    [Fact]
+    public void Passes_Info_OnlyOnPermissive()
+    {
+        Assert.False(SensitivityFilter.Passes(RuleSeverity.Info, Confidence.High, SensitivityThreshold.Strict));
+        Assert.False(SensitivityFilter.Passes(RuleSeverity.Info, Confidence.High, SensitivityThreshold.Balanced));
+        Assert.True(SensitivityFilter.Passes(RuleSeverity.Info, Confidence.Low, SensitivityThreshold.Permissive));
+    }
+
+    [Fact]
+    public void Passes_None_Never()
+    {
+        Assert.False(SensitivityFilter.Passes(RuleSeverity.None, Confidence.High, SensitivityThreshold.Permissive));
     }
 
     // ── Strict ─────────────────────────────────────────────────────────────────
