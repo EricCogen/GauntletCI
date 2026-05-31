@@ -4,7 +4,7 @@
   "repo": "dotnet/runtime",
   "pr_number": 126276,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T18:43:32.667262+00:00",
+  "generated_at_utc": "2026-05-31T20:52:30.436881+00:00",
   "upstream_pr_url": "https://github.com/dotnet/runtime/pull/126276",
   "eval_lab_pr_url": null,
   "defects": [
@@ -13,13 +13,22 @@
       "summary": "dotnet/runtime PR126276: .Value access in ILTrim.Core production trimming tool",
       "primary_rule": "GCI0006",
       "fn_class": "edge-case-handling",
-      "file": "",
+      "file": "src/coreclr/tools/ILTrim.Core/DependencyAnalysis/ConstructedTypeNode.cs",
+      "line": 41,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0006"
-      ]
+        "GCI0006",
+        "ConstructedTypeNode.cs",
+        "src/coreclr/tools/ILTrim.Core/DependencyAnalysis/ConstructedTypeNode.cs",
+        "break",
+        "statement",
+        "added",
+        "loop",
+        "coreclr"
+      ],
+      "evidence_excerpt": "Added: break;"
     },
     {
       "defect_id": "corpus-gci0015",
@@ -27,12 +36,14 @@
       "primary_rule": "GCI0015",
       "fn_class": "data-integrity-risk",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0015"
-      ]
+      ],
+      "evidence_excerpt": ""
     }
   ],
   "tools": [
@@ -59,7 +70,7 @@
     {
       "name": "CodeQL",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:21.814016+00:00",
+      "harvested_at_utc": "2026-05-31T20:18:19.272586+00:00",
       "caught_by_defect": {
         "corpus-gci0006": {
           "caught_ground_truth": false,
@@ -127,7 +138,7 @@
     {
       "name": "SonarCloud",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:44.266678+00:00",
+      "harvested_at_utc": "2026-05-31T20:19:00.368973+00:00",
       "caught_by_defect": {
         "corpus-gci0006": {
           "caught_ground_truth": false,
@@ -144,7 +155,7 @@
     {
       "name": "Semgrep",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:42:15.253678+00:00",
+      "harvested_at_utc": "2026-05-31T20:20:05.526216+00:00",
       "caught_by_defect": {
         "corpus-gci0006": {
           "caught_ground_truth": false,

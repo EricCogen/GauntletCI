@@ -15,16 +15,20 @@ DB = Path(os.environ.get("USERPROFILE", "")) / ".gauntletci" / "corpus.db"
 SUITE = REPO / "eval" / "benchmark-suite.json"
 FIXTURES_ROOT = REPO / "data" / "fixtures"
 
-from benchmark_lib import load_suite as load_benchmark_suite, suite_fixtures, write_competitor_artifact  # noqa: E402
-
-TOKEN_FILE = Path(os.environ.get("USERPROFILE", "")) / ".tokens" / "cursor_security.token"
+from benchmark_lib import (  # noqa: E402
+    load_github_token,
+    load_suite as load_benchmark_suite,
+    resolve_diff as lib_resolve_diff,
+    suite_fixtures,
+    write_competitor_artifact,
+)
 
 
 def gh_env() -> dict[str, str]:
     env = os.environ.copy()
     if not env.get("GH_TOKEN") and not env.get("GITHUB_TOKEN"):
-        if TOKEN_FILE.exists():
-            token = TOKEN_FILE.read_text(encoding="utf-8").strip()
+        token = load_github_token()
+        if token:
             env["GH_TOKEN"] = token
             env["GITHUB_TOKEN"] = token
     return env
@@ -54,28 +58,7 @@ def parse_changed_cs(diff_path: Path) -> set[str]:
 
 
 def resolve_diff(entry: dict) -> Path | None:
-    fid = entry["fixture_id"]
-    cached = REPO / "eval" / "diffs" / f"{fid}.patch"
-    if cached.exists():
-        return cached
-    cp = entry.get("corpus_path")
-    if cp:
-        p = REPO / cp.replace("/", os.sep) / "diff.patch"
-        if p.exists():
-            return p
-    for tier in ("discovery", "silver", "gold", "Discovery", "Silver", "Gold"):
-        p = FIXTURES_ROOT / tier.lower() / fid / "diff.patch"
-        if p.exists():
-            return p
-    row_path = None
-    con = sqlite3.connect(DB)
-    row = con.execute("SELECT path, tier FROM fixtures WHERE fixture_id=?", (fid,)).fetchone()
-    con.close()
-    if row and row[0]:
-        p = Path(row[0]) / "diff.patch"
-        if p.exists():
-            return p
-    return None
+    return lib_resolve_diff(entry)
 
 
 def fetch_alerts(repo: str, cache: dict) -> list[dict]:
@@ -116,15 +99,19 @@ def fetch_alerts(repo: str, cache: dict) -> list[dict]:
 
 
 def probe_code_scanning() -> str | None:
-    if not TOKEN_FILE.exists() and not os.environ.get("GH_TOKEN") and not os.environ.get("GITHUB_TOKEN"):
+    if not load_github_token():
         return (
-            "No GitHub token. Set GH_TOKEN or create ~/.tokens/cursor_security.token (security_events)."
+            "No GitHub token. Use gh auth login, GH_TOKEN, or ~/.tokens/github.token "
+            "(public_repo + security_events for code-scanning/alerts)."
         )
     proc = gh_run(["api", "user", "-q", ".login"])
     if proc.returncode != 0:
         combined = (proc.stderr or "") + (proc.stdout or "")
         if "401" in combined or "403" in combined:
-            return "GitHub token rejected. Ensure PAT includes security_events scope."
+            return (
+                "GitHub token rejected. Ensure PAT includes repo and security_events scopes, "
+                "or use gh auth login."
+            )
         return "GitHub API error: " + combined.strip()[:200]
     return None
 

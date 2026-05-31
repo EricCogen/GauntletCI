@@ -4,7 +4,7 @@
   "repo": "npgsql/npgsql",
   "pr_number": 6316,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T18:43:32.683470+00:00",
+  "generated_at_utc": "2026-05-31T20:52:30.501331+00:00",
   "upstream_pr_url": "https://github.com/npgsql/npgsql/pull/6316",
   "eval_lab_pr_url": null,
   "defects": [
@@ -13,13 +13,22 @@
       "summary": "Published library: Npgsql removes public type mapping API \u2014 breaking for extension library authors",
       "primary_rule": "GCI0004",
       "fn_class": "breaking-change",
-      "file": "",
+      "file": "src/Npgsql/Internal/PgConverter.cs",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0004"
-      ]
+        "GCI0004",
+        "PgConverter.cs",
+        "src/Npgsql/Internal/PgConverter.cs",
+        "Obsolete",
+        "added",
+        "Npgsql",
+        "Internal",
+        "PgConverter"
+      ],
+      "evidence_excerpt": "Added: [Obsolete(\"Use the overload without ref.\")]; [Obsolete(\"Use the overload without ref.\")]; [Obsolete(\"Use the overload without ref.\")]"
     },
     {
       "defect_id": "corpus-gci0003",
@@ -27,18 +36,20 @@
       "primary_rule": "GCI0003",
       "fn_class": "logic-bug-no-token",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0003"
-      ]
+      ],
+      "evidence_excerpt": ""
     }
   ],
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 13,
+      "finding_count": 9,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0004": {
@@ -59,7 +70,7 @@
     {
       "name": "CodeQL",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:22.716185+00:00",
+      "harvested_at_utc": "2026-05-31T20:18:20.182171+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,
@@ -127,7 +138,7 @@
     {
       "name": "SonarCloud",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:45.786053+00:00",
+      "harvested_at_utc": "2026-05-31T20:19:02.314357+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,
@@ -144,7 +155,7 @@
     {
       "name": "Semgrep",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:42:16.224353+00:00",
+      "harvested_at_utc": "2026-05-31T20:20:07.016709+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,

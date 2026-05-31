@@ -28,13 +28,43 @@ LLM reviewers stay **anchor-only** until additional eval-lab mirrors exist.
 ./scripts/run-gold-expansion.ps1
 ```
 
-Produces up to **25 gold** fixtures, enriches **CodeQL + SonarCloud + Semgrep** on changed `.cs` paths, runs GauntletCI, scores `ci_required` recall by tool and `fn_class`, and writes [`eval/reports/gold-expansion.json`](reports/gold-expansion.json).
+Produces gold fixtures, enriches **CodeQL + SonarCloud + Semgrep** on changed `.cs` paths, runs GauntletCI, scores `ci_required` recall by tool and `fn_class`, and writes [`eval/reports/gold-expansion.json`](reports/gold-expansion.json).
+
+**Maximal cohort (~570 PRs with local diff):**
+
+```powershell
+./scripts/run-gold-scale-expansion.ps1 -SkipAnalyze -SkipPromote   # select + export only (fast)
+./scripts/run-gold-scale-expansion.ps1                            # full pipeline (hours)
+```
+
+Corpus ceiling today: **~571** fixtures with `diff.patch` under `data/fixtures/discovery` (not 300+ labeled defects). Only **~59** have `expected_findings` suitable for scored recall until more are promoted.
 
 | Gold static tool | Script |
 |------------------|--------|
 | CodeQL | `python scripts/enrich-benchmark-codeql.py --gold-only` |
 | SonarCloud | `python scripts/enrich-benchmark-sonarcloud.py --gold-only` |
 | Semgrep | `python scripts/enrich-benchmark-semgrep.py --gold-only` (requires `semgrep` on PATH) |
+
+**Gold noise audit** (recall guard + sensitivity sweep):
+
+```powershell
+./scripts/run-gold-noise-audit.ps1
+./scripts/run-gold-noise-audit.ps1 -FullSweep   # strict/balanced/permissive (slow)
+```
+
+Writes `eval/reports/gold-noise-sweep.json`. Benchmark runs default to `--sensitivity balanced`.
+
+**Repair known harness limits** (weak gold, empty file/line, static enrich auth):
+
+```powershell
+./scripts/run-fix-gold-limits.ps1
+```
+
+| Token file | Env var | Used by |
+|------------|---------|---------|
+| `gh auth login` (preferred) | `GH_TOKEN` via `gh auth token` | CodeQL enrich, upstream PR harvest |
+| `%USERPROFILE%\.tokens\cursor_security.token` | `GH_TOKEN` fallback | CodeQL (`security_events`; add `repo` if 403) |
+| `%USERPROFILE%\.tokens\sonarcloud.token` | `SONAR_TOKEN` | SonarCloud enrich (`Bearer` on Sonar API) |
 
 ## Refresh workflow
 
@@ -87,9 +117,10 @@ Requires GitHub token with **security_events** scope (Code Scanning API). Never 
 
 | File | Scopes | Used by |
 |------|--------|---------|
-| `%USERPROFILE%\.tokens\cursor_security.token` | `security_events` (add `repo` for private repos) | `enrich-benchmark-codeql.py`, `gh api` |
+| `%USERPROFILE%\.tokens\cursor_security.token` | `security_events` (add `repo` for private repos) | CodeQL fallback after `gh auth token` |
+| `%USERPROFILE%\.tokens\sonarcloud.token` | Sonar user token | SonarCloud project/issue API |
 
-The benchmark script auto-loads that file into `GH_TOKEN` when `GH_TOKEN` / `GITHUB_TOKEN` are unset. Alternative: `gh auth refresh -h github.com -s repo,security_events` (device flow).
+Enrich scripts prefer `gh auth token`, then env vars, then `~/.tokens` files. For Code Scanning: `gh auth refresh -h github.com -s repo,security_events`.
 
 Verify auth (no secret output):
 

@@ -4,7 +4,7 @@
   "repo": "grpc/grpc-dotnet",
   "pr_number": 2531,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T18:43:32.669395+00:00",
+  "generated_at_utc": "2026-05-31T20:52:30.467046+00:00",
   "upstream_pr_url": "https://github.com/grpc/grpc-dotnet/pull/2531",
   "eval_lab_pr_url": null,
   "defects": [
@@ -14,12 +14,14 @@
       "primary_rule": "GCI0004",
       "fn_class": "breaking-change",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_gold",
       "match_keywords": [
         "GCI0004"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0006",
@@ -27,12 +29,14 @@
       "primary_rule": "GCI0006",
       "fn_class": "edge-case-handling",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0006"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0003",
@@ -40,12 +44,20 @@
       "primary_rule": "GCI0003",
       "fn_class": "logic-bug-no-token",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0003"
-      ]
+        "GCI0003",
+        "method",
+        "signatures",
+        "changed",
+        "incompatible",
+        "across",
+        "files"
+      ],
+      "evidence_excerpt": "Files: GrpcHealthChecksPublisher.cs (2), ContextPropagationInterceptor.cs (1), GrpcServerLog.cs (28) (+18 more files)"
     }
   ],
   "tools": [
@@ -77,7 +89,7 @@
     {
       "name": "CodeQL",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:18.620991+00:00",
+      "harvested_at_utc": "2026-05-31T20:18:15.745861+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,
@@ -165,7 +177,7 @@
     {
       "name": "SonarCloud",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:38.778377+00:00",
+      "harvested_at_utc": "2026-05-31T20:18:53.373059+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,
@@ -187,7 +199,7 @@
     {
       "name": "Semgrep",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:42:10.125799+00:00",
+      "harvested_at_utc": "2026-05-31T20:19:57.730711+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,

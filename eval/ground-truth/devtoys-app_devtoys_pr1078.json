@@ -13,25 +13,36 @@
       "primary_rule": "GCI0004",
       "fn_class": "breaking-change",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0004"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0006",
       "summary": "devtoys PR1078: .Value access in JsonWebToken helpers \u2014 JWT parsing production code",
       "primary_rule": "GCI0006",
       "fn_class": "edge-case-handling",
-      "file": "",
+      "file": "src/app/dev/DevToys.Blazor/Components/UIElements/UIMultiLineTextInputPresenter.razor.cs",
+      "line": 152,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0006"
-      ]
+        "GCI0006",
+        "UIMultiLineTextInputPresenter.razor.cs",
+        "src/app/dev/DevToys.Blazor/Components/UIElements/UIMultiLineTextInputPresenter.razor.cs",
+        "iteration",
+        "limit",
+        "added",
+        "loop",
+        "DevToys"
+      ],
+      "evidence_excerpt": "Added: for (int i = 0; i < decorations.Length; i++)"
     },
     {
       "defect_id": "corpus-gci0015",
@@ -39,12 +50,14 @@
       "primary_rule": "GCI0015",
       "fn_class": "data-integrity-risk",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0015"
-      ]
+      ],
+      "evidence_excerpt": ""
     }
   ],
   "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."

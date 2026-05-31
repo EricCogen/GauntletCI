@@ -4,7 +4,7 @@
   "repo": "apache/logging-log4net",
   "pr_number": 201,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T18:43:32.615848+00:00",
+  "generated_at_utc": "2026-05-31T20:52:30.371953+00:00",
   "upstream_pr_url": "https://github.com/apache/logging-log4net/pull/201",
   "eval_lab_pr_url": null,
   "defects": [
@@ -14,31 +14,42 @@
       "primary_rule": "GCI0004",
       "fn_class": "breaking-change",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_gold",
       "match_keywords": [
         "GCI0004"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0006",
       "summary": "log4net PR201: .Value access in PluginMap/ConverterInfo production code",
       "primary_rule": "GCI0006",
       "fn_class": "edge-case-handling",
-      "file": "",
+      "file": "src/log4net/Appender/RollingFileAppender.cs",
+      "line": 697,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0006"
-      ]
+        "GCI0006",
+        "RollingFileAppender.cs",
+        "src/log4net/Appender/RollingFileAppender.cs",
+        "iteration",
+        "limit",
+        "added",
+        "loop",
+        "log4net"
+      ],
+      "evidence_excerpt": "Added: for (int i = 0; i < files.Length; i++)"
     }
   ],
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 17,
+      "finding_count": 16,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0004": {
@@ -59,7 +70,7 @@
     {
       "name": "CodeQL",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:20.899297+00:00",
+      "harvested_at_utc": "2026-05-31T20:18:18.331304+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,
@@ -127,7 +138,7 @@
     {
       "name": "SonarCloud",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:42.664671+00:00",
+      "harvested_at_utc": "2026-05-31T20:18:58.387210+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,
@@ -144,7 +155,7 @@
     {
       "name": "Semgrep",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:42:14.251205+00:00",
+      "harvested_at_utc": "2026-05-31T20:20:04.213120+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,

@@ -12,13 +12,22 @@
       "summary": "dapper PR1928: .Value access in DynamicParameters/SqlDataRecordListTVPParameter production code",
       "primary_rule": "GCI0006",
       "fn_class": "edge-case-handling",
-      "file": "",
+      "file": "Dapper/DataTableHandler.cs",
+      "line": 7,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0006"
-      ]
+        "GCI0006",
+        "DataTableHandler.cs",
+        "Dapper/DataTableHandler.cs",
+        "method",
+        "parameter",
+        "added",
+        "without",
+        "apparent"
+      ],
+      "evidence_excerpt": "Line 7: public object Parse(Type destinationType, object? value)"
     },
     {
       "defect_id": "corpus-gci0004",
@@ -26,12 +35,14 @@
       "primary_rule": "GCI0004",
       "fn_class": "breaking-change",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0004"
-      ]
+      ],
+      "evidence_excerpt": ""
     }
   ],
   "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."

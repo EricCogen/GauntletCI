@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "guard-deletion-remote-use",
+  "repo": "GauntletCI/regression-fixtures",
+  "pr_number": 0,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/GauntletCI/regression-fixtures/pull/0",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0059",
+      "summary": "Removed null guard on order but order.Total still used in TryCharge (guard-deletion-remote-use FN class).",
+      "primary_rule": "GCI0059",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "Manual",
+      "match_keywords": [
+        "GCI0059"
+      ],
+      "evidence_excerpt": ""
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

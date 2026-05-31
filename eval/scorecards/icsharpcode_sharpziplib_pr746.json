@@ -4,7 +4,7 @@
   "repo": "icsharpcode/SharpZipLib",
   "pr_number": 746,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T18:43:32.672392+00:00",
+  "generated_at_utc": "2026-05-31T20:52:30.480062+00:00",
   "upstream_pr_url": "https://github.com/icsharpcode/SharpZipLib/pull/746",
   "eval_lab_pr_url": null,
   "defects": [
@@ -13,13 +13,22 @@
       "summary": "SharpZipLib NuGet library \u2014 SkipBlock/Close sig changes in TarBuffer.cs",
       "primary_rule": "GCI0003",
       "fn_class": "logic-bug-no-token",
-      "file": "",
+      "file": "src/ICSharpCode.SharpZipLib/Tar/TarHeader.cs",
+      "line": 129,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0003"
-      ]
+        "GCI0003",
+        "TarHeader.cs",
+        "src/ICSharpCode.SharpZipLib/Tar/TarHeader.cs",
+        "method",
+        "signatures",
+        "changed",
+        "incompatible",
+        "ICSharpCode"
+      ],
+      "evidence_excerpt": "Changed: '=', '=', '=' (+18 more) | e.g. Was: public const byte LF_NORMAL = (byte)'0'; | Now: public const byte LF_NORMAL = (byte) '0';"
     },
     {
       "defect_id": "corpus-gci0015",
@@ -27,12 +36,14 @@
       "primary_rule": "GCI0015",
       "fn_class": "data-integrity-risk",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0015"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0016",
@@ -40,12 +51,21 @@
       "primary_rule": "GCI0016",
       "fn_class": "concurrency-risk",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0016"
-      ]
+        "GCI0016",
+        "Blocking",
+        "async",
+        "call",
+        "Wait",
+        "GetAwaiter",
+        "GetResult",
+        "risks"
+      ],
+      "evidence_excerpt": "Line 291: SkipBlockAsync(CancellationToken.None, false).GetAwaiter().GetResult();"
     }
   ],
   "tools": [
@@ -80,7 +100,7 @@
     {
       "name": "CodeQL",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:16.794080+00:00",
+      "harvested_at_utc": "2026-05-31T20:18:13.921950+00:00",
       "caught_by_defect": {
         "corpus-gci0003": {
           "caught_ground_truth": false,
@@ -168,7 +188,7 @@
     {
       "name": "SonarCloud",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:35.573019+00:00",
+      "harvested_at_utc": "2026-05-31T20:18:49.362951+00:00",
       "caught_by_defect": {
         "corpus-gci0003": {
           "caught_ground_truth": false,
@@ -190,7 +210,7 @@
     {
       "name": "Semgrep",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:42:06.536146+00:00",
+      "harvested_at_utc": "2026-05-31T20:19:52.867052+00:00",
       "caught_by_defect": {
         "corpus-gci0003": {
           "caught_ground_truth": false,

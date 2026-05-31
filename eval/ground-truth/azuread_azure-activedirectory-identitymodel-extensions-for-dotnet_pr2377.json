@@ -13,12 +13,14 @@
       "primary_rule": "GCI0036",
       "fn_class": "logic-bug-no-token",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0036"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0016",
@@ -26,12 +28,14 @@
       "primary_rule": "GCI0016",
       "fn_class": "concurrency-risk",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0016"
-      ]
+      ],
+      "evidence_excerpt": ""
     }
   ],
   "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."

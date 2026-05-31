@@ -13,25 +13,36 @@
       "primary_rule": "GCI0004",
       "fn_class": "breaking-change",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0004"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0003",
       "summary": "Corpus label expects GCI0003",
       "primary_rule": "GCI0003",
       "fn_class": "logic-bug-no-token",
-      "file": "",
+      "file": "src/AngleSharp/Dom/Internal/Document.cs",
+      "line": 885,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_gold",
       "match_keywords": [
-        "GCI0003"
-      ]
+        "GCI0003",
+        "Document.cs",
+        "src/AngleSharp/Dom/Internal/Document.cs",
+        "Backward",
+        "compatible",
+        "signature",
+        "extension",
+        "Dispose"
+      ],
+      "evidence_excerpt": "Was: public void Dispose() | Now: public virtual void Dispose() [Context boost +35%]"
     }
   ],
   "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."

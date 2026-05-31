@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sqlite3
 import time
 import urllib.parse
@@ -12,6 +13,7 @@ from datetime import datetime, timezone
 
 from benchmark_lib import (
     DB,
+    load_optional_token,
     load_suite,
     parse_changed_cs,
     resolve_diff,
@@ -22,9 +24,17 @@ from benchmark_lib import (
 SONAR_API = "https://sonarcloud.io/api"
 
 
+def sonar_headers() -> dict[str, str]:
+    headers = {"Accept": "application/json"}
+    token = load_optional_token("sonarcloud.token") or os.environ.get("SONAR_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token.strip()}"
+    return headers
+
+
 def http_get(url: str) -> dict | None:
     try:
-        req = urllib.request.Request(url, headers={"Accept": "application/json"})
+        req = urllib.request.Request(url, headers=sonar_headers())
         with urllib.request.urlopen(req, timeout=60) as resp:
             return json.loads(resp.read().decode("utf-8"))
     except Exception:

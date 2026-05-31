@@ -4,7 +4,7 @@
   "repo": "rabbitmq/rabbitmq-dotnet-client",
   "pr_number": 1779,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T18:43:32.683470+00:00",
+  "generated_at_utc": "2026-05-31T20:52:30.507098+00:00",
   "upstream_pr_url": "https://github.com/rabbitmq/rabbitmq-dotnet-client/pull/1779",
   "eval_lab_pr_url": null,
   "defects": [
@@ -14,25 +14,36 @@
       "primary_rule": "GCI0004",
       "fn_class": "breaking-change",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0004"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0003",
       "summary": "rabbitmq-dotnet-client \u2014 AddRabbitMQInstrumentation sig change in production TraceProviderBuilderExtensions.cs",
       "primary_rule": "GCI0003",
       "fn_class": "logic-bug-no-token",
-      "file": "",
+      "file": "projects/RabbitMQ.Client.OpenTelemetry/TraceProviderBuilderExtensions.cs",
+      "line": 14,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0003"
-      ]
+        "GCI0003",
+        "TraceProviderBuilderExtensions.cs",
+        "projects/RabbitMQ.Client.OpenTelemetry/TraceProviderBuilderExtensions.cs",
+        "Method",
+        "signature",
+        "changed",
+        "AddRabbitMQInstrumentation",
+        "projects"
+      ],
+      "evidence_excerpt": "Was: public static TracerProviderBuilder AddRabbitMQInstrumentation(this TracerProviderBuilder builder) | Now: public static TracerProviderBuilder AddRabbitMQInstrumentation(this TracerProviderBuilder builder, Action<RabbitMQTracingOptions>"
     }
   ],
   "tools": [
@@ -59,7 +70,7 @@
     {
       "name": "CodeQL",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:23.162859+00:00",
+      "harvested_at_utc": "2026-05-31T20:18:20.624443+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,
@@ -127,7 +138,7 @@
     {
       "name": "SonarCloud",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:46.551767+00:00",
+      "harvested_at_utc": "2026-05-31T20:19:03.260227+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,
@@ -144,7 +155,7 @@
     {
       "name": "Semgrep",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:42:16.694816+00:00",
+      "harvested_at_utc": "2026-05-31T20:20:07.538307+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,

@@ -12,13 +12,22 @@
       "summary": "Published library: Npgsql removes public type mapping API \u2014 breaking for extension library authors",
       "primary_rule": "GCI0004",
       "fn_class": "breaking-change",
-      "file": "",
+      "file": "src/Npgsql/Internal/PgConverter.cs",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0004"
-      ]
+        "GCI0004",
+        "PgConverter.cs",
+        "src/Npgsql/Internal/PgConverter.cs",
+        "Obsolete",
+        "added",
+        "Npgsql",
+        "Internal",
+        "PgConverter"
+      ],
+      "evidence_excerpt": "Added: [Obsolete(\"Use the overload without ref.\")]; [Obsolete(\"Use the overload without ref.\")]; [Obsolete(\"Use the overload without ref.\")]"
     },
     {
       "defect_id": "corpus-gci0003",
@@ -26,12 +35,14 @@
       "primary_rule": "GCI0003",
       "fn_class": "logic-bug-no-token",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0003"
-      ]
+      ],
+      "evidence_excerpt": ""
     }
   ],
   "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."

@@ -53,8 +53,9 @@ def match_llm(text: str, defect: dict) -> tuple[bool, list[str]]:
     if file_part and Path(file_part).name.lower() not in low:
         return False, []
     keywords = defect.get("match_keywords") or []
-    hits = [k for k in keywords if k.lower() in low]
-    if len(hits) < 2:
+    hits = [k for k in keywords if k and k.lower() in low]
+    min_hits = 1 if not file_part else 2
+    if len(hits) < min_hits:
         return False, []
     evidence.extend(hits[:5])
     fn = defect.get("fn_class", "")
@@ -163,7 +164,18 @@ def score_fixture(
             if name == "GauntletCI":
                 ok, ev = match_gauntlet(findings, d)
             elif name in ("CodeQL", "SonarCloud", "Semgrep"):
-                ok, ev = match_static_alerts(alerts if alerts else [], d, strict_logic=(name == "CodeQL"))
+                ok, ev = match_static_alerts(
+                    alerts if alerts else [],
+                    d,
+                    strict_logic=(name == "CodeQL"),
+                )
+                if not ok and name != "CodeQL" and alerts and not d.get("file"):
+                    for a in alerts:
+                        msg = " ".join(str(a.get(k) or "") for k in ("message", "rule_id", "sonar_rule"))
+                        kw_hits = [k for k in (d.get("match_keywords") or []) if k.lower() in msg.lower()]
+                        if len(kw_hits) >= 1 and d.get("primary_rule", "").lower() in msg.lower():
+                            ok, ev = True, kw_hits
+                            break
             else:
                 ok, ev = match_llm(text_blob, d)
             caught_by[did] = {
@@ -271,15 +283,24 @@ def rollup(scorecards: list[dict], scope: dict) -> dict:
 
     repos = {s.get("repo") for s in scorecards}
     gold_with_primary = sum(1 for g in gold if any(d.get("ci_required") for d in g.get("defects", [])))
+    ci_defects = sum(1 for s in scorecards for d in s.get("defects", []) if d.get("ci_required", True))
     return {
         "schema_version": "1.0.0",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
-        "sample_size": sum(1 for s in scorecards for d in s.get("defects", []) if d.get("ci_required", True)),
+        "sample_size": ci_defects,
         "fixtures_scored": len(scorecards),
-        "gold_fixtures": len(gold),
+        "gold_fixtures_in_scorecards": len(gold),
         "gold_with_ci_required": gold_with_primary,
         "repos_represented": len(repos),
-        "evidence_tier": "measured" if len(gold) >= 15 and len(repos) >= 8 else "provisional",
+        "evidence_tier": (
+            "scale_cohort"
+            if len(gold) >= 100
+            else ("measured" if len(gold) >= 15 and len(repos) >= 8 else "provisional")
+        ),
+        "recall_denominator_note": (
+            "ci_required defects on fixtures with ground-truth only; "
+            "large gold cohort may include unscored fixtures until promote"
+        ),
         "comparison_scope": scope.get("comparison_scope", "diff_behavioral_review"),
         "scope_manifest": "eval/competitor-scope.json",
         "segments": {

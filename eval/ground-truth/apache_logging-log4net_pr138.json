@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "apache_logging-log4net_pr138",
+  "repo": "apache/logging-log4net",
+  "pr_number": 138,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/apache/logging-log4net/pull/138",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Published library: log4net removes ColoredConsoleAppender public API \u2014 breaking for consumers",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "src/log4net/Appender/BufferingAppenderSkeleton.cs",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0004",
+        "BufferingAppenderSkeleton.cs",
+        "src/log4net/Appender/BufferingAppenderSkeleton.cs",
+        "Obsolete",
+        "attribute",
+        "removed",
+        "log4net",
+        "Appender"
+      ],
+      "evidence_excerpt": "Removed: [Obsolete(\"Use Fix property\")]"
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

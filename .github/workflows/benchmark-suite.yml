@@ -18,6 +18,8 @@ on:
       - "scripts/enrich-benchmark-sonarcloud.py"
       - "scripts/enrich-benchmark-semgrep.py"
       - "scripts/benchmark_lib.py"
+      - "scripts/audit-gold-noise.py"
+      - "scripts/run-gold-noise-audit.ps1"
       - "eval/ground-truth/**"
 jobs:
   benchmark-suite:
@@ -37,7 +39,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          ./scripts/run-benchmark-suite.ps1 -CiOnly
+          ./scripts/run-benchmark-suite.ps1 -CiOnly -Sensitivity balanced
           python scripts/score-competitive-benchmark.py --all-with-ground-truth --check
       - name: Scorecard check
         shell: pwsh

@@ -4,7 +4,7 @@
   "repo": "StackExchange/StackExchange.Redis",
   "pr_number": 2995,
   "suite_tier": "anchor",
-  "generated_at_utc": "2026-05-31T18:43:32.683470+00:00",
+  "generated_at_utc": "2026-05-31T20:52:30.528913+00:00",
   "upstream_pr_url": "https://github.com/StackExchange/StackExchange.Redis/pull/2995",
   "eval_lab_pr_url": "https://github.com/EricCogen/ai-review-eval-stackexchange-redis/pull/7",
   "defects": [
@@ -29,7 +29,7 @@
     {
       "defect_id": "swallowed-handler-exception",
       "summary": "Bare catch blocks in ChannelMessageQueue discard user handler exceptions",
-      "primary_rule": "GCI0007",
+      "primary_rule": "GCI0032",
       "fn_class": "intentional-swallow",
       "file": "src/StackExchange.Redis/ChannelMessageQueue.cs",
       "method": "OnMessageSyncImpl",
@@ -45,7 +45,7 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 16,
+      "finding_count": 14,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "paired-implementation-inversion": {
@@ -57,9 +57,12 @@
           "notes": ""
         },
         "swallowed-handler-exception": {
-          "caught_ground_truth": false,
-          "evidence": [],
-          "notes": "no_match"
+          "caught_ground_truth": true,
+          "evidence": [
+            "GCI0032",
+            "2 added catch block(s) in non-test files contain no executable statements."
+          ],
+          "notes": ""
         }
       }
     },

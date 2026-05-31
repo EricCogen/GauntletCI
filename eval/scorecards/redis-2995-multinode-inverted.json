@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "redis-2995-multinode-inverted",
+  "repo": "StackExchange/StackExchange.Redis",
+  "pr_number": 2995,
+  "suite_tier": "gold",
+  "generated_at_utc": "2026-05-31T20:52:30.507098+00:00",
+  "upstream_pr_url": "https://github.com/StackExchange/StackExchange.Redis/pull/2995",
+  "eval_lab_pr_url": null,
+  "defects": [
+    {
+      "defect_id": "corpus-gci0058",
+      "summary": "MultiNodeSubscription inverts IsSubscriberConnected vs SingleNodeSubscription (Redis PR #2995 adjudicated defect).",
+      "primary_rule": "GCI0058",
+      "fn_class": "sibling-implementation-drift",
+      "file": "src/StackExchange.Redis/Subscription.cs",
+      "line": 267,
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "Manual",
+      "match_keywords": [
+        "GCI0058",
+        "Subscription.cs",
+        "src/StackExchange.Redis/Subscription.cs",
+        "Sibling",
+        "implementations",
+        "disagree",
+        "IsSubscriberConnected",
+        "polarity"
+      ],
+      "evidence_excerpt": "src/StackExchange.Redis/Subscription.cs:267 \u2014 SingleNodeSubscription.RemoveDisconnectedEndpoints uses `server is { IsSubscriberConnected: false }` while MultiNodeSubscription.RemoveDisconnectedEndpoints uses `server.Value.IsSubscriberConnec"
+    }
+  ],
+  "tools": [
+    {
+      "name": "GauntletCI",
+      "finding_count": 16,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0058": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "GCI0058",
+            "src/StackExchange.Redis/Subscription.cs:267 \u2014 SingleNodeSubscription.RemoveDisconnectedEndpoints uses `server is { IsSub"
+          ],
+          "notes": ""
+        }
+      }
+    },
+    {
+      "name": "CodeQL",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T19:01:28.609710+00:00",
+      "caught_by_defect": {
+        "corpus-gci0058": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeRabbit",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0058": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Greptile",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0058": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Qodo",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0058": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "SonarCloud",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T19:01:44.219082+00:00",
+      "caught_by_defect": {
+        "corpus-gci0058": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Semgrep",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T19:01:57.072576+00:00",
+      "caught_by_defect": {
+        "corpus-gci0058": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    }
+  ]
+}

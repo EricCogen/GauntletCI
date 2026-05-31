@@ -2,6 +2,8 @@
 param(
     [string]$SuitePath = (Join-Path $PSScriptRoot "..\eval\benchmark-suite.json"),
     [string]$RepoRoot = (Split-Path $PSScriptRoot -Parent),
+    [ValidateSet("strict", "balanced", "permissive")]
+    [string]$Sensitivity = "balanced",
     [switch]$CiOnly,
     [switch]$GoldOnly
 )
@@ -23,7 +25,11 @@ dotnet build GauntletCI.slnx -v quiet --nologo | Out-Null
 $runsDir = Join-Path $RepoRoot "eval\runs\gauntletci"
 New-Item -ItemType Directory -Force -Path $runsDir | Out-Null
 
+$total = $fixtures.Count
+$i = 0
 foreach ($f in $fixtures) {
+    $i++
+    Write-Progress -Activity "GauntletCI benchmark" -Status $f.fixture_id -PercentComplete (($i / $total) * 100)
     $fid = $f.fixture_id
     $diff = Join-Path $RepoRoot "eval\diffs\$fid.patch"
     if (-not (Test-Path $diff)) {
@@ -57,7 +63,7 @@ foreach ($f in $fixtures) {
         --diff $diff `
         --repo $cfgDir `
         --output $out `
-        --sensitivity permissive `
+        --sensitivity $Sensitivity `
         --no-banner | Out-Null
 
     foreach ($rule in $f.primary_rules) {
@@ -67,5 +73,6 @@ foreach ($f in $fixtures) {
     }
     $count = @((Get-Content $out -Raw | ConvertFrom-Json).Findings).Count
     if ($count -gt 25) { throw "Fixture $fid exceeded delivery cap: $count" }
-    Write-Host "OK $fid ($count findings)"
+    Write-Host "[$i/$total] OK $fid ($count findings)"
 }
+Write-Progress -Activity "GauntletCI benchmark" -Completed

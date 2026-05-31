@@ -13,12 +13,14 @@
       "primary_rule": "GCI0004",
       "fn_class": "breaking-change",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0004"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0003",
@@ -26,12 +28,14 @@
       "primary_rule": "GCI0003",
       "fn_class": "logic-bug-no-token",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0003"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0015",
@@ -39,12 +43,14 @@
       "primary_rule": "GCI0015",
       "fn_class": "data-integrity-risk",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0015"
-      ]
+      ],
+      "evidence_excerpt": ""
     }
   ],
   "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."

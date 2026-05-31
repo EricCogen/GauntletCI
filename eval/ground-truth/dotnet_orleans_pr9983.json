@@ -13,12 +13,14 @@
       "primary_rule": "GCI0004",
       "fn_class": "breaking-change",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0004"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0003",
@@ -26,25 +28,36 @@
       "primary_rule": "GCI0003",
       "fn_class": "logic-bug-no-token",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0003"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0006",
       "summary": "orleans PR9983: .Value access in ClientLifecycleEvents/ConnectionEvents production code",
       "primary_rule": "GCI0006",
       "fn_class": "edge-case-handling",
-      "file": "",
+      "file": "src/Orleans.Core/Diagnostics/ClientLifecycleEvents.cs",
+      "line": 497,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0006"
-      ]
+        "GCI0006",
+        "ClientLifecycleEvents.cs",
+        "src/Orleans.Core/Diagnostics/ClientLifecycleEvents.cs",
+        "Potential",
+        "null",
+        "dereference",
+        "Value",
+        "access"
+      ],
+      "evidence_excerpt": "Line 497: if (value.Value is LifecycleEvent evt)"
     }
   ],
   "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."

@@ -12,13 +12,22 @@
       "summary": "SharpZipLib NuGet library \u2014 SkipBlock/Close sig changes in TarBuffer.cs",
       "primary_rule": "GCI0003",
       "fn_class": "logic-bug-no-token",
-      "file": "",
+      "file": "src/ICSharpCode.SharpZipLib/Tar/TarHeader.cs",
+      "line": 129,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0003"
-      ]
+        "GCI0003",
+        "TarHeader.cs",
+        "src/ICSharpCode.SharpZipLib/Tar/TarHeader.cs",
+        "method",
+        "signatures",
+        "changed",
+        "incompatible",
+        "ICSharpCode"
+      ],
+      "evidence_excerpt": "Changed: '=', '=', '=' (+18 more) | e.g. Was: public const byte LF_NORMAL = (byte)'0'; | Now: public const byte LF_NORMAL = (byte) '0';"
     },
     {
       "defect_id": "corpus-gci0015",
@@ -26,12 +35,14 @@
       "primary_rule": "GCI0015",
       "fn_class": "data-integrity-risk",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0015"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0016",
@@ -39,12 +50,21 @@
       "primary_rule": "GCI0016",
       "fn_class": "concurrency-risk",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0016"
-      ]
+        "GCI0016",
+        "Blocking",
+        "async",
+        "call",
+        "Wait",
+        "GetAwaiter",
+        "GetResult",
+        "risks"
+      ],
+      "evidence_excerpt": "Line 291: SkipBlockAsync(CancellationToken.None, false).GetAwaiter().GetResult();"
     }
   ],
   "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."

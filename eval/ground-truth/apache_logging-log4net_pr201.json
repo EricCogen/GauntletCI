@@ -13,25 +13,36 @@
       "primary_rule": "GCI0004",
       "fn_class": "breaking-change",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_gold",
       "match_keywords": [
         "GCI0004"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0006",
       "summary": "log4net PR201: .Value access in PluginMap/ConverterInfo production code",
       "primary_rule": "GCI0006",
       "fn_class": "edge-case-handling",
-      "file": "",
+      "file": "src/log4net/Appender/RollingFileAppender.cs",
+      "line": 697,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0006"
-      ]
+        "GCI0006",
+        "RollingFileAppender.cs",
+        "src/log4net/Appender/RollingFileAppender.cs",
+        "iteration",
+        "limit",
+        "added",
+        "loop",
+        "log4net"
+      ],
+      "evidence_excerpt": "Added: for (int i = 0; i < files.Length; i++)"
     }
   ],
   "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."

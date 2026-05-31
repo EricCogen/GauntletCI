@@ -4,7 +4,7 @@
   "repo": "StackExchange/StackExchange.Redis",
   "pr_number": 3028,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T18:43:32.699102+00:00",
+  "generated_at_utc": "2026-05-31T20:52:30.539913+00:00",
   "upstream_pr_url": "https://github.com/StackExchange/StackExchange.Redis/pull/3028",
   "eval_lab_pr_url": null,
   "defects": [
@@ -14,12 +14,14 @@
       "primary_rule": "GCI0004",
       "fn_class": "breaking-change",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0004"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0003",
@@ -27,25 +29,36 @@
       "primary_rule": "GCI0003",
       "fn_class": "logic-bug-no-token",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0003"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0006",
       "summary": "stackexchange.redis PR3028: .Value access in build tool + RESPite production protocol code",
       "primary_rule": "GCI0006",
       "fn_class": "edge-case-handling",
-      "file": "",
+      "file": "eng/StackExchange.Redis.Build/AsciiHashGenerator.cs",
+      "line": 300,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0006"
-      ]
+        "GCI0006",
+        "AsciiHashGenerator.cs",
+        "eng/StackExchange.Redis.Build/AsciiHashGenerator.cs",
+        "iteration",
+        "limit",
+        "added",
+        "loop",
+        "StackExchange"
+      ],
+      "evidence_excerpt": "Added: for (int i = 1; i <= len; i++)"
     }
   ],
   "tools": [
@@ -77,7 +90,7 @@
     {
       "name": "CodeQL",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:15.432332+00:00",
+      "harvested_at_utc": "2026-05-31T20:18:12.404605+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,
@@ -165,7 +178,7 @@
     {
       "name": "SonarCloud",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:33.212432+00:00",
+      "harvested_at_utc": "2026-05-31T20:18:46.345986+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,
@@ -187,7 +200,7 @@
     {
       "name": "Semgrep",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:42:05.005871+00:00",
+      "harvested_at_utc": "2026-05-31T20:19:50.851030+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,

@@ -33,18 +33,31 @@ def main() -> None:
         if row.get("total"):
             headline_parts.append(f"{tool} {row['caught']}/{row['total']}")
 
+    noise_sweep_path = EVAL / "reports" / "gold-noise-sweep.json"
+    noise_sweep = load(noise_sweep_path) if noise_sweep_path.exists() else None
+
     report = {
         "schema_version": "1.0.0",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "comparison_scope": scope.get("comparison_scope"),
         "gauntletci_promise": scope.get("gauntletci_promise"),
         "gold_fixture_count": len(gold),
+        "gold_scoring_eligible": sum(1 for f in gold if f.get("scoring_eligible")),
         "gold_with_primary_rules": sum(1 for f in gold if f.get("primary_rules")),
         "repos_in_gold": len({f["repo"] for f in gold}),
         "selection_report": suite.get("selection_report"),
+        "scale_note": (
+            "Full gold cohort includes fixtures without corpus labels; "
+            "measured ci_required recall applies only after ground-truth promotion."
+            if len(gold) > 80
+            else None
+        ),
         "measured_recall": recall,
         "recall_by_fn_class": gold_seg.get("recall_by_fn_class", {}),
         "gauntletci_noise": gold_seg.get("gauntletci_noise", {}),
+        "gold_noise_sweep": noise_sweep.get("sensitivity_summary") if noise_sweep else None,
+        "top_noisy_rules_balanced": (noise_sweep.get("top_noisy_rules_balanced") or [])[:5] if noise_sweep else None,
+        "recommended_gate_sensitivity": noise_sweep.get("recommended_gate_sensitivity") if noise_sweep else "balanced",
         "anchor_recall": rollup.get("segments", {}).get("anchor_only", {}).get("recall_by_tool"),
         "evidence_tier": rollup.get("evidence_tier"),
         "headline": "; ".join(headline_parts) if headline_parts else matrix.get("headline"),
@@ -52,6 +65,7 @@ def main() -> None:
             "same_defect_recall_ci_required",
             "recall_by_fn_class",
             "gauntletci_delivery_noise_on_gold",
+            "gold_noise_sensitivity_sweep",
             "static_vs_llm_on_anchor",
             "free_tier_comparable_tools_only",
         ],
@@ -62,6 +76,7 @@ def main() -> None:
             "eval/competitive-matrix.json",
             "eval/ground-truth/",
             "eval/competitor-runs/",
+            "eval/reports/gold-noise-sweep.json",
         ],
     }
 

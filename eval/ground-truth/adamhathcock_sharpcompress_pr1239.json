@@ -13,25 +13,36 @@
       "primary_rule": "GCI0004",
       "fn_class": "breaking-change",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0004"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0003",
       "summary": "SharpCompress NuGet library \u2014 WriteToDirectory/WriteToFile sig changes in IArchiveEntryExtensions.cs",
       "primary_rule": "GCI0003",
       "fn_class": "logic-bug-no-token",
-      "file": "",
+      "file": "src/SharpCompress/Archives/IArchiveEntryExtensions.cs",
+      "line": 138,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0003"
-      ]
+        "GCI0003",
+        "IArchiveEntryExtensions.cs",
+        "src/SharpCompress/Archives/IArchiveEntryExtensions.cs",
+        "Backward",
+        "compatible",
+        "signature",
+        "extension",
+        "WriteToFile"
+      ],
+      "evidence_excerpt": "Was: public void WriteToFile(string destinationFileName) => | Now: public void WriteToFile(string destinationFileName, ExtractionOptions? options = null) =>"
     }
   ],
   "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."

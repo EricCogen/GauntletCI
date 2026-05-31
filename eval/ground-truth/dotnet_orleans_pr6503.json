@@ -13,38 +13,58 @@
       "primary_rule": "GCI0004",
       "fn_class": "breaking-change",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0004"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0003",
       "summary": "dotnet/orleans \u2014 GetPrimaryKeyLong sig change in Core.Abstractions/GrainExtensions.cs, public API",
       "primary_rule": "GCI0003",
       "fn_class": "logic-bug-no-token",
-      "file": "",
+      "file": "src/Orleans.Core.Abstractions/Core/GrainExtensions.cs",
+      "line": 153,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0003"
-      ]
+        "GCI0003",
+        "GrainExtensions.cs",
+        "src/Orleans.Core.Abstractions/Core/GrainExtensions.cs",
+        "backward",
+        "compatible",
+        "signature",
+        "extensions",
+        "Orleans"
+      ],
+      "evidence_excerpt": "Changed: 'GetPrimaryKeyLong', 'GetPrimaryKey' | e.g. Was: public static long GetPrimaryKeyLong(this IAddressable grain) | Now: public static long GetPrimaryKeyLong(this IAddressable grain, out string keyExt) => LegacyGrainId.FromGrainId(Get"
     },
     {
       "defect_id": "corpus-gci0006",
       "summary": "orleans PR6503: .Value access in GrainInterfaceId/GrainInterfaceProperties production code",
       "primary_rule": "GCI0006",
       "fn_class": "edge-case-handling",
-      "file": "",
+      "file": "src/Orleans.Core/Manifest/ClientClusterManifestProvider.cs",
+      "line": 36,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0006"
-      ]
+        "GCI0006",
+        "ClientClusterManifestProvider.cs",
+        "src/Orleans.Core/Manifest/ClientClusterManifestProvider.cs",
+        "Potential",
+        "null",
+        "dereference",
+        "Value",
+        "access"
+      ],
+      "evidence_excerpt": "Line 36: _options = options.Value;"
     }
   ],
   "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."

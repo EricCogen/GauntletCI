@@ -1,12 +1,13 @@
 {
   "schema_version": "1.0.0",
-  "generated_at_utc": "2026-05-31T18:43:32.699102+00:00",
-  "sample_size": 24,
-  "fixtures_scored": 26,
-  "gold_fixtures": 25,
-  "gold_with_ci_required": 19,
-  "repos_represented": 19,
+  "generated_at_utc": "2026-05-31T20:52:30.540911+00:00",
+  "sample_size": 34,
+  "fixtures_scored": 58,
+  "gold_fixtures_in_scorecards": 57,
+  "gold_with_ci_required": 29,
+  "repos_represented": 28,
   "evidence_tier": "measured",
+  "recall_denominator_note": "ci_required defects on fixtures with ground-truth only; large gold cohort may include unscored fixtures until promote",
   "comparison_scope": "diff_behavioral_review",
   "scope_manifest": "eval/competitor-scope.json",
   "segments": {
@@ -41,31 +42,75 @@
       }
     },
     "gold_cross_repo": {
-      "fixtures": 25,
+      "fixtures": 57,
       "recall_by_tool": {
         "GauntletCI": {
-          "caught": 23,
-          "total": 23,
+          "caught": 33,
+          "total": 33,
           "rate": 1.0
         },
         "CodeQL": {
           "caught": 0,
-          "total": 23,
+          "total": 33,
           "rate": 0.0
         },
         "SonarCloud": {
           "caught": 0,
-          "total": 23,
+          "total": 33,
           "rate": 0.0
         },
         "Semgrep": {
           "caught": 0,
-          "total": 23,
+          "total": 33,
           "rate": 0.0
         }
       },
       "recall_by_fn_class": {
         "logic-bug-no-token": {
+          "GauntletCI": {
+            "caught": 15,
+            "total": 15,
+            "rate": 1.0
+          },
+          "CodeQL": {
+            "caught": 0,
+            "total": 15,
+            "rate": 0.0
+          },
+          "SonarCloud": {
+            "caught": 0,
+            "total": 15,
+            "rate": 0.0
+          },
+          "Semgrep": {
+            "caught": 0,
+            "total": 15,
+            "rate": 0.0
+          }
+        },
+        "breaking-change": {
+          "GauntletCI": {
+            "caught": 5,
+            "total": 5,
+            "rate": 1.0
+          },
+          "CodeQL": {
+            "caught": 0,
+            "total": 5,
+            "rate": 0.0
+          },
+          "SonarCloud": {
+            "caught": 0,
+            "total": 5,
+            "rate": 0.0
+          },
+          "Semgrep": {
+            "caught": 0,
+            "total": 5,
+            "rate": 0.0
+          }
+        },
+        "edge-case-handling": {
           "GauntletCI": {
             "caught": 11,
             "total": 11,
@@ -84,50 +129,6 @@
           "Semgrep": {
             "caught": 0,
             "total": 11,
-            "rate": 0.0
-          }
-        },
-        "edge-case-handling": {
-          "GauntletCI": {
-            "caught": 9,
-            "total": 9,
-            "rate": 1.0
-          },
-          "CodeQL": {
-            "caught": 0,
-            "total": 9,
-            "rate": 0.0
-          },
-          "SonarCloud": {
-            "caught": 0,
-            "total": 9,
-            "rate": 0.0
-          },
-          "Semgrep": {
-            "caught": 0,
-            "total": 9,
-            "rate": 0.0
-          }
-        },
-        "breaking-change": {
-          "GauntletCI": {
-            "caught": 2,
-            "total": 2,
-            "rate": 1.0
-          },
-          "CodeQL": {
-            "caught": 0,
-            "total": 2,
-            "rate": 0.0
-          },
-          "SonarCloud": {
-            "caught": 0,
-            "total": 2,
-            "rate": 0.0
-          },
-          "Semgrep": {
-            "caught": 0,
-            "total": 2,
             "rate": 0.0
           }
         },
@@ -152,12 +153,34 @@
             "total": 1,
             "rate": 0.0
           }
+        },
+        "sibling-implementation-drift": {
+          "GauntletCI": {
+            "caught": 1,
+            "total": 1,
+            "rate": 1.0
+          },
+          "CodeQL": {
+            "caught": 0,
+            "total": 1,
+            "rate": 0.0
+          },
+          "SonarCloud": {
+            "caught": 0,
+            "total": 1,
+            "rate": 0.0
+          },
+          "Semgrep": {
+            "caught": 0,
+            "total": 1,
+            "rate": 0.0
+          }
         }
       },
       "gauntletci_noise": {
-        "fixture_count": 25,
-        "mean_findings": 11.0,
-        "median_findings": 9,
+        "fixture_count": 57,
+        "mean_findings": 7.4,
+        "median_findings": 4,
         "at_delivery_cap_25": 4
       }
     }

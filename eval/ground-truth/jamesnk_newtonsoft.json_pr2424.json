@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "jamesnk_newtonsoft.json_pr2424",
+  "repo": "JamesNK/Newtonsoft.Json",
+  "pr_number": 2424,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/JamesNK/Newtonsoft.Json/pull/2424",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Published library: Newtonsoft.Json changes Deserialize<T> public signature \u2014 breaking for consumers",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0004"
+      ],
+      "evidence_excerpt": ""
+    },
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "Newtonsoft.Json library \u2014 DeserializeObject<T>/DeserializeAnonymousType<T> sig changes in JsonConvert.cs, core public API",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003"
+      ],
+      "evidence_excerpt": ""
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

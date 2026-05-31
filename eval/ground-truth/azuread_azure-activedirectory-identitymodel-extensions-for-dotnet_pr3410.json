@@ -12,13 +12,22 @@
       "summary": "AzureAD identity model \u2014 ValidateSignature sig changes (Experimental path but still breaks callers)",
       "primary_rule": "GCI0003",
       "fn_class": "logic-bug-no-token",
-      "file": "",
+      "file": "src/Microsoft.IdentityModel.JsonWebTokens/Experimental/JsonWebTokenHandler.ValidateSignature.cs",
+      "line": 27,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0003"
-      ]
+        "GCI0003",
+        "JsonWebTokenHandler.ValidateSignature.cs",
+        "src/Microsoft.IdentityModel.JsonWebTokens/Experimental/JsonWebTokenHandler.ValidateSignature.cs",
+        "Method",
+        "signature",
+        "changed",
+        "ValidateSignature",
+        "Microsoft"
+      ],
+      "evidence_excerpt": "Was: internal static ValidationResult<SecurityKey, ValidationError> ValidateSignature( | Now: internal ValidationResult<SecurityKey, ValidationError> ValidateSignature("
     },
     {
       "defect_id": "corpus-gci0006",
@@ -26,12 +35,14 @@
       "primary_rule": "GCI0006",
       "fn_class": "edge-case-handling",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0006"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0010",
@@ -39,12 +50,14 @@
       "primary_rule": "GCI0010",
       "fn_class": "logic-bug-no-token",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0010"
-      ]
+      ],
+      "evidence_excerpt": ""
     }
   ],
   "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."

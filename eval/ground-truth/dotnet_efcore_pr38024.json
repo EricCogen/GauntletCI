@@ -12,13 +12,22 @@
       "summary": "Published library: EFCore removes public API including internal-by-convention but public-by-keyword members",
       "primary_rule": "GCI0004",
       "fn_class": "breaking-change",
-      "file": "",
+      "file": "src/EFCore.Cosmos/Infrastructure/CosmosDbContextOptionsBuilder.cs",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0004"
-      ]
+        "GCI0004",
+        "CosmosDbContextOptionsBuilder.cs",
+        "src/EFCore.Cosmos/Infrastructure/CosmosDbContextOptionsBuilder.cs",
+        "Obsolete",
+        "added",
+        "EFCore",
+        "Cosmos",
+        "Infrastructure"
+      ],
+      "evidence_excerpt": "Added: [Obsolete(\"Enabling ContentResponseOnWrite currently has no benefit for EF Core.\")]"
     },
     {
       "defect_id": "corpus-gci0003",
@@ -26,25 +35,36 @@
       "primary_rule": "GCI0003",
       "fn_class": "logic-bug-no-token",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0003"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0006",
       "summary": "efcore PR38024: .Value access in EFCore.Cosmos/Internal production code",
       "primary_rule": "GCI0006",
       "fn_class": "edge-case-handling",
-      "file": "",
+      "file": "src/EFCore.Cosmos/Update/Internal/DocumentSource.cs",
+      "line": 96,
       "adjudication_confidence": "medium",
       "ci_required": true,
       "label_source": "human_bulk",
       "match_keywords": [
-        "GCI0006"
-      ]
+        "GCI0006",
+        "DocumentSource.cs",
+        "src/EFCore.Cosmos/Update/Internal/DocumentSource.cs",
+        "Potential",
+        "null",
+        "dereference",
+        "Value",
+        "access"
+      ],
+      "evidence_excerpt": "Line 96: entry.SetStoreGeneratedValue(property, ordinal!.Value + 1, setModified: false);"
     }
   ],
   "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."

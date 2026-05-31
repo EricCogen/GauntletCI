@@ -11,7 +11,7 @@
   "competitor_harvest": "anchor",
   "primary_rules": [
     "GCI0058",
-    "GCI0007"
+    "GCI0032"
   ],
   "defects": [
     {
@@ -35,7 +35,7 @@
     {
       "defect_id": "swallowed-handler-exception",
       "summary": "Bare catch blocks in ChannelMessageQueue discard user handler exceptions",
-      "primary_rule": "GCI0007",
+      "primary_rule": "GCI0032",
       "fn_class": "intentional-swallow",
       "file": "src/StackExchange.Redis/ChannelMessageQueue.cs",
       "method": "OnMessageSyncImpl",

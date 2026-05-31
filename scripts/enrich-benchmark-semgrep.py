@@ -14,6 +14,7 @@ from pathlib import Path
 from benchmark_lib import (
     DB,
     load_suite,
+    parse_diff_hunk_files,
     resolve_diff,
     suite_fixtures,
     write_competitor_artifact,
@@ -22,21 +23,6 @@ from benchmark_lib import (
 
 def semgrep_available() -> bool:
     return shutil.which("semgrep") is not None
-
-
-def parse_added_cs(diff_path: Path) -> dict[str, list[str]]:
-    by_file: dict[str, list[str]] = {}
-    current: str | None = None
-    for line in diff_path.read_text(encoding="utf-8", errors="replace").splitlines():
-        if line.startswith("+++ b/"):
-            path = line[6:]
-            current = path if path.endswith(".cs") else None
-            if current and current not in by_file:
-                by_file[current] = []
-            continue
-        if current and line.startswith("+") and not line.startswith("+++"):
-            by_file[current].append(line[1:])
-    return by_file
 
 
 def sanitize_name(path: str) -> str:
@@ -97,7 +83,7 @@ def sync_db(con: sqlite3.Connection, fixture_id: str, repo: str, count: int, rul
 
 def main() -> None:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--config", default="auto")
+    ap.add_argument("--config", default="p/csharp")
     ap.add_argument("--gold-only", action="store_true", default=True)
     ap.add_argument("--all-suite", action="store_true")
     args = ap.parse_args()
@@ -117,7 +103,7 @@ def main() -> None:
         if not diff:
             print(f"skip {fid}: no diff")
             continue
-        added = parse_added_cs(diff)
+        added = parse_diff_hunk_files(diff)
         if not added:
             doc = {"tool": "Semgrep", "finding_count": 0, "alerts": [], "harvested_at_utc": datetime.now(timezone.utc).isoformat()}
             write_competitor_artifact(fid, "semgrep.json", doc)
@@ -132,6 +118,12 @@ def main() -> None:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text("\n".join(lines) + "\n", encoding="utf-8")
             alerts, raw = run_semgrep(root, args.config)
+            for a in alerts:
+                rel = a.get("file", "")
+                for orig in added:
+                    if sanitize_name(orig) in rel or orig.replace("/", "__") in rel:
+                        a["source_path"] = orig
+                        break
 
         rules = ",".join(sorted({a["rule_id"] for a in alerts if a.get("rule_id")})) or None
         sev_rank = {"CRITICAL": 5, "HIGH": 4, "MEDIUM": 3, "LOW": 2, "INFO": 1}

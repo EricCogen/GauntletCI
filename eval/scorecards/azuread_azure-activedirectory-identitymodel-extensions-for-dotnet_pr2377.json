@@ -4,7 +4,7 @@
   "repo": "AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
   "pr_number": 2377,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T18:43:32.615848+00:00",
+  "generated_at_utc": "2026-05-31T20:52:30.374974+00:00",
   "upstream_pr_url": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/pull/2377",
   "eval_lab_pr_url": null,
   "defects": [
@@ -14,12 +14,14 @@
       "primary_rule": "GCI0036",
       "fn_class": "logic-bug-no-token",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0036"
-      ]
+      ],
+      "evidence_excerpt": ""
     },
     {
       "defect_id": "corpus-gci0016",
@@ -27,12 +29,14 @@
       "primary_rule": "GCI0016",
       "fn_class": "concurrency-risk",
       "file": "",
+      "line": null,
       "adjudication_confidence": "medium",
       "ci_required": false,
       "label_source": "human_bulk",
       "match_keywords": [
         "GCI0016"
-      ]
+      ],
+      "evidence_excerpt": ""
     }
   ],
   "tools": [
@@ -56,7 +60,7 @@
     {
       "name": "CodeQL",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:19.081295+00:00",
+      "harvested_at_utc": "2026-05-31T20:18:16.227299+00:00",
       "caught_by_defect": {
         "corpus-gci0036": {
           "caught_ground_truth": false,
@@ -124,7 +128,7 @@
     {
       "name": "SonarCloud",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:41:39.540372+00:00",
+      "harvested_at_utc": "2026-05-31T20:18:54.341811+00:00",
       "caught_by_defect": {
         "corpus-gci0036": {
           "caught_ground_truth": false,
@@ -141,7 +145,7 @@
     {
       "name": "Semgrep",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T18:42:11.629469+00:00",
+      "harvested_at_utc": "2026-05-31T20:19:59.563554+00:00",
       "caught_by_defect": {
         "corpus-gci0036": {
           "caught_ground_truth": false,
