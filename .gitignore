@@ -194,3 +194,8 @@ site/tsconfig.tsbuildinfo
 !.cursor/**/*.md
 !.cursor/**/*.mdc
 !.cursor/skills/**/SKILL.md
+
+# Benchmark diffs (exported from corpus; large)
+eval/diffs/*.patch
+eval/runs/
+

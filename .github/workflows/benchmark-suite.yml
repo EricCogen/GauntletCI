@@ -1,0 +1,37 @@
+name: Benchmark Suite
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "eval/benchmark-suite.json"
+      - "eval/ground-truth/**"
+      - "scripts/run-benchmark-suite.ps1"
+      - ".github/workflows/benchmark-suite.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "scripts/run-benchmark-suite.ps1"
+      - "eval/ground-truth/**"
+jobs:
+  benchmark-suite:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+      - name: Export diffs
+        shell: pwsh
+        run: ./scripts/export-benchmark-diffs.ps1
+      - name: Run CI fixtures
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ./scripts/run-benchmark-suite.ps1 -CiOnly
+          python scripts/score-competitive-benchmark.py --all-with-ground-truth --check
+      - name: Scorecard check
+        shell: pwsh
+        run: python scripts/score-competitive-benchmark.py --fixture stackexchange-redis-pr-2995 --check
+

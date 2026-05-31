@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "dotnet_efcore_pr38038",
+  "repo": "dotnet/efcore",
+  "pr_number": 38038,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/dotnet/efcore/pull/38038",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Published library: EFCore removes public relational metadata API \u2014 breaking for provider authors",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0004"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "dotnet/efcore \u2014 GetDefaultColumnMappings/GetTableColumnMappings sig changes in RelationalPropertyExtensions.cs",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0015",
+      "summary": "efcore PR38038: mass assignment in EFCore.Relational/Design tooling code",
+      "primary_rule": "GCI0015",
+      "fn_class": "data-integrity-risk",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0015"
+      ]
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

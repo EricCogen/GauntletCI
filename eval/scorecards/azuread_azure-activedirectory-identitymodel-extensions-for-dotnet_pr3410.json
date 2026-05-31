@@ -1,0 +1,166 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "azuread_azure-activedirectory-identitymodel-extensions-for-dotnet_pr3410",
+  "repo": "AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+  "pr_number": 3410,
+  "suite_tier": "gold",
+  "generated_at_utc": "2026-05-31T18:06:19.781744+00:00",
+  "upstream_pr_url": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/pull/3410",
+  "eval_lab_pr_url": null,
+  "defects": [
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "AzureAD identity model \u2014 ValidateSignature sig changes (Experimental path but still breaks callers)",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0006",
+      "summary": "azuread PR3410: mixed \u2014 .Value in test + new params without validation in production identity code",
+      "primary_rule": "GCI0006",
+      "fn_class": "edge-case-handling",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0006"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0010",
+      "summary": "azuread PR3410: hardcoded authority URL in production identity model code \u2014 should be configurable",
+      "primary_rule": "GCI0010",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0010"
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "name": "GauntletCI",
+      "finding_count": 2,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "GCI0003",
+            "Was: internal static ValidationResult<SecurityKey, ValidationError> ValidateSignature( | Now: internal ValidationResult<"
+          ],
+          "notes": ""
+        },
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0010": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeQL",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T16:04:19.500933+00:00",
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0010": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeRabbit",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0010": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Greptile",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0010": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Qodo",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0010": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    }
+  ]
+}

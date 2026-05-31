@@ -2,74 +2,74 @@
   "benchmark_id": "stackexchange-redis-pr-2995",
   "source_pr": "https://github.com/StackExchange/StackExchange.Redis/pull/2995",
   "eval_lab_pr": "https://github.com/EricCogen/ai-review-eval-stackexchange-redis/pull/7",
-  "generated_at_utc": "2026-05-30T01:25:00Z",
+  "generated_at_utc": "2026-05-31T15:49:41Z",
   "gauntletci_version": "platform-phases-1-5",
   "ground_truth_defect": {
     "summary": "MultiNodeSubscription.RemoveDisconnectedEndpoints uses inverted IsSubscriberConnected polarity vs SingleNodeSubscription",
     "file": "src/StackExchange.Redis/Subscription.cs",
     "method": "RemoveDisconnectedEndpoints",
-    "competitors_that_caught": ["Greptile", "Qodo"]
+    "competitors_that_caught": [
+      "CodeRabbit",
+      "Greptile",
+      "Qodo"
+    ]
   },
   "runs": [
     {
-      "label": "baseline_pre_platform",
-      "finding_count": 39,
-      "caught_ground_truth": false,
-      "noise_rules": ["GCI0038", "GCI0022", "GCI0007"],
-      "notes": "High fanout; relocated-code false positives; no sibling-predicate rule"
-    },
-    {
-      "label": "platform_phases_1_4",
-      "config": {
-        "domain": { "profile": "library" },
-        "output": { "delivery": { "globalMaxFindings": 25 } },
-        "provenance": { "enabled": true }
-      },
-      "finding_count": 10,
-      "caught_ground_truth": true,
-      "primary_rule": "GCI0058",
-      "primary_evidence_line": 267,
-      "notes": "Delivery cap + domain gating + GCI0058 paired-implementation rule"
-    },
-    {
-      "label": "platform_phases_1_5_permissive",
-      "config": {
-        "domain": { "profile": "library" },
-        "output": { "delivery": { "globalMaxFindings": 25 } },
-        "provenance": { "enabled": true },
-        "semantics": { "enabled": true }
-      },
+      "label": "platform_phases_1_5",
       "finding_count": 16,
       "caught_ground_truth": true,
-      "primary_rule": "GCI0058",
-      "primary_severity": "Block",
-      "notes": "Without library profile in default repo config; with library profile expect <=10 delivered findings"
+      "primary_rule": "GCI0058"
     }
   ],
+  "competitive_scorecard": "eval/scorecards/stackexchange-redis-pr-2995.json",
+  "competitive_suite_rollup": "eval/scorecards/competitive-suite.json",
   "competitive_advantage_claims": [
     {
       "claim": "Deterministic sibling-predicate detection (GCI0058)",
-      "vs": ["Greptile", "Qodo", "CodeRabbit", "GitHub Copilot Review"],
+      "vs": [
+        "Greptile",
+        "Qodo",
+        "CodeRabbit",
+        "GitHub Copilot Review"
+      ],
       "differentiator": "No LLM required; cites exact class/method/line; Block severity by default"
     },
     {
       "claim": "Relocated-code suppression (PG-PROVENANCE)",
-      "vs": ["SonarQube", "Codacy", "DeepSource", "Sourcery"],
+      "vs": [
+        "SonarQube",
+        "Codacy",
+        "DeepSource",
+        "Sourcery"
+      ],
       "differentiator": "Added-line != new-risk; suppresses move/restructure noise that inflates AI and static tools"
     },
     {
       "claim": "Domain-aware rule gating (PG-DOMAIN)",
-      "vs": ["CodeGuru", "CodeAnt AI", "GitLab Duo"],
+      "vs": [
+        "CodeGuru",
+        "CodeAnt AI",
+        "GitLab Duo"
+      ],
       "differentiator": "Web/DI rules silenced on library/infrastructure repos"
     },
     {
       "claim": "Ranked delivery budget (PG-DELIVERY)",
-      "vs": ["Ellipsis", "Graphite Agent", "Cursor BugBot"],
+      "vs": [
+        "Ellipsis",
+        "Graphite Agent",
+        "Cursor BugBot"
+      ],
       "differentiator": "Fixed finding budget with severity ranking; avoids review fatigue from 40-finding dumps"
     },
     {
       "claim": "Counterfactual witnesses (PG-SEMANTICS)",
-      "vs": ["Claude Code Review", "Manus", "Repowise"],
+      "vs": [
+        "Claude Code Review",
+        "Manus",
+        "Repowise"
+      ],
       "differentiator": "Patch-local scenario text attached to high-risk conditional changes"
     }
   ]

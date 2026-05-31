@@ -1,0 +1,23 @@
+{
+  "findings_rule_ids": [
+    "GCI0058",
+    "GCI0006",
+    "GCI0006",
+    "GCI0006",
+    "GCI0006",
+    "GCI0006",
+    "GCI0006",
+    "GCI0032",
+    "GCI0043",
+    "GCI0043",
+    "GCI0043",
+    "GCI0043",
+    "GCI0042",
+    "GCI0043",
+    "GCI0045",
+    "GCI0045"
+  ],
+  "finding_count": 16,
+  "tool": "GauntletCI",
+  "harvested_at_utc": "2026-05-31T15:48:38.8796437Z"
+}

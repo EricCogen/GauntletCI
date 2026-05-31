@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "icsharpcode_sharpziplib_pr746",
+  "repo": "icsharpcode/SharpZipLib",
+  "pr_number": 746,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/icsharpcode/SharpZipLib/pull/746",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "SharpZipLib NuGet library \u2014 SkipBlock/Close sig changes in TarBuffer.cs",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0015",
+      "summary": "sharpziplib PR746: mass assignment in TarHeader/TarInputStream production TAR parsing code",
+      "primary_rule": "GCI0015",
+      "fn_class": "data-integrity-risk",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0015"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0016",
+      "summary": "sharpziplib PR746: blocking .Result/.Wait() async call in SharpZipLib production code \u2014 deadlock risk",
+      "primary_rule": "GCI0016",
+      "fn_class": "concurrency-risk",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0016"
+      ]
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

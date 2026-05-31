@@ -1,0 +1,166 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "devtoys-app_devtoys_pr1078",
+  "repo": "DevToys-app/DevToys",
+  "pr_number": 1078,
+  "suite_tier": "gold",
+  "generated_at_utc": "2026-05-31T18:06:19.911861+00:00",
+  "upstream_pr_url": "https://github.com/DevToys-app/DevToys/pull/1078",
+  "eval_lab_pr_url": null,
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Published API: DevToys.Api removes public ResultInfo<T> \u2014 breaking for extension authors",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0004"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0006",
+      "summary": "devtoys PR1078: .Value access in JsonWebToken helpers \u2014 JWT parsing production code",
+      "primary_rule": "GCI0006",
+      "fn_class": "edge-case-handling",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0006"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0015",
+      "summary": "devtoys PR1078: mass assignment in DevToys.Blazor and DevToys.Tools production code",
+      "primary_rule": "GCI0015",
+      "fn_class": "data-integrity-risk",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0015"
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "name": "GauntletCI",
+      "finding_count": 15,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0006": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "GCI0006",
+            "Added: for (int i = 0; i < decorations.Length; i++)"
+          ],
+          "notes": ""
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeQL",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T16:04:19.504928+00:00",
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeRabbit",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Greptile",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Qodo",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,128 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "anglesharp_anglesharp_pr1159",
+  "repo": "AngleSharp/AngleSharp",
+  "pr_number": 1159,
+  "suite_tier": "gold",
+  "generated_at_utc": "2026-05-31T18:06:19.700313+00:00",
+  "upstream_pr_url": "https://github.com/AngleSharp/AngleSharp/pull/1159",
+  "eval_lab_pr_url": null,
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Published library: AngleSharp removes public API \u2014 breaking for consumers",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0004"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "Corpus label expects GCI0003",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_gold",
+      "match_keywords": [
+        "GCI0003"
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "name": "GauntletCI",
+      "finding_count": 25,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "GCI0003",
+            "Was: public void Dispose() | Now: public virtual void Dispose() [Context boost +35%]"
+          ],
+          "notes": ""
+        }
+      }
+    },
+    {
+      "name": "CodeQL",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T16:04:19.497929+00:00",
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeRabbit",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Greptile",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Qodo",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    }
+  ]
+}

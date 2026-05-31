@@ -1,5 +1,5 @@
 {
-  "matrix_version": "2026-05-30",
+  "matrix_version": "2026-05-31",
   "purpose": "Head-to-head positioning for GauntletCI vs AI and static review tools",
   "evaluation_axes": [
     "deterministic_reproducibility",
@@ -12,36 +12,374 @@
     "counterfactual_witness"
   ],
   "tools": [
-    { "name": "GauntletCI", "type": "deterministic_rules_plus_platform", "scores": { "deterministic_reproducibility": 5, "line_anchored_evidence": 5, "behavioral_logic_bugs": 4, "noise_ratio_on_large_prs": 4, "offline_no_api_key": 5, "pre_commit_latency": 5, "cross_entity_reasoning": 4, "counterfactual_witness": 4 } },
-    { "name": "Amazon CodeGuru", "type": "cloud_ml_static", "scores": { "deterministic_reproducibility": 3, "line_anchored_evidence": 4, "behavioral_logic_bugs": 2, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 1, "pre_commit_latency": 2, "cross_entity_reasoning": 2, "counterfactual_witness": 1 } },
-    { "name": "Atlassian Rovo", "type": "llm_assistant", "scores": { "deterministic_reproducibility": 2, "line_anchored_evidence": 3, "behavioral_logic_bugs": 3, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 1, "pre_commit_latency": 2, "cross_entity_reasoning": 3, "counterfactual_witness": 2 } },
-    { "name": "Bito", "type": "llm_review", "scores": { "deterministic_reproducibility": 2, "line_anchored_evidence": 3, "behavioral_logic_bugs": 3, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 1, "pre_commit_latency": 2, "cross_entity_reasoning": 2, "counterfactual_witness": 2 } },
-    { "name": "Claude Code Review", "type": "llm_review", "scores": { "deterministic_reproducibility": 2, "line_anchored_evidence": 4, "behavioral_logic_bugs": 4, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 1, "pre_commit_latency": 2, "cross_entity_reasoning": 4, "counterfactual_witness": 3 } },
-    { "name": "Codacy", "type": "static_platform", "scores": { "deterministic_reproducibility": 4, "line_anchored_evidence": 4, "behavioral_logic_bugs": 2, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 2, "pre_commit_latency": 3, "cross_entity_reasoning": 1, "counterfactual_witness": 1 } },
-    { "name": "CodeAnt AI", "type": "llm_plus_static", "scores": { "deterministic_reproducibility": 2, "line_anchored_evidence": 3, "behavioral_logic_bugs": 3, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 1, "pre_commit_latency": 2, "cross_entity_reasoning": 3, "counterfactual_witness": 2 } },
-    { "name": "CodeRabbit", "type": "llm_review", "scores": { "deterministic_reproducibility": 2, "line_anchored_evidence": 4, "behavioral_logic_bugs": 4, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 1, "pre_commit_latency": 2, "cross_entity_reasoning": 3, "counterfactual_witness": 3 } },
-    { "name": "CodeScene", "type": "behavioral_static", "scores": { "deterministic_reproducibility": 4, "line_anchored_evidence": 3, "behavioral_logic_bugs": 3, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 2, "pre_commit_latency": 2, "cross_entity_reasoning": 2, "counterfactual_witness": 1 } },
-    { "name": "Cursor BugBot", "type": "llm_review", "scores": { "deterministic_reproducibility": 2, "line_anchored_evidence": 4, "behavioral_logic_bugs": 4, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 1, "pre_commit_latency": 2, "cross_entity_reasoning": 3, "counterfactual_witness": 2 } },
-    { "name": "DeepSource", "type": "static_platform", "scores": { "deterministic_reproducibility": 4, "line_anchored_evidence": 4, "behavioral_logic_bugs": 2, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 2, "pre_commit_latency": 3, "cross_entity_reasoning": 1, "counterfactual_witness": 1 } },
-    { "name": "Ellipsis", "type": "llm_review", "scores": { "deterministic_reproducibility": 2, "line_anchored_evidence": 3, "behavioral_logic_bugs": 3, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 1, "pre_commit_latency": 2, "cross_entity_reasoning": 2, "counterfactual_witness": 2 } },
-    { "name": "GitHub Copilot Review", "type": "llm_review", "scores": { "deterministic_reproducibility": 2, "line_anchored_evidence": 4, "behavioral_logic_bugs": 4, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 1, "pre_commit_latency": 2, "cross_entity_reasoning": 3, "counterfactual_witness": 2 } },
-    { "name": "GitLab Duo", "type": "llm_assistant", "scores": { "deterministic_reproducibility": 2, "line_anchored_evidence": 3, "behavioral_logic_bugs": 3, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 1, "pre_commit_latency": 2, "cross_entity_reasoning": 3, "counterfactual_witness": 2 } },
-    { "name": "Graphite Agent", "type": "llm_review", "scores": { "deterministic_reproducibility": 2, "line_anchored_evidence": 3, "behavioral_logic_bugs": 3, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 1, "pre_commit_latency": 2, "cross_entity_reasoning": 2, "counterfactual_witness": 2 } },
-    { "name": "Greptile", "type": "llm_review", "scores": { "deterministic_reproducibility": 2, "line_anchored_evidence": 4, "behavioral_logic_bugs": 4, "noise_ratio_on_large_prs": 4, "offline_no_api_key": 1, "pre_commit_latency": 2, "cross_entity_reasoning": 4, "counterfactual_witness": 3 } },
-    { "name": "Manus", "type": "llm_agent", "scores": { "deterministic_reproducibility": 1, "line_anchored_evidence": 3, "behavioral_logic_bugs": 3, "noise_ratio_on_large_prs": 2, "offline_no_api_key": 1, "pre_commit_latency": 1, "cross_entity_reasoning": 3, "counterfactual_witness": 2 } },
-    { "name": "Qodo", "type": "llm_review", "scores": { "deterministic_reproducibility": 2, "line_anchored_evidence": 4, "behavioral_logic_bugs": 4, "noise_ratio_on_large_prs": 4, "offline_no_api_key": 1, "pre_commit_latency": 2, "cross_entity_reasoning": 4, "counterfactual_witness": 3 } },
-    { "name": "Repowise", "type": "llm_review", "scores": { "deterministic_reproducibility": 2, "line_anchored_evidence": 3, "behavioral_logic_bugs": 3, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 1, "pre_commit_latency": 2, "cross_entity_reasoning": 2, "counterfactual_witness": 2 } },
-    { "name": "SonarQube", "type": "static_platform", "scores": { "deterministic_reproducibility": 5, "line_anchored_evidence": 4, "behavioral_logic_bugs": 2, "noise_ratio_on_large_prs": 2, "offline_no_api_key": 4, "pre_commit_latency": 3, "cross_entity_reasoning": 1, "counterfactual_witness": 1 } },
-    { "name": "Sourcery", "type": "refactor_static", "scores": { "deterministic_reproducibility": 4, "line_anchored_evidence": 4, "behavioral_logic_bugs": 2, "noise_ratio_on_large_prs": 3, "offline_no_api_key": 3, "pre_commit_latency": 4, "cross_entity_reasoning": 1, "counterfactual_witness": 1 } }
+    {
+      "name": "GauntletCI",
+      "type": "deterministic_rules_plus_platform",
+      "scores": {
+        "deterministic_reproducibility": 5,
+        "line_anchored_evidence": 5,
+        "behavioral_logic_bugs": 4,
+        "noise_ratio_on_large_prs": 4,
+        "offline_no_api_key": 5,
+        "pre_commit_latency": 5,
+        "cross_entity_reasoning": 4,
+        "counterfactual_witness": 4
+      }
+    },
+    {
+      "name": "Amazon CodeGuru",
+      "type": "cloud_ml_static",
+      "scores": {
+        "deterministic_reproducibility": 3,
+        "line_anchored_evidence": 4,
+        "behavioral_logic_bugs": 2,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 2,
+        "counterfactual_witness": 1
+      }
+    },
+    {
+      "name": "Atlassian Rovo",
+      "type": "llm_assistant",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 3,
+        "behavioral_logic_bugs": 3,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 3,
+        "counterfactual_witness": 2
+      }
+    },
+    {
+      "name": "Bito",
+      "type": "llm_review",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 3,
+        "behavioral_logic_bugs": 3,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 2,
+        "counterfactual_witness": 2
+      }
+    },
+    {
+      "name": "Claude Code Review",
+      "type": "llm_review",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 4,
+        "behavioral_logic_bugs": 4,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 4,
+        "counterfactual_witness": 3
+      }
+    },
+    {
+      "name": "Codacy",
+      "type": "static_platform",
+      "scores": {
+        "deterministic_reproducibility": 4,
+        "line_anchored_evidence": 4,
+        "behavioral_logic_bugs": 2,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 2,
+        "pre_commit_latency": 3,
+        "cross_entity_reasoning": 1,
+        "counterfactual_witness": 1
+      }
+    },
+    {
+      "name": "CodeAnt AI",
+      "type": "llm_plus_static",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 3,
+        "behavioral_logic_bugs": 3,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 3,
+        "counterfactual_witness": 2
+      }
+    },
+    {
+      "name": "CodeRabbit",
+      "type": "llm_review",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 4,
+        "behavioral_logic_bugs": 4,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 3,
+        "counterfactual_witness": 3
+      }
+    },
+    {
+      "name": "CodeScene",
+      "type": "behavioral_static",
+      "scores": {
+        "deterministic_reproducibility": 4,
+        "line_anchored_evidence": 3,
+        "behavioral_logic_bugs": 3,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 2,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 2,
+        "counterfactual_witness": 1
+      }
+    },
+    {
+      "name": "Cursor BugBot",
+      "type": "llm_review",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 4,
+        "behavioral_logic_bugs": 4,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 3,
+        "counterfactual_witness": 2
+      }
+    },
+    {
+      "name": "DeepSource",
+      "type": "static_platform",
+      "scores": {
+        "deterministic_reproducibility": 4,
+        "line_anchored_evidence": 4,
+        "behavioral_logic_bugs": 2,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 2,
+        "pre_commit_latency": 3,
+        "cross_entity_reasoning": 1,
+        "counterfactual_witness": 1
+      }
+    },
+    {
+      "name": "Ellipsis",
+      "type": "llm_review",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 3,
+        "behavioral_logic_bugs": 3,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 2,
+        "counterfactual_witness": 2
+      }
+    },
+    {
+      "name": "GitHub Copilot Review",
+      "type": "llm_review",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 4,
+        "behavioral_logic_bugs": 4,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 3,
+        "counterfactual_witness": 2
+      }
+    },
+    {
+      "name": "GitLab Duo",
+      "type": "llm_assistant",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 3,
+        "behavioral_logic_bugs": 3,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 3,
+        "counterfactual_witness": 2
+      }
+    },
+    {
+      "name": "Graphite Agent",
+      "type": "llm_review",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 3,
+        "behavioral_logic_bugs": 3,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 2,
+        "counterfactual_witness": 2
+      }
+    },
+    {
+      "name": "Greptile",
+      "type": "llm_review",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 4,
+        "behavioral_logic_bugs": 4,
+        "noise_ratio_on_large_prs": 4,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 4,
+        "counterfactual_witness": 3
+      }
+    },
+    {
+      "name": "Manus",
+      "type": "llm_agent",
+      "scores": {
+        "deterministic_reproducibility": 1,
+        "line_anchored_evidence": 3,
+        "behavioral_logic_bugs": 3,
+        "noise_ratio_on_large_prs": 2,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 1,
+        "cross_entity_reasoning": 3,
+        "counterfactual_witness": 2
+      }
+    },
+    {
+      "name": "Qodo",
+      "type": "llm_review",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 4,
+        "behavioral_logic_bugs": 4,
+        "noise_ratio_on_large_prs": 4,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 4,
+        "counterfactual_witness": 3
+      }
+    },
+    {
+      "name": "Repowise",
+      "type": "llm_review",
+      "scores": {
+        "deterministic_reproducibility": 2,
+        "line_anchored_evidence": 3,
+        "behavioral_logic_bugs": 3,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 1,
+        "pre_commit_latency": 2,
+        "cross_entity_reasoning": 2,
+        "counterfactual_witness": 2
+      }
+    },
+    {
+      "name": "SonarQube",
+      "type": "static_platform",
+      "scores": {
+        "deterministic_reproducibility": 5,
+        "line_anchored_evidence": 4,
+        "behavioral_logic_bugs": 2,
+        "noise_ratio_on_large_prs": 2,
+        "offline_no_api_key": 4,
+        "pre_commit_latency": 3,
+        "cross_entity_reasoning": 1,
+        "counterfactual_witness": 1
+      }
+    },
+    {
+      "name": "Sourcery",
+      "type": "refactor_static",
+      "scores": {
+        "deterministic_reproducibility": 4,
+        "line_anchored_evidence": 4,
+        "behavioral_logic_bugs": 2,
+        "noise_ratio_on_large_prs": 3,
+        "offline_no_api_key": 3,
+        "pre_commit_latency": 4,
+        "cross_entity_reasoning": 1,
+        "counterfactual_witness": 1
+      }
+    }
   ],
-  "headline": "GauntletCI wins on reproducibility, offline pre-commit, and structured delivery; matches top LLM reviewers on Redis #2995 logic defect with GCI0058 after platform phases 1-5.",
+  "headline": "Measured benchmark: 16 fixtures, 10 repos (ci_required defects). Gold GauntletCI 15/15; CodeQL same-defect 0/15. Anchor Redis #2995: Greptile, Qodo, CodeRabbit, and GauntletCI (GCI0058) caught inversion; CodeQL did not.",
   "proof_fixtures": [
-    "eval/redis-2995-scorecard.json",
-    "eval/rule-audit.json"
+    "eval/scorecards/stackexchange-redis-pr-2995.json",
+    "eval/scorecards/competitive-suite.json",
+    "eval/benchmark-suite.json",
+    "eval/redis-2995-scorecard.json"
   ],
   "honest_gaps": [
     "Natural-language explanation quality still below Claude Code Review / Greptile on arbitrary repos",
     "Breadth of language support narrower than SonarQube / Codacy",
     "Requires rule corpus maintenance unlike pure-LLM tools"
-  ]
+  ],
+  "evidence_tier": "measured",
+  "recall_scope": "ci_required defects only (see eval/scorecards/competitive-suite.json)",
+  "scorecard_generated_at_utc": "2026-05-31T18:06:20.278044+00:00",
+  "anchor_recall": {
+    "GauntletCI": {
+      "caught": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "CodeQL": {
+      "caught": 0,
+      "total": 1,
+      "rate": 0.0
+    },
+    "CodeRabbit": {
+      "caught": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "Greptile": {
+      "caught": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "Qodo": {
+      "caught": 1,
+      "total": 1,
+      "rate": 1.0
+    }
+  },
+  "benchmark_suite": "eval/benchmark-suite.json",
+  "gold_cross_repo": {
+    "fixtures": 15,
+    "recall_by_tool": {
+      "GauntletCI": {
+        "caught": 15,
+        "total": 15,
+        "rate": 1.0
+      },
+      "CodeQL": {
+        "caught": 0,
+        "total": 15,
+        "rate": 0.0
+      },
+      "CodeRabbit": {
+        "caught": 0,
+        "total": 15,
+        "rate": 0.0
+      },
+      "Greptile": {
+        "caught": 0,
+        "total": 15,
+        "rate": 0.0
+      },
+      "Qodo": {
+        "caught": 0,
+        "total": 15,
+        "rate": 0.0
+      }
+    }
+  },
+  "llm_competitors_scope": "anchor_only until additional eval-lab harvests exist",
+  "fixtures_with_ground_truth": 16
 }

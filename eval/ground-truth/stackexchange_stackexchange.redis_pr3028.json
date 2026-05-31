@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "stackexchange_stackexchange.redis_pr3028",
+  "repo": "StackExchange/StackExchange.Redis",
+  "pr_number": 3028,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/StackExchange/StackExchange.Redis/pull/3028",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Published library: StackExchange.Redis removes public API \u2014 breaking for consumers",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0004"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "stackexchange.redis production API \u2014 LCSMatch/WriteBulkString sig changes in library code",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0006",
+      "summary": "stackexchange.redis PR3028: .Value access in build tool + RESPite production protocol code",
+      "primary_rule": "GCI0006",
+      "fn_class": "edge-case-handling",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0006"
+      ]
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

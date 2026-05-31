@@ -1,0 +1,169 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "icsharpcode_sharpziplib_pr746",
+  "repo": "icsharpcode/SharpZipLib",
+  "pr_number": 746,
+  "suite_tier": "gold",
+  "generated_at_utc": "2026-05-31T18:06:20.129208+00:00",
+  "upstream_pr_url": "https://github.com/icsharpcode/SharpZipLib/pull/746",
+  "eval_lab_pr_url": null,
+  "defects": [
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "SharpZipLib NuGet library \u2014 SkipBlock/Close sig changes in TarBuffer.cs",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0015",
+      "summary": "sharpziplib PR746: mass assignment in TarHeader/TarInputStream production TAR parsing code",
+      "primary_rule": "GCI0015",
+      "fn_class": "data-integrity-risk",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0015"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0016",
+      "summary": "sharpziplib PR746: blocking .Result/.Wait() async call in SharpZipLib production code \u2014 deadlock risk",
+      "primary_rule": "GCI0016",
+      "fn_class": "concurrency-risk",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0016"
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "name": "GauntletCI",
+      "finding_count": 15,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "GCI0003",
+            "Changed: '=', '=', '=' (+18 more) | e.g. Was: public const byte LF_NORMAL = (byte)'0'; | Now: public const byte LF_NORMA"
+          ],
+          "notes": ""
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0016": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "GCI0016",
+            "Line 291: SkipBlockAsync(CancellationToken.None, false).GetAwaiter().GetResult();"
+          ],
+          "notes": ""
+        }
+      }
+    },
+    {
+      "name": "CodeQL",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T16:04:19.511994+00:00",
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0016": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeRabbit",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0016": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Greptile",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0016": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Qodo",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0016": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    }
+  ]
+}

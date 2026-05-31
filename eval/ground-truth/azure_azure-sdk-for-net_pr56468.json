@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "azure_azure-sdk-for-net_pr56468",
+  "repo": "Azure/azure-sdk-for-net",
+  "pr_number": 56468,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/Azure/azure-sdk-for-net/pull/56468",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Corpus label expects GCI0004",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_gold",
+      "match_keywords": [
+        "GCI0004"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "azure-sdk-for-net \u2014 25 logic lines removed in sdk/disconnectedoperations (non-generated path) + sig changes",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0006",
+      "summary": "azure-sdk PR56468: .Value access in non-generated SDK production code",
+      "primary_rule": "GCI0006",
+      "fn_class": "edge-case-handling",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0006"
+      ]
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "dotnet_efcore_pr38024",
+  "repo": "dotnet/efcore",
+  "pr_number": 38024,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/dotnet/efcore/pull/38024",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Published library: EFCore removes public API including internal-by-convention but public-by-keyword members",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0004"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "dotnet/efcore \u2014 CreateItemRequestOptions/AddToTransaction sig changes in EFCore.Cosmos/Internal, used by providers",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0006",
+      "summary": "efcore PR38024: .Value access in EFCore.Cosmos/Internal production code",
+      "primary_rule": "GCI0006",
+      "fn_class": "edge-case-handling",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0006"
+      ]
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

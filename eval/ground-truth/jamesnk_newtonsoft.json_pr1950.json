@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "jamesnk_newtonsoft.json_pr1950",
+  "repo": "JamesNK/Newtonsoft.Json",
+  "pr_number": 1950,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/JamesNK/Newtonsoft.Json/pull/1950",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0006",
+      "summary": "newtonsoft.json PR1950: .Value access in BinaryConverter/DataSetConverter production converters",
+      "primary_rule": "GCI0006",
+      "fn_class": "edge-case-handling",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0006"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0015",
+      "summary": "newtonsoft.json PR1950: mass assignment in EntityKeyMemberConverter/JObject production code",
+      "primary_rule": "GCI0015",
+      "fn_class": "data-integrity-risk",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0015"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0036",
+      "summary": "newtonsoft.json PR1950: assignment in getter in XmlNodeConverter.cs production code",
+      "primary_rule": "GCI0036",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0036"
+      ]
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}
