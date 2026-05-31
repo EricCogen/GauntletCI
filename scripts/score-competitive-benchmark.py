@@ -219,6 +219,12 @@ def main() -> None:
             for card in scorecards:
                 if card.get("suite_tier") not in ("anchor", "gold"):
                     continue
+                fid = card["fixture_id"]
+                gci_run = EVAL / "runs" / "gauntletci" / f"{fid}.json"
+                if not gci_run.exists():
+                    latest = EVAL / "redis-2995-latest.json"
+                    if not (fid == "stackexchange-redis-pr-2995" and latest.exists()):
+                        continue
                 for tool in card.get("tools", []):
                     if tool["name"] != "GauntletCI":
                         continue

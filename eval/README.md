@@ -17,6 +17,7 @@ Public proof for GauntletCI vs CodeQL, CodeRabbit, Greptile, and Qodo.
    python scripts/select-benchmark-fixtures.py --write
    ./scripts/export-benchmark-diffs.ps1
    ```
+   CI uses `-CiOnly` (fixtures with `ci_regression` and `primary_rules`); missing local corpus diffs are fetched from GitHub via `GH_TOKEN`.
 4. **Score**:
    ```powershell
    python scripts/score-competitive-benchmark.py --fixture stackexchange-redis-pr-2995

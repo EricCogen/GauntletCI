@@ -12,6 +12,8 @@ on:
     branches: [main]
     paths:
       - "scripts/run-benchmark-suite.ps1"
+      - "scripts/export-benchmark-diffs.ps1"
+      - "scripts/score-competitive-benchmark.py"
       - "eval/ground-truth/**"
 jobs:
   benchmark-suite:
@@ -23,7 +25,7 @@ jobs:
           dotnet-version: 8.0.x
       - name: Export diffs
         shell: pwsh
-        run: ./scripts/export-benchmark-diffs.ps1
+        run: ./scripts/export-benchmark-diffs.ps1 -CiOnly
       - name: Run CI fixtures
         shell: pwsh
         env:
