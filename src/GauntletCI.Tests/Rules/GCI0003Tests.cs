@@ -15,14 +15,13 @@ public class GCI0003Tests
     [Fact]
     public async Task RemovedLogicWithoutTests_ShouldFlag()
     {
-        // 17 removed lines all containing explicit control-flow keywords: well above
-        // the threshold (15). Represents a whole validation method body being deleted.
+        // 30+ removed lines with return/throw: above threshold. Whole method body stripped.
         var raw = """
             diff --git a/src/Validator.cs b/src/Validator.cs
             index abc..def 100644
             --- a/src/Validator.cs
             +++ b/src/Validator.cs
-            @@ -1,22 +1,4 @@
+            @@ -1,35 +1,4 @@
              public class Validator {
             -    public bool Validate(Order order) {
             -        if (order == null) throw new ArgumentNullException(nameof(order));
@@ -39,6 +38,21 @@ public class GCI0003Tests
             -        if (order.DeliveryDate < DateTime.UtcNow) return false;
             -        if (order.DeliveryDate > DateTime.UtcNow.AddYears(1)) return false;
             -        if (order.Notes != null && order.Notes.Length > 500) return false;
+            -        if (order.Discount < 0) return false;
+            -        if (order.Discount > 1) return false;
+            -        if (order.TaxRate < 0) throw new InvalidOperationException("tax");
+            -        if (order.TaxRate > 1) throw new InvalidOperationException("tax");
+            -        if (order.Status == OrderStatus.Cancelled) return false;
+            -        if (order.Status == OrderStatus.Pending) return false;
+            -        if (order.Status == OrderStatus.Shipped) return true;
+            -        if (order.PaymentId == null) throw new ArgumentException("payment");
+            -        if (order.PaymentId.Length == 0) return false;
+            -        if (order.CreatedUtc == default) throw new ArgumentException("created");
+            -        if (order.UpdatedUtc < order.CreatedUtc) return false;
+            -        if (order.Version < 1) return false;
+            -        if (order.Version > 1000) return false;
+            -        if (order.Channel == null) throw new ArgumentNullException(nameof(order.Channel));
+            -        if (order.Channel.Length == 0) return false;
             -        return true;
             -    }
              }
@@ -53,7 +67,7 @@ public class GCI0003Tests
     [Fact]
     public async Task SmallLogicRemoval_ShouldNotFlag()
     {
-        // Only 5 removed logic lines: routine refactor, below the 15-line threshold.
+        // Only 5 removed logic lines: routine refactor, below the 30-line threshold.
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644

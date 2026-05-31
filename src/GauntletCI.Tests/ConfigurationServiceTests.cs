@@ -9,7 +9,7 @@ public class ConfigurationServiceTests
     // ── Default severity resolution ────────────────────────────────────────────
 
     [Theory]
-    [InlineData("GCI0001", RuleSeverity.Warn)]
+    [InlineData("GCI0001", RuleSeverity.Info)]
     [InlineData("GCI0003", RuleSeverity.Block)]
     [InlineData("GCI0004", RuleSeverity.Warn)]
     [InlineData("GCI0012", RuleSeverity.Block)]
@@ -96,7 +96,7 @@ public class ConfigurationServiceTests
         {
             // No .editorconfig created
             var svc = new ConfigurationService(new GauntletConfig(), dir);
-            Assert.Equal(RuleSeverity.Warn, svc.GetEffectiveSeverity("GCI0001")); // built-in default
+            Assert.Equal(RuleSeverity.Info, svc.GetEffectiveSeverity("GCI0001")); // built-in default
         }
         finally { Directory.Delete(dir, recursive: true); }
     }
@@ -116,11 +116,11 @@ public class ConfigurationServiceTests
 
             var config = new GauntletConfig
             {
-                Rules = new() { ["GCI0001"] = new RuleConfig { Severity = "Warn" } }
+                Rules = new() { ["GCI0001"] = new RuleConfig { Severity = "Info" } }
             };
             var svc = new ConfigurationService(config, dir);
             // JSON override (Warn) wins over .editorconfig (none)
-            Assert.Equal(RuleSeverity.Warn, svc.GetEffectiveSeverity("GCI0001"));
+            Assert.Equal(RuleSeverity.Info, svc.GetEffectiveSeverity("GCI0001"));
         }
         finally { Directory.Delete(dir, recursive: true); }
     }
