@@ -1,0 +1,168 @@
+{
+  "tool": "SonarCloud",
+  "project_key": "jellyfin_jellyfin",
+  "harvested_at_utc": "2026-05-31T20:19:35.836883+00:00",
+  "alerts": [
+    {
+      "changed_file": "Emby.Server.Implementations/Library/DotIgnoreIgnoreRule.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 190
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/Library/DotIgnoreIgnoreRule.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 220
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/Library/DotIgnoreIgnoreRule.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 226
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/Library/DotIgnoreIgnoreRule.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 227
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/Library/DotIgnoreIgnoreRule.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 250
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/Library/DotIgnoreIgnoreRule.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 263
+    },
+    {
+      "changed_file": "MediaBrowser.Controller/IO/FileSystemHelper.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 103
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/IO/ManagedFileSystem.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 347
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/IO/ManagedFileSystem.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 384
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/IO/ManagedFileSystem.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S2083",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "BLOCKER",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 603
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/IO/ManagedFileSystem.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 603
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/IO/ManagedFileSystem.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S2083",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "BLOCKER",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 606
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/IO/ManagedFileSystem.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 606
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/IO/ManagedFileSystem.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 702
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/IO/ManagedFileSystem.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 634
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/IO/ManagedFileSystem.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 192
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/IO/ManagedFileSystem.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 203
+    },
+    {
+      "changed_file": "Emby.Server.Implementations/IO/ManagedFileSystem.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S2083",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "BLOCKER",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 631
+    },
+    {
+      "changed_file": "MediaBrowser.Controller/Entities/BaseItem.cs",
+      "sonar_rule": "csharpsquid:S1244",
+      "sonar_type": "BUG",
+      "sonar_severity": "MAJOR",
+      "message": "Do not check floating point inequality with exact values, use a range instead.",
+      "start_line": 2558
+    },
+    {
+      "changed_file": "MediaBrowser.Controller/Entities/BaseItem.cs",
+      "sonar_rule": "csharpsquid:S1244",
+      "sonar_type": "BUG",
+      "sonar_severity": "MAJOR",
+      "message": "Do not check floating point inequality with exact values, use a range instead.",
+      "start_line": 2564
+    }
+  ],
+  "repo_open_issues": 87
+}

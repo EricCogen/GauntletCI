@@ -1,7 +1,7 @@
 {
   "tool": "Semgrep",
-  "config": "auto",
-  "harvested_at_utc": "2026-05-31T18:42:12.652173+00:00",
+  "config": "p/csharp",
+  "harvested_at_utc": "2026-05-31T20:20:01.545539+00:00",
   "finding_count": 0,
   "alerts": []
 }
