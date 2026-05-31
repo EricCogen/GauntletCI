@@ -4,7 +4,7 @@
   "repo": "StackExchange/StackExchange.Redis",
   "pr_number": 3028,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T18:06:20.278044+00:00",
+  "generated_at_utc": "2026-05-31T18:43:32.699102+00:00",
   "upstream_pr_url": "https://github.com/StackExchange/StackExchange.Redis/pull/3028",
   "eval_lab_pr_url": null,
   "defects": [
@@ -77,7 +77,7 @@
     {
       "name": "CodeQL",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T16:04:19.516847+00:00",
+      "harvested_at_utc": "2026-05-31T18:41:15.432332+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,
@@ -144,6 +144,50 @@
       "name": "Qodo",
       "finding_count": null,
       "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "SonarCloud",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T18:41:33.212432+00:00",
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Semgrep",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T18:42:05.005871+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,

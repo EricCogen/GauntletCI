@@ -1,9 +1,11 @@
 {
   "schema_version": "1.0.0",
-  "generated_at_utc": "2026-05-31T18:31:51.089332+00:00",
-  "sample_size": 16,
-  "fixtures_scored": 16,
-  "repos_represented": 10,
+  "generated_at_utc": "2026-05-31T18:43:32.699102+00:00",
+  "sample_size": 24,
+  "fixtures_scored": 26,
+  "gold_fixtures": 25,
+  "gold_with_ci_required": 19,
+  "repos_represented": 19,
   "evidence_tier": "measured",
   "comparison_scope": "diff_behavioral_review",
   "scope_manifest": "eval/competitor-scope.json",
@@ -39,18 +41,124 @@
       }
     },
     "gold_cross_repo": {
-      "fixtures": 15,
+      "fixtures": 25,
       "recall_by_tool": {
         "GauntletCI": {
-          "caught": 15,
-          "total": 15,
+          "caught": 23,
+          "total": 23,
           "rate": 1.0
         },
         "CodeQL": {
           "caught": 0,
-          "total": 15,
+          "total": 23,
+          "rate": 0.0
+        },
+        "SonarCloud": {
+          "caught": 0,
+          "total": 23,
+          "rate": 0.0
+        },
+        "Semgrep": {
+          "caught": 0,
+          "total": 23,
           "rate": 0.0
         }
+      },
+      "recall_by_fn_class": {
+        "logic-bug-no-token": {
+          "GauntletCI": {
+            "caught": 11,
+            "total": 11,
+            "rate": 1.0
+          },
+          "CodeQL": {
+            "caught": 0,
+            "total": 11,
+            "rate": 0.0
+          },
+          "SonarCloud": {
+            "caught": 0,
+            "total": 11,
+            "rate": 0.0
+          },
+          "Semgrep": {
+            "caught": 0,
+            "total": 11,
+            "rate": 0.0
+          }
+        },
+        "edge-case-handling": {
+          "GauntletCI": {
+            "caught": 9,
+            "total": 9,
+            "rate": 1.0
+          },
+          "CodeQL": {
+            "caught": 0,
+            "total": 9,
+            "rate": 0.0
+          },
+          "SonarCloud": {
+            "caught": 0,
+            "total": 9,
+            "rate": 0.0
+          },
+          "Semgrep": {
+            "caught": 0,
+            "total": 9,
+            "rate": 0.0
+          }
+        },
+        "breaking-change": {
+          "GauntletCI": {
+            "caught": 2,
+            "total": 2,
+            "rate": 1.0
+          },
+          "CodeQL": {
+            "caught": 0,
+            "total": 2,
+            "rate": 0.0
+          },
+          "SonarCloud": {
+            "caught": 0,
+            "total": 2,
+            "rate": 0.0
+          },
+          "Semgrep": {
+            "caught": 0,
+            "total": 2,
+            "rate": 0.0
+          }
+        },
+        "concurrency-risk": {
+          "GauntletCI": {
+            "caught": 1,
+            "total": 1,
+            "rate": 1.0
+          },
+          "CodeQL": {
+            "caught": 0,
+            "total": 1,
+            "rate": 0.0
+          },
+          "SonarCloud": {
+            "caught": 0,
+            "total": 1,
+            "rate": 0.0
+          },
+          "Semgrep": {
+            "caught": 0,
+            "total": 1,
+            "rate": 0.0
+          }
+        }
+      },
+      "gauntletci_noise": {
+        "fixture_count": 25,
+        "mean_findings": 11.0,
+        "median_findings": 9,
+        "at_delivery_cap_25": 4
       }
     }
   }

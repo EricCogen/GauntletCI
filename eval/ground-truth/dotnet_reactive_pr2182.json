@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "dotnet_reactive_pr2182",
+  "repo": "dotnet/reactive",
+  "pr_number": 2182,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/dotnet/reactive/pull/2182",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Corpus label expects GCI0004",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_gold",
+      "match_keywords": [
+        "GCI0004"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "dotnet/reactive \u2014 Amb<TSource> sig change in Observable.Multiple.cs, production Rx.NET API",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003"
+      ]
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

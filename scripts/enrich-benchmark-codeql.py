@@ -15,6 +15,8 @@ DB = Path(os.environ.get("USERPROFILE", "")) / ".gauntletci" / "corpus.db"
 SUITE = REPO / "eval" / "benchmark-suite.json"
 FIXTURES_ROOT = REPO / "data" / "fixtures"
 
+from benchmark_lib import load_suite as load_benchmark_suite, suite_fixtures, write_competitor_artifact  # noqa: E402
+
 TOKEN_FILE = Path(os.environ.get("USERPROFILE", "")) / ".tokens" / "cursor_security.token"
 
 
@@ -127,11 +129,23 @@ def probe_code_scanning() -> str | None:
     return None
 
 def main() -> None:
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--gold-only", action="store_true", help="Only gold-tier fixtures")
+    ap.add_argument("--all-suite", action="store_true", help="All fixtures in benchmark-suite.json")
+    args = ap.parse_args()
+
     err = probe_code_scanning()
     if err:
         raise SystemExit(err)
-    suite = json.loads(SUITE.read_text(encoding="utf-8"))
-    entries = suite.get("fixtures", [])
+    suite = load_benchmark_suite()
+    if args.all_suite:
+        entries = suite.get("fixtures", [])
+    elif args.gold_only:
+        entries = suite_fixtures(suite, tier="gold")
+    else:
+        entries = suite.get("fixtures", [])
     con = sqlite3.connect(DB)
     con.execute(
         """
@@ -167,10 +181,21 @@ def main() -> None:
             continue
         alerts = fetch_alerts(repo, cache)
         processed += 1
+        on_diff: list[dict] = []
         n = 0
         for alert in alerts:
             if alert["file"] not in changed:
                 continue
+            on_diff.append(
+                {
+                    "changed_file": alert["file"],
+                    "codeql_rule": alert["rule_id"],
+                    "codeql_rule_name": alert["rule_name"],
+                    "severity": alert["severity"],
+                    "message": alert["message"],
+                    "start_line": alert["start_line"],
+                }
+            )
             con.execute(
                 """
                 INSERT OR IGNORE INTO code_scanning_matches
@@ -194,6 +219,16 @@ def main() -> None:
             )
             n += 1
             total += 1
+        write_competitor_artifact(
+            fid,
+            "codeql.json",
+            {
+                "tool": "CodeQL",
+                "harvested_at_utc": datetime.now(timezone.utc).isoformat(),
+                "alerts": on_diff,
+                "repo_open_alerts": len(alerts),
+            },
+        )
         if n:
             matched_fixtures += 1
             print(f"{fid}: {n} match(es)")

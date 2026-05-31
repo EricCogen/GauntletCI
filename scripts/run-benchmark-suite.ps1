@@ -2,14 +2,17 @@
 param(
     [string]$SuitePath = (Join-Path $PSScriptRoot "..\eval\benchmark-suite.json"),
     [string]$RepoRoot = (Split-Path $PSScriptRoot -Parent),
-    [switch]$CiOnly
+    [switch]$CiOnly,
+    [switch]$GoldOnly
 )
 
 $ErrorActionPreference = "Stop"
 Set-Location $RepoRoot
 $suite = Get-Content $SuitePath -Raw | ConvertFrom-Json
 $fixtures = @($suite.fixtures)
-if ($CiOnly) {
+if ($GoldOnly) {
+    $fixtures = @($fixtures | Where-Object { $_.suite_tier -eq "gold" })
+} elseif ($CiOnly) {
     $fixtures = @($fixtures | Where-Object { $_.ci_regression -eq $true -and $_.primary_rules -and $_.primary_rules.Count -gt 0 })
     if ($fixtures.Count -eq 0) {
         $fixtures = @($suite.fixtures | Where-Object { $_.fixture_id -eq "stackexchange-redis-pr-2995" })

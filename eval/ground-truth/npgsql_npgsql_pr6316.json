@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "npgsql_npgsql_pr6316",
+  "repo": "npgsql/npgsql",
+  "pr_number": 6316,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/npgsql/npgsql/pull/6316",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Published library: Npgsql removes public type mapping API \u2014 breaking for extension library authors",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0004"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "Npgsql library \u2014 GetWriteInfo/BindValue sig changes in Internal/Composites; provider extensions depend on these",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003"
+      ]
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

@@ -20,7 +20,21 @@ Public proof for GauntletCI vs **free tools that claim the same promise**: diff-
 | `anchor_only` | GauntletCI, CodeQL, CodeRabbit, Greptile, Qodo (eval-lab PR #7 harvest) |
 | `gold_cross_repo` | GauntletCI vs CodeQL same-defect on `ci_required` defects |
 
-LLM reviewers stay **anchor-only** until additional eval-lab mirrors exist. SonarCloud and Semgrep are listed as comparable with `planned_gold` when automation lands.
+LLM reviewers stay **anchor-only** until additional eval-lab mirrors exist.
+
+**Gold expansion (full pipeline):**
+
+```powershell
+./scripts/run-gold-expansion.ps1
+```
+
+Produces up to **25 gold** fixtures, enriches **CodeQL + SonarCloud + Semgrep** on changed `.cs` paths, runs GauntletCI, scores `ci_required` recall by tool and `fn_class`, and writes [`eval/reports/gold-expansion.json`](reports/gold-expansion.json).
+
+| Gold static tool | Script |
+|------------------|--------|
+| CodeQL | `python scripts/enrich-benchmark-codeql.py --gold-only` |
+| SonarCloud | `python scripts/enrich-benchmark-sonarcloud.py --gold-only` |
+| Semgrep | `python scripts/enrich-benchmark-semgrep.py --gold-only` (requires `semgrep` on PATH) |
 
 ## Refresh workflow
 

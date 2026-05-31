@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "dapperlib_dapper_pr1928",
+  "repo": "DapperLib/Dapper",
+  "pr_number": 1928,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/DapperLib/Dapper/pull/1928",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0006",
+      "summary": "dapper PR1928: .Value access in DynamicParameters/SqlDataRecordListTVPParameter production code",
+      "primary_rule": "GCI0006",
+      "fn_class": "edge-case-handling",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0006"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "dapper PR1928: SetValue/Parse public API signature changed in Dapper.EntityFramework library",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0004"
+      ]
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

@@ -28,15 +28,29 @@ def has_diff(path: str | None) -> bool:
 
 
 def fetch_candidates(con: sqlite3.Connection) -> list[dict]:
-    sql = (
+    sql_with_sonar = (
         "SELECT f.fixture_id, f.repo, f.pr_number, f.tier, f.pr_size_bucket, f.path, "
         "(SELECT COUNT(*) FROM code_scanning_matches c WHERE c.fixture_id = f.fixture_id), "
+        "(SELECT COUNT(*) FROM sonar_matches s WHERE s.fixture_id = f.fixture_id), "
         "(SELECT COUNT(*) FROM expected_findings e WHERE e.fixture_id = f.fixture_id AND e.should_trigger = 1) "
         "FROM fixtures f"
     )
-    rows = con.execute(sql).fetchall()
+    sql_fallback = (
+        "SELECT f.fixture_id, f.repo, f.pr_number, f.tier, f.pr_size_bucket, f.path, "
+        "(SELECT COUNT(*) FROM code_scanning_matches c WHERE c.fixture_id = f.fixture_id), "
+        "0, "
+        "(SELECT COUNT(*) FROM expected_findings e WHERE e.fixture_id = f.fixture_id AND e.should_trigger = 1) "
+        "FROM fixtures f"
+    )
+    try:
+        rows = con.execute(sql_with_sonar).fetchall()
+    except sqlite3.OperationalError:
+        rows = con.execute(sql_fallback).fetchall()
     out: list[dict] = []
-    for fid, repo, pr, tier, size, path, codescan, pos in rows:
+    for row in rows:
+        fid, repo, pr, tier, size, path, codescan, sonar, pos = (
+            row if len(row) >= 9 else (*row, 0)[:9]
+        )
         if not has_diff(path):
             continue
         out.append(
@@ -48,6 +62,7 @@ def fetch_candidates(con: sqlite3.Connection) -> list[dict]:
                 "pr_size_bucket": size or "unknown",
                 "path": path,
                 "codescan_hits": int(codescan or 0),
+                "sonar_hits": int(sonar or 0),
                 "positive_labels": int(pos or 0),
             }
         )
@@ -59,7 +74,12 @@ def pick(candidates: list[dict], max_n: int, per_repo_cap: int, exclude: set[str
     repo_counts: Counter[str] = Counter()
     pool = sorted(
         candidates,
-        key=lambda x: (-x["codescan_hits"], -x["positive_labels"], x["repo"], x["pr_number"]),
+        key=lambda x: (
+            -(x["codescan_hits"] + x.get("sonar_hits", 0)),
+            -x["positive_labels"],
+            x["repo"],
+            x["pr_number"],
+        ),
     )
     for item in pool:
         if item["fixture_id"] in exclude:
@@ -94,7 +114,7 @@ def main() -> None:
     ap.add_argument("--db", type=Path, default=DEFAULT_DB)
     ap.add_argument("--out", type=Path, default=DEFAULT_OUT)
     ap.add_argument("--write", action="store_true")
-    ap.add_argument("--gold-max", type=int, default=15)
+    ap.add_argument("--gold-max", type=int, default=25)
     ap.add_argument("--silver-max", type=int, default=30)
     ap.add_argument("--smoke-max", type=int, default=8)
     ap.add_argument("--per-repo-cap", type=int, default=2)

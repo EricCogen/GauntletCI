@@ -15,6 +15,9 @@ on:
       - "scripts/export-benchmark-diffs.ps1"
       - "scripts/score-competitive-benchmark.py"
       - "eval/competitor-scope.json"
+      - "scripts/enrich-benchmark-sonarcloud.py"
+      - "scripts/enrich-benchmark-semgrep.py"
+      - "scripts/benchmark_lib.py"
       - "eval/ground-truth/**"
 jobs:
   benchmark-suite:

@@ -4,7 +4,7 @@
   "repo": "StackExchange/StackExchange.Redis",
   "pr_number": 2995,
   "suite_tier": "anchor",
-  "generated_at_utc": "2026-05-31T18:06:20.244803+00:00",
+  "generated_at_utc": "2026-05-31T18:43:32.683470+00:00",
   "upstream_pr_url": "https://github.com/StackExchange/StackExchange.Redis/pull/2995",
   "eval_lab_pr_url": "https://github.com/EricCogen/ai-review-eval-stackexchange-redis/pull/7",
   "defects": [
@@ -142,6 +142,40 @@
             "inversion-language"
           ],
           "notes": ""
+        },
+        "swallowed-handler-exception": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "SonarCloud",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "paired-implementation-inversion": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "swallowed-handler-exception": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Semgrep",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "paired-implementation-inversion": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
         },
         "swallowed-handler-exception": {
           "caught_ground_truth": false,

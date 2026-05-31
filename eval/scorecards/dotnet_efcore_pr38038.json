@@ -4,7 +4,7 @@
   "repo": "dotnet/efcore",
   "pr_number": 38038,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T18:06:19.994530+00:00",
+  "generated_at_utc": "2026-05-31T18:43:32.654261+00:00",
   "upstream_pr_url": "https://github.com/dotnet/efcore/pull/38038",
   "eval_lab_pr_url": null,
   "defects": [
@@ -74,7 +74,7 @@
     {
       "name": "CodeQL",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T16:04:19.507928+00:00",
+      "harvested_at_utc": "2026-05-31T18:41:17.701581+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,
@@ -141,6 +141,50 @@
       "name": "Qodo",
       "finding_count": null,
       "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "SonarCloud",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T18:41:37.151183+00:00",
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Semgrep",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T18:42:08.592890+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,

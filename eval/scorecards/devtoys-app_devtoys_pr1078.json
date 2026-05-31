@@ -4,7 +4,7 @@
   "repo": "DevToys-app/DevToys",
   "pr_number": 1078,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T18:06:19.911861+00:00",
+  "generated_at_utc": "2026-05-31T18:43:32.647264+00:00",
   "upstream_pr_url": "https://github.com/DevToys-app/DevToys/pull/1078",
   "eval_lab_pr_url": null,
   "defects": [
@@ -77,7 +77,7 @@
     {
       "name": "CodeQL",
       "finding_count": null,
-      "harvested_at_utc": "2026-05-31T16:04:19.504928+00:00",
+      "harvested_at_utc": "2026-05-31T18:41:16.348088+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,
@@ -144,6 +144,50 @@
       "name": "Qodo",
       "finding_count": null,
       "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "SonarCloud",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T18:41:34.784781+00:00",
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Semgrep",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T18:42:06.059559+00:00",
       "caught_by_defect": {
         "corpus-gci0004": {
           "caught_ground_truth": false,

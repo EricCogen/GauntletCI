@@ -70,21 +70,52 @@ def match_llm(text: str, defect: dict) -> tuple[bool, list[str]]:
     return False, evidence
 
 
-def match_codeql(alerts: list[dict], defect: dict) -> tuple[bool, list[str]]:
+def _file_overlap(defect: dict, alert_path: str) -> bool:
     file_part = defect.get("file", "").lower()
+    cf = alert_path.lower()
+    if not file_part:
+        return True
+    return file_part in cf or Path(file_part).name in cf
+
+
+def match_static_alerts(alerts: list[dict], defect: dict, *, strict_logic: bool = True) -> tuple[bool, list[str]]:
     evidence: list[str] = []
     for a in alerts:
-        cf = (a.get("changed_file") or a.get("file") or "").lower()
-        if file_part and file_part not in cf and Path(file_part).name not in cf:
+        cf = a.get("changed_file") or a.get("file") or ""
+        if not _file_overlap(defect, cf):
             continue
-        msg = (a.get("message") or "") + " " + (a.get("codeql_rule_name") or a.get("codeql_rule") or "")
+        msg = " ".join(
+            str(a.get(k) or "")
+            for k in ("message", "codeql_rule_name", "codeql_rule", "sonar_rule", "rule_id", "sonar_message")
+        )
         low = msg.lower()
-        if defect.get("fn_class") == "sibling-implementation-drift":
-            if any(t in low for t in ("logic", "condition", "comparison", "always true", "dead code")):
-                evidence.append(a.get("codeql_rule", "codeql"))
+        rule = (
+            a.get("codeql_rule")
+            or a.get("sonar_rule")
+            or a.get("rule_id")
+            or "static-alert"
+        )
+        if defect.get("fn_class") == "sibling-implementation-drift" and strict_logic:
+            if any(t in low for t in ("logic", "condition", "comparison", "always true", "dead code", "invert")):
+                evidence.append(str(rule))
                 return True, evidence
-        evidence.append(a.get("codeql_rule", "codeql-alert"))
+            continue
+        if defect.get("fn_class") == "intentional-swallow" and "catch" in low:
+            evidence.append(str(rule))
+            return True, evidence
+        if defect.get("fn_class") == "breaking-change" and any(
+            t in low for t in ("deprecated", "obsolete", "removed", "breaking")
+        ):
+            evidence.append(str(rule))
+            return True, evidence
+        if defect.get("primary_rule", "").lower() in low:
+            evidence.append(str(rule))
+            return True, evidence
     return False, evidence
+
+
+def match_codeql(alerts: list[dict], defect: dict) -> tuple[bool, list[str]]:
+    return match_static_alerts(alerts, defect, strict_logic=True)
 
 
 def match_gauntlet(findings: list[dict], defect: dict) -> tuple[bool, list[str]]:
@@ -131,11 +162,8 @@ def score_fixture(
             did = d["defect_id"]
             if name == "GauntletCI":
                 ok, ev = match_gauntlet(findings, d)
-            elif name == "CodeQL":
-                ok, ev = match_codeql(alerts if alerts else [], d)
-                if not ok and not alerts:
-                    body = text_blob
-                    ok, ev = match_llm(body, d) if "codeql" in body else (False, [])
+            elif name in ("CodeQL", "SonarCloud", "Semgrep"):
+                ok, ev = match_static_alerts(alerts if alerts else [], d, strict_logic=(name == "CodeQL"))
             else:
                 ok, ev = match_llm(text_blob, d)
             caught_by[did] = {
@@ -192,19 +220,76 @@ def rollup(scorecards: list[dict], scope: dict) -> dict:
             out[t] = {"caught": caught, "total": total, "rate": round(caught / total, 3) if total else 0}
         return out
 
+    def recall_by_fn_class(cards: list[dict], segment_key: str) -> dict:
+        tools = segments.get(segment_key, {}).get("tool_names", scoring_tool_names(scope))
+        by_class: dict[str, dict] = {}
+        for card in cards:
+            for defect in card.get("defects", []):
+                if not defect.get("ci_required", True):
+                    continue
+                fn = defect.get("fn_class", "unknown")
+                did = defect["defect_id"]
+                bucket = by_class.setdefault(fn, {t: {"caught": 0, "total": 0} for t in tools})
+                for t in tools:
+                    bucket[t]["total"] += 1
+                    for tool in card.get("tools", []):
+                        if tool["name"] == t and tool.get("caught_by_defect", {}).get(did, {}).get(
+                            "caught_ground_truth"
+                        ):
+                            bucket[t]["caught"] += 1
+                            break
+        for fn, tool_stats in by_class.items():
+            for t, row in tool_stats.items():
+                total = row["total"]
+                row["rate"] = round(row["caught"] / total, 3) if total else 0.0
+        return by_class
+
+    def gauntlet_gold_noise(cards: list[dict]) -> dict:
+        counts: list[int] = []
+        at_cap = 0
+        for card in cards:
+            for tool in card.get("tools", []):
+                if tool["name"] != "GauntletCI":
+                    continue
+                n = tool.get("finding_count")
+                if n is None:
+                    continue
+                counts.append(int(n))
+                if n >= 25:
+                    at_cap += 1
+                break
+        if not counts:
+            return {"fixture_count": 0}
+        counts.sort()
+        mid = len(counts) // 2
+        return {
+            "fixture_count": len(counts),
+            "mean_findings": round(sum(counts) / len(counts), 2),
+            "median_findings": counts[mid],
+            "at_delivery_cap_25": at_cap,
+        }
+
     repos = {s.get("repo") for s in scorecards}
+    gold_with_primary = sum(1 for g in gold if any(d.get("ci_required") for d in g.get("defects", [])))
     return {
         "schema_version": "1.0.0",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "sample_size": sum(1 for s in scorecards for d in s.get("defects", []) if d.get("ci_required", True)),
         "fixtures_scored": len(scorecards),
+        "gold_fixtures": len(gold),
+        "gold_with_ci_required": gold_with_primary,
         "repos_represented": len(repos),
         "evidence_tier": "measured" if len(gold) >= 15 and len(repos) >= 8 else "provisional",
         "comparison_scope": scope.get("comparison_scope", "diff_behavioral_review"),
         "scope_manifest": "eval/competitor-scope.json",
         "segments": {
             "anchor_only": {"fixtures": len(anchor), "recall_by_tool": recall_segment(anchor, "anchor_only")},
-            "gold_cross_repo": {"fixtures": len(gold), "recall_by_tool": recall_segment(gold, "gold_cross_repo")},
+            "gold_cross_repo": {
+                "fixtures": len(gold),
+                "recall_by_tool": recall_segment(gold, "gold_cross_repo"),
+                "recall_by_fn_class": recall_by_fn_class(gold, "gold_cross_repo"),
+                "gauntletci_noise": gauntlet_gold_noise(gold),
+            },
         },
     }
 

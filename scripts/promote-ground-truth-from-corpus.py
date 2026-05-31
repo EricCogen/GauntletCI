@@ -157,6 +157,12 @@ def run_analyze(entry: dict) -> list[str]:
 
 
 def main() -> None:
+    import argparse
+
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--refresh-all", action="store_true", help="Re-promote and re-validate all gold fixtures")
+    args = ap.parse_args()
+
     GT_DIR.mkdir(parents=True, exist_ok=True)
     con = sqlite3.connect(DB)
     suite = load_suite()
@@ -164,7 +170,7 @@ def main() -> None:
     for entry in suite["fixtures"]:
         if entry["suite_tier"] not in ("gold",):
             continue
-        if (GT_DIR / f"{entry['fixture_id']}.json").exists():
+        if (GT_DIR / f"{entry['fixture_id']}.json").exists() and not args.refresh_all:
             continue
         labels = expected_for(con, entry["fixture_id"])
         if not labels:

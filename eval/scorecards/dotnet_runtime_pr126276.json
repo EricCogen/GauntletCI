@@ -1,0 +1,162 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "dotnet_runtime_pr126276",
+  "repo": "dotnet/runtime",
+  "pr_number": 126276,
+  "suite_tier": "gold",
+  "generated_at_utc": "2026-05-31T18:43:32.667262+00:00",
+  "upstream_pr_url": "https://github.com/dotnet/runtime/pull/126276",
+  "eval_lab_pr_url": null,
+  "defects": [
+    {
+      "defect_id": "corpus-gci0006",
+      "summary": "dotnet/runtime PR126276: .Value access in ILTrim.Core production trimming tool",
+      "primary_rule": "GCI0006",
+      "fn_class": "edge-case-handling",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0006"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0015",
+      "summary": "dotnet/runtime PR126276: mass assignment in ILTrim.Core production DependencyAnalysis code",
+      "primary_rule": "GCI0015",
+      "fn_class": "data-integrity-risk",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0015"
+      ]
+    }
+  ],
+  "tools": [
+    {
+      "name": "GauntletCI",
+      "finding_count": 25,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0006": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "GCI0006",
+            "Added: break;"
+          ],
+          "notes": ""
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeQL",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T18:41:21.814016+00:00",
+      "caught_by_defect": {
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeRabbit",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Greptile",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Qodo",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "SonarCloud",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T18:41:44.266678+00:00",
+      "caught_by_defect": {
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Semgrep",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T18:42:15.253678+00:00",
+      "caught_by_defect": {
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0015": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    }
+  ]
+}

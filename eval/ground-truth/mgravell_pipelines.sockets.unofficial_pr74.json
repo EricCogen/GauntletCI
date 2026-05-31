@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "mgravell_pipelines.sockets.unofficial_pr74",
+  "repo": "mgravell/Pipelines.Sockets.Unofficial",
+  "pr_number": 74,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/mgravell/Pipelines.Sockets.Unofficial/pull/74",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Published library: Pipelines.Sockets removes public MemoryEnumerable \u2014 breaking for consumers",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0004"
+      ]
+    },
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "Pipelines.Sockets.Unofficial library \u2014 PinnedArrayPoolAllocator/GetSpan production sig changes",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003"
+      ]
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

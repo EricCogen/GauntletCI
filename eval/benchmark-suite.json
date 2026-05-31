@@ -1,14 +1,14 @@
 {
   "schema_version": "1.0.0",
-  "generated_at_utc": "2026-05-31T12:04:07.426099-04:00",
+  "generated_at_utc": "2026-05-31T18:43:23.137417+00:00",
   "description": "Cross-repo competitive benchmark manifest",
   "corpus_db": "C:\\Users\\ericc\\.gauntletci\\corpus.db",
   "selection_report": {
     "candidates_with_diff": 569,
-    "selected_gold": 15,
+    "selected_gold": 25,
     "selected_silver": 30,
     "selected_smoke": 8,
-    "repos": 29
+    "repos": 30
   },
   "fixtures": [
     {
@@ -18,10 +18,12 @@
       "suite_tier": "anchor",
       "domain_profile": "library",
       "primary_rules": [
-        "GCI0058"
+        "GCI0058",
+        "GCI0007"
       ],
       "defect_ids": [
-        "paired-implementation-inversion"
+        "paired-implementation-inversion",
+        "swallowed-handler-exception"
       ],
       "competitor_harvest": "anchor",
       "ci_regression": true
@@ -302,6 +304,182 @@
       "competitor_harvest": "none",
       "ci_regression": false,
       "corpus_path": "./data/fixtures\\discovery\\azuread_azure-activedirectory-identitymodel-extensions-for-dotnet_pr2377",
+      "pr_size_bucket": "Small"
+    },
+    {
+      "fixture_id": "dapperlib_dapper_pr1928",
+      "repo": "DapperLib/Dapper",
+      "pr_number": 1928,
+      "suite_tier": "gold",
+      "domain_profile": "library",
+      "primary_rules": [
+        "GCI0006"
+      ],
+      "defect_ids": [
+        "corpus-gci0006",
+        "corpus-gci0004"
+      ],
+      "competitor_harvest": "none",
+      "ci_regression": true,
+      "corpus_path": "./data/fixtures\\discovery\\dapperlib_dapper_pr1928",
+      "pr_size_bucket": "Huge"
+    },
+    {
+      "fixture_id": "ricosuter_namotion.reflection_pr62",
+      "repo": "RicoSuter/Namotion.Reflection",
+      "pr_number": 62,
+      "suite_tier": "gold",
+      "domain_profile": "library",
+      "primary_rules": [],
+      "defect_ids": [
+        "corpus-gci0036",
+        "corpus-gci0021"
+      ],
+      "competitor_harvest": "none",
+      "ci_regression": false,
+      "corpus_path": "./data/fixtures\\discovery\\ricosuter_namotion.reflection_pr62",
+      "pr_size_bucket": "Large"
+    },
+    {
+      "fixture_id": "adamhathcock_sharpcompress_pr1211",
+      "repo": "adamhathcock/sharpcompress",
+      "pr_number": 1211,
+      "suite_tier": "gold",
+      "domain_profile": "library",
+      "primary_rules": [
+        "GCI0003"
+      ],
+      "defect_ids": [
+        "corpus-gci0004",
+        "corpus-gci0003"
+      ],
+      "competitor_harvest": "none",
+      "ci_regression": true,
+      "corpus_path": "./data/fixtures\\discovery\\adamhathcock_sharpcompress_pr1211",
+      "pr_size_bucket": "Large"
+    },
+    {
+      "fixture_id": "adamhathcock_sharpcompress_pr1239",
+      "repo": "adamhathcock/sharpcompress",
+      "pr_number": 1239,
+      "suite_tier": "gold",
+      "domain_profile": "library",
+      "primary_rules": [
+        "GCI0003"
+      ],
+      "defect_ids": [
+        "corpus-gci0004",
+        "corpus-gci0003"
+      ],
+      "competitor_harvest": "none",
+      "ci_regression": true,
+      "corpus_path": "./data/fixtures\\discovery\\adamhathcock_sharpcompress_pr1239",
+      "pr_size_bucket": "Large"
+    },
+    {
+      "fixture_id": "apache_logging-log4net_pr201",
+      "repo": "apache/logging-log4net",
+      "pr_number": 201,
+      "suite_tier": "gold",
+      "domain_profile": "library",
+      "primary_rules": [
+        "GCI0006"
+      ],
+      "defect_ids": [
+        "corpus-gci0004",
+        "corpus-gci0006"
+      ],
+      "competitor_harvest": "none",
+      "ci_regression": true,
+      "corpus_path": "./data/fixtures\\discovery\\apache_logging-log4net_pr201",
+      "pr_size_bucket": "Huge"
+    },
+    {
+      "fixture_id": "dotnet_reactive_pr2182",
+      "repo": "dotnet/reactive",
+      "pr_number": 2182,
+      "suite_tier": "gold",
+      "domain_profile": "library",
+      "primary_rules": [
+        "GCI0003"
+      ],
+      "defect_ids": [
+        "corpus-gci0004",
+        "corpus-gci0003"
+      ],
+      "competitor_harvest": "none",
+      "ci_regression": true,
+      "corpus_path": "./data/fixtures\\discovery\\dotnet_reactive_pr2182",
+      "pr_size_bucket": "Small"
+    },
+    {
+      "fixture_id": "dotnet_runtime_pr126276",
+      "repo": "dotnet/runtime",
+      "pr_number": 126276,
+      "suite_tier": "gold",
+      "domain_profile": "library",
+      "primary_rules": [
+        "GCI0006"
+      ],
+      "defect_ids": [
+        "corpus-gci0006",
+        "corpus-gci0015"
+      ],
+      "competitor_harvest": "none",
+      "ci_regression": true,
+      "corpus_path": "./data/fixtures\\discovery\\dotnet_runtime_pr126276",
+      "pr_size_bucket": "Huge"
+    },
+    {
+      "fixture_id": "mgravell_pipelines.sockets.unofficial_pr74",
+      "repo": "mgravell/Pipelines.Sockets.Unofficial",
+      "pr_number": 74,
+      "suite_tier": "gold",
+      "domain_profile": "library",
+      "primary_rules": [],
+      "defect_ids": [
+        "corpus-gci0004",
+        "corpus-gci0003"
+      ],
+      "competitor_harvest": "none",
+      "ci_regression": false,
+      "corpus_path": "./data/fixtures\\discovery\\mgravell_pipelines.sockets.unofficial_pr74",
+      "pr_size_bucket": "Large"
+    },
+    {
+      "fixture_id": "npgsql_npgsql_pr6316",
+      "repo": "npgsql/npgsql",
+      "pr_number": 6316,
+      "suite_tier": "gold",
+      "domain_profile": "library",
+      "primary_rules": [
+        "GCI0004"
+      ],
+      "defect_ids": [
+        "corpus-gci0004",
+        "corpus-gci0003"
+      ],
+      "competitor_harvest": "none",
+      "ci_regression": true,
+      "corpus_path": "./data/fixtures\\discovery\\npgsql_npgsql_pr6316",
+      "pr_size_bucket": "Large"
+    },
+    {
+      "fixture_id": "rabbitmq_rabbitmq-dotnet-client_pr1779",
+      "repo": "rabbitmq/rabbitmq-dotnet-client",
+      "pr_number": 1779,
+      "suite_tier": "gold",
+      "domain_profile": "library",
+      "primary_rules": [
+        "GCI0003"
+      ],
+      "defect_ids": [
+        "corpus-gci0004",
+        "corpus-gci0003"
+      ],
+      "competitor_harvest": "none",
+      "ci_regression": true,
+      "corpus_path": "./data/fixtures\\discovery\\rabbitmq_rabbitmq-dotnet-client_pr1779",
       "pr_size_bucket": "Small"
     },
     {
@@ -695,32 +873,6 @@
       "pr_size_bucket": "Small"
     },
     {
-      "fixture_id": "dotnet_reactive_pr2182",
-      "repo": "dotnet/reactive",
-      "pr_number": 2182,
-      "suite_tier": "smoke",
-      "domain_profile": "library",
-      "primary_rules": [],
-      "defect_ids": [],
-      "competitor_harvest": "none",
-      "ci_regression": true,
-      "corpus_path": "./data/fixtures\\discovery\\dotnet_reactive_pr2182",
-      "pr_size_bucket": "Small"
-    },
-    {
-      "fixture_id": "rabbitmq_rabbitmq-dotnet-client_pr1779",
-      "repo": "rabbitmq/rabbitmq-dotnet-client",
-      "pr_number": 1779,
-      "suite_tier": "smoke",
-      "domain_profile": "library",
-      "primary_rules": [],
-      "defect_ids": [],
-      "competitor_harvest": "none",
-      "ci_regression": true,
-      "corpus_path": "./data/fixtures\\discovery\\rabbitmq_rabbitmq-dotnet-client_pr1779",
-      "pr_size_bucket": "Small"
-    },
-    {
       "fixture_id": "guard-deletion-remote-use",
       "repo": "GauntletCI/regression-fixtures",
       "pr_number": 0,
@@ -797,6 +949,32 @@
       "ci_regression": true,
       "corpus_path": "./data/fixtures\\discovery\\app-vnext_polly_pr2953",
       "pr_size_bucket": "Tiny"
+    },
+    {
+      "fixture_id": "app-vnext_polly_pr3017",
+      "repo": "App-vNext/Polly",
+      "pr_number": 3017,
+      "suite_tier": "smoke",
+      "domain_profile": "library",
+      "primary_rules": [],
+      "defect_ids": [],
+      "competitor_harvest": "none",
+      "ci_regression": true,
+      "corpus_path": "./data/fixtures\\discovery\\app-vnext_polly_pr3017",
+      "pr_size_bucket": "Small"
+    },
+    {
+      "fixture_id": "avaloniaui_avalonia_pr20920",
+      "repo": "AvaloniaUI/Avalonia",
+      "pr_number": 20920,
+      "suite_tier": "smoke",
+      "domain_profile": "library",
+      "primary_rules": [],
+      "defect_ids": [],
+      "competitor_harvest": "none",
+      "ci_regression": true,
+      "corpus_path": "./data/fixtures\\discovery\\avaloniaui_avalonia_pr20920",
+      "pr_size_bucket": "Small"
     }
   ]
 }
