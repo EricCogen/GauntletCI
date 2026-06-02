@@ -8,7 +8,26 @@ param(
 $ErrorActionPreference = "Stop"
 Set-Location $RepoRoot
 
-$toolsDir = Join-Path $env:USERPROFILE ".dotnet\tools"
+function Get-GlobalDotNetToolsDirectory {
+    $profileRoot = if ($IsWindows -or ($env:OS -match 'Windows')) {
+        $env:USERPROFILE
+    }
+    else {
+        $env:HOME
+    }
+
+    if ([string]::IsNullOrWhiteSpace($profileRoot)) {
+        $profileRoot = $env:HOME ?? $env:USERPROFILE
+    }
+
+    if ([string]::IsNullOrWhiteSpace($profileRoot)) {
+        throw "Cannot resolve the .NET global tools directory (HOME/USERPROFILE is unset)."
+    }
+
+    return Join-Path $profileRoot ".dotnet/tools"
+}
+
+$toolsDir = Get-GlobalDotNetToolsDirectory
 $nupkgDir = Join-Path $RepoRoot "nupkg-local"
 
 Write-Host "Packing GauntletCI CLI..."
@@ -23,13 +42,15 @@ if ($installed) {
 Write-Host "Installing global gauntletci tool from $nupkgDir..."
 dotnet tool install -g GauntletCI --add-source $nupkgDir | Out-Null
 
+$toolShim = Join-Path $toolsDir "gauntletci"
 $toolExe = Join-Path $toolsDir "gauntletci.exe"
-if (-not (Test-Path $toolExe)) {
-    throw "Expected tool shim at $toolExe after install."
+$launcher = if (Test-Path $toolExe) { $toolExe } elseif (Test-Path $toolShim) { $toolShim } else { $null }
+if ($null -eq $launcher) {
+    throw "Expected tool shim at $toolShim or $toolExe after install."
 }
 
-$version = & $toolExe --version
-Write-Host "Installed gauntletci $version at $toolExe"
+$version = & $launcher --version
+Write-Host "Installed gauntletci $version at $launcher"
 
 if ($AddToPath) {
     $userPath = [Environment]::GetEnvironmentVariable("Path", "User")
@@ -51,5 +72,5 @@ else {
     Write-Host ""
     Write-Host "Note: $toolsDir is not on PATH in this shell."
     Write-Host "Run with -AddToPath to persist, or invoke directly:"
-    Write-Host "  & '$toolExe' analyze --staged"
+    Write-Host "  & '$launcher' analyze --staged"
 }

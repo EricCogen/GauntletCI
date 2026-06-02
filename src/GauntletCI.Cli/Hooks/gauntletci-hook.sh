@@ -6,30 +6,39 @@ set -e
 
 resolve_gauntletci() {
     if command -v gauntletci &> /dev/null; then
-        echo "gauntletci"
+        GAUNTLETCI_MODE="shim"
+        GAUNTLETCI_CMD="gauntletci"
         return 0
     fi
 
-    local tools_dir="${DOTNET_ROOT:+$DOTNET_ROOT/tools}"
-    if [ -z "$tools_dir" ]; then
-        tools_dir="$HOME/.dotnet/tools"
+    local default_tools="$HOME/.dotnet/tools"
+    local tools_dirs=()
+    if [ -n "${DOTNET_ROOT:-}" ]; then
+        tools_dirs+=("$DOTNET_ROOT/tools")
     fi
+    tools_dirs+=("$default_tools")
 
-    if [ -x "$tools_dir/gauntletci" ]; then
-        echo "$tools_dir/gauntletci"
-        return 0
-    fi
+    local dir
+    for dir in "${tools_dirs[@]}"; do
+        if [ -x "$dir/gauntletci" ]; then
+            GAUNTLETCI_MODE="shim"
+            GAUNTLETCI_CMD="$dir/gauntletci"
+            return 0
+        fi
 
-    if [ -x "$tools_dir/gauntletci.exe" ]; then
-        echo "$tools_dir/gauntletci.exe"
-        return 0
-    fi
+        if [ -x "$dir/gauntletci.exe" ]; then
+            GAUNTLETCI_MODE="shim"
+            GAUNTLETCI_CMD="$dir/gauntletci.exe"
+            return 0
+        fi
+    done
 
     local current
     current="$(pwd)"
     while [ -n "$current" ] && [ "$current" != "/" ]; do
         if [ -f "$current/src/GauntletCI.Cli/GauntletCI.Cli.csproj" ]; then
-            echo "dotnet run --project $current/src/GauntletCI.Cli --"
+            GAUNTLETCI_MODE="repo"
+            GAUNTLETCI_REPO_ROOT="$current"
             return 0
         fi
         current="$(dirname "$current")"
@@ -38,8 +47,18 @@ resolve_gauntletci() {
     return 1
 }
 
-GAUNTLETCI_CMD="$(resolve_gauntletci || true)"
-if [ -z "$GAUNTLETCI_CMD" ]; then
+run_gauntletci() {
+    if [ "$GAUNTLETCI_MODE" = "repo" ]; then
+        dotnet run --project "$GAUNTLETCI_REPO_ROOT/src/GauntletCI.Cli" -- "$@"
+    else
+        "$GAUNTLETCI_CMD" "$@"
+    fi
+}
+
+GAUNTLETCI_MODE=""
+GAUNTLETCI_CMD=""
+GAUNTLETCI_REPO_ROOT=""
+if ! resolve_gauntletci; then
     echo "GauntletCI not found. Install with: dotnet tool install -g GauntletCI"
     echo "Or from this repo: ./scripts/install-gauntletci-global-tool.ps1"
     exit 0
@@ -54,19 +73,11 @@ if command -v jq &> /dev/null; then
 fi
 
 # Run gauntletci — JSON output uses Confidence: 0=Low, 1=Medium, 2=High
-if [[ "$GAUNTLETCI_CMD" == dotnet\ run* ]]; then
-    OUTPUT=$($GAUNTLETCI_CMD analyze --staged --output json --no-banner 2>&1) || {
-        echo "GauntletCI failed to run. Commit aborted."
-        echo "$OUTPUT"
-        exit 1
-    }
-else
-    OUTPUT=$("$GAUNTLETCI_CMD" analyze --staged --output json --no-banner 2>&1) || {
-        echo "GauntletCI failed to run. Commit aborted."
-        echo "$OUTPUT"
-        exit 1
-    }
-fi
+OUTPUT=$(run_gauntletci analyze --staged --output json --no-banner 2>&1) || {
+    echo "GauntletCI failed to run. Commit aborted."
+    echo "$OUTPUT"
+    exit 1
+}
 
 # Count findings by confidence level
 if [ $HAS_JQ -eq 1 ]; then

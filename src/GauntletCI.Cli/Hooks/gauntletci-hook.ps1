@@ -3,23 +3,52 @@
 
 $ErrorActionPreference = "Stop"
 
-function Get-DotNetToolsDirectory {
-    if ($env:DOTNET_ROOT) {
-        return Join-Path $env:DOTNET_ROOT "tools"
+function Get-DotNetToolsDirectories {
+    $dirs = [System.Collections.Generic.List[string]]::new()
+    if ($env:USERPROFILE) {
+        $dirs.Add((Join-Path $env:USERPROFILE ".dotnet\tools"))
     }
 
-    return Join-Path $env:USERPROFILE ".dotnet\tools"
+    if ($env:HOME) {
+        $dirs.Add((Join-Path $env:HOME ".dotnet/tools"))
+    }
+
+    if ($env:DOTNET_ROOT) {
+        $dirs.Add((Join-Path $env:DOTNET_ROOT "tools"))
+    }
+
+    return $dirs | Select-Object -Unique
 }
 
 function Get-RepoCliProjectPath {
-    $current = Get-Location
-    while ($null -ne $current) {
-        $candidate = Join-Path $current.FullName "src\GauntletCI.Cli\GauntletCI.Cli.csproj"
+    $toplevel = $null
+    try {
+        $toplevel = git rev-parse --show-toplevel 2>$null
+    }
+    catch {
+        $toplevel = $null
+    }
+
+    if ($toplevel) {
+        $candidate = Join-Path $toplevel "src\GauntletCI.Cli\GauntletCI.Cli.csproj"
+        if (Test-Path $candidate) {
+            return $candidate
+        }
+    }
+
+    $current = (Get-Location).Path
+    while (-not [string]::IsNullOrEmpty($current)) {
+        $candidate = Join-Path $current "src\GauntletCI.Cli\GauntletCI.Cli.csproj"
         if (Test-Path $candidate) {
             return $candidate
         }
 
-        $current = $current.Parent
+        $parent = Split-Path $current -Parent
+        if ([string]::IsNullOrEmpty($parent) -or $parent -eq $current) {
+            break
+        }
+
+        $current = $parent
     }
 
     return $null
@@ -33,20 +62,21 @@ function Resolve-GauntletCiInvocation {
         }
     }
 
-    $toolsDir = Get-DotNetToolsDirectory
-    $toolExe = Join-Path $toolsDir "gauntletci.exe"
-    if (Test-Path $toolExe) {
-        return @{
-            Command = $toolExe
-            PrefixArgs = @()
+    foreach ($toolsDir in Get-DotNetToolsDirectories) {
+        $toolExe = Join-Path $toolsDir "gauntletci.exe"
+        if (Test-Path $toolExe) {
+            return @{
+                Command = $toolExe
+                PrefixArgs = @()
+            }
         }
-    }
 
-    $toolShim = Join-Path $toolsDir "gauntletci"
-    if (Test-Path $toolShim) {
-        return @{
-            Command = $toolShim
-            PrefixArgs = @()
+        $toolShim = Join-Path $toolsDir "gauntletci"
+        if (Test-Path $toolShim) {
+            return @{
+                Command = $toolShim
+                PrefixArgs = @()
+            }
         }
     }
 
