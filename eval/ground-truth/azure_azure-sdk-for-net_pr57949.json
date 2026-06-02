@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "azure_azure-sdk-for-net_pr57949",
+  "repo": "Azure/azure-sdk-for-net",
+  "pr_number": 57949,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/Azure/azure-sdk-for-net/pull/57949",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Published SDK: Azure SDK changes public ContainerServiceFleet API signature \u2014 breaking for consumers",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0004"
+      ],
+      "evidence_excerpt": ""
+    },
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "azure-sdk-for-net \u2014 api/ surface file changes to ContainerServiceFleetUpdateGroup (API surface tracking file)",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003"
+      ],
+      "evidence_excerpt": ""
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

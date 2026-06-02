@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "azure_azure-sdk-for-net_pr57223",
+  "repo": "Azure/azure-sdk-for-net",
+  "pr_number": 57223,
+  "suite_tier": "gold",
+  "generated_at_utc": "2026-05-31T21:39:17.016756+00:00",
+  "upstream_pr_url": "https://github.com/Azure/azure-sdk-for-net/pull/57223",
+  "eval_lab_pr_url": null,
+  "defects": [
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "azure-sdk PR57223: SearchClientOptions/AnalyzeText sig changed in api/ surface file \u2014 API surface change",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "sdk/search/Azure.Search.Documents/src/KnowledgeBases/KnowledgeBaseRetrievalClient.cs",
+      "line": 41,
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003",
+        "KnowledgeBaseRetrievalClient.cs",
+        "sdk/search/Azure.Search.Documents/src/KnowledgeBases/KnowledgeBaseRetrievalClient.cs",
+        "method",
+        "signatures",
+        "changed",
+        "incompatible",
+        "search"
+      ],
+      "evidence_excerpt": "Changed: 'KnowledgeBaseRetrievalClient', 'KnowledgeBaseRetrievalClient', 'KnowledgeBaseRetrievalClient' (+5 more) | e.g. Was: protected KnowledgeBaseRetrievalClient() { } | Now: public KnowledgeBaseRetrievalClient(Uri endpoint, string knowl"
+    }
+  ],
+  "tools": [
+    {
+      "name": "GauntletCI",
+      "finding_count": 19,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "GCI0003",
+            "Changed: 'KnowledgeBaseRetrievalClient', 'KnowledgeBaseRetrievalClient', 'KnowledgeBaseRetrievalClient' (+5 more) | e.g."
+          ],
+          "notes": ""
+        }
+      }
+    },
+    {
+      "name": "CodeQL",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T20:18:20.644838+00:00",
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeRabbit",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Greptile",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Qodo",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "SonarCloud",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T20:19:03.290901+00:00",
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Semgrep",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T20:20:08.437388+00:00",
+      "caught_by_defect": {
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    }
+  ]
+}

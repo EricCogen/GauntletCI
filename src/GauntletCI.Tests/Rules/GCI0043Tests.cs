@@ -30,19 +30,20 @@ public class GCI0043Tests
     }
 
     [Fact]
-    public async Task NullForgivingOperator_MoreThanOnce_ShouldFire()
+    public async Task NullForgivingOperator_ThreeOrMore_ShouldFire()
     {
         var raw = """
             diff --git a/src/UserService.cs b/src/UserService.cs
             index abc..def 100644
             --- a/src/UserService.cs
             +++ b/src/UserService.cs
-            @@ -1,3 +1,7 @@
+            @@ -1,3 +1,8 @@
              public class UserService {
             +    public string GetName(User user) {
             +        var name = user.Profile!.DisplayName;
             +        var email = user.Contact!.Email;
-            +        return name + email;
+            +        var id = user.Account!.Id;
+            +        return name + email + id;
             +    }
              }
             """;
@@ -54,17 +55,18 @@ public class GCI0043Tests
     }
 
     [Fact]
-    public async Task NullForgivingOperator_OnlyOnce_ShouldNotFireNullForgivingRule()
+    public async Task NullForgivingOperator_TwoOrFewer_ShouldNotFireNullForgivingRule()
     {
         var raw = """
             diff --git a/src/UserService.cs b/src/UserService.cs
             index abc..def 100644
             --- a/src/UserService.cs
             +++ b/src/UserService.cs
-            @@ -1,3 +1,5 @@
+            @@ -1,3 +1,6 @@
              public class UserService {
             +    public string GetName(User user) {
-            +        return user.Profile!.DisplayName;
+            +        var name = user.Profile!.DisplayName;
+            +        return name + user.Contact!.Email;
             +    }
              }
             """;

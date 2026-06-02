@@ -1,0 +1,64 @@
+{
+  "tool": "SonarCloud",
+  "project_key": "jellyfin_jellyfin",
+  "harvested_at_utc": "2026-05-31T20:19:35.849688+00:00",
+  "alerts": [
+    {
+      "changed_file": "MediaBrowser.Controller/MediaEncoding/EncodingHelper.cs",
+      "sonar_rule": "csharpsquid:S2259",
+      "sonar_type": "BUG",
+      "sonar_severity": "MAJOR",
+      "message": "'mainFilters' is null on at least one execution path.",
+      "start_line": 6270
+    },
+    {
+      "changed_file": "MediaBrowser.Controller/MediaEncoding/EncodingHelper.cs",
+      "sonar_rule": "csharpsquid:S1244",
+      "sonar_type": "BUG",
+      "sonar_severity": "MAJOR",
+      "message": "Do not check floating point inequality with exact values, use a range instead.",
+      "start_line": 3690
+    },
+    {
+      "changed_file": "MediaBrowser.Controller/MediaEncoding/EncodingHelper.cs",
+      "sonar_rule": "csharpsquid:S1244",
+      "sonar_type": "BUG",
+      "sonar_severity": "MAJOR",
+      "message": "Do not check floating point inequality with exact values, use a range instead.",
+      "start_line": 4543
+    },
+    {
+      "changed_file": "MediaBrowser.Controller/MediaEncoding/EncodingHelper.cs",
+      "sonar_rule": "csharpsquid:S1244",
+      "sonar_type": "BUG",
+      "sonar_severity": "MAJOR",
+      "message": "Do not check floating point inequality with exact values, use a range instead.",
+      "start_line": 3902
+    },
+    {
+      "changed_file": "MediaBrowser.Controller/MediaEncoding/EncodingHelper.cs",
+      "sonar_rule": "csharpsquid:S2583",
+      "sonar_type": "BUG",
+      "sonar_severity": "MAJOR",
+      "message": "Change this condition so that it does not always evaluate to 'True'. Some code paths are unreachable.",
+      "start_line": 5970
+    },
+    {
+      "changed_file": "MediaBrowser.Controller/MediaEncoding/EncodingHelper.cs",
+      "sonar_rule": "csharpsquid:S1244",
+      "sonar_type": "BUG",
+      "sonar_severity": "MAJOR",
+      "message": "Do not check floating point inequality with exact values, use a range instead.",
+      "start_line": 3730
+    },
+    {
+      "changed_file": "MediaBrowser.Controller/MediaEncoding/EncodingHelper.cs",
+      "sonar_rule": "csharpsquid:S2583",
+      "sonar_type": "BUG",
+      "sonar_severity": "MAJOR",
+      "message": "Change this condition so that it does not always evaluate to 'True'. Some code paths are unreachable.",
+      "start_line": 4435
+    }
+  ],
+  "repo_open_issues": 87
+}

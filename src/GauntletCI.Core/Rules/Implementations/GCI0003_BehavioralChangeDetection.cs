@@ -61,7 +61,7 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
 
     // Narrower keyword set: "else", "&&", "||" appear in virtually every C# file so
     // counting them as "logic" drives massive false-positive rates.
-    private static readonly string[] LogicKeywords = ["return ", "throw ", "if (", "if("];
+    private static readonly string[] LogicKeywords = ["return ", "throw "];
     private static readonly string[] AccessModifiers = ["public ", "private ", "protected ", "internal "];
 
     // Cryptographic methods where argument changes represent behavioral/security boundaries
@@ -138,7 +138,7 @@ public class GCI0003_BehavioralChangeDetection : RuleBase
         // Threshold of 15: small refactors routinely remove 5-10 lines of control flow.
         // Only a large-scale logic deletion (whole method body stripped, significant function
         // rewrite) should trigger without accompanying test changes.
-        if (removedLogicLines.Count < 15) return;
+        if (removedLogicLines.Count < 30) return;
 
         bool hasTestChanges = diff.Files.Any(f =>
             f.NewPath.Contains("Test", StringComparison.OrdinalIgnoreCase) ||

@@ -1,0 +1,7 @@
+{
+  "tool": "SonarCloud",
+  "project_key": "HangfireIO_Hangfire",
+  "harvested_at_utc": "2026-05-31T20:19:19.980209+00:00",
+  "alerts": [],
+  "repo_open_issues": 8
+}

@@ -1,0 +1,190 @@
+{
+  "schema_version": "1.0.0",
+  "tier": "silver",
+  "fixture_count": 30,
+  "mean_findings": 4.5,
+  "median_findings": 3,
+  "at_delivery_cap": 0,
+  "fixtures": [
+    {
+      "fixture_id": "azure_azure-sdk-for-net_pr57223",
+      "repo": "Azure/azure-sdk-for-net",
+      "finding_count": 21,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "closedxml_closedxml_pr1417",
+      "repo": "ClosedXML/ClosedXML",
+      "finding_count": 4,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "closedxml_closedxml_pr2093",
+      "repo": "ClosedXML/ClosedXML",
+      "finding_count": 6,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "dapperlib_dapper_pr1910",
+      "repo": "DapperLib/Dapper",
+      "finding_count": 5,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "devtoys-app_devtoys_pr139",
+      "repo": "DevToys-app/DevToys",
+      "finding_count": 5,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "devtoys-app_devtoys_pr1009",
+      "repo": "DevToys-app/DevToys",
+      "finding_count": 7,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "fluentvalidation_fluentvalidation_pr1888",
+      "repo": "FluentValidation/FluentValidation",
+      "finding_count": 5,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "humanizr_humanizer_pr1701",
+      "repo": "Humanizr/Humanizer",
+      "finding_count": 0,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "nlog_nlog_pr6132",
+      "repo": "NLog/NLog",
+      "finding_count": 0,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "ricosuter_namotion.reflection_pr55",
+      "repo": "RicoSuter/Namotion.Reflection",
+      "finding_count": 3,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "sixlabors_imagesharp_pr2793",
+      "repo": "SixLabors/ImageSharp",
+      "finding_count": 1,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "stackexchange_stackexchange.redis_pr2939",
+      "repo": "StackExchange/StackExchange.Redis",
+      "finding_count": 8,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "adamhathcock_sharpcompress_pr1243",
+      "repo": "adamhathcock/sharpcompress",
+      "finding_count": 3,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "apache_logging-log4net_pr138",
+      "repo": "apache/logging-log4net",
+      "finding_count": 15,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "dotnet_aspnetcore_pr64807",
+      "repo": "dotnet/aspnetcore",
+      "finding_count": 7,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "dotnet_aspnetcore_pr65808",
+      "repo": "dotnet/aspnetcore",
+      "finding_count": 2,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "dotnet_orleans_pr8401",
+      "repo": "dotnet/orleans",
+      "finding_count": 3,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "dotnet_reactive_pr2268",
+      "repo": "dotnet/reactive",
+      "finding_count": 11,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "dotnet_runtime_pr125274",
+      "repo": "dotnet/runtime",
+      "finding_count": 0,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "googleapis_google-api-dotnet-client_pr3135",
+      "repo": "googleapis/google-api-dotnet-client",
+      "finding_count": 2,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "googleapis_google-api-dotnet-client_pr3138",
+      "repo": "googleapis/google-api-dotnet-client",
+      "finding_count": 2,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "icsharpcode_sharpziplib_pr592",
+      "repo": "icsharpcode/SharpZipLib",
+      "finding_count": 6,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "npgsql_npgsql_pr6504",
+      "repo": "npgsql/npgsql",
+      "finding_count": 10,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "nunit_nunit_pr5191",
+      "repo": "nunit/nunit",
+      "finding_count": 1,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "nunit_nunit_pr5192",
+      "repo": "nunit/nunit",
+      "finding_count": 3,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "anglesharp_anglesharp_pr1148",
+      "repo": "AngleSharp/AngleSharp",
+      "finding_count": 2,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "anglesharp_anglesharp_pr1153",
+      "repo": "AngleSharp/AngleSharp",
+      "finding_count": 0,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "app-vnext_polly_pr1145",
+      "repo": "App-vNext/Polly",
+      "finding_count": 1,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "app-vnext_polly_pr1522",
+      "repo": "App-vNext/Polly",
+      "finding_count": 0,
+      "at_cap": false
+    },
+    {
+      "fixture_id": "avaloniaui_avalonia_pr20856",
+      "repo": "AvaloniaUI/Avalonia",
+      "finding_count": 2,
+      "at_cap": false
+    }
+  ]
+}

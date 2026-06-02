@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "jamesnk_newtonsoft.json_pr2980",
+  "repo": "JamesNK/Newtonsoft.Json",
+  "pr_number": 2980,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/JamesNK/Newtonsoft.Json/pull/2980",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Published library: Newtonsoft.Json changes public API signature \u2014 breaking for consumers",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0004"
+      ],
+      "evidence_excerpt": ""
+    },
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "Newtonsoft.Json library \u2014 10 logic lines removed + GenerateInternal sig change in JsonSchemaGenerator",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003",
+        "method",
+        "signatures",
+        "changed",
+        "incompatible",
+        "across",
+        "files"
+      ],
+      "evidence_excerpt": "Files: JsonContract.cs (1), CollectionUtils.cs (2), DynamicReflectionDelegateFactory.cs (1) (+6 more files)"
+    },
+    {
+      "defect_id": "corpus-gci0006",
+      "summary": "newtonsoft.json PR2980: new params without null validation in Newtonsoft.Json production library",
+      "primary_rule": "GCI0006",
+      "fn_class": "edge-case-handling",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0006"
+      ],
+      "evidence_excerpt": ""
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

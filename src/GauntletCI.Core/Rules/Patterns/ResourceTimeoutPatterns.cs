@@ -32,7 +32,7 @@ internal static class ResourceTimeoutPatterns
     public static readonly string[] IterationLimitPatterns =
     [
         "maxiterations", "max_iterations", "iterationcount", "iteration_count",
-        "loopcount", "loop_count", "maxcount", "max_count", "limit"
+        "loopcount", "loop_count", "maxcount", "max_count"
     ];
 
     /// <summary>

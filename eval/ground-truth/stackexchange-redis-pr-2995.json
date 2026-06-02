@@ -1,0 +1,52 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "stackexchange-redis-pr-2995",
+  "repo": "StackExchange/StackExchange.Redis",
+  "pr_number": 2995,
+  "upstream_pr_url": "https://github.com/StackExchange/StackExchange.Redis/pull/2995",
+  "eval_lab_repo": "EricCogen/ai-review-eval-stackexchange-redis",
+  "eval_lab_pr_number": 7,
+  "suite_tier": "anchor",
+  "domain_profile": "library",
+  "competitor_harvest": "anchor",
+  "primary_rules": [
+    "GCI0058",
+    "GCI0032"
+  ],
+  "defects": [
+    {
+      "defect_id": "paired-implementation-inversion",
+      "summary": "MultiNodeSubscription.RemoveDisconnectedEndpoints uses inverted IsSubscriberConnected polarity vs SingleNodeSubscription",
+      "primary_rule": "GCI0058",
+      "fn_class": "sibling-implementation-drift",
+      "file": "src/StackExchange.Redis/Subscription.cs",
+      "method": "RemoveDisconnectedEndpoints",
+      "line": 267,
+      "adjudication_confidence": "high",
+      "match_keywords": [
+        "RemoveDisconnectedEndpoints",
+        "IsSubscriberConnected",
+        "inverted",
+        "MultiNodeSubscription",
+        "Subscription.cs"
+      ],
+      "ci_required": true
+    },
+    {
+      "defect_id": "swallowed-handler-exception",
+      "summary": "Bare catch blocks in ChannelMessageQueue discard user handler exceptions",
+      "primary_rule": "GCI0032",
+      "fn_class": "intentional-swallow",
+      "file": "src/StackExchange.Redis/ChannelMessageQueue.cs",
+      "method": "OnMessageSyncImpl",
+      "adjudication_confidence": "medium",
+      "match_keywords": [
+        "catch",
+        "ChannelMessageQueue",
+        "handler"
+      ],
+      "ci_required": false
+    }
+  ],
+  "eval_lab_pr_url": "https://github.com/EricCogen/ai-review-eval-stackexchange-redis/pull/7"
+}

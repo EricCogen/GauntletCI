@@ -53,7 +53,7 @@ public class GCI0042_TodoStubDetection : RuleBase
                     evidence.Add($"Line {line.LineNumber}: {trimmed}");
             }
 
-            if (evidence.Count == 0) continue;
+            if (evidence.Count < 2) continue;
 
             findings.Add(CreateFinding(
                 file,

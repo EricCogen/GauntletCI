@@ -1,0 +1,191 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "stackexchange-redis-pr-2995",
+  "repo": "StackExchange/StackExchange.Redis",
+  "pr_number": 2995,
+  "suite_tier": "anchor",
+  "generated_at_utc": "2026-05-31T21:39:17.166310+00:00",
+  "upstream_pr_url": "https://github.com/StackExchange/StackExchange.Redis/pull/2995",
+  "eval_lab_pr_url": "https://github.com/EricCogen/ai-review-eval-stackexchange-redis/pull/7",
+  "defects": [
+    {
+      "defect_id": "paired-implementation-inversion",
+      "summary": "MultiNodeSubscription.RemoveDisconnectedEndpoints uses inverted IsSubscriberConnected polarity vs SingleNodeSubscription",
+      "primary_rule": "GCI0058",
+      "fn_class": "sibling-implementation-drift",
+      "file": "src/StackExchange.Redis/Subscription.cs",
+      "method": "RemoveDisconnectedEndpoints",
+      "line": 267,
+      "adjudication_confidence": "high",
+      "match_keywords": [
+        "RemoveDisconnectedEndpoints",
+        "IsSubscriberConnected",
+        "inverted",
+        "MultiNodeSubscription",
+        "Subscription.cs"
+      ],
+      "ci_required": true
+    },
+    {
+      "defect_id": "swallowed-handler-exception",
+      "summary": "Bare catch blocks in ChannelMessageQueue discard user handler exceptions",
+      "primary_rule": "GCI0032",
+      "fn_class": "intentional-swallow",
+      "file": "src/StackExchange.Redis/ChannelMessageQueue.cs",
+      "method": "OnMessageSyncImpl",
+      "adjudication_confidence": "medium",
+      "match_keywords": [
+        "catch",
+        "ChannelMessageQueue",
+        "handler"
+      ],
+      "ci_required": false
+    }
+  ],
+  "tools": [
+    {
+      "name": "GauntletCI",
+      "finding_count": 11,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "paired-implementation-inversion": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "GCI0058",
+            "src/StackExchange.Redis/Subscription.cs:267 \u2014 SingleNodeSubscription.RemoveDisconnectedEndpoints uses `server is { IsSub"
+          ],
+          "notes": ""
+        },
+        "swallowed-handler-exception": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "GCI0032",
+            "2 added catch block(s) in non-test files contain no executable statements."
+          ],
+          "notes": ""
+        }
+      }
+    },
+    {
+      "name": "CodeQL",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T16:04:19.516847+00:00",
+      "caught_by_defect": {
+        "paired-implementation-inversion": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "swallowed-handler-exception": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeRabbit",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T15:49:03.6945032Z",
+      "caught_by_defect": {
+        "paired-implementation-inversion": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "RemoveDisconnectedEndpoints",
+            "inverted",
+            "MultiNodeSubscription",
+            "Subscription.cs",
+            "inversion-language"
+          ],
+          "notes": ""
+        },
+        "swallowed-handler-exception": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Greptile",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T15:47:33.7359086Z",
+      "caught_by_defect": {
+        "paired-implementation-inversion": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "RemoveDisconnectedEndpoints",
+            "inverted",
+            "MultiNodeSubscription",
+            "Subscription.cs",
+            "inversion-language"
+          ],
+          "notes": ""
+        },
+        "swallowed-handler-exception": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Qodo",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T15:47:33.7359086Z",
+      "caught_by_defect": {
+        "paired-implementation-inversion": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "RemoveDisconnectedEndpoints",
+            "IsSubscriberConnected",
+            "inverted",
+            "MultiNodeSubscription",
+            "Subscription.cs",
+            "inversion-language"
+          ],
+          "notes": ""
+        },
+        "swallowed-handler-exception": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "SonarCloud",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "paired-implementation-inversion": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "swallowed-handler-exception": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Semgrep",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "paired-implementation-inversion": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "swallowed-handler-exception": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    }
+  ]
+}

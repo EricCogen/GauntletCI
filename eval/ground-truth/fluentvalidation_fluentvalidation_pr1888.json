@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "fluentvalidation_fluentvalidation_pr1888",
+  "repo": "FluentValidation/FluentValidation",
+  "pr_number": 1888,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/FluentValidation/FluentValidation/pull/1888",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Corpus label expects GCI0004",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "src/FluentValidation/Enums.cs",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_gold",
+      "match_keywords": [
+        "GCI0004",
+        "Enums.cs",
+        "src/FluentValidation/Enums.cs",
+        "Obsolete",
+        "attribute",
+        "removed",
+        "FluentValidation",
+        "Enums"
+      ],
+      "evidence_excerpt": "Removed: [Obsolete(\"Use CascadeMode.Stop instead. The behaviour of StopOnFirstFailure was ambiguous when used at validator-level. For more details, see https://docs.fluentvalidation.net/en/latest/conditions.html#stop-vs-stoponfirstfailure\")"
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

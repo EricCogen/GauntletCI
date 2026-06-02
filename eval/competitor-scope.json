@@ -1,0 +1,177 @@
+{
+  "schema_version": "1.0.0",
+  "updated_at_utc": "2026-05-31",
+  "comparison_scope": "diff_behavioral_review",
+  "gauntletci_promise": [
+    "Diff-scoped review of a changeset (staged commit or pull request)",
+    "Behavioral and logic regression risk, not style-only or whole-repo hygiene",
+    "Line-anchored findings with stable rule identifiers",
+    "Deterministic output: same diff and config produce the same rule firings",
+    "Pre-commit or PR gate with bounded delivery noise on large diffs"
+  ],
+  "inclusion_criteria": {
+    "must_claim": "Pull request or diff review for bugs, regressions, or behavioral risk",
+    "must_be_free": "Free tier for public OSS repos, free PR bot, or free local CLI usable in the benchmark workflow",
+    "must_be_measurable_or_planned": "Anchor harvest, GitHub API, SARIF, or documented replay on eval/diffs patches"
+  },
+  "harness_segments": {
+    "anchor_only": {
+      "description": "Eval-lab mirror PR with harvested competitor comments",
+      "tool_names": ["GauntletCI", "CodeQL", "CodeRabbit", "Greptile", "Qodo"]
+    },
+    "gold_cross_repo": {
+      "description": "Automated same-defect recall on ci_required adjudicated defects across expanded gold tier",
+      "tool_names": ["GauntletCI", "CodeQL", "SonarCloud", "Semgrep"]
+    }
+  },
+  "comparable_tools": [
+    {
+      "name": "GauntletCI",
+      "type": "deterministic_rules_plus_platform",
+      "free_tier": "CLI and GitHub Action",
+      "measured_segments": ["anchor_only", "gold_cross_repo"],
+      "harvest_artifact": null
+    },
+    {
+      "name": "CodeQL",
+      "type": "github_code_scanning",
+      "free_tier": "GitHub code scanning on public repositories",
+      "measured_segments": ["anchor_only", "gold_cross_repo"],
+      "harvest_artifact": "codeql.json"
+    },
+    {
+      "name": "SonarCloud",
+      "type": "pr_static_analysis",
+      "free_tier": "Free for public projects on SonarCloud",
+      "measured_segments": ["gold_cross_repo"],
+      "harvest_artifact": "sonarcloud.json"
+    },
+    {
+      "name": "Semgrep",
+      "type": "pr_static_analysis",
+      "free_tier": "Semgrep CLI and OSS rules",
+      "measured_segments": ["gold_cross_repo"],
+      "harvest_artifact": "semgrep.json"
+    },
+    {
+      "name": "Greptile",
+      "type": "llm_pr_review",
+      "free_tier": "Public repository PR reviews",
+      "measured_segments": ["anchor_only"],
+      "harvest_artifact": "greptile.json"
+    },
+    {
+      "name": "Qodo",
+      "type": "llm_pr_review",
+      "free_tier": "Open-source project PR reviews",
+      "measured_segments": ["anchor_only"],
+      "harvest_artifact": "qodo.json"
+    },
+    {
+      "name": "CodeRabbit",
+      "type": "llm_pr_review",
+      "free_tier": "Open-source repository reviews",
+      "measured_segments": ["anchor_only"],
+      "harvest_artifact": "coderabbit.json"
+    },
+    {
+      "name": "GitHub Copilot Review",
+      "type": "llm_pr_review",
+      "free_tier": "GitHub Copilot plan includes PR review on supported repos",
+      "measured_segments": [],
+      "harvest_artifact": null,
+      "positioning_only": true
+    },
+    {
+      "name": "Claude Code Review",
+      "type": "llm_pr_review",
+      "free_tier": "Vendor-dependent; not in harness until a reproducible OSS harvest exists",
+      "measured_segments": [],
+      "harvest_artifact": null,
+      "positioning_only": true
+    },
+    {
+      "name": "Cursor BugBot",
+      "type": "llm_pr_review",
+      "free_tier": "Product-dependent; not in harness until a reproducible OSS harvest exists",
+      "measured_segments": [],
+      "harvest_artifact": null,
+      "positioning_only": true
+    },
+    {
+      "name": "Ellipsis",
+      "type": "llm_pr_review",
+      "free_tier": "Open-source tier for public repositories",
+      "measured_segments": [],
+      "harvest_artifact": "ellipsis.json",
+      "positioning_only": true
+    }
+  ],
+  "adjacent_not_comparable": [
+    {
+      "name": "Amazon CodeGuru",
+      "category": "paid_cloud_ml",
+      "reason": "Paid AWS service; not a free diff-review peer"
+    },
+    {
+      "name": "Atlassian Rovo",
+      "category": "suite_assistant",
+      "reason": "Work management assistant, not a PR behavioral gauntlet"
+    },
+    {
+      "name": "Bito",
+      "category": "llm_assistant",
+      "reason": "No free reproducible PR harvest in benchmark"
+    },
+    {
+      "name": "Codacy",
+      "category": "static_quality",
+      "reason": "Repo quality and coverage emphasis, not adjudicated logic defects on diff"
+    },
+    {
+      "name": "CodeAnt AI",
+      "category": "llm_plus_static",
+      "reason": "No free reproducible harness path"
+    },
+    {
+      "name": "CodeScene",
+      "category": "behavioral_architecture",
+      "reason": "Code health and evolution metrics, not PR gate on logic drift"
+    },
+    {
+      "name": "DeepSource",
+      "category": "static_quality",
+      "reason": "Static quality platform, different promise than diff behavioral risk"
+    },
+    {
+      "name": "GitLab Duo",
+      "category": "suite_assistant",
+      "reason": "GitLab suite AI, not a free standalone diff gauntlet"
+    },
+    {
+      "name": "Graphite Agent",
+      "category": "llm_review",
+      "reason": "No free reproducible PR harvest in benchmark"
+    },
+    {
+      "name": "Manus",
+      "category": "general_agent",
+      "reason": "General agent, not a pre-commit diff reviewer"
+    },
+    {
+      "name": "Repowise",
+      "category": "llm_review",
+      "reason": "No free reproducible PR harvest in benchmark"
+    },
+    {
+      "name": "SonarQube",
+      "category": "self_hosted_static",
+      "reason": "Self-hosted quality server; compare via SonarCloud in gold harness"
+    },
+    {
+      "name": "Sourcery",
+      "category": "refactor_suggestions",
+      "reason": "Refactoring and style, not behavioral defect detection"
+    }
+  ]
+}

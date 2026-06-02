@@ -1,0 +1,16 @@
+{
+  "tool": "SonarCloud",
+  "project_key": "jellyfin_jellyfin",
+  "harvested_at_utc": "2026-05-31T20:19:35.865355+00:00",
+  "alerts": [
+    {
+      "changed_file": "Emby.Server.Implementations/IO/LibraryMonitor.cs",
+      "sonar_rule": "csharpsquid:S2259",
+      "sonar_type": "BUG",
+      "sonar_severity": "MAJOR",
+      "message": "'watcher' is null on at least one execution path.",
+      "start_line": 307
+    }
+  ],
+  "repo_open_issues": 87
+}
