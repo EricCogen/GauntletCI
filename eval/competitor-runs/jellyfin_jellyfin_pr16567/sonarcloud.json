@@ -1,0 +1,16 @@
+{
+  "tool": "SonarCloud",
+  "project_key": "jellyfin_jellyfin",
+  "harvested_at_utc": "2026-05-31T20:19:35.867350+00:00",
+  "alerts": [
+    {
+      "changed_file": "MediaBrowser.MediaEncoding/Probing/ProbeResultNormalizer.cs",
+      "sonar_rule": "csharpsquid:S1244",
+      "sonar_type": "BUG",
+      "sonar_severity": "MAJOR",
+      "message": "Do not check floating point equality with exact values, use a range instead.",
+      "start_line": 1211
+    }
+  ],
+  "repo_open_issues": 87
+}

@@ -1,0 +1,166 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at_utc": "2026-05-31T21:39:17.171524+00:00",
+  "sample_size": 31,
+  "fixtures_scored": 58,
+  "gold_fixtures_in_scorecards": 57,
+  "gold_with_ci_required": 26,
+  "repos_represented": 28,
+  "evidence_tier": "measured",
+  "recall_denominator_note": "ci_required defects on fixtures with ground-truth only; large gold cohort may include unscored fixtures until promote",
+  "comparison_scope": "diff_behavioral_review",
+  "scope_manifest": "eval/competitor-scope.json",
+  "segments": {
+    "anchor_only": {
+      "fixtures": 1,
+      "recall_by_tool": {
+        "GauntletCI": {
+          "caught": 1,
+          "total": 1,
+          "rate": 1.0
+        },
+        "CodeQL": {
+          "caught": 0,
+          "total": 1,
+          "rate": 0.0
+        },
+        "CodeRabbit": {
+          "caught": 1,
+          "total": 1,
+          "rate": 1.0
+        },
+        "Greptile": {
+          "caught": 1,
+          "total": 1,
+          "rate": 1.0
+        },
+        "Qodo": {
+          "caught": 1,
+          "total": 1,
+          "rate": 1.0
+        }
+      }
+    },
+    "gold_cross_repo": {
+      "fixtures": 57,
+      "recall_by_tool": {
+        "GauntletCI": {
+          "caught": 30,
+          "total": 30,
+          "rate": 1.0
+        },
+        "CodeQL": {
+          "caught": 0,
+          "total": 30,
+          "rate": 0.0
+        },
+        "SonarCloud": {
+          "caught": 0,
+          "total": 30,
+          "rate": 0.0
+        },
+        "Semgrep": {
+          "caught": 0,
+          "total": 30,
+          "rate": 0.0
+        }
+      },
+      "recall_by_fn_class": {
+        "logic-bug-no-token": {
+          "GauntletCI": {
+            "caught": 15,
+            "total": 15,
+            "rate": 1.0
+          },
+          "CodeQL": {
+            "caught": 0,
+            "total": 15,
+            "rate": 0.0
+          },
+          "SonarCloud": {
+            "caught": 0,
+            "total": 15,
+            "rate": 0.0
+          },
+          "Semgrep": {
+            "caught": 0,
+            "total": 15,
+            "rate": 0.0
+          }
+        },
+        "breaking-change": {
+          "GauntletCI": {
+            "caught": 5,
+            "total": 5,
+            "rate": 1.0
+          },
+          "CodeQL": {
+            "caught": 0,
+            "total": 5,
+            "rate": 0.0
+          },
+          "SonarCloud": {
+            "caught": 0,
+            "total": 5,
+            "rate": 0.0
+          },
+          "Semgrep": {
+            "caught": 0,
+            "total": 5,
+            "rate": 0.0
+          }
+        },
+        "edge-case-handling": {
+          "GauntletCI": {
+            "caught": 9,
+            "total": 9,
+            "rate": 1.0
+          },
+          "CodeQL": {
+            "caught": 0,
+            "total": 9,
+            "rate": 0.0
+          },
+          "SonarCloud": {
+            "caught": 0,
+            "total": 9,
+            "rate": 0.0
+          },
+          "Semgrep": {
+            "caught": 0,
+            "total": 9,
+            "rate": 0.0
+          }
+        },
+        "concurrency-risk": {
+          "GauntletCI": {
+            "caught": 1,
+            "total": 1,
+            "rate": 1.0
+          },
+          "CodeQL": {
+            "caught": 0,
+            "total": 1,
+            "rate": 0.0
+          },
+          "SonarCloud": {
+            "caught": 0,
+            "total": 1,
+            "rate": 0.0
+          },
+          "Semgrep": {
+            "caught": 0,
+            "total": 1,
+            "rate": 0.0
+          }
+        }
+      },
+      "gauntletci_noise": {
+        "fixture_count": 57,
+        "mean_findings": 6.37,
+        "median_findings": 3,
+        "at_delivery_cap_25": 3
+      }
+    }
+  }
+}

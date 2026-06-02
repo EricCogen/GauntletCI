@@ -1,0 +1,173 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "dapperlib_dapper_pr1928",
+  "repo": "DapperLib/Dapper",
+  "pr_number": 1928,
+  "suite_tier": "gold",
+  "generated_at_utc": "2026-05-31T21:39:17.033296+00:00",
+  "upstream_pr_url": "https://github.com/DapperLib/Dapper/pull/1928",
+  "eval_lab_pr_url": null,
+  "defects": [
+    {
+      "defect_id": "corpus-gci0006",
+      "summary": "dapper PR1928: .Value access in DynamicParameters/SqlDataRecordListTVPParameter production code",
+      "primary_rule": "GCI0006",
+      "fn_class": "edge-case-handling",
+      "file": "Dapper/DataTableHandler.cs",
+      "line": 7,
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0006",
+        "DataTableHandler.cs",
+        "Dapper/DataTableHandler.cs",
+        "method",
+        "parameter",
+        "added",
+        "without",
+        "apparent"
+      ],
+      "evidence_excerpt": "Line 7: public object Parse(Type destinationType, object? value)"
+    },
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "dapper PR1928: SetValue/Parse public API signature changed in Dapper.EntityFramework library",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0004"
+      ],
+      "evidence_excerpt": ""
+    }
+  ],
+  "tools": [
+    {
+      "name": "GauntletCI",
+      "finding_count": 15,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0006": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "GCI0006",
+            "Line 7: public object Parse(Type destinationType, object? value)"
+          ],
+          "notes": ""
+        },
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeQL",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T20:18:16.719731+00:00",
+      "caught_by_defect": {
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeRabbit",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Greptile",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Qodo",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "SonarCloud",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T20:18:55.428556+00:00",
+      "caught_by_defect": {
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Semgrep",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T20:20:00.351183+00:00",
+      "caught_by_defect": {
+        "corpus-gci0006": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    }
+  ]
+}

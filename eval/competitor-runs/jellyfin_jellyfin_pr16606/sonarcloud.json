@@ -1,0 +1,16 @@
+{
+  "tool": "SonarCloud",
+  "project_key": "jellyfin_jellyfin",
+  "harvested_at_utc": "2026-05-31T20:19:35.867867+00:00",
+  "alerts": [
+    {
+      "changed_file": "MediaBrowser.Providers/Manager/ProviderManager.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S5144",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the URL from user-controlled data.",
+      "start_line": 209
+    }
+  ],
+  "repo_open_issues": 87
+}

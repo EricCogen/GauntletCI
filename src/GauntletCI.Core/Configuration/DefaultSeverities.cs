@@ -27,7 +27,7 @@ internal static class DefaultSeverities
             ["GCI0052"] = RuleSeverity.Block,
 
             // Warn: visible by default, non-blocking
-            ["GCI0001"] = RuleSeverity.Warn,
+            ["GCI0001"] = RuleSeverity.Info,
             ["GCI0004"] = RuleSeverity.Warn,
             ["GCI0006"] = RuleSeverity.Warn,
             ["GCI0022"] = RuleSeverity.Warn,

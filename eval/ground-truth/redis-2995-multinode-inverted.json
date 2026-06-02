@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "redis-2995-multinode-inverted",
+  "repo": "StackExchange/StackExchange.Redis",
+  "pr_number": 2995,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/StackExchange/StackExchange.Redis/pull/2995",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0058",
+      "summary": "MultiNodeSubscription inverts IsSubscriberConnected vs SingleNodeSubscription (Redis PR #2995 adjudicated defect).",
+      "primary_rule": "GCI0058",
+      "fn_class": "sibling-implementation-drift",
+      "file": "src/StackExchange.Redis/Subscription.cs",
+      "line": 267,
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "Manual",
+      "match_keywords": [
+        "GCI0058",
+        "Subscription.cs",
+        "src/StackExchange.Redis/Subscription.cs",
+        "Sibling",
+        "implementations",
+        "disagree",
+        "IsSubscriberConnected",
+        "polarity"
+      ],
+      "evidence_excerpt": "src/StackExchange.Redis/Subscription.cs:267 \u2014 SingleNodeSubscription.RemoveDisconnectedEndpoints uses `server is { IsSubscriberConnected: false }` while MultiNodeSubscription.RemoveDisconnectedEndpoints uses `server.Value.IsSubscriberConnec"
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

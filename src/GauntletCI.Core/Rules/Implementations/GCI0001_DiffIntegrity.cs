@@ -87,7 +87,7 @@ public class GCI0001_DiffIntegrity : RuleBase
             }
 
             var totalChanged = addedLines.Count + removedLines.Count;
-            if (totalChanged > 10 && whitespaceOnlyPairs > totalChanged * 0.4)
+            if (totalChanged > 20 && whitespaceOnlyPairs > totalChanged * 0.55)
             {
                 findings.Add(CreateFinding(
                     file,

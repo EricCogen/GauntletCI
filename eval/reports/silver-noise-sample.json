@@ -1,0 +1,57 @@
+{
+  "schema_version": "1.0.0",
+  "tier": "silver_sample",
+  "fixtures": [
+    {
+      "fixture_id": "azure_azure-sdk-for-net_pr57223",
+      "repo": "Azure/azure-sdk-for-net",
+      "finding_count": 21
+    },
+    {
+      "fixture_id": "closedxml_closedxml_pr1417",
+      "repo": "ClosedXML/ClosedXML",
+      "finding_count": 4
+    },
+    {
+      "fixture_id": "closedxml_closedxml_pr2093",
+      "repo": "ClosedXML/ClosedXML",
+      "finding_count": 6
+    },
+    {
+      "fixture_id": "dapperlib_dapper_pr1910",
+      "repo": "DapperLib/Dapper",
+      "finding_count": 5
+    },
+    {
+      "fixture_id": "devtoys-app_devtoys_pr139",
+      "repo": "DevToys-app/DevToys",
+      "finding_count": 5
+    },
+    {
+      "fixture_id": "devtoys-app_devtoys_pr1009",
+      "repo": "DevToys-app/DevToys",
+      "finding_count": 7
+    },
+    {
+      "fixture_id": "fluentvalidation_fluentvalidation_pr1888",
+      "repo": "FluentValidation/FluentValidation",
+      "finding_count": 5
+    },
+    {
+      "fixture_id": "humanizr_humanizer_pr1701",
+      "repo": "Humanizr/Humanizer",
+      "finding_count": 0
+    },
+    {
+      "fixture_id": "nlog_nlog_pr6132",
+      "repo": "NLog/NLog",
+      "finding_count": 0
+    },
+    {
+      "fixture_id": "ricosuter_namotion.reflection_pr55",
+      "repo": "RicoSuter/Namotion.Reflection",
+      "finding_count": 3
+    }
+  ],
+  "mean_findings": 5.6
+}

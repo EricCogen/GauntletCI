@@ -1,0 +1,16 @@
+{
+  "tool": "SonarCloud",
+  "project_key": "jellyfin_jellyfin",
+  "harvested_at_utc": "2026-05-31T20:19:35.836883+00:00",
+  "alerts": [
+    {
+      "changed_file": "Jellyfin.Api/Controllers/LibraryStructureController.cs",
+      "sonar_rule": "roslyn.sonaranalyzer.security.cs:S6549",
+      "sonar_type": "VULNERABILITY",
+      "sonar_severity": "MAJOR",
+      "message": "Change this code to not construct the path from user-controlled data.",
+      "start_line": 153
+    }
+  ],
+  "repo_open_issues": 87
+}

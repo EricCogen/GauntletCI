@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "dapperlib_dapper_pr1910",
+  "repo": "DapperLib/Dapper",
+  "pr_number": 1910,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/DapperLib/Dapper/pull/1910",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "Dapper NuGet library \u2014 ExecuteReaderSync and DeserializerState signature changes in production code",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003",
+        "method",
+        "signatures",
+        "changed",
+        "incompatible",
+        "across",
+        "files"
+      ],
+      "evidence_excerpt": "Files: SqlMapper.DeserializerState.cs (1), SqlMapper.GridReader.Async.cs (1), SqlMapper.GridReader.cs (1) (+2 more files)"
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

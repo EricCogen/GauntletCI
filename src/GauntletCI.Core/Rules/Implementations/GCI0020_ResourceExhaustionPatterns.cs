@@ -85,6 +85,8 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
                 continue;
 
             var removedLimits = file.RemovedLines
+                .Where(l => !IsCommentOnlyLine(l.Content))
+                .Where(l => !IsRuleDetectorInvocationLine(l.Content))
                 .Where(l => WellKnownPatterns.IterationLimitPatterns.Any(p =>
                     l.Content.Contains(p, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
@@ -233,6 +235,27 @@ public class GCI0020_ResourceExhaustionPatterns : RuleBase
         var name1 = line1.Split('=')[0].Trim().Split(' ').Last();
         var name2 = line2.Split('=')[0].Trim().Split(' ').Last();
         return name1 == name2;
+    }
+
+    /// <summary>
+    /// Skips removed calls to sibling rule detectors (e.g. GCI0006 loop helpers)
+    /// whose names contain iteration-limit substrings but are not product limits.
+    /// </summary>
+    private static bool IsCommentOnlyLine(string content)
+    {
+        var trimmed = content.Trim();
+        return trimmed.StartsWith("//", StringComparison.Ordinal) ||
+               trimmed.StartsWith("/*", StringComparison.Ordinal) ||
+               trimmed.StartsWith("*", StringComparison.Ordinal);
+    }
+
+    private static bool IsRuleDetectorInvocationLine(string content)
+    {
+        var trimmed = content.Trim();
+        return trimmed.Contains("Detect", StringComparison.Ordinal) &&
+               (trimmed.Contains("IterationLimit", StringComparison.Ordinal) ||
+                trimmed.Contains("LoopBoundary", StringComparison.Ordinal) ||
+                trimmed.Contains("ResourceLimit", StringComparison.Ordinal));
     }
 }
 

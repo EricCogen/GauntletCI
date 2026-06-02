@@ -1,0 +1,274 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at_utc": "2026-05-31T21:39:30.769947+00:00",
+  "comparison_scope": "diff_behavioral_review",
+  "gauntletci_promise": [
+    "Diff-scoped review of a changeset (staged commit or pull request)",
+    "Behavioral and logic regression risk, not style-only or whole-repo hygiene",
+    "Line-anchored findings with stable rule identifiers",
+    "Deterministic output: same diff and config produce the same rule firings",
+    "Pre-commit or PR gate with bounded delivery noise on large diffs"
+  ],
+  "gold_fixture_count": 569,
+  "gold_scoring_eligible": 55,
+  "gold_with_primary_rules": 26,
+  "repos_in_gold": 56,
+  "selection_report": {
+    "candidates_with_diff": 569,
+    "gold_pool_size": 569,
+    "selected_gold": 569,
+    "selected_gold_scoring_eligible": 55,
+    "selected_silver": 0,
+    "selected_smoke": 0,
+    "repos": 56,
+    "gold_all_with_diff": true,
+    "gold_max": 0,
+    "per_repo_cap": 0
+  },
+  "scale_note": "Full gold cohort includes fixtures without corpus labels; measured ci_required recall applies only after ground-truth promotion.",
+  "measured_recall": {
+    "GauntletCI": {
+      "caught": 30,
+      "total": 30,
+      "rate": 1.0
+    },
+    "CodeQL": {
+      "caught": 0,
+      "total": 30,
+      "rate": 0.0
+    },
+    "SonarCloud": {
+      "caught": 0,
+      "total": 30,
+      "rate": 0.0
+    },
+    "Semgrep": {
+      "caught": 0,
+      "total": 30,
+      "rate": 0.0
+    }
+  },
+  "recall_by_fn_class": {
+    "logic-bug-no-token": {
+      "GauntletCI": {
+        "caught": 15,
+        "total": 15,
+        "rate": 1.0
+      },
+      "CodeQL": {
+        "caught": 0,
+        "total": 15,
+        "rate": 0.0
+      },
+      "SonarCloud": {
+        "caught": 0,
+        "total": 15,
+        "rate": 0.0
+      },
+      "Semgrep": {
+        "caught": 0,
+        "total": 15,
+        "rate": 0.0
+      }
+    },
+    "breaking-change": {
+      "GauntletCI": {
+        "caught": 5,
+        "total": 5,
+        "rate": 1.0
+      },
+      "CodeQL": {
+        "caught": 0,
+        "total": 5,
+        "rate": 0.0
+      },
+      "SonarCloud": {
+        "caught": 0,
+        "total": 5,
+        "rate": 0.0
+      },
+      "Semgrep": {
+        "caught": 0,
+        "total": 5,
+        "rate": 0.0
+      }
+    },
+    "edge-case-handling": {
+      "GauntletCI": {
+        "caught": 9,
+        "total": 9,
+        "rate": 1.0
+      },
+      "CodeQL": {
+        "caught": 0,
+        "total": 9,
+        "rate": 0.0
+      },
+      "SonarCloud": {
+        "caught": 0,
+        "total": 9,
+        "rate": 0.0
+      },
+      "Semgrep": {
+        "caught": 0,
+        "total": 9,
+        "rate": 0.0
+      }
+    },
+    "concurrency-risk": {
+      "GauntletCI": {
+        "caught": 1,
+        "total": 1,
+        "rate": 1.0
+      },
+      "CodeQL": {
+        "caught": 0,
+        "total": 1,
+        "rate": 0.0
+      },
+      "SonarCloud": {
+        "caught": 0,
+        "total": 1,
+        "rate": 0.0
+      },
+      "Semgrep": {
+        "caught": 0,
+        "total": 1,
+        "rate": 0.0
+      }
+    }
+  },
+  "gauntletci_noise": {
+    "fixture_count": 57,
+    "mean_findings": 6.37,
+    "median_findings": 3,
+    "at_delivery_cap_25": 3
+  },
+  "gold_noise_sweep": {
+    "strict": {
+      "fixture_count": 569,
+      "data_available": true,
+      "mean_findings": 0.48,
+      "median_findings": 0,
+      "max_findings": 25,
+      "at_delivery_cap": 4,
+      "recall_failures": [
+        "azure_azure-sdk-for-net_pr57223",
+        "dapperlib_dapper_pr1910",
+        "fluentvalidation_fluentvalidation_pr1888",
+        "apache_logging-log4net_pr138",
+        "icsharpcode_sharpziplib_pr592",
+        "npgsql_npgsql_pr6504"
+      ]
+    },
+    "balanced": {
+      "fixture_count": 569,
+      "data_available": true,
+      "mean_findings": 1.87,
+      "median_findings": 1,
+      "max_findings": 25,
+      "at_delivery_cap": 4,
+      "recall_failures": []
+    },
+    "permissive": {
+      "fixture_count": 569,
+      "data_available": true,
+      "mean_findings": 0.48,
+      "median_findings": 0,
+      "max_findings": 25,
+      "at_delivery_cap": 4,
+      "recall_failures": [
+        "azure_azure-sdk-for-net_pr57223",
+        "dapperlib_dapper_pr1910",
+        "fluentvalidation_fluentvalidation_pr1888",
+        "apache_logging-log4net_pr138",
+        "icsharpcode_sharpziplib_pr592",
+        "npgsql_npgsql_pr6504"
+      ]
+    }
+  },
+  "top_noisy_rules_balanced": [
+    {
+      "rule_id": "GCI0001",
+      "gold_finding_count": 171,
+      "ci_required_hits": 0,
+      "likely_noise_on_gold": true,
+      "noise_findings": 171
+    },
+    {
+      "rule_id": "GCI0003",
+      "gold_finding_count": 163,
+      "ci_required_hits": 23,
+      "likely_noise_on_gold": true,
+      "noise_findings": 140
+    },
+    {
+      "rule_id": "GCI0006",
+      "gold_finding_count": 143,
+      "ci_required_hits": 54,
+      "likely_noise_on_gold": true,
+      "noise_findings": 89
+    },
+    {
+      "rule_id": "GCI0043",
+      "gold_finding_count": 84,
+      "ci_required_hits": 0,
+      "likely_noise_on_gold": true,
+      "noise_findings": 84
+    },
+    {
+      "rule_id": "GCI0045",
+      "gold_finding_count": 80,
+      "ci_required_hits": 0,
+      "likely_noise_on_gold": true,
+      "noise_findings": 80
+    }
+  ],
+  "recommended_gate_sensitivity": "balanced",
+  "anchor_recall": {
+    "GauntletCI": {
+      "caught": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "CodeQL": {
+      "caught": 0,
+      "total": 1,
+      "rate": 0.0
+    },
+    "CodeRabbit": {
+      "caught": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "Greptile": {
+      "caught": 1,
+      "total": 1,
+      "rate": 1.0
+    },
+    "Qodo": {
+      "caught": 1,
+      "total": 1,
+      "rate": 1.0
+    }
+  },
+  "evidence_tier": "measured",
+  "headline": "GauntletCI 30/30 ci_required recall; CodeQL 0/30; SonarCloud 0/30; Semgrep 0/30",
+  "angles_covered": [
+    "same_defect_recall_ci_required",
+    "recall_by_fn_class",
+    "gauntletci_delivery_noise_on_gold",
+    "gold_noise_sensitivity_sweep",
+    "static_vs_llm_on_anchor",
+    "free_tier_comparable_tools_only"
+  ],
+  "artifacts": [
+    "eval/benchmark-suite.json",
+    "eval/competitor-scope.json",
+    "eval/scorecards/competitive-suite.json",
+    "eval/competitive-matrix.json",
+    "eval/ground-truth/",
+    "eval/competitor-runs/",
+    "eval/reports/gold-noise-sweep.json"
+  ]
+}

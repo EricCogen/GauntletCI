@@ -1,0 +1,7 @@
+{
+  "tool": "Semgrep",
+  "config": "p/csharp",
+  "harvested_at_utc": "2026-05-31T20:23:47.626135+00:00",
+  "finding_count": 0,
+  "alerts": []
+}

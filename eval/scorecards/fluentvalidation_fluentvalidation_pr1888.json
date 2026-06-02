@@ -1,0 +1,123 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "fluentvalidation_fluentvalidation_pr1888",
+  "repo": "FluentValidation/FluentValidation",
+  "pr_number": 1888,
+  "suite_tier": "gold",
+  "generated_at_utc": "2026-05-31T21:39:17.090650+00:00",
+  "upstream_pr_url": "https://github.com/FluentValidation/FluentValidation/pull/1888",
+  "eval_lab_pr_url": null,
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Corpus label expects GCI0004",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "src/FluentValidation/Enums.cs",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_gold",
+      "match_keywords": [
+        "GCI0004",
+        "Enums.cs",
+        "src/FluentValidation/Enums.cs",
+        "Obsolete",
+        "attribute",
+        "removed",
+        "FluentValidation",
+        "Enums"
+      ],
+      "evidence_excerpt": "Removed: [Obsolete(\"Use CascadeMode.Stop instead. The behaviour of StopOnFirstFailure was ambiguous when used at validator-level. For more details, see https://docs.fluentvalidation.net/en/latest/conditions.html#stop-vs-stoponfirstfailure\")"
+    }
+  ],
+  "tools": [
+    {
+      "name": "GauntletCI",
+      "finding_count": 5,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "GCI0004",
+            "Removed: [Obsolete(\"Use CascadeMode.Stop instead. The behaviour of StopOnFirstFailure was ambiguous when used at validat"
+          ],
+          "notes": ""
+        }
+      }
+    },
+    {
+      "name": "CodeQL",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T20:18:21.594808+00:00",
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeRabbit",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Greptile",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Qodo",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "SonarCloud",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T20:19:05.273247+00:00",
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Semgrep",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T20:20:12.553353+00:00",
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    }
+  ]
+}

@@ -29,7 +29,7 @@ public class GCI0042Tests
     }
 
     [Fact]
-    public async Task TodoComment_InProductionFile_ShouldFire()
+    public async Task SingleTodo_InProductionFile_ShouldNotFire()
     {
         var raw = """
             diff --git a/src/Service.cs b/src/Service.cs
@@ -46,7 +46,7 @@ public class GCI0042Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f => f.Summary.Contains("TODO/stub"));
+        Assert.Empty(findings);
     }
 
     [Fact]
@@ -74,15 +74,16 @@ public class GCI0042Tests
     }
 
     [Fact]
-    public async Task NotImplementedException_ShouldFire()
+    public async Task NotImplementedException_WithSecondMarker_ShouldFire()
     {
         var raw = """
             diff --git a/src/OrderService.cs b/src/OrderService.cs
             index abc..def 100644
             --- a/src/OrderService.cs
             +++ b/src/OrderService.cs
-            @@ -1,3 +1,5 @@
+            @@ -1,3 +1,6 @@
              public class OrderService {
+            +    // FIXME: wire up persistence
             +    public void ProcessOrder() {
             +        throw new NotImplementedException();
             +    }

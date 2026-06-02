@@ -1,0 +1,2351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GauntletCI App Mockup — app.gauntletci.com</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="app.css">
+  <style id="mcp-host-fonts"></style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.42.0/dist/tabler-icons.min.css"
+    media="all" onload="this.media='all'">
+</head>
+<body>
+  <!-- Pre-defined SVG markers — available to all SVGs via url(#arrow) -->
+  <svg style="position:absolute;width:0;height:0" aria-hidden="true">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6"
+        orient="auto-start-reverse">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round"
+          stroke-linejoin="round"></path>
+      </marker>
+    </defs>
+  </svg>
+  <div id="vis-container">
+    <h2 class="sr-only">GauntletCI full application mockup with role-aware home pages and all shared sub-pages including
+      Pull Requests, Repositories, Risk Trends, Rules, Integrations, Audit Log, and Settings</h2>
+
+    <div class="mockup-wrap">
+      <div class="mockup-header">
+        <div>
+          <div class="mockup-title">app.gauntletci.com</div>
+          <div class="mockup-sub">Role-based prototype · GCI deterministic rules · AI assist &amp; org features marked
+            <span class="plan-badge">Enterprise · planned</span></div>
+        </div>
+        <div class="role-sel">
+          <div class="role-lbl">Viewing as</div>
+          <select id="roleSelect" onchange="switchRole(this.value)">
+            <option value="cto">CTO / VP Eng</option>
+            <option value="em">Eng Manager</option>
+            <option value="tl">Tech Lead</option>
+            <option value="dev">Developer</option>
+            <option value="sec">Security / Compliance</option>
+            <option value="ops">Platform / DevOps</option>
+          </select>
+        </div>
+      </div>
+      <div class="shell">
+        <div class="sidebar">
+          <div class="sb-top">
+            <div class="logo"><span class="logo-badge">GCI</span>GauntletCI</div>
+            <div class="plan-tier-lbl">Edition</div>
+            <div class="plan-tier">Enterprise</div>
+          </div>
+          <div class="nav-sec" id="navSec">
+            <div class="nav-item"><i class="ti ti-home" aria-hidden="true"></i>Home</div>
+            <div class="nav-item active"><i class="ti ti-git-pull-request" aria-hidden="true"></i>Pull requests</div>
+            <div class="nav-item dim"><i class="ti ti-folder" aria-hidden="true"></i>Repositories</div>
+            <div class="nav-item dim"><i class="ti ti-chart-bar" aria-hidden="true"></i>Risk trends</div>
+            <div class="nav-item dim"><i class="ti ti-list-check" aria-hidden="true"></i>Rules</div>
+            <div class="nav-item dim"><i class="ti ti-plug" aria-hidden="true"></i>Integrations</div>
+            <div class="nav-item dim"><i class="ti ti-file-description" aria-hidden="true"></i>Audit log</div>
+            <div class="nav-item dim"><i class="ti ti-settings" aria-hidden="true"></i>Settings</div>
+          </div>
+        </div>
+
+        <div class="main" id="mainArea">
+
+          <div class="page" id="p-home-cto">
+            <div class="ph">
+              <div>
+                <div class="pt">Executive risk overview</div>
+                <div class="ps">Org-wide · 94% policy compliance · 82% delivery alignment · 1 org unit escalated</div>
+              </div>
+              <div class="ha"><button class="btn">Export report</button><button class="btn btnp">View
+                  escalations</button></div>
+            </div>
+            <div class="pc">
+              <div class="kg" style="grid-template-columns:repeat(4,1fr)">
+                <div class="kc">
+                  <div class="kl">Risk prevented (30d)</div>
+                  <div class="kv g">42</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">High-risk merges blocked</div>
+                  <div class="kv r">8</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Policy compliance</div>
+                  <div class="kv g">94%</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Delivery alignment <span class="plan-badge"
+                      style="margin-left:0;display:block;margin-top:2px">Enterprise · planned</span></div>
+                  <div class="kv g">82%</div>
+                </div>
+              </div>
+              <div class="exec-grid">
+                <div class="exec-chart">
+                  <div class="stl">Org scan outcomes (quarterly)</div>
+                  <div class="trend-wrap" id="ctoTrend" style="height:62px"></div>
+                  <div class="chart-axis"><span>Q1</span><span>Q2</span><span>Q3</span><span>Q4</span></div>
+                  <div class="chart-legend"><span><i style="background:#1D9E75"></i>Passed</span><span><i
+                        style="background:#EF9F27"></i>Warned</span><span><i
+                        style="background:#E24B4A"></i>Blocked</span></div>
+                </div>
+                <div class="exec-chart">
+                  <div class="stl">Risk prevented (8 weeks)</div>
+                  <div class="spark-line" id="ctoRiskSpark"></div>
+                  <div class="chart-axis"><span>Wk 1</span><span>Wk 4</span><span>Wk 8</span></div>
+                  <div class="chart-caption">Trending up · +12% vs prior period</div>
+                </div>
+                <div class="exec-chart">
+                  <div class="stl">Delivery alignment (quarterly) <span class="plan-badge">Enterprise · planned</span>
+                  </div>
+                  <div class="trend-wrap" id="alignTrend" style="height:62px"></div>
+                  <div class="chart-axis"><span>Q1</span><span>Q2</span><span>Q3</span><span>Q4</span></div>
+                  <div class="chart-legend"><span><i style="background:#1D9E75"></i>Full match</span><span><i
+                        style="background:#EF9F27"></i>Partial</span><span><i style="background:#7F77DD"></i>Scope
+                      drift</span><span><i style="background:#C8C8C8"></i>Unclear</span></div>
+                </div>
+                <div class="exec-chart">
+                  <div class="stl">Intent match distribution <span class="plan-badge">Enterprise · planned</span></div>
+                  <div class="donut-wrap">
+                    <div class="donut"
+                      style="background:conic-gradient(#1D9E75 0 82%, #EF9F27 82% 95%, #7F77DD 95% 100%)">
+                      <div class="donut-hole">82%</div>
+                    </div>
+                    <div class="donut-meta">
+                      <div><span class="donut-dot" style="background:#1D9E75"></span>Full match 82%</div>
+                      <div><span class="donut-dot" style="background:#EF9F27"></span>Partial 13%</div>
+                      <div><span class="donut-dot" style="background:#7F77DD"></span>Scope review 5%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="exec-grid-3">
+                <div class="exec-chart">
+                  <div class="stl">Org unit health index <span class="preview-lbl">(preview)</span></div>
+                  <div id="ctoOrgHealth"></div>
+                  <div class="chart-caption">Payments is the only unit below executive threshold.</div>
+                </div>
+                <div class="exec-chart">
+                  <div class="stl">Risk prevented by domain</div>
+                  <div id="ctoRiskDomain"></div>
+                </div>
+                <div class="exec-chart">
+                  <div class="stl">High-risk merges blocked</div>
+                  <div class="spark-line" id="ctoBlockedSpark"></div>
+                  <div class="chart-axis"><span>Wk 1</span><span>Wk 4</span><span>Wk 8</span></div>
+                  <div class="chart-caption">8 blocked this month · down from 11 prior month</div>
+                </div>
+              </div>
+              <div class="exec-grid">
+                <div class="exec-chart">
+                  <div class="stl">Policy compliance trend</div>
+                  <div class="spark-line" id="ctoPolicySpark"></div>
+                  <div class="chart-axis"><span>Jan</span><span>Apr</span><span>Jul</span><span>Oct</span></div>
+                  <div class="chart-caption">Org target 95% · currently 94%</div>
+                </div>
+                <div class="exec-chart">
+                  <div class="stl">Governance &amp; audit posture</div>
+                  <div id="ctoGovernance"></div>
+                  <div class="chart-caption">Accepted-risk volume stable · evidence chain complete</div>
+                </div>
+                <div class="exec-chart">
+                  <div class="stl">EM org status mix</div>
+                  <div class="trend-wrap" id="ctoEmStatus" style="height:52px"></div>
+                  <div class="chart-legend"><span><i style="background:#1D9E75"></i>Healthy</span><span><i
+                        style="background:#EF9F27"></i>Watch</span><span><i
+                        style="background:#E24B4A"></i>Escalated</span></div>
+                  <div class="chart-caption">1 of 3 engineering organizations escalated</div>
+                </div>
+                <div class="exec-chart">
+                  <div class="stl">Policy compliance</div>
+                  <div class="donut-wrap">
+                    <div class="donut"
+                      style="background:conic-gradient(#1D9E75 0 94%, #EF9F27 94% 98%, #E24B4A 98% 100%)">
+                      <div class="donut-hole">94%</div>
+                    </div>
+                    <div class="donut-meta">
+                      <div><span class="donut-dot" style="background:#1D9E75"></span>Enforced 94%</div>
+                      <div><span class="donut-dot" style="background:#EF9F27"></span>Partial 4%</div>
+                      <div><span class="donut-dot" style="background:#E24B4A"></span>Gap 2%</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">Engineering managers</div>
+                <div class="card">
+                  <table class="mt">
+                    <thead>
+                      <tr>
+                        <th style="width:22%">Manager</th>
+                        <th style="width:28%">Organization</th>
+                        <th style="width:14%">Status</th>
+                        <th>Executive note</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <div class="ic-name">mroberts</div>
+                          <div class="ic-sub">Morgan Roberts</div>
+                        </td>
+                        <td>Payments &amp; customer money movement</td>
+                        <td><span class="badge bhigh">Escalated</span></td>
+                        <td>Repeat delivery-risk pattern · EM review in progress</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="ic-name">khoff</div>
+                          <div class="ic-sub">Kim Hoff</div>
+                        </td>
+                        <td>Core platform &amp; edge</td>
+                        <td><span class="badge bp">Healthy</span></td>
+                        <td>No executive action required</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="ic-name">jpark</div>
+                          <div class="ic-sub">Jordan Park</div>
+                        </td>
+                        <td>Data &amp; analytics</td>
+                        <td><span class="badge bw">Watch</span></td>
+                        <td>Policy compliance below org target</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="p-home-em">
+            <div class="ph">
+              <div>
+                <div class="pt">Engineering risk control center</div>
+                <div class="ps">3 tech leads · 4 blocked across teams · 3 PRs flagged for scope drift</div>
+              </div>
+              <div class="ha"><button class="btn">Accepted risks</button><button class="btn btnp">Open pull
+                  requests</button></div>
+            </div>
+            <div class="pc">
+              <div class="kg" style="grid-template-columns:repeat(5,1fr)">
+                <div class="kc">
+                  <div class="kl">Open blocked PRs</div>
+                  <div class="kv r">4</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Avg resolve time</div>
+                  <div class="kv w">6.2h</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Teams below health index <span class="preview-lbl">(preview)</span></div>
+                  <div class="kv w">1</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Accepted risks pending</div>
+                  <div class="kv w">3</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Delivery alignment <span class="plan-badge"
+                      style="margin-left:0;display:block;margin-top:2px">Enterprise · planned</span></div>
+                  <div class="kv w">79%</div>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">Tech leads</div>
+                <div class="card">
+                  <table class="mt">
+                    <thead>
+                      <tr>
+                        <th style="width:20%">Lead</th>
+                        <th style="width:12%">Team</th>
+                        <th style="width:9%">Blocked</th>
+                        <th style="width:12%">Scope drift</th>
+                        <th style="width:12%">Status</th>
+                        <th>Manager note</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <div class="ic-name">tleaduser</div>
+                          <div class="ic-sub">Taylor Reed</div>
+                        </td>
+                        <td>Payments</td>
+                        <td style="color:#A32D2D;font-weight:500">2</td>
+                        <td style="color:#BA7517">1 likely</td>
+                        <td><span class="badge bhigh">Attention</span></td>
+                        <td>Clear today or escalate</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="ic-name">swalsh</div>
+                          <div class="ic-sub">Sam Walsh</div>
+                        </td>
+                        <td>Platform</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td><span class="badge bp">Healthy</span></td>
+                        <td>No action</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="ic-name">nwilson</div>
+                          <div class="ic-sub">Nina Wilson</div>
+                        </td>
+                        <td>Data</td>
+                        <td style="color:#A32D2D;font-weight:500">1</td>
+                        <td style="color:#BA7517">1 possible</td>
+                        <td><span class="badge bw">Watch</span></td>
+                        <td>Slow resolve on EF upgrade</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="exec-grid">
+                <div class="exec-chart">
+                  <div class="stl">Team health index <span class="preview-lbl">(preview)</span></div>
+                  <div id="emTeamHealth"></div>
+                  <div class="chart-caption">Squad rollup · repo detail on Repositories</div>
+                </div>
+                <div class="exec-chart">
+                  <div class="stl">Recurring risk patterns (sprint)</div>
+                  <div id="emRiskPatterns"></div>
+                  <div class="chart-caption">Retry and data-access patterns up vs last sprint</div>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">Team work queue</div>
+                <div class="card">
+                  <table class="mt">
+                    <thead>
+                      <tr>
+                        <th style="width:9%">Status</th>
+                        <th style="width:26%">PR</th>
+                        <th style="width:14%">Team / lead</th>
+                        <th style="width:7%">Age</th>
+                        <th style="width:11%">Intent</th>
+                        <th style="width:11%">Scope drift</th>
+                        <th>Next step</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><span class="badge bb">Blocked</span></td>
+                        <td>feat: add retry policy to PaymentClient</td>
+                        <td>Payments · tleaduser</td>
+                        <td>2h</td>
+                        <td><span class="badge bpart">Partial</span></td>
+                        <td><span class="badge bdrift">Likely</span></td>
+                        <td>Review split with lead</td>
+                      </tr>
+                      <tr>
+                        <td><span class="badge bb">Blocked</span></td>
+                        <td>chore: bump EF Core to 8.0</td>
+                        <td>Data · nwilson</td>
+                        <td>1d</td>
+                        <td><span class="badge bw">Weak</span></td>
+                        <td><span class="badge bpart">Possible</span></td>
+                        <td>Require lead review</td>
+                      </tr>
+                      <tr>
+                        <td><span class="badge bw">Warned</span></td>
+                        <td>refactor: extract TokenService</td>
+                        <td>Platform · swalsh</td>
+                        <td>8h</td>
+                        <td><span class="badge bpart">Partial</span></td>
+                        <td><span class="badge bpart">Possible</span></td>
+                        <td>TL owns API review</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                  <div
+                    style="padding:8px 11px;border-top:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between;gap:8px">
+                    <span style="font-size:10px;color:var(--color-text-secondary)">IC-level triage and finding detail
+                      live under each tech lead · full queue in Pull requests</span>
+                    <button class="btn btnp" style="font-size:10px;flex-shrink:0">Open pull requests</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="p-home-tl">
+            <div class="ph">
+              <div>
+                <div class="pt">Technical risk dashboard</div>
+                <div class="ps">5 ICs on team · 2 blocked PRs · GCI0044 most common · payments-svc health index 74
+                  (preview)</div>
+              </div>
+              <div class="ha"><button class="btn">Tune policy</button><button class="btn btnp">Open PR detail</button>
+              </div>
+            </div>
+            <div class="pc">
+              <div class="kg">
+                <div class="kc">
+                  <div class="kl">Blocking findings</div>
+                  <div class="kv r">5</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Warnings</div>
+                  <div class="kv w">6</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Lowest health index <span class="preview-lbl">(preview)</span></div>
+                  <div class="kv w">61</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Most common rule</div>
+                  <div class="kv" style="font-size:13px;font-family:var(--font-mono)">GCI0044</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">New risk today</div>
+                  <div class="kv r">3</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Avg scan time</div>
+                  <div class="kv g">1.4s</div>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">Individual contributors</div>
+                <div class="card">
+                  <table class="mt">
+                    <thead>
+                      <tr>
+                        <th style="width:20%">Engineer</th>
+                        <th style="width:14%">Primary repo</th>
+                        <th style="width:9%">Open PRs</th>
+                        <th style="width:9%">Blocked</th>
+                        <th style="width:9%">Warned</th>
+                        <th style="width:12%">Intent match</th>
+                        <th>Needs attention</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <div class="ic-name">jsmith</div>
+                          <div class="ic-sub">Jordan Smith · payments</div>
+                        </td>
+                        <td>payments-svc</td>
+                        <td>2</td>
+                        <td style="color:#A32D2D;font-weight:500">1</td>
+                        <td>1</td>
+                        <td><span class="badge bpart">Partial</span></td>
+                        <td>PaymentClient retry PR · likely scope drift</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="ic-name">acarter</div>
+                          <div class="ic-sub">Alex Carter · data</div>
+                        </td>
+                        <td>data-pipeline</td>
+                        <td>1</td>
+                        <td style="color:#A32D2D;font-weight:500">1</td>
+                        <td>0</td>
+                        <td><span class="badge bw">Weak</span></td>
+                        <td>EF Core bump · lead review recommended</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="ic-name">rchen</div>
+                          <div class="ic-sub">Riley Chen · identity</div>
+                        </td>
+                        <td>auth-core</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td style="color:#BA7517;font-weight:500">1</td>
+                        <td><span class="badge bpart">Partial</span></td>
+                        <td>TokenService refactor · API behavior</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="ic-name">bnguyen</div>
+                          <div class="ic-sub">Blake Nguyen · platform</div>
+                        </td>
+                        <td>api-gateway</td>
+                        <td>2</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td><span class="badge bp">Full</span></td>
+                        <td>—</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <div class="ic-name">mlee</div>
+                          <div class="ic-sub">Morgan Lee · edge</div>
+                        </td>
+                        <td>api-gateway</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td style="color:#BA7517;font-weight:500">1</td>
+                        <td><span class="badge bp">Full</span></td>
+                        <td>Logging middleware warning only</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">Pull request triage queue</div>
+                <div class="card">
+                  <table class="mt">
+                    <thead>
+                      <tr>
+                        <th style="width:10%">Status</th>
+                        <th style="width:10%">Author</th>
+                        <th style="width:28%">PR</th>
+                        <th style="width:14%">Repo</th>
+                        <th style="width:7%">Blocks</th>
+                        <th style="width:7%">Warns</th>
+                        <th style="width:11%">Worst confidence</th>
+                        <th style="width:13%">Last scan</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><span class="badge bb">Blocked</span></td>
+                        <td>jsmith</td>
+                        <td>feat: add retry policy to PaymentClient</td>
+                        <td>payments-svc</td>
+                        <td style="color:#A32D2D;font-weight:500">3</td>
+                        <td>1</td>
+                        <td style="color:#A32D2D;font-weight:500">High</td>
+                        <td>4m ago</td>
+                      </tr>
+                      <tr>
+                        <td><span class="badge bb">Blocked</span></td>
+                        <td>acarter</td>
+                        <td>chore: bump EF Core to 8.0</td>
+                        <td>data-pipeline</td>
+                        <td style="color:#A32D2D;font-weight:500">2</td>
+                        <td>3</td>
+                        <td style="color:#A32D2D;font-weight:500">High</td>
+                        <td>11m ago</td>
+                      </tr>
+                      <tr>
+                        <td><span class="badge bw">Warned</span></td>
+                        <td>rchen</td>
+                        <td>refactor: extract TokenService</td>
+                        <td>auth-core</td>
+                        <td>0</td>
+                        <td>2</td>
+                        <td style="color:#BA7517;font-weight:500">Medium</td>
+                        <td>19m ago</td>
+                      </tr>
+                      <tr>
+                        <td><span class="badge bp">Passed</span></td>
+                        <td>bnguyen</td>
+                        <td>fix: resolve race condition</td>
+                        <td>api-gateway</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td style="color:#3B6D11;font-weight:500">Low</td>
+                        <td>22m ago</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="tc">
+                <div class="sec">
+                  <div class="stl">Most common runtime-risk patterns</div>
+                  <div class="card">
+                    <table class="mt">
+                      <thead>
+                        <tr>
+                          <th style="width:24%">Rule</th>
+                          <th>Name</th>
+                          <th style="width:18%">Count</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td class="mono" style="color:#534AB7">GCI0044</td>
+                          <td>Performance Hotpath Risk</td>
+                          <td>34</td>
+                        </tr>
+                        <tr>
+                          <td class="mono" style="color:#534AB7">GCI0016</td>
+                          <td>Async Concurrency Risk</td>
+                          <td>18</td>
+                        </tr>
+                        <tr>
+                          <td class="mono" style="color:#534AB7">GCI0039</td>
+                          <td>External Service Safety</td>
+                          <td>11</td>
+                        </tr>
+                        <tr>
+                          <td class="mono" style="color:#534AB7">GCI0032</td>
+                          <td>Uncaught Exception Path</td>
+                          <td>9</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="sec">
+                  <div class="stl">Rule drift / hotspots</div>
+                  <div class="card">
+                    <table class="mt">
+                      <thead>
+                        <tr>
+                          <th>File</th>
+                          <th>Repeated risk</th>
+                          <th style="width:14%">Count</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td class="mono">PaymentClient.cs</td>
+                          <td>Retry behavior drift</td>
+                          <td>6</td>
+                        </tr>
+                        <tr>
+                          <td class="mono">RetryAuditService.cs</td>
+                          <td>EF Core query behavior</td>
+                          <td>5</td>
+                        </tr>
+                        <tr>
+                          <td class="mono">NotificationJob.cs</td>
+                          <td>Async blocking</td>
+                          <td>4</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <div class="sec intent-preview">
+                <div class="stl">Intent-to-implementation preview — PaymentClient PR <span class="plan-badge">Enterprise
+                    · planned</span></div>
+                <div class="card">
+                  <div
+                    style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+                    <span style="font-size:11px;color:var(--color-text-secondary)">PAY-2847 · Implement payment retry
+                      with exponential backoff</span>
+                    <span class="badge bpart">Intent match: Partial</span>
+                  </div>
+                  <div class="tc" style="gap:10px;margin-bottom:0">
+                    <div>
+                      <div class="ai-lbl">Matched</div>
+                      <ul class="ai-list">
+                        <li>Retry support added</li>
+                        <li>Exponential backoff implemented</li>
+                        <li>Transient gateway failure path changed</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <div class="ai-lbl">Outside ticket scope</div>
+                      <ul class="ai-list">
+                        <li>API key fallback behavior added</li>
+                        <li>Retry audit query behavior changed</li>
+                        <li>Exception propagation changed</li>
+                      </ul>
+                    </div>
+                  </div>
+                  <div style="margin-top:8px;font-size:11px;color:var(--color-text-primary)"><strong
+                      style="font-weight:500">Reviewer focus:</strong> Review exception propagation, retry eligibility,
+                    and configuration fallback before merge.</div>
+                  <span class="ai-badge" style="margin-top:8px">AI-assisted analysis · deterministic findings remain
+                    merge authority</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="p-home-dev">
+            <div class="ph">
+              <div>
+                <div class="pt">My PRs</div>
+                <div class="ps">1 blocked · action required on payments-svc</div>
+              </div>
+              <div class="ha"><button class="btn">Re-run scan</button><button class="btn btnp">View blocked
+                  finding</button></div>
+            </div>
+            <div class="pc">
+              <div class="kg" style="grid-template-columns:repeat(5,1fr)">
+                <div class="kc">
+                  <div class="kl">My blocked PRs</div>
+                  <div class="kv r">1</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Warnings</div>
+                  <div class="kv w">2</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Ready to merge</div>
+                  <div class="kv g">1</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Fixes requested</div>
+                  <div class="kv r">3</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Risks pending</div>
+                  <div class="kv w">1</div>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">My pull requests</div>
+                <div class="card">
+                  <table class="mt">
+                    <thead>
+                      <tr>
+                        <th style="width:10%">Status</th>
+                        <th style="width:32%">PR</th>
+                        <th style="width:16%">Repo</th>
+                        <th style="width:14%">Findings</th>
+                        <th style="width:10%">Worst confidence</th>
+                        <th style="width:18%">Next action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><span class="badge bb">Blocked</span></td>
+                        <td>add retry policy to PaymentClient</td>
+                        <td>payments-svc</td>
+                        <td>3 blocks, 1 warn</td>
+                        <td style="color:#A32D2D;font-weight:500">High</td>
+                        <td style="color:#A32D2D">Fix required</td>
+                      </tr>
+                      <tr>
+                        <td><span class="badge bw">Warned</span></td>
+                        <td>refactor TokenService</td>
+                        <td>auth-core</td>
+                        <td>2 warnings</td>
+                        <td style="color:#BA7517;font-weight:500">Medium</td>
+                        <td style="color:#BA7517">Review recommended</td>
+                      </tr>
+                      <tr>
+                        <td><span class="badge bp">Passed</span></td>
+                        <td>resolve cache race condition</td>
+                        <td>api-gateway</td>
+                        <td>0</td>
+                        <td style="color:#3B6D11;font-weight:500">Low</td>
+                        <td style="color:#3B6D11">Ready to merge</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="tc">
+                <div class="sec">
+                  <div class="stl">Finding detail — GCI0016</div>
+                  <div class="card" style="padding:11px 13px">
+                    <div class="fid">GCI0016</div>
+                    <div class="ftitle">Async Concurrency Risk</div>
+                    <div class="ffile">PaymentClient.cs:84</div>
+                    <div class="fdesc" style="margin-bottom:8px">Using <code
+                        style="font-family:var(--font-mono);font-size:10px">.Result</code> can block ASP.NET request
+                      threads under load, causing production timeouts.</div>
+                    <div class="fdesc" style="margin-bottom:8px"><strong style="font-weight:500">Fix:</strong> Use <code
+                        style="font-family:var(--font-mono);font-size:10px">await</code> and keep async chain intact.
+                    </div>
+                    <div class="det"><i class="ti ti-check" aria-hidden="true"></i>Deterministic · no prompt judgment
+                    </div>
+                  </div>
+                </div>
+                <div class="sec">
+                  <div class="stl">Fix checklist</div>
+                  <div class="card" style="padding:9px 13px">
+                    <label
+                      style="display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;cursor:pointer"><input
+                        type="checkbox" style="margin-top:1px;accent-color:#7F77DD">Replace <code
+                        style="font-family:var(--font-mono);font-size:10px">.Result</code> with <code
+                        style="font-family:var(--font-mono);font-size:10px">await</code> in PaymentClient.cs:84</label>
+                    <label
+                      style="display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;cursor:pointer"><input
+                        type="checkbox" style="margin-top:1px;accent-color:#7F77DD">Move retry policy construction
+                      outside request path</label>
+                    <label
+                      style="display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;cursor:pointer"><input
+                        type="checkbox" style="margin-top:1px;accent-color:#7F77DD">Remove hardcoded API key
+                      fallback</label>
+                    <label
+                      style="display:flex;gap:8px;align-items:flex-start;padding:5px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:11px;cursor:pointer"><input
+                        type="checkbox" style="margin-top:1px;accent-color:#7F77DD">Add projection to RetryAuditService
+                      query</label>
+                    <label
+                      style="display:flex;gap:8px;align-items:flex-start;padding:5px 0;font-size:11px;cursor:pointer"><input
+                        type="checkbox" style="margin-top:1px;accent-color:#7F77DD">Re-run GauntletCI scan</label>
+                  </div>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">Intent-to-Implementation Review <span class="plan-badge">Enterprise · planned</span>
+                </div>
+                <div class="card" style="padding:11px 13px">
+                  <div class="ai-row">
+                    <div class="ai-lbl">Detected intent</div>
+                    <div class="ai-val">Add retry behavior to PaymentClient for transient payment gateway failures.
+                    </div>
+                  </div>
+                  <div class="ai-row">
+                    <div class="ai-lbl">Found work</div>
+                    <ul class="ai-list">
+                      <li>Retry implementation added</li>
+                      <li>Exponential backoff added</li>
+                      <li>Retry audit logging modified</li>
+                      <li>API key fallback added</li>
+                    </ul>
+                  </div>
+                  <div class="ai-row">
+                    <div class="ai-lbl">Possible mismatch</div>
+                    <div class="ai-val" style="color:var(--color-text-secondary)">The ticket does not mention API key
+                      fallback behavior or RetryAuditService query changes.</div>
+                  </div>
+                  <div class="ai-row">
+                    <div class="ai-lbl">Suggested next action</div>
+                    <div class="ai-val" style="color:var(--color-text-secondary)">Update the PR description, split
+                      unrelated changes, or ask the tech lead to accept the additional scope.</div>
+                  </div>
+                  <span class="ai-badge">AI-assisted · merge blocking uses deterministic rules only</span>
+                  <div class="ha" style="margin-top:10px;flex-wrap:wrap">
+                    <button class="btn" style="font-size:10px">Update PR description</button>
+                    <button class="btn" style="font-size:10px">Request review</button>
+                    <button class="btn" style="font-size:10px">Split PR</button>
+                    <button class="btn btnp" style="font-size:10px">Explain mismatch</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="p-home-sec">
+            <div class="ph">
+              <div>
+                <div class="pt">Audit and policy overview</div>
+                <div class="ps">2 accepted risks missing Jira ref · 2 expired</div>
+              </div>
+              <div class="ha"><button class="btn">Policy changes</button><button class="btn btnp">Export audit
+                  log</button></div>
+            </div>
+            <div class="pc">
+              <div class="kg">
+                <div class="kc">
+                  <div class="kl">Accepted risks</div>
+                  <div class="kv w">7</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Expired accepted risks</div>
+                  <div class="kv r">2</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Policy violations</div>
+                  <div class="kv r">3</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Protected repos</div>
+                  <div class="kv g">31</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Stored scan reports</div>
+                  <div class="kv g">437</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Unreviewed high-risk</div>
+                  <div class="kv w">2</div>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">Accepted risk log <span class="plan-badge">Enterprise · planned</span></div>
+                <div class="card">
+                  <table class="mt">
+                    <thead>
+                      <tr>
+                        <th style="width:12%">Rule</th>
+                        <th style="width:20%">Repo / PR</th>
+                        <th style="width:14%">Accepted by</th>
+                        <th>Reason</th>
+                        <th style="width:12%">Expires</th>
+                        <th style="width:12%">Ticket</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="mono" style="color:#534AB7">GCI0044</td>
+                        <td>payments-svc #214</td>
+                        <td>mroberts</td>
+                        <td>Follow-up ticket created</td>
+                        <td>14 days</td>
+                        <td style="color:#185FA5">PAY-2911</td>
+                      </tr>
+                      <tr>
+                        <td class="mono" style="color:#534AB7">GCI0022</td>
+                        <td>auth-core #188</td>
+                        <td>dpatel</td>
+                        <td>Low production impact</td>
+                        <td>30 days</td>
+                        <td style="color:#185FA5">AUTH-1022</td>
+                      </tr>
+                      <tr>
+                        <td class="mono" style="color:#534AB7">GCI0016</td>
+                        <td>notification-worker #201</td>
+                        <td>acarter</td>
+                        <td>Background job, low risk</td>
+                        <td style="color:#A32D2D">Expired</td>
+                        <td style="color:#A32D2D">Missing</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">Accepted risk context — GCI0044 <span class="plan-badge">Enterprise · planned</span>
+                </div>
+                <div class="card" style="padding:11px 13px">
+                  <div style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px">GCI0044
+                    · Performance Hotpath Risk · payments-svc #214</div>
+                  <div class="ai-row">
+                    <div class="ai-lbl">AI-assisted context</div>
+                    <div class="ai-val" style="color:var(--color-text-secondary)">The accepted finding appears outside
+                      the original Jira ticket scope. The ticket requested payment retry behavior; this finding relates
+                      to retry audit query behavior.</div>
+                  </div>
+                  <div class="ai-row">
+                    <div class="ai-lbl">Required reviewer note</div>
+                    <div class="ai-val" style="color:var(--color-text-secondary)">Explain why this out-of-scope data
+                      access risk is acceptable for this release.</div>
+                  </div>
+                  <div class="tc" style="gap:10px;margin-top:4px">
+                    <div class="kc" style="padding:8px 10px">
+                      <div class="kl">Suggested expiration</div>
+                      <div class="kv" style="font-size:14px">14 days</div>
+                    </div>
+                    <div class="kc" style="padding:8px 10px">
+                      <div class="kl">Required follow-up</div>
+                      <div class="kv" style="font-size:14px;font-family:var(--font-mono);color:#185FA5">PAY-2911</div>
+                    </div>
+                  </div>
+                  <span class="ai-badge" style="margin-top:8px">AI-assisted context · policy and audit trail remain
+                    authoritative</span>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">Policy enforcement matrix <span class="plan-badge">Enterprise · planned</span></div>
+                <div class="card">
+                  <table class="mt" style="table-layout:fixed">
+                    <thead>
+                      <tr>
+                        <th style="width:22%">Repo</th>
+                        <th>Blocking on</th>
+                        <th>Jira required</th>
+                        <th>Scan stored</th>
+                        <th>Branch protected</th>
+                        <th>Expiry required</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>payments-svc</td>
+                        <td style="text-align:center"><i class="ti ti-check" style="color:#1D9E75"
+                            aria-hidden="true"></i></td>
+                        <td style="text-align:center"><i class="ti ti-check" style="color:#1D9E75"
+                            aria-hidden="true"></i></td>
+                        <td style="text-align:center"><i class="ti ti-check" style="color:#1D9E75"
+                            aria-hidden="true"></i></td>
+                        <td style="text-align:center"><i class="ti ti-check" style="color:#1D9E75"
+                            aria-hidden="true"></i></td>
+                        <td style="text-align:center"><i class="ti ti-check" style="color:#1D9E75"
+                            aria-hidden="true"></i></td>
+                      </tr>
+                      <tr>
+                        <td>notification-worker</td>
+                        <td style="text-align:center"><i class="ti ti-check" style="color:#1D9E75"
+                            aria-hidden="true"></i></td>
+                        <td style="text-align:center"><i class="ti ti-x" style="color:#E24B4A" aria-hidden="true"></i>
+                        </td>
+                        <td style="text-align:center"><i class="ti ti-x" style="color:#E24B4A" aria-hidden="true"></i>
+                        </td>
+                        <td style="text-align:center"><i class="ti ti-check" style="color:#1D9E75"
+                            aria-hidden="true"></i></td>
+                        <td style="text-align:center"><i class="ti ti-check" style="color:#1D9E75"
+                            aria-hidden="true"></i></td>
+                      </tr>
+                      <tr>
+                        <td>data-pipeline</td>
+                        <td style="text-align:center"><i class="ti ti-check" style="color:#1D9E75"
+                            aria-hidden="true"></i></td>
+                        <td style="text-align:center"><i class="ti ti-check" style="color:#1D9E75"
+                            aria-hidden="true"></i></td>
+                        <td style="text-align:center"><i class="ti ti-check" style="color:#1D9E75"
+                            aria-hidden="true"></i></td>
+                        <td style="text-align:center"><i class="ti ti-x" style="color:#E24B4A" aria-hidden="true"></i>
+                        </td>
+                        <td style="text-align:center"><i class="ti ti-check" style="color:#1D9E75"
+                            aria-hidden="true"></i></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="p-home-ops">
+            <div class="ph">
+              <div>
+                <div class="pt">Platform operations</div>
+                <div class="ps">Azure DevOps warning · 2 repos missing token scope</div>
+              </div>
+              <div class="ha"><button class="btn">Test webhook</button><button class="btn btnp">Fix failed scan</button>
+              </div>
+            </div>
+            <div class="pc">
+              <div class="kg">
+                <div class="kc">
+                  <div class="kl">Scan success rate</div>
+                  <div class="kv g">98.6%</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Failed scans</div>
+                  <div class="kv w">6</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Avg scan duration</div>
+                  <div class="kv g">1.4s</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Repos onboarded</div>
+                  <div class="kv">34</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Integrations healthy</div>
+                  <div class="kv w">3/4</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Webhook delivery</div>
+                  <div class="kv g">100%</div>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">Integration health</div>
+                <div class="card" style="padding:0">
+                  <div class="irow">
+                    <div>
+                      <div class="iname"><span class="dot-g"></span>GitHub Actions</div>
+                      <div class="imeta">Last sync 2m ago · 43 repos connected · shipped today</div>
+                    </div><span class="badge bp">Healthy</span>
+                  </div>
+                  <div class="irow">
+                    <div>
+                      <div class="iname"><span class="dot-a"></span>Azure DevOps <span class="plan-badge">Enterprise ·
+                          planned</span></div>
+                      <div class="imeta">Last sync 18m ago · 2 repos missing token scope</div>
+                    </div><span class="badge bw">Warning</span>
+                  </div>
+                  <div class="irow">
+                    <div>
+                      <div class="iname"><span class="dot-g"></span>Jira <span class="plan-badge">Enterprise ·
+                          planned</span></div>
+                      <div class="imeta">Last sync 1m ago · comments posting normally</div>
+                    </div><span class="badge bp">Healthy</span>
+                  </div>
+                  <div class="irow">
+                    <div>
+                      <div class="iname"><span class="dot-g"></span>Linear <span class="plan-badge">Enterprise ·
+                          planned</span></div>
+                      <div class="imeta">Last sync 14m ago · sync active</div>
+                    </div><span class="badge bp">Healthy</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">AI assist health <span class="plan-badge">Enterprise · planned</span></div>
+                <div class="card" style="padding:0">
+                  <div class="arow"><span>Jira sync</span><span class="badge bp">Healthy</span></div>
+                  <div class="arow"><span>PR description access</span><span class="badge bp">Healthy</span></div>
+                  <div class="arow"><span>Acceptance criteria parsing</span><span class="badge bp">Enabled</span></div>
+                  <div class="arow"><span>AI summaries (linked PRs)</span><span
+                      style="color:var(--color-text-primary);font-weight:500">93%</span></div>
+                  <div class="arow"><span>Skipped — missing ticket link</span><span style="color:#BA7517">7 PRs</span>
+                  </div>
+                  <div class="arow"><span>Skipped — issue permissions</span><span style="color:#BA7517">2 PRs</span>
+                  </div>
+                </div>
+              </div>
+              <div class="tc">
+                <div class="sec">
+                  <div class="stl">Failed scan queue</div>
+                  <div class="card">
+                    <table class="mt">
+                      <thead>
+                        <tr>
+                          <th>Repo</th>
+                          <th>Failure</th>
+                          <th style="width:20%">Last retry</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>notification-worker</td>
+                          <td>Missing repo access</td>
+                          <td>3m ago</td>
+                        </tr>
+                        <tr>
+                          <td>legacy-billing</td>
+                          <td>Config error</td>
+                          <td>12m ago</td>
+                        </tr>
+                        <tr>
+                          <td>reporting-svc</td>
+                          <td>Webhook failure</td>
+                          <td>1h ago</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="sec">
+                  <div class="stl">Configuration drift</div>
+                  <div class="card">
+                    <table class="mt">
+                      <thead>
+                        <tr>
+                          <th>Repo</th>
+                          <th>Drift</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>payments-svc</td>
+                          <td style="color:#BA7517">GCI0039 is Warn not Block</td>
+                        </tr>
+                        <tr>
+                          <td>notification-worker</td>
+                          <td style="color:#BA7517">Scan storage disabled</td>
+                        </tr>
+                        <tr>
+                          <td>data-pipeline</td>
+                          <td style="color:#BA7517">Jira not configured</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page active" id="p-prs">
+            <div class="ph">
+              <div>
+                <div class="pt">Pull requests</div>
+                <div class="ps">All repos · 4 blocked · 6 warned · 31 passed today</div>
+              </div>
+              <div class="ha"><button class="btn">Filter</button><button class="btn btnp">Export</button></div>
+            </div>
+            <div class="pc">
+              <div class="kg" style="grid-template-columns:repeat(5,1fr)">
+                <div class="kc">
+                  <div class="kl">Blocked</div>
+                  <div class="kv r">4</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Warned</div>
+                  <div class="kv w">6</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Passed</div>
+                  <div class="kv g">31</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Avg findings / PR</div>
+                  <div class="kv w">2.4</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Scanned today</div>
+                  <div class="kv">41</div>
+                </div>
+              </div>
+              <div class="sform">
+                <input placeholder="Search PRs, repos, authors..." style="max-width:280px">
+                <select
+                  style="font-size:12px;padding:5px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)">
+                  <option>All statuses</option>
+                  <option>Blocked</option>
+                  <option>Warned</option>
+                  <option>Passed</option>
+                </select>
+                <select
+                  style="font-size:12px;padding:5px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)">
+                  <option>All repos</option>
+                  <option>payments-svc</option>
+                  <option>auth-core</option>
+                  <option>data-pipeline</option>
+                </select>
+              </div>
+              <div class="sec">
+                <div class="card">
+                  <table class="mt">
+                    <thead>
+                      <tr>
+                        <th style="width:10%">Status</th>
+                        <th style="width:28%">PR</th>
+                        <th style="width:16%">Repo</th>
+                        <th style="width:10%">Author</th>
+                        <th style="width:8%">Files</th>
+                        <th style="width:8%">Blocks</th>
+                        <th style="width:8%">Warns</th>
+                        <th style="width:10%">Worst confidence</th>
+                        <th style="width:10%">Scanned</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><span class="badge bb">Blocked</span></td>
+                        <td>feat: add retry policy to PaymentClient</td>
+                        <td>payments-svc</td>
+                        <td>jsmith</td>
+                        <td>7</td>
+                        <td style="color:#A32D2D;font-weight:500">3</td>
+                        <td>1</td>
+                        <td style="color:#A32D2D;font-weight:500">High</td>
+                        <td>4m ago</td>
+                      </tr>
+                      <tr>
+                        <td><span class="badge bb">Blocked</span></td>
+                        <td>chore: bump EF Core to 8.0</td>
+                        <td>data-pipeline</td>
+                        <td>acarter</td>
+                        <td>12</td>
+                        <td style="color:#A32D2D;font-weight:500">2</td>
+                        <td>3</td>
+                        <td style="color:#A32D2D;font-weight:500">High</td>
+                        <td>11m ago</td>
+                      </tr>
+                      <tr>
+                        <td><span class="badge bb">Blocked</span></td>
+                        <td>fix: update cancellation token handling</td>
+                        <td>notification-worker</td>
+                        <td>bnguyen</td>
+                        <td>4</td>
+                        <td style="color:#A32D2D;font-weight:500">1</td>
+                        <td>0</td>
+                        <td style="color:#A32D2D;font-weight:500">High</td>
+                        <td>34m ago</td>
+                      </tr>
+                      <tr>
+                        <td><span class="badge bw">Warned</span></td>
+                        <td>refactor: extract TokenService</td>
+                        <td>auth-core</td>
+                        <td>rchen</td>
+                        <td>5</td>
+                        <td>0</td>
+                        <td>2</td>
+                        <td style="color:#BA7517;font-weight:500">Medium</td>
+                        <td>19m ago</td>
+                      </tr>
+                      <tr>
+                        <td><span class="badge bw">Warned</span></td>
+                        <td>feat: add request logging middleware</td>
+                        <td>api-gateway</td>
+                        <td>mlee</td>
+                        <td>3</td>
+                        <td>0</td>
+                        <td>1</td>
+                        <td style="color:#BA7517;font-weight:500">Medium</td>
+                        <td>42m ago</td>
+                      </tr>
+                      <tr>
+                        <td><span class="badge bp">Passed</span></td>
+                        <td>fix: resolve race condition in cache layer</td>
+                        <td>api-gateway</td>
+                        <td>bnguyen</td>
+                        <td>3</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td style="color:#3B6D11;font-weight:500">Low</td>
+                        <td>22m ago</td>
+                      </tr>
+                      <tr>
+                        <td><span class="badge bp">Passed</span></td>
+                        <td>docs: update README with retry policy guide</td>
+                        <td>payments-svc</td>
+                        <td>jsmith</td>
+                        <td>1</td>
+                        <td>0</td>
+                        <td>0</td>
+                        <td style="color:#3B6D11;font-weight:500">—</td>
+                        <td>1h ago</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">PR detail — feat: add retry policy to PaymentClient</div>
+                <div class="card" style="padding:0">
+                  <div
+                    style="padding:10px 13px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between">
+                    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span
+                        class="badge bb">Blocked</span><span
+                        style="font-size:12px;font-weight:500;color:var(--color-text-primary)">payments-svc /
+                        #217</span><span style="font-size:11px;color:var(--color-text-secondary)">jsmith · 7 files · 3
+                        block · 1 warn · PAY-2847</span></div>
+                    <div class="ha"><button class="btn">Open in GitHub</button><button class="btn btnp">Request risk
+                        acceptance <span class="plan-badge">Enterprise · planned</span></button></div>
+                  </div>
+                  <div class="pr-detail-grid">
+                    <div class="pr-detail-main" style="padding:10px 13px">
+                      <div
+                        style="font-size:10px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">
+                        Deterministic findings (merge authority)</div>
+                      <div class="pr-finding">
+                        <div class="fid">GCI0016 · Block</div>
+                        <div class="ftitle">Async Concurrency Risk</div>
+                        <div class="ffile">src/Payments/PaymentClient.cs:84</div>
+                        <div class="fdesc">Using <code
+                            style="font-family:var(--font-mono);font-size:10px">.Result</code> on async operation can
+                          block ASP.NET threads under load.</div>
+                      </div>
+                      <div class="pr-finding">
+                        <div class="fid">GCI0044 · Block</div>
+                        <div class="ftitle">Performance Hotpath Risk</div>
+                        <div class="ffile">src/Audit/RetryAuditService.cs:42</div>
+                        <div class="fdesc">Query inside loop without projection will generate N+1 database calls at
+                          runtime.</div>
+                      </div>
+                      <div class="pr-finding">
+                        <div class="fid">GCI0012 · Block</div>
+                        <div class="ftitle">Security Risk</div>
+                        <div class="ffile">src/Payments/PaymentClient.cs:21</div>
+                        <div class="fdesc">API key fallback value is hardcoded in source — must be removed before merge.
+                        </div>
+                      </div>
+                      <div class="pr-warn-finding">
+                        <div class="fid" style="color:#854F0B">GCI0022 · Warn</div>
+                        <div class="ftitle">Idempotency &amp; Retry Safety</div>
+                        <div class="ffile">src/Payments/PaymentClient.cs:67</div>
+                        <div class="fdesc">Retry delay configuration duplicated across 3 call sites — consider
+                          extracting to policy class.</div>
+                      </div>
+                    </div>
+                    <aside class="ai-panel">
+                      <div style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px">
+                        Intent match <span class="plan-badge">Enterprise · planned</span></div>
+                      <span class="ai-badge">AI-assisted analysis · deterministic findings remain merge authority</span>
+                      <div class="ai-row">
+                        <div class="ai-lbl">Ticket</div>
+                        <div class="ai-val">PAY-2847 · Implement payment retry with exponential backoff</div>
+                      </div>
+                      <div class="ai-row">
+                        <div class="ai-lbl">Intent match</div>
+                        <div class="ai-val"><span class="badge bpart">Partial</span> · scope drift <span
+                            class="badge bdrift">Likely</span></div>
+                      </div>
+                      <div class="ai-row">
+                        <div class="ai-lbl">Matched</div>
+                        <ul class="ai-list">
+                          <li>Retry support added</li>
+                          <li>Exponential backoff implemented</li>
+                          <li>Transient gateway failure path changed</li>
+                        </ul>
+                      </div>
+                      <div class="ai-row">
+                        <div class="ai-lbl">Possibly missing</div>
+                        <ul class="ai-list">
+                          <li>No explicit declined-card no-retry guard found</li>
+                          <li>No max-retry exhaustion test found</li>
+                        </ul>
+                      </div>
+                      <div class="ai-row">
+                        <div class="ai-lbl">Outside ticket scope</div>
+                        <ul class="ai-list">
+                          <li>API key fallback behavior added</li>
+                          <li>Retry audit query behavior changed</li>
+                          <li>Exception propagation changed</li>
+                        </ul>
+                      </div>
+                      <div class="ai-row">
+                        <div class="ai-lbl">Reviewer focus</div>
+                        <div class="ai-val">Review exception propagation, retry eligibility, and configuration fallback
+                          before merge.</div>
+                      </div>
+                      <div class="ai-row">
+                        <div class="ai-lbl">Acceptance criteria</div>
+                        <div class="ai-val" style="font-size:10px;line-height:1.5">AC1 Covered · AC2 Covered · AC3 Not
+                          found · AC4 Partially covered</div>
+                      </div>
+                      <div class="ai-row">
+                        <div class="ai-lbl">Evidence</div>
+                        <div class="ai-val" style="font-size:10px;color:var(--color-text-secondary)">Jira acceptance
+                          criteria · PR description · changed files · GCI0016, GCI0044, GCI0012, GCI0022</div>
+                      </div>
+                      <button class="btn" style="width:100%;font-size:10px;margin-top:4px">Open reviewer focus
+                        brief</button>
+                    </aside>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="p-repos">
+            <div class="ph">
+              <div>
+                <div class="pt">Repositories</div>
+                <div class="ps">34 onboarded · 3 below health index threshold (preview) · 2 not protected</div>
+              </div>
+              <div class="ha"><button class="btn">Add repo</button><button class="btn btnp">Apply policy</button></div>
+            </div>
+            <div class="pc">
+              <div class="kg" style="grid-template-columns:repeat(5,1fr)">
+                <div class="kc">
+                  <div class="kl">Onboarded</div>
+                  <div class="kv">34</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Protected</div>
+                  <div class="kv g">32</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Below threshold</div>
+                  <div class="kv r">3</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Not connected</div>
+                  <div class="kv w">2</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Avg health index <span class="preview-lbl">(preview)</span></div>
+                  <div class="kv w">79</div>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">All repositories</div>
+                <div class="card">
+                  <table class="mt">
+                    <thead>
+                      <tr>
+                        <th style="width:22%">Repo</th>
+                        <th style="width:14%">Health index <span class="preview-lbl">(preview)</span></th>
+                        <th style="width:12%">Trend</th>
+                        <th style="width:14%">Status</th>
+                        <th style="width:16%">Dominant risk</th>
+                        <th style="width:10%">Open PRs</th>
+                        <th style="width:16%">Last scan</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td style="font-weight:500">payments-svc</td>
+                        <td style="color:#A32D2D;font-weight:500">74</td>
+                        <td style="color:#E24B4A">↓ 6 this wk</td>
+                        <td><span class="badge bhigh">High risk</span></td>
+                        <td>GCI0044 / GCI0016</td>
+                        <td>3</td>
+                        <td>4m ago</td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight:500">notification-worker</td>
+                        <td style="color:#A32D2D;font-weight:500">61</td>
+                        <td style="color:#E24B4A">↓ 9 this wk</td>
+                        <td><span class="badge bhigh">High risk</span></td>
+                        <td>GCI0016 / GCI0032</td>
+                        <td>2</td>
+                        <td>34m ago</td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight:500">data-pipeline</td>
+                        <td style="color:#BA7517;font-weight:500">77</td>
+                        <td style="color:#E24B4A">↓ 2 this wk</td>
+                        <td><span class="badge bmod">Moderate</span></td>
+                        <td>Query materialization</td>
+                        <td>1</td>
+                        <td>11m ago</td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight:500">auth-core</td>
+                        <td style="color:#3B6D11;font-weight:500">88</td>
+                        <td style="color:#1D9E75">↑ 2 this wk</td>
+                        <td><span class="badge bi">Stable</span></td>
+                        <td>API behavior</td>
+                        <td>1</td>
+                        <td>19m ago</td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight:500">api-gateway</td>
+                        <td style="color:#3B6D11;font-weight:500">91</td>
+                        <td style="color:#1D9E75">↑ 1 this wk</td>
+                        <td><span class="badge bp">Healthy</span></td>
+                        <td>Low open risk</td>
+                        <td>2</td>
+                        <td>22m ago</td>
+                      </tr>
+                      <tr>
+                        <td style="font-weight:500">legacy-billing</td>
+                        <td style="color:#BA7517;font-weight:500">71</td>
+                        <td style="color:var(--color-text-tertiary)">— stable</td>
+                        <td><span class="badge bmod">Moderate</span></td>
+                        <td>Exception flow</td>
+                        <td>0</td>
+                        <td>12m ago</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">Repo detail — payments-svc</div>
+                <div class="card" style="padding:0">
+                  <div
+                    style="padding:10px 13px;border-bottom:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between">
+                    <div style="display:flex;gap:10px;align-items:center">
+                      <div
+                        style="width:36px;height:36px;border-radius:50%;background:#FCEBEB;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;color:#A32D2D"
+                        title="Health index (preview)">74</div>
+                      <div>
+                        <div style="font-size:13px;font-weight:500;color:var(--color-text-primary)">payments-svc</div>
+                        <div style="font-size:10px;color:var(--color-text-secondary)">Health index 74 (preview) · High
+                          risk · trend ↓6 · 3 open PRs · last scan 4m ago</div>
+                      </div>
+                    </div>
+                    <div class="ha"><button class="btn">View all PRs</button><button class="btn btnp">Tune
+                        policy</button></div>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;padding:0">
+                    <div style="padding:10px 13px;border-right:0.5px solid var(--color-border-tertiary)">
+                      <div class="stl">Blocking findings</div>
+                      <div class="rbar"><span class="rbl">GCI0044</span>
+                        <div class="rbt">
+                          <div class="rbf" style="width:80%;background:#E24B4A"></div>
+                        </div><span class="rbv">12</span>
+                      </div>
+                      <div class="rbar"><span class="rbl">GCI0016</span>
+                        <div class="rbt">
+                          <div class="rbf" style="width:50%;background:#E24B4A"></div>
+                        </div><span class="rbv">7</span>
+                      </div>
+                      <div class="rbar"><span class="rbl">GCI0012</span>
+                        <div class="rbt">
+                          <div class="rbf" style="width:30%;background:#EF9F27"></div>
+                        </div><span class="rbv">4</span>
+                      </div>
+                    </div>
+                    <div style="padding:10px 13px;border-right:0.5px solid var(--color-border-tertiary)">
+                      <div class="stl">Policy config</div>
+                      <div class="arow" style="padding:4px 0"><span style="color:#0F6E56"><i class="ti ti-check"
+                            aria-hidden="true"></i> Blocking enforced</span></div>
+                      <div class="arow" style="padding:4px 0"><span style="color:#0F6E56"><i class="ti ti-check"
+                            aria-hidden="true"></i> Jira required</span></div>
+                      <div class="arow" style="padding:4px 0"><span style="color:#E24B4A"><i class="ti ti-x"
+                            aria-hidden="true"></i> GCI0039 is Warn not Block</span></div>
+                    </div>
+                    <div style="padding:10px 13px">
+                      <div class="stl">Accepted risks</div>
+                      <div style="font-size:11px;color:var(--color-text-secondary);margin-bottom:4px">GCI0044 · PAY-2911
+                        · 14 days</div>
+                      <div style="font-size:11px;color:var(--color-text-secondary)">Accepted by mroberts · follow-up
+                        created</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="p-trends">
+            <div class="ph">
+              <div>
+                <div class="pt">Risk trends</div>
+                <div class="ps">Last 30 days · all repos · deterministic scans only</div>
+              </div>
+              <div class="ha"><button class="btn">Date range</button><button class="btn btnp">Export</button></div>
+            </div>
+            <div class="pc">
+              <div class="kg">
+                <div class="kc">
+                  <div class="kl">Risk prevented (30d)</div>
+                  <div class="kv g">148</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Avg weekly blocks</div>
+                  <div class="kv r">5.8</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Avg weekly warnings</div>
+                  <div class="kv w">16</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Resolution rate</div>
+                  <div class="kv g">91%</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Accepted risks</div>
+                  <div class="kv w">7</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Scans this month</div>
+                  <div class="kv">437</div>
+                </div>
+              </div>
+              <div class="tc">
+                <div class="sec">
+                  <div class="stl">Weekly scan outcomes</div>
+                  <div class="card" style="padding:10px 12px 8px">
+                    <div class="trend-wrap" id="trendsChart">
+                      <div class="tbar-g">
+                        <div class="tbar" style="height:43px;background:#1D9E75"></div>
+                        <div class="tbar" style="height:10px;background:#EF9F27"></div>
+                        <div class="tbar" style="height:3px;background:#E24B4A"></div>
+                      </div>
+                      <div class="tbar-g">
+                        <div class="tbar" style="height:46px;background:#1D9E75"></div>
+                        <div class="tbar" style="height:9px;background:#EF9F27"></div>
+                        <div class="tbar" style="height:4px;background:#E24B4A"></div>
+                      </div>
+                      <div class="tbar-g">
+                        <div class="tbar" style="height:54px;background:#1D9E75"></div>
+                        <div class="tbar" style="height:6px;background:#EF9F27"></div>
+                        <div class="tbar" style="height:2px;background:#E24B4A"></div>
+                      </div>
+                      <div class="tbar-g">
+                        <div class="tbar" style="height:58px;background:#1D9E75"></div>
+                        <div class="tbar" style="height:5px;background:#EF9F27"></div>
+                        <div class="tbar" style="height:2px;background:#E24B4A"></div>
+                      </div>
+                    </div>
+                    <div
+                      style="display:flex;justify-content:space-between;padding-top:4px;font-size:10px;color:var(--color-text-tertiary)">
+                      <span>Wk 1</span><span>Wk 2</span><span>Wk 3</span><span>Wk 4</span>
+                    </div>
+                    <div style="display:flex;gap:10px;padding-top:6px;font-size:10px;color:var(--color-text-secondary)">
+                      <span><span
+                          style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#1D9E75;margin-right:3px"></span>Passed</span>
+                      <span><span
+                          style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#EF9F27;margin-right:3px"></span>Warned</span>
+                      <span><span
+                          style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#E24B4A;margin-right:3px"></span>Blocked</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="sec">
+                  <div class="stl">Risk category over time</div>
+                  <div class="card" style="padding:10px 12px">
+                    <div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:8px">Findings by category
+                      this month</div>
+                    <div class="rbar"><span class="rbl">EF Core / data</span>
+                      <div class="rbt">
+                        <div class="rbf" style="width:78%;background:#7F77DD"></div>
+                      </div><span class="rbv">34</span>
+                    </div>
+                    <div class="rbar"><span class="rbl">Async</span>
+                      <div class="rbt">
+                        <div class="rbf" style="width:60%;background:#7F77DD"></div>
+                      </div><span class="rbv">26</span>
+                    </div>
+                    <div class="rbar"><span class="rbl">Retry / timeout</span>
+                      <div class="rbt">
+                        <div class="rbf" style="width:44%;background:#7F77DD"></div>
+                      </div><span class="rbv">19</span>
+                    </div>
+                    <div class="rbar"><span class="rbl">Exception flow</span>
+                      <div class="rbt">
+                        <div class="rbf" style="width:28%;background:#7F77DD"></div>
+                      </div><span class="rbv">12</span>
+                    </div>
+                    <div class="rbar"><span class="rbl">API behavior</span>
+                      <div class="rbt">
+                        <div class="rbf" style="width:18%;background:#7F77DD"></div>
+                      </div><span class="rbv">8</span>
+                    </div>
+                    <div class="rbar"><span class="rbl">Observability</span>
+                      <div class="rbt">
+                        <div class="rbf" style="width:12%;background:#7F77DD"></div>
+                      </div><span class="rbv">5</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="tc">
+                <div class="sec">
+                  <div class="stl">Risk concentration by repo</div>
+                  <div class="card" style="padding:0">
+                    <div class="repo-health">
+                      <div class="rh-score" style="background:#FCEBEB;color:#A32D2D">74</div>
+                      <div class="rh-info">
+                        <div class="rh-name">payments-svc</div>
+                        <div class="rh-sub">12 blocking findings · ↓ trending worse</div>
+                      </div>
+                      <div class="rbar" style="width:80px;margin:0">
+                        <div class="rbt">
+                          <div class="rbf" style="width:74%;background:#E24B4A"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="repo-health">
+                      <div class="rh-score" style="background:#FCEBEB;color:#A32D2D">61</div>
+                      <div class="rh-info">
+                        <div class="rh-name">notification-worker</div>
+                        <div class="rh-sub">8 blocking findings · ↓ trending worse</div>
+                      </div>
+                      <div class="rbar" style="width:80px;margin:0">
+                        <div class="rbt">
+                          <div class="rbf" style="width:61%;background:#E24B4A"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="repo-health">
+                      <div class="rh-score" style="background:#FAEEDA;color:#854F0B">77</div>
+                      <div class="rh-info">
+                        <div class="rh-name">data-pipeline</div>
+                        <div class="rh-sub">4 blocking findings · stable</div>
+                      </div>
+                      <div class="rbar" style="width:80px;margin:0">
+                        <div class="rbt">
+                          <div class="rbf" style="width:77%;background:#EF9F27"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="repo-health">
+                      <div class="rh-score" style="background:#EAF3DE;color:#3B6D11">88</div>
+                      <div class="rh-info">
+                        <div class="rh-name">auth-core</div>
+                        <div class="rh-sub">0 blocking findings · ↑ improving</div>
+                      </div>
+                      <div class="rbar" style="width:80px;margin:0">
+                        <div class="rbt">
+                          <div class="rbf" style="width:88%;background:#1D9E75"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="sec">
+                  <div class="stl">Mean time to resolve</div>
+                  <div class="card" style="padding:10px 12px">
+                    <div style="display:flex;gap:10px;margin-bottom:10px">
+                      <div class="kc" style="flex:1">
+                        <div class="kl">Mean time</div>
+                        <div class="kv w" style="font-size:16px">6.2h</div>
+                      </div>
+                      <div class="kc" style="flex:1">
+                        <div class="kl">Median time</div>
+                        <div class="kv g" style="font-size:16px">3.1h</div>
+                      </div>
+                      <div class="kc" style="flex:1">
+                        <div class="kl">Reopened</div>
+                        <div class="kv r" style="font-size:16px">2</div>
+                      </div>
+                    </div>
+                    <div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:6px">Oldest unresolved
+                      blocked PRs</div>
+                    <div
+                      style="font-size:11px;color:var(--color-text-primary);padding:4px 0;border-bottom:0.5px solid var(--color-border-tertiary)">
+                      chore: bump EF Core · data-pipeline · <span style="color:#A32D2D">1d 3h open</span></div>
+                    <div style="font-size:11px;color:var(--color-text-primary);padding:4px 0">feat: retry policy ·
+                      payments-svc · <span style="color:#BA7517">2h 14m open</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="p-rules">
+            <div class="ph">
+              <div>
+                <div class="pt">Rules</div>
+                <div class="ps">35 active rules · GCI0001–GCI0059 (non-contiguous) · diff-based deterministic analysis
+                </div>
+              </div>
+              <div class="ha"><button class="btn">Import config</button><button class="btn btnp">Edit policy</button>
+              </div>
+            </div>
+            <div class="pc">
+              <div class="kg" style="grid-template-columns:repeat(5,1fr)">
+                <div class="kc">
+                  <div class="kl">Active rules</div>
+                  <div class="kv">35</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Block rules</div>
+                  <div class="kv r">18</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Warn rules</div>
+                  <div class="kv w">17</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Fired this month</div>
+                  <div class="kv">148</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Categories</div>
+                  <div class="kv">7</div>
+                </div>
+              </div>
+              <div class="sform">
+                <input placeholder="Search rules by ID or name..." style="max-width:260px">
+                <div class="ck">
+                  <span class="chip on">All</span>
+                  <span class="chip">Async</span>
+                  <span class="chip">EF Core</span>
+                  <span class="chip">Retry</span>
+                  <span class="chip">Exception</span>
+                  <span class="chip">API</span>
+                  <span class="chip">Secrets</span>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="card" style="padding:0">
+                  <div
+                    style="display:flex;padding:6px 11px;background:var(--color-background-secondary);border-bottom:0.5px solid var(--color-border-tertiary);font-size:10px;font-weight:500;color:var(--color-text-secondary)">
+                    <span style="width:58px;flex-shrink:0">Rule ID</span>
+                    <span style="flex:1">Name</span>
+                    <span style="width:80px;flex-shrink:0">Category</span>
+                    <span style="width:70px;flex-shrink:0">Default sev.</span>
+                    <span style="width:36px;text-align:right;flex-shrink:0">Fires</span>
+                    <span style="width:60px;text-align:right;flex-shrink:0">Override</span>
+                  </div>
+                  <div class="rule-row"><span class="rule-id">GCI0044</span><span class="rule-name">Performance Hotpath
+                      Risk</span><span class="rule-cat">Data access</span><span style="width:70px;flex-shrink:0"><span
+                        class="sev-block">Block</span></span><span class="rule-cnt">34</span><span
+                      style="width:60px;text-align:right;flex-shrink:0"><button class="btn"
+                        style="font-size:10px;padding:2px 7px">Tune</button></span></div>
+                  <div class="rule-row"><span class="rule-id">GCI0016</span><span class="rule-name">Async Concurrency
+                      Risk</span><span class="rule-cat">Async</span><span style="width:70px;flex-shrink:0"><span
+                        class="sev-block">Block</span></span><span class="rule-cnt">18</span><span
+                      style="width:60px;text-align:right;flex-shrink:0"><button class="btn"
+                        style="font-size:10px;padding:2px 7px">Tune</button></span></div>
+                  <div class="rule-row"><span class="rule-id">GCI0039</span><span class="rule-name">External Service
+                      Safety</span><span class="rule-cat">Reliability</span><span style="width:70px;flex-shrink:0"><span
+                        class="sev-block">Block</span></span><span class="rule-cnt">11</span><span
+                      style="width:60px;text-align:right;flex-shrink:0"><button class="btn"
+                        style="font-size:10px;padding:2px 7px">Tune</button></span></div>
+                  <div class="rule-row"><span class="rule-id">GCI0032</span><span class="rule-name">Uncaught Exception
+                      Path</span><span class="rule-cat">Reliability</span><span style="width:70px;flex-shrink:0"><span
+                        class="sev-block">Block</span></span><span class="rule-cnt">9</span><span
+                      style="width:60px;text-align:right;flex-shrink:0"><button class="btn"
+                        style="font-size:10px;padding:2px 7px">Tune</button></span></div>
+                  <div class="rule-row"><span class="rule-id">GCI0012</span><span class="rule-name">Security
+                      Risk</span><span class="rule-cat">Secrets</span><span style="width:70px;flex-shrink:0"><span
+                        class="sev-block">Block</span></span><span class="rule-cnt">7</span><span
+                      style="width:60px;text-align:right;flex-shrink:0"><button class="btn"
+                        style="font-size:10px;padding:2px 7px">Tune</button></span></div>
+                  <div class="rule-row"><span class="rule-id">GCI0022</span><span class="rule-name">Idempotency &amp;
+                      Retry Safety</span><span class="rule-cat">Retry</span><span style="width:70px;flex-shrink:0"><span
+                        class="sev-warn">Warn</span></span><span class="rule-cnt">14</span><span
+                      style="width:60px;text-align:right;flex-shrink:0"><button class="btn"
+                        style="font-size:10px;padding:2px 7px">Tune</button></span></div>
+                  <div class="rule-row"><span class="rule-id">GCI0024</span><span class="rule-name">Resource
+                      Lifecycle</span><span class="rule-cat">Async</span><span style="width:70px;flex-shrink:0"><span
+                        class="sev-block">Block</span></span><span class="rule-cnt">6</span><span
+                      style="width:60px;text-align:right;flex-shrink:0"><button class="btn"
+                        style="font-size:10px;padding:2px 7px">Tune</button></span></div>
+                  <div class="rule-row"><span class="rule-id">GCI0059</span><span class="rule-name">Guard Deletion
+                      Remote Use</span><span class="rule-cat">API</span><span style="width:70px;flex-shrink:0"><span
+                        class="sev-block">Block</span></span><span class="rule-cnt">4</span><span
+                      style="width:60px;text-align:right;flex-shrink:0"><button class="btn"
+                        style="font-size:10px;padding:2px 7px">Tune</button></span></div>
+                  <div class="rule-row"><span class="rule-id">GCI0015</span><span class="rule-name">Data Integrity
+                      Risk</span><span class="rule-cat">Data access</span><span style="width:70px;flex-shrink:0"><span
+                        class="sev-warn">Warn</span></span><span class="rule-cnt">8</span><span
+                      style="width:60px;text-align:right;flex-shrink:0"><button class="btn"
+                        style="font-size:10px;padding:2px 7px">Tune</button></span></div>
+                  <div class="rule-row"><span class="rule-id">GCI0004</span><span class="rule-name">Breaking Change
+                      Risk</span><span class="rule-cat">API</span><span style="width:70px;flex-shrink:0"><span
+                        class="sev-warn">Warn</span></span><span class="rule-cnt">5</span><span
+                      style="width:60px;text-align:right;flex-shrink:0"><button class="btn"
+                        style="font-size:10px;padding:2px 7px">Tune</button></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="p-integrations">
+            <div class="ph">
+              <div>
+                <div class="pt">Integrations</div>
+                <div class="ps">GitHub Actions shipped · issue trackers &amp; Azure DevOps <span
+                    class="plan-badge">Enterprise · planned</span></div>
+              </div>
+              <div class="ha"><button class="btn">View logs</button><button class="btn btnp">Add integration</button>
+              </div>
+            </div>
+            <div class="pc">
+              <div class="kg" style="grid-template-columns:repeat(4,1fr)">
+                <div class="kc">
+                  <div class="kl">Connected</div>
+                  <div class="kv">7</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Healthy</div>
+                  <div class="kv g">5</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Warning</div>
+                  <div class="kv w">2</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Last sync (all)</div>
+                  <div class="kv">1m ago</div>
+                </div>
+              </div>
+              <div class="tc">
+                <div class="sec">
+                  <div class="stl">CI / CD integrations</div>
+                  <div class="card" style="padding:0">
+                    <div class="irow">
+                      <div>
+                        <div class="iname"><span class="dot-g"></span>GitHub Actions</div>
+                        <div class="imeta">43 repos · all workflows healthy · last sync 2m ago</div>
+                      </div>
+                      <div class="ha"><button class="btn" style="font-size:10px">Configure</button><span
+                          class="badge bp">Healthy</span></div>
+                    </div>
+                    <div class="irow">
+                      <div>
+                        <div class="iname"><span class="dot-a"></span>Azure DevOps <span class="plan-badge">Enterprise ·
+                            planned</span></div>
+                        <div class="imeta">11 repos · 2 missing token scope · last sync 18m ago</div>
+                      </div>
+                      <div class="ha"><button class="btn" style="font-size:10px;color:#A32D2D">Fix</button><span
+                          class="badge bw">Warning</span></div>
+                    </div>
+                    <div class="irow">
+                      <div>
+                        <div class="iname"><span class="dot-g"></span>GitLab CI</div>
+                        <div class="imeta">6 repos · pipeline hooks active · last sync 5m ago</div>
+                      </div>
+                      <div class="ha"><button class="btn" style="font-size:10px">Configure</button><span
+                          class="badge bp">Healthy</span></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="sec">
+                  <div class="stl">Issue tracker integrations <span class="plan-badge">Enterprise · planned</span></div>
+                  <div class="card" style="padding:0">
+                    <div class="irow">
+                      <div>
+                        <div class="iname"><span class="dot-g"></span>Jira</div>
+                        <div class="imeta">Comments posting normally · 2 projects configured · last sync 1m ago</div>
+                      </div>
+                      <div class="ha"><button class="btn" style="font-size:10px">Configure</button><span
+                          class="badge bp">Healthy</span></div>
+                    </div>
+                    <div class="irow">
+                      <div>
+                        <div class="iname"><span class="dot-g"></span>Linear</div>
+                        <div class="imeta">Sync active · Engineering workspace · last sync 14m ago</div>
+                      </div>
+                      <div class="ha"><button class="btn" style="font-size:10px">Configure</button><span
+                          class="badge bp">Healthy</span></div>
+                    </div>
+                    <div class="irow">
+                      <div>
+                        <div class="iname"><span class="dot-a"></span>Azure Boards</div>
+                        <div class="imeta">3 boards configured · comment delay detected · last sync 22m ago</div>
+                      </div>
+                      <div class="ha"><button class="btn" style="font-size:10px">Configure</button><span
+                          class="badge bw">Warning</span></div>
+                    </div>
+                    <div class="irow">
+                      <div>
+                        <div class="iname"><span class="dot-g"></span>ClickUp</div>
+                        <div class="imeta">1 workspace · scan events posting · last sync 6m ago</div>
+                      </div>
+                      <div class="ha"><button class="btn" style="font-size:10px">Configure</button><span
+                          class="badge bp">Healthy</span></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="sec">
+                <div class="stl">Webhook delivery log</div>
+                <div class="card">
+                  <table class="mt">
+                    <thead>
+                      <tr>
+                        <th style="width:16%">Integration</th>
+                        <th style="width:18%">Event</th>
+                        <th style="width:20%">Destination</th>
+                        <th style="width:10%">Status</th>
+                        <th style="width:12%">Latency</th>
+                        <th style="width:12%">Time</th>
+                        <th>Payload</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>GitHub Actions</td>
+                        <td>scan.completed</td>
+                        <td>payments-svc</td>
+                        <td style="color:#1D9E75">200 OK</td>
+                        <td>84ms</td>
+                        <td>2m ago</td>
+                        <td class="mono" style="color:var(--color-text-secondary)">PR #217</td>
+                      </tr>
+                      <tr>
+                        <td>Jira</td>
+                        <td>finding.created</td>
+                        <td>PAY project</td>
+                        <td style="color:#1D9E75">201 Created</td>
+                        <td>142ms</td>
+                        <td>2m ago</td>
+                        <td class="mono" style="color:var(--color-text-secondary)">GCI0016 → PAY-2918</td>
+                      </tr>
+                      <tr>
+                        <td>Azure DevOps</td>
+                        <td>scan.completed</td>
+                        <td>notification-worker</td>
+                        <td style="color:#E24B4A">401 Auth</td>
+                        <td>—</td>
+                        <td>18m ago</td>
+                        <td class="mono" style="color:#A32D2D">Token expired</td>
+                      </tr>
+                      <tr>
+                        <td>GitHub Actions</td>
+                        <td>scan.blocked</td>
+                        <td>data-pipeline</td>
+                        <td style="color:#1D9E75">200 OK</td>
+                        <td>91ms</td>
+                        <td>11m ago</td>
+                        <td class="mono" style="color:var(--color-text-secondary)">PR #209</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="p-audit">
+            <div class="ph">
+              <div>
+                <div class="pt">Audit log</div>
+                <div class="ps">Full event history · scan reports · policy changes · accepted-risk trail</div>
+              </div>
+              <div class="ha"><button class="btn">Filter events</button><button class="btn btnp">Export log</button>
+              </div>
+            </div>
+            <div class="pc">
+              <div class="kg" style="grid-template-columns:repeat(5,1fr)">
+                <div class="kc">
+                  <div class="kl">Events today</div>
+                  <div class="kv">84</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Scan reports stored</div>
+                  <div class="kv g">437</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Policy changes (30d)</div>
+                  <div class="kv w">3</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Risk acceptances (30d)</div>
+                  <div class="kv">7</div>
+                </div>
+                <div class="kc">
+                  <div class="kl">Expired risks</div>
+                  <div class="kv r">2</div>
+                </div>
+              </div>
+              <div class="sform">
+                <input placeholder="Search events, repos, rules..." style="max-width:260px">
+                <select
+                  style="font-size:12px;padding:5px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)">
+                  <option>All event types</option>
+                  <option>PR scanned</option>
+                  <option>Risk accepted</option>
+                  <option>Policy changed</option>
+                  <option>Finding created</option>
+                </select>
+                <select
+                  style="font-size:12px;padding:5px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)">
+                  <option>All repos</option>
+                  <option>payments-svc</option>
+                  <option>auth-core</option>
+                </select>
+              </div>
+              <div class="sec">
+                <div class="card" style="padding:0">
+                  <div class="audit-evt">
+                    <div class="ae-icon" style="background:#FCEBEB"><i class="ti ti-git-pull-request"
+                        style="font-size:12px;color:#A32D2D" aria-hidden="true"></i></div>
+                    <div class="ae-body">
+                      <div class="ae-title">PR blocked — payments-svc #217</div>
+                      <div class="ae-meta">GCI0016, GCI0044, GCI0012 · jsmith · 3 block · 1 warn · scan logged locally
+                      </div>
+                    </div>
+                    <div class="ae-time">2m ago</div>
+                  </div>
+                  <div class="audit-evt">
+                    <div class="ae-icon" style="background:#E1F5EE"><i class="ti ti-check"
+                        style="font-size:12px;color:#0F6E56" aria-hidden="true"></i></div>
+                    <div class="ae-body">
+                      <div class="ae-title">Risk accepted — GCI0044 · payments-svc #214</div>
+                      <div class="ae-meta">Accepted by mroberts · reason: Follow-up ticket PAY-2911 · expires in 14 days
+                      </div>
+                    </div>
+                    <div class="ae-time">1h ago</div>
+                  </div>
+                  <div class="audit-evt">
+                    <div class="ae-icon" style="background:#FAEEDA"><i class="ti ti-settings"
+                        style="font-size:12px;color:#854F0B" aria-hidden="true"></i></div>
+                    <div class="ae-body">
+                      <div class="ae-title">Policy changed — payments-svc</div>
+                      <div class="ae-meta">GCI0039 severity changed Warn → Block · changed by tleaduser · previous
+                        config snapshot stored</div>
+                    </div>
+                    <div class="ae-time">3h ago</div>
+                  </div>
+                  <div class="audit-evt">
+                    <div class="ae-icon" style="background:#EAF3DE"><i class="ti ti-git-pull-request"
+                        style="font-size:12px;color:#3B6D11" aria-hidden="true"></i></div>
+                    <div class="ae-body">
+                      <div class="ae-title">PR passed — api-gateway #201</div>
+                      <div class="ae-meta">bnguyen · 3 files · 0 findings · scan logged locally</div>
+                    </div>
+                    <div class="ae-time">22m ago</div>
+                  </div>
+                  <div class="audit-evt">
+                    <div class="ae-icon" style="background:#FCEBEB"><i class="ti ti-clock"
+                        style="font-size:12px;color:#A32D2D" aria-hidden="true"></i></div>
+                    <div class="ae-body">
+                      <div class="ae-title">Risk acceptance expired — GCI0016 · notification-worker #201</div>
+                      <div class="ae-meta">Accepted by acarter · reason: Background job, low risk · no renewal submitted
+                      </div>
+                    </div>
+                    <div class="ae-time">2d ago</div>
+                  </div>
+                  <div class="audit-evt">
+                    <div class="ae-icon" style="background:#E6F1FB"><i class="ti ti-file"
+                        style="font-size:12px;color:#185FA5" aria-hidden="true"></i></div>
+                    <div class="ae-body">
+                      <div class="ae-title">Scan report exported — payments-svc</div>
+                      <div class="ae-meta">Exported by secteam · includes 14 scan events · rule config snapshot included
+                      </div>
+                    </div>
+                    <div class="ae-time">1d ago</div>
+                  </div>
+                  <div class="audit-evt">
+                    <div class="ae-icon" style="background:#FAEEDA"><i class="ti ti-git-pull-request"
+                        style="font-size:12px;color:#854F0B" aria-hidden="true"></i></div>
+                    <div class="ae-body">
+                      <div class="ae-title">PR warned — auth-core #188</div>
+                      <div class="ae-meta">rchen · 5 files · 2 warnings · GCI0022, GCI0004</div>
+                    </div>
+                    <div class="ae-time">19m ago</div>
+                  </div>
+                  <div class="audit-evt">
+                    <div class="ae-icon" style="background:#EEEDFE"><i class="ti ti-plug"
+                        style="font-size:12px;color:#534AB7" aria-hidden="true"></i></div>
+                    <div class="ae-body">
+                      <div class="ae-title">Jira issue created — PAY-2918 <span class="plan-badge">Enterprise ·
+                          planned</span></div>
+                      <div class="ae-meta">Auto-created from GCI0016 finding · payments-svc #217 · linked to scan report
+                      </div>
+                    </div>
+                    <div class="ae-time">2m ago</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="page" id="p-settings">
+            <div class="ph">
+              <div>
+                <div class="pt">Settings</div>
+                <div class="ps">Organization-wide configuration · policy defaults · integrations · notifications</div>
+              </div>
+              <div class="ha"><button class="btn btnp">Save changes</button></div>
+            </div>
+            <div class="pc">
+              <div class="tc">
+                <div>
+                  <div class="settings-section">
+                    <div class="settings-label">Organization</div>
+                    <div class="field-row">
+                      <div>
+                        <div class="field-lbl">Organization name</div>
+                        <div class="field-sub">Shown in reports and exports</div>
+                      </div><input style="width:160px;font-size:12px;padding:4px 8px" value="Acme Engineering">
+                    </div>
+                    <div class="field-row">
+                      <div>
+                        <div class="field-lbl">Default branch</div>
+                        <div class="field-sub">Branch protected by policy</div>
+                      </div><input style="width:100px;font-size:12px;padding:4px 8px" value="main">
+                    </div>
+                    <div class="field-row">
+                      <div>
+                        <div class="field-lbl">Scan mode</div>
+                      </div><select
+                        style="font-size:12px;padding:4px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)">
+                        <option>Deterministic only (no LLM)</option>
+                        <option>Deterministic + LLM explanations</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div class="settings-section">
+                    <div class="settings-label">Default policy</div>
+                    <div class="toggle-row">
+                      <div>
+                        <div class="tinfo">Blocking enforced org-wide</div>
+                        <div class="tsub">Block PRs on high-severity findings by default</div>
+                      </div>
+                      <div class="tgl"></div>
+                    </div>
+                    <div class="toggle-row">
+                      <div>
+                        <div class="tinfo">Jira required for risk acceptance <span class="plan-badge">Enterprise ·
+                            planned</span></div>
+                        <div class="tsub">Require a linked ticket before accepting risk</div>
+                      </div>
+                      <div class="tgl"></div>
+                    </div>
+                    <div class="toggle-row">
+                      <div>
+                        <div class="tinfo">Scan reports stored</div>
+                        <div class="tsub">Retain all scan output for audit use</div>
+                      </div>
+                      <div class="tgl"></div>
+                    </div>
+                    <div class="toggle-row">
+                      <div>
+                        <div class="tinfo">Risk acceptance expiration required <span class="plan-badge">Enterprise ·
+                            planned</span></div>
+                        <div class="tsub">Force expiry date on all accepted risks</div>
+                      </div>
+                      <div class="tgl"></div>
+                    </div>
+                    <div class="toggle-row">
+                      <div>
+                        <div class="tinfo">Rule version pinned per scan</div>
+                        <div class="tsub">Capture rule version in every scan report</div>
+                      </div>
+                      <div class="tgl"></div>
+                    </div>
+                  </div>
+                </div>
+                <div>
+                  <div class="settings-section">
+                    <div class="settings-label">Notifications</div>
+                    <div class="toggle-row">
+                      <div>
+                        <div class="tinfo">PR blocked notification</div>
+                        <div class="tsub">Alert PR author on block</div>
+                      </div>
+                      <div class="tgl"></div>
+                    </div>
+                    <div class="toggle-row">
+                      <div>
+                        <div class="tinfo">Risk acceptance expiry alert</div>
+                        <div class="tsub">Notify reviewer 3 days before expiry</div>
+                      </div>
+                      <div class="tgl"></div>
+                    </div>
+                    <div class="toggle-row">
+                      <div>
+                        <div class="tinfo">Weekly risk summary email</div>
+                        <div class="tsub">Send to EM and above</div>
+                      </div>
+                      <div class="tgl"></div>
+                    </div>
+                    <div class="toggle-row">
+                      <div>
+                        <div class="tinfo">Policy drift alert</div>
+                        <div class="tsub">Notify platform team on config drift</div>
+                      </div>
+                      <div class="tgl off"></div>
+                    </div>
+                  </div>
+                  <div class="settings-section">
+                    <div class="settings-label">Access and roles</div>
+                    <div class="field-row">
+                      <div>
+                        <div class="field-lbl">Role assignment method</div>
+                      </div><select
+                        style="font-size:12px;padding:4px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)">
+                        <option>GitHub teams sync</option>
+                        <option>Manual assignment</option>
+                        <option>SSO groups</option>
+                      </select>
+                    </div>
+                    <div class="field-row">
+                      <div>
+                        <div class="field-lbl">SSO provider <span class="plan-badge">Enterprise · planned</span></div>
+                      </div><select
+                        style="font-size:12px;padding:4px 8px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)">
+                        <option>Microsoft Entra ID</option>
+                        <option>AWS Cognito</option>
+                        <option>WorkOS</option>
+                        <option>Auth0</option>
+                        <option>Ping</option>
+                        <option>Clerk</option>
+                        <option>Custom</option>
+                        <option>None</option>
+                      </select>
+                    </div>
+                    <div class="field-row">
+                      <div>
+                        <div class="field-lbl">API token</div>
+                        <div class="field-sub">For GitHub Actions and CI</div>
+                      </div>
+                      <div style="display:flex;gap:6px;align-items:center"><span
+                          style="font-family:var(--font-mono);font-size:10px;color:var(--color-text-secondary)">gci_••••••••7f3a</span><button
+                          class="btn" style="font-size:10px">Rotate</button></div>
+                    </div>
+                  </div>
+                  <div class="settings-section">
+                    <div class="settings-label">Plan</div>
+                    <div class="field-row">
+                      <div class="field-lbl">Current plan</div><span class="badge bi">Enterprise</span>
+                    </div>
+                    <div class="field-row">
+                      <div class="field-lbl">Repos included</div>
+                      <div class="field-val">34 / 50</div>
+                    </div>
+                    <div class="field-row">
+                      <div class="field-lbl">Scans this month</div>
+                      <div class="field-val">437 / 2,000</div>
+                    </div>
+                    <div class="field-row">
+                      <div class="field-lbl">Retention</div>
+                      <div class="field-val">7 Years</div>
+                    </div>
+
+                    <div class="field-row">
+                      <div>
+                        <div class="field-lbl">License</div>
+                      </div>
+                      <div style="display:flex;gap:6px;align-items:center"><span
+                          style="font-family:var(--font-mono);font-size:10px;color:var(--color-text-secondary)">gci_e_••••••••</span><button
+                          class="btn" style="font-size:10px">Renew</button></div>
+                    </div>
+
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="app.js" defer></script>
+</body>
+</html>

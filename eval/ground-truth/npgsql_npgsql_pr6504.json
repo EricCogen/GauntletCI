@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "npgsql_npgsql_pr6504",
+  "repo": "npgsql/npgsql",
+  "pr_number": 6504,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/npgsql/npgsql/pull/6504",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0041",
+      "summary": "npgsql PR6504: tests silenced with Skip/Ignore in NpgsqlCommandTests.cs",
+      "primary_rule": "GCI0041",
+      "fn_class": "logic-bug-no-token",
+      "file": "test/Npgsql.Specification.Tests/NpgsqlCommandTests.cs",
+      "line": 28,
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0041",
+        "NpgsqlCommandTests.cs",
+        "test/Npgsql.Specification.Tests/NpgsqlCommandTests.cs",
+        "Test",
+        "silenced",
+        "with",
+        "Skip",
+        "Ignore"
+      ],
+      "evidence_excerpt": "Line 28: [Fact(Skip = \"NpgsqlCommand.ExecuteReader() throws NpgsqlOperationInProgressException instead of InvalidOperationException when another reader is already open\")]"
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

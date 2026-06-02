@@ -26,7 +26,8 @@ public static class SensitivityFilter
     /// at the given sensitivity level.
     /// <list type="bullet">
     ///   <item><description>Advisory: always passes (shown regardless of threshold).</description></item>
-    ///   <item><description>Info/None: always passes here; gated separately by <c>minSeverity</c> / <c>--verbose</c>.</description></item>
+    ///   <item><description>Info: permissive only (aligned with docs — use <c>--verbose</c> for explicit Info in other modes).</description></item>
+    ///   <item><description>None: never passes.</description></item>
     ///   <item><description>strict: Block + Medium or higher only.</description></item>
     ///   <item><description>balanced: all Block; Warn + Medium or higher.</description></item>
     ///   <item><description>permissive: all Block and all Warn.</description></item>
@@ -34,8 +35,12 @@ public static class SensitivityFilter
     /// </summary>
     public static bool Passes(RuleSeverity severity, Confidence confidence, SensitivityThreshold threshold)
     {
-        if (severity is RuleSeverity.Advisory or RuleSeverity.Info or RuleSeverity.None)
+        if (severity == RuleSeverity.None)
+            return false;
+        if (severity == RuleSeverity.Advisory)
             return true;
+        if (severity == RuleSeverity.Info)
+            return threshold == SensitivityThreshold.Permissive;
 
         return threshold switch
         {

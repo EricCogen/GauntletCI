@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "closedxml_closedxml_pr1417",
+  "repo": "ClosedXML/ClosedXML",
+  "pr_number": 1417,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/ClosedXML/ClosedXML/pull/1417",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "ClosedXML NuGet library \u2014 ContainsKey/Store sig changes in XLRepositoryBase.cs",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003"
+      ],
+      "evidence_excerpt": ""
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

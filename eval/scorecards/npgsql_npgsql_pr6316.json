@@ -1,0 +1,173 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "npgsql_npgsql_pr6316",
+  "repo": "npgsql/npgsql",
+  "pr_number": 6316,
+  "suite_tier": "gold",
+  "generated_at_utc": "2026-05-31T21:39:17.133169+00:00",
+  "upstream_pr_url": "https://github.com/npgsql/npgsql/pull/6316",
+  "eval_lab_pr_url": null,
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Published library: Npgsql removes public type mapping API \u2014 breaking for extension library authors",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "src/Npgsql/Internal/PgConverter.cs",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0004",
+        "PgConverter.cs",
+        "src/Npgsql/Internal/PgConverter.cs",
+        "Obsolete",
+        "added",
+        "Npgsql",
+        "Internal",
+        "PgConverter"
+      ],
+      "evidence_excerpt": "Added: [Obsolete(\"Use the overload without ref.\")]; [Obsolete(\"Use the overload without ref.\")]; [Obsolete(\"Use the overload without ref.\")]"
+    },
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "Npgsql library \u2014 GetWriteInfo/BindValue sig changes in Internal/Composites; provider extensions depend on these",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003"
+      ],
+      "evidence_excerpt": ""
+    }
+  ],
+  "tools": [
+    {
+      "name": "GauntletCI",
+      "finding_count": 6,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": true,
+          "evidence": [
+            "GCI0004",
+            "Added: [Obsolete(\"Use the overload without ref.\")]; [Obsolete(\"Use the overload without ref.\")]; [Obsolete(\"Use the over"
+          ],
+          "notes": ""
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeQL",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T20:18:20.182171+00:00",
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "CodeRabbit",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Greptile",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Qodo",
+      "finding_count": null,
+      "harvested_at_utc": null,
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "SonarCloud",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T20:19:02.314357+00:00",
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    },
+    {
+      "name": "Semgrep",
+      "finding_count": null,
+      "harvested_at_utc": "2026-05-31T20:20:07.016709+00:00",
+      "caught_by_defect": {
+        "corpus-gci0004": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        },
+        "corpus-gci0003": {
+          "caught_ground_truth": false,
+          "evidence": [],
+          "notes": "no_match"
+        }
+      }
+    }
+  ]
+}

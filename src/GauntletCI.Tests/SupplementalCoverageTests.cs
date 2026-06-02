@@ -16,11 +16,19 @@ public class SupplementalCoverageTests
     [Fact]
     public async Task GCI0001_WhitespaceChurn_ShouldFlag()
     {
-        // Build a diff with >10 total changes and >40% whitespace-only added lines
+        // Build a diff with >20 total changes and >55% whitespace-only added lines
         var rule = new GCI0001_DiffIntegrity(new StubPatternProvider());
-        // 12 added lines: 6 are whitespace-only (50% > 40%), total changed = 12 > 10
+        // 24 added lines: 14 whitespace-only (~58%), total changed = 24 > 20
         var addedLines = new string[]
         {
+            "+    ",
+            "+    ",
+            "+    ",
+            "+    ",
+            "+    ",
+            "+    ",
+            "+    ",
+            "+    ",
             "+    ",
             "+    ",
             "+    ",
@@ -32,14 +40,18 @@ public class SupplementalCoverageTests
             "+int c = 3;",
             "+int d = 4;",
             "+int e = 5;",
-            "+int f = 6;"
+            "+int f = 6;",
+            "+int g = 7;",
+            "+int h = 8;",
+            "+int i = 9;",
+            "+int j = 10;"
         };
         var raw = $"""
             diff --git a/src/Service.cs b/src/Service.cs
             index abc..def 100644
             --- a/src/Service.cs
             +++ b/src/Service.cs
-            @@ -1,1 +1,13 @@
+            @@ -1,1 +1,25 @@
              // service
             {string.Join("\n", addedLines)}
             """;

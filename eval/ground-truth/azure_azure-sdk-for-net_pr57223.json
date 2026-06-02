@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "azure_azure-sdk-for-net_pr57223",
+  "repo": "Azure/azure-sdk-for-net",
+  "pr_number": 57223,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/Azure/azure-sdk-for-net/pull/57223",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "azure-sdk PR57223: SearchClientOptions/AnalyzeText sig changed in api/ surface file \u2014 API surface change",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "sdk/search/Azure.Search.Documents/src/KnowledgeBases/KnowledgeBaseRetrievalClient.cs",
+      "line": 41,
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003",
+        "KnowledgeBaseRetrievalClient.cs",
+        "sdk/search/Azure.Search.Documents/src/KnowledgeBases/KnowledgeBaseRetrievalClient.cs",
+        "method",
+        "signatures",
+        "changed",
+        "incompatible",
+        "search"
+      ],
+      "evidence_excerpt": "Changed: 'KnowledgeBaseRetrievalClient', 'KnowledgeBaseRetrievalClient', 'KnowledgeBaseRetrievalClient' (+5 more) | e.g. Was: protected KnowledgeBaseRetrievalClient() { } | Now: public KnowledgeBaseRetrievalClient(Uri endpoint, string knowl"
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

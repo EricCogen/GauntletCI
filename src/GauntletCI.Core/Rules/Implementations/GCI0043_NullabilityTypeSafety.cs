@@ -62,7 +62,7 @@ public class GCI0043_NullabilityTypeSafety : RuleBase
             .Where(l => !IsSystemCommandLinePattern(l))
             .ToList();
 
-        if (matchingLines.Count <= 1) return;
+        if (matchingLines.Count < 3) return;
 
         var evidence = matchingLines.Take(5)
             .Select(l => $"Line {l.LineNumber}: {l.Content.Trim()}");

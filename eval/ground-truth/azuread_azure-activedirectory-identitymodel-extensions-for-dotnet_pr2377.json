@@ -1,0 +1,42 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "azuread_azure-activedirectory-identitymodel-extensions-for-dotnet_pr2377",
+  "repo": "AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet",
+  "pr_number": 2377,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/AzureAD/azure-activedirectory-identitymodel-extensions-for-dotnet/pull/2377",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0036",
+      "summary": "azuread PR2377: assignment in getter in X509SecurityKey production code \u2014 mutation in property getter is a side-effect concern",
+      "primary_rule": "GCI0036",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0036"
+      ],
+      "evidence_excerpt": ""
+    },
+    {
+      "defect_id": "corpus-gci0016",
+      "summary": "azuread PR2377: new static mutable field in production identity model code",
+      "primary_rule": "GCI0016",
+      "fn_class": "concurrency-risk",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0016"
+      ],
+      "evidence_excerpt": ""
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}

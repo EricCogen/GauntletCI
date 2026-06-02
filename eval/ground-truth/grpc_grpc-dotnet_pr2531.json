@@ -1,0 +1,63 @@
+{
+  "schema_version": "1.0.0",
+  "fixture_id": "grpc_grpc-dotnet_pr2531",
+  "repo": "grpc/grpc-dotnet",
+  "pr_number": 2531,
+  "suite_tier": "gold",
+  "upstream_pr_url": "https://github.com/grpc/grpc-dotnet/pull/2531",
+  "domain_profile": "library",
+  "defects": [
+    {
+      "defect_id": "corpus-gci0004",
+      "summary": "Corpus label expects GCI0004",
+      "primary_rule": "GCI0004",
+      "fn_class": "breaking-change",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_gold",
+      "match_keywords": [
+        "GCI0004"
+      ],
+      "evidence_excerpt": ""
+    },
+    {
+      "defect_id": "corpus-gci0006",
+      "summary": "grpc PR2531: new params without null validation in GrpcHealthChecksPublisher/ContextPropagationInterceptor",
+      "primary_rule": "GCI0006",
+      "fn_class": "edge-case-handling",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": false,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0006"
+      ],
+      "evidence_excerpt": ""
+    },
+    {
+      "defect_id": "corpus-gci0003",
+      "summary": "grpc PR2531: EvaluatingPublishedHealthReport/ServiceMappingStatusUpdated sig changed in GrpcHealthChecksPublisher.cs production",
+      "primary_rule": "GCI0003",
+      "fn_class": "logic-bug-no-token",
+      "file": "",
+      "line": null,
+      "adjudication_confidence": "medium",
+      "ci_required": true,
+      "label_source": "human_bulk",
+      "match_keywords": [
+        "GCI0003",
+        "method",
+        "signatures",
+        "changed",
+        "incompatible",
+        "across",
+        "files"
+      ],
+      "evidence_excerpt": "Files: GrpcHealthChecksPublisher.cs (2), ContextPropagationInterceptor.cs (1), GrpcServerLog.cs (28) (+18 more files)"
+    }
+  ],
+  "notes": "Auto-promoted from corpus expected_findings; refine file/line for gold tier."
+}
