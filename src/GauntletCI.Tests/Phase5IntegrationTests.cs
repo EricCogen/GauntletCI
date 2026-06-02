@@ -188,7 +188,7 @@ public class Phase5IntegrationTests
     [Fact]
     public async Task Orchestrator_AllRulesPresent_36EnabledRulesEvaluated()
     {
-        // 37 rule implementations; GCI0054 and GCI0055 disabled by default (duplicate coverage).
+        // 38 rule implementations; GCI0054 and GCI0055 disabled by default (duplicate coverage).
         var orchestrator = RuleOrchestrator.CreateDefault();
         var cleanDiff = DiffParser.Parse("""
             diff --git a/src/Clean.cs b/src/Clean.cs

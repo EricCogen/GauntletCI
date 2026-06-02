@@ -91,4 +91,91 @@ public sealed class GCI0059Tests
         Assert.Equal("GCI0059", finding.RuleId);
         Assert.Contains("_cache", finding.Evidence, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public async Task GuardAndDereferenceBothRemoved_ShouldNotFire()
+    {
+        var raw = """
+            diff --git a/src/OrderService.cs b/src/OrderService.cs
+            index abc..def 100644
+            --- a/src/OrderService.cs
+            +++ b/src/OrderService.cs
+            @@ -10,12 +10,8 @@
+             internal sealed class OrderService
+             {
+                 internal bool TryCharge(Order? order)
+                 {
+            -        if (order == null)
+            -            return false;
+            -        return order.Total > 0;
+            +        return true;
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public async Task SameMethodNameDifferentClasses_ShouldNotCrossMatch()
+    {
+        var raw = """
+            diff --git a/src/Services.cs b/src/Services.cs
+            index abc..def 100644
+            --- a/src/Services.cs
+            +++ b/src/Services.cs
+            @@ -1,20 +1,18 @@
+             internal sealed class OrderService
+             {
+                 internal bool Process(Order? order)
+                 {
+            -        if (order == null)
+            -            return false;
+                 }
+             }
+             internal sealed class InvoiceService
+             {
+                 internal bool Process(Invoice? invoice)
+                 {
+                     return invoice.Total > 0;
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public async Task ReplacementGuardAfterUnguardedUse_ShouldFire()
+    {
+        var raw = """
+            diff --git a/src/OrderService.cs b/src/OrderService.cs
+            index abc..def 100644
+            --- a/src/OrderService.cs
+            +++ b/src/OrderService.cs
+            @@ -10,14 +10,14 @@
+             internal sealed class OrderService
+             {
+                 internal bool TryCharge(Order? order)
+                 {
+            -        if (order == null)
+            -            return false;
+                     return order.Total > 0;
+            +        if (order is null)
+            +            return false;
+                 }
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Single(findings);
+    }
 }

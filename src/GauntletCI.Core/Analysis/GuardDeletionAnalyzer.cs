@@ -54,13 +54,15 @@ internal static class GuardDeletionAnalyzer
             var line = orderedLines[index];
             var content = line.Content;
             var effectiveKind = GetEffectiveKind(line);
-            var classMatch = Regex.Match(NormalizeDiffLine(content), @"\b(?:class|record|struct)\s+(\w+)\b");
-            if (classMatch.Success)
-                currentClass = classMatch.Groups[1].Value!;
+            var normalized = NormalizeDiffLine(content);
 
-            var methodMatch = MethodDeclarationRegex.Match(NormalizeDiffLine(content));
-            if (methodMatch.Success)
-                currentMethod = methodMatch.Groups[1].Value!;
+            var classMatch = Regex.Match(normalized, @"\b(?:class|record|struct)\s+(\w+)\b");
+            if (classMatch.Success && TryGetCapture(classMatch, 1, out var className))
+                currentClass = className;
+
+            var methodMatch = MethodDeclarationRegex.Match(normalized);
+            if (methodMatch.Success && TryGetCapture(methodMatch, 1, out var methodName))
+                currentMethod = methodName;
 
             if (currentClass is null || currentMethod is null)
                 continue;
@@ -73,13 +75,13 @@ internal static class GuardDeletionAnalyzer
                     line.LineNumber,
                     index,
                     guard,
-                    NormalizeDiffLine(content),
+                    normalized,
                     IsRemovedLine: true));
             }
 
             if (effectiveKind is EffectiveLineKind.Added or EffectiveLineKind.Context)
             {
-                foreach (var guard in ExtractGuardSymbols(NormalizeDiffLine(content)))
+                foreach (var guard in ExtractGuardSymbols(normalized))
                 {
                     guards.Add(new GuardRemoval(
                         currentClass,
@@ -87,52 +89,104 @@ internal static class GuardDeletionAnalyzer
                         line.LineNumber,
                         index,
                         guard,
-                        NormalizeDiffLine(content),
+                        normalized,
                         IsRemovedLine: false));
                 }
             }
 
-            foreach (var symbol in ExtractSymbolUses(content))
+            if (effectiveKind is EffectiveLineKind.Added or EffectiveLineKind.Context)
             {
-                uses.Add(new SymbolUse(
-                    currentClass,
-                    currentMethod,
-                    line.LineNumber,
-                    index,
-                    symbol,
-                    NormalizeDiffLine(content),
-                    effectiveKind == EffectiveLineKind.Added));
+                foreach (var symbol in ExtractSymbolUses(content))
+                {
+                    uses.Add(new SymbolUse(
+                        currentClass,
+                        currentMethod,
+                        line.LineNumber,
+                        index,
+                        symbol,
+                        normalized,
+                        effectiveKind == EffectiveLineKind.Added));
+                }
             }
         }
 
         var mismatches = new List<(GuardRemoval, SymbolUse)>();
 
-        foreach (var guard in guards.Where(g => g.IsRemovedLine))
+        foreach (var guard in guards)
         {
-            var replacementGuard = guards.Any(g =>
-                !g.IsRemovedLine &&
-                g.MethodName == guard.MethodName &&
-                g.GuardedSymbol.Equals(guard.GuardedSymbol, StringComparison.Ordinal) &&
-                g.LineIndex >= guard.LineIndex - 2 &&
-                g.LineIndex <= guard.LineIndex + 6);
-
-            if (replacementGuard)
+            if (!guard.IsRemovedLine)
                 continue;
 
-            var remoteUse = uses
-                .Where(u =>
-                    u.MethodName == guard.MethodName &&
-                    u.Symbol.Equals(guard.GuardedSymbol, StringComparison.Ordinal) &&
-                    u.LineIndex > guard.LineIndex)
-                .OrderByDescending(u => u.IsAddedLine)
-                .ThenBy(u => u.LineIndex)
-                .FirstOrDefault();
+            var remoteUse = FindRemoteUse(guard, uses);
+            if (remoteUse is null)
+                continue;
 
-            if (remoteUse is not null)
-                mismatches.Add((guard, remoteUse));
+            if (HasReplacementGuardBeforeUse(guard, remoteUse, guards))
+                continue;
+
+            mismatches.Add((guard, remoteUse));
         }
 
         return mismatches;
+    }
+
+    private static SymbolUse? FindRemoteUse(GuardRemoval guard, List<SymbolUse> uses)
+    {
+        SymbolUse? best = null;
+        foreach (var use in uses)
+        {
+            if (!use.ClassName.Equals(guard.ClassName, StringComparison.Ordinal))
+                continue;
+
+            if (!use.MethodName.Equals(guard.MethodName, StringComparison.Ordinal))
+                continue;
+
+            if (!use.Symbol.Equals(guard.GuardedSymbol, StringComparison.Ordinal))
+                continue;
+
+            if (use.LineIndex <= guard.LineIndex)
+                continue;
+
+            if (best is null ||
+                (use.IsAddedLine && !best.IsAddedLine) ||
+                (use.IsAddedLine == best.IsAddedLine && use.LineIndex < best.LineIndex))
+            {
+                best = use;
+            }
+        }
+
+        return best;
+    }
+
+    private static bool HasReplacementGuardBeforeUse(
+        GuardRemoval removedGuard,
+        SymbolUse remoteUse,
+        List<GuardRemoval> guards)
+    {
+        foreach (var candidate in guards)
+        {
+            if (candidate.IsRemovedLine)
+                continue;
+
+            if (!candidate.ClassName.Equals(removedGuard.ClassName, StringComparison.Ordinal))
+                continue;
+
+            if (!candidate.MethodName.Equals(removedGuard.MethodName, StringComparison.Ordinal))
+                continue;
+
+            if (!candidate.GuardedSymbol.Equals(removedGuard.GuardedSymbol, StringComparison.Ordinal))
+                continue;
+
+            if (candidate.LineIndex <= removedGuard.LineIndex)
+                continue;
+
+            if (candidate.LineIndex >= remoteUse.LineIndex)
+                continue;
+
+            return true;
+        }
+
+        return false;
     }
 
     private static IEnumerable<string> ExtractRemovedGuards(string content, EffectiveLineKind kind)
@@ -172,10 +226,16 @@ internal static class GuardDeletionAnalyzer
     private static IEnumerable<string> ExtractGuardSymbols(string trimmed)
     {
         foreach (Match match in GuardIfRegex.Matches(trimmed))
-            yield return match.Groups["ident"].Value!;
+        {
+            if (TryGetCapture(match, "ident", out var ident))
+                yield return ident;
+        }
 
         foreach (Match match in ThrowIfNullRegex.Matches(trimmed))
-            yield return match.Groups["ident"].Value!;
+        {
+            if (TryGetCapture(match, "ident", out var ident))
+                yield return ident;
+        }
     }
 
     private static IEnumerable<string> ExtractSymbolUses(string content)
@@ -186,8 +246,7 @@ internal static class GuardDeletionAnalyzer
 
         foreach (Match match in Regex.Matches(trimmed, @"\b([A-Za-z_][A-Za-z0-9_]*)\.(?!\.)"))
         {
-            var symbol = match.Groups[1].Value!;
-            if (IsKeyword(symbol))
+            if (!TryGetCapture(match, 1, out var symbol) || IsKeyword(symbol))
                 continue;
 
             yield return symbol;
@@ -195,10 +254,35 @@ internal static class GuardDeletionAnalyzer
 
         foreach (Match match in Regex.Matches(trimmed, @"\b([A-Za-z_][A-Za-z0-9_]*)\.Value\b"))
         {
-            var symbol = match.Groups[1].Value!;
-            if (!IsKeyword(symbol))
-                yield return symbol;
+            if (!TryGetCapture(match, 1, out var symbol) || IsKeyword(symbol))
+                continue;
+
+            yield return symbol;
         }
+    }
+
+    private static bool TryGetCapture(Match match, int groupIndex, out string value)
+    {
+        value = string.Empty;
+        if (!match.Success || groupIndex >= match.Groups.Count)
+            return false;
+
+        var group = match.Groups[groupIndex];
+        if (!group.Success || string.IsNullOrEmpty(group.Value))
+            return false;
+
+        value = group.Value;
+        return true;
+    }
+
+    private static bool TryGetCapture(Match match, string groupName, out string value)
+    {
+        value = string.Empty;
+        if (!match.Success || !match.Groups[groupName].Success)
+            return false;
+
+        value = match.Groups[groupName].Value;
+        return !string.IsNullOrEmpty(value);
     }
 
     private static bool IsKeyword(string symbol) =>
