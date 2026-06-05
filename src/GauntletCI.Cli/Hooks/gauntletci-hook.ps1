@@ -3,27 +3,124 @@
 
 $ErrorActionPreference = "Stop"
 
-# Resolve the gauntletci binary
-$gauntletciCmd = $null
-if (Get-Command gauntletci -ErrorAction SilentlyContinue) {
-    $gauntletciCmd = "gauntletci"
-} elseif (dotnet tool list -g 2>$null | Select-String -Quiet "gauntletci") {
-    $gauntletciCmd = "dotnet gauntletci"
-} else {
-    Write-Host "⚠️  GauntletCI not found in PATH or as a global dotnet tool. Skipping pre-commit check." -ForegroundColor Yellow
+function Get-DotNetToolsDirectories {
+    $dirs = [System.Collections.Generic.List[string]]::new()
+    if ($env:USERPROFILE) {
+        $dirs.Add((Join-Path $env:USERPROFILE ".dotnet\tools"))
+    }
+
+    if ($env:HOME) {
+        $dirs.Add((Join-Path $env:HOME ".dotnet/tools"))
+    }
+
+    if ($env:DOTNET_ROOT) {
+        $dirs.Add((Join-Path $env:DOTNET_ROOT "tools"))
+    }
+
+    return $dirs | Select-Object -Unique
+}
+
+function Get-RepoCliProjectPath {
+    $toplevel = $null
+    try {
+        $toplevel = git rev-parse --show-toplevel 2>$null
+    }
+    catch {
+        $toplevel = $null
+    }
+
+    if ($toplevel) {
+        $candidate = Join-Path $toplevel "src\GauntletCI.Cli\GauntletCI.Cli.csproj"
+        if (Test-Path $candidate) {
+            return $candidate
+        }
+    }
+
+    $current = (Get-Location).Path
+    while (-not [string]::IsNullOrEmpty($current)) {
+        $candidate = Join-Path $current "src\GauntletCI.Cli\GauntletCI.Cli.csproj"
+        if (Test-Path $candidate) {
+            return $candidate
+        }
+
+        $parent = Split-Path $current -Parent
+        if ([string]::IsNullOrEmpty($parent) -or $parent -eq $current) {
+            break
+        }
+
+        $current = $parent
+    }
+
+    return $null
+}
+
+function Resolve-GauntletCiInvocation {
+    if (Get-Command gauntletci -ErrorAction SilentlyContinue) {
+        return @{
+            Command = "gauntletci"
+            PrefixArgs = @()
+        }
+    }
+
+    foreach ($toolsDir in Get-DotNetToolsDirectories) {
+        $toolExe = Join-Path $toolsDir "gauntletci.exe"
+        if (Test-Path $toolExe) {
+            return @{
+                Command = $toolExe
+                PrefixArgs = @()
+            }
+        }
+
+        $toolShim = Join-Path $toolsDir "gauntletci"
+        if (Test-Path $toolShim) {
+            return @{
+                Command = $toolShim
+                PrefixArgs = @()
+            }
+        }
+    }
+
+    $repoProject = Get-RepoCliProjectPath
+    if ($null -ne $repoProject) {
+        return @{
+            Command = "dotnet"
+            PrefixArgs = @("run", "--project", $repoProject, "--")
+        }
+    }
+
+    return $null
+}
+
+function Invoke-GauntletCi {
+    param(
+        [hashtable]$Invocation,
+        [string[]]$CliArgs
+    )
+
+    if ($Invocation.PrefixArgs.Count -gt 0) {
+        & $Invocation.Command @($Invocation.PrefixArgs + $CliArgs)
+    }
+    else {
+        & $Invocation.Command @CliArgs
+    }
+}
+
+$gauntletci = Resolve-GauntletCiInvocation
+if ($null -eq $gauntletci) {
+    Write-Host "GauntletCI not found. Install with: dotnet tool install -g GauntletCI" -ForegroundColor Yellow
+    Write-Host "Or from this repo: ./scripts/install-gauntletci-global-tool.ps1" -ForegroundColor Yellow
     exit 0
 }
 
-Write-Host "🔍 GauntletCI: Analyzing staged changes..." -ForegroundColor Cyan
+Write-Host "GauntletCI: Analyzing staged changes..." -ForegroundColor Cyan
 
 try {
-$output = if ($gauntletciCmd -eq "gauntletci") {
-        gauntletci analyze --staged --output json --no-banner 2>&1
-    } else {
-        dotnet gauntletci analyze --staged --output json --no-banner 2>&1
-    }
+    $output = Invoke-GauntletCi -Invocation $gauntletci -CliArgs @(
+        "analyze", "--staged", "--output", "json", "--no-banner"
+    ) 2>&1
+
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "❌ GauntletCI failed to run. Commit aborted." -ForegroundColor Red
+        Write-Host "GauntletCI failed to run. Commit aborted." -ForegroundColor Red
         Write-Host $output
         exit 1
     }
@@ -40,30 +137,30 @@ $output = if ($gauntletciCmd -eq "gauntletci") {
 
     if ($highCount -gt 0) {
         Write-Host ""
-        Write-Host "🚨 GauntletCI found $highCount high-confidence issue(s):" -ForegroundColor Red
+        Write-Host "GauntletCI found $highCount high-confidence issue(s):" -ForegroundColor Red
         foreach ($f in $highFindings) {
-            Write-Host "  • [$($f.RuleId)] $($f.Summary)" -ForegroundColor Red
+            Write-Host "  - [$($f.RuleId)] $($f.Summary)" -ForegroundColor Red
             Write-Host "    $($f.Evidence)" -ForegroundColor DarkRed
         }
         Write-Host ""
-        Write-Host "❌ Commit aborted. Fix high-confidence issues or use --no-verify to bypass." -ForegroundColor Red
+        Write-Host "Commit aborted. Fix high-confidence issues or use --no-verify to bypass." -ForegroundColor Red
         exit 1
     }
     elseif ($total -gt 0) {
         Write-Host ""
-        Write-Host "⚠️  GauntletCI found $total issue(s) (none high-confidence):" -ForegroundColor Yellow
+        Write-Host "GauntletCI found $total issue(s) (none high-confidence):" -ForegroundColor Yellow
         foreach ($f in $result.Findings) {
             $color = if ($f.Confidence -eq 1) { "Yellow" } else { "Gray" }
-            Write-Host "  • [$($f.RuleId)] $($f.Summary)" -ForegroundColor $color
+            Write-Host "  - [$($f.RuleId)] $($f.Summary)" -ForegroundColor $color
         }
         Write-Host ""
-        Write-Host "✅ Commit allowed, but consider reviewing." -ForegroundColor Green
+        Write-Host "Commit allowed, but consider reviewing." -ForegroundColor Green
     }
     else {
-        Write-Host "✅ GauntletCI found no issues." -ForegroundColor Green
+        Write-Host "GauntletCI found no issues." -ForegroundColor Green
     }
 }
 catch {
-    Write-Host "❌ GauntletCI error: $_" -ForegroundColor Red
+    Write-Host "GauntletCI error: $_" -ForegroundColor Red
     exit 1
 }

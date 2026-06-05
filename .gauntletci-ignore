@@ -56,6 +56,11 @@ GCI0006:src/GauntletCI.Cli/Output/GitHubChecksWriter.cs
 GCI0006:src/GauntletCI.Cli/Output/GitHubPrReviewWriter.cs
 GCI0006:src/GauntletCI.Core/Model/FindingGrouper.cs
 
+# GuardDeletionAnalyzer iterates diff hunks by design; loop/for-each patterns are not product limits.
+GCI0006:src/GauntletCI.Core/Analysis/GuardDeletionAnalyzer.cs
+GCI0038:src/GauntletCI.Core/Analysis/GuardDeletionAnalyzer.cs
+GCI0043:src/GauntletCI.Core/Analysis/GuardDeletionAnalyzer.cs
+
 # RuleOrchestrator uses Activator.CreateInstance with type filtering to safely
 # discover and instantiate IRule implementations via reflection. Type validation
 # (isClass, !isAbstract, IAssignableFrom(IRule)) prevents injection attacks.

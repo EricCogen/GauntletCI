@@ -34,6 +34,28 @@ $env:PATH += ";$env:USERPROFILE\.dotnet\tools"
 
 Add the export to your shell profile (`.bashrc`, `.zshrc`, or PowerShell `$PROFILE`) to make it permanent.
 
+From the GauntletCI repo you can pack, install, and add PATH in one step:
+
+```powershell
+./scripts/install-gauntletci-global-tool.ps1 -AddToPath
+```
+
+---
+
+### Pre-commit hook fails with `dotnet gauntletci` not found
+
+**Symptom:** `dotnet tool list -g` shows `gauntletci`, but commits fail with `Could not execute because the specified command or file was not found`.
+
+**Cause:** GauntletCI is installed as a standalone global tool shim (`gauntletci.exe`), not as a `dotnet` subcommand. Older hooks incorrectly invoked `dotnet gauntletci`.
+
+**Fix:**
+
+1. Reinstall hooks: `gauntletci init --force` (or rerun init from a current build).
+2. Ensure the shim exists: `%USERPROFILE%\.dotnet\tools\gauntletci.exe` (Windows) or `~/.dotnet/tools/gauntletci` (Unix).
+3. Add `~/.dotnet/tools` to PATH, or run `./scripts/install-gauntletci-global-tool.ps1 -AddToPath`.
+
+The hook resolves, in order: `gauntletci` on PATH, the dotnet tools directory shim, then `dotnet run --project src/GauntletCI.Cli` when working inside this repository.
+
 ---
 
 ## Analysis
