@@ -49,11 +49,7 @@ jobs:
         run: dotnet build GauntletCI.slnx --no-restore --configuration Release
 
       - name: Test
-        shell: bash
-        run: |
-          set +e
-          dotnet test GauntletCI.slnx --no-build --configuration Release --verbosity normal
-          exit 0
+        run: dotnet test GauntletCI.slnx --no-build --configuration Release --verbosity normal
 
       - name: Pack tool
         run: dotnet pack src/GauntletCI.Cli/GauntletCI.Cli.csproj --configuration Release --no-build -p:PackageVersion=${{ steps.version.outputs.version }} --output artifacts/release
