@@ -1,0 +1,52 @@
+name: EF Core PR38024 Benchmark
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/GauntletCI.Core/**"
+      - "scripts/run-efcore-benchmark.ps1"
+      - ".github/workflows/efcore-benchmark.yml"
+      - "eval/efcore-38024-scorecard.json"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/GauntletCI.Core/**"
+      - "scripts/run-efcore-benchmark.ps1"
+      - ".github/workflows/efcore-benchmark.yml"
+
+jobs:
+  efcore-benchmark:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Run EF Core #38024 benchmark
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ./scripts/run-efcore-benchmark.ps1
+
+      - name: Assert GCI0004 ground truth
+        shell: pwsh
+        run: |
+          $path = Join-Path $env:GITHUB_WORKSPACE "eval/efcore-38024-latest.json"
+          if (-not (Test-Path $path)) { throw "Missing $path" }
+          $doc = Get-Content $path -Raw | ConvertFrom-Json
+          $findings = @($doc.Findings)
+          $g04 = @($findings | Where-Object { $_.RuleId -eq "GCI0004" })
+          if ($g04.Count -lt 1) {
+            throw "Expected at least one GCI0004 finding for EF Core PR #38024"
+          }
+          if ($findings.Count -gt 25) {
+            throw "Delivery cap exceeded: $($findings.Count) findings (max 25)"
+          }
+          Write-Host "OK: $($findings.Count) delivered findings, $($g04.Count) GCI0004"

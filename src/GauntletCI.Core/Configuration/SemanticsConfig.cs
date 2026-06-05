@@ -15,6 +15,7 @@ public class SemanticsConfig
     public string[] BoostRules { get; set; } =
     [
         "GCI0058",
+        "GCI0059",
         "GCI0003",
         "GCI0007",
     ];
