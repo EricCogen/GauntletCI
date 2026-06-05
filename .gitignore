@@ -1,3 +1,6 @@
+# Git history rewrite tooling (never commit)
+.git-rewrite/
+
 # Build outputs
 **/bin/
 **/obj/
