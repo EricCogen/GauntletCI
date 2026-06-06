@@ -27,10 +27,10 @@ Rules do not modify code and do not block merges on their own. They surface info
 
 | Category | Count | Rule IDs |
 |----------|------:|----------|
-| **Active** (emit findings by default) | 34 | GCI0001, GCI0003–GCI0007, GCI0010, GCI0012, GCI0015–GCI0016, GCI0020–GCI0022, GCI0024, GCI0029, GCI0032, GCI0035–GCI0036, GCI0038–GCI0039, GCI0041–GCI0049, GCI0050–GCI0053, GCI0056–GCI0057 |
+| **Active** (emit findings by default) | 37 | GCI0001, GCI0003–GCI0007, GCI0010, GCI0012, GCI0015–GCI0016, GCI0019, GCI0020–GCI0022, GCI0024, GCI0029, GCI0032, GCI0035–GCI0036, GCI0038–GCI0039, GCI0041–GCI0049, GCI0050–GCI0053, GCI0056–GCI0059 |
 | **Implemented, disabled by default** | 2 | GCI0054 (async void — use GCI0016), GCI0055 (regex signatures — use GCI0003) |
 | **Reserved / consolidated** | 3 | GCI0028 (unassigned), GCI0030 (→ GCI0024), GCI0033 (→ GCI0016) |
-| **Documented below, not yet implemented** | 18 | GCI0002, GCI0005, GCI0008–GCI0009, GCI0011, GCI0013–GCI0014, GCI0017–GCI0019, GCI0023, GCI0025–GCI0027, GCI0031, GCI0034, GCI0037, GCI0040 |
+| **Documented below, not yet implemented** | 17 | GCI0002, GCI0005, GCI0008–GCI0009, GCI0011, GCI0013–GCI0014, GCI0017–GCI0018, GCI0023, GCI0025–GCI0027, GCI0031, GCI0034, GCI0037, GCI0040 |
 
 Sections marked **Status: Not yet implemented** describe planned behavior only. The engine discovers rules via reflection on `IRule` classes under `Rules/Implementations/`; IDs without a class never run, regardless of `.gauntletci.json`.
 
@@ -44,7 +44,7 @@ This document is prepared for an independent third-party review of the GauntletC
 
 2. **Should any rules be adjusted?** A rule may be detecting the right *category* of risk but using patterns that are too loose (causing false positives), too strict (missing real cases), or calibrated at the wrong confidence level. If the detection logic needs narrowing or the confidence level is wrong, tell us.
 
-3. **Are there important risk categories we have missed?** We maintain 30+ rules today, and the catalog continues to evolve. We do not believe this is exhaustive. If you can identify a class of risk that regularly causes production incidents, security vulnerabilities, or data loss: and that a diff-level static analysis could plausibly detect: we want to add it.
+3. **Are there important risk categories we have missed?** We maintain 37 active rules today, and the catalog continues to evolve. We do not believe this is exhaustive. If you can identify a class of risk that regularly causes production incidents, security vulnerabilities, or data loss: and that a diff-level static analysis could plausibly detect: we want to add it.
 
 ### What GauntletCI is (and is not)
 
@@ -123,8 +123,7 @@ These rules examine the shape of the diff itself rather than the code it contain
 
 ### GCI0019 · Confidence and Evidence
 
-**Status:** Not yet implemented (spec only)
-
+**Default severity:** Info
 **Confidence:** Low
 **What it detects:** Two checks. First, it identifies binary files: such as images, PDFs, compiled executables, or font files: included in the diff, since their contents cannot be inspected by static analysis. Second, it runs as a post-processor after all other rules: if the diff changes more than 200 lines but no other rules produced findings, it flags the possibility of hidden risks that deterministic rules did not catch.
 **Why it matters:** Binary files cannot be scanned for credentials, logic errors, or security issues using text-based analysis. Large diffs with no findings may simply mean the code is clean, but they may also mean the risks are subtle enough to evade automated checks.
