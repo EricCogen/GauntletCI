@@ -27,7 +27,7 @@ const table = [
   { feature: "Trend and velocity metrics", gauntlet: "No",                                           cc: "Yes -- GPA scoring over time" },
   { feature: "Local LLM enrichment",       gauntlet: "Built-in ONNX, fully offline",                 cc: "No" },
   { feature: "Baseline delta mode",        gauntlet: "Yes -- suppress pre-existing findings",        cc: "No" },
-  { feature: "Free for open source",       gauntlet: "Yes, all rules",                               cc: "Yes (public repos only)" },
+  { feature: "Free for personal & internal use", gauntlet: "Yes, all rules (Elastic License 2.0)",           cc: "Yes (public repos only)" },
   { feature: "MCP server",                 gauntlet: "Yes (Pro tier) -- AI assistants call GauntletCI directly",  cc: "No" },
   { feature: "Custom rules",               gauntlet: "Yes -- implement IRule in C#",                   cc: "Partial -- via engine plugins only" },
 ];

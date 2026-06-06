@@ -45,7 +45,7 @@ const commonQA = [
     question: "Can I add custom detection rules?",
     answer: (
       <>
-        Yes. GauntletCI is open source and built for extension. Implement{" "}
+        Yes. GauntletCI is source-available under the Elastic License 2.0 and built for extension. Implement{" "}
         <code>IRule</code> (or extend <code>RuleBase</code>), place the file in{" "}
         <code>src/GauntletCI.Core/Rules/Implementations/</code>, and write a test.
         The orchestrator discovers all rules via reflection at startup - no registration step needed.

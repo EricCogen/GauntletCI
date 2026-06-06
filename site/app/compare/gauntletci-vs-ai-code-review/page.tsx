@@ -101,8 +101,8 @@ const featureRows = [
     ai: "No -- not extensible",
   },
   {
-    label: "Free for open source",
-    gauntlet: "Yes, all rules",
+    label: "Free for personal & internal use",
+    gauntlet: "Yes, all rules (Elastic License 2.0)",
     ai: "Varies by provider",
   },
 ];
