@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { buildFaqSchema, softwareApplicationSchema } from "@/lib/schemas";
 import { IntegrationStatusBanner } from "../_components/integration-status-banner";
+import { IntegrationRelatedLinks } from "../_components/integration-related-links";
 
 export const metadata: Metadata = {
   title: "JetBrains Rider Plugin | GauntletCI Docs",
@@ -211,6 +212,7 @@ export default function RiderPage() {
             </a>.
           </p>
         </section>
+        <IntegrationRelatedLinks />
       </div>
     </>
   );

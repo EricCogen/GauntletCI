@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { buildFaqSchema, softwareApplicationSchema } from "@/lib/schemas";
 import { IntegrationStatusBanner } from "../_components/integration-status-banner";
+import { IntegrationRelatedLinks } from "../_components/integration-related-links";
 
 export const metadata: Metadata = {
   title: "Visual Studio Extension | GauntletCI Docs",
@@ -227,6 +228,7 @@ export default function VisualStudioPage() {
             </a>.
           </p>
         </section>
+        <IntegrationRelatedLinks />
       </div>
     </>
   );
