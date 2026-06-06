@@ -1,22 +1,23 @@
 {
   "ci": {
     "collect": {
-      "staticDistDir": "./out",
+      "startServerCommand": "npx --yes serve out -l 9009",
+      "startServerReadyPattern": "Accepting connections",
       "url": [
-        "/",
-        "/about",
-        "/articles",
-        "/docs",
-        "/pricing",
-        "/benchmark",
-        "/articles/why-tests-miss-bugs",
-        "/articles/why-code-review-misses-bugs",
-        "/articles/what-is-diff-based-analysis",
-        "/articles/detect-breaking-changes-before-merge",
-        "/articles/can-ai-code-review-be-deterministic",
-        "/articles/behavioral-change-risk-formal-framework",
-        "/articles/case-studies",
-        "/articles/the-asymmetry-of-change"
+        "http://localhost:9009/",
+        "http://localhost:9009/about",
+        "http://localhost:9009/articles",
+        "http://localhost:9009/docs",
+        "http://localhost:9009/pricing",
+        "http://localhost:9009/benchmark",
+        "http://localhost:9009/articles/why-tests-miss-bugs",
+        "http://localhost:9009/articles/why-code-review-misses-bugs",
+        "http://localhost:9009/articles/what-is-diff-based-analysis",
+        "http://localhost:9009/articles/detect-breaking-changes-before-merge",
+        "http://localhost:9009/articles/can-ai-code-review-be-deterministic",
+        "http://localhost:9009/articles/behavioral-change-risk-formal-framework",
+        "http://localhost:9009/articles/case-studies",
+        "http://localhost:9009/articles/the-asymmetry-of-change"
       ],
       "numberOfRuns": 1
     },
