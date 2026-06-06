@@ -105,7 +105,7 @@ export default function AboutPage() {
                   href="/docs/rules"
                   className="text-cyan-400 hover:underline font-semibold flex items-center gap-2"
                 >
-                  Browse the 30+ deterministic rules
+                  Browse the 37 deterministic rules
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
                 <p className="text-muted-foreground text-xs mt-1">

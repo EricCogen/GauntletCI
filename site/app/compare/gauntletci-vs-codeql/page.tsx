@@ -192,7 +192,7 @@ export default function VsCodeQLPage() {
               },
               {
                 title: "No QL required",
-                body: "CodeQL's power comes with complexity. GauntletCI's 30+ built-in C#/.NET rules cover the most common behavioral regression classes with zero configuration required to start.",
+                body: "CodeQL's power comes with complexity. GauntletCI's 37 built-in C#/.NET rules cover the most common behavioral regression classes with zero configuration required to start.",
               },
               {
                 title: "100% local, always",

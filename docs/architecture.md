@@ -26,7 +26,7 @@ Instead of executing a heavy build-and-scan pass, GauntletCI intercepts the inne
 
 1. **Extraction:** The engine queries the local Git index to isolate modified lines and files.
 2. **Targeted Parsing:** Only the affected source files are loaded into syntax trees, omitting unchanged projects or assemblies.
-3. **Rule Application:** 30+ deterministic rules (e.g., `GCI0003` for guard clause removal, `GCI0007` for swallowed exceptions) evaluate the structural delta between the pre-image and post-image of the code.
+3. **Rule Application:** 37 deterministic rules (e.g., `GCI0003` for guard clause removal, `GCI0007` for swallowed exceptions) evaluate the structural delta between the pre-image and post-image of the code.
 
 This approach means GauntletCI runs before you push, gives instant feedback, and never sees your code outside your machine.
 

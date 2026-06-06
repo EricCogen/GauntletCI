@@ -55,7 +55,7 @@ Five minutes from install to first finding. No configuration required.
 
 ## What GauntletCI Detects
 
-30+ deterministic rules across production risk tiers:
+37 deterministic rules across production risk tiers:
 
 | Tier | Category | Example |
 |---|---|---|

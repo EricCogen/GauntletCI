@@ -21,7 +21,7 @@ const jsonLd = {
 const faqSchema = buildFaqSchema([
   {
     q: "Is GauntletCI zero-config?",
-    a: "Yes. GauntletCI works out of the box with no configuration file required. All 30+ rules are enabled by default. Place a .gauntletci.json file at your repository root to customize behavior.",
+    a: "Yes. GauntletCI works out of the box with no configuration file required. All 37 rules are enabled by default. Place a .gauntletci.json file at your repository root to customize behavior.",
   },
   {
     q: "How do I disable a specific rule?",
