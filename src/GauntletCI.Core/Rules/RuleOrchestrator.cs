@@ -172,6 +172,7 @@ public class RuleOrchestrator
             SkippedFiles = skippedRecords,
             FileStatistics = fileStatistics,
             Diff = filteredDiff,
+            AllFiles = diff.Files,
             StaticAnalysis = staticAnalysis,
             Syntax = staticAnalysis?.Syntax,
             TargetFramework = staticAnalysis?.TargetFramework,
@@ -240,7 +241,7 @@ public class RuleOrchestrator
         }
 
         ApplyIgnoreList(allFindings, ignoreList);
-        PostProcess(filteredDiff, allFindings);
+        PostProcess(diff, allFindings);
 
         var provenanceIndex = DiffProvenanceAnalyzer.Build(filteredDiff);
         var provenance = ProvenanceFindingProcessor.Apply(allFindings, provenanceIndex, _config.Provenance);
@@ -298,7 +299,7 @@ public class RuleOrchestrator
         {
             foreach (var processor in _rules.OfType<IPostProcessor>())
             {
-                var finding = processor.PostProcess(diff);
+                var finding = processor.PostProcess(diff, allFindings);
                 if (finding != null) allFindings.Add(finding);
             }
         }

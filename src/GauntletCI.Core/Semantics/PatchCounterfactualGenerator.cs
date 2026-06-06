@@ -41,7 +41,10 @@ public static class PatchCounterfactualGenerator
             switch (op.Kind)
             {
                 case PatchOperationKind.ConditionalModified:
-                    counterfactuals.Add(PatchCounterfactualFactory.BoundaryValue("Test boundary where condition changed"));
+                    counterfactuals.Add(PatchCounterfactualFactory.BoundaryValue(
+                        "Test boundary where condition changed",
+                        op.FilePath,
+                        op.NewLineNumber));
                     break;
 
                 case PatchOperationKind.ConditionalRemoved:

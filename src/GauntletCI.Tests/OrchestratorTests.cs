@@ -22,7 +22,7 @@ public class OrchestratorTests
             +var x = 1;
             """);
         var result = await orchestrator.RunAsync(diff);
-        Assert.Equal(36, result.RulesEvaluated);
+        Assert.Equal(37, result.RulesEvaluated);
     }
 
     [Fact]
@@ -40,7 +40,7 @@ public class OrchestratorTests
             """);
         var result = await orchestrator.RunAsync(diff);
         Assert.NotNull(result);
-        Assert.Equal(36, result.RulesEvaluated);
+        Assert.Equal(37, result.RulesEvaluated);
     }
 
     [Fact]
@@ -194,9 +194,8 @@ public class OrchestratorTests
         var diff = DiffParser.Parse(raw);
         var orchestrator = RuleOrchestrator.CreateDefault();
         var result = await orchestrator.RunAsync(diff);
-        // The GCI0019 large-diff warning is added if totalLines > 200 and findings < 2
-        // We just verify RunAsync completes without error
-        Assert.NotNull(result);
+        Assert.Contains(result.Findings, f => f.RuleId == "GCI0019");
+        Assert.Contains(result.Findings, f => f.Summary.Contains("Large diff", StringComparison.Ordinal));
     }
 
     [Fact]

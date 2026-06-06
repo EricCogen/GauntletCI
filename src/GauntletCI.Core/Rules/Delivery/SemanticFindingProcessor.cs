@@ -66,7 +66,8 @@ public static class SemanticFindingProcessor
                 continue;
             }
 
-            var witness = counterfactuals.All.FirstOrDefault();
+            var line = finding.Line!.Value;
+            var witness = FindWitness(counterfactuals, finding.FilePath, line);
             var note = witness is null
                 ? $"Semantic witness: {operation.Description}"
                 : $"Counterfactual: {witness.Description} — {operation.Description}";
@@ -99,6 +100,19 @@ public static class SemanticFindingProcessor
             : source.CoverageNote + " | " + counterfactualNote,
         TicketContext = source.TicketContext,
     };
+
+    private static PatchCounterfactual? FindWitness(
+        PatchCounterfactualCollection counterfactuals,
+        string? filePath,
+        int line)
+    {
+        var normalized = NormalizePath(filePath);
+        return counterfactuals.All.FirstOrDefault(c =>
+                   c.PrimaryLineNumber == line &&
+                   string.Equals(NormalizePath(c.FilePath), normalized, StringComparison.OrdinalIgnoreCase))
+               ?? counterfactuals.All.FirstOrDefault(c =>
+                   string.Equals(NormalizePath(c.FilePath), normalized, StringComparison.OrdinalIgnoreCase));
+    }
 
     private static string Key(string? filePath, int? line) =>
         $"{NormalizePath(filePath)}|{line ?? 0}";

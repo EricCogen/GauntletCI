@@ -28,6 +28,9 @@ public sealed class AnalysisContext
     /// </summary>
     public DiffContext Diff { get; init; } = new();
 
+    /// <summary>All changed files from the original diff, including skipped paths.</summary>
+    public IReadOnlyList<DiffFile> AllFiles { get; init; } = Array.Empty<DiffFile>();
+
     /// <summary>Optional static analysis results for the diff.</summary>
     public AnalyzerResult? StaticAnalysis { get; init; }
 

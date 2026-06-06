@@ -11,5 +11,9 @@ namespace GauntletCI.Core.Rules;
 /// </summary>
 public interface IPostProcessor
 {
-    Finding? PostProcess(DiffContext context);
+    /// <summary>
+    /// Runs after all rules have evaluated. Returns an optional synthetic finding
+    /// based on aggregate diff properties and prior rule output.
+    /// </summary>
+    Finding? PostProcess(DiffContext context, IReadOnlyList<Finding> findings);
 }

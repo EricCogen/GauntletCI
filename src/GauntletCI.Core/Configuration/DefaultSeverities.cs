@@ -20,6 +20,7 @@ internal static class DefaultSeverities
             ["GCI0012"] = RuleSeverity.Block,
             ["GCI0015"] = RuleSeverity.Block,
             ["GCI0016"] = RuleSeverity.Block,
+            ["GCI0019"] = RuleSeverity.Info,
             ["GCI0020"] = RuleSeverity.Block,
             ["GCI0021"] = RuleSeverity.Block,
             ["GCI0036"] = RuleSeverity.Block,
