@@ -72,9 +72,8 @@ public static class LicenseService
         var parts = token.Split('.');
         if (parts.Length != 3)
         {
-            // Legacy non-JWT token: backward-compat with the old "any non-empty env var" stub.
-            return new LicenseInfo(LicenseTier.Pro, null, null, true,
-                "Legacy license key format. Re-issue a signed token at gauntletci.com.");
+            return LicenseInfo.Invalid(
+                "License token is not a valid signed JWT. Re-issue a token at https://gauntletci.com/pricing");
         }
 
         try
