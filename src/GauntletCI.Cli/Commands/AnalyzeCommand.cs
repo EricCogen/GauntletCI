@@ -32,7 +32,7 @@ public static class AnalyzeCommand
         var stagedFlag = new Option<bool>("--staged", "Analyse staged changes (git diff --cached)");
         var unstagedFlag = new Option<bool>("--unstaged", "Analyse unstaged changes (git diff)");
         var allChangesFlag = new Option<bool>("--all-changes", "Analyse all local changes: staged + unstaged (git diff HEAD)");
-        var codebaseOption = new Option<DirectoryInfo?>("--codebase", "Full codebase scan: analyse all C# files in directory (e.g., ./src). Treats all code as new for rule evaluation. This is the default when no other source is specified.");
+        var codebaseOption = new Option<DirectoryInfo?>("--codebase", "Full codebase scan: analyse all C# files in directory (e.g., ./src). Treats all code as new for rule evaluation.");
         var repoOption = new Option<DirectoryInfo>(
             "--repo",
             () => new DirectoryInfo(Directory.GetCurrentDirectory()),
@@ -140,11 +140,11 @@ public static class AnalyzeCommand
                 output = Path.GetExtension(output).TrimStart('.').ToLowerInvariant();
             }
 
-            // Default to full codebase scan if no explicit source is provided and stdin is not redirected
+            // Default to staged changes when no explicit source is provided and stdin is not redirected
             if (diffFile is null && commit is null && !staged && !unstaged && !allChanges &&
                 codebase is null && !Console.IsInputRedirected)
             {
-                codebase = repo;
+                staged = true;
             }
 
             // Enforce single diff source
