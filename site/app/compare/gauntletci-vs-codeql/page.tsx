@@ -73,11 +73,16 @@ const featureRows = [
   { label: "Custom rules via code (no query language required)", gauntlet: "yes" as const, codeql: "yes" as const },
 ];
 
-type CellVal = "yes" | "no" | "partial";
+type CellVal = "yes" | "no" | "partial" | "yes (Teams tier)";
 
 function Cell({ value, cyan }: { value: CellVal; cyan?: boolean }) {
-  if (value === "yes")
-    return <Check className={`h-5 w-5 mx-auto ${cyan ? "text-cyan-400" : "text-emerald-500/70"}`} />;
+  if (value === "yes" || value === "yes (Teams tier)")
+    return (
+      <Check
+        className={`h-5 w-5 mx-auto ${cyan ? "text-cyan-400" : "text-emerald-500/70"}`}
+        aria-label={value === "yes (Teams tier)" ? "Yes (Teams tier)" : "Yes"}
+      />
+    );
   if (value === "partial")
     return <AlertCircle className="h-4 w-4 mx-auto text-amber-400/60" />;
   return <Minus className="h-4 w-4 mx-auto text-muted-foreground/30" />;

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CaseStudyLayout } from "../_components/case-study-layout";
+import { CaseStudyLayout, type CaseStudyDiffLine } from "../_components/case-study-layout";
 
 export const metadata: Metadata = {
   title: "Case Study: Cosmos Serialization Modernization in EF Core | GauntletCI",
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: { images: [{ url: "/og/case-studies.png", width: 1200, height: 630 }] },
 };
 
-const diffLines = [
+const diffLines: CaseStudyDiffLine[] = [
   { type: "context", line: "// Public Cosmos option marked obsolete" },
   { type: "added", line: '[Obsolete("Enabling ContentResponseOnWrite currently has no benefit for EF Core.")]' },
   { type: "context", line: "public virtual CosmosDbContextOptionsBuilder ContentResponseOnWriteEnabled(bool enabled = true)" },

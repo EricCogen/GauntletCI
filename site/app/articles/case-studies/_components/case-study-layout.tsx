@@ -40,7 +40,7 @@ export type CaseStudyLayoutProps = {
   sections: CaseStudySection[];
   diffTitle: string;
   diffFile: string;
-  diffLines: CaseStudyDiffLine[];
+  diffLines: readonly CaseStudyDiffLine[];
   findingTitle: string;
   findingBody: string;
   caveats: string[];

@@ -56,7 +56,7 @@ export default function GrpcAnalysisPage() {
   return (
     <main className="min-h-screen flex flex-col">
       <Header />
-      <Breadcrumbs items={[{ label: "Articles", href: "/articles" }, { label: "gRPC-dotnet PR #2531" }]} />
+      <Breadcrumbs />
 
       <article className="flex-1 max-w-3xl mx-auto px-6 py-12">
         <JsonLd data={jsonLd} />

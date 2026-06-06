@@ -56,7 +56,7 @@ export default function GoogleAPIAnalysisPage() {
   return (
     <main className="min-h-screen flex flex-col">
       <Header />
-      <Breadcrumbs items={[{ label: "Articles", href: "/articles" }, { label: "Google API PR #3150" }]} />
+      <Breadcrumbs />
 
       <article className="flex-1 max-w-3xl mx-auto px-6 py-12">
         <JsonLd data={jsonLd} />

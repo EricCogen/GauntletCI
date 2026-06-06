@@ -19,8 +19,9 @@ export async function generateStaticParams() {
   }));
 }
 
-export function generateMetadata({ params }: { params: { page: string } }): Metadata {
-  const pageNum = parseInt(params.page, 10) || 1;
+export async function generateMetadata({ params }: { params: Promise<{ page: string }> }): Promise<Metadata> {
+  const { page } = await params;
+  const pageNum = parseInt(page, 10) || 1;
   const canonical = pageNum === 1 ? "/articles" : `/articles/p/${pageNum}`;
   
   return {
@@ -39,8 +40,9 @@ const jsonLd = {
   url: "https://gauntletci.com/articles",
 };
 
-export default function ArticlesPageRoute({ params }: { params: { page: string } }) {
-  const pageParam = parseInt(params.page, 10);
+export default async function ArticlesPageRoute({ params }: { params: Promise<{ page: string }> }) {
+  const { page } = await params;
+  const pageParam = parseInt(page, 10);
   const currentPage = Math.max(1, pageParam || 1);
 
   // Sort: pinned first, then by order

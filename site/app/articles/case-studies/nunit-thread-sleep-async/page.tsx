@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CaseStudyLayout } from "../_components/case-study-layout";
+import { CaseStudyLayout, type CaseStudyDiffLine } from "../_components/case-study-layout";
 
 export const metadata: Metadata = {
   title: "Case Study: Timeout Inheritance Change in NUnit | GauntletCI",
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: { images: [{ url: "/og/case-studies.png", width: 1200, height: 630 }] },
 };
 
-const diffLines = [
+const diffLines: CaseStudyDiffLine[] = [
   { type: "context", line: "// CancelAfterAttribute now propagates from base fixtures/classes" },
   { type: "removed", line: '[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited=false)]' },
   { type: "added", line: '[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, AllowMultiple = false, Inherited = true)]' },
