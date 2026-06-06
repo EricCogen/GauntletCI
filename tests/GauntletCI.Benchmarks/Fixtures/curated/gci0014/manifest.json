@@ -1,7 +1,0 @@
-{
-  "mapped_gci_rules": [
-    "GCI014"
-  ],
-  "description": "Rollback Safety: Detect irreversible deployment and rollback behavior in migrations and data paths.",
-  "fixtures": []
-}

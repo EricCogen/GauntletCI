@@ -1,7 +1,0 @@
-{
-  "mapped_gci_rules": [
-    "GCI009"
-  ],
-  "description": "Consistency with Existing Patterns: Detect dangerous deviations from established codebase patterns.",
-  "fixtures": []
-}

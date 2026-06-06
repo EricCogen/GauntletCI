@@ -1,7 +1,0 @@
-{
-  "mapped_gci_rules": [
-    "GCI013"
-  ],
-  "description": "Observability and Debuggability: Detect loss of critical logs, traces, and correlation context.",
-  "fixtures": []
-}

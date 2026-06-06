@@ -1,7 +1,0 @@
-{
-  "mapped_gci_rules": [
-    "GCI010"
-  ],
-  "description": "Hardcoding and Configuration: Detect hardcoded values, secrets, and brittle assumptions.",
-  "fixtures": []
-}

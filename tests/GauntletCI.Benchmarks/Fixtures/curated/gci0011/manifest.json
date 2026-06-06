@@ -1,7 +1,0 @@
-{
-  "mapped_gci_rules": [
-    "GCI011"
-  ],
-  "description": "Performance Risk: Detect runtime performance regressions such as N+1 queries and hot-path inefficiencies.",
-  "fixtures": []
-}

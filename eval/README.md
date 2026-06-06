@@ -99,8 +99,9 @@ Writes `eval/reports/gold-noise-sweep.json`. Benchmark runs default to `--sensit
 | `scorecards/*.json` | Per-fixture + `competitive-suite.json` rollup |
 | `competitive-matrix.json` | Subjective axis scores (comparable tools only) |
 | `redis-2995-scorecard.json` | Legacy summary + anchor pointer |
+| `../tests/GauntletCI.Benchmarks/Fixtures/curated/` | In-repo diff regressions (17 asserted); separate from Silver corpus |
 
-CI runs anchor via `redis-benchmark.yml`; gold fixtures with `primary_rules` via `benchmark-suite.yml` (`-CiOnly` until ground truth expands).
+CI runs anchor via `redis-benchmark.yml`; gold fixtures with `primary_rules` via `benchmark-suite.yml` (`-CiOnly` until ground truth expands). In-repo curated fixtures run via `dotnet test tests/GauntletCI.Benchmarks --filter Category=Benchmark`.
 
 ## Corpus promotion
 
