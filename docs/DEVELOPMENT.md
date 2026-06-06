@@ -46,7 +46,7 @@ dotnet test GauntletCI.slnx --nologo --collect:"XPlat Code Coverage" --results-d
 | Project | Purpose |
 |---------|---------|
 | `GauntletCI.Tests` | Unit tests for rules, diff parser, config, LLM templates (~570 tests) |
-| `GauntletCI.Benchmarks` | Curated fixture tests: true/false positive regression checks |
+| `GauntletCI.Benchmarks` | Curated diff regression tests (17 asserted + 4 observation diffs; see `tests/GauntletCI.Benchmarks/Fixtures/curated/README.md`) |
 
 ### Opt-in tests
 
