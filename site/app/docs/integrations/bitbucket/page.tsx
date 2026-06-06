@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { buildFaqSchema, softwareApplicationSchema } from "@/lib/schemas";
+import { IntegrationRelatedLinks } from "../_components/integration-related-links";
 
 export const metadata: Metadata = {
   title: "Bitbucket Pipelines Integration | GauntletCI Docs",
@@ -179,6 +180,7 @@ export default function BitbucketPage() {
             </div>
           </div>
         </section>
+        <IntegrationRelatedLinks />
       </div>
     </>
   );

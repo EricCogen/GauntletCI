@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { buildFaqSchema, softwareApplicationSchema } from "@/lib/schemas";
+import { IntegrationRelatedLinks } from "../_components/integration-related-links";
 
 export const metadata: Metadata = {
   title: "Neovim Plugin | GauntletCI Docs",
@@ -208,6 +209,7 @@ export default function NeovimPage() {
             </a>.
           </p>
         </section>
+        <IntegrationRelatedLinks />
       </div>
     </>
   );

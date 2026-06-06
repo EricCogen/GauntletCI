@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { buildFaqSchema, softwareApplicationSchema } from "@/lib/schemas";
 import { IntegrationStatusBanner } from "../_components/integration-status-banner";
+import { IntegrationRelatedLinks } from "../_components/integration-related-links";
 
 export const metadata: Metadata = {
   title: "MCP Server (AI Assistants) | GauntletCI Docs",
@@ -328,6 +329,7 @@ export default function McpPage() {
             ))}
           </div>
         </section>
+        <IntegrationRelatedLinks />
       </div>
     </>
   );

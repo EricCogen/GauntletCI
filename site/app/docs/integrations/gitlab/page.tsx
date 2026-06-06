@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { buildFaqSchema, softwareApplicationSchema } from "@/lib/schemas";
+import { IntegrationRelatedLinks } from "../_components/integration-related-links";
 
 export const metadata: Metadata = {
   title: "GitLab CI Integration | GauntletCI Docs",
@@ -187,6 +188,7 @@ export default function GitLabPage() {
             under <strong>Settings &gt; CI/CD &gt; Variables</strong>. Defaults to <code className="bg-muted px-1 rounded text-xs">balanced</code> if unset.
           </p>
         </section>
+        <IntegrationRelatedLinks />
       </div>
     </>
   );
