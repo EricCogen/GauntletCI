@@ -1,7 +1,0 @@
-{
-  "mapped_gci_rules": [
-    "GCI001"
-  ],
-  "description": "Diff Integrity and Scope: Detect mixed concerns, incomplete changesets, and scope creep.",
-  "fixtures": []
-}

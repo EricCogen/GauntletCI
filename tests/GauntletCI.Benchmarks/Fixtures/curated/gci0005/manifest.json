@@ -1,7 +1,0 @@
-{
-  "mapped_gci_rules": [
-    "GCI005"
-  ],
-  "description": "Test Coverage Relevance: Assess whether tests verify changed behavior.",
-  "fixtures": []
-}

@@ -1,7 +1,0 @@
-{
-  "mapped_gci_rules": [
-    "GCI012"
-  ],
-  "description": "Security Risk: Detect introduced vulnerabilities or weakened security safeguards.",
-  "fixtures": []
-}
