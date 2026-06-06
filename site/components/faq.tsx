@@ -52,7 +52,7 @@ const commonQA = [
         For team-specific rules without code, the{" "}
         <code>experimental.engineeringPolicy</code> config lets you define rules in plain markdown,
         evaluated locally by the LLM.{" "}
-        <a href="/docs/custom-rules" className="text-cyan-400 hover:underline">
+        <a href="/docs/custom-rules" className="text-cyan-400 underline underline-offset-2">
           Read the custom rules guide.
         </a>
       </>
@@ -105,7 +105,7 @@ const commonQA = [
         Add the workflow to your repo. It runs on every pull request, diffs the branch against the base,
         posts findings as inline review comments on the exact diff lines that triggered them, and exits with
         code 1 if blocking findings are detected. See the{" "}
-        <a href="/docs/integrations" className="text-cyan-400 hover:underline">CI/CD Integrations</a> doc for
+        <a href="/docs/integrations" className="text-cyan-400 underline underline-offset-2">CI/CD Integrations</a> doc for
         the full YAML.
       </>
     ),

@@ -28,7 +28,7 @@ export function Footer() {
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-16">
               <div>
-                <h3 className="text-sm font-semibold mb-4">Product</h3>
+                <p className="text-sm font-semibold mb-4">Product</p>
                 <ul className="space-y-3">
                   <li>
                     <Link href="/#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -48,7 +48,7 @@ export function Footer() {
                 </ul>
               </div>
               <div>
-                <h3 className="text-sm font-semibold mb-4">Resources</h3>
+                <p className="text-sm font-semibold mb-4">Resources</p>
                 <ul className="space-y-3">
                   <li>
                     <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -68,7 +68,7 @@ export function Footer() {
                 </ul>
               </div>
               <div>
-                <h3 className="text-sm font-semibold mb-4">Community</h3>
+                <p className="text-sm font-semibold mb-4">Community</p>
                 <ul className="space-y-3">
                   <li>
                     <Link href="/demo" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -88,7 +88,7 @@ export function Footer() {
                 </ul>
               </div>
               <div>
-                <h3 className="text-sm font-semibold mb-4">More</h3>
+                <p className="text-sm font-semibold mb-4">More</p>
                 <ul className="space-y-3">
                   <li>
                     <Link href="/releases" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
