@@ -102,7 +102,7 @@ export default async function ArticlesPageRoute({ params }: { params: Promise<{ 
                       {tag}
                     </span>
                   ))}
-                  <span className="text-xs text-muted-foreground/50 ml-auto">
+                  <span className="text-xs text-muted-foreground ml-auto">
                     {article.readTime}
                   </span>
                 </div>

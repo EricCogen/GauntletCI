@@ -74,21 +74,29 @@ jobs:
           fail-on-severity: moderate
 
   codeql:
+    name: CodeQL (${{ matrix.language }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [csharp, javascript-typescript]
     steps:
       - uses: actions/checkout@v6
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
-          languages: csharp
+          languages: ${{ matrix.language }}
+          source-root: ${{ matrix.language == 'javascript-typescript' && 'site' || '.' }}
 
       - name: Setup .NET
+        if: matrix.language == 'csharp'
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 8.0.x
 
       - name: Build
+        if: matrix.language == 'csharp'
         run: dotnet build GauntletCI.slnx --configuration Release
 
       - name: Analyze

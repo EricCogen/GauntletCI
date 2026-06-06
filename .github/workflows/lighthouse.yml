@@ -41,9 +41,6 @@ jobs:
         run: pnpm run build
 
       - name: Run Lighthouse CI
-        uses: treosh/lighthouse-ci-action@v12
-        continue-on-error: true
-        with:
-          configPath: site/.lighthouserc.json
-          uploadArtifacts: true
-          temporaryPublicStorage: true
+        run: npx --yes @lhci/cli@0.14.0 autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}

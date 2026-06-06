@@ -39,7 +39,7 @@ const annotations = [
 const colorMap: Record<OutputLine["type"], string> = {
   cmd:      "text-cyan-300 font-semibold",
   blank:    "",
-  dim:      "text-gray-500",
+  dim:      "text-zinc-400",
   critical: "text-red-400 font-semibold",
   risk:     "text-orange-400",
   info:     "text-yellow-400",
@@ -69,8 +69,8 @@ export function TerminalBlock() {
               <span className="h-3 w-3 rounded-full bg-red-500/80" />
               <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
               <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
-              <div className="flex-1 flex items-center justify-center gap-1.5 text-xs text-gray-500">
-                <Terminal className="h-3 w-3" />
+              <div className="flex-1 flex items-center justify-center gap-1.5 text-xs text-zinc-400">
+                <Terminal className="h-3 w-3" aria-hidden="true" />
                 <span>Live recording</span>
               </div>
             </div>
@@ -122,8 +122,8 @@ export function TerminalBlock() {
                 <span className="h-3 w-3 rounded-full bg-red-500/80" />
                 <span className="h-3 w-3 rounded-full bg-yellow-500/80" />
                 <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
-                <div className="flex-1 flex items-center justify-center gap-1.5 text-xs text-gray-500">
-                  <Terminal className="h-3 w-3" />
+                <div className="flex-1 flex items-center justify-center gap-1.5 text-xs text-zinc-400">
+                  <Terminal className="h-3 w-3" aria-hidden="true" />
                   <span>bash: ~/repos/my-service</span>
                 </div>
               </div>
