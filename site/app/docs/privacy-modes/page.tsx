@@ -51,7 +51,7 @@ export default function PrivacyModesPage() {
                 <div>
                   <p className="font-semibold text-foreground mb-1">✓ What's enabled:</p>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li>30+ built-in deterministic rules (GCI0001-GCI0037)</li>
+                    <li>37 built-in deterministic rules (GCI0001-GCI0037)</li>
                     <li>Diff-based change detection</li>
                     <li>Local AST analysis (Roslyn syntax trees)</li>
                     <li>Pre-commit hook integration</li>
@@ -324,7 +324,7 @@ integrations:
           <div className="rounded-lg border border-cyan-500/30 bg-cyan-500/5 p-4 mb-4">
             <p className="text-sm font-semibold text-cyan-400 mb-2">📋 Rule Types</p>
             <p className="text-sm text-muted-foreground mb-2">
-              <strong>Built-in rules (30+ deterministic):</strong> Run without any LLM. Results are identical across runs. Always enabled.
+              <strong>Built-in rules (37 deterministic):</strong> Run without any LLM. Results are identical across runs. Always enabled.
             </p>
             <p className="text-sm text-muted-foreground">
               <strong>Experimental policy rules (optional):</strong> Defined in markdown, evaluated via LLM. Opt-in via <code className="bg-muted px-1 rounded text-xs">experimental.engineeringPolicy</code>.

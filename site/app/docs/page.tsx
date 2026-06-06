@@ -38,7 +38,7 @@ const faqSchema = buildFaqSchema([
   },
   {
     q: "What does GauntletCI analyze?",
-    a: "GauntletCI reads the exact lines added and removed in your diff and evaluates them against 30+ deterministic rules. It flags behavior changes without test updates, breaking API changes, new exception paths, removed null guards, and hardcoded secrets.",
+    a: "GauntletCI reads the exact lines added and removed in your diff and evaluates them against 37 deterministic rules. It flags behavior changes without test updates, breaking API changes, new exception paths, removed null guards, and hardcoded secrets.",
   },
 ]);
 
@@ -120,7 +120,7 @@ export default function DocsPage() {
       <section>
         <h2 className="text-2xl font-semibold mb-4">What it analyzes</h2>
         <p className="text-muted-foreground mb-4">
-          GauntletCI reads the exact lines added and removed in your diff and evaluates them against 30+ deterministic rules. It flags:
+          GauntletCI reads the exact lines added and removed in your diff and evaluates them against 37 deterministic rules. It flags:
         </p>
         <ul className="space-y-2 text-sm text-muted-foreground list-none">
           {[

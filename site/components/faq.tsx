@@ -186,8 +186,8 @@ const faqs = [
     myth: "AI finds the bugs.",
     reality: (
       <>
-        The <strong>detection engine is 100% deterministic Roslyn analysis</strong>. It uses a fixed set of 30+
-        rules to identify changes. The AI (which runs 100% offline, locally) is only used to <em>explain</em> the
+        The <strong>detection engine is 100% deterministic Roslyn analysis</strong>. It uses a fixed set of 37
+        built-in rules to identify changes. The AI (which runs 100% offline, locally) is only used to <em>explain</em> the
         finding in plain English so juniors do not have to Google the error code.
       </>
     ),

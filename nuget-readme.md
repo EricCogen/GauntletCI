@@ -18,7 +18,7 @@ Neither validates what your change actually does.
 - ⚡ Sub-second analysis: no compilation, no AST, no network
 - 🔒 Runs locally: no code leaves your machine
 - 🎯 Up to 3 high-signal findings per run, no noise
-- 🔢 Fully deterministic: 30+ rules, no LLM required
+- 🔢 Fully deterministic: 37 rules, no LLM required
 
 ---
 
@@ -142,7 +142,7 @@ Baseline delta mode means you get signal on what you're changing today, not nois
 | | |
 |--|--|
 | [Getting Started](https://gauntletci.com/docs) | Install, first run, pre-commit hook |
-| [Rule Library](https://gauntletci.com/docs/rules) | All 30+ detection rules with examples |
+| [Rule Library](https://gauntletci.com/docs/rules) | All 37 detection rules with examples |
 | [CLI Reference](https://gauntletci.com/docs/cli-reference) | All commands and flags |
 | [Configuration](https://gauntletci.com/docs/configuration) | `.gauntletci.json` reference |
 | [Local LLM Setup](https://gauntletci.com/docs/local-llm) | Optional explanation layer via Ollama |

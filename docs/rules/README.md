@@ -10,7 +10,19 @@ A finding is not a claim that the code is definitely broken. A finding is eviden
 - **Beta**: useful but still being tuned
 - **Experimental**: may produce more false positives
 
-## Rules
+## Active rules (37)
+
+GauntletCI ships **37 active deterministic rules** today. The canonical reference with confidence levels, detection logic, and configuration notes is **[docs/rules.md](../rules.md)**.
+
+| Category | Count | Rule IDs |
+|----------|------:|----------|
+| **Active** (emit findings by default) | 37 | GCI0001, GCI0003–GCI0007, GCI0010, GCI0012, GCI0015–GCI0016, GCI0019, GCI0020–GCI0022, GCI0024, GCI0029, GCI0032, GCI0035–GCI0036, GCI0038–GCI0039, GCI0041–GCI0049, GCI0050–GCI0053, GCI0056–GCI0059 |
+| **Implemented, disabled by default** | 2 | GCI0054 (async void — use GCI0016), GCI0055 (regex signatures — use GCI0003) |
+| **Reserved / consolidated** | 3 | GCI0028 (unassigned), GCI0030 (→ GCI0024), GCI0033 (→ GCI0016) |
+
+## Deep-dive rule pages
+
+These pages expand on a subset of high-traffic rules. See [docs/rules.md](../rules.md) for the full catalog.
 
 | Rule | Name | Category | Status |
 | --- | --- | --- | --- |
@@ -19,8 +31,6 @@ A finding is not a claim that the code is definitely broken. A finding is eviden
 | [GCI0006](GCI0006-edge-case-handling.md) | Edge Case Handling | Behavior and Contracts | Stable |
 | [GCI0007](GCI0007-error-handling-integrity.md) | Error Handling Integrity | Observability and Failure Handling | Stable |
 | [GCI0010](GCI0010-hardcoding-and-configuration.md) | Hardcoding and Configuration | Security and Configuration | Stable |
-
-For the full evolving rule reference, see [docs/rules.md](../rules.md).
 
 ## Best Practices Guide
 
