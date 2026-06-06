@@ -7,7 +7,7 @@ import { Breadcrumbs } from "@/components/breadcrumbs";
 export const metadata: Metadata = {
   title: "The Silver Benchmark | GauntletCI Detection Accuracy",
   description:
-    "618 real .NET OSS pull requests. 30 rules. Precision and recall of each GauntletCI detection rule measured against a labeled corpus of open-source PRs.",
+    "618 real .NET OSS pull requests. Silver metrics for 23 of 37 active rules. Precision and recall measured against a labeled corpus of open-source PRs.",
   alternates: { canonical: "/benchmark" },
   openGraph: {
     images: [{ url: "/og/benchmark.png", width: 1200, height: 630 }],
@@ -19,7 +19,7 @@ const jsonLd = {
   "@type": "Article",
   headline: "The Silver Benchmark",
   description:
-    "618 real .NET OSS pull requests. 30 rules. Precision and recall of each GauntletCI detection rule measured against a labeled corpus.",
+    "618 real .NET OSS pull requests. Silver metrics for 23 of 37 active GauntletCI rules against a labeled OSS PR corpus.",
   url: "https://gauntletci.com/benchmark",
   publisher: {
     "@type": "Organization",
@@ -700,16 +700,16 @@ export default function BenchmarkPage() {
               The Silver Benchmark
             </h1>
             <p className="text-xl text-muted-foreground leading-relaxed text-pretty">
-              618 real .NET OSS pull requests. 30 rules. Every number earned
-              through iteration.
+              618 real .NET OSS pull requests. Silver metrics for 23 of 37
+              active rules. Every number earned through iteration.
             </p>
             <p className="text-muted-foreground leading-relaxed max-w-3xl">
-              This page documents the precision and recall of each GauntletCI
-              detection rule, measured against a labeled corpus of real
-              open-source pull requests. The numbers reflect what it took to
-              get here: labeler rewrites, rule narrowing, skip-guard additions,
-              and calibration passes that surfaced misalignments between what
-              a rule detects and what its labeler measured.
+              This page documents precision and recall for rules calibrated on
+              the Silver corpus — not all 37 active rules have Silver labels
+              yet. The numbers reflect labeler rewrites, rule narrowing,
+              skip-guard additions, and calibration passes that surfaced
+              misalignments between what a rule detects and what its labeler
+              measured.
             </p>
           </div>
 
