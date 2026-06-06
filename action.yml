@@ -38,7 +38,7 @@ inputs:
   gauntletci-version:
     description: "The GauntletCI NuGet tool version to install."
     required: false
-    default: "2.7.1"
+    default: "2.8.0-alpha1"
 
 outputs:
   findings-count:
