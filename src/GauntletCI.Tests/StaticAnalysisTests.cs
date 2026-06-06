@@ -343,4 +343,38 @@ public class StaticAnalysisTests
             Directory.Delete(tempDir, recursive: true);
         }
     }
+
+    [Fact]
+    public async Task StaticAnalysisRunner_PathOutsideRepo_ShouldSkipFile()
+    {
+        var tempRoot = Path.Combine(Path.GetTempPath(), $"gci_sas_{Guid.NewGuid():N}");
+        var repoDir = Path.Combine(tempRoot, "repo");
+        var outsideDir = Path.Combine(tempRoot, "outside");
+        Directory.CreateDirectory(repoDir);
+        Directory.CreateDirectory(outsideDir);
+
+        var outsideFile = Path.Combine(outsideDir, "Secret.cs");
+        await File.WriteAllTextAsync(outsideFile, "public class Secret { public string Token => \"leaked\"; }");
+
+        try
+        {
+            var raw = """
+                diff --git a/../../outside/Secret.cs b/../../outside/Secret.cs
+                index abc..def 100644
+                --- a/../../outside/Secret.cs
+                +++ b/../../outside/Secret.cs
+                @@ -1,1 +1,1 @@
+                -public class Secret { }
+                +public class Secret { public string Token => "leaked"; }
+                """;
+            var diff = DiffParser.Parse(raw);
+            var result = await StaticAnalysisRunner.RunAsync(diff, repoPath: repoDir);
+
+            Assert.Null(result);
+        }
+        finally
+        {
+            Directory.Delete(tempRoot, recursive: true);
+        }
+    }
 }

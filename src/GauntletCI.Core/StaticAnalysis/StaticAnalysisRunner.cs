@@ -50,9 +50,9 @@ public static class StaticAnalysisRunner
         {
             ct.ThrowIfCancellationRequested();
 
-            // Normalize to OS path separator
-            var relativePath = file.NewPath.Replace('/', Path.DirectorySeparatorChar);
-            var absolutePath = Path.Combine(repoPath, relativePath);
+            // Normalize to OS path separator and reject paths outside the repo root
+            if (!RepoPathResolver.TryResolvePathUnderRoot(repoPath, file.NewPath, out var absolutePath))
+                continue;
 
             if (!File.Exists(absolutePath))
                 continue;
