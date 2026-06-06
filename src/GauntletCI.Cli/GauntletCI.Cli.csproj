@@ -44,7 +44,6 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>gauntletci</ToolCommandName>
     <PackageId>GauntletCI</PackageId>
-    <Version>2.8.0-alpha1</Version>
     <Authors>Eric Cogen</Authors>
     <Description>GauntletCI is a .NET pre-commit and PR integration gate that evaluates diffs against 36+ behavioral-change rules: catching unvalidated changes, missing tests, async deadlock risk, security risks, and resource lifecycle violations before code is committed or merged. Optional local LLM enrichment via Ollama. Built-in MCP server for AI assistant integration. Core analysis runs locally by default. Source-available CodeRabbit alternative (Elastic License 2.0) with deterministic, auditable findings.</Description>
     <PackageTags>pre-commit;code-review;llm;static-analysis;behavioral-analysis;diff-analysis;git-hooks;ci;dotnet;csharp;mcp;pr-review;risk-detection;behavioral-testing;security-risk;async-safety;ollama;ai-code-review</PackageTags>
