@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CaseStudyLayout } from "../_components/case-study-layout";
+import { CaseStudyLayout, type CaseStudyDiffLine } from "../_components/case-study-layout";
 
 export const metadata: Metadata = {
   title: "Case Study: Paired Implementation Drift in StackExchange.Redis | GauntletCI",
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: { images: [{ url: "/og/case-studies.png", width: 1200, height: 630 }] },
 };
 
-const diffLines = [
+const diffLines: CaseStudyDiffLine[] = [
   { type: "context", line: "// PR #2995: cluster-aware subscription cleanup in Subscription.cs" },
   { type: "context", line: "internal sealed class SingleNodeSubscription : Subscription" },
   { type: "context", line: "{" },
@@ -29,7 +29,7 @@ const diffLines = [
   { type: "added", line: "                scratch[count++] = server.Key;" },
   { type: "context", line: "    }" },
   { type: "context", line: "}" },
-] as const;
+];
 
 const findingBody = [
   "[GCI0058] Paired Implementation Consistency",

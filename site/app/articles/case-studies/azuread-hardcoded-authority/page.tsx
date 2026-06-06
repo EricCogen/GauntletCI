@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CaseStudyLayout } from "../_components/case-study-layout";
+import { CaseStudyLayout, type CaseStudyDiffLine } from "../_components/case-study-layout";
 
 export const metadata: Metadata = {
   title: "Case Study: Signature Validation Telemetry in IdentityModel | GauntletCI",
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: { images: [{ url: "/og/case-studies.png", width: 1200, height: 630 }] },
 };
 
-const diffLines = [
+const diffLines: CaseStudyDiffLine[] = [
   { type: "context", line: "// New telemetry controls and issuer allowlist" },
   { type: "added", line: "public static bool RecordSignatureValidationTelemetry { get; set; }" },
   { type: "added", line: "public static bool EnableIssuerHostCaching { get; set; }" },

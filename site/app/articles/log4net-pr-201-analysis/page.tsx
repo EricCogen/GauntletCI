@@ -116,7 +116,7 @@ export default function Log4NetAnalysisPage() {
   return (
     <main className="min-h-screen flex flex-col">
       <Header />
-      <Breadcrumbs items={[{ label: "Articles", href: "/articles" }, { label: "log4net PR #201" }]} />
+      <Breadcrumbs />
 
       <article className="flex-1 max-w-3xl mx-auto px-6 py-12">
         <JsonLd data={jsonLd} />

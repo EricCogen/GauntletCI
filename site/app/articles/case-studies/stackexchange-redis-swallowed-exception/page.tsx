@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CaseStudyLayout } from "../_components/case-study-layout";
+import { CaseStudyLayout, type CaseStudyDiffLine } from "../_components/case-study-layout";
 
 export const metadata: Metadata = {
   title: "Case Study: Swallowed Handler Exceptions in StackExchange.Redis | GauntletCI",
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: { images: [{ url: "/og/case-studies.png", width: 1200, height: 630 }] },
 };
 
-const diffLines = [
+const diffLines: CaseStudyDiffLine[] = [
   { type: "context", line: "// PR #2995: ChannelMessageQueue was restructured during keyspace notification work" },
   { type: "context", line: "private void OnMessageSyncImpl(ChannelMessage next, Action<ChannelMessage>? handler)" },
   { type: "context", line: "{" },
@@ -26,7 +26,7 @@ const diffLines = [
   { type: "context", line: "    }" },
   { type: "added", line: "    catch { } // matches MessageCompletable" },
   { type: "context", line: "}" },
-] as const;
+];
 
 const findingBody = [
   "[GCI0007] Error Handling Integrity",
