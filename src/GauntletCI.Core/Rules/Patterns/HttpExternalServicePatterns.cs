@@ -30,6 +30,12 @@ internal static class HttpExternalServicePatterns
     }
 
     /// <summary>
+    /// Returns <c>true</c> when the file is the centralized static HttpClient factory.
+    /// </summary>
+    public static bool IsCentralHttpClientFactoryFile(string path) =>
+        path.EndsWith("HttpClientFactory.cs", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
     /// Returns <c>true</c> when the added lines indicate HttpClient configuration via IHttpClientFactory.
     /// Factory-managed clients configure timeout at the handler/channel level, not per-client.
     /// </summary>
@@ -65,7 +71,8 @@ internal static class HttpExternalServicePatterns
         var factoryPatterns = new[]
         {
             "IHttpClientFactory", "AddHttpClient", "HttpClientFactoryOptions",
-            "AddPolicyHandler", "AddTransientHttpErrorPolicy", "Polly"
+            "AddPolicyHandler", "AddTransientHttpErrorPolicy", "Polly",
+            "HttpClientFactory.Get",
         };
 
         return addedLines.Any(l =>

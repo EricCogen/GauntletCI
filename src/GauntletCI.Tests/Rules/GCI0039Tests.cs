@@ -229,4 +229,25 @@ public class GCI0039Tests
         // Should not flag timeout because GrpcChannelOptions is used
         Assert.DoesNotContain(findings, f => f.Summary.Contains("HttpClient used without explicit timeout"));
     }
+
+    [Fact]
+    public async Task NewHttpClient_InHttpClientFactoryFile_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/GauntletCI.Core/HttpClientFactory.cs b/src/GauntletCI.Core/HttpClientFactory.cs
+            index abc..def 100644
+            --- a/src/GauntletCI.Core/HttpClientFactory.cs
+            +++ b/src/GauntletCI.Core/HttpClientFactory.cs
+            @@ -1,3 +1,5 @@
+             public static class HttpClientFactory {
+            +    var client = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false }) { Timeout = TimeSpan.FromSeconds(30) };
+             }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("Direct HttpClient instantiation"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("HttpClient used without explicit timeout"));
+    }
 }
