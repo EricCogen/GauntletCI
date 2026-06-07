@@ -35,8 +35,8 @@
 
 | Document | Purpose |
 |----------|---------|
-| [/docs/rules.md](/docs/rules.md) | Complete GCI rule reference (50+ rules) |
-| [/docs/rules/](/docs/rules/) | Individual rule pages (GCI0001-GCI0050+) |
+| [/docs/rules.md](/docs/rules.md) | Complete GCI rule reference (37 active rules) |
+| [/docs/rules/](/docs/rules/) | Individual rule pages (GCI0001–GCI0059) |
 | [/docs/best-practices.md](/docs/best-practices.md) | Recommended patterns (BP001-BP030) |
 | [/docs/core-engineering-rules.md](/docs/core-engineering-rules.md) | Engineering invariants & principles |
 

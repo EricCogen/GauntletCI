@@ -178,6 +178,8 @@ github-app-server/.env
 site/out/
 site/.next/
 site/tsconfig.tsbuildinfo
+site/package-lock.json
+site/.lighthouseci/
 
 # Python bytecode
 **/__pycache__/
