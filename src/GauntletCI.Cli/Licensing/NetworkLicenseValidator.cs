@@ -9,8 +9,9 @@ namespace GauntletCI.Cli.Licensing;
 /// <summary>
 /// Validates an active GauntletCI license against the remote status endpoint.
 /// Caches the result for 24 hours to avoid latency on every run.
-/// Fails open (returns valid) if the network is unreachable, so air-gapped
-/// or locked-down CI environments are unaffected.
+/// On network errors, reuses a stale cache entry when one exists for the same token.
+/// When no cache exists and the network is unreachable, fails open but flags
+/// <see cref="NetworkLicenseValidationResult.SkippedNetworkCheck"/> so callers can warn.
 /// Set GAUNTLETCI_OFFLINE=1 to skip the network check entirely (Enterprise/air-gap).
 /// </summary>
 public static class NetworkLicenseValidator
@@ -18,35 +19,39 @@ public static class NetworkLicenseValidator
     private const string StatusEndpoint = "https://gauntletci-license-worker.patient-water-71dd.workers.dev/license/status";
     private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(24);
 
-    private static readonly string CachePath = Path.Combine(
+    private static readonly string DefaultCachePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
         ".gauntletci", "license-status-cache.json");
 
+    /// <summary>Test hook: override cache file path.</summary>
+    internal static string? TestCachePathOverride { get; set; }
+
+    /// <summary>Test hook: override status endpoint (use unreachable URL to simulate network failure).</summary>
+    internal static string? TestStatusEndpointOverride { get; set; }
+
+    private static string CachePath => TestCachePathOverride ?? DefaultCachePath;
+
     /// <summary>
     /// Validates the token against the remote endpoint.
-    /// Returns (Valid: true, Reason: null) when the subscription is active.
-    /// Returns (Valid: false, Reason: string) when cancelled or revoked.
-    /// Returns (Valid: true, Reason: null) when the network is unreachable (fail-open).
-    /// Returns (Valid: true, Reason: null) when GAUNTLETCI_OFFLINE=1 is set.
     /// </summary>
-    public static async Task<(bool Valid, string? Reason)> ValidateAsync(
+    public static async Task<NetworkLicenseValidationResult> ValidateAsync(
         string token,
         CancellationToken ct = default)
     {
         if (IsOfflineMode())
-            return (true, null);
+            return new NetworkLicenseValidationResult(true, null, SkippedNetworkCheck: true);
 
-        // Check cache first -- skip network if cache is fresh and token matches.
-        var cached = TryReadCache(token);
+        var cached = TryReadCache(token, ignoreTtl: false);
         if (cached.HasValue)
-            return cached.Value;
+            return new NetworkLicenseValidationResult(cached.Value.Valid, cached.Value.Reason);
 
         try
         {
+            var endpoint = TestStatusEndpointOverride ?? StatusEndpoint;
             var http = HttpClientFactory.GetGenericClient();
             // Do not dispose: HttpClientFactory owns this shared, process-wide client.
 
-            using var request = new HttpRequestMessage(HttpMethod.Get, StatusEndpoint);
+            using var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
             using var response = await http.SendAsync(request, ct);
@@ -57,13 +62,20 @@ public static class NetworkLicenseValidator
             var reason = root.TryGetProperty("reason", out var r) ? r.GetString() : null;
 
             WriteCache(token, valid, reason);
-            return (valid, reason);
+            return new NetworkLicenseValidationResult(valid, reason);
         }
-        catch (OperationCanceledException) { /* caller cancelled */ throw; }
-        catch
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex)
         {
-            // Network unavailable -- fail open and do not update the cache.
-            return (true, null);
+            System.Diagnostics.Debug.WriteLine(
+                $"[NetworkLicenseValidator] Network check failed: {ex.Message}");
+
+            var stale = TryReadCache(token, ignoreTtl: true);
+            if (stale.HasValue)
+                return new NetworkLicenseValidationResult(stale.Value.Valid, stale.Value.Reason);
+
+            // No prior validation record -- allow air-gapped first run, but flag it.
+            return new NetworkLicenseValidationResult(true, null, SkippedNetworkCheck: true);
         }
     }
 
@@ -72,7 +84,7 @@ public static class NetworkLicenseValidator
     private static bool IsOfflineMode() =>
         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GAUNTLETCI_OFFLINE"));
 
-    private static (bool Valid, string? Reason)? TryReadCache(string token)
+    internal static (bool Valid, string? Reason)? TryReadCache(string token, bool ignoreTtl)
     {
         try
         {
@@ -83,15 +95,17 @@ public static class NetworkLicenseValidator
             using var doc = JsonDocument.Parse(stream);
             var root = doc.RootElement;
 
-            // Invalidate if the token has changed since the cache was written.
             var cachedHash = root.TryGetProperty("tokenHash", out var h) ? h.GetString() : null;
             if (cachedHash != TokenHash(token))
                 return null;
 
-            var cachedAt = DateTimeOffset.FromUnixTimeSeconds(
-                root.GetProperty("cachedAt").GetInt64());
-            if (DateTimeOffset.UtcNow - cachedAt > CacheTtl)
-                return null;
+            if (!ignoreTtl)
+            {
+                var cachedAt = DateTimeOffset.FromUnixTimeSeconds(
+                    root.GetProperty("cachedAt").GetInt64());
+                if (DateTimeOffset.UtcNow - cachedAt > CacheTtl)
+                    return null;
+            }
 
             var valid = root.GetProperty("valid").GetBoolean();
             var reason = root.TryGetProperty("reason", out var rv) ? rv.GetString() : null;
@@ -103,7 +117,7 @@ public static class NetworkLicenseValidator
         }
     }
 
-    private static void WriteCache(string token, bool valid, string? reason)
+    internal static void WriteCache(string token, bool valid, string? reason)
     {
         try
         {
@@ -119,8 +133,8 @@ public static class NetworkLicenseValidator
         }
         catch (Exception ex)
         {
-            // Cache write failure is non-critical but should be logged
-            System.Diagnostics.Debug.WriteLine($"[NetworkLicenseValidator] Warning: Failed to write license cache: {ex.Message}");
+            System.Diagnostics.Debug.WriteLine(
+                $"[NetworkLicenseValidator] Warning: Failed to write license cache: {ex.Message}");
         }
     }
 
@@ -130,3 +144,8 @@ public static class NetworkLicenseValidator
         return Convert.ToHexString(bytes)[..16];
     }
 }
+
+public readonly record struct NetworkLicenseValidationResult(
+    bool Valid,
+    string? Reason,
+    bool SkippedNetworkCheck = false);

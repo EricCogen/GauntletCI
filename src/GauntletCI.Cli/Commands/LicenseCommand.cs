@@ -66,13 +66,17 @@ public static class LicenseCommand
             if (license.IsValid && license.Tier > LicenseTier.Community && rawToken is not null)
             {
                 AnsiConsole.WriteLine();
-                var (netValid, reason) = await NetworkLicenseValidator.ValidateAsync(
+                var netResult = await NetworkLicenseValidator.ValidateAsync(
                     rawToken, ctx.GetCancellationToken());
 
-                if (netValid)
+                if (netResult.Valid && !netResult.SkippedNetworkCheck)
                     AnsiConsole.MarkupLine("  Subscription: [green]Active[/]");
+                else if (netResult.Valid && netResult.SkippedNetworkCheck)
+                    AnsiConsole.MarkupLine(
+                        "  Subscription: [yellow]Not verified[/] (offline — set GAUNTLETCI_OFFLINE=1 or check network)");
                 else
-                    AnsiConsole.MarkupLine($"  Subscription: [red]Inactive[/] ({Markup.Escape(reason ?? "cancelled")})");
+                    AnsiConsole.MarkupLine(
+                        $"  Subscription: [red]Inactive[/] ({Markup.Escape(netResult.Reason ?? "cancelled")})");
             }
 
             AnsiConsole.WriteLine();
