@@ -9,7 +9,7 @@ To understand why GauntletCI is fast and private, it helps to see how it works f
 | **Execution Trigger** | Push to remote branch / PR creation. | Local `git commit` hook or manual CLI invocation. |
 | **Analysis Scope** | Whole-project compilation and full test-suite execution. | Staged Git diff isolation via localized Roslyn AST parsing. |
 | **Feedback Loop** | 5 to 20+ minutes (Context switch required). | **Sub-second (<0.5s)** (Immediate local feedback). |
-| **Data Privacy** | Code is transmitted to third-party cloud runners. | **100% Local.** No external API calls, zero data exfiltration. |
+| **Data Privacy** | Code is transmitted to third-party cloud runners. | **Core analysis runs locally by default.** No external API calls required for rule detection; optional telemetry and integrations are opt-in. |
 | **Target Risk** | Functional regressions (via unit/integration tests). | **Behavioral Change Risk (BCR)** (Silent exception paths, unverified logic). |
 
 ## The Diff-Isolation Engine

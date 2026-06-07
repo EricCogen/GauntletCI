@@ -57,7 +57,7 @@ const tableRows = [
 
 const featureRows = [
   { label: "Diff-scoped analysis (changed lines only)", gauntlet: "yes" as const, ndepend: "no" as const },
-  { label: "100% local execution, no code upload", gauntlet: "yes" as const, ndepend: "yes" as const },
+  { label: "Core analysis runs locally by default, no code upload", gauntlet: "yes" as const, ndepend: "yes" as const },
   { label: "Pre-commit (before push) feedback", gauntlet: "yes" as const, ndepend: "no" as const },
   { label: "Air-gap / data residency friendly", gauntlet: "yes" as const, ndepend: "yes" as const },
   { label: "Free tier with full rule set", gauntlet: "yes" as const, ndepend: "no" as const },
@@ -158,7 +158,7 @@ export default function VsNDependPage() {
                 "CQLinq - a LINQ-based query language for writing custom metric-based rules",
                 "Technical debt time estimates with trend charts across builds",
                 "Cyclomatic complexity, coupling, cohesion, and other structural metrics",
-                "Runs 100% locally - no code upload, no SaaS dependency",
+                "Core analysis runs locally by default -- no code upload, no SaaS dependency",
                 "Deep Visual Studio and CI/CD integration for .NET teams",
               ].map((item) => (
                 <li key={item} className="flex items-start gap-2">

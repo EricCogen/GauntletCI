@@ -329,7 +329,7 @@ export default function AiCodeReviewComparePage() {
               {[
                 "You want to catch behavioral regressions before the commit is created",
                 "Your team needs deterministic, repeatable findings with no LLM variance",
-                "You require 100% local execution -- no code uploads, no API cost",
+                "You require core analysis to run locally by default -- no code uploads, no API cost",
                 "You work in .NET / C# and want diff-aware behavioral detection",
                 "Pre-commit speed matters -- results in under one second",
               ].map((item) => (

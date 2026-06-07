@@ -213,7 +213,7 @@ export default function CodeClimateComparePage() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               {[
                 "You want to catch behavioral regressions before the commit is created",
-                "Your team needs 100% local execution -- no code uploads, no SaaS account",
+                "Your team needs core analysis to run locally by default -- no code uploads, no SaaS account",
                 "You want findings scoped to what changed, not the whole codebase",
                 "You work in .NET / C# and want diff-aware behavioral detection",
                 "Pre-commit speed is required -- under one second on every save",

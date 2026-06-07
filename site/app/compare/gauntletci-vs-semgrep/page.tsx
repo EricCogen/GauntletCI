@@ -198,7 +198,7 @@ export default function SemgrepComparePage() {
                 "You want zero-config detection of behavioral and structural risk",
                 "You need pre-commit speed - under one second on every commit",
                 "You want findings only on what changed, not the entire codebase",
-                "You need 100% local execution with no account or network dependency",
+                "You need core analysis to run locally by default with no account or network dependency",
                 "You work in a .NET / C# codebase and want diff-aware coverage from day one",
               ].map((item) => (
                 <li key={item} className="flex gap-2">
