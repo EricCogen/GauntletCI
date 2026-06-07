@@ -303,6 +303,19 @@ GauntletCI supports two LLM enrichment paths:
 - API key read from the environment variable named by `ciApiKeyEnv`: never stored in config.
 - Requires a GauntletCI license key in the environment variable named by `licenseKeyEnv`.
 
+### License subscription check
+
+Paid-tier features trigger a remote subscription check against the GauntletCI license worker. Behavior:
+
+| Condition | Result |
+| --- | --- |
+| Fresh cache (< 24 h, same token) | Uses cached active/inactive status |
+| Network error + stale cache | Reuses last known status (revoked licenses stay blocked) |
+| Network error + no cache | Fails open, prints a warning; set `GAUNTLETCI_OFFLINE=1` for intentional air-gap |
+| `GAUNTLETCI_OFFLINE=1` | Skips network check entirely |
+
+Run `gauntletci license status` to inspect JWT validity and subscription state.
+
 In both cases, enrichment applies only to `High`-confidence findings and appends a `LlmExplanation` string to each.
 
 ---

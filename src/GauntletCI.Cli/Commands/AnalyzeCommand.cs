@@ -234,15 +234,22 @@ public static class AnalyzeCommand
                     var rawToken = LicenseService.ReadRawToken(envVar);
                     if (rawToken is not null)
                     {
-                        var (netValid, netReason) = await Licensing.NetworkLicenseValidator
+                        var netResult = await Licensing.NetworkLicenseValidator
                             .ValidateAsync(rawToken, ct);
-                        if (!netValid)
+                        if (!netResult.Valid)
                         {
                             Console.Error.WriteLine(
-                                $"[GauntletCI] License subscription is no longer active ({netReason ?? "cancelled"}). " +
+                                $"[GauntletCI] License subscription is no longer active ({netResult.Reason ?? "cancelled"}). " +
                                 "Renew at https://gauntletci.com/pricing or run: gauntletci license renew");
                             ctx.ExitCode = 1;
                             return;
+                        }
+
+                        if (netResult.SkippedNetworkCheck)
+                        {
+                            Console.Error.WriteLine(
+                                "[GauntletCI] Warning: Could not verify license subscription online. " +
+                                "Using offline mode. Set GAUNTLETCI_OFFLINE=1 to suppress this warning.");
                         }
                     }
                 }
