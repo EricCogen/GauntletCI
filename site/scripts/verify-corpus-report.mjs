@@ -127,21 +127,21 @@ const noTestRiskPercent = ((noTestRiskPrs / noTestPrs) * 100).toFixed(1);
 
 assertEqual('CSV row count', rows.length, 610);
 assertEqual('CSV repository count', repoCount, 61);
-assertEqual('CSV distinct rule IDs', ruleIds.size, 29);
+assertEqual('CSV distinct rule IDs', ruleIds.size, 28);
 assertEqual('CSV high-confidence distinct rule IDs', highConfidenceRuleIds.size, 15);
-assertEqual('CSV raw findings', rawFindings, 148327);
+assertEqual('CSV raw findings', rawFindings, 147958);
 assertEqual('CSV high-confidence findings', highConfidenceFindings, 35871);
-assertEqual('CSV PRs with findings', riskPrs, 535);
+assertEqual('CSV PRs with findings', riskPrs, 529);
 assertEqual('CSV PRs with high-confidence findings', highConfidencePrs, 214);
 assertEqual('CSV PRs without test changes', noTestPrs, 178);
-assertEqual('CSV no-test PRs with findings', noTestRiskPrs, 133);
+assertEqual('CSV no-test PRs with findings', noTestRiskPrs, 131);
 assertEqual('CSV no-test PRs with high-confidence findings', noTestHighConfidencePrs, 46);
-assertEqual('Azure SDK PR #57223 raw findings', azureRawFindings, 40156);
+assertEqual('Azure SDK PR #57223 raw findings', azureRawFindings, 40155);
 assertEqual('Azure SDK PR #57223 high-confidence findings', azureHighConfidenceFindings, 16611);
 assertEqual('Azure SDK raw percentage', azureRawPercent, '27.1');
 assertEqual('Azure SDK high-confidence percentage', azureHighPercent, '46.3');
 assertEqual('High-confidence PR percentage', highConfidencePrPercent, '35.1');
-assertEqual('No-test PR risk percentage', noTestRiskPercent, '74.7');
+assertEqual('No-test PR risk percentage', noTestRiskPercent, '73.6');
 
 const values = {
   prCount: formatInt(rows.length),

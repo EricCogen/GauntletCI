@@ -36,7 +36,7 @@ const sources = [
     label: "Azure SDK for .NET PR #57223",
     href: "https://github.com/Azure/azure-sdk-for-net/pull/57223",
     description:
-      "The largest outlier in the current corpus; it accounts for 40,156 raw findings and 16,611 high-confidence findings.",
+      "The largest outlier in the current corpus; it accounts for 40,155 raw findings and 16,611 high-confidence findings.",
   },
   {
     label: "Azure SDK PR #57223 deep dive",
@@ -61,7 +61,7 @@ const sources = [
 const rawStats = [
   { value: "610", label: "merged C# PRs" },
   { value: "61", label: "public repositories" },
-  { value: "148,327", label: "raw BCR findings" },
+  { value: "147,958", label: "raw BCR findings" },
   { value: "35,871", label: "high-confidence findings" },
 ];
 
@@ -92,7 +92,7 @@ const topRepositories = [
 ];
 
 export const metadata: Metadata = {
-  title: `${title}: 148,327 Risk Signals Across 610 C# PRs | GauntletCI`,
+  title: `${title}: 147,958 Risk Signals Across 610 C# PRs | GauntletCI`,
   description,
   alternates: { canonical: `/articles/${slug}` },
   keywords: [
@@ -108,7 +108,7 @@ export const metadata: Metadata = {
   creator: "Eric Cogen",
   publisher: "GauntletCI",
   openGraph: {
-    title: `${title}: 148,327 Risk Signals Across 610 C# PRs`,
+    title: `${title}: 147,958 Risk Signals Across 610 C# PRs`,
     description,
     url: `https://gauntletci.com/articles/${slug}`,
     type: "article",
@@ -260,7 +260,7 @@ export default function CorpusReportPage() {
         <section className="space-y-4 rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-6">
           <h2 className="text-2xl font-bold">Outlier disclosure: Azure SDK PR #57223</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Azure SDK for .NET PR #57223 contributes 40,156 raw findings and 16,611 high-confidence findings. That is 27.1% of the corpus raw total and 46.3% of the high-confidence total. Any honest reading of the corpus has to say that out loud.
+            Azure SDK for .NET PR #57223 contributes 40,155 raw findings and 16,611 high-confidence findings. That is 27.1% of the corpus raw total and 46.3% of the high-confidence total. Any honest reading of the corpus has to say that out loud.
           </p>
           <p className="text-muted-foreground leading-relaxed">
             The right conclusion is not "Azure SDK is bad." The useful conclusion is that multiframework, published-surface-area changes create a different risk profile than small application PRs. For libraries, one signature or visibility change can echo through multiple target frameworks and generated surfaces.
@@ -273,7 +273,7 @@ export default function CorpusReportPage() {
         <section className="space-y-4">
           <h2 className="text-3xl font-bold">Test changes are not a reliable proxy for risk</h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            The corpus contains 178 PRs with no test-file changes recorded. Of those, 133 had at least one Behavioral Change Risk finding, and 46 had at least one high-confidence finding. That does not prove the PRs were wrong. It proves that "tests changed" and "risk was introduced" are different signals.
+            The corpus contains 178 PRs with no test-file changes recorded. Of those, 131 had at least one Behavioral Change Risk finding, and 46 had at least one high-confidence finding. That does not prove the PRs were wrong. It proves that "tests changed" and "risk was introduced" are different signals.
           </p>
           <p className="text-lg text-muted-foreground leading-relaxed">
             A reviewer needs both. A test diff shows what behavior the author chose to prove. A risk diff shows what behavior the author may have changed without making that choice explicit.
@@ -317,7 +317,7 @@ export default function CorpusReportPage() {
         <section className="space-y-4">
           <h2 className="text-3xl font-bold">Methodology and limitations</h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            The current local corpus database contains 610 public, already-merged C# pull requests across 61 repositories. The analyzed findings table contains 148,327 triggered findings across 535 PRs and 29 rule IDs. A high-confidence finding is a triggered finding with an `actual_confidence` value of at least 0.70.
+            The current local corpus database contains 610 public, already-merged C# pull requests across 61 repositories. The analyzed findings table contains 147,958 triggered findings across 529 PRs and 28 rule IDs. A high-confidence finding is a triggered finding with an `actual_confidence` value of at least 0.70.
           </p>
           <p className="text-lg text-muted-foreground leading-relaxed">
             The report is not a benchmark of repository quality, maintainer skill, or defect rate. It is a field report about where deterministic change-risk rules fire when applied to real merged diffs. Some findings represent intentional changes. Some represent generated or multiframework duplication. That is why this page reports raw counts, high-confidence counts, and the largest outlier separately.

@@ -368,7 +368,7 @@ export default function AzureSDKAnalysisPage() {
             <section className="mb-12">
               <h2 className="text-2xl font-bold mb-4">What GauntletCI Detected</h2>
               <p className="mb-4">
-                GauntletCI's behavioral analysis identified all 40,156 risk signals in 660ms of analysis time. The system:
+                GauntletCI's behavioral analysis identified all 40,155 risk signals in 660ms of analysis time. The system:
               </p>
               <ul className="list-disc list-inside space-y-2 mb-4">
                 <li>Traced signature changes and mapped them to breaking contracts</li>
@@ -406,7 +406,7 @@ export default function AzureSDKAnalysisPage() {
                 This analysis is based on Azure/azure-sdk-for-net PR #57223, which is a publicly available, already-merged PR. GauntletCI 2.8.0-alpha analyzed the full diff.
               </p>
               <p className="mb-4">
-                <strong>Raw findings:</strong> 40,156 signals across 13 distinct rule types
+                <strong>Raw findings:</strong> 40,155 signals across 13 distinct rule types
               </p>
               <p className="mb-4">
                 <strong>Unique findings:</strong> 6,650+ (after deduplicating across .NET 10.0, 8.0, and .NET Standard 2.0 compatibility surfaces)
@@ -415,7 +415,7 @@ export default function AzureSDKAnalysisPage() {
                 <strong>Why both numbers matter:</strong>
               </p>
               <ul className="list-disc list-inside space-y-2 mb-4">
-                <li><strong>Raw findings (40,156):</strong> Show the actual user surface area at risk. A .NET 8.0 user sees the breaking changes on .NET 8.0. A .NET Standard 2.0 user sees the breaking changes on their platform.</li>
+                <li><strong>Raw findings (40,155):</strong> Show the actual user surface area at risk. A .NET 8.0 user sees the breaking changes on .NET 8.0. A .NET Standard 2.0 user sees the breaking changes on their platform.</li>
                 <li><strong>Unique findings (6,650+):</strong> Show the underlying issues in source code, deduplicated for clarity.</li>
               </ul>
               <p className="mb-4">
