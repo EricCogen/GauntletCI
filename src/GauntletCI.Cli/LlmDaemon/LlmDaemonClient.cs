@@ -21,13 +21,19 @@ internal sealed class LlmDaemonClient : ILlmEngine
     private readonly NamedPipeClientStream _pipe;
     private readonly StreamReader _reader;
     private readonly StreamWriter _writer;
+    private readonly string _sessionToken;
     private bool _disposed;
 
-    private LlmDaemonClient(NamedPipeClientStream pipe, StreamReader reader, StreamWriter writer)
+    private LlmDaemonClient(
+        NamedPipeClientStream pipe,
+        StreamReader reader,
+        StreamWriter writer,
+        string sessionToken)
     {
         _pipe = pipe;
         _reader = reader;
         _writer = writer;
+        _sessionToken = sessionToken;
     }
 
     public bool IsAvailable => _pipe.IsConnected && !_disposed;
@@ -93,8 +99,15 @@ internal sealed class LlmDaemonClient : ILlmEngine
             var reader = new StreamReader(pipe, leaveOpen: true);
             var writer = new StreamWriter(pipe, leaveOpen: true) { AutoFlush = true };
 
+            var sessionToken = LlmDaemonAuth.TryReadPersistedToken();
+            if (sessionToken is null)
+            {
+                pipe.Dispose();
+                return null;
+            }
+
             // Ping to confirm the server is ready
-            await writer.WriteLineAsync(JsonSerializer.Serialize(new DaemonRequest("ping")));
+            await writer.WriteLineAsync(JsonSerializer.Serialize(new DaemonRequest("ping", Token: sessionToken)));
             var raw = await reader.ReadLineAsync(ct);
             if (raw is null) { pipe.Dispose(); return null; }
 
@@ -103,7 +116,7 @@ internal sealed class LlmDaemonClient : ILlmEngine
 
             pipe = null; // ownership transferred to client
             return new LlmDaemonClient(
-                (NamedPipeClientStream)reader.BaseStream, reader, writer);
+                (NamedPipeClientStream)reader.BaseStream, reader, writer, sessionToken);
         }
         catch (OperationCanceledException)
         {
@@ -151,6 +164,7 @@ internal sealed class LlmDaemonClient : ILlmEngine
     public async Task<string> EnrichFindingAsync(Finding finding, CancellationToken ct = default)
     {
         var req = new DaemonRequest("enrich",
+            Token: _sessionToken,
             RuleId: finding.RuleId,
             RuleName: finding.RuleName,
             Summary: finding.Summary,

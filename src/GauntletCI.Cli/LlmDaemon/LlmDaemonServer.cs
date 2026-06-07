@@ -32,6 +32,9 @@ internal static class LlmDaemonServer
         Directory.CreateDirectory(Path.GetDirectoryName(pidPath)!);
         await File.WriteAllTextAsync(pidPath, Environment.ProcessId.ToString(), ct);
 
+        var sessionToken = LlmDaemonAuth.GenerateToken();
+        await LlmDaemonAuth.PersistTokenAsync(sessionToken, ct);
+
         using ILlmEngine engine = new LocalLlmEngine();
         var lastActivity = DateTime.UtcNow;
 
@@ -39,12 +42,7 @@ internal static class LlmDaemonServer
         {
             while (!ct.IsCancellationRequested && DateTime.UtcNow - lastActivity < IdleTimeout)
             {
-                using var pipe = new NamedPipeServerStream(
-                    PipeName,
-                    PipeDirection.InOut,
-                    maxNumberOfServerInstances: 1,
-                    PipeTransmissionMode.Byte,
-                    PipeOptions.Asynchronous);
+                using var pipe = LlmDaemonAuth.CreateServerStream(PipeName);
 
                 // Wait for a client with a rolling poll window so we can re-check idle time
                 using var pollCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -60,13 +58,14 @@ internal static class LlmDaemonServer
                 }
 
                 lastActivity = DateTime.UtcNow;
-                await HandleClientAsync(engine, pipe, ct);
+                await HandleClientAsync(engine, pipe, sessionToken, ct);
                 lastActivity = DateTime.UtcNow;
             }
         }
         catch (OperationCanceledException) { }
         finally
         {
+            LlmDaemonAuth.DeleteTokenFile();
             try { File.Delete(pidPath); }
             catch (Exception ex)
             {
@@ -76,7 +75,8 @@ internal static class LlmDaemonServer
         }
     }
 
-    private static async Task HandleClientAsync(ILlmEngine engine, NamedPipeServerStream pipe, CancellationToken ct)
+    private static async Task HandleClientAsync(
+        ILlmEngine engine, NamedPipeServerStream pipe, string sessionToken, CancellationToken ct)
     {
         using var reader = new StreamReader(pipe, leaveOpen: true);
         using var writer = new StreamWriter(pipe, leaveOpen: true) { AutoFlush = true };
@@ -109,6 +109,10 @@ internal static class LlmDaemonServer
                 if (req is null)
                 {
                     resp = new DaemonResponse(false, "Deserialization resulted in null");
+                }
+                else if (!LlmDaemonAuth.IsValidToken(sessionToken, req.Token))
+                {
+                    resp = new DaemonResponse(false, "Unauthorized");
                 }
                 else
                 {
