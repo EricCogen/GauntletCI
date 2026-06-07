@@ -5,6 +5,7 @@ using System.Text.Json;
 using GauntletCI.Core;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
+using GauntletCI.Core.Security;
 
 namespace GauntletCI.Cli.Output;
 
@@ -48,10 +49,20 @@ public static class SlackTeamsNotifier
         var tasks = new List<Task>();
 
         if (slackUrl is not null)
-            tasks.Add(SendSlackNotificationAsync(result, repo, prNumStr, shortSha, slackUrl, ct));
+        {
+            if (WebhookUrlValidator.TryValidateSlack(slackUrl, out var slackError))
+                tasks.Add(SendSlackNotificationAsync(result, repo, prNumStr, shortSha, slackUrl, ct));
+            else
+                Console.Error.WriteLine($"[GauntletCI] Slack webhook rejected: {slackError}");
+        }
 
         if (teamsUrl is not null)
-            tasks.Add(SendTeamsNotificationAsync(result, repo, prNumStr, shortSha, teamsUrl, ct));
+        {
+            if (WebhookUrlValidator.TryValidateTeams(teamsUrl, out var teamsError))
+                tasks.Add(SendTeamsNotificationAsync(result, repo, prNumStr, shortSha, teamsUrl, ct));
+            else
+                Console.Error.WriteLine($"[GauntletCI] Teams webhook rejected: {teamsError}");
+        }
 
         // Send notifications in parallel (both at once if both URLs exist)
         await Task.WhenAll(tasks);
