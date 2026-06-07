@@ -32,14 +32,18 @@ public static class TelemetryHasher
     {
         try
         {
-            var psi = new System.Diagnostics.ProcessStartInfo("git",
-                $"-C \"{repoRoot}\" remote get-url origin")
+            var psi = new System.Diagnostics.ProcessStartInfo("git")
             {
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true,
             };
+            psi.ArgumentList.Add("-C");
+            psi.ArgumentList.Add(repoRoot);
+            psi.ArgumentList.Add("remote");
+            psi.ArgumentList.Add("get-url");
+            psi.ArgumentList.Add("origin");
             using var proc = System.Diagnostics.Process.Start(psi);
             if (proc is null) return "local";
             var url = await proc.StandardOutput.ReadToEndAsync(ct);

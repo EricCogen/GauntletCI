@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Text.RegularExpressions;
+using GauntletCI.Core.Git;
 
 namespace GauntletCI.Core.Diff;
 
@@ -180,7 +181,9 @@ public static class DiffParser
     public static async Task<DiffContext> FromStagedAsync(
         string repoPath, int contextLines = 10, CancellationToken ct = default)
     {
-        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff --cached -U{contextLines}", ct).ConfigureAwait(false);
+        var diff = await RunGitAsync(
+            ["-C", repoPath, "diff", "--cached", $"-U{contextLines}"],
+            ct).ConfigureAwait(false);
         return Parse(diff, commitSha: "staged");
     }
 
@@ -188,7 +191,9 @@ public static class DiffParser
     public static async Task<DiffContext> FromUnstagedAsync(
         string repoPath, int contextLines = 10, CancellationToken ct = default)
     {
-        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff -U{contextLines}", ct).ConfigureAwait(false);
+        var diff = await RunGitAsync(
+            ["-C", repoPath, "diff", $"-U{contextLines}"],
+            ct).ConfigureAwait(false);
         return Parse(diff, commitSha: "unstaged");
     }
 
@@ -196,7 +201,9 @@ public static class DiffParser
     public static async Task<DiffContext> FromAllChangesAsync(
         string repoPath, int contextLines = 10, CancellationToken ct = default)
     {
-        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff HEAD -U{contextLines}", ct).ConfigureAwait(false);
+        var diff = await RunGitAsync(
+            ["-C", repoPath, "diff", $"-U{contextLines}", "HEAD"],
+            ct).ConfigureAwait(false);
         return Parse(diff, commitSha: "all-changes");
     }
 
@@ -220,33 +227,45 @@ public static class DiffParser
     private static async Task<(string diff, string? message)> RunGitAsync(
         string repoPath, string commitRef, int contextLines, CancellationToken ct)
     {
+        GitRefValidator.ValidateRef(commitRef);
+
         // Get commit message
         string? message = null;
         try
         {
-            var msgResult = await RunProcessAsync("git", $"-C \"{repoPath}\" log -1 --format=%s {commitRef}", ct).ConfigureAwait(false);
+            var msgResult = await RunGitAsync(
+                ["-C", repoPath, "log", "-1", "--format=%s", "--", commitRef],
+                ct).ConfigureAwait(false);
             message = msgResult.Trim();
         }
         catch { /* non-fatal */ }
 
         // Get diff: for a single commit use commit^..commit; for a range pass as-is
-        var diffArg = commitRef.Contains("..") ? commitRef : $"{commitRef}^..{commitRef}";
-        var diff = await RunProcessAsync("git", $"-C \"{repoPath}\" diff -U{contextLines} {diffArg}", ct).ConfigureAwait(false);
+        var diffArg = commitRef.Contains("..", StringComparison.Ordinal) ? commitRef : $"{commitRef}^..{commitRef}";
+        var diff = await RunGitAsync(
+            ["-C", repoPath, "diff", $"-U{contextLines}", "--", diffArg],
+            ct).ConfigureAwait(false);
         return (diff, message);
     }
 
-    private static async Task<string> RunProcessAsync(string executable, string arguments, CancellationToken ct)
+    private static Task<string> RunGitAsync(IReadOnlyList<string> args, CancellationToken ct) =>
+        RunProcessAsync("git", args, ct);
+
+    private static async Task<string> RunProcessAsync(
+        string executable, IReadOnlyList<string> arguments, CancellationToken ct)
     {
         using var process = new System.Diagnostics.Process();
         process.StartInfo = new System.Diagnostics.ProcessStartInfo
         {
             FileName = executable,
-            Arguments = arguments,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
         };
+
+        foreach (var arg in arguments)
+            process.StartInfo.ArgumentList.Add(arg);
 
         process.Start();
 
@@ -288,7 +307,7 @@ public static class DiffParser
         }
 
         if (process.ExitCode != 0)
-            throw new GitProcessException($"{executable} {arguments}", process.ExitCode, stderr);
+            throw new GitProcessException($"{executable} {string.Join(' ', arguments)}", process.ExitCode, stderr);
 
         return output;
     }
