@@ -454,9 +454,9 @@ export default function BCRFormalFrameworkPage() {
                 </p>
               </div>
               <div className="rounded-xl border border-cyan-500/30 bg-cyan-500/5 p-5">
-                <p className="text-3xl font-bold text-cyan-400 mb-1">74.7%</p>
+                <p className="text-3xl font-bold text-cyan-400 mb-1">73.6%</p>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  of pull requests submitted without test file modifications (133 of 178) contained at least one
+                  of pull requests submitted without test file modifications (131 of 178) contained at least one
                   behavioral risk indicator. When test authorship effort is absent, risk patterns are not merely
                   possible; they are prevalent.
                 </p>

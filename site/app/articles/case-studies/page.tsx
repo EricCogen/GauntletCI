@@ -188,7 +188,7 @@ export default function CaseStudiesPage() {
               <Link href="/articles/corpus-report-2025" className="font-medium text-cyan-400 hover:text-cyan-300">
                 State of Behavioral Change Risk in .NET
               </Link>
-              : 610 merged C# pull requests, 61 repositories, 148,327 raw findings,
+              : 610 merged C# pull requests, 61 repositories, 147,958 raw findings,
               and 35,871 high-confidence findings.
             </p>
           </section>
