@@ -1,5 +1,7 @@
 # Phase 9B/C Analysis: Corpus-Driven Rule Refinement Decision
 
+> **Historical document.** Metrics and rule counts reflect the May 2026 corpus analysis era (34 rules at Phase 10). For the current rule inventory, see [rules/README.md](rules/README.md).
+
 **Date:** 2026-05-01  
 **Status:** Analysis complete, refinement strategy revised  
 **Decision:** Focus on case study integration (immediate value) vs corpus-based refinements (higher risk)
@@ -150,7 +152,7 @@ The mismatch between corpus labels and actual detections suggests one or more of
 
 ## Conclusion
 
-**Current state**: 34 rules, 1258 passing tests, production-ready.
+**State at time of writing (May 2026)**: 34 rules, 1258 passing tests, production-ready.
 
 **Corpus issue**: Data quality mismatch between labels and implementations. **Not a production risk.** The test suite is a more reliable signal than corpus labels.
 

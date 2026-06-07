@@ -23,7 +23,7 @@ the rule).
 With the core engine stable, effort shifted to the marketing site (`site/`, Next.js,
 static export). Work in this phase:
 
-- Rule-as-a-Page: 30+ individual rule detail pages at `/docs/rules/[ruleId]`, each
+- Rule-as-a-Page: 37 individual rule detail pages at `/docs/rules/[ruleId]`, each
   with full rule description, severity rationale, and code examples
 - Contextual loop: articles link to relevant rules, rule pages link back to articles
 - Founder bio and `/about` page for E-E-A-T author trust signals

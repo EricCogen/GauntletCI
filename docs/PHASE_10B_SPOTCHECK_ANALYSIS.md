@@ -1,5 +1,7 @@
 # Phase 10B: Corpus Re-Labeling Spot-Check Analysis
 
+> **Historical document.** Metrics and rule counts reflect the May 2026 corpus analysis era (34 rules at Phase 10). For the current rule inventory, see [rules/README.md](rules/README.md).
+
 **Date**: 2026-05-01  
 **Status**: Spot-check analysis complete on 3 priority rules  
 **Objective**: Understand FP patterns to guide corpus re-labeling strategy

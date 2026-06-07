@@ -1,5 +1,7 @@
 # Phase 10C-B: Selective Re-Labeling Results
 
+> **Historical document.** Metrics and rule counts reflect the May 2026 corpus analysis era (34 rules at Phase 10). For the current rule inventory, see [rules/README.md](rules/README.md).
+
 **Date**: 2026-05-01  
 **Status**: Spot-check complete, categorization done  
 **Rules Reviewed**: GCI0038, GCI0010 (10 samples each)

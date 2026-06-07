@@ -199,10 +199,14 @@ Rules not yet validated from corpus:
 - **GCI0001**: Diff integrity check; disabled in GauntletCI own CI config; no corpus example found
 - **GCI0029**: PII in logs; high FP rate on broad terms like `name`; excluded from showcase
 - **GCI0035**: Layer import violations; requires `ForbiddenImports` config to fire
-- **GCI0048**: Insecure random; newly added; corpus validation pending
-- **GCI0049**: Float equality; newly added; corpus validation pending
-- **GCI0052**: Dependency bot API drift; fires when bot-updated package appears in source without API surface update; corpus validation pending
-- **GCI0053**: Lockfile changed without source; fires when lockfile changes with no corresponding .cs changes; corpus validation pending
+- **GCI0051**: Numeric coercion risk; unit tested; no curated OSS PR showcase example yet
+- **GCI0052**: Dependency bot API drift; **disabled by default** — requires `GITHUB_ACTOR` bot context unavailable in generic diffs
+
+Rules validated via unit tests and case studies (not listed in the corpus showcase table above):
+- **GCI0048**: Insecure random — [case study](case-studies/gci0048-insecure-random.md) and unit tests
+- **GCI0049**: Float/double equality — unit tests and Silver corpus heuristics
+- **GCI0050**: SQL column truncation — [case study](case-studies/gci0050-sql-truncation.md) and unit tests
+- **GCI0053**: Lockfile changed without source — unit tests across supported lockfile formats
 
 Known precision caveats (as of current version):
 - **GCI0029**: `name` term fires on logging context keys and property names, not just PII; use `.gauntletci-ignore` to suppress per path
