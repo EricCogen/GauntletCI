@@ -5,6 +5,7 @@ namespace GauntletCI.Cli.LlmDaemon;
 
 internal sealed record DaemonRequest(
     [property: JsonPropertyName("op")] string Op,
+    [property: JsonPropertyName("token")] string? Token = null,
     [property: JsonPropertyName("ruleId")] string? RuleId = null,
     [property: JsonPropertyName("ruleName")] string? RuleName = null,
     [property: JsonPropertyName("summary")] string? Summary = null,
