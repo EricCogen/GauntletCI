@@ -188,8 +188,8 @@ export default function VsNDependPage() {
                   body: "Rules target behavioral drift: removed null guards, altered exception handling, changed concurrency patterns, dropped public API members. These compile fine but break production behavior.",
                 },
                 {
-                  title: "Free, no license server",
-                  body: "GauntletCI is open-source and free. No per-developer license, no activation server, no renewal cycle. Install with a single dotnet tool install command.",
+                  title: "Free Community tier",
+                  body: "GauntletCI is source-available under Elastic License 2.0 with a free Community tier. No per-developer license, no activation server, no renewal cycle. Install with a single dotnet tool install command.",
                 },
               ].map((card) => (
                 <div key={card.title} className="rounded-lg border border-border bg-card/50 p-5">
