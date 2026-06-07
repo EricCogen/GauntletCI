@@ -82,11 +82,11 @@ export default function AsymmetryOfChangePage() {
               Think of every diff as a time machine moving in one direction. The assertions stay where they were written, while the code underneath them moves forward. This creates a dangerous blind spot: <strong>The Implicit Contract.</strong> Consider a guard clause that has existed for years. Because that guard was always there, no one ever felt the need to write an explicit test for the `null` case. The "contract" was implicit in the structure of the code. If a developer removes that guard, the test suite remains green. The suite isn't "broken"; it just never knew the guard was a requirement. It was a silent protector that the tests never bothered to verify.
             </p>
             <div className="bg-slate-100 dark:bg-slate-900 rounded-lg p-4 overflow-x-auto text-sm font-mono text-slate-900 dark:text-slate-100 space-y-2">
-              <div className="text-gray-600 dark:text-gray-400">// Before diff: the implicit contract</div>
+              <div className="text-gray-600 dark:text-gray-400">{"// Before diff: the implicit contract"}</div>
               <div>if (user == null) return;</div>
               <div>Process(user.Name);</div>
               <div className="pt-2"></div>
-              <div className="text-gray-600 dark:text-gray-400">// After diff: guard removed, tests still pass.</div>
+              <div className="text-gray-600 dark:text-gray-400">{"// After diff: guard removed, tests still pass."}</div>
               <div>Process(user.Name);</div>
             </div>
             <p className="text-muted-foreground leading-relaxed">

@@ -266,14 +266,14 @@ export default function WhatIsDiffBasedAnalysisPage() {
                 <p className="text-muted-foreground/40">--- a/src/UserService.cs</p>
                 <p className="text-muted-foreground/40">+++ b/src/UserService.cs</p>
                 <p className="text-amber-400/80">@@ -38,12 +38,10 @@ public class UserService</p>
-                <p className="text-muted-foreground/40">{"  "}/// &lt;summary&gt;Retrieves a user by identifier.&lt;/summary&gt;</p>
+                <p className="text-muted-foreground/40">{"  /// &lt;summary&gt;Retrieves a user by identifier.&lt;/summary&gt;"}</p>
                 <p className="text-muted-foreground/40">{"  "}public async Task&lt;User&gt; GetUserAsync(int id)</p>
                 <p className="text-muted-foreground/40">{"  "}{"{"}</p>
                 <p className="text-red-400">-{"     "}if (id &lt;= 0)</p>
                 <p className="text-red-400">-{"         "}throw new ArgumentOutOfRangeException(nameof(id));</p>
                 <p className="text-muted-foreground/40">{"      "}var cached = _cache.Get(id);</p>
                 <p className="text-muted-foreground/40">{"      "}if (cached != null) return cached;</p>
-                <p className="text-green-400">+{"      "}// TODO: restore validation</p>
+                <p className="text-green-400">{"+      // TODO: restore validation"}</p>
                 <p className="text-muted-foreground/40">{"      "}return await _repo.FindAsync(id);</p>
                 <p className="text-muted-foreground/40">{"  "}{"}"}</p>
               </div>
