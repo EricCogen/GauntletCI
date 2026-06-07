@@ -134,6 +134,12 @@ internal static class WellKnownPatterns
         HttpExternalServicePatterns.IsGrpcRelatedFile(path);
 
     /// <summary>
+    /// Returns <c>true</c> when the file is the centralized static HttpClient factory.
+    /// </summary>
+    public static bool IsCentralHttpClientFactoryFile(string path) =>
+        HttpExternalServicePatterns.IsCentralHttpClientFactoryFile(path);
+
+    /// <summary>
     /// Returns <c>true</c> when the added lines indicate HttpClient configuration via IHttpClientFactory.
     /// Factory-managed clients configure timeout at the handler/channel level, not per-client.
     /// </summary>

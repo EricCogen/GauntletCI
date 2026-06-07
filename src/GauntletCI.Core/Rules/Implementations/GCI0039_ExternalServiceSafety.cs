@@ -40,6 +40,9 @@ public class GCI0039_ExternalServiceSafety : RuleBase
         // Skip gRPC files entirely - gRPC Channel initialization IS the timeout mechanism
         if (WellKnownPatterns.IsGrpcRelatedFile(file.NewPath)) return;
 
+        // Central factory is the designated place for HttpClient construction
+        if (WellKnownPatterns.IsCentralHttpClientFactoryFile(file.NewPath)) return;
+
         foreach (var line in file.AddedLines)
         {
             var content = line.Content;
@@ -66,6 +69,8 @@ public class GCI0039_ExternalServiceSafety : RuleBase
 
     private void CheckMissingTimeout(DiffFile file, List<Finding> findings)
     {
+        if (WellKnownPatterns.IsCentralHttpClientFactoryFile(file.NewPath)) return;
+
         var addedLines = file.AddedLines.ToList();
 
         // Only flag files that directly instantiate a new HttpClient; using

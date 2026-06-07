@@ -22,7 +22,7 @@ public static class HttpClientFactory
     // Generic client: no auth, 30 second default timeout
     private static readonly Lazy<HttpClient> GenericClient = new(() => CreateGenericClient());
 
-    // Anthropic client: API key auth, 120 second timeout for inference calls
+    // Anthropic / webhook client: no redirect, 120 second timeout (webhooks share this pool)
     private static readonly Lazy<HttpClient> AnthropicClientInstance = new(() => CreateAnthropicClient());
 
     // Codecov client: Bearer token auth, 15 second timeout
@@ -55,6 +55,13 @@ public static class HttpClientFactory
     /// Do NOT dispose; client is managed by the factory.
     /// </summary>
     public static HttpClient GetAnthropicClient() => AnthropicClientInstance.Value;
+
+    /// <summary>
+    /// Gets an HTTP client for Slack/Teams incoming webhook POSTs.
+    /// Shares the no-redirect client pool (redirects disabled for SSRF hardening).
+    /// Do NOT dispose; client is managed by the factory.
+    /// </summary>
+    public static HttpClient GetWebhookClient() => AnthropicClientInstance.Value;
 
     /// <summary>
     /// Gets a Codecov API client. Token must be attached per-request via HttpRequestMessage.Headers.
