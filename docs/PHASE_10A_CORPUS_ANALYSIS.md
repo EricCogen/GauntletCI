@@ -1,5 +1,7 @@
 # Phase 10A: Corpus Validation Tooling - Analysis Report
 
+> **Historical document.** Metrics and rule counts reflect the May 2026 corpus analysis era (34 rules at Phase 10). For the current rule inventory, see [rules/README.md](rules/README.md).
+
 **Date**: 2026-05-01  
 **Status**: Analysis complete, tooling validated  
 **Objective**: Understand label/detection mismatch; prepare for Phase 10B re-labeling  

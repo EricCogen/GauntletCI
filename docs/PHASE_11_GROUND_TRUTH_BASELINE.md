@@ -1,5 +1,7 @@
 # Phase 11: Ground Truth Building - COMPLETE ✅
 
+> **Historical document.** Metrics and rule counts reflect the May 2026 corpus analysis era (34 rules at Phase 10). For the current rule inventory and Silver benchmark metrics, see [rules/README.md](rules/README.md).
+
 **Date**: 2026-05-01  
 **Session**: Phase 10C-B continuation → Phase 11
 

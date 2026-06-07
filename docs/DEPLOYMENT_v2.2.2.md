@@ -39,7 +39,7 @@
 - ✅ No ambiguity about feature availability by tier
 
 #### Phase 7e-7f: Standardization Complete
-- ✅ Rule counts standardized to "30+" (future-proof for 34 rules)
+- ✅ Rule counts standardized to "30+" at v2.2.2 (current: 37 active rules — see `docs/rules/README.md`)
 - ✅ Model naming consistent: "Phi-4 Mini" (marketing), "phi4-mini" (config)
 - ✅ All site pages using consistent terminology
 
