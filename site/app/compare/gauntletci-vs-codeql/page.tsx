@@ -195,8 +195,8 @@ export default function VsCodeQLPage() {
                 body: "CodeQL's power comes with complexity. GauntletCI's 37 built-in C#/.NET rules cover the most common behavioral regression classes with zero configuration required to start.",
               },
               {
-                title: "100% local, always",
-                body: "CodeQL results are uploaded to GitHub. GauntletCI never sends code anywhere. No GitHub Advanced Security subscription required. Works in air-gapped environments and private networks.",
+                title: "Local by default",
+                body: "CodeQL results are uploaded to GitHub. GauntletCI core analysis never sends code anywhere by default. No GitHub Advanced Security subscription required. Works in air-gapped environments and private networks.",
               },
             ].map((card) => (
               <div key={card.title} className="rounded-lg border border-border bg-card/50 p-5">

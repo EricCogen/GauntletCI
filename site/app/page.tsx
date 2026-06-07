@@ -58,7 +58,7 @@ const faqSchema = {
       "name": "How does GauntletCI compare to Snyk?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Snyk is primarily a dependency and container vulnerability scanner that requires cloud connectivity and a Snyk account. GauntletCI detects behavioral, structural, and security risks in first-party code changes, not dependency vulnerabilities, and runs 100% locally with no data transmitted. GauntletCI is suitable for air-gapped environments and organizations with strict data residency requirements; Snyk is not."
+        "text": "Snyk is primarily a dependency and container vulnerability scanner that requires cloud connectivity and a Snyk account. GauntletCI detects behavioral, structural, and security risks in first-party code changes, not dependency vulnerabilities, and runs core analysis locally by default with no data transmitted unless optional integrations are enabled. GauntletCI is suitable for air-gapped environments and organizations with strict data residency requirements; Snyk is not."
       }
     },
     {
@@ -74,7 +74,7 @@ const faqSchema = {
       "name": "How does GauntletCI compare to Code Climate?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Code Climate is a SaaS platform that analyzes full repositories for maintainability and test coverage trends over time. It requires uploading code to a cloud service. GauntletCI is fully local, diff-scoped, and focused on change risk rather than codebase health metrics. GauntletCI does not require a cloud account, never transmits code, and produces results in under one second, making it a complement to, not a replacement for, Code Climate's longitudinal reporting."
+        "text": "Code Climate is a SaaS platform that analyzes full repositories for maintainability and test coverage trends over time. It requires uploading code to a cloud service. GauntletCI is diff-scoped and focused on change risk rather than codebase health metrics, with core analysis running locally by default. GauntletCI does not require a cloud account, does not transmit code by default, and produces results in under one second, making it a complement to, not a replacement for, Code Climate's longitudinal reporting."
       }
     },
     {

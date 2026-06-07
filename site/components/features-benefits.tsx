@@ -36,9 +36,9 @@ const items = [
   },
   {
     icon: Lock,
-    feature: "100% Local Execution & Privacy",
-    what: "All analysis runs entirely on the machine where the command runs. No diff, no finding, no file path is ever transmitted. Evidence strings for PII and secrets are auto-redacted in output.",
-    benefit: "Works in air-gapped environments, on proprietary codebases, and in organizations with strict data residency requirements, no policy exceptions needed. Local execution is the default and requires no configuration.",
+    feature: "Core Analysis Runs Locally by Default",
+    what: "Deterministic rule evaluation runs entirely on the machine where the command runs. By default, no diff, finding, or file path is transmitted. Optional telemetry and network integrations are opt-in. Evidence strings for PII and secrets are auto-redacted in output.",
+    benefit: "Works in air-gapped environments, on proprietary codebases, and in organizations with strict data residency requirements. Local execution is the default and requires no configuration.",
   },
   {
     icon: BrainCircuit,

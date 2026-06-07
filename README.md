@@ -82,7 +82,7 @@ Detection is fully deterministic. Same diff, same findings, every time. No LLM e
 | Behavioral change detection | ✅ | Partial | Partial | ❌ |
 | Test coverage gap detection | ✅ | ❌ | ❌ | ❌ |
 | Runs pre-commit (local) | ✅ | ❌ | ❌ | ❌ |
-| 100% local / no data egress | ✅ | ❌ | ❌ | ✅ |
+| Core analysis local / no data egress by default | ✅ | ❌ | ❌ | ✅ |
 | .NET-native | ✅ | ❌ | ❌ | ✅ |
 | AI explanations available | ✅ opt-in | ✅ | ✅ | ❌ |
 
