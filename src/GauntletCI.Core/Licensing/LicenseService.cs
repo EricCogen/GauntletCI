@@ -103,6 +103,11 @@ public static class LicenseService
                 if (expiresAt.Value < DateTimeOffset.UtcNow)
                     return LicenseInfo.Expired(expiresAt.Value);
             }
+            else if (!IsDevLicenseMode())
+            {
+                return LicenseInfo.Invalid(
+                    "License token is missing an expiry (exp) claim. Re-issue a token at https://gauntletci.com/pricing");
+            }
 
             var tierStr = root.TryGetProperty("tier", out var tierProp) ? tierProp.GetString() : null;
             var tier = tierStr?.ToLowerInvariant() switch
@@ -125,20 +130,26 @@ public static class LicenseService
 
     private static string ResolvePublicKeyPem()
     {
-        var inline = Environment.GetEnvironmentVariable("GAUNTLETCI_LICENSE_PUBLIC_KEY");
-        if (!string.IsNullOrWhiteSpace(inline))
-            return inline.Replace("\\n", "\n", StringComparison.Ordinal).Trim();
-
-        var keyFile = Environment.GetEnvironmentVariable("GAUNTLETCI_LICENSE_PUBLIC_KEY_FILE");
-        if (!string.IsNullOrWhiteSpace(keyFile) && File.Exists(keyFile))
+        if (IsDevLicenseMode())
         {
-            var pem = File.ReadAllText(keyFile).Trim();
-            if (!string.IsNullOrWhiteSpace(pem))
-                return pem;
+            var inline = Environment.GetEnvironmentVariable("GAUNTLETCI_LICENSE_PUBLIC_KEY");
+            if (!string.IsNullOrWhiteSpace(inline))
+                return inline.Replace("\\n", "\n", StringComparison.Ordinal).Trim();
+
+            var keyFile = Environment.GetEnvironmentVariable("GAUNTLETCI_LICENSE_PUBLIC_KEY_FILE");
+            if (!string.IsNullOrWhiteSpace(keyFile) && File.Exists(keyFile))
+            {
+                var pem = File.ReadAllText(keyFile).Trim();
+                if (!string.IsNullOrWhiteSpace(pem))
+                    return pem;
+            }
         }
 
         return EmbeddedPublicKey;
     }
+
+    internal static bool IsDevLicenseMode() =>
+        string.Equals(Environment.GetEnvironmentVariable("GAUNTLETCI_DEV"), "1", StringComparison.Ordinal);
 
     private static byte[] Base64UrlDecode(string input)
     {

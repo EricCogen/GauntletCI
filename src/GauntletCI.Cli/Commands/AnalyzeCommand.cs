@@ -6,6 +6,7 @@ using GauntletCI.Cli.Analysis;
 using GauntletCI.Cli.Audit;
 using GauntletCI.Cli.Baseline;
 using GauntletCI.Cli.Enrichment;
+using GauntletCI.Cli.Licensing;
 using GauntletCI.Cli.LlmDaemon;
 using GauntletCI.Cli.Output;
 using GauntletCI.Cli.Presentation;
@@ -225,33 +226,14 @@ public static class AnalyzeCommand
                 if (ctx.ParseResult.FindResultFor(verboseFlag) is null)
                     verbose = config.Output.Verbose;
 
-                // Remote subscription check -- only when a licensed feature is in use.
-                // Fires once per 24h (cached). Fails open if the network is unreachable.
                 bool usingLicensedFeature = withLlm || withExpertCtx || ghPrComments || githubChecks;
-                if (usingLicensedFeature)
+                var licenseEnvVar = config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE";
+                var licenseExit = await PaidFeatureGate.TryEnsureLicensedAsync(
+                    usingLicensedFeature, licenseEnvVar, ct);
+                if (licenseExit is int exitCode)
                 {
-                    var envVar = config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE";
-                    var rawToken = LicenseService.ReadRawToken(envVar);
-                    if (rawToken is not null)
-                    {
-                        var netResult = await Licensing.NetworkLicenseValidator
-                            .ValidateAsync(rawToken, ct);
-                        if (!netResult.Valid)
-                        {
-                            Console.Error.WriteLine(
-                                $"[GauntletCI] License subscription is no longer active ({netResult.Reason ?? "cancelled"}). " +
-                                "Renew at https://gauntletci.com/pricing or run: gauntletci license renew");
-                            ctx.ExitCode = 1;
-                            return;
-                        }
-
-                        if (netResult.SkippedNetworkCheck)
-                        {
-                            Console.Error.WriteLine(
-                                "[GauntletCI] Warning: Could not verify license subscription online. " +
-                                "Using offline mode. Set GAUNTLETCI_OFFLINE=1 to suppress this warning.");
-                        }
-                    }
+                    ctx.ExitCode = exitCode;
+                    return;
                 }
 
                 // Severity: only apply config value if user did not explicitly pass --severity
