@@ -18,15 +18,22 @@ public class HttpClientFactoryTests
     }
 
     [Fact]
-    public void GetWebhookClient_ReturnsSameInstanceAsAnthropicClient()
+    public void GetWebhookClient_ReturnsSameInstanceOnRepeatCalls()
     {
-        Assert.Same(HttpClientFactory.GetAnthropicClient(), HttpClientFactory.GetWebhookClient());
+        Assert.Same(HttpClientFactory.GetWebhookClient(), HttpClientFactory.GetWebhookClient());
     }
 
     [Fact]
-    public void GetWebhookClient_IsDistinctFromGenericClient()
+    public void GetWebhookClient_IsDistinctFromAnthropicAndGenericClients()
     {
+        Assert.NotSame(HttpClientFactory.GetWebhookClient(), HttpClientFactory.GetAnthropicClient());
         Assert.NotSame(HttpClientFactory.GetWebhookClient(), HttpClientFactory.GetGenericClient());
+    }
+
+    [Fact]
+    public void GetWebhookClient_UsesThirtySecondTimeout()
+    {
+        Assert.Equal(TimeSpan.FromSeconds(30), HttpClientFactory.GetWebhookClient().Timeout);
     }
 
     private static HttpMessageHandler GetRootHandler(HttpClient client)
