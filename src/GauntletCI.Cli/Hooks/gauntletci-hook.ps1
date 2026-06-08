@@ -55,6 +55,14 @@ function Get-RepoCliProjectPath {
 }
 
 function Resolve-GauntletCiInvocation {
+    $repoProject = Get-RepoCliProjectPath
+    if ($null -ne $repoProject) {
+        return @{
+            Command = "dotnet"
+            PrefixArgs = @("run", "--project", $repoProject, "--")
+        }
+    }
+
     if (Get-Command gauntletci -ErrorAction SilentlyContinue) {
         return @{
             Command = "gauntletci"
@@ -77,14 +85,6 @@ function Resolve-GauntletCiInvocation {
                 Command = $toolShim
                 PrefixArgs = @()
             }
-        }
-    }
-
-    $repoProject = Get-RepoCliProjectPath
-    if ($null -ne $repoProject) {
-        return @{
-            Command = "dotnet"
-            PrefixArgs = @("run", "--project", $repoProject, "--")
         }
     }
 

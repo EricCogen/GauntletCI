@@ -5,6 +5,17 @@
 set -e
 
 resolve_gauntletci() {
+    local current
+    current="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+    while [ -n "$current" ] && [ "$current" != "/" ]; do
+        if [ -f "$current/src/GauntletCI.Cli/GauntletCI.Cli.csproj" ]; then
+            GAUNTLETCI_MODE="repo"
+            GAUNTLETCI_REPO_ROOT="$current"
+            return 0
+        fi
+        current="$(dirname "$current")"
+    done
+
     if command -v gauntletci &> /dev/null; then
         GAUNTLETCI_MODE="shim"
         GAUNTLETCI_CMD="gauntletci"
@@ -31,17 +42,6 @@ resolve_gauntletci() {
             GAUNTLETCI_CMD="$dir/gauntletci.exe"
             return 0
         fi
-    done
-
-    local current
-    current="$(pwd)"
-    while [ -n "$current" ] && [ "$current" != "/" ]; do
-        if [ -f "$current/src/GauntletCI.Cli/GauntletCI.Cli.csproj" ]; then
-            GAUNTLETCI_MODE="repo"
-            GAUNTLETCI_REPO_ROOT="$current"
-            return 0
-        fi
-        current="$(dirname "$current")"
     done
 
     return 1
