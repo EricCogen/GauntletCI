@@ -11,7 +11,8 @@ namespace GauntletCI.Core.Licensing;
 /// </summary>
 public static class LicenseService
 {
-    // DEV/PLACEHOLDER key -- replace with your production key pair before issuing live licenses.
+    // DEV/PLACEHOLDER key -- replace with your production key pair before issuing live licenses,
+    // or set GAUNTLETCI_LICENSE_PUBLIC_KEY / GAUNTLETCI_LICENSE_PUBLIC_KEY_FILE at runtime.
     // The matching private key is stored securely in your license issuance service and never committed.
     private static readonly string EmbeddedPublicKey = string.Join("\n",
         "-----BEGIN RSA PUBLIC KEY-----",
@@ -82,7 +83,7 @@ public static class LicenseService
             var signature = Base64UrlDecode(parts[2]);
 
             using var rsa = RSA.Create();
-            rsa.ImportFromPem(EmbeddedPublicKey);
+            rsa.ImportFromPem(ResolvePublicKeyPem());
 
             if (!rsa.VerifyData(dataToVerify, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1))
                 return LicenseInfo.Invalid(
@@ -120,6 +121,23 @@ public static class LicenseService
         {
             return LicenseInfo.Invalid($"License could not be parsed: {ex.Message}");
         }
+    }
+
+    private static string ResolvePublicKeyPem()
+    {
+        var inline = Environment.GetEnvironmentVariable("GAUNTLETCI_LICENSE_PUBLIC_KEY");
+        if (!string.IsNullOrWhiteSpace(inline))
+            return inline.Replace("\\n", "\n", StringComparison.Ordinal).Trim();
+
+        var keyFile = Environment.GetEnvironmentVariable("GAUNTLETCI_LICENSE_PUBLIC_KEY_FILE");
+        if (!string.IsNullOrWhiteSpace(keyFile) && File.Exists(keyFile))
+        {
+            var pem = File.ReadAllText(keyFile).Trim();
+            if (!string.IsNullOrWhiteSpace(pem))
+                return pem;
+        }
+
+        return EmbeddedPublicKey;
     }
 
     private static byte[] Base64UrlDecode(string input)
