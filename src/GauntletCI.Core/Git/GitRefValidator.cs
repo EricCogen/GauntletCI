@@ -24,6 +24,14 @@ public static class GitRefValidator
         if (commitRef.StartsWith('-'))
             throw new ArgumentException($"Invalid git ref: {commitRef}", nameof(commitRef));
 
+        if (commitRef.Contains("...", StringComparison.Ordinal))
+        {
+            var parts = commitRef.Split("...", 2, StringSplitOptions.None);
+            ValidateRefPart(parts[0]);
+            ValidateRefPart(parts[1]);
+            return;
+        }
+
         if (commitRef.Contains("..", StringComparison.Ordinal))
         {
             var parts = commitRef.Split("..", 2, StringSplitOptions.None);

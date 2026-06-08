@@ -53,11 +53,11 @@ public class GCI0012_SecurityRisk : RuleBase
 
             foreach (var line in file.AddedLines)
             {
-                CheckSqlInjection(line, findings);
-                CheckWeakHashing(line, findings);
-                CheckWeakCrypto(line, findings);
-                CheckDangerousApis(line, findings);
-                CheckInsecureDeserialization(line, findings);
+                CheckSqlInjection(file, line, findings);
+                CheckWeakHashing(file, line, findings);
+                CheckWeakCrypto(file, line, findings);
+                CheckDangerousApis(file, line, findings);
+                CheckInsecureDeserialization(file, line, findings);
             }
         }
 
@@ -67,11 +67,10 @@ public class GCI0012_SecurityRisk : RuleBase
         return Task.FromResult(findings);
     }
 
-    private void CheckSqlInjection(DiffLine line, List<Finding> findings)
+    private void CheckSqlInjection(DiffFile file, DiffLine line, List<Finding> findings)
     {
         var content = line.Content;
 
-        // Skip mock objects in unit tests (even if test file guard wasn't applied)
         if (WellKnownPatterns.HasMockPattern(content)) return;
 
         bool hasSqlKeyword = SqlKeywords.Any(k => content.Contains(k, StringComparison.OrdinalIgnoreCase));
@@ -82,70 +81,70 @@ public class GCI0012_SecurityRisk : RuleBase
                                  content.Contains("string.Format", StringComparison.Ordinal);
         if (!hasConcatenation) return;
 
-        findings.Add(CreateFinding(
+        findings.Add(CreateFinding(file,
             summary: "Potential SQL injection: SQL string built via concatenation or interpolation.",
-            evidence: $"Line {line.LineNumber}: {content.Trim()}",
+            evidence: content.Trim(),
             whyItMatters: "String-concatenated SQL is vulnerable to SQL injection attacks that can expose or destroy data.",
             suggestedAction: "Use parameterized queries or an ORM (EF Core, Dapper with parameters).",
-            confidence: Confidence.High));
+            confidence: Confidence.High,
+            line: line));
     }
 
-    private void CheckWeakHashing(DiffLine line, List<Finding> findings)
+    private void CheckWeakHashing(DiffFile file, DiffLine line, List<Finding> findings)
     {
         foreach (var algo in WeakHashAlgorithms)
         {
             if (!line.Content.Contains(algo, StringComparison.Ordinal)) continue;
 
-            findings.Add(CreateFinding(
+            findings.Add(CreateFinding(file,
                 summary: $"Weak hashing algorithm used: {algo}",
-                evidence: $"Line {line.LineNumber}: {line.Content.Trim()}",
+                evidence: line.Content.Trim(),
                 whyItMatters: "MD5 and SHA1 are cryptographically broken and must not be used for security purposes.",
                 suggestedAction: "Use SHA256, SHA384, or SHA512 via SHA256.Create() etc.",
-                confidence: Confidence.High));
+                confidence: Confidence.High,
+                line: line));
             return;
         }
     }
 
-    private void CheckWeakCrypto(DiffLine line, List<Finding> findings)
+    private void CheckWeakCrypto(DiffFile file, DiffLine line, List<Finding> findings)
     {
         var content = line.Content;
 
-        // Skip test code (cryptography unit tests may intentionally use weak algos for comparison)
         if (WellKnownPatterns.HasMockPattern(content)) return;
 
         foreach (var algo in WeakCryptoAlgorithms)
         {
             if (!content.Contains(algo, StringComparison.Ordinal)) continue;
 
-            findings.Add(CreateFinding(
+            findings.Add(CreateFinding(file,
                 summary: $"Weak or deprecated cryptographic algorithm: {algo}",
-                evidence: $"Line {line.LineNumber}: {content.Trim()}",
+                evidence: content.Trim(),
                 whyItMatters: "DES, RC2, and 3DES are deprecated and vulnerable to brute-force attacks.",
                 suggestedAction: "Use AES (AesGcm or Aes.Create()) with appropriate key sizes.",
-                confidence: Confidence.High));
+                confidence: Confidence.High,
+                line: line));
             return;
         }
     }
 
-    private void CheckDangerousApis(DiffLine line, List<Finding> findings)
+    private void CheckDangerousApis(DiffFile file, DiffLine line, List<Finding> findings)
     {
         foreach (var api in DangerousApis)
         {
             if (!line.Content.Contains(api, StringComparison.Ordinal)) continue;
 
-            // Activator.CreateInstance is safe when called with a typeof() literal (compile-time type)
-            // or when the result is immediately cast to a known type (cast pattern: (Type)Activator.CreateInstance).
-            // These patterns represent controlled factory usage, not user-input-driven code injection.
             if (api == "Activator.CreateInstance(" &&
                 (line.Content.Contains("typeof(", StringComparison.Ordinal) ||
                  line.Content.Contains(")Activator.CreateInstance(", StringComparison.Ordinal))) continue;
 
-            findings.Add(CreateFinding(
+            findings.Add(CreateFinding(file,
                 summary: $"Dangerous API call detected: {api}",
-                evidence: $"Line {line.LineNumber}: {line.Content.Trim()}",
+                evidence: line.Content.Trim(),
                 whyItMatters: "Dynamic type loading and process execution with user-controlled input can lead to code injection.",
                 suggestedAction: "Validate all arguments, use allowlists, and avoid dynamic execution where possible.",
-                confidence: Confidence.High));
+                confidence: Confidence.High,
+                line: line));
             return;
         }
     }
@@ -200,7 +199,7 @@ public class GCI0012_SecurityRisk : RuleBase
 
 
 
-    private void CheckInsecureDeserialization(DiffLine line, List<Finding> findings)
+    private void CheckInsecureDeserialization(DiffFile file, DiffLine line, List<Finding> findings)
     {
         var content = line.Content;
         if ((content.Contains("JsonConvert.DeserializeObject", StringComparison.Ordinal) ||
@@ -208,12 +207,13 @@ public class GCI0012_SecurityRisk : RuleBase
             (content.Contains("TypeNameHandling.All", StringComparison.Ordinal) ||
              content.Contains("TypeNameHandling.Auto", StringComparison.Ordinal)))
         {
-            findings.Add(CreateFinding(
+            findings.Add(CreateFinding(file,
                 summary: "Insecure deserialization: TypeNameHandling.All/Auto enables arbitrary type instantiation.",
-                evidence: $"Line {line.LineNumber}: {content.Trim()}",
+                evidence: content.Trim(),
                 whyItMatters: "TypeNameHandling.All/Auto can allow attackers to instantiate arbitrary types via crafted JSON.",
                 suggestedAction: "Use TypeNameHandling.None (the default). Implement a custom ISerializationBinder if type discrimination is needed.",
-                confidence: Confidence.High));
+                confidence: Confidence.High,
+                line: line));
         }
     }
 

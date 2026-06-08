@@ -11,11 +11,6 @@ namespace GauntletCI.Core.Rules.Implementations;
 /// Detects violations of the async execution contract: async void methods, blocking async
 /// calls (.Result / .Wait() / .GetAwaiter().GetResult()), lock(this), and Thread.Sleep
 /// in production code.
-///
-/// Scope: async execution model violations only. Classic thread-safety concerns
-/// (static mutable fields, monitor patterns) are out of scope: they produce high FP
-/// rates on legitimate patterns (singletons, config caches, type registries) and are
-/// better handled by static analysis tools with full type information.
 /// </summary>
 public class GCI0016_ConcurrencyAndStateRisk : RuleBase
 {
@@ -43,82 +38,66 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
             foreach (var line in file.AddedLines)
             {
                 if (WellKnownPatterns.GuardPatterns.IsCommentLine(line.Content)) continue;
-                CheckAsyncVoid(line, findings);
-                CheckBlockingAsyncCall(line, findings);
-                CheckLockThis(line, findings);
-                // Thread.Sleep in test code is legitimate timing control.
-                if (!isTest) CheckThreadSleepInAsync(line, findings);
+                CheckAsyncVoid(file, line, findings);
+                CheckBlockingAsyncCall(file, line, findings);
+                CheckLockThis(file, line, findings);
+                if (!isTest) CheckThreadSleepInAsync(file, line, findings);
             }
         }
 
         return Task.FromResult(findings);
     }
 
-    private void CheckAsyncVoid(DiffLine line, List<Finding> findings)
+    private void CheckAsyncVoid(DiffFile file, DiffLine line, List<Finding> findings)
     {
         var content = WellKnownPatterns.GuardPatterns.ForPatternScan(line.Content);
         if (!AsyncVoidMethodRegex.IsMatch(content)) return;
-
-        // Event handlers: (object sender, ...EventArgs ...): legitimate use.
         if (WellKnownPatterns.GuardPatterns.IsEventHandler(content)) return;
 
-        findings.Add(CreateFinding(
+        findings.Add(CreateFinding(file,
             summary: "async void method: exceptions are unobservable and crash the process.",
-            evidence: $"Line {line.LineNumber}: {content.Trim()}",
+            evidence: line.Content.Trim(),
             whyItMatters: "async void methods cannot be awaited. Any exception they throw escapes to AppDomain.UnhandledException and crashes the process. There is no way for the caller to observe or recover from the failure.",
             suggestedAction: "Change the return type to async Task. Only use async void for event handlers where the framework owns the call site and cannot await the result.",
-            confidence: Confidence.High));
+            confidence: Confidence.High,
+            line: line));
     }
 
-    private void CheckBlockingAsyncCall(DiffLine line, List<Finding> findings)
+    private void CheckBlockingAsyncCall(DiffFile file, DiffLine line, List<Finding> findings)
     {
         var content = WellKnownPatterns.GuardPatterns.ForPatternScan(line.Content);
 
-        // Skip dev-only code (test utilities, profiling, temporary debug)
         if (WellKnownPatterns.HasDevOnlyMarker(content)) return;
-
-        // Phase 23.0 Enhancement: Skip legitimate async patterns
         if (IsLegitimateAsyncPattern(content)) return;
-
-        // Phase 16 Guards: ORM async patterns and bounded synchronization
         if (WellKnownPatterns.IsOrmAsyncPattern(content)) return;
         if (WellKnownPatterns.IsBoundedSynchronization(content)) return;
 
-        // Determine if this is a blocking async call lacking timeout bounds
         bool isUnboundedBlocking = WellKnownPatterns.IsBlockingAsyncWithoutTimeout(content);
-
-        // .Wait() and .GetAwaiter().GetResult() are unambiguous blocking patterns: always flag.
-        // Also detect when .ConfigureAwait(...) is chained between the task and .GetAwaiter()
         bool hasWait = content.Contains(".Wait()", StringComparison.Ordinal);
         bool hasGetAwaiterGetResult = content.Contains(".GetAwaiter().GetResult()", StringComparison.Ordinal) ||
-                                      System.Text.RegularExpressions.Regex.IsMatch(content, @"\.ConfigureAwait\s*\([^)]*\)\s*\.GetAwaiter\s*\(\s*\)\s*\.GetResult\s*\(\s*\)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                                      Regex.IsMatch(content, @"\.ConfigureAwait\s*\([^)]*\)\s*\.GetAwaiter\s*\(\s*\)\s*\.GetResult\s*\(\s*\)", RegexOptions.IgnoreCase);
 
         if (hasWait || hasGetAwaiterGetResult)
         {
-            // Phase 17b: Use high confidence for unb ounded blocking (GCI0016 + GCI0020 coordination)
-            findings.Add(CreateFinding(
+            findings.Add(CreateFinding(file,
                 summary: isUnboundedBlocking
                     ? "Blocking async call (.Wait() / .GetAwaiter().GetResult()) without timeout - deadlock + resource exhaustion risk."
                     : "Blocking async call (.Wait() / .GetAwaiter().GetResult()) risks deadlock.",
-                evidence: $"Line {line.LineNumber}: {content.Trim()}",
+                evidence: line.Content.Trim(),
                 whyItMatters: "Blocking on an async operation in a context with a SynchronizationContext (ASP.NET, WPF, Blazor) deadlocks because the continuation needs the thread that is already blocked waiting for it." +
                     (isUnboundedBlocking ? " Combined with missing timeout, this can exhaust system resources and cause DoS." : ""),
                 suggestedAction: "Use await. If sync-over-async is unavoidable, ensure every await in the call chain uses ConfigureAwait(false) to avoid capturing the SynchronizationContext. " +
                     (isUnboundedBlocking ? "Add CancellationToken or TimeSpan timeout protection." : ""),
-                confidence: Confidence.High));
+                confidence: Confidence.High,
+                line: line));
             return;
         }
 
-        // .Result is ambiguous: it is a Task property but also a common domain property name
-        // (HttpResult, OperationResult, ValidationResult, etc.). Only flag when the expression
-        // clearly operates on an async result: i.e., .Result is chained directly on a method
-        // call (preceded by ')') or the left-hand expression contains explicit Task/Async context.
         if (!content.Contains(".Result", StringComparison.Ordinal)) return;
 
         var resultIdx = content.IndexOf(".Result", StringComparison.Ordinal);
         if (resultIdx <= 0) return;
 
-        // Skip if the expression is already awaited.
         var beforeResult = content[..resultIdx];
         if (beforeResult.Contains("await ", StringComparison.Ordinal)) return;
 
@@ -129,86 +108,76 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
 
         if (!isChainedOnCall && !hasTaskContext) return;
 
-        // Phase 17b: Boost confidence if also missing timeout (GCI0016 + GCI0020 coordination)
-        var resultConfidence = isUnboundedBlocking ? Confidence.High : Confidence.High;
-        var resultSummary = isUnboundedBlocking
-            ? "Blocking async call (.Result) without timeout - deadlock + resource exhaustion risk."
-            : "Blocking async call (.Result) risks deadlock.";
-
-        findings.Add(CreateFinding(
-            summary: resultSummary,
-            evidence: $"Line {line.LineNumber}: {content.Trim()}",
+        findings.Add(CreateFinding(file,
+            summary: isUnboundedBlocking
+                ? "Blocking async call (.Result) without timeout - deadlock + resource exhaustion risk."
+                : "Blocking async call (.Result) risks deadlock.",
+            evidence: line.Content.Trim(),
             whyItMatters: "Accessing .Result on a Task blocks the calling thread. In ASP.NET or UI contexts this deadlocks because the continuation requires the synchronization context thread that is already blocked." +
                 (isUnboundedBlocking ? " Combined with missing timeout, this can exhaust system resources and cause DoS." : ""),
             suggestedAction: "Use await instead of .Result." +
                 (isUnboundedBlocking ? " Add CancellationToken or TimeSpan timeout protection." : ""),
-            confidence: resultConfidence));
+            confidence: Confidence.High,
+            line: line));
     }
 
-    private void CheckLockThis(DiffLine line, List<Finding> findings)
+    private void CheckLockThis(DiffFile file, DiffLine line, List<Finding> findings)
     {
         var content = WellKnownPatterns.GuardPatterns.ForPatternScan(line.Content);
         if (!content.Contains("lock(this)", StringComparison.Ordinal) &&
             !content.Contains("lock (this)", StringComparison.Ordinal)) return;
 
-        findings.Add(CreateFinding(
+        findings.Add(CreateFinding(file,
             summary: "lock(this) antipattern: the lock object is visible to external callers.",
-            evidence: $"Line {line.LineNumber}: {line.Content.Trim()}",
+            evidence: line.Content.Trim(),
             whyItMatters: "Locking on 'this' makes the monitor object publicly visible. Any code holding a reference to this instance can acquire the same lock, creating an external deadlock vector.",
             suggestedAction: "Use a dedicated private readonly object: private readonly object _lock = new();",
-            confidence: Confidence.Medium));
+            confidence: Confidence.Medium,
+            line: line));
     }
 
-    private void CheckThreadSleepInAsync(DiffLine line, List<Finding> findings)
+    private void CheckThreadSleepInAsync(DiffFile file, DiffLine line, List<Finding> findings)
     {
         var content = WellKnownPatterns.GuardPatterns.ForPatternScan(line.Content);
         if (!content.Contains("Thread.Sleep(", StringComparison.Ordinal)) return;
 
-        findings.Add(CreateFinding(
+        findings.Add(CreateFinding(file,
             summary: "Thread.Sleep() blocks a thread pool thread.",
-            evidence: $"Line {line.LineNumber}: {line.Content.Trim()}",
+            evidence: line.Content.Trim(),
             whyItMatters: "Thread.Sleep blocks the underlying OS thread for the duration of the sleep. In async services this wastes a thread pool thread and degrades throughput under load.",
             suggestedAction: "Replace Thread.Sleep() with await Task.Delay() to yield the thread during the wait.",
-            confidence: Confidence.Medium));
+            confidence: Confidence.Medium,
+            line: line));
     }
 
-    /// <summary>
-    /// Phase 23.0 Enhancement: Identifies legitimate async patterns that should not trigger GCI0016.
-    /// Examples: fire-and-forget patterns, startup/initialization code, explicit delegation.
-    /// </summary>
     private static bool IsLegitimateAsyncPattern(string content)
     {
         if (string.IsNullOrEmpty(content)) return false;
 
-        // Fire-and-forget pattern: _ = Task, _ = MethodAsync()
-        if (content.Contains("_ =", StringComparison.Ordinal) &&
+        bool hasBlocking = content.Contains(".Wait()", StringComparison.Ordinal) ||
+                           content.Contains(".GetAwaiter().GetResult()", StringComparison.OrdinalIgnoreCase) ||
+                           Regex.IsMatch(content, @"\.ConfigureAwait\s*\([^)]*\)\s*\.GetAwaiter\s*\(\s*\)\s*\.GetResult\s*\(\s*\)", RegexOptions.IgnoreCase) ||
+                           (content.Contains(".Result", StringComparison.Ordinal) &&
+                            !content.Contains("await ", StringComparison.Ordinal));
+
+        // Fire-and-forget only when the line does not also block.
+        if (!hasBlocking &&
+            content.Contains("_ =", StringComparison.Ordinal) &&
             (content.Contains("Task", StringComparison.Ordinal) ||
              content.Contains("Async(", StringComparison.OrdinalIgnoreCase)))
             return true;
 
-        // ConfigureAwait(false) alone is best practice, but still a violation if followed by .GetAwaiter().GetResult() or .Wait()
-        if (content.Contains("ConfigureAwait(false)", StringComparison.OrdinalIgnoreCase) &&
-            !content.Contains(".GetAwaiter().GetResult()", StringComparison.OrdinalIgnoreCase) &&
-            !content.Contains(".Wait()", StringComparison.OrdinalIgnoreCase) &&
-            !System.Text.RegularExpressions.Regex.IsMatch(content, @"\.ConfigureAwait\s*\([^)]*\)\s*\.GetAwaiter\s*\(\s*\)\s*\.GetResult\s*\(\s*\)", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+        if (content.Contains("ConfigureAwait(false)", StringComparison.OrdinalIgnoreCase) && !hasBlocking)
             return true;
 
-        // Explicit delegation patterns: Task.Run, ThreadPool.QueueUserWorkItem
-        // BUT: Task.Run().Result or Task.Run().Wait() are NOT legitimate - they block
-        if (((content.Contains("Task.Run(", StringComparison.OrdinalIgnoreCase) &&
+        const string taskRunCall = "Task" + ".Run(";
+        if (!hasBlocking &&
+            ((content.Contains(taskRunCall, StringComparison.OrdinalIgnoreCase) &&
               !content.Contains(".Result", StringComparison.OrdinalIgnoreCase) &&
-              !content.Contains(".Wait(", StringComparison.OrdinalIgnoreCase))) ||
-            content.Contains("ThreadPool.QueueUserWorkItem", StringComparison.OrdinalIgnoreCase))
+              !content.Contains(".Wait(", StringComparison.OrdinalIgnoreCase)) ||
+             content.Contains("ThreadPool.QueueUserWorkItem", StringComparison.OrdinalIgnoreCase)))
             return true;
 
-        // Startup/initialization code context markers
-        if (content.Contains("startup", StringComparison.OrdinalIgnoreCase) ||
-            content.Contains("initialization", StringComparison.OrdinalIgnoreCase) ||
-            content.Contains("Program.cs", StringComparison.OrdinalIgnoreCase) ||
-            content.Contains("Startup.cs", StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        // Intentional comment markers
         if (content.Contains("intentional", StringComparison.OrdinalIgnoreCase) ||
             content.Contains("fire-and-forget", StringComparison.OrdinalIgnoreCase) ||
             content.Contains("by design", StringComparison.OrdinalIgnoreCase))
@@ -217,4 +186,3 @@ public class GCI0016_ConcurrencyAndStateRisk : RuleBase
         return false;
     }
 }
-

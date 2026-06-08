@@ -5,7 +5,7 @@ namespace GauntletCI.Core.StaticAnalysis;
 /// <summary>
 /// Resolves repository-relative paths without allowing traversal outside the repo root.
 /// </summary>
-internal static class RepoPathResolver
+public static class RepoPathResolver
 {
     /// <summary>
     /// Resolves <paramref name="relativePath"/> under <paramref name="repoPath"/> when it stays inside the repo.

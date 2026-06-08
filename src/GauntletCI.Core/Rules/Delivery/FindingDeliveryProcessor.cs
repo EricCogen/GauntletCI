@@ -124,8 +124,12 @@ public static class FindingDeliveryProcessor
                 .ThenBy(f => f.Line ?? int.MaxValue)
                 .ToList();
 
-            kept.AddRange(ordered.Take(cap));
-            dropped += Math.Max(0, ordered.Count - cap);
+            var blocks = ordered.Where(f => f.Severity == RuleSeverity.Block).ToList();
+            var nonBlocks = ordered.Where(f => f.Severity != RuleSeverity.Block).ToList();
+            var nonBlockSlots = Math.Max(0, cap - blocks.Count);
+            var groupKept = blocks.Concat(nonBlocks.Take(nonBlockSlots)).ToList();
+            kept.AddRange(groupKept);
+            dropped += Math.Max(0, ordered.Count - groupKept.Count);
         }
 
         return (kept, dropped);
@@ -144,7 +148,11 @@ public static class FindingDeliveryProcessor
         if (globalMax <= 0 || ranked.Count <= globalMax)
             return (ranked, 0);
 
-        return (ranked.Take(globalMax).ToList(), ranked.Count - globalMax);
+        var blocks = ranked.Where(f => f.Severity == RuleSeverity.Block).ToList();
+        var nonBlocks = ranked.Where(f => f.Severity != RuleSeverity.Block).ToList();
+        var nonBlockSlots = Math.Max(0, globalMax - blocks.Count);
+        var kept = blocks.Concat(nonBlocks.Take(nonBlockSlots)).ToList();
+        return (kept, ranked.Count - kept.Count);
     }
 
     /// <summary>

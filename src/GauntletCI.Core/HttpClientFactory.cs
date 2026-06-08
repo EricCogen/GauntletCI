@@ -86,7 +86,8 @@ public static class HttpClientFactory
     {
         var client = new HttpClient(new SocketsHttpHandler
         {
-            PooledConnectionLifetime = TimeSpan.FromMinutes(5)
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            AllowAutoRedirect = false,
         })
         {
             Timeout = TimeSpan.FromSeconds(60)
@@ -109,7 +110,8 @@ public static class HttpClientFactory
     {
         var client = new HttpClient(new SocketsHttpHandler
         {
-            PooledConnectionLifetime = TimeSpan.FromMinutes(5)
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            AllowAutoRedirect = false,
         })
         {
             Timeout = TimeSpan.FromSeconds(30)
@@ -129,7 +131,8 @@ public static class HttpClientFactory
     {
         var client = new HttpClient(new SocketsHttpHandler
         {
-            PooledConnectionLifetime = TimeSpan.FromMinutes(5)
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            AllowAutoRedirect = false,
         })
         {
             Timeout = TimeSpan.FromSeconds(30)
@@ -192,7 +195,8 @@ public static class HttpClientFactory
     {
         var client = new HttpClient(new SocketsHttpHandler
         {
-            PooledConnectionLifetime = TimeSpan.FromMinutes(5)
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            AllowAutoRedirect = false,
         })
         {
             Timeout = TimeSpan.FromSeconds(15)
@@ -210,7 +214,8 @@ public static class HttpClientFactory
     {
         var client = new HttpClient(new SocketsHttpHandler
         {
-            PooledConnectionLifetime = TimeSpan.FromMinutes(5)
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            AllowAutoRedirect = false,
         })
         {
             Timeout = TimeSpan.FromSeconds(120)

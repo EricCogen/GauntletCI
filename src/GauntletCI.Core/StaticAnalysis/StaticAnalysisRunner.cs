@@ -54,18 +54,9 @@ public static class StaticAnalysisRunner
             if (!RepoPathResolver.TryResolvePathUnderRoot(repoPath, file.NewPath, out var absolutePath))
                 continue;
 
-            if (!File.Exists(absolutePath))
+            var sourceCode = await GitSourceReader.TryReadAsync(repoPath, diff, file.NewPath, ct).ConfigureAwait(false);
+            if (sourceCode is null)
                 continue;
-
-            string sourceCode;
-            try
-            {
-                sourceCode = await File.ReadAllTextAsync(absolutePath, ct).ConfigureAwait(false);
-            }
-            catch (IOException)
-            {
-                continue;
-            }
 
             var changedLines = file.AddedLines.Select(l => l.LineNumber).ToList();
             var (result, tree) = await Analyzer.AnalyzeFileAsync(
