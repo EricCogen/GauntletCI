@@ -103,7 +103,8 @@ public static class DiffParser
                 if (!int.TryParse(oldStartLineStr, out var oldStartLine) ||
                     !int.TryParse(newStartLineStr, out var newStartLine))
                 {
-                    // Malformed hunk header - skip this hunk
+                    // Malformed hunk header - discard partial hunk state
+                    currentHunk = null;
                     continue;
                 }
 
@@ -234,7 +235,7 @@ public static class DiffParser
         try
         {
             var msgResult = await RunGitAsync(
-                ["-C", repoPath, "log", "-1", "--format=%s", "--", commitRef],
+                ["-C", repoPath, "log", "-1", "--format=%s", commitRef],
                 ct).ConfigureAwait(false);
             message = msgResult.Trim();
         }
@@ -243,7 +244,7 @@ public static class DiffParser
         // Get diff: for a single commit use commit^..commit; for a range pass as-is
         var diffArg = commitRef.Contains("..", StringComparison.Ordinal) ? commitRef : $"{commitRef}^..{commitRef}";
         var diff = await RunGitAsync(
-            ["-C", repoPath, "diff", $"-U{contextLines}", "--", diffArg],
+            ["-C", repoPath, "diff", $"-U{contextLines}", diffArg],
             ct).ConfigureAwait(false);
         return (diff, message);
     }

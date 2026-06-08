@@ -284,7 +284,7 @@ public static class AnalyzeCommand
                 var sw = Stopwatch.StartNew();
                 var staticAnalysis = await StaticAnalysisRunner.RunAsync(diff, repoPath, ct);
 
-                var result = await orchestrator.RunAsync(diff, staticAnalysis, ignoreList: ignoreList);
+                var result = await orchestrator.RunAsync(diff, staticAnalysis, ignoreList: ignoreList, ct: ct);
 
                 // Enrichment pipeline: automatically enrich findings with code snippets, expert context, etc.
                 try
@@ -392,14 +392,21 @@ public static class AnalyzeCommand
                     if (config.Experimental.EngineeringPolicy.Enabled && llm.IsAvailable)
                     {
                         setStatus("Checking standards...");
-                        var policyPath = Path.Combine(repo.FullName, config.Experimental.EngineeringPolicy.Path);
-                        var license = LicenseService.Load(config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE");
-                        var isLicensed = license.IsLicensed;
-                        var policyFindings = await EngineeringPolicyEvaluator.EvaluateAsync(
-                            diff, policyPath, llm, isLicensed,
-                            config.Experimental.EngineeringPolicy.MaxDiffChars,
-                            ctx.GetCancellationToken());
-                        result.Findings.AddRange(policyFindings);
+                        if (!RepoPathResolver.TryResolvePathUnderRoot(
+                                repo.FullName, config.Experimental.EngineeringPolicy.Path, out var policyPath))
+                        {
+                            Console.Error.WriteLine(
+                                "[GauntletCI] Engineering policy path must resolve inside the repository root. Skipping policy evaluation.");
+                        }
+                        else
+                        {
+                            var license = LicenseService.Load(config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE");
+                            var policyFindings = await EngineeringPolicyEvaluator.EvaluateAsync(
+                                diff, policyPath, llm, license.IsLicensed,
+                                config.Experimental.EngineeringPolicy.MaxDiffChars,
+                                ctx.GetCancellationToken());
+                            result.Findings.AddRange(policyFindings);
+                        }
                     }
                 }
 
