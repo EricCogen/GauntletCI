@@ -61,7 +61,10 @@ GAUNTLETCI_REPO_ROOT=""
 if ! resolve_gauntletci; then
     echo "GauntletCI not found. Install with: dotnet tool install -g GauntletCI"
     echo "Or from this repo: ./scripts/install-gauntletci-global-tool.ps1"
-    exit 0
+    if [ "${GAUNTLETCI_HOOK_OPTIONAL:-}" = "1" ]; then
+        exit 0
+    fi
+    exit 1
 fi
 
 echo "GauntletCI: Analyzing staged changes..."

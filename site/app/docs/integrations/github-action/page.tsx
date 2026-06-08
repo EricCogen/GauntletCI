@@ -194,7 +194,7 @@ export default function GithubActionPage() {
               <tbody className="divide-y divide-border">
                 {[
                   ["sensitivity", '"balanced"', "strict | balanced | permissive. Controls which confidence levels trigger findings."],
-                  ["fail-on-findings", '"true"', "Exit with code 1 when any findings are produced, failing the GitHub check."],
+                  ["fail-on-findings", '"true"', "Pass through GauntletCI exit code. Block-severity findings fail by default; set exitOn to Warn in .gauntletci.json to also fail on warnings."],
                   ["inline-comments", '"false"', "Post findings as inline PR review comments. Requires pull-requests: write."],
                   ["no-llm", '"true"', "Disable LLM enrichment. Recommended for CI - keeps the step deterministic and fast."],
                   ["ascii", '"true"', "Use ASCII-only output. Recommended for CI logs - avoids encoding issues."],

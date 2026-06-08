@@ -31,7 +31,7 @@ const items = [
   {
     icon: GitPullRequestArrow,
     feature: "CI Gate with GitHub Inline Comments",
-    what: "A drop-in GitHub Actions composite action runs GauntletCI on every PR, fails the check if findings are produced, and posts findings as inline review comments directly on the diff.",
+    what: "A drop-in GitHub Actions composite action runs GauntletCI on every PR, fails the check on Block-severity findings by default (Warn severity with exitOn: Warn in .gauntletci.json), and posts findings as inline review comments directly on the diff.",
     benefit: "Risky changes can't merge unless reviewed or suppressed. Findings appear on the exact lines that triggered them, no separate report to read, no manual triage.",
   },
   {

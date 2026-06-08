@@ -69,7 +69,7 @@ const detections = [
     finding: "GCI0004: Required parameter 'includeArchived' added to public method at line 1. Callers in external assemblies compiled against the old signature will throw MissingMethodException at runtime.",
   },
   {
-    id: "GCI0012",
+    id: "GCI0010",
     title: "Security: hardcoded connection string",
     severity: "High",
     category: "Security",
