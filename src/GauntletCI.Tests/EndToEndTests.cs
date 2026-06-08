@@ -33,9 +33,15 @@ public class EndToEndTests
 
     private static (string dll, bool skip) GetCliDll()
     {
-        var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
-            "../../../../GauntletCI.Cli/bin/Debug/net8.0/GauntletCI.Cli.dll"));
-        return (path, !File.Exists(path));
+        foreach (var configuration in new[] { "Release", "Debug" })
+        {
+            var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
+                $"../../../../GauntletCI.Cli/bin/{configuration}/net8.0/GauntletCI.Cli.dll"));
+            if (File.Exists(path))
+                return (path, false);
+        }
+
+        return (string.Empty, true);
     }
 
     private static async Task<(string stdout, string stderr, int exitCode)> RunCliAsync(

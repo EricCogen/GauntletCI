@@ -16,7 +16,7 @@ inputs:
     required: false
     default: "true"
   fail-on-findings:
-    description: "Exit with code 1 if any findings are produced (fails the check)."
+    description: "When true (default), pass through GauntletCI's exit code. Block-severity findings fail by default (exitOn: Block); set exitOn to Warn in .gauntletci.json to also fail on warnings."
     required: false
     default: "true"
   inline-comments:

@@ -81,7 +81,7 @@ const jsonLd = {
 const findings = [
   {
     rule: "GCI0004",
-    title: "Public API Exposure",
+    title: "Breaking Change Risk",
     count: 3929,
     severity: "High",
     description: "Types or methods changed from internal to public visibility without proper versioning",
@@ -89,7 +89,7 @@ const findings = [
   },
   {
     rule: "GCI0003",
-    title: "Signature Changes",
+    title: "Behavioral Change Detection",
     count: 2723,
     severity: "Block",
     description: "Method signatures changed in ways that break callers. Parameters removed, types changed, defaults removed.",
@@ -97,7 +97,7 @@ const findings = [
   },
   {
     rule: "GCI0006",
-    title: "Null Dereference Risk",
+    title: "Edge Case Handling",
     count: 193,
     severity: "Warn",
     description: "New code paths access nullable values without null checks",
@@ -105,7 +105,7 @@ const findings = [
   },
   {
     rule: "GCI0024",
-    title: "Security - Dangerous APIs",
+    title: "Resource Lifecycle",
     count: 97,
     severity: "Block",
     description: "Unsafe reflection usage, dynamic code generation, or dangerous string operations",
@@ -113,7 +113,7 @@ const findings = [
   },
   {
     rule: "GCI0047",
-    title: "Resource Lifecycle Risk",
+    title: "Naming/Contract Alignment",
     count: 85,
     severity: "Warn",
     description: "Disposable resources created but not properly disposed in new code paths",
@@ -168,11 +168,11 @@ export default function AzureSDKAnalysisPage() {
                 </div>
                 <div className="bg-cyan-500/5 p-4 rounded border-l-4 border-cyan-500">
                   <div className="text-3xl font-bold text-cyan-500">3,929</div>
-                  <div className="text-sm text-muted-foreground">API Exposure Issues</div>
+                  <div className="text-sm text-muted-foreground">Breaking Change Risk</div>
                 </div>
                 <div className="bg-cyan-500/5 p-4 rounded border-l-4 border-cyan-500">
                   <div className="text-3xl font-bold text-cyan-500">2,723</div>
-                  <div className="text-sm text-muted-foreground">Signature Changes</div>
+                  <div className="text-sm text-muted-foreground">Behavioral Changes</div>
                 </div>
                 <div className="bg-cyan-500/5 p-4 rounded border-l-4 border-cyan-500">
                   <div className="text-3xl font-bold text-cyan-500">3</div>
@@ -212,7 +212,7 @@ export default function AzureSDKAnalysisPage() {
               <div className="mb-8 pb-8 border-b border-border">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="text-xl font-bold">GCI0004 - Public API Exposure</h3>
+                    <h3 className="text-xl font-bold">GCI0004 - Breaking Change Risk</h3>
                     <p className="text-sm text-muted-foreground mt-1">Types or methods changed from internal to public visibility without proper versioning</p>
                   </div>
                   <div className="text-right">
@@ -228,7 +228,7 @@ export default function AzureSDKAnalysisPage() {
               <div className="mb-8 pb-8 border-b border-border">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="text-xl font-bold">GCI0003 - Signature Changes</h3>
+                    <h3 className="text-xl font-bold">GCI0003 - Behavioral Change Detection</h3>
                     <p className="text-sm text-muted-foreground mt-1">Method signatures changed in ways that break callers. Parameters removed, types changed, defaults removed.</p>
                   </div>
                   <div className="text-right">
@@ -244,7 +244,7 @@ export default function AzureSDKAnalysisPage() {
               <div className="mb-8 pb-8 border-b border-border">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="text-xl font-bold">GCI0006 - Null Dereference Risk</h3>
+                    <h3 className="text-xl font-bold">GCI0006 - Edge Case Handling</h3>
                     <p className="text-sm text-muted-foreground mt-1">New code paths access nullable values without null checks</p>
                   </div>
                   <div className="text-right">
@@ -260,7 +260,7 @@ export default function AzureSDKAnalysisPage() {
               <div className="mb-8 pb-8 border-b border-border">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="text-xl font-bold">GCI0024 - Security - Dangerous APIs</h3>
+                    <h3 className="text-xl font-bold">GCI0024 - Resource Lifecycle</h3>
                     <p className="text-sm text-muted-foreground mt-1">Unsafe reflection usage, dynamic code generation, or dangerous string operations</p>
                   </div>
                   <div className="text-right">
@@ -276,7 +276,7 @@ export default function AzureSDKAnalysisPage() {
               <div className="mb-8 pb-8 border-b border-border last:border-b-0">
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <h3 className="text-xl font-bold">GCI0047 - Resource Lifecycle Risk</h3>
+                    <h3 className="text-xl font-bold">GCI0047 - Naming/Contract Alignment</h3>
                     <p className="text-sm text-muted-foreground mt-1">Disposable resources created but not properly disposed in new code paths</p>
                   </div>
                   <div className="text-right">
@@ -293,7 +293,7 @@ export default function AzureSDKAnalysisPage() {
             <section className="mb-12">
               <h2 className="text-2xl font-bold mb-4">Deep Dive: The Top Two Categories</h2>
 
-              <h3 className="text-xl font-bold mb-3 mt-8">GCI0004 - API Exposure (3,929 unique findings)</h3>
+              <h3 className="text-xl font-bold mb-3 mt-8">GCI0004 - Breaking Change Risk (3,929 unique findings)</h3>
               <p className="mb-4">
                 More than 59% of the unique risk signals in this PR are categorized as API exposure violations. This means internal types, methods, or classes were promoted to public visibility.
               </p>
@@ -311,7 +311,7 @@ export default function AzureSDKAnalysisPage() {
                 Without behavioral analysis, this risk stays hidden until users upgrade and encounter breaking changes.
               </p>
 
-              <h3 className="text-xl font-bold mb-3 mt-8">GCI0003 - Signature Changes (2,723 unique findings)</h3>
+              <h3 className="text-xl font-bold mb-3 mt-8">GCI0003 - Behavioral Change Detection (2,723 unique findings)</h3>
               <p className="mb-4">
                 The second major category: method signatures changed in incompatible ways. This includes:
               </p>

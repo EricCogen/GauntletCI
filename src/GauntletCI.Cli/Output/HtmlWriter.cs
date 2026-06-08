@@ -559,7 +559,7 @@ public static class HtmlWriter
                 </div>
                 <div class=""stat-card"">
                     <div class=""stat-label"">Rules Evaluated</div>
-                    <div class=""stat-value"">${data.RulesEvaluated || 34}</div>
+                    <div class=""stat-value"">${data.RulesEvaluated || 37}</div>
                 </div>
             `;
         }
@@ -728,7 +728,7 @@ public static class HtmlWriter
             const now = new Date().toLocaleString();
             footer.innerHTML = `
                 <p><a href=""https://github.com/gaunlet-ai/gauntletci"" target=""_blank"" style=""color: #667eea; text-decoration: none; font-weight: 600;"">GauntletCI Analysis Report</a> | Generated: ${now}</p>
-                <p style=""margin-top: 10px; font-size: 0.85em;"">Rules Evaluated: ${data.RulesEvaluated || 34} | Total Findings: ${(data.Findings || []).length}</p>
+                <p style=""margin-top: 10px; font-size: 0.85em;"">Rules Evaluated: ${data.RulesEvaluated || 37} | Total Findings: ${(data.Findings || []).length}</p>
             `;
         }
 

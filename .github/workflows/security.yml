@@ -30,10 +30,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          failed=0
           while IFS= read -r project; do
             echo "Auditing $project"
-            dotnet list "$project" package --vulnerable --include-transitive
+            if dotnet list "$project" package --vulnerable --include-transitive | grep -q "has the following vulnerable packages"; then
+              echo "Vulnerable packages found in $project"
+              failed=1
+            fi
           done < <(find src -name '*.csproj' | sort)
+          exit $failed
 
   npm-audit:
     runs-on: ubuntu-latest

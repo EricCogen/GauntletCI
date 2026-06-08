@@ -109,7 +109,8 @@ $gauntletci = Resolve-GauntletCiInvocation
 if ($null -eq $gauntletci) {
     Write-Host "GauntletCI not found. Install with: dotnet tool install -g GauntletCI" -ForegroundColor Yellow
     Write-Host "Or from this repo: ./scripts/install-gauntletci-global-tool.ps1" -ForegroundColor Yellow
-    exit 0
+    if ($env:GAUNTLETCI_HOOK_OPTIONAL -eq "1") { exit 0 }
+    exit 1
 }
 
 Write-Host "GauntletCI: Analyzing staged changes..." -ForegroundColor Cyan

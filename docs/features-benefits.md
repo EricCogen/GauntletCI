@@ -175,7 +175,7 @@ Drop-in composite action with inputs for commit SHA, fail-on-findings, inline PR
 | GCI0003: Removed logic without tests | Return/throw removed from production code with no test diff | Multiple repos |
 | GCI0004: Breaking API change | Public method signatures changed or removed | Multiple repos |
 | GCI0006: Edge case handling | `OpenAsyncWriteStream(string path, ...)` added with no null guard on `path` | SharpCompress |
-| GCI0007: Breaking serialization change | `[JsonProperty]` / `[DataMember]` attributes removed from DTO | Multiple repos |
+| GCI0007: Error Handling Integrity | Swallowed exceptions or removed error logging in catch blocks | Multiple repos |
 | GCI0010: Hardcoded secret | `_secretKey = "secretkey"`: credential-like string literal in AWS signing code | aws-sdk-net |
 | GCI0012: Hardcoded secret | Password literal assigned in production code | Multiple repos |
 | GCI0015: Unchecked cast | `(int)input.Position`: `Stream.Position` is `long`; overflows for files >2 GB | SharpCompress |
