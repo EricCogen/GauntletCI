@@ -22,8 +22,11 @@ public static class HttpClientFactory
     // Generic client: no auth, 30 second default timeout
     private static readonly Lazy<HttpClient> GenericClient = new(() => CreateGenericClient());
 
-    // Anthropic / webhook client: no redirect, 120 second timeout (webhooks share this pool)
+    // Anthropic client: API key auth, 120 second timeout, no redirect
     private static readonly Lazy<HttpClient> AnthropicClientInstance = new(() => CreateAnthropicClient());
+
+    // Webhook client: Slack/Teams incoming webhooks, 30 second timeout, no redirect
+    private static readonly Lazy<HttpClient> WebhookClientInstance = new(() => CreateWebhookClient());
 
     // Codecov client: Bearer token auth, 15 second timeout
     private static readonly Lazy<HttpClient> CodecovClientInstance = new(() => CreateCodecovClient());
@@ -58,10 +61,10 @@ public static class HttpClientFactory
 
     /// <summary>
     /// Gets an HTTP client for Slack/Teams incoming webhook POSTs.
-    /// Shares the no-redirect client pool (redirects disabled for SSRF hardening).
+    /// Disables automatic redirects to prevent allowlisted URLs from being followed to internal targets.
     /// Do NOT dispose; client is managed by the factory.
     /// </summary>
-    public static HttpClient GetWebhookClient() => AnthropicClientInstance.Value;
+    public static HttpClient GetWebhookClient() => WebhookClientInstance.Value;
 
     /// <summary>
     /// Gets a Codecov API client. Token must be attached per-request via HttpRequestMessage.Headers.
@@ -157,6 +160,27 @@ public static class HttpClientFactory
 
         client.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/json"));
+
+        return client;
+    }
+
+    /// <summary>
+    /// Creates a webhook HTTP client with redirects disabled (SSRF hardening for incoming webhooks).
+    /// </summary>
+    private static HttpClient CreateWebhookClient()
+    {
+        var handler = new SocketsHttpHandler
+        {
+            PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            AllowAutoRedirect = false,
+        };
+
+        var client = new HttpClient(handler)
+        {
+            Timeout = TimeSpan.FromSeconds(30),
+        };
+
+        client.DefaultRequestHeaders.Add("User-Agent", "GauntletCI/2.0");
 
         return client;
     }
