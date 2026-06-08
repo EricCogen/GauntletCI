@@ -55,15 +55,27 @@ public class NetworkLicenseValidatorTests : IDisposable
     }
 
     [Fact]
-    public async Task ValidateAsync_FailsOpenWhenNoCacheAndNetworkFails()
+    public async Task ValidateAsync_FailsClosedWhenNoCacheAndNetworkFails()
     {
         const string token = "test-token-no-cache";
         SimulateNetworkFailure();
 
         var result = await NetworkLicenseValidator.ValidateAsync(token);
 
-        Assert.True(result.Valid);
-        Assert.True(result.SkippedNetworkCheck);
+        Assert.False(result.Valid);
+        Assert.Equal("network_unreachable", result.Reason);
+    }
+
+    [Fact]
+    public async Task ValidateAsync_IgnoresStaleCacheBeyondGracePeriod()
+    {
+        const string token = "test-token-expired-stale";
+        WriteStaleCache(token, valid: true, reason: null, age: TimeSpan.FromDays(5));
+
+        SimulateNetworkFailure();
+        var result = await NetworkLicenseValidator.ValidateAsync(token);
+
+        Assert.False(result.Valid);
     }
 
     [Fact]

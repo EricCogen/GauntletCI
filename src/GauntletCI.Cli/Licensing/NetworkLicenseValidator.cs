@@ -9,15 +9,16 @@ namespace GauntletCI.Cli.Licensing;
 /// <summary>
 /// Validates an active GauntletCI license against the remote status endpoint.
 /// Caches the result for 24 hours to avoid latency on every run.
-/// On network errors, reuses a stale cache entry when one exists for the same token.
-/// When no cache exists and the network is unreachable, fails open but flags
-/// <see cref="NetworkLicenseValidationResult.SkippedNetworkCheck"/> so callers can warn.
-/// Set GAUNTLETCI_OFFLINE=1 to skip the network check entirely (Enterprise/air-gap).
+/// On network errors, reuses a stale cache entry when one exists for the same token (max 72h).
+/// When no cache exists and the network is unreachable, fails closed unless
+/// <c>GAUNTLETCI_ENTERPRISE_AIRGAP=1</c> is set (Enterprise/air-gap).
+/// Set <c>GAUNTLETCI_OFFLINE=1</c> with enterprise air-gap to skip the network call entirely.
 /// </summary>
 public static class NetworkLicenseValidator
 {
     private const string StatusEndpoint = "https://gauntletci-license-worker.patient-water-71dd.workers.dev/license/status";
     private static readonly TimeSpan CacheTtl = TimeSpan.FromHours(24);
+    private static readonly TimeSpan MaxStaleCacheAge = TimeSpan.FromHours(72);
 
     private static readonly string DefaultCachePath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
@@ -39,7 +40,12 @@ public static class NetworkLicenseValidator
         CancellationToken ct = default)
     {
         if (IsOfflineMode())
+        {
+            if (!IsEnterpriseAirGap())
+                return new NetworkLicenseValidationResult(false, "offline_requires_enterprise_air_gap");
+
             return new NetworkLicenseValidationResult(true, null, SkippedNetworkCheck: true);
+        }
 
         var cached = TryReadCache(token, ignoreTtl: false);
         if (cached.HasValue)
@@ -56,6 +62,13 @@ public static class NetworkLicenseValidator
 
             using var response = await http.SendAsync(request, ct);
             var body = await response.Content.ReadAsStringAsync(ct);
+            if (!response.IsSuccessStatusCode)
+            {
+                return new NetworkLicenseValidationResult(
+                    false,
+                    $"license_status_http_{(int)response.StatusCode}");
+            }
+
             using var doc = JsonDocument.Parse(body);
             var root = doc.RootElement;
             var valid = root.GetProperty("valid").GetBoolean();
@@ -71,18 +84,47 @@ public static class NetworkLicenseValidator
                 $"[NetworkLicenseValidator] Network check failed: {ex.Message}");
 
             var stale = TryReadCache(token, ignoreTtl: true);
-            if (stale.HasValue)
+            if (stale.HasValue && IsStaleCacheWithinGrace(token))
                 return new NetworkLicenseValidationResult(stale.Value.Valid, stale.Value.Reason);
 
-            // No prior validation record -- allow air-gapped first run, but flag it.
-            return new NetworkLicenseValidationResult(true, null, SkippedNetworkCheck: true);
+            if (IsEnterpriseAirGap())
+                return new NetworkLicenseValidationResult(true, null, SkippedNetworkCheck: true);
+
+            return new NetworkLicenseValidationResult(false, "network_unreachable");
         }
     }
 
     // -------------------------------------------------------------------------
 
     private static bool IsOfflineMode() =>
-        !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GAUNTLETCI_OFFLINE"));
+        string.Equals(Environment.GetEnvironmentVariable("GAUNTLETCI_OFFLINE"), "1", StringComparison.Ordinal);
+
+    private static bool IsEnterpriseAirGap() =>
+        string.Equals(Environment.GetEnvironmentVariable("GAUNTLETCI_ENTERPRISE_AIRGAP"), "1", StringComparison.Ordinal);
+
+    private static bool IsStaleCacheWithinGrace(string token)
+    {
+        try
+        {
+            if (!File.Exists(CachePath))
+                return false;
+
+            using var stream = File.OpenRead(CachePath);
+            using var doc = JsonDocument.Parse(stream);
+            var root = doc.RootElement;
+
+            var cachedHash = root.TryGetProperty("tokenHash", out var h) ? h.GetString() : null;
+            if (cachedHash != TokenHash(token))
+                return false;
+
+            var cachedAt = DateTimeOffset.FromUnixTimeSeconds(root.GetProperty("cachedAt").GetInt64());
+            return DateTimeOffset.UtcNow - cachedAt <= MaxStaleCacheAge;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 
     internal static (bool Valid, string? Reason)? TryReadCache(string token, bool ignoreTtl)
     {

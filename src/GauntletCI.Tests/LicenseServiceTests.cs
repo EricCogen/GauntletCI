@@ -52,6 +52,7 @@ public class LicenseServiceTests
 
         try
         {
+            Environment.SetEnvironmentVariable("GAUNTLETCI_DEV", "1");
             Environment.SetEnvironmentVariable(publicKeyEnv, publicPem);
             Environment.SetEnvironmentVariable(licenseEnv, token);
 
@@ -65,6 +66,7 @@ public class LicenseServiceTests
         {
             Environment.SetEnvironmentVariable(licenseEnv, null);
             Environment.SetEnvironmentVariable(publicKeyEnv, null);
+            Environment.SetEnvironmentVariable("GAUNTLETCI_DEV", null);
         }
     }
 
@@ -81,6 +83,7 @@ public class LicenseServiceTests
 
         try
         {
+            Environment.SetEnvironmentVariable("GAUNTLETCI_DEV", "1");
             Environment.SetEnvironmentVariable(publicKeyFileEnv, keyPath);
             Environment.SetEnvironmentVariable(licenseEnv, token);
 
@@ -94,6 +97,7 @@ public class LicenseServiceTests
         {
             Environment.SetEnvironmentVariable(licenseEnv, null);
             Environment.SetEnvironmentVariable(publicKeyFileEnv, null);
+            Environment.SetEnvironmentVariable("GAUNTLETCI_DEV", null);
             if (File.Exists(keyPath))
                 File.Delete(keyPath);
         }

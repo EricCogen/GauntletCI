@@ -75,8 +75,11 @@ async function handleLicenseStatus(request: Request, env: Env): Promise<Response
     return Response.json({ valid: false, reason: "subscription_cancelled", tier: "community" });
   }
 
-  // No KV record means the token was issued before KV was added -- trust the JWT.
-  return Response.json({ valid: true, tier: record?.tier ?? tier });
+  if (!record) {
+    return Response.json({ valid: false, reason: "subscription_not_found", tier: "community" });
+  }
+
+  return Response.json({ valid: true, tier: record.tier ?? tier });
 }
 
 // ---- KV helpers -------------------------------------------------------------
