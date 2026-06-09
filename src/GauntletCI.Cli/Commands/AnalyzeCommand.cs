@@ -226,10 +226,26 @@ public static class AnalyzeCommand
                 if (ctx.ParseResult.FindResultFor(verboseFlag) is null)
                     verbose = config.Output.Verbose;
 
-                bool usingLicensedFeature = withLlm || withExpertCtx || ghPrComments || githubChecks;
+                notifySlack ??= config.Notifications.SlackWebhook;
+                notifyTeams ??= config.Notifications.TeamsWebhook;
+
+                var useBaseline = !noBaseline && BaselineStore.Exists(repo.FullName);
+                var engineeringPolicyWillRun =
+                    config.Experimental.EngineeringPolicy.Enabled && withLlm;
+                var requiredTier = PaidFeatureGate.ComputeAnalyzeRequiredTier(
+                    withLlm, withExpertCtx, ghPrComments, githubChecks,
+                    withTicketCtx, withCoverage,
+                    !string.IsNullOrWhiteSpace(notifySlack),
+                    !string.IsNullOrWhiteSpace(notifyTeams),
+                    useBaseline, engineeringPolicyWillRun);
+
                 var licenseEnvVar = config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE";
-                var licenseExit = await PaidFeatureGate.TryEnsureLicensedAsync(
-                    usingLicensedFeature, licenseEnvVar, ct);
+                var licenseExit = await PaidFeatureGate.TryEnsureTierAsync(
+                    requiredTier > LicenseTier.Community,
+                    requiredTier,
+                    "analyze with the selected options",
+                    licenseEnvVar,
+                    ct);
                 if (licenseExit is int exitCode)
                 {
                     ctx.ExitCode = exitCode;
@@ -253,10 +269,6 @@ public static class AnalyzeCommand
                     NoBanner = noBanner,
                     OutputFormat = output ?? "text",
                 });
-
-                // Notifications: CLI arg takes precedence, then config, then env var (handled downstream)
-                notifySlack ??= config.Notifications.SlackWebhook;
-                notifyTeams ??= config.Notifications.TeamsWebhook;
 
                 var ignoreList = IgnoreList.Load(repo.FullName);
                 var orchestrator = RuleOrchestrator.CreateDefault(config, repoPath: repo.FullName);

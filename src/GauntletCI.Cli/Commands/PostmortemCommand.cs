@@ -2,9 +2,11 @@
 using System.CommandLine;
 using System.Diagnostics;
 using System.Text.Json;
+using GauntletCI.Cli.Licensing;
 using GauntletCI.Cli.Output;
 using GauntletCI.Cli.Presentation;
 using GauntletCI.Core.Configuration;
+using GauntletCI.Core.Licensing;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Rules;
 using Spectre.Console;
@@ -41,12 +43,22 @@ public static class PostmortemCommand
             var output = ctx.ParseResult.GetValueForOption(outputOption)!;
             var noBanner = ctx.ParseResult.GetValueForOption(noBannerOption);
             var ascii = ctx.ParseResult.GetValueForOption(asciiFlag);
+            var ct = ctx.GetCancellationToken();
 
             CliBanner.PrintIfEnabled(new BannerContext { NoBanner = noBanner, OutputFormat = output });
 
             try
             {
                 var config = ConfigLoader.Load(repo.FullName);
+                var licenseEnvVar = config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE";
+                var licenseExit = await PaidFeatureGate.TryEnsureTierAsync(
+                    LicenseTier.Enterprise, "postmortem", licenseEnvVar, ct);
+                if (licenseExit is int code)
+                {
+                    ctx.ExitCode = code;
+                    return;
+                }
+
                 var diff = await DiffParser.FromGitAsync(repo.FullName, commit, config.DiffContextLines);
                 var ignoreList = IgnoreList.Load(repo.FullName);
                 var orchestrator = RuleOrchestrator.CreateDefault(config);

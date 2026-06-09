@@ -20,6 +20,9 @@ public static class BaselineStore
     /// <summary>Returns the absolute path to the baseline file for the given repo root.</summary>
     public static string GetPath(string repoRoot) => Path.Combine(repoRoot, FileName);
 
+    /// <summary>Returns true when a baseline file exists in the repository.</summary>
+    public static bool Exists(string repoRoot) => File.Exists(GetPath(repoRoot));
+
     // Strips a leading "Line N: " prefix from evidence so fingerprints survive line-number shifts
     private static readonly Regex LineNumberPrefixRegex = new(
         @"^Line \d+:\s*", RegexOptions.Compiled);

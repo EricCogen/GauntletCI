@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.CommandLine;
 using GauntletCI.Cli.Baseline;
+using GauntletCI.Cli.Licensing;
 using GauntletCI.Core.Configuration;
+using GauntletCI.Core.Licensing;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Rules;
 using GauntletCI.Core.StaticAnalysis;
@@ -78,6 +80,15 @@ public static class BaselineCommand
             try
             {
                 var config = ConfigLoader.Load(repo.FullName);
+                var licenseEnvVar = config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE";
+                var licenseExit = await PaidFeatureGate.TryEnsureTierAsync(
+                    LicenseTier.Pro, "baseline create", licenseEnvVar, ct);
+                if (licenseExit is int code)
+                {
+                    ctx.ExitCode = code;
+                    return;
+                }
+
                 var diff = diffFile is not null
                     ? DiffParser.FromFile(diffFile.FullName)
                     : commit is not null

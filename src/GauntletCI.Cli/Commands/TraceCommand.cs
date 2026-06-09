@@ -2,8 +2,10 @@
 using System.CommandLine;
 using System.Text;
 using GauntletCI.Cli.IncidentCorrelation;
+using GauntletCI.Cli.Licensing;
 using GauntletCI.Cli.Presentation;
 using GauntletCI.Core.Configuration;
+using GauntletCI.Core.Licensing;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
@@ -114,12 +116,21 @@ public static class TraceCommand
 
             try
             {
+                var config = ConfigLoader.Load(repo.FullName);
+                var licenseEnvVar = config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE";
+                var licenseExit = await PaidFeatureGate.TryEnsureTierAsync(
+                    LicenseTier.Enterprise, "trace", licenseEnvVar, ct);
+                if (licenseExit is int code)
+                {
+                    ctx.ExitCode = code;
+                    return;
+                }
+
                 var now = DateTimeOffset.UtcNow;
                 var sinceDto = IncidentClient.ParseSince(since, now);
 
                 // Step 1: get diff from base ref to HEAD using three-dot range
                 var rangeRef = $"{baseRef}...HEAD";
-                var config = ConfigLoader.Load(repo.FullName);
                 var diff = await DiffParser.FromGitAsync(repo.FullName, rangeRef, config.DiffContextLines, ct);
 
                 // Step 2: run rule orchestrator
