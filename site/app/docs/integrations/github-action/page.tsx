@@ -114,10 +114,15 @@ export default function GithubActionPage() {
             <pre className="text-foreground whitespace-pre">{MINIMAL_WORKFLOW}</pre>
           </div>
           <p className="text-sm text-muted-foreground mt-3">
-            This runs with all defaults: balanced sensitivity, findings fail the check, no inline
-            comments. To post findings as inline PR review comments, add{" "}
-            <code className="bg-muted px-1 rounded text-xs">pull-requests: write</code> and set{" "}
-            <code className="bg-muted px-1 rounded text-xs">inline-comments: &apos;true&apos;</code>.
+            This runs with all defaults: <code className="bg-muted px-1 rounded text-xs">sensitivity: balanced</code>{" "}
+            filters noise while keeping Block and Warn findings visible, and{" "}
+            <code className="bg-muted px-1 rounded text-xs">fail-on-findings: true</code> fails the
+            check only when GauntletCI exits non-zero — Block-severity findings by default (set{" "}
+            <code className="bg-muted px-1 rounded text-xs">exitOn: Warn</code> in{" "}
+            <code className="bg-muted px-1 rounded text-xs">.gauntletci.json</code> to also fail on
+            warnings). Inline comments are off unless enabled. To post findings as inline PR review
+            comments, add <code className="bg-muted px-1 rounded text-xs">pull-requests: write</code>{" "}
+            and set <code className="bg-muted px-1 rounded text-xs">inline-comments: &apos;true&apos;</code>.
           </p>
         </section>
 

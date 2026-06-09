@@ -24,12 +24,12 @@ const stats = [
   },
   {
     icon: ShieldCheck,
-    value: "30",
+    value: "37",
     label: "Detection rules",
     sub: "Across 7 risk categories.",
     color: "text-emerald-400",
     bg: "bg-emerald-500/10",
-    numericValue: 30,
+    numericValue: 37,
   },
   {
     icon: Lock,

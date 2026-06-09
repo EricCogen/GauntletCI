@@ -43,10 +43,10 @@ const jsonLd = {
 };
 
 const findings = [
-  { rule: "GCI0015", title: "Data Integrity Risk", count: 671, severity: "High", description: "Async method implementation changes" },
-  { rule: "GCI0016", title: "Async Concurrency Risk", count: 640, severity: "High", description: "Concurrent operation pattern changes" },
-  { rule: "GCI0003", title: "Behavioral Change Detection", count: 568, severity: "Block", description: "Breaking API changes" },
-  { rule: "GCI0004", title: "Breaking Change Risk", count: 447, severity: "High", description: "Visibility changes in public APIs" },
+  { rule: "GCI0015", title: "Data Integrity Risk", count: 671, severity: "Block", description: "Unchecked casts, mass assignment, and silent SQL discard patterns" },
+  { rule: "GCI0016", title: "Concurrency and State Risk", count: 640, severity: "Block", description: "async void, blocking .Result/.Wait(), lock(this), and Thread.Sleep" },
+  { rule: "GCI0003", title: "Behavioral Change Detection", count: 568, severity: "Block", description: "Incompatible method signature and contract changes" },
+  { rule: "GCI0004", title: "Breaking Change Risk", count: 447, severity: "Warn", description: "[Obsolete] attribute added or removed on public APIs" },
   { rule: "GCI0006", title: "Edge Case Handling", count: 381, severity: "Warn", description: "Nullable access without checks" },
 ];
 

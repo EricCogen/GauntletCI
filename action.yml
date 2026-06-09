@@ -78,6 +78,8 @@ runs:
         gauntletci $args 2>&1 | tee "$TMPFILE"
         EXIT_CODE=$?
         set +o pipefail
+        # Approximate count: grep lines matching GCI#### in CLI text output (not JSON-parsed).
+        # For exact counts, run gauntletci with --output json and parse the findings array.
         FINDINGS=$(grep -cE 'GCI[0-9]{4}' "$TMPFILE" 2>/dev/null || true)
         FINDINGS="${FINDINGS:-0}"
         rm -f "$TMPFILE"

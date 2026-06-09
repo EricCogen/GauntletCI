@@ -256,6 +256,22 @@ export const rules: Rule[] = [
     relatedIds: ["GCI0024", "GCI0039", "GCI0046"],
   },
   {
+    id: "GCI0019",
+    name: "Confidence and Evidence",
+    severity: "Info",
+    categorySlug: "quality",
+    description:
+      "Flags binary files that cannot be text-scanned and warns when large diffs produce no other findings.",
+    whyExists:
+      "Binary and very large diffs can hide real risk from text-based rules. This rule surfaces coverage gaps so reviewers know when manual inspection is required.",
+    example: {
+      language: "diff",
+      bad: "+ assets/logo.png (binary)\n+ src/Service.cs | 400 lines changed\n  // zero other rule hits",
+      good: "+ assets/logo.png (binary) — reviewed manually\n+ src/Service.cs changes paired with updated tests",
+    },
+    relatedIds: ["GCI0001", "GCI0041"],
+  },
+  {
     id: "GCI0021",
     name: "Data and Schema Compatibility",
     severity: "Block",
@@ -686,6 +702,38 @@ export const rules: Rule[] = [
       good: "+ var json = await File.ReadAllTextAsync(path, ct);",
     },
     relatedIds: ["GCI0016", "GCI0024"],
+  },
+  {
+    id: "GCI0058",
+    name: "Paired Implementation Consistency",
+    severity: "Block",
+    categorySlug: "behavior",
+    description:
+      "Compares sibling class implementations for opposite boolean polarity on the same predicate.",
+    whyExists:
+      "Parallel implementations of the same behavior with inverted predicates usually indicate a copy/paste logic bug rather than an intentional difference.",
+    example: {
+      language: "csharp",
+      bad: "+ // FooValidator and BarValidator disagree on the same IsActive check\n+ if (!user.IsActive) return;\n+ if (user.IsActive) return;",
+      good: "+ // Both validators use the same polarity or document why they differ",
+    },
+    relatedIds: ["GCI0003", "GCI0046"],
+  },
+  {
+    id: "GCI0059",
+    name: "Guard Deletion Remote Use",
+    severity: "Block",
+    categorySlug: "behavior",
+    description:
+      "Detects removed null or validation guards where the guarded symbol is still used later in the same method.",
+    whyExists:
+      "Deleting a guard while retaining downstream use reintroduces NullReferenceException or invalid-state paths that tests may not exercise.",
+    example: {
+      language: "csharp",
+      bad: "- if (order is null) throw new ArgumentNullException(nameof(order));\n  return order.Total;",
+      good: "- if (order is null) throw new ArgumentNullException(nameof(order));\n+ if (order is null) return 0;\n  return order.Total;",
+    },
+    relatedIds: ["GCI0003", "GCI0006", "GCI0007"],
   },
 ];
 

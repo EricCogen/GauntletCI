@@ -83,9 +83,9 @@ const findings = [
     rule: "GCI0004",
     title: "Breaking Change Risk",
     count: 3929,
-    severity: "High",
-    description: "Types or methods changed from internal to public visibility without proper versioning",
-    impact: "Exposes internal implementation details. Breaks encapsulation. Creates support burden for maintaining stable public API. Multiplied across 3 framework versions.",
+    severity: "Warn",
+    description: "[Obsolete] attribute added or removed on public APIs",
+    impact: "Signals active deprecation or stripped deprecation guards. Callers lose migration warnings and may depend on APIs scheduled for removal. Multiplied across 3 framework versions.",
   },
   {
     rule: "GCI0003",
@@ -107,17 +107,17 @@ const findings = [
     rule: "GCI0024",
     title: "Resource Lifecycle",
     count: 97,
-    severity: "Block",
-    description: "Unsafe reflection usage, dynamic code generation, or dangerous string operations",
-    impact: "Opens doors to injection attacks, code injection, or privilege escalation.",
+    severity: "Warn",
+    description: "Disposable resources allocated without using or try/finally disposal",
+    impact: "Memory leaks, file handle exhaustion, or connection pool depletion in production.",
   },
   {
     rule: "GCI0047",
     title: "Naming/Contract Alignment",
     count: 85,
-    severity: "Warn",
-    description: "Disposable resources created but not properly disposed in new code paths",
-    impact: "Memory leaks, file handle exhaustion, or connection pool depletion in production.",
+    severity: "Info",
+    description: "Method renames where the new CRUD verb contradicts the old behavior",
+    impact: "Callers see a new contract name but the implementation still performs the old action, hiding intent mismatches during review.",
   },
 ];
 
@@ -213,15 +213,15 @@ export default function AzureSDKAnalysisPage() {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <h3 className="text-xl font-bold">GCI0004 - Breaking Change Risk</h3>
-                    <p className="text-sm text-muted-foreground mt-1">Types or methods changed from internal to public visibility without proper versioning</p>
+                    <p className="text-sm text-muted-foreground mt-1">[Obsolete] attribute added or removed on public APIs</p>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-cyan-500">3,929</div>
-                    <div className="text-xs font-semibold px-2 py-1 rounded mt-1 inline-block whitespace-nowrap bg-orange-500/20 text-orange-400">High</div>
+                    <div className="text-xs font-semibold px-2 py-1 rounded mt-1 inline-block whitespace-nowrap bg-yellow-500/20 text-yellow-300">Warn</div>
                   </div>
                 </div>
                 <div className="bg-card/50 p-4 rounded">
-                  <p className="text-sm"><strong>Impact:</strong> Exposes internal implementation details. Breaks encapsulation. Creates support burden for maintaining stable public API. Multiplied across 3 framework versions.</p>
+                  <p className="text-sm"><strong>Impact:</strong> Signals active deprecation or stripped deprecation guards. Callers lose migration warnings and may depend on APIs scheduled for removal. Multiplied across 3 framework versions.</p>
                 </div>
               </div>
 
@@ -261,15 +261,15 @@ export default function AzureSDKAnalysisPage() {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <h3 className="text-xl font-bold">GCI0024 - Resource Lifecycle</h3>
-                    <p className="text-sm text-muted-foreground mt-1">Unsafe reflection usage, dynamic code generation, or dangerous string operations</p>
+                    <p className="text-sm text-muted-foreground mt-1">Disposable resources allocated without using or try/finally disposal</p>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-cyan-500">97</div>
-                    <div className="text-xs font-semibold px-2 py-1 rounded mt-1 inline-block whitespace-nowrap bg-red-500/20 text-red-400">Block</div>
+                    <div className="text-xs font-semibold px-2 py-1 rounded mt-1 inline-block whitespace-nowrap bg-yellow-500/20 text-yellow-300">Warn</div>
                   </div>
                 </div>
                 <div className="bg-card/50 p-4 rounded">
-                  <p className="text-sm"><strong>Impact:</strong> Opens doors to injection attacks, code injection, or privilege escalation.</p>
+                  <p className="text-sm"><strong>Impact:</strong> Memory leaks, file handle exhaustion, or connection pool depletion in production.</p>
                 </div>
               </div>
 
@@ -277,15 +277,15 @@ export default function AzureSDKAnalysisPage() {
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <h3 className="text-xl font-bold">GCI0047 - Naming/Contract Alignment</h3>
-                    <p className="text-sm text-muted-foreground mt-1">Disposable resources created but not properly disposed in new code paths</p>
+                    <p className="text-sm text-muted-foreground mt-1">Method renames where the new CRUD verb contradicts the old behavior</p>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-cyan-500">85</div>
-                    <div className="text-xs font-semibold px-2 py-1 rounded mt-1 inline-block whitespace-nowrap bg-yellow-500/20 text-yellow-300">Warn</div>
+                    <div className="text-xs font-semibold px-2 py-1 rounded mt-1 inline-block whitespace-nowrap bg-blue-500/20 text-blue-300">Info</div>
                   </div>
                 </div>
                 <div className="bg-card/50 p-4 rounded">
-                  <p className="text-sm"><strong>Impact:</strong> Memory leaks, file handle exhaustion, or connection pool depletion in production.</p>
+                  <p className="text-sm"><strong>Impact:</strong> Callers see a new contract name but the implementation still performs the old action, hiding intent mismatches during review.</p>
                 </div>
               </div>
             </section>
@@ -295,17 +295,16 @@ export default function AzureSDKAnalysisPage() {
 
               <h3 className="text-xl font-bold mb-3 mt-8">GCI0004 - Breaking Change Risk (3,929 unique findings)</h3>
               <p className="mb-4">
-                More than 59% of the unique risk signals in this PR are categorized as API exposure violations. This means internal types, methods, or classes were promoted to public visibility.
+                More than 59% of the unique risk signals in this PR are [Obsolete] transitions on public APIs — active deprecations or removed deprecation guards.
               </p>
               <p className="mb-4">
                 In a library like Azure SDK, this is critical:
               </p>
               <ul className="list-disc list-inside space-y-2 mb-4">
-                <li>Users start depending on APIs that were meant to be internal</li>
-                <li>You can't refactor those internal details later without breaking downstream code</li>
-                <li>Support burden increases - you're now committed to maintaining public APIs</li>
-                <li>Version management becomes complex - did this change break compatibility?</li>
-                <li>Each change is multiplied by 3 because it affects .NET 10.0, 8.0, and .NET Standard 2.0 surfaces</li>
+                <li>Callers lose migration warnings when [Obsolete] guards are stripped</li>
+                <li>New [Obsolete] markers signal breaking removals that downstream teams must plan for</li>
+                <li>Deprecation messages must be accurate across .NET 10.0, 8.0, and .NET Standard 2.0 surfaces</li>
+                <li>Each transition is multiplied by 3 because it affects all three framework targets</li>
               </ul>
               <p className="mb-4">
                 Without behavioral analysis, this risk stays hidden until users upgrade and encounter breaking changes.
