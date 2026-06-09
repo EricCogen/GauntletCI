@@ -35,10 +35,13 @@ public class EndToEndTests
     {
         foreach (var configuration in new[] { "Release", "Debug" })
         {
-            var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
-                $"../../../../GauntletCI.Cli/bin/{configuration}/net8.0/GauntletCI.Cli.dll"));
-            if (File.Exists(path))
-                return (path, false);
+            foreach (var assemblyName in new[] { "gauntletci.dll", "GauntletCI.Cli.dll" })
+            {
+                var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
+                    $"../../../../GauntletCI.Cli/bin/{configuration}/net8.0/{assemblyName}"));
+                if (File.Exists(path))
+                    return (path, false);
+            }
         }
 
         return (string.Empty, true);
@@ -71,6 +74,14 @@ public class EndToEndTests
         await Task.WhenAll(stdoutTask, stderrTask);
         await proc.WaitForExitAsync();
         return (stdoutTask.Result, stderrTask.Result, proc.ExitCode);
+    }
+
+    [Fact]
+    public void CliDll_MustExist_InReleaseBuilds()
+    {
+        var (_, skip) = GetCliDll();
+        if (string.Equals(Environment.GetEnvironmentVariable("GAUNTLETCI_E2E_STRICT"), "1", StringComparison.Ordinal))
+            Assert.False(skip, "CLI DLL not found at expected Release/Debug path. Build GauntletCI.Cli before running E2E tests.");
     }
 
     [Fact]

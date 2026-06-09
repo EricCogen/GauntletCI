@@ -128,30 +128,30 @@ try {
 
     $result = $output | ConvertFrom-Json
 
-    # Confidence: 0=Low, 1=Medium, 2=High
-    $highFindings   = $result.Findings | Where-Object { $_.Confidence -eq 2 }
-    $mediumFindings = $result.Findings | Where-Object { $_.Confidence -eq 1 }
-    $lowFindings    = $result.Findings | Where-Object { $_.Confidence -eq 0 }
+    # Severity: 1=Info, 2=Warn, 3=Block
+    $blockFindings = $result.Findings | Where-Object { $_.Severity -eq 3 }
+    $warnFindings  = $result.Findings | Where-Object { $_.Severity -eq 2 }
+    $infoFindings  = $result.Findings | Where-Object { $_.Severity -eq 1 }
 
-    $total     = @($result.Findings).Count
-    $highCount = @($highFindings).Count
+    $total      = @($result.Findings).Count
+    $blockCount = @($blockFindings).Count
 
-    if ($highCount -gt 0) {
+    if ($blockCount -gt 0) {
         Write-Host ""
-        Write-Host "GauntletCI found $highCount high-confidence issue(s):" -ForegroundColor Red
-        foreach ($f in $highFindings) {
+        Write-Host "GauntletCI found $blockCount Block-severity issue(s):" -ForegroundColor Red
+        foreach ($f in $blockFindings) {
             Write-Host "  - [$($f.RuleId)] $($f.Summary)" -ForegroundColor Red
             Write-Host "    $($f.Evidence)" -ForegroundColor DarkRed
         }
         Write-Host ""
-        Write-Host "Commit aborted. Fix high-confidence issues or use --no-verify to bypass." -ForegroundColor Red
+        Write-Host "Commit aborted. Fix Block-severity issues or use --no-verify to bypass." -ForegroundColor Red
         exit 1
     }
     elseif ($total -gt 0) {
         Write-Host ""
-        Write-Host "GauntletCI found $total issue(s) (none high-confidence):" -ForegroundColor Yellow
-        foreach ($f in $result.Findings) {
-            $color = if ($f.Confidence -eq 1) { "Yellow" } else { "Gray" }
+        Write-Host "GauntletCI found $total issue(s) (Warn/Info only):" -ForegroundColor Yellow
+        foreach ($f in ($warnFindings + $infoFindings)) {
+            $color = if ($f.Severity -eq 2) { "Yellow" } else { "Gray" }
             Write-Host "  - [$($f.RuleId)] $($f.Summary)" -ForegroundColor $color
         }
         Write-Host ""

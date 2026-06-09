@@ -82,7 +82,7 @@ public static class SlackTeamsNotifier
             using var response = await _http.PostAsync(slackUrl, content, ct);
             if (!response.IsSuccessStatusCode)
             {
-                var body = await response.Content.ReadAsStringAsync(ct);
+                var body = TruncateForLog(await response.Content.ReadAsStringAsync(ct));
                 Console.Error.WriteLine($"[GauntletCI] Slack notification failed: {response.StatusCode}: {body}");
             }
         }
@@ -107,7 +107,7 @@ public static class SlackTeamsNotifier
             using var response = await _http.PostAsync(teamsUrl, content, ct);
             if (!response.IsSuccessStatusCode)
             {
-                var body = await response.Content.ReadAsStringAsync(ct);
+                var body = TruncateForLog(await response.Content.ReadAsStringAsync(ct));
                 Console.Error.WriteLine($"[GauntletCI] Teams notification failed: {response.StatusCode}: {body}");
             }
         }
@@ -196,5 +196,14 @@ public static class SlackTeamsNotifier
         }
 
         return null;
+    }
+
+    private static string TruncateForLog(string? body, int maxLen = 120)
+    {
+        if (string.IsNullOrEmpty(body))
+            return "(empty)";
+
+        var trimmed = body.Replace('\r', ' ').Replace('\n', ' ');
+        return trimmed.Length <= maxLen ? trimmed : trimmed[..maxLen] + "…";
     }
 }

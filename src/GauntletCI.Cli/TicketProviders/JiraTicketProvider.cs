@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using GauntletCI.Core;
 using GauntletCI.Core.Model;
+using GauntletCI.Core.Security;
 namespace GauntletCI.Cli.TicketProviders;
 
 public sealed class JiraTicketProvider : ITicketProvider
@@ -14,23 +15,23 @@ public sealed class JiraTicketProvider : ITicketProvider
     public string ProviderName => "Jira";
 
     public bool IsAvailable =>
-        !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("JIRA_BASE_URL")) &&
+        TryGetValidatedBaseUrl(out _, out _) &&
         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("JIRA_API_TOKEN")) &&
         !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("JIRA_USER_EMAIL"));
 
     public async Task<TicketInfo?> FetchAsync(string issueKey, CancellationToken ct = default)
     {
-        var baseUrl = Environment.GetEnvironmentVariable("JIRA_BASE_URL");
+        if (!TryGetValidatedBaseUrl(out var baseUrl, out _))
+            return null;
+
         var token = Environment.GetEnvironmentVariable("JIRA_API_TOKEN");
         var email = Environment.GetEnvironmentVariable("JIRA_USER_EMAIL");
 
-        if (string.IsNullOrEmpty(baseUrl) || string.IsNullOrEmpty(token) || string.IsNullOrEmpty(email))
-        {
-            return null;  // Not available
-        }
+        if (string.IsNullOrEmpty(token) || string.IsNullOrEmpty(email))
+            return null;
 
         var creds = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{email}:{token}"));
-        var cleanUrl = baseUrl.TrimEnd('/');
+        var cleanUrl = baseUrl!.TrimEnd('/');
 
         using var req = new HttpRequestMessage(HttpMethod.Get,
             $"{cleanUrl}/rest/api/3/issue/{issueKey}?fields=summary,description");
@@ -51,9 +52,15 @@ public sealed class JiraTicketProvider : ITicketProvider
             Id = issueKey,
             Title = summary ?? issueKey,
             Description = desc,
-            Url = $"{baseUrl}/browse/{issueKey}",
+            Url = $"{cleanUrl}/browse/{issueKey}",
             Provider = "Jira",
         };
+    }
+
+    internal static bool TryGetValidatedBaseUrl(out string? baseUrl, out string? error)
+    {
+        baseUrl = Environment.GetEnvironmentVariable("JIRA_BASE_URL");
+        return OutboundUrlValidator.TryValidateHttpsUrl(baseUrl, out error);
     }
 
     private static string? ExtractDescription(JsonElement fields)

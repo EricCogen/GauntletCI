@@ -48,6 +48,11 @@ public static class LicenseService
     public static string? ReadRawToken(string envVarName = "GAUNTLETCI_LICENSE") =>
         ReadToken(envVarName);
 
+    /// <summary>
+    /// Parses a license JWT string without reading from env or disk.
+    /// </summary>
+    public static LicenseInfo ParseToken(string token) => Parse(token);
+
     private static string? ReadToken(string envVarName)
     {
         var envVal = Environment.GetEnvironmentVariable(envVarName);

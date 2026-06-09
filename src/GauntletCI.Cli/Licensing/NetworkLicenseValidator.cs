@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using GauntletCI.Core;
+using GauntletCI.Core.Licensing;
 
 namespace GauntletCI.Cli.Licensing;
 
@@ -41,7 +42,7 @@ public static class NetworkLicenseValidator
     {
         if (IsOfflineMode())
         {
-            if (!IsEnterpriseAirGap())
+            if (!QualifiesForEnterpriseAirGap(token))
                 return new NetworkLicenseValidationResult(false, "offline_requires_enterprise_air_gap");
 
             return new NetworkLicenseValidationResult(true, null, SkippedNetworkCheck: true);
@@ -87,7 +88,7 @@ public static class NetworkLicenseValidator
             if (stale.HasValue && IsStaleCacheWithinGrace(token))
                 return new NetworkLicenseValidationResult(stale.Value.Valid, stale.Value.Reason);
 
-            if (IsEnterpriseAirGap())
+            if (QualifiesForEnterpriseAirGap(token))
                 return new NetworkLicenseValidationResult(true, null, SkippedNetworkCheck: true);
 
             return new NetworkLicenseValidationResult(false, "network_unreachable");
@@ -101,6 +102,15 @@ public static class NetworkLicenseValidator
 
     internal static bool IsEnterpriseAirGap() =>
         string.Equals(Environment.GetEnvironmentVariable("GAUNTLETCI_ENTERPRISE_AIRGAP"), "1", StringComparison.Ordinal);
+
+    private static bool QualifiesForEnterpriseAirGap(string token) =>
+        IsEnterpriseAirGap() && IsEnterpriseToken(token);
+
+    private static bool IsEnterpriseToken(string token)
+    {
+        var license = LicenseService.ParseToken(token);
+        return license.IsValid && license.Tier == LicenseTier.Enterprise;
+    }
 
     private static bool IsStaleCacheWithinGrace(string token)
     {
