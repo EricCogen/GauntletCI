@@ -286,11 +286,13 @@ steps:
     displayName: Analyze PR diff`}</pre>
         </div>
         <p className="mt-3 text-sm text-muted-foreground">
-          For inline pipeline annotations, use the{" "}
+          For inline pipeline annotations, see the{" "}
           <Link href="/docs/integrations/azure-devops" className="text-cyan-400 hover:underline">
-            Azure DevOps Marketplace task
+            Azure DevOps integration docs
           </Link>{" "}
-          instead, which emits <code className="bg-muted px-1 rounded text-xs">##vso</code> logging commands automatically.
+          for manual pipeline setup. A Marketplace task is coming soon; until then use the script
+          above or the manual steps on the Azure DevOps page, which emits{" "}
+          <code className="bg-muted px-1 rounded text-xs">##vso</code> logging commands when configured.
         </p>
       </section>
 
@@ -356,7 +358,7 @@ pipelines:
               </tr>
               <tr>
                 <td className="px-4 py-2 font-mono text-destructive">1</td>
-                <td className="px-4 py-2 text-sm text-muted-foreground">Findings detected</td>
+                <td className="px-4 py-2 text-sm text-muted-foreground">Blocking findings detected (Block by default; Warn when exitOn is Warn)</td>
                 <td className="px-4 py-2 text-sm text-destructive">Fail / block merge</td>
               </tr>
               <tr>

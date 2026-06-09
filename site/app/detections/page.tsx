@@ -15,18 +15,17 @@ export const metadata: Metadata = {
 const detections = [
   {
     id: "GCI0003",
-    title: "Behavioral change: removed null guard",
-    severity: "High",
+    title: "Behavioral change: incompatible method signature",
+    severity: "Block",
     category: "Behavioral Correctness",
     diff: [
-      { type: "context", line: "public async Task<Order> CreateOrderAsync(CreateOrderRequest request)" },
+      { type: "removed", line: "public IEnumerable<Product> GetProducts(int categoryId)" },
+      { type: "added", line: "public IEnumerable<Product> GetProducts(int categoryId, bool includeArchived)" },
       { type: "context", line: "{" },
-      { type: "removed", line: "    if (request is null) throw new ArgumentNullException(nameof(request));" },
-      { type: "context", line: "    var order = new Order(request.CustomerId, request.Items);" },
-      { type: "context", line: "    return await _repo.SaveAsync(order);" },
+      { type: "context", line: "    return _repo.Query(categoryId);" },
       { type: "context", line: "}" },
     ],
-    finding: "GCI0003: Guard clause removed at line 3 -- ArgumentNullException no longer thrown on null input. Callers relying on this contract will see NullReferenceException deeper in the call stack.",
+    finding: "GCI0003: Required parameter 'includeArchived' added to public method at line 1. Callers in external assemblies compiled against the old signature will throw MissingMethodException at runtime.",
   },
   {
     id: "GCI0029",
@@ -56,17 +55,16 @@ const detections = [
   },
   {
     id: "GCI0004",
-    title: "Breaking change: public method signature changed",
-    severity: "High",
+    title: "Breaking change: [Obsolete] guard removed",
+    severity: "Warn",
     category: "API Contracts",
     diff: [
-      { type: "removed", line: "public IEnumerable<Product> GetProducts(int categoryId)" },
-      { type: "added", line: "public IEnumerable<Product> GetProducts(int categoryId, bool includeArchived)" },
-      { type: "context", line: "{" },
-      { type: "context", line: "    return _repo.Query(categoryId);" },
-      { type: "context", line: "}" },
+      { type: "removed", line: '[Obsolete("Use GetOrderV2 instead. Removed in v3.")]' },
+      { type: "context", line: "public Task<Order> GetOrder(int id) => GetOrderV2(id);" },
+      { type: "context", line: "" },
+      { type: "added", line: "public Task<Order> GetOrder(int id) => _repo.FindAsync(id);" },
     ],
-    finding: "GCI0004: Required parameter 'includeArchived' added to public method at line 1. Callers in external assemblies compiled against the old signature will throw MissingMethodException at runtime.",
+    finding: "GCI0004: [Obsolete] attribute removed from public GetOrder at line 1. Callers lose the deprecation signal and may depend on an API scheduled for removal.",
   },
   {
     id: "GCI0010",
@@ -84,7 +82,7 @@ const detections = [
   {
     id: "GCI0007",
     title: "Error handling: exception swallowed silently",
-    severity: "Medium",
+    severity: "Block",
     category: "Error Handling",
     diff: [
       { type: "context", line: "try" },
@@ -102,7 +100,9 @@ const detections = [
 ];
 
 const severityColor: Record<string, string> = {
+  Block: "bg-red-500/10 text-red-400 border border-red-500/20",
   High: "bg-red-500/10 text-red-400 border border-red-500/20",
+  Warn: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
   Medium: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
   Low: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
 };

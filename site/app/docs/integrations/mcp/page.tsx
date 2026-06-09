@@ -35,7 +35,7 @@ const faqSchema = buildFaqSchema([
   },
   {
     q: "What tools does the GauntletCI MCP server expose?",
-    a: "Three tools: analyze_commit returns findings as readable text, get_findings_json returns raw structured JSON for programmatic use, and get_sarif returns a SARIF 2.1.0 report compatible with GitHub Advanced Security and the VS Code SARIF viewer.",
+    a: "Five tools: analyze_staged, analyze_diff, analyze_commit, list_rules, and audit_stats. All analysis tools return structured JSON findings from the local CLI.",
   },
 ]);
 
@@ -106,9 +106,9 @@ export default function McpPage() {
             </a>{" "}
             is an open standard that lets AI assistants call external tools. The GauntletCI MCP
             server is a local Node.js process that listens on stdin/stdout. When your assistant
-            calls the <code className="bg-muted px-1 rounded text-xs">analyze_commit</code> tool,
-            the server runs <code className="bg-muted px-1 rounded text-xs">gauntletci analyze</code>{" "}
-            in the directory you specify and returns the findings as structured text.
+            calls an analysis tool such as <code className="bg-muted px-1 rounded text-xs">analyze_staged</code>{" "}
+            or <code className="bg-muted px-1 rounded text-xs">analyze_commit</code>, the server runs the
+            local GauntletCI CLI and returns findings as structured JSON.
           </p>
 
           {/* Architecture diagram mockup */}
@@ -238,19 +238,29 @@ export default function McpPage() {
               <tbody className="divide-y divide-border">
                 {[
                   [
+                    "analyze_staged",
+                    "Analyze staged changes in a git repository (pre-commit workflow).",
+                    "repo (optional, defaults to cwd)",
+                  ],
+                  [
+                    "analyze_diff",
+                    "Analyze a raw unified diff string.",
+                    "diff (required)",
+                  ],
+                  [
                     "analyze_commit",
-                    "Run GauntletCI on HEAD and return findings as readable structured text.",
-                    "workingDirectory (required), sensitivity (optional)",
+                    "Analyze a specific git commit in a repository.",
+                    "repo (required), commit (required)",
                   ],
                   [
-                    "get_findings_json",
-                    "Run GauntletCI and return the raw JSON result for programmatic processing.",
-                    "workingDirectory (required), sensitivity (optional)",
+                    "list_rules",
+                    "Return all available GauntletCI rules with id and name.",
+                    "none",
                   ],
                   [
-                    "get_sarif",
-                    "Run GauntletCI and return a SARIF 2.1.0 report for ingestion into GHAS or the VS Code SARIF viewer.",
-                    "workingDirectory (required)",
+                    "audit_stats",
+                    "Return aggregate scan statistics from the local audit log.",
+                    "none",
                   ],
                 ].map(([tool, desc, params]) => (
                   <tr key={tool}>
@@ -263,10 +273,13 @@ export default function McpPage() {
             </table>
           </div>
           <p className="text-sm text-muted-foreground mt-3">
-            The <code className="bg-muted px-1 rounded text-xs">sensitivity</code> parameter accepts{" "}
-            <code className="bg-muted px-1 rounded text-xs">strict</code>,{" "}
-            <code className="bg-muted px-1 rounded text-xs">balanced</code> (default), or{" "}
-            <code className="bg-muted px-1 rounded text-xs">permissive</code>.
+            Start the built-in MCP server with{" "}
+            <code className="bg-muted px-1 rounded text-xs">gauntletci mcp serve</code>. Pass{" "}
+            <code className="bg-muted px-1 rounded text-xs">--ollama-model</code> (and optionally{" "}
+            <code className="bg-muted px-1 rounded text-xs">--ollama-url</code>) to enable LLM
+            enrichment of high-confidence findings via a local or remote Ollama endpoint. Without{" "}
+            <code className="bg-muted px-1 rounded text-xs">--ollama-model</code>, analysis is
+            deterministic rules-only.
           </p>
         </section>
 

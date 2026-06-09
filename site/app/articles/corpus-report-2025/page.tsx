@@ -66,15 +66,15 @@ const rawStats = [
 ];
 
 const topRules = [
-  ["GCI0004", "Public API exposure and visibility changes", "59,965"],
+  ["GCI0004", "[Obsolete] attribute transitions on public APIs", "59,965"],
   ["GCI0003", "Method signature and contract changes", "39,628"],
   ["GCI0006", "Null and edge-case handling changes", "10,978"],
-  ["GCI0015", "Exception-path changes", "10,389"],
+  ["GCI0015", "Data integrity and silent discard risks", "10,389"],
   ["GCI0016", "Async and deadlock candidates", "4,040"],
-  ["GCI0024", "Dangerous API usage", "3,435"],
-  ["GCI0010", "Thread-safety and concurrency risks", "3,225"],
+  ["GCI0024", "Resource lifecycle and undisposed disposables", "3,435"],
+  ["GCI0010", "Hardcoded secrets, URLs, and connection strings", "3,225"],
   ["GCI0001", "Mixed-scope or diff-integrity risk", "2,674"],
-  ["GCI0036", "Performance hot-path risks", "2,524"],
+  ["GCI0036", "Pure context mutation and side effects in getters", "2,524"],
   ["GCI0047", "Additional behavioral-change signals", "1,450"],
 ];
 

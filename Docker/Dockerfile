@@ -13,4 +13,4 @@ RUN dotnet publish src/GauntletCI.Cli/GauntletCI.Cli.csproj \
 FROM mcr.microsoft.com/dotnet/runtime-deps:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
-ENTRYPOINT ["/app/GauntletCI.Cli"]
+ENTRYPOINT ["/app/gauntletci"]
