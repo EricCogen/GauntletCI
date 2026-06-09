@@ -274,7 +274,7 @@ public static class AnalyzeCommand
                 var orchestrator = RuleOrchestrator.CreateDefault(config, repoPath: repo.FullName);
 
                 // Run static analysis on changed C# files (null when no repo path or no .cs changes)
-                var repoPath = diffFile is null ? repo.FullName : null;
+                var repoPath = repo.FullName;
                 var sw = Stopwatch.StartNew();
                 var staticAnalysis = await StaticAnalysisRunner.RunAsync(diff, repoPath, ct);
 

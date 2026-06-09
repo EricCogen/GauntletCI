@@ -75,45 +75,45 @@ if command -v jq &> /dev/null; then
     HAS_JQ=1
 fi
 
-# Run gauntletci — JSON output uses Confidence: 0=Low, 1=Medium, 2=High
+# Run gauntletci — JSON output uses Severity: 1=Info, 2=Warn, 3=Block
 OUTPUT=$(run_gauntletci analyze --staged --output json --no-banner 2>&1) || {
     echo "GauntletCI failed to run. Commit aborted."
     echo "$OUTPUT"
     exit 1
 }
 
-# Count findings by confidence level
+# Count findings by severity level
 if [ $HAS_JQ -eq 1 ]; then
-    HIGH_COUNT=$(echo "$OUTPUT" | jq '[.Findings[] | select(.Confidence == 2)] | length')
-    MEDIUM_COUNT=$(echo "$OUTPUT" | jq '[.Findings[] | select(.Confidence == 1)] | length')
-    LOW_COUNT=$(echo "$OUTPUT" | jq '[.Findings[] | select(.Confidence == 0)] | length')
+    BLOCK_COUNT=$(echo "$OUTPUT" | jq '[.Findings[] | select(.Severity == 3)] | length')
+    WARN_COUNT=$(echo "$OUTPUT" | jq '[.Findings[] | select(.Severity == 2)] | length')
+    INFO_COUNT=$(echo "$OUTPUT" | jq '[.Findings[] | select(.Severity == 1)] | length')
 else
-    HIGH_COUNT=$(echo "$OUTPUT" | grep -c '"Confidence": 2' || true)
-    MEDIUM_COUNT=$(echo "$OUTPUT" | grep -c '"Confidence": 1' || true)
-    LOW_COUNT=$(echo "$OUTPUT" | grep -c '"Confidence": 0' || true)
-    HIGH_COUNT="${HIGH_COUNT:-0}"
-    MEDIUM_COUNT="${MEDIUM_COUNT:-0}"
-    LOW_COUNT="${LOW_COUNT:-0}"
+    BLOCK_COUNT=$(echo "$OUTPUT" | grep -c '"Severity": 3' || true)
+    WARN_COUNT=$(echo "$OUTPUT" | grep -c '"Severity": 2' || true)
+    INFO_COUNT=$(echo "$OUTPUT" | grep -c '"Severity": 1' || true)
+    BLOCK_COUNT="${BLOCK_COUNT:-0}"
+    WARN_COUNT="${WARN_COUNT:-0}"
+    INFO_COUNT="${INFO_COUNT:-0}"
 fi
 
-TOTAL=$((HIGH_COUNT + MEDIUM_COUNT + LOW_COUNT))
+TOTAL=$((BLOCK_COUNT + WARN_COUNT + INFO_COUNT))
 
-if [ "$HIGH_COUNT" -gt 0 ]; then
+if [ "$BLOCK_COUNT" -gt 0 ]; then
     echo ""
-    echo "GauntletCI found $HIGH_COUNT high-confidence issue(s):"
+    echo "GauntletCI found $BLOCK_COUNT Block-severity issue(s):"
     if [ $HAS_JQ -eq 1 ]; then
-        echo "$OUTPUT" | jq -r '.Findings[] | select(.Confidence == 2) | "  • \u001b[31m[\(.RuleId)]\u001b[0m \(.Summary)\n    \(.Evidence)"'
+        echo "$OUTPUT" | jq -r '.Findings[] | select(.Severity == 3) | "  • \u001b[31m[\(.RuleId)]\u001b[0m \(.Summary)\n    \(.Evidence)"'
     else
-        echo "$OUTPUT" | grep -A 5 '"Confidence": 2' | head -30
+        echo "$OUTPUT" | grep -A 5 '"Severity": 3' | head -30
     fi
     echo ""
-    echo "Commit aborted. Fix high-confidence issues or use --no-verify to bypass."
+    echo "Commit aborted. Fix Block-severity issues or use --no-verify to bypass."
     exit 1
 elif [ "$TOTAL" -gt 0 ]; then
     echo ""
-    echo "GauntletCI found $TOTAL issue(s) (none high-confidence):"
+    echo "GauntletCI found $TOTAL issue(s) (Warn/Info only):"
     if [ $HAS_JQ -eq 1 ]; then
-        echo "$OUTPUT" | jq -r '.Findings[] | "  • [\(.RuleId)] \(.Summary)"'
+        echo "$OUTPUT" | jq -r '.Findings[] | select(.Severity == 2 or .Severity == 1) | "  • [\(.RuleId)] \(.Summary)"'
     else
         echo "$OUTPUT"
     fi

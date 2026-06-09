@@ -41,7 +41,7 @@ export default {
       return handleLicenseStatus(request, env);
     }
 
-    if (request.method === "POST") {
+    if (request.method === "POST" && url.pathname === "/stripe/webhook") {
       return handleStripeWebhook(request, env);
     }
 
@@ -60,12 +60,20 @@ async function handleLicenseStatus(request: Request, env: Env): Promise<Response
 
   let email: string;
   let tier: string;
+  let exp: number | undefined;
   try {
     const publicKey = await importSPKI(env.GAUNTLETCI_PUBLIC_KEY, "RS256");
     const { payload } = await jwtVerify(token, publicKey, { issuer: "gauntletci.com" });
     email = payload["email"] as string;
     tier  = payload["tier"]  as string;
+    exp   = payload["exp"] as number | undefined;
     if (!email || !tier) throw new Error("missing claims");
+    if (typeof exp !== "number") {
+      return Response.json({ valid: false, reason: "missing_exp" }, { status: 401 });
+    }
+    if (exp <= Math.floor(Date.now() / 1000)) {
+      return Response.json({ valid: false, reason: "token_expired", tier: "community" }, { status: 401 });
+    }
   } catch {
     return Response.json({ valid: false, reason: "invalid_token" }, { status: 401 });
   }
@@ -250,10 +258,17 @@ function extractSessionEmail(session: Record<string, unknown>): string | undefin
 }
 
 function extractSessionPriceId(session: Record<string, unknown>): string | undefined {
-  return (
+  const fromLineItems = (
     (session["line_items"] as { data: { price: { id: string } }[] } | undefined)
       ?.data?.[0]?.price?.id
   );
+  if (fromLineItems) return fromLineItems;
+
+  const metadata = session["metadata"] as { price_id?: string } | undefined;
+  if (metadata?.price_id) return metadata.price_id;
+
+  const displayItems = session["display_items"] as { price?: { id: string } }[] | undefined;
+  return displayItems?.[0]?.price?.id;
 }
 
 function extractInvoicePriceId(invoice: Record<string, unknown>): string | undefined {

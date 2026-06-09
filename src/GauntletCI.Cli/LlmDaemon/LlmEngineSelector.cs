@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Licensing;
+using GauntletCI.Core.Security;
 using GauntletCI.Llm;
 
 namespace GauntletCI.Cli.LlmDaemon;
@@ -105,6 +106,12 @@ internal static class LlmEngineSelector
                 $"--with-llm was passed but no API key was found in ${llmCfg.CiApiKeyEnv}.",
                 "A remote LLM endpoint is configured but the API key env var is missing.",
                 $"Set ${llmCfg.CiApiKeyEnv} in your pipeline secrets and retry.");
+
+        if (!OutboundUrlValidator.TryValidateHttpsUrl(llmCfg.CiEndpoint, out var endpointError))
+            return WarnAndSkip(
+                $"--with-llm was passed but 'llm.ciEndpoint' is not a valid outbound HTTPS URL: {endpointError}",
+                "Remote LLM endpoints must use HTTPS and must not target private or loopback hosts.",
+                "Set 'llm.ciEndpoint' to a public HTTPS OpenAI-compatible URL.");
 
         return new RemoteLlmEngine(llmCfg.CiEndpoint, llmCfg.CiModel, apiKey,
             llmCfg.NumCtx, llmCfg.MaxCompleteTokens);
