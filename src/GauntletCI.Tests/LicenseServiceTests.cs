@@ -41,6 +41,7 @@ public class LicenseServiceTests
         Assert.Equal(LicenseTier.Community, license.Tier);
     }
 
+#if DEBUG
     [Fact]
     public void Load_ValidToken_WithPublicKeyEnvOverride_AcceptsProTier()
     {
@@ -69,7 +70,9 @@ public class LicenseServiceTests
             Environment.SetEnvironmentVariable("GAUNTLETCI_DEV", null);
         }
     }
+#endif
 
+#if DEBUG
     [Fact]
     public void Load_ValidToken_WithPublicKeyFileOverride_AcceptsProTier()
     {
@@ -102,6 +105,7 @@ public class LicenseServiceTests
                 File.Delete(keyPath);
         }
     }
+#endif
 
     private static string SignTestJwt(RSA rsa, object payload)
     {

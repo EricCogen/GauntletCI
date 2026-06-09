@@ -99,7 +99,7 @@ public static class NetworkLicenseValidator
     private static bool IsOfflineMode() =>
         string.Equals(Environment.GetEnvironmentVariable("GAUNTLETCI_OFFLINE"), "1", StringComparison.Ordinal);
 
-    private static bool IsEnterpriseAirGap() =>
+    internal static bool IsEnterpriseAirGap() =>
         string.Equals(Environment.GetEnvironmentVariable("GAUNTLETCI_ENTERPRISE_AIRGAP"), "1", StringComparison.Ordinal);
 
     private static bool IsStaleCacheWithinGrace(string token)

@@ -130,6 +130,7 @@ public static class LicenseService
 
     private static string ResolvePublicKeyPem()
     {
+#if DEBUG
         if (IsDevLicenseMode())
         {
             var inline = Environment.GetEnvironmentVariable("GAUNTLETCI_LICENSE_PUBLIC_KEY");
@@ -144,6 +145,7 @@ public static class LicenseService
                     return pem;
             }
         }
+#endif
 
         return EmbeddedPublicKey;
     }

@@ -38,6 +38,15 @@ internal static class LlmEngineSelector
         var ollamaUrl = config.Corpus.OllamaEndpoints.FirstOrDefault(e => e.Enabled)?.Url;
         if (!string.IsNullOrWhiteSpace(ollamaUrl))
         {
+            var license = LicenseService.Load(config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE");
+            if (!license.HasTier(LicenseTier.Pro))
+            {
+                return WarnAndSkip(
+                    "--with-llm was passed but no valid Pro license was found.",
+                    "Local Ollama LLM enrichment requires a GauntletCI Pro or higher license.",
+                    "Get a license at https://gauntletci.com/pricing");
+            }
+
             var endpoint = ollamaUrl.TrimEnd('/') + "/v1/chat/completions";
             if (!Uri.TryCreate(endpoint, UriKind.Absolute, out _))
             {

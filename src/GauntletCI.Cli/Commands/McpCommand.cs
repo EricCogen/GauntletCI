@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.CommandLine;
+using GauntletCI.Cli.Licensing;
 using GauntletCI.Cli.Mcp;
+using GauntletCI.Core.Configuration;
+using GauntletCI.Core.Licensing;
 using GauntletCI.Llm;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -38,8 +41,21 @@ public static class McpCommand
 
         cmd.SetHandler(async (System.CommandLine.Invocation.InvocationContext ctx) =>
         {
+            var repoPath = ctx.ParseResult.GetValueForOption(repoOption);
             var ollamaModel = ctx.ParseResult.GetValueForOption(ollamaModelOption);
             var ollamaUrl = ctx.ParseResult.GetValueForOption(ollamaUrlOption)!;
+            var ct = ctx.GetCancellationToken();
+
+            var repoRoot = repoPath ?? Directory.GetCurrentDirectory();
+            var config = ConfigLoader.Load(repoRoot);
+            var licenseEnvVar = config.Llm?.LicenseKeyEnv ?? "GAUNTLETCI_LICENSE";
+            var licenseExit = await PaidFeatureGate.TryEnsureTierAsync(
+                LicenseTier.Pro, "MCP server", licenseEnvVar, ct);
+            if (licenseExit is int code)
+            {
+                ctx.ExitCode = code;
+                return;
+            }
 
             if (ollamaModel is not null)
             {
@@ -64,7 +80,7 @@ public static class McpCommand
                 .WithStdioServerTransport()
                 .WithToolsFromAssembly(typeof(GauntletTools).Assembly);
 
-            await builder.Build().RunAsync(ctx.GetCancellationToken());
+            await builder.Build().RunAsync(ct);
         });
 
         return cmd;
