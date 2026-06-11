@@ -37,14 +37,38 @@ public class EndToEndTests
         {
             foreach (var assemblyName in new[] { "gauntletci.dll", "GauntletCI.Cli.dll" })
             {
-                var path = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory,
-                    $"../../../../GauntletCI.Cli/bin/{configuration}/net8.0/{assemblyName}"));
-                if (File.Exists(path))
+                var path = FindCliDll(configuration, assemblyName);
+                if (path is not null)
                     return (path, false);
             }
         }
 
         return (string.Empty, true);
+    }
+
+    private static string? FindCliDll(string configuration, string assemblyName)
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            var candidate = Path.Combine(
+                dir.FullName,
+                "src",
+                "GauntletCI.Cli",
+                "bin",
+                configuration,
+                "net8.0",
+                assemblyName);
+            if (File.Exists(candidate))
+                return candidate;
+
+            if (File.Exists(Path.Combine(dir.FullName, "GauntletCI.slnx")))
+                break;
+
+            dir = dir.Parent;
+        }
+
+        return null;
     }
 
     private static async Task<(string stdout, string stderr, int exitCode)> RunCliAsync(
