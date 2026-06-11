@@ -9,7 +9,31 @@ public class GCI0001Tests
     private static readonly GCI0001_DiffIntegrity Rule = new(new StubPatternProvider());
 
     [Fact]
-    public async Task MixedCodeAndMarkdown_ShouldFlagMixedScope()
+    public async Task MixedCodeAndUnrelatedAsset_ShouldFlagMixedScope()
+    {
+        var raw = """
+            diff --git a/src/Foo.cs b/src/Foo.cs
+            index abc..def 100644
+            --- a/src/Foo.cs
+            +++ b/src/Foo.cs
+            @@ -1,1 +1,1 @@
+            -old
+            +new
+            diff --git a/site/hero.png b/site/hero.png
+            index 111..222 100644
+            --- a/site/hero.png
+            +++ b/site/hero.png
+            Binary files differ
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.Contains(findings, f => f.Summary.Contains("mixed scope"));
+    }
+
+    [Fact]
+    public async Task MixedCodeAndReadme_ShouldNotFlagMixedScope()
     {
         var raw = """
             diff --git a/src/Foo.cs b/src/Foo.cs
@@ -31,7 +55,7 @@ public class GCI0001Tests
         var diff = DiffParser.Parse(raw);
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.Contains(findings, f => f.Summary.Contains("mixed scope"));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("mixed scope"));
     }
 
     [Fact]

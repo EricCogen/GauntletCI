@@ -348,7 +348,7 @@ public sealed class RuleCorpusRunnerTests : IDisposable
     private readonly FixtureFolderStore _store;
     private readonly RuleCorpusRunner _runner;
 
-    // A minimal unified diff that mixes code and a markdown file: triggers GCI0001.
+    // A minimal unified diff that mixes code and an unrelated asset: triggers GCI0001.
     private const string MixedScopeDiff = """
         diff --git a/src/Foo.cs b/src/Foo.cs
         index abc..def 100644
@@ -357,13 +357,11 @@ public sealed class RuleCorpusRunnerTests : IDisposable
         @@ -1,1 +1,1 @@
         -old
         +new
-        diff --git a/README.md b/README.md
+        diff --git a/site/hero.png b/site/hero.png
         index 111..222 100644
-        --- a/README.md
-        +++ b/README.md
-        @@ -1,1 +1,1 @@
-        -old docs
-        +new docs
+        --- a/site/hero.png
+        +++ b/site/hero.png
+        Binary files differ
         """;
 
     public RuleCorpusRunnerTests()

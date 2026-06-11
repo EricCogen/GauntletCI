@@ -331,8 +331,19 @@ public static class CorpusUtilityFactory
                     Console.WriteLine("╚════════════════════════════════════════╝");
                     Console.WriteLine();
 
+                    using var countCmd = db.Connection.CreateCommand();
+                    countCmd.CommandText = "SELECT COUNT(*) FROM fixtures";
+                    var indexedCountObj = await countCmd.ExecuteScalarAsync(ct);
+                    var indexedCount = indexedCountObj is long indexed ? indexed : 0;
+
                     var all = await store.ListFixturesAsync(null, ct);
-                    Console.WriteLine($"Total fixtures: {all.Count}");
+                    Console.WriteLine($"Indexed in database: {indexedCount}");
+                    Console.WriteLine($"Loaded metadata:     {all.Count}");
+                    if (all.Count < indexedCount)
+                    {
+                        Console.WriteLine(
+                            $"⚠ Warning: {indexedCount - all.Count} indexed fixture(s) could not be materialized (invalid tier or missing index fields)");
+                    }
 
                     var byTier = all.GroupBy(m => m.Tier).ToDictionary(g => g.Key, g => g.ToList());
                     foreach (var (tierKey, tierList) in byTier.OrderBy(x => x.Key))
@@ -340,16 +351,24 @@ public static class CorpusUtilityFactory
                         Console.WriteLine($"  {tierKey,-10}: {tierList.Count,4}");
                     }
 
-                    // Check for orphaned fixtures (missing diff.patch)
+                    var storedPaths = new Dictionary<string, string?>(StringComparer.OrdinalIgnoreCase);
+                    using (var pathCmd = db.Connection.CreateCommand())
+                    {
+                        pathCmd.CommandText = "SELECT fixture_id, path FROM fixtures";
+                        using var pathReader = await pathCmd.ExecuteReaderAsync(ct);
+                        while (await pathReader.ReadAsync(ct))
+                        {
+                            storedPaths[pathReader.GetString(0)] =
+                                pathReader.IsDBNull(1) ? null : pathReader.GetString(1);
+                        }
+                    }
+
+                    // Check for orphaned fixtures (missing diff.patch on disk)
                     int orphaned = 0;
                     foreach (var fixture in all)
                     {
-                        string? fixturePath = null;
-                        foreach (var t in new[] { FixtureTier.Gold, FixtureTier.Silver, FixtureTier.Discovery })
-                        {
-                            var candidate = FixtureIdHelper.GetFixturePath(fixtures, t, fixture.FixtureId);
-                            if (Directory.Exists(candidate)) { fixturePath = candidate; break; }
-                        }
+                        storedPaths.TryGetValue(fixture.FixtureId, out var storedPath);
+                        var fixturePath = store.ResolveFixtureDirectory(fixture.FixtureId, fixture.Tier, storedPath);
 
                         if (fixturePath is null || !File.Exists(Path.Combine(fixturePath, "diff.patch")))
                             orphaned++;

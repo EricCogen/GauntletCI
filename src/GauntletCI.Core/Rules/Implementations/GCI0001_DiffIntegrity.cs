@@ -37,6 +37,35 @@ public class GCI0001_DiffIntegrity : RuleBase
         return LockFileNames.Contains(Path.GetFileName(filePath));
     }
 
+    /// <summary>
+    /// Files that commonly change alongside C# in real PRs (docs, build wiring, CI) are not mixed-scope noise.
+    /// </summary>
+    private static bool IsRoutineCompanionNonCodeFile(string filePath)
+    {
+        ArgumentNullException.ThrowIfNull(filePath);
+
+        var fileName = Path.GetFileName(filePath);
+        var extension = Path.GetExtension(filePath);
+
+        if (extension.Equals(".md", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".txt", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (extension.Equals(".csproj", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".props", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".targets", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".sln", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (extension.Equals(".yml", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".yaml", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".json", StringComparison.OrdinalIgnoreCase)
+            || extension.Equals(".editorconfig", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return fileName.StartsWith("PublicAPI.", StringComparison.OrdinalIgnoreCase);
+    }
+
     public override Task<List<Finding>> EvaluateAsync(
         AnalysisContext context, CancellationToken ct = default)
     {
@@ -57,6 +86,7 @@ public class GCI0001_DiffIntegrity : RuleBase
             .Where(x => x.Classification is FileEligibilityClassification.KnownNonSource
                                          or FileEligibilityClassification.UnknownUnsupported)
             .Where(x => !IsLockFile(x.FilePath))
+            .Where(x => !IsRoutineCompanionNonCodeFile(x.FilePath))
             .ToList();
 
         if (hasCodeFiles && nonCodeFiles.Count > 0)
