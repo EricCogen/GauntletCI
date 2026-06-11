@@ -152,7 +152,7 @@ If corpus precision reaches ≥50%:
 | `src/GauntletCI.Core/Rules/Implementations/GCI0022_IdempotencyRetrySafety.cs` | +1 method (+12 lines) |
 | `src/GauntletCI.Core/Rules/Implementations/GCI0029_PiiLoggingLeak.cs` | +1 method (+10 lines) |
 | `src/GauntletCI.Core/Rules/Implementations/GCI0039_ExternalServiceSafety.cs` | +2 methods (+18 lines), 1 method signature change |
-| `src/GauntletCI.Tests/Rules/GCI0039Tests.cs` | +1 test (+16 lines), 1 test updated |
+| `tests/GauntletCI.Tests/Rules/GCI0039Tests.cs` | +1 test (+16 lines), 1 test updated |
 
 **Total Changes**: 4 files, +56 lines new code
 

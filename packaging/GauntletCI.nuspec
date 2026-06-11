@@ -159,7 +159,7 @@ v2.0.0
 
     <!-- Package assets -->
     <file src="..\..\nuget-readme.md" target="" />
-    <file src="..\..\GauntletCI.png" target="" />
+    <file src="assets\images\GauntletCI.png" target="" />
     <file src="..\..\LICENSE" target="" />
   </files>
 

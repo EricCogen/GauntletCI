@@ -259,7 +259,7 @@ See `GCI0035_ArchitectureLayerGuard.cs` for a real example using `ForbiddenImpor
 
 ### 5. Write tests
 
-Create `src/GauntletCI.Tests/Rules/GCI00XXTests.cs`:
+Create `tests/GauntletCI.Tests/Rules/GCI00XXTests.cs`:
 
 ```csharp
 // SPDX-License-Identifier: Elastic-2.0
@@ -349,7 +349,7 @@ Open a pull request. The CI workflow will run `dotnet test` on Ubuntu, Windows, 
 If a rule is no longer useful:
 
 1. Delete the rule file from `src/GauntletCI.Core/Rules/Implementations/`
-2. Delete the test file from `src/GauntletCI.Tests/Rules/`
+2. Delete the test file from `tests/GauntletCI.Tests/Rules/`
 3. Mark the rule as retired in `docs/rules.md` (do **not** delete the entry; the ID is permanently reserved)
 4. Commit with `[RULE] Retire GCI00XX <reason>`
 

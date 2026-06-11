@@ -220,7 +220,7 @@ public class CodeFilePathTests
     [InlineData("src/MyTest.test.cs", true)]
     [InlineData("test/MyClass.cs", true)]
     [InlineData("tests/MyClass.cs", true)]
-    [InlineData("src/GauntletCI.Tests/file.cs", true)]
+    [InlineData("tests/GauntletCI.Tests/file.cs", true)]
     [InlineData("src/MyClass.cs", false)]
     [InlineData("src/Production/file.cs", false)]
     public void IsTest_DetectsTestFiles(string path, bool expected)

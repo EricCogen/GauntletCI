@@ -197,10 +197,10 @@ public class GCI0045Tests
     public async Task DelegationWrapperInTestFile_ShouldNotFlag()
     {
         var raw = """
-            diff --git a/src/GauntletCI.Tests/FakeServiceTests.cs b/src/GauntletCI.Tests/FakeServiceTests.cs
+            diff --git a/tests/GauntletCI.Tests/FakeServiceTests.cs b/tests/GauntletCI.Tests/FakeServiceTests.cs
             index abc..def 100644
-            --- a/src/GauntletCI.Tests/FakeServiceTests.cs
-            +++ b/src/GauntletCI.Tests/FakeServiceTests.cs
+            --- a/tests/GauntletCI.Tests/FakeServiceTests.cs
+            +++ b/tests/GauntletCI.Tests/FakeServiceTests.cs
             @@ -1,3 +1,9 @@
              public class FakeService {
             +    public string GetA() => return _inner.GetA();

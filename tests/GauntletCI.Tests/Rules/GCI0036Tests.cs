@@ -188,10 +188,10 @@ public class GCI0036Tests
     public async Task AssignmentInGetterInTestFile_ShouldNotFlag()
     {
         var raw = """
-            diff --git a/src/GauntletCI.Tests/FooTests.cs b/src/GauntletCI.Tests/FooTests.cs
+            diff --git a/tests/GauntletCI.Tests/FooTests.cs b/tests/GauntletCI.Tests/FooTests.cs
             index abc..def 100644
-            --- a/src/GauntletCI.Tests/FooTests.cs
-            +++ b/src/GauntletCI.Tests/FooTests.cs
+            --- a/tests/GauntletCI.Tests/FooTests.cs
+            +++ b/tests/GauntletCI.Tests/FooTests.cs
             @@ -1,7 +1,8 @@
              public class FooTests {
                  private int _count;

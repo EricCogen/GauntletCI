@@ -16,10 +16,8 @@ Images, diagrams, and media files used across GauntletCI documentation and marke
 
 ## Usage
 
-All images are referenced from:
-- Root README.md
-- Documentation files (docs/)
-- Website (site/)
+All images live under `packaging/assets/images/` and are referenced from:
+- NuGet package metadata (`GauntletCI.Cli.csproj`, `packaging/GauntletCI.nuspec`)
+- Documentation files (`docs/`)
+- Website (`site/`)
 - GitHub profile
-
-Update image paths if moving these files.
