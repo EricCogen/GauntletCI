@@ -8,7 +8,7 @@ const organizationSchema = {
   "name": "GauntletCI",
   "url": "https://gauntletci.com",
   "logo": "https://gauntletci.com/icon-512x512.png",
-  "description": "Deterministic pre-commit change-risk detection for .NET. Sub-second analysis, runs locally, high-signal output.",
+  "description": "Deterministic pre-commit change-risk detection for .NET. Fast local analysis, runs locally by default, ranked high-signal output.",
   "sameAs": [
     "https://github.com/gauntletci/gauntletci"
   ]
@@ -20,7 +20,7 @@ const softwareSchema = {
   "name": "GauntletCI",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Windows, macOS, Linux",
-  "description": "Deterministic pre-commit change-risk detection for .NET. Sub-second analysis, runs locally, high-signal output.",
+  "description": "Deterministic pre-commit change-risk detection for .NET. Fast local analysis, runs locally by default, ranked high-signal output.",
   "url": "https://gauntletci.com",
   "offers": [
     {
@@ -84,7 +84,7 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] });
 export const metadata: Metadata = {
   metadataBase: new URL('https://gauntletci.com'),
   title: 'GauntletCI: Catch Breaking Changes Before They Merge',
-  description: 'Find regressions that pass tests and code review. Core analysis runs locally by default. Sub-second diff analysis for C# and .NET.',
+  description: 'Find regressions that pass tests and code review. Core analysis runs locally by default. Fast diff-scoped analysis for C# and .NET.',
   alternates: { canonical: '/' },
   icons: {
     icon: [

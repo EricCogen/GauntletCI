@@ -105,6 +105,42 @@ function Invoke-GauntletCi {
     }
 }
 
+function Write-FindingsSummary {
+    param($Result)
+
+    if ($null -eq $Result.Findings -or @($Result.Findings).Count -eq 0) {
+        Write-Host "GauntletCI found no issues." -ForegroundColor Green
+        return
+    }
+
+    $blockFindings = $Result.Findings | Where-Object { $_.Severity -eq 3 }
+    $warnFindings  = $Result.Findings | Where-Object { $_.Severity -eq 2 }
+    $infoFindings  = $Result.Findings | Where-Object { $_.Severity -eq 1 }
+    $total = @($Result.Findings).Count
+
+    Write-Host ""
+    Write-Host "GauntletCI found $total issue(s):" -ForegroundColor Yellow
+    foreach ($f in ($blockFindings + $warnFindings + $infoFindings)) {
+        $color = switch ($f.Severity) {
+            3 { "Red" }
+            2 { "Yellow" }
+            default { "Gray" }
+        }
+        Write-Host "  - [$($f.RuleId)] $($f.Summary)" -ForegroundColor $color
+        if ($f.Evidence) {
+            Write-Host "    $($f.Evidence)" -ForegroundColor DarkGray
+        }
+    }
+
+    if ($Result.Delivery) {
+        $dropped = [int]$Result.Delivery.DroppedByGlobalCap + [int]$Result.Delivery.DroppedByPerRuleCap
+        if ($dropped -gt 0) {
+            Write-Host ""
+            Write-Host "Note: $dropped finding(s) were dropped by delivery caps (see Delivery in JSON output)." -ForegroundColor DarkYellow
+        }
+    }
+}
+
 $gauntletci = Resolve-GauntletCiInvocation
 if ($null -eq $gauntletci) {
     Write-Host "GauntletCI not found. Install with: dotnet tool install -g GauntletCI" -ForegroundColor Yellow
@@ -116,49 +152,42 @@ if ($null -eq $gauntletci) {
 Write-Host "GauntletCI: Analyzing staged changes..." -ForegroundColor Cyan
 
 try {
+    $prevEap = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
     $output = Invoke-GauntletCi -Invocation $gauntletci -CliArgs @(
         "analyze", "--staged", "--output", "json", "--no-banner"
     ) 2>&1
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $prevEap
 
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "GauntletCI failed to run. Commit aborted." -ForegroundColor Red
-        Write-Host $output
+    $jsonText = ($output | Where-Object { $_ -is [string] }) -join [Environment]::NewLine
+    $result = $null
+    try {
+        if (-not [string]::IsNullOrWhiteSpace($jsonText)) {
+            $result = $jsonText | ConvertFrom-Json
+        }
+    }
+    catch {
+        $result = $null
+    }
+
+    if ($exitCode -ne 0) {
+        Write-Host ""
+        Write-Host "Commit aborted. GauntletCI exited with code $exitCode (see .gauntletci.json exitOn and sensitivity)." -ForegroundColor Red
+        if ($null -ne $result) {
+            Write-FindingsSummary -Result $result
+        }
+        else {
+            Write-Host $output
+        }
         exit 1
     }
 
-    $result = $output | ConvertFrom-Json
-
-    # Severity: 1=Info, 2=Warn, 3=Block
-    $blockFindings = $result.Findings | Where-Object { $_.Severity -eq 3 }
-    $warnFindings  = $result.Findings | Where-Object { $_.Severity -eq 2 }
-    $infoFindings  = $result.Findings | Where-Object { $_.Severity -eq 1 }
-
-    $total      = @($result.Findings).Count
-    $blockCount = @($blockFindings).Count
-
-    if ($blockCount -gt 0) {
-        Write-Host ""
-        Write-Host "GauntletCI found $blockCount Block-severity issue(s):" -ForegroundColor Red
-        foreach ($f in $blockFindings) {
-            Write-Host "  - [$($f.RuleId)] $($f.Summary)" -ForegroundColor Red
-            Write-Host "    $($f.Evidence)" -ForegroundColor DarkRed
-        }
-        Write-Host ""
-        Write-Host "Commit aborted. Fix Block-severity issues or use --no-verify to bypass." -ForegroundColor Red
-        exit 1
-    }
-    elseif ($total -gt 0) {
-        Write-Host ""
-        Write-Host "GauntletCI found $total issue(s) (Warn/Info only):" -ForegroundColor Yellow
-        foreach ($f in ($warnFindings + $infoFindings)) {
-            $color = if ($f.Severity -eq 2) { "Yellow" } else { "Gray" }
-            Write-Host "  - [$($f.RuleId)] $($f.Summary)" -ForegroundColor $color
-        }
-        Write-Host ""
-        Write-Host "Commit allowed, but consider reviewing." -ForegroundColor Green
+    if ($null -ne $result) {
+        Write-FindingsSummary -Result $result
     }
     else {
-        Write-Host "GauntletCI found no issues." -ForegroundColor Green
+        Write-Host $output
     }
 }
 catch {

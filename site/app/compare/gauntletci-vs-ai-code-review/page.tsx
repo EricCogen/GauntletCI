@@ -62,7 +62,7 @@ const featureRows = [
   },
   {
     label: "Pre-commit speed",
-    gauntlet: "Under 1 second",
+    gauntlet: "Seconds on typical staged diffs",
     ai: "Not designed for pre-commit use",
   },
   {
@@ -203,7 +203,7 @@ export default function AiCodeReviewComparePage() {
               GauntletCI runs on your machine, reads only the staged diff, and applies
               deterministic rules to identify Behavioral Change Risk before the commit is
               created. The same input always produces the same output. No LLM. No cloud.
-              No token cost. Results in under one second.
+              No token cost. Results in seconds on typical staged diffs.
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
               It catches the category of change that looks safe to a reviewer -- and to an
@@ -331,7 +331,7 @@ export default function AiCodeReviewComparePage() {
                 "Your team needs deterministic, repeatable findings with no LLM variance",
                 "You require core analysis to run locally by default -- no code uploads, no API cost",
                 "You work in .NET / C# and want diff-aware behavioral detection",
-                "Pre-commit speed matters -- results in under one second",
+                "Pre-commit speed matters -- fast local results on typical staged diffs",
               ].map((item) => (
                 <li key={item} className="flex gap-2">
                   <span className="text-cyan-400 shrink-0 mt-0.5">-</span>

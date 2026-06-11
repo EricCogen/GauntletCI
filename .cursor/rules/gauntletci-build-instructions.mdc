@@ -5,6 +5,10 @@ alwaysApply: true
 
 # GauntletCI — Copilot Build Instructions
 
+> **STALE (2026-06):** This file describes a planned LLM-only architecture that was **not** shipped.
+> **Runtime truth:** 39+ heuristic `IRule` classes in `GauntletCI.Core`, optional LLM enrichment, Roslyn on changed C# files.
+> Authoritative product docs: `docs/rules.md`, `docs/architecture.md`, `site/`. Do not implement "one LLM call / 18 prompt rules" from this file.
+
 ## What this is
 
 GauntletCI is a pre-commit developer tool that runs every changeset through

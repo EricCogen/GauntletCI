@@ -83,6 +83,14 @@ public static class ConsoleReporter
         if (suppressedBySensitivity > 0)
             AnsiConsole.MarkupLine($"[dim]  ({suppressedBySensitivity} hidden by {sensitivity.ToString().ToLowerInvariant()} sensitivity - use --sensitivity permissive to see all)[/]");
 
+        if (result.DeliverySummary is { } delivery
+            && (delivery.DroppedByGlobalCap > 0 || delivery.DroppedByPerRuleCap > 0))
+        {
+            var dropped = delivery.DroppedByGlobalCap + delivery.DroppedByPerRuleCap;
+            AnsiConsole.MarkupLine(
+                $"[yellow]  Delivery    : {dropped} finding(s) dropped by output caps ({delivery.InputCount} evaluated, {delivery.OutputCount} shown)[/]");
+        }
+
         var distinctRules = filteredFindings
             .Where(f => f.Severity is RuleSeverity.Block or RuleSeverity.Warn)
             .Select(f => f.RuleId)

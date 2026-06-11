@@ -26,7 +26,7 @@ const tableRows = [
   {
     scenario: "Pre-commit feedback before a push",
     winner: "gauntlet",
-    note: "Sub-second local diff analysis. NDepend runs a full assembly scan post-build.",
+    note: "Fast local diff analysis (seconds on typical staged changes). NDepend runs a full assembly scan post-build.",
   },
   {
     scenario: "Tracking code quality metrics and technical debt over time",
@@ -269,7 +269,7 @@ export default function VsNDependPage() {
               The distinction matters at the moment of commit. A developer who just added a
               CancellationToken parameter to a public interface method does not need a full
               dependency matrix report - they need to know that the change breaks all existing
-              callers. GauntletCI surfaces that finding in under a second, before the push.
+              callers. GauntletCI surfaces that finding in seconds on typical staged diffs, before the push.
             </p>
             <p className="text-muted-foreground">
               NDepend's strength is longitudinal: tracking how architectural health evolves across

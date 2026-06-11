@@ -10,7 +10,7 @@ const withoutSteps = [
 
 const withSteps = [
   { label: "Write code", state: "neutral" },
-  { label: "GauntletCI flags risk", state: "gate", note: "Pre-commit, local, sub-second" },
+  { label: "GauntletCI flags risk", state: "gate", note: "Pre-commit, local, fast" },
   { label: "Fix before committing", state: "fix" },
   { label: "Tests pass", state: "pass" },
   { label: "Review: intent only", state: "pass", note: "Behavioral risk already handled" },
