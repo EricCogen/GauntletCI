@@ -7,8 +7,8 @@ export function Features() {
   const features = [
     {
       icon: Zap,
-      title: "Sub-second analysis",
-      description: "No full build required. Core analysis requires no network. Get instant feedback on your changes before the commit is created.",
+      title: "Fast local analysis",
+      description: "No full solution build required. Core rule detection runs locally with no network. Typical staged diffs complete in seconds.",
     },
     {
       icon: Eye,
@@ -18,7 +18,7 @@ export function Features() {
     {
       icon: Lock,
       title: "Local execution by default",
-      description: "Core analysis runs entirely on your machine by default. Auto-redaction prevents sensitive data exposure. Can run air-gapped.",
+      description: "Core analysis runs entirely on your machine by default. CLI text output redacts secret/PII evidence for select rules. Can run air-gapped.",
     },
     {
       icon: Server,
@@ -28,7 +28,7 @@ export function Features() {
     {
       icon: Target,
       title: "High-signal output",
-      description: "Up to 3 findings per run by design. No alert fatigue. Output developers actually read every time.",
+      description: "Delivery caps rank and limit output (25 findings max by default, with per-rule caps). Focused signal, not unbounded noise.",
     },
     {
       icon: Container,
@@ -53,7 +53,7 @@ export function Features() {
     {
       icon: Shield,
       title: "Privacy-focused",
-      description: "All analysis runs locally. Telemetry is optional and anonymous. Never includes code, diffs, or findings.",
+      description: "Core analysis runs locally. Telemetry is opt-in (Off, Local, or Shared). Shared mode sends anonymous rule signals only — never code or diffs.",
     },
   ];
 

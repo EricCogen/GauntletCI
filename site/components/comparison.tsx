@@ -26,7 +26,7 @@ const rows: ComparisonRow[] = [
     gauntlet: "yes", sonar: "no", semgrep: "partial", snyk: "no", codeql: "no", codeclimate: "no", ndepend: "no",
   },
   {
-    label: "Sub-second pre-commit feedback",
+    label: "Fast pre-commit feedback",
     sublabel: "Results before the commit is created",
     gauntlet: "yes", sonar: "no", semgrep: "partial", snyk: "no", codeql: "no", codeclimate: "no", ndepend: "no",
   },

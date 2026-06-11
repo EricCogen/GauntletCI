@@ -5,7 +5,7 @@ const steps = [
     number: "01",
     icon: GitBranch,
     title: "Stage your changes",
-    body: "Write code as normal. When you're ready to commit, GauntletCI reads the staged diff directly - no compilation, no network, no setup.",
+    body: "Write code as normal. When you're ready to commit, GauntletCI reads the staged diff directly - no full solution build, no network for core detection, minimal setup.",
     color: "text-slate-400",
     bg: "bg-slate-500/10",
   },
@@ -48,7 +48,7 @@ export function HowItWorks() {
             Understand GauntletCI in 60 seconds
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto text-pretty">
-            One command. Sub-second analysis. Findings before the commit exists.
+            One command. Fast local analysis. Findings before the commit exists.
           </p>
         </div>
 

@@ -15,10 +15,10 @@ Neither validates what your change actually does.
 
 **GauntletCI analyzes pull request diffs and flags unverified behavioral changes before they reach code review** - logic shifts, removed guards, silent regressions, and hidden contract breaks that pass tests and reviewers alike.
 
-- ⚡ Sub-second analysis: no compilation, no AST, no network
-- 🔒 Runs locally: no code leaves your machine
-- 🎯 Up to 3 high-signal findings per run, no noise
-- 🔢 Fully deterministic: 37 rules, no LLM required
+- ⚡ Fast local analysis: no full solution build; targeted Roslyn on changed C# files
+- 🔒 Runs locally by default: no code uploaded unless you enable optional integrations
+- 🎯 Ranked, capped output (25 findings max by default) to reduce alert fatigue
+- 🔢 Fully deterministic: 39 built-in rules, no LLM required for core detection
 
 ---
 
