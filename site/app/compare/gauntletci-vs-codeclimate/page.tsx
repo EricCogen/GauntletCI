@@ -216,7 +216,7 @@ export default function CodeClimateComparePage() {
                 "Your team needs core analysis to run locally by default -- no code uploads, no SaaS account",
                 "You want findings scoped to what changed, not the whole codebase",
                 "You work in .NET / C# and want diff-aware behavioral detection",
-                "Pre-commit speed is required -- under one second on every save",
+                "Pre-commit speed is required -- fast local feedback on every save",
               ].map((item) => (
                 <li key={item} className="flex gap-2">
                   <span className="text-cyan-400 shrink-0 mt-0.5">-</span>
@@ -233,7 +233,7 @@ export default function CodeClimateComparePage() {
           <p className="text-sm text-muted-foreground leading-relaxed">
             The two tools operate at different time horizons. Code Climate gives your team a
             quarterly view of codebase health and technical debt trends. GauntletCI gives each
-            developer a sub-second view of the risk in their current change. Running them together
+            developer a fast local view of the risk in their current change. Running them together
             covers both the macro (is our codebase healthy?) and the micro (did I just break
             something?).
           </p>

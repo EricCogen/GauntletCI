@@ -60,7 +60,7 @@ const featureRows = [
   { label: "Core analysis: local, no code upload by default", gauntlet: "yes" as const, codeql: "partial" as const },
   { label: "Pre-commit (before push) feedback", gauntlet: "yes" as const, codeql: "no" as const },
   { label: "Air-gap / data residency friendly (core engine)", gauntlet: "yes" as const, codeql: "no" as const },
-  { label: "Sub-second analysis time", gauntlet: "yes" as const, codeql: "no" as const },
+  { label: "Fast local analysis (typical staged diffs)", gauntlet: "yes" as const, codeql: "no" as const },
   { label: "Security variant / CVE detection", gauntlet: "no" as const, codeql: "yes" as const },
   { label: "Custom query language (QL)", gauntlet: "no" as const, codeql: "yes" as const },
   { label: "GitHub Security tab integration", gauntlet: "partial" as const, codeql: "yes" as const },

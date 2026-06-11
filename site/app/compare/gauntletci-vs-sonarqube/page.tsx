@@ -26,7 +26,7 @@ const tableRows = [
   {
     scenario: "Pre-commit feedback before a push",
     winner: "gauntlet",
-    note: "Sub-second local analysis. SonarQube runs post-push in CI.",
+    note: "Fast local analysis on typical staged diffs. SonarQube runs post-push in CI.",
   },
   {
     scenario: "Air-gapped or strict data-residency environments",

@@ -197,7 +197,7 @@ const faqs = [
     myth: "Analysis makes CI slower.",
     reality: (
       <>
-        GauntletCI runs <strong>locally in under one second</strong> on just the diff. By catching the risky
+        GauntletCI runs <strong>locally in seconds</strong> on typical staged diffs. By catching the risky
         change <em>before</em> you push, you avoid the push, wait 15 minutes, CI fails, fix loop that actually
         kills velocity.
       </>

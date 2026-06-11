@@ -26,7 +26,7 @@ const tableRows = [
   {
     scenario: "Pre-commit feedback before a push",
     winner: "gauntlet",
-    note: "Sub-second local diff analysis. NDepend runs a full assembly scan post-build.",
+    note: "Fast local diff analysis (seconds on typical staged changes). NDepend runs a full assembly scan post-build.",
   },
   {
     scenario: "Tracking code quality metrics and technical debt over time",

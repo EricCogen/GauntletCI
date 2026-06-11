@@ -108,7 +108,7 @@ export default function SemgrepComparePage() {
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
               No YAML to write. 37 built-in rules cover behavioral drift, security, async safety,
-              data integrity, and architecture violations - all running in under one second with
+              data integrity, and architecture violations - typically completing in seconds on small staged diffs with
               no account or network call required.
             </p>
           </div>
@@ -196,7 +196,7 @@ export default function SemgrepComparePage() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               {[
                 "You want zero-config detection of behavioral and structural risk",
-                "You need pre-commit speed - under one second on every commit",
+                "You need pre-commit speed - fast local feedback on every commit",
                 "You want findings only on what changed, not the entire codebase",
                 "You need core analysis to run locally by default with no account or network dependency",
                 "You work in a .NET / C# codebase and want diff-aware coverage from day one",

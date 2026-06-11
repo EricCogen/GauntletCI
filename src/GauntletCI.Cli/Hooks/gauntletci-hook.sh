@@ -55,6 +55,29 @@ run_gauntletci() {
     fi
 }
 
+print_findings_summary() {
+    local output="$1"
+    if [ $HAS_JQ -eq 1 ]; then
+        local total
+        total=$(echo "$output" | jq '.Findings | length')
+        if [ "$total" -eq 0 ]; then
+            echo "GauntletCI found no issues."
+            return
+        fi
+        echo ""
+        echo "GauntletCI found $total issue(s):"
+        echo "$output" | jq -r '.Findings[] | "  • [\(.RuleId)] \(.Summary)"'
+        local dropped
+        dropped=$(echo "$output" | jq '((.Delivery.DroppedByGlobalCap // 0) + (.Delivery.DroppedByPerRuleCap // 0))')
+        if [ "$dropped" -gt 0 ] 2>/dev/null; then
+            echo ""
+            echo "Note: $dropped finding(s) were dropped by delivery caps (see Delivery in JSON output)."
+        fi
+    else
+        echo "$output"
+    fi
+}
+
 GAUNTLETCI_MODE=""
 GAUNTLETCI_CMD=""
 GAUNTLETCI_REPO_ROOT=""
@@ -69,56 +92,21 @@ fi
 
 echo "GauntletCI: Analyzing staged changes..."
 
-# Determine if jq is available
 HAS_JQ=0
 if command -v jq &> /dev/null; then
     HAS_JQ=1
 fi
 
-# Run gauntletci — JSON output uses Severity: 1=Info, 2=Warn, 3=Block
-OUTPUT=$(run_gauntletci analyze --staged --output json --no-banner 2>&1) || {
-    echo "GauntletCI failed to run. Commit aborted."
-    echo "$OUTPUT"
-    exit 1
-}
+set +e
+OUTPUT=$(run_gauntletci analyze --staged --output json --no-banner 2>&1)
+EXIT_CODE=$?
+set -e
 
-# Count findings by severity level
-if [ $HAS_JQ -eq 1 ]; then
-    BLOCK_COUNT=$(echo "$OUTPUT" | jq '[.Findings[] | select(.Severity == 3)] | length')
-    WARN_COUNT=$(echo "$OUTPUT" | jq '[.Findings[] | select(.Severity == 2)] | length')
-    INFO_COUNT=$(echo "$OUTPUT" | jq '[.Findings[] | select(.Severity == 1)] | length')
-else
-    BLOCK_COUNT=$(echo "$OUTPUT" | grep -c '"Severity": 3' || true)
-    WARN_COUNT=$(echo "$OUTPUT" | grep -c '"Severity": 2' || true)
-    INFO_COUNT=$(echo "$OUTPUT" | grep -c '"Severity": 1' || true)
-    BLOCK_COUNT="${BLOCK_COUNT:-0}"
-    WARN_COUNT="${WARN_COUNT:-0}"
-    INFO_COUNT="${INFO_COUNT:-0}"
+if [ "$EXIT_CODE" -ne 0 ]; then
+    echo ""
+    echo "Commit aborted. GauntletCI exited with code $EXIT_CODE (see .gauntletci.json exitOn and sensitivity)."
+    print_findings_summary "$OUTPUT"
+    exit 1
 fi
 
-TOTAL=$((BLOCK_COUNT + WARN_COUNT + INFO_COUNT))
-
-if [ "$BLOCK_COUNT" -gt 0 ]; then
-    echo ""
-    echo "GauntletCI found $BLOCK_COUNT Block-severity issue(s):"
-    if [ $HAS_JQ -eq 1 ]; then
-        echo "$OUTPUT" | jq -r '.Findings[] | select(.Severity == 3) | "  • \u001b[31m[\(.RuleId)]\u001b[0m \(.Summary)\n    \(.Evidence)"'
-    else
-        echo "$OUTPUT" | grep -A 5 '"Severity": 3' | head -30
-    fi
-    echo ""
-    echo "Commit aborted. Fix Block-severity issues or use --no-verify to bypass."
-    exit 1
-elif [ "$TOTAL" -gt 0 ]; then
-    echo ""
-    echo "GauntletCI found $TOTAL issue(s) (Warn/Info only):"
-    if [ $HAS_JQ -eq 1 ]; then
-        echo "$OUTPUT" | jq -r '.Findings[] | select(.Severity == 2 or .Severity == 1) | "  • [\(.RuleId)] \(.Summary)"'
-    else
-        echo "$OUTPUT"
-    fi
-    echo ""
-    echo "Commit allowed, but consider reviewing."
-else
-    echo "GauntletCI found no issues."
-fi
+print_findings_summary "$OUTPUT"

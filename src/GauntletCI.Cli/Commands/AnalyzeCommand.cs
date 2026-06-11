@@ -477,6 +477,14 @@ public static class AnalyzeCommand
                             }).ToList(),
                             result.FileStatistics,
                             SuppressedByBaseline = suppressedByBaseline,
+                            Delivery = result.DeliverySummary is null ? null : new
+                            {
+                                result.DeliverySummary.InputCount,
+                                result.DeliverySummary.OutputCount,
+                                result.DeliverySummary.DroppedByGlobalCap,
+                                result.DeliverySummary.DroppedByPerRuleCap,
+                                result.DeliverySummary.DroppedByFileLevelDemotion,
+                            },
                         };
                         var json = JsonSerializer.Serialize(jsonResult, new JsonSerializerOptions { WriteIndented = true });
                         Console.WriteLine(json);

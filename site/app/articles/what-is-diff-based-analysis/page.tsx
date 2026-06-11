@@ -347,7 +347,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
             </p>
             <p className="text-muted-foreground leading-relaxed">
               Pre-commit hooks also run locally, which means no network round trip and no CI
-              queue wait. GauntletCI is designed to complete analysis in under one second on a
+              queue wait. GauntletCI is designed to complete analysis in seconds on typical staged diffs on a
               typical diff, making it fast enough to run on every commit without disrupting
               developer flow. The hook receives the staged diff directly from Git and returns
               structured findings before the commit object is created.
@@ -373,7 +373,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
             <h3 className="text-lg font-semibold mt-4">IDE and editor integration</h3>
             <p className="text-muted-foreground leading-relaxed">
               Some teams run analysis on save or on file change within the editor. This is the
-              fastest feedback loop possible: sub-second latency, with findings surfaced inline
+              fastest feedback loop possible: low-latency local analysis, with findings surfaced inline
               while the code is still on screen. GauntletCI can be invoked with a diff piped from
               the editor change buffer, making real-time IDE integration achievable. The tradeoff
               is that partial changes (code that is syntactically incomplete or not yet compiling)
