@@ -31,6 +31,22 @@ public sealed class FixtureFolderStore : IFixtureStore
 
     public string BasePath => _basePath;
 
+    /// <summary>
+    /// Resolves the on-disk fixture directory using the SQLite path, configured fixtures root, and tier.
+    /// </summary>
+    public string? ResolveFixtureDirectory(string fixtureId, FixtureTier tier, string? storedPath = null)
+    {
+        foreach (var candidate in EnumerateFixtureDirectoryCandidates(
+                     new FixtureIndexRow(fixtureId, tier.ToString(), storedPath, string.Empty, 0, string.Empty,
+                         null, null, null, false, false, string.Empty, string.Empty)))
+        {
+            if (Directory.Exists(candidate))
+                return candidate;
+        }
+
+        return null;
+    }
+
 
     // ── IFixtureStore ────────────────────────────────────────────────────────
 
@@ -88,34 +104,120 @@ public sealed class FixtureFolderStore : IFixtureStore
     {
         using var cmd = _db.Connection.CreateCommand();
 
+        const string selectColumns = """
+            SELECT fixture_id, tier, path, repo, pr_number, language,
+                   rule_ids_json, tags_json, pr_size_bucket,
+                   has_tests_changed, has_review_comments, source, created_at_utc
+            """;
+
         if (tier.HasValue)
         {
-            cmd.CommandText = "SELECT path FROM fixtures WHERE tier = $tier";
+            cmd.CommandText = $"{selectColumns} FROM fixtures WHERE tier = $tier";
             cmd.Parameters.AddWithValue("$tier", tier.Value.ToString());
         }
         else
         {
-            cmd.CommandText = "SELECT path FROM fixtures";
-        }
-
-        var paths = new List<string>();
-        using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
-        while (await reader.ReadAsync(ct).ConfigureAwait(false))
-        {
-            if (!reader.IsDBNull(0))
-                paths.Add(reader.GetString(0));
+            cmd.CommandText = $"{selectColumns} FROM fixtures";
         }
 
         var results = new List<FixtureMetadata>();
-        foreach (var path in paths)
+        using var reader = await cmd.ExecuteReaderAsync(ct).ConfigureAwait(false);
+        while (await reader.ReadAsync(ct).ConfigureAwait(false))
         {
-            var metaPath = Path.Combine(path, "metadata.json");
-            if (!File.Exists(metaPath)) continue;
-            var json = await File.ReadAllTextAsync(metaPath, ct).ConfigureAwait(false);
-            var m = JsonSerializer.Deserialize<FixtureMetadata>(json, JsonOpts);
-            if (m is not null) results.Add(m);
+            var row = ReadFixtureIndexRow(reader);
+            var metadata = await TryLoadMetadataAsync(row, ct).ConfigureAwait(false);
+            if (metadata is not null)
+                results.Add(metadata);
         }
+
         return results;
+    }
+
+    private sealed record FixtureIndexRow(
+        string FixtureId,
+        string Tier,
+        string? StoredPath,
+        string Repo,
+        int PullRequestNumber,
+        string Language,
+        string? RuleIdsJson,
+        string? TagsJson,
+        string? PrSizeBucket,
+        bool HasTestsChanged,
+        bool HasReviewComments,
+        string Source,
+        string CreatedAtUtc);
+
+    private static FixtureIndexRow ReadFixtureIndexRow(SqliteDataReader reader) =>
+        new(
+            FixtureId: reader.GetString(0),
+            Tier: reader.GetString(1),
+            StoredPath: reader.IsDBNull(2) ? null : reader.GetString(2),
+            Repo: reader.IsDBNull(3) ? string.Empty : reader.GetString(3),
+            PullRequestNumber: reader.IsDBNull(4) ? 0 : reader.GetInt32(4),
+            Language: reader.IsDBNull(5) ? string.Empty : reader.GetString(5),
+            RuleIdsJson: reader.IsDBNull(6) ? null : reader.GetString(6),
+            TagsJson: reader.IsDBNull(7) ? null : reader.GetString(7),
+            PrSizeBucket: reader.IsDBNull(8) ? null : reader.GetString(8),
+            HasTestsChanged: !reader.IsDBNull(9) && reader.GetInt32(9) != 0,
+            HasReviewComments: !reader.IsDBNull(10) && reader.GetInt32(10) != 0,
+            Source: reader.IsDBNull(11) ? string.Empty : reader.GetString(11),
+            CreatedAtUtc: reader.IsDBNull(12) ? string.Empty : reader.GetString(12));
+
+    private async Task<FixtureMetadata?> TryLoadMetadataAsync(FixtureIndexRow row, CancellationToken ct)
+    {
+        foreach (var candidatePath in EnumerateFixtureDirectoryCandidates(row))
+        {
+            var metaPath = Path.Combine(candidatePath, "metadata.json");
+            if (!File.Exists(metaPath))
+                continue;
+
+            var json = await File.ReadAllTextAsync(metaPath, ct).ConfigureAwait(false);
+            return JsonSerializer.Deserialize<FixtureMetadata>(json, JsonOpts);
+        }
+
+        return BuildMetadataFromIndexRow(row);
+    }
+
+    private IEnumerable<string> EnumerateFixtureDirectoryCandidates(FixtureIndexRow row)
+    {
+        if (!string.IsNullOrWhiteSpace(row.StoredPath))
+        {
+            yield return row.StoredPath;
+            if (!Path.IsPathRooted(row.StoredPath))
+                yield return Path.GetFullPath(row.StoredPath);
+        }
+
+        if (Enum.TryParse<FixtureTier>(row.Tier, ignoreCase: true, out var tier))
+            yield return FixtureIdHelper.GetFixturePath(_basePath, tier, row.FixtureId);
+    }
+
+    private static FixtureMetadata? BuildMetadataFromIndexRow(FixtureIndexRow row)
+    {
+        if (!Enum.TryParse<FixtureTier>(row.Tier, ignoreCase: true, out var tier))
+            return null;
+
+        Enum.TryParse<PrSizeBucket>(row.PrSizeBucket, ignoreCase: true, out var sizeBucket);
+        DateTime.TryParse(row.CreatedAtUtc, out var createdAtUtc);
+
+        var ruleIds = TryDeserializeStringList(row.RuleIdsJson);
+        var tags = TryDeserializeStringList(row.TagsJson);
+
+        return new FixtureMetadata
+        {
+            FixtureId = row.FixtureId,
+            Tier = tier,
+            Repo = row.Repo,
+            PullRequestNumber = row.PullRequestNumber,
+            Language = row.Language,
+            RuleIds = ruleIds,
+            Tags = tags,
+            PrSizeBucket = sizeBucket,
+            HasTestsChanged = row.HasTestsChanged,
+            HasReviewComments = row.HasReviewComments,
+            Source = row.Source,
+            CreatedAtUtc = createdAtUtc == default ? DateTime.UtcNow : createdAtUtc,
+        };
     }
 
     public async Task<IReadOnlyList<ExpectedFinding>> ReadExpectedFindingsAsync(
@@ -213,6 +315,21 @@ public sealed class FixtureFolderStore : IFixtureStore
             """;
 
         File.WriteAllText(notesPath, template);
+    }
+
+    private static IReadOnlyList<string> TryDeserializeStringList(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return [];
+
+        try
+        {
+            return JsonSerializer.Deserialize<List<string>>(json, JsonOpts) ?? [];
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
     }
 
     private async Task UpsertFixtureSqliteAsync(FixtureMetadata meta, string fixturePath, CancellationToken ct)
