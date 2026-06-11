@@ -37,8 +37,19 @@ public class LlmEndpointValidatorTests
     [Theory]
     [InlineData("http://169.254.169.254/latest/meta-data")]
     [InlineData("http://127.0.0.2:11434")]
-    public void TryValidateConfigOllamaBaseUrl_RejectsMetadataAndNonLoopback127(string url)
+    [InlineData("http://8.8.8.8:11434")]
+    [InlineData("http://1.1.1.1:11434")]
+    public void TryValidateConfigOllamaBaseUrl_RejectsMetadataPublicAndNonLoopback127(string url)
     {
         Assert.False(LlmEndpointValidator.TryValidateConfigOllamaBaseUrl(url, out _));
+    }
+
+    [Theory]
+    [InlineData("http://localhost:11434/v1/chat/completions")]
+    [InlineData("http://127.0.0.1:11434?debug=1")]
+    public void TryValidateMcpOllamaBaseUrl_RejectsNonBaseUrls(string url)
+    {
+        Assert.False(LlmEndpointValidator.TryValidateMcpOllamaBaseUrl(url, out var error));
+        Assert.False(string.IsNullOrWhiteSpace(error));
     }
 }

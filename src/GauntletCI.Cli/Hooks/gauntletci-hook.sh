@@ -58,17 +58,25 @@ run_gauntletci() {
 print_findings_summary() {
     local output="$1"
     if [ $HAS_JQ -eq 1 ]; then
+        if ! echo "$output" | jq -e . >/dev/null 2>&1; then
+            echo "$output"
+            return
+        fi
         local total
-        total=$(echo "$output" | jq '.Findings | length')
+        total=$(echo "$output" | jq '.Findings | length' 2>/dev/null || echo "")
+        if [ -z "$total" ]; then
+            echo "$output"
+            return
+        fi
         if [ "$total" -eq 0 ]; then
             echo "GauntletCI found no issues."
             return
         fi
         echo ""
         echo "GauntletCI found $total issue(s):"
-        echo "$output" | jq -r '.Findings[] | "  • [\(.RuleId)] \(.Summary)"'
+        echo "$output" | jq -r '.Findings[] | "  • [\(.RuleId)] \(.Summary)"' 2>/dev/null || echo "$output"
         local dropped
-        dropped=$(echo "$output" | jq '((.Delivery.DroppedByGlobalCap // 0) + (.Delivery.DroppedByPerRuleCap // 0))')
+        dropped=$(echo "$output" | jq '((.Delivery.DroppedByGlobalCap // 0) + (.Delivery.DroppedByPerRuleCap // 0))' 2>/dev/null || echo "0")
         if [ "$dropped" -gt 0 ] 2>/dev/null; then
             echo ""
             echo "Note: $dropped finding(s) were dropped by delivery caps (see Delivery in JSON output)."

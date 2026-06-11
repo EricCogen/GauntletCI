@@ -1,11 +1,20 @@
 #!/usr/bin/env python3
-"""One-off corpus stats for adversarial audit. Reads ~/.gauntletci/corpus.db only."""
+"""One-off corpus stats for adversarial audit. Reads ~/.gauntletci/corpus.db by default."""
+import argparse
 import json
 import os
 import sqlite3
 from collections import Counter
+from pathlib import Path
 
-db = os.path.join(os.environ["USERPROFILE"], ".gauntletci", "corpus.db")
+parser = argparse.ArgumentParser(description="Summarize corpus.db metrics for audits.")
+parser.add_argument(
+    "--db",
+    default=str(Path.home() / ".gauntletci" / "corpus.db"),
+    help="Path to corpus SQLite database (default: ~/.gauntletci/corpus.db)",
+)
+args = parser.parse_args()
+db = args.db
 if not os.path.exists(db):
     print(json.dumps({"error": "corpus.db not found", "path": db}))
     raise SystemExit(1)

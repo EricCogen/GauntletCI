@@ -27,6 +27,7 @@ Rules do not modify code and do not block merges on their own. They surface info
 
 | Category | Count | Rule IDs |
 |----------|------:|----------|
+| **Implemented** (`IRule` classes in Core) | 39 | All classes under `Rules/Implementations/` |
 | **Active** (emit findings by default) | 37 | GCI0001, GCI0003–GCI0007, GCI0010, GCI0012, GCI0015–GCI0016, GCI0019, GCI0020–GCI0022, GCI0024, GCI0029, GCI0032, GCI0035–GCI0036, GCI0038–GCI0039, GCI0041–GCI0049, GCI0050–GCI0053, GCI0056–GCI0059 |
 | **Implemented, disabled by default** | 2 | GCI0054 (async void — use GCI0016), GCI0055 (regex signatures — use GCI0003) |
 | **Reserved / consolidated** | 3 | GCI0028 (unassigned), GCI0030 (→ GCI0024), GCI0033 (→ GCI0016) |
@@ -44,7 +45,7 @@ This document is prepared for an independent third-party review of the GauntletC
 
 2. **Should any rules be adjusted?** A rule may be detecting the right *category* of risk but using patterns that are too loose (causing false positives), too strict (missing real cases), or calibrated at the wrong confidence level. If the detection logic needs narrowing or the confidence level is wrong, tell us.
 
-3. **Are there important risk categories we have missed?** We maintain 37 active rules today, and the catalog continues to evolve. We do not believe this is exhaustive. If you can identify a class of risk that regularly causes production incidents, security vulnerabilities, or data loss: and that a diff-level static analysis could plausibly detect: we want to add it.
+3. **Are there important risk categories we have missed?** We ship 39 rule implementations today (37 active by default), and the catalog continues to evolve. We do not believe this is exhaustive. If you can identify a class of risk that regularly causes production incidents, security vulnerabilities, or data loss: and that a diff-level static analysis could plausibly detect: we want to add it.
 
 ### What GauntletCI is (and is not)
 

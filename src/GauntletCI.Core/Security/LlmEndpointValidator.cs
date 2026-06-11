@@ -68,6 +68,19 @@ public static class LlmEndpointValidator
             return false;
         }
 
+        if (!string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment))
+        {
+            error = "URL must not contain a query or fragment.";
+            return false;
+        }
+
+        var path = uri.AbsolutePath;
+        if (!string.IsNullOrEmpty(path) && !path.Equals("/", StringComparison.Ordinal))
+        {
+            error = "URL must be a base URL without a path.";
+            return false;
+        }
+
         var host = uri.IdnHost.ToLowerInvariant();
 
         if (IsCloudMetadataHost(host))
@@ -91,19 +104,31 @@ public static class LlmEndpointValidator
             return false;
         }
 
-        if (ip.AddressFamily == AddressFamily.InterNetwork && IsBlockedLanIPv4(ip.GetAddressBytes()))
+        if (ip.AddressFamily == AddressFamily.InterNetwork)
         {
-            error = "URL host is not allowed.";
-            return false;
+            if (IsBlockedLanIPv4(ip.GetAddressBytes()) || !IsAllowedPrivateLanIPv4(ip.GetAddressBytes()))
+            {
+                error = "URL host must be a private LAN address.";
+                return false;
+            }
+
+            return true;
         }
 
-        if (ip.AddressFamily == AddressFamily.InterNetworkV6 && IsBlockedLanIPv6(ip.GetAddressBytes()))
+        if (ip.AddressFamily == AddressFamily.InterNetworkV6)
         {
-            error = "URL host is not allowed.";
-            return false;
+            var bytes = ip.GetAddressBytes();
+            if (IsBlockedLanIPv6(bytes) || !IsAllowedPrivateLanIPv6(bytes))
+            {
+                error = "URL host must be a private LAN address.";
+                return false;
+            }
+
+            return true;
         }
 
-        return true;
+        error = "URL host is not allowed.";
+        return false;
     }
 
     private static bool IsLoopbackHost(string host)
@@ -135,6 +160,18 @@ public static class LlmEndpointValidator
             _ => false,
         };
 
+    private static bool IsAllowedPrivateLanIPv4(byte[] bytes) =>
+        bytes[0] switch
+        {
+            10 => true,
+            172 when bytes[1] is >= 16 and <= 31 => true,
+            192 when bytes[1] == 168 => true,
+            _ => false,
+        };
+
     private static bool IsBlockedLanIPv6(byte[] bytes) =>
-        (bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80);
+        bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80;
+
+    private static bool IsAllowedPrivateLanIPv6(byte[] bytes) =>
+        (bytes[0] & 0xfe) == 0xfc;
 }
