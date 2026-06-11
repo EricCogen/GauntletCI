@@ -274,7 +274,7 @@ export default function VsSonarQubePage() {
             removed a null guard that protected a hot path is signal.
           </p>
           <p className="text-muted-foreground">
-            Diff-based analysis also means GauntletCI can run in milliseconds before a commit, not
+            Diff-based analysis also means GauntletCI can run in seconds on typical staged diffs before a commit, not
             minutes after a push. Finding a regression pre-commit costs nothing. Finding it in
             production costs everything.
           </p>

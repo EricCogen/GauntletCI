@@ -15,7 +15,7 @@ const table = [
   { feature: "Analysis scope",         gauntlet: "Changed diff lines only",           semgrep: "Full file or full repo scan" },
   { feature: "Rule authoring",         gauntlet: "37 built-in, zero config",          semgrep: "Custom YAML patterns required" },
   { feature: "Behavioral drift detection", gauntlet: "Yes - removed logic, API contract changes", semgrep: "Limited - pattern matches only" },
-  { feature: "Pre-commit speed",       gauntlet: "Under 1 second",                     semgrep: "Seconds to minutes (file-scoped)" },
+  { feature: "Pre-commit speed",       gauntlet: "Seconds on typical staged diffs",    semgrep: "Seconds to minutes (file-scoped)" },
   { feature: "False positives on unchanged code", gauntlet: "None - diff-scoped by design", semgrep: "Yes - scans pre-existing issues too" },
   { feature: "Local execution",        gauntlet: "Runs locally by default, no account",  semgrep: "CLI is local; rules registry is cloud" },
   { feature: "Air-gapped support",     gauntlet: "Yes - core engine requires no network", semgrep: "Partial - rule sync needs network" },

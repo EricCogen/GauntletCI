@@ -15,7 +15,7 @@ const table = [
   { feature: "Primary focus",              gauntlet: "Behavioral regressions in the diff",          snyk: "Known vulnerabilities in dependencies and code" },
   { feature: "Analysis scope",             gauntlet: "Changed diff lines only",                     snyk: "Full dependency tree + file scan" },
   { feature: "Data leaves the machine",    gauntlet: "By default, no -- core analysis is local",    snyk: "Yes -- SaaS platform, code sent to Snyk servers" },
-  { feature: "Pre-commit speed",           gauntlet: "Under 1 second",                              snyk: "Seconds to minutes (network round-trip)" },
+  { feature: "Pre-commit speed",           gauntlet: "Seconds on typical staged diffs",           snyk: "Seconds to minutes (network round-trip)" },
   { feature: "Account required",           gauntlet: "No -- works fully offline",                   snyk: "Yes -- Snyk account and authentication required" },
   { feature: "Air-gap / data residency",   gauntlet: "Yes -- core engine requires no network",      snyk: "No -- requires Snyk cloud for most features" },
   { feature: "False positives on old code",gauntlet: "None -- diff-scoped by design",               snyk: "Yes -- reports pre-existing issues on every run" },

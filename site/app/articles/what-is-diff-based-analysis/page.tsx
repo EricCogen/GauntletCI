@@ -419,7 +419,7 @@ export default function WhatIsDiffBasedAnalysisPage() {
                 <tbody className="divide-y divide-border">
                   {[
                     ["Scope", "Every file in the project", "Only changed lines"],
-                    ["Run time", "Minutes to hours on large codebases", "Under one second"],
+                    ["Run time", "Minutes to hours on large codebases", "Seconds on typical staged diffs"],
                     ["When it runs", "Scheduled or CI pipeline", "Pre-commit, on every save"],
                     ["Signal type", "Existing issues in the full codebase", "Risk introduced by this change"],
                     ["Noise", "High: existing issues reappear every run", "Low: only new delta is analyzed"],

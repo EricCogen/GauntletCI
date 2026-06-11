@@ -4,7 +4,7 @@
 
 ## What It Does
 
-GauntletCI analyzes the exact lines added or removed in a pull request and flags patterns that introduce unvalidated behavioral risk: before code is merged. No compilation, no AST, no network. Results in under one second.
+GauntletCI analyzes the exact lines added or removed in a pull request and flags patterns that introduce unvalidated behavioral risk before code is merged. Targeted Roslyn analysis on changed C# files runs locally in seconds on typical staged diffs; no full solution build or remote CI queue required for the inner loop.
 
 ---
 
@@ -155,7 +155,7 @@ Drop-in composite action with inputs for commit SHA, fail-on-findings, inline PR
 | Benefit | Why it matters |
 |---|---|
 | Catches what green tests miss | Tests pass even when behavior changes without matching validation |
-| Runs in under one second | No compile, no AST, no network: structural heuristics on diff lines only |
+| Runs in seconds on typical staged diffs | Local Roslyn syntax/semantic analysis on changed files; no full solution build required |
 | Zero noise about style | Every rule targets behavioral or security risk, not formatting or preferences |
 | Works anywhere git does | Pre-commit hook, CI pipeline, or ad-hoc on any commit SHA |
 | Baseline suppression | Teams can snapshot known findings and only see what is new: no alert fatigue |

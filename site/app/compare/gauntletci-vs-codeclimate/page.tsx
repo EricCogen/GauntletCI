@@ -16,7 +16,7 @@ const table = [
   { feature: "Analysis scope",             gauntlet: "Changed diff lines only",                      cc: "Full repository scan" },
   { feature: "Data leaves the machine",    gauntlet: "By default, no -- core analysis is local",     cc: "Yes -- SaaS platform, repository connected to Code Climate" },
   { feature: "When it runs",               gauntlet: "Pre-commit, before the push",                  cc: "Post-push in CI pipeline" },
-  { feature: "Pre-commit speed",           gauntlet: "Under 1 second",                               cc: "Not designed for pre-commit use" },
+  { feature: "Pre-commit speed",           gauntlet: "Seconds on typical staged diffs",            cc: "Not designed for pre-commit use" },
   { feature: "Account required",           gauntlet: "No",                                           cc: "Yes -- Code Climate account and repo authorization" },
   { feature: "Air-gap / data residency",   gauntlet: "Yes -- core engine requires no network",        cc: "No -- SaaS-only" },
   { feature: "False positives on old code",gauntlet: "None -- diff-scoped by design",                cc: "Yes -- reports pre-existing issues on every run" },
@@ -110,8 +110,8 @@ export default function CodeClimateComparePage() {
             <p className="text-sm text-muted-foreground leading-relaxed">
               GauntletCI runs on your machine, reads only the staged diff, and flags risk
               introduced by the current change -- before the commit is created. It never
-              scans the full codebase. It never uploads code. Analysis completes in under
-              one second with no account required.
+              scans the full codebase. It never uploads code. Analysis typically completes in
+              seconds on small staged diffs with no account required.
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
               It answers a more urgent question than code quality trends: "Does this specific

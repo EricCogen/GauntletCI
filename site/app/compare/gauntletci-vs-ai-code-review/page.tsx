@@ -62,7 +62,7 @@ const featureRows = [
   },
   {
     label: "Pre-commit speed",
-    gauntlet: "Under 1 second",
+    gauntlet: "Seconds on typical staged diffs",
     ai: "Not designed for pre-commit use",
   },
   {

@@ -10,7 +10,7 @@ This means rules have full structural context within the modified files. For exa
 
 ### What about cross-project or semantic breaking changes?
 
-Because GauntletCI optimizes for sub-second execution in the local pre-commit inner loop, it skips full project compilation and assembly linking.
+Because GauntletCI optimizes for fast local feedback in the pre-commit inner loop, it skips full project compilation and assembly linking.
 
 * **What it catches:** Behavioral Change Risk (BCR) within the logical units you are actively modifying—such as silent exception leaks, algorithmic shifts, or structural regressions lacking test coverage.
 * **What it leaves to your CI/Compiler:** Cross-assembly breaking changes (e.g., changing a method signature in Project A that breaks an uncompiled consumer in Project B).
