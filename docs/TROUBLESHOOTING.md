@@ -219,6 +219,43 @@ GauntletCI exits with code 1 when high-severity findings are present and `fail-o
 
 ---
 
+## Licensing (offline / air-gapped)
+
+### Network unreachable with a valid license
+
+GauntletCI caches license status for 24 hours. If the network is down and no fresh cache exists, validation fails closed unless you qualify for enterprise air-gap mode.
+
+**Enterprise air-gap (no network call):**
+
+```bash
+export GAUNTLETCI_ENTERPRISE_AIRGAP=1
+export GAUNTLETCI_OFFLINE=1
+export GAUNTLETCI_LICENSE="<enterprise-jwt>"
+gauntletci license status --offline
+```
+
+Requirements (all must hold):
+
+- License JWT tier is **Enterprise**
+- `GAUNTLETCI_ENTERPRISE_AIRGAP=1` is set
+- `GAUNTLETCI_OFFLINE=1` skips the remote status call entirely
+
+**Stale cache grace:** when the network fails but a prior successful cache exists for the same token, GauntletCI reuses it for up to **72 hours**.
+
+Non-enterprise tokens cannot use offline mode; fix network access or refresh cache while online.
+
+### `corpus doctor` shows fewer fixtures than indexed
+
+If SQLite lists fixtures with tier `unknown` (or other invalid values), they are indexed but not materialized. Run:
+
+```bash
+gauntletci corpus doctor --db ~/.gauntletci/corpus.db --fixtures ./data/fixtures --verbose
+```
+
+Invalid-tier fixture IDs print under `--verbose`. Re-hydrate or delete stale index rows, or set tier to `Discovery` before normalization.
+
+---
+
 ## Still stuck?
 
 Open an issue on GitHub with:
