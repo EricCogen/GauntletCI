@@ -254,6 +254,57 @@ gauntletci corpus doctor --db ~/.gauntletci/corpus.db --fixtures ./data/fixtures
 
 Invalid-tier fixture IDs print under `--verbose`. Re-hydrate or delete stale index rows, or set tier to `Discovery` before normalization.
 
+### `corpus errors` fails with `no such column: logged_at`
+
+Upgrade to a build that maps `pipeline_errors.recorded_at` and `message` (not `logged_at` / `error_message`). If you are on an older CLI, query directly:
+
+```sql
+SELECT recorded_at, step, provider, repo, error_code, message
+FROM pipeline_errors ORDER BY recorded_at DESC LIMIT 20;
+```
+
+### `corpus fetch-diffs` for missing `diff.patch`
+
+```bash
+gauntletci corpus fetch-diffs --db ~/.gauntletci/corpus.db --fixtures ./data/fixtures --tier discovery --dry-run
+gauntletci corpus fetch-diffs --db ~/.gauntletci/corpus.db --fixtures ./data/fixtures --tier discovery
+```
+
+HTTP 404 usually means the PR was deleted; remove the fixture row or re-point to a valid PR.
+
+---
+
+## Merge blocked / bypass required (GitHub rulesets)
+
+The `main` branch ruleset may require **CodeQL**, **code quality**, and **Copilot code review** while GitHub Actions CI (build/test, GauntletCI Self-Analysis) stays optional. Admins can merge with bypass when those rules pass but Actions was never required.
+
+To gate merge on CI jobs, add a **required status checks** rule to the `main` ruleset (GitHub: Settings → Rules → Rulesets → `main`). Use the job **name** as the check context:
+
+| Check context | Workflow job |
+|---------------|--------------|
+| `GauntletCI Self-Analysis` | `.github/workflows/ci.yml` `gauntletci-analyze` |
+| `build-and-test (ubuntu-latest)` | `ci.yml` matrix |
+| `build-and-test (windows-latest)` | `ci.yml` matrix |
+
+Example ruleset rule (REST API `type`: `required_status_checks`):
+
+```json
+{
+  "type": "required_status_checks",
+  "parameters": {
+    "strict_required_status_checks_policy": true,
+    "do_not_enforce_on_create": true,
+    "required_status_checks": [
+      { "context": "GauntletCI Self-Analysis" },
+      { "context": "build-and-test (ubuntu-latest)" },
+      { "context": "build-and-test (windows-latest)" }
+    ]
+  }
+}
+```
+
+After adding checks, PRs cannot merge until those jobs report success (unless bypassed).
+
 ---
 
 ## Still stuck?
