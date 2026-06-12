@@ -339,10 +339,39 @@ public static class CorpusUtilityFactory
                     var all = await store.ListFixturesAsync(null, ct);
                     Console.WriteLine($"Indexed in database: {indexedCount}");
                     Console.WriteLine($"Loaded metadata:     {all.Count}");
-                    if (all.Count < indexedCount)
+
+                    var invalidTierIds = new List<string>();
+                    using (var tierCmd = db.Connection.CreateCommand())
+                    {
+                        tierCmd.CommandText = """
+                            SELECT fixture_id, tier
+                            FROM fixtures
+                            WHERE tier IS NULL
+                               OR tier = ''
+                               OR lower(tier) NOT IN ('discovery', 'silver', 'gold')
+                            ORDER BY fixture_id
+                            """;
+                        using var tierReader = await tierCmd.ExecuteReaderAsync(ct);
+                        while (await tierReader.ReadAsync(ct))
+                        {
+                            invalidTierIds.Add(tierReader.GetString(0));
+                        }
+                    }
+
+                    if (invalidTierIds.Count > 0)
                     {
                         Console.WriteLine(
-                            $"⚠ Warning: {indexedCount - all.Count} indexed fixture(s) could not be materialized (invalid tier or missing index fields)");
+                            $"⚠ Warning: {invalidTierIds.Count} indexed fixture(s) have invalid tier values (not Discovery/Silver/Gold)");
+                        if (verbose)
+                        {
+                            foreach (var fixtureId in invalidTierIds)
+                                Console.WriteLine($"    {fixtureId}");
+                        }
+                    }
+                    else if (all.Count < indexedCount)
+                    {
+                        Console.WriteLine(
+                            $"⚠ Warning: {indexedCount - all.Count} indexed fixture(s) could not be materialized (missing index fields)");
                     }
 
                     var byTier = all.GroupBy(m => m.Tier).ToDictionary(g => g.Key, g => g.ToList());
