@@ -303,7 +303,8 @@ GitHub evaluates **rulesets separately from Actions job success**. A green `buil
 |---------|--------------|-----|
 | `mergeStateStatus: BLOCKED`, CodeQL rollup `NEUTRAL` | Stale CodeQL category on `main` | See [CodeQL NEUTRAL](#codeql-status-check-is-neutral-merge-still-blocked) below |
 | BLOCKED, no failing job, `strict_required_status_checks_policy: true` | Head commit behind `main` | Click **Update branch** on the PR (strict policy requires up-to-date head) |
-| BLOCKED, admin user, all rules satisfied | API reports `BLOCKED` until rules pass; admins may still need UI bypass or `gh pr merge --admin` | Confirm `mergeStateStatus` is `CLEAN` on the PR checks page; non-admin contributors are the real gate |
+| BLOCKED, admin user, all rules satisfied | Rulesets can keep `mergeStateStatus: BLOCKED` in the API even when `viewerCanMergeAsAdmin` is true ([Atlantis #4116](https://github.com/runatlantis/atlantis/issues/4116)) | Use **Merge without waiting for requirements** in the UI, or `gh pr merge N --squash --admin`. Non-admin contributors still need `CLEAN`. |
+| BLOCKED, `statusCheckRollup.state: SUCCESS`, CodeQL `success` | `code_scanning` ruleset or strict up-to-date policy | Re-apply ruleset with `strict_required_status_checks_policy: false` in `main-update.json`; confirm CodeQL categories on `main` (see below) |
 | BLOCKED, invisible rule | Former `code_quality` ruleset entry | Keep `code_quality` out of `main-update.json` until Code Quality is configured |
 
 **Verify merge readiness** (replace `N` with PR number):
