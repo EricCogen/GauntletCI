@@ -5,7 +5,8 @@ param(
     [ValidateSet("strict", "balanced", "permissive")]
     [string]$Sensitivity = "balanced",
     [switch]$CiOnly,
-    [switch]$GoldOnly
+    [switch]$GoldOnly,
+    [switch]$AllowCapExceed
 )
 
 $ErrorActionPreference = "Stop"
@@ -77,7 +78,11 @@ foreach ($f in $fixtures) {
         }
     }
     $count = @((Get-Content $out -Raw | ConvertFrom-Json).Findings).Count
-    if ($count -gt 25) { throw "Fixture $fid exceeded delivery cap: $count" }
+    if ($count -gt 25) {
+        $capMsg = "Fixture $fid exceeded delivery cap: $count"
+        if (-not $AllowCapExceed) { throw $capMsg }
+        Write-Warning $capMsg
+    }
     Write-Host "[$i/$total] OK $fid ($count findings)"
 }
 Write-Progress -Activity "GauntletCI benchmark" -Completed

@@ -261,7 +261,7 @@
   ],
   "evidence_tier": "measured",
   "recall_scope": "ci_required defects only (see eval/scorecards/competitive-suite.json)",
-  "scorecard_generated_at_utc": "2026-05-31T21:39:17.171524+00:00",
+  "scorecard_generated_at_utc": "2026-06-12T13:49:34.995692+00:00",
   "anchor_recall": {
     "GauntletCI": {
       "caught": 1,
@@ -406,9 +406,9 @@
     },
     "gauntletci_noise": {
       "fixture_count": 57,
-      "mean_findings": 6.37,
-      "median_findings": 3,
-      "at_delivery_cap_25": 3
+      "mean_findings": 6.98,
+      "median_findings": 4,
+      "at_delivery_cap_25": 4
     }
   },
   "llm_competitors_scope": "anchor_only per competitor-scope.json; gold is GauntletCI vs CodeQL same-defect",

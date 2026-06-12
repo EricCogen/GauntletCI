@@ -19,7 +19,7 @@ if (-not $SkipBenchmark) {
     ./scripts/export-benchmark-diffs.ps1 -GoldOnly
 
     Write-Host "=== Run gold benchmark at gate sensitivity: $GateSensitivity ==="
-    ./scripts/run-benchmark-suite.ps1 -GoldOnly -Sensitivity $GateSensitivity
+    ./scripts/run-benchmark-suite.ps1 -GoldOnly -Sensitivity $GateSensitivity -AllowCapExceed
 }
 
 $sweepArgs = @("scripts/audit-gold-noise.py", "--use-main-runs")

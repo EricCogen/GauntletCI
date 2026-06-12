@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at_utc": "2026-05-31T21:39:30.769947+00:00",
+  "generated_at_utc": "2026-06-12T13:49:35.300491+00:00",
   "comparison_scope": "diff_behavioral_review",
   "gauntletci_promise": [
     "Diff-scoped review of a changeset (staged commit or pull request)",
@@ -140,9 +140,9 @@
   },
   "gauntletci_noise": {
     "fixture_count": 57,
-    "mean_findings": 6.37,
-    "median_findings": 3,
-    "at_delivery_cap_25": 3
+    "mean_findings": 6.98,
+    "median_findings": 4,
+    "at_delivery_cap_25": 4
   },
   "gold_noise_sweep": {
     "strict": {
@@ -164,10 +164,10 @@
     "balanced": {
       "fixture_count": 569,
       "data_available": true,
-      "mean_findings": 1.87,
+      "mean_findings": 2.24,
       "median_findings": 1,
-      "max_findings": 25,
-      "at_delivery_cap": 4,
+      "max_findings": 48,
+      "at_delivery_cap": 6,
       "recall_failures": []
     },
     "permissive": {
@@ -189,18 +189,25 @@
   },
   "top_noisy_rules_balanced": [
     {
-      "rule_id": "GCI0001",
-      "gold_finding_count": 171,
+      "rule_id": "GCI0019",
+      "gold_finding_count": 262,
       "ci_required_hits": 0,
       "likely_noise_on_gold": true,
-      "noise_findings": 171
+      "noise_findings": 262
     },
     {
       "rule_id": "GCI0003",
-      "gold_finding_count": 163,
+      "gold_finding_count": 162,
       "ci_required_hits": 23,
       "likely_noise_on_gold": true,
-      "noise_findings": 140
+      "noise_findings": 139
+    },
+    {
+      "rule_id": "GCI0001",
+      "gold_finding_count": 99,
+      "ci_required_hits": 0,
+      "likely_noise_on_gold": true,
+      "noise_findings": 99
     },
     {
       "rule_id": "GCI0006",
@@ -215,13 +222,6 @@
       "ci_required_hits": 0,
       "likely_noise_on_gold": true,
       "noise_findings": 84
-    },
-    {
-      "rule_id": "GCI0045",
-      "gold_finding_count": 80,
-      "ci_required_hits": 0,
-      "likely_noise_on_gold": true,
-      "noise_findings": 80
     }
   ],
   "recommended_gate_sensitivity": "balanced",
