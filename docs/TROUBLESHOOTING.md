@@ -303,13 +303,7 @@ The rollup check `CodeQL` (app: `github-advanced-security`) goes **NEUTRAL** whe
 
 **Fix:**
 
-1. Pin categories in `.github/workflows/security.yml`:
-
-   ```yaml
-   - uses: github/codeql-action/analyze@v4
-     with:
-       category: /language:${{ matrix.language }}
-   ```
+1. Keep a **single** CodeQL workflow with a language matrix (do not add a second workflow). Let `github/codeql-action/analyze` use its default category (`.github/workflows/security.yml:codeql/language:…`). Do **not** set a custom `category` unless it matches what is already on `main`.
 
 2. Delete obsolete analyses for category `.github/workflows/security.yml:codeql` on `main`:
 
