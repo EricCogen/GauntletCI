@@ -295,6 +295,26 @@ Only checks that run on **every** PR are required (CI build/test and Self-Analys
 
 Repository admins retain ruleset bypass (`bypass_mode: always`). Non-admin merges need all required checks green.
 
+### CodeQL status check is `NEUTRAL` (merge still blocked)
+
+The rollup check `CodeQL` (app: `github-advanced-security`) goes **NEUTRAL** when `main` has a stale CodeQL **category** that the PR did not upload. Common after switching from a single CodeQL job to a language matrix.
+
+**Symptoms:** Matrix jobs `CodeQL (csharp)` and `CodeQL (javascript-typescript)` pass, but the rollup stays `NEUTRAL` and the `code_scanning` ruleset blocks merge.
+
+**Fix:**
+
+1. Keep a **single** CodeQL workflow with a language matrix (do not add a second workflow). Let `github/codeql-action/analyze` use its default category (`.github/workflows/security.yml:codeql/language:…`). Do **not** set a custom `category` unless it matches what is already on `main`.
+
+2. Delete obsolete analyses for category `.github/workflows/security.yml:codeql` on `main`:
+
+   ```bash
+   python scripts/cleanup-stale-codeql-analyses.py --ref refs/heads/main
+   ```
+
+3. Re-run Security workflow on the PR (push empty commit or re-run jobs).
+
+**Verify:** `gh api repos/OWNER/REPO/code-scanning/analyses?ref=refs/heads/main --jq '[.[].category] | unique'` should list only `/language:csharp` and `/language:javascript-typescript`, not bare `:codeql`.
+
 To change required checks, edit the JSON and PUT again, or use GitHub: Settings → Rules → Rulesets → `main`.
 
 ---
