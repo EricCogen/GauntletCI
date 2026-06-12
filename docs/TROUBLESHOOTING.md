@@ -295,6 +295,28 @@ Only checks that run on **every** PR are required (CI build/test and Self-Analys
 
 Repository admins retain ruleset bypass (`bypass_mode: always`). Non-admin merges need all required checks green.
 
+### All checks green but merge still shows "bypass required"
+
+GitHub evaluates **rulesets separately from Actions job success**. A green `build-and-test` row does not by itself satisfy `code_scanning` or `required_status_checks`.
+
+| Symptom | Likely cause | Fix |
+|---------|--------------|-----|
+| `mergeStateStatus: BLOCKED`, CodeQL rollup `NEUTRAL` | Stale CodeQL category on `main` | See [CodeQL NEUTRAL](#codeql-status-check-is-neutral-merge-still-blocked) below |
+| BLOCKED, no failing job, `strict_required_status_checks_policy: true` | Head commit behind `main` | Click **Update branch** on the PR (strict policy requires up-to-date head) |
+| BLOCKED, admin user, all rules satisfied | API reports `BLOCKED` until rules pass; admins may still need UI bypass or `gh pr merge --admin` | Confirm `mergeStateStatus` is `CLEAN` on the PR checks page; non-admin contributors are the real gate |
+| BLOCKED, invisible rule | Former `code_quality` ruleset entry | Keep `code_quality` out of `main-update.json` until Code Quality is configured |
+
+**Verify merge readiness** (replace `N` with PR number):
+
+```bash
+gh pr view N --json mergeStateStatus,mergeable,statusCheckRollup
+gh api repos/EricCogen/GauntletCI/pulls/N/commits --jq '.[-1].sha' | ForEach-Object {
+  gh api "repos/EricCogen/GauntletCI/commits/$_/check-runs" --jq '[.check_runs[] | {name,conclusion,status}]'
+}
+```
+
+When every required context is `success` and CodeQL rollup is `success`, `mergeStateStatus` should become **`CLEAN`** within a few minutes. If it stays `BLOCKED` after 10+ minutes with no failing checks, inspect **Settings → Rules → Rulesets → main → Rule insights** on the PR.
+
 ### CodeQL status check is `NEUTRAL` (merge still blocked)
 
 The rollup check `CodeQL` (app: `github-advanced-security`) goes **NEUTRAL** when `main` has a stale CodeQL **category** that the PR did not upload. Common after switching from a single CodeQL job to a language matrix.
