@@ -181,10 +181,10 @@ public static class CorpusUtilityFactory
 
                 var whereClause = where.Count > 0 ? "WHERE " + string.Join(" AND ", where) : "";
                 cmd2.CommandText = $"""
-                    SELECT logged_at, step, provider, repo, error_code, error_message
+                    SELECT recorded_at, step, provider, repo, error_code, message
                     FROM pipeline_errors
                     {whereClause}
-                    ORDER BY logged_at DESC
+                    ORDER BY recorded_at DESC
                     LIMIT $limit
                     """;
 
