@@ -276,34 +276,26 @@ HTTP 404 usually means the PR was deleted; remove the fixture row or re-point to
 
 ## Merge blocked / bypass required (GitHub rulesets)
 
-The `main` branch ruleset may require **CodeQL**, **code quality**, and **Copilot code review** while GitHub Actions CI (build/test, GauntletCI Self-Analysis) stays optional. Admins can merge with bypass when those rules pass but Actions was never required.
-
-To gate merge on CI jobs, add a **required status checks** rule to the `main` ruleset (GitHub: Settings → Rules → Rulesets → `main`). Use the job **name** as the check context:
+The `main` branch ruleset requires **CodeQL**, **code quality**, **Copilot code review**, and these GitHub Actions status checks:
 
 | Check context | Workflow job |
 |---------------|--------------|
 | `GauntletCI Self-Analysis` | `.github/workflows/ci.yml` `gauntletci-analyze` |
 | `build-and-test (ubuntu-latest)` | `ci.yml` matrix |
 | `build-and-test (windows-latest)` | `ci.yml` matrix |
+| `benchmark-suite` | `benchmark-suite.yml` (path-filtered PRs only; **not** a required merge check) |
 
-Example ruleset rule (REST API `type`: `required_status_checks`):
+Canonical ruleset JSON: `.github/rulesets/main-update.json`. Re-apply after edits:
 
-```json
-{
-  "type": "required_status_checks",
-  "parameters": {
-    "strict_required_status_checks_policy": true,
-    "do_not_enforce_on_create": true,
-    "required_status_checks": [
-      { "context": "GauntletCI Self-Analysis" },
-      { "context": "build-and-test (ubuntu-latest)" },
-      { "context": "build-and-test (windows-latest)" }
-    ]
-  }
-}
+```bash
+gh api --method PUT repos/EricCogen/GauntletCI/rulesets/14756937 --input .github/rulesets/main-update.json
 ```
 
-After adding checks, PRs cannot merge until those jobs report success (unless bypassed).
+Only checks that run on **every** PR are required (CI build/test and Self-Analysis). Path-filtered workflows such as `benchmark-suite` stay optional so doc-only PRs can merge.
+
+Repository admins retain ruleset bypass (`bypass_mode: always`). Non-admin merges need all required checks green.
+
+To change required checks, edit the JSON and PUT again, or use GitHub: Settings → Rules → Rulesets → `main`.
 
 ---
 
