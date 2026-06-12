@@ -1,7 +1,7 @@
 {
-  "prior_gci0001_fixture_count": 40,
-  "still_fires_gci0001": 15,
-  "resolved_noise_reduction": 25,
+  "prior_gci0001_fixture_count": 171,
+  "still_fires_gci0001": 71,
+  "resolved_noise_reduction": 100,
   "missing_diff": 0,
   "not_in_gold_suite": 0,
   "prior_report_gci0001_total": 171
