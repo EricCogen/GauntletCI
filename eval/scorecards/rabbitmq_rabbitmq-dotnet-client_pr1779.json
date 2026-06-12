@@ -4,7 +4,7 @@
   "repo": "rabbitmq/rabbitmq-dotnet-client",
   "pr_number": 1779,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T21:39:17.149756+00:00",
+  "generated_at_utc": "2026-06-12T13:49:34.959414+00:00",
   "upstream_pr_url": "https://github.com/rabbitmq/rabbitmq-dotnet-client/pull/1779",
   "eval_lab_pr_url": null,
   "defects": [

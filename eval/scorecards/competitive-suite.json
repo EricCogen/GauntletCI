@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "generated_at_utc": "2026-05-31T21:39:17.171524+00:00",
+  "generated_at_utc": "2026-06-12T13:49:34.995692+00:00",
   "sample_size": 31,
   "fixtures_scored": 58,
   "gold_fixtures_in_scorecards": 57,
@@ -157,9 +157,9 @@
       },
       "gauntletci_noise": {
         "fixture_count": 57,
-        "mean_findings": 6.37,
-        "median_findings": 3,
-        "at_delivery_cap_25": 3
+        "mean_findings": 6.98,
+        "median_findings": 4,
+        "at_delivery_cap_25": 4
       }
     }
   }

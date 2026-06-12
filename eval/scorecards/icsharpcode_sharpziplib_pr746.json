@@ -4,7 +4,7 @@
   "repo": "icsharpcode/SharpZipLib",
   "pr_number": 746,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T21:39:17.116635+00:00",
+  "generated_at_utc": "2026-06-12T13:49:34.932316+00:00",
   "upstream_pr_url": "https://github.com/icsharpcode/SharpZipLib/pull/746",
   "eval_lab_pr_url": null,
   "defects": [
@@ -71,7 +71,7 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 14,
+      "finding_count": 19,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0003": {
@@ -91,7 +91,7 @@
           "caught_ground_truth": true,
           "evidence": [
             "GCI0016",
-            "Line 291: SkipBlockAsync(CancellationToken.None, false).GetAwaiter().GetResult();"
+            "public void SkipBlock() => SkipBlockAsync(CancellationToken.None, false).GetAwaiter().GetResult();"
           ],
           "notes": ""
         }

@@ -4,7 +4,7 @@
   "repo": "Azure/azure-sdk-for-net",
   "pr_number": 56468,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T21:39:17.016756+00:00",
+  "generated_at_utc": "2026-06-12T13:49:34.851561+00:00",
   "upstream_pr_url": "https://github.com/Azure/azure-sdk-for-net/pull/56468",
   "eval_lab_pr_url": null,
   "defects": [
@@ -57,7 +57,7 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 3,
+      "finding_count": 1,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0004": {
