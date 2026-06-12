@@ -283,13 +283,15 @@ The `main` branch ruleset requires **CodeQL**, **code quality**, **Copilot code 
 | `GauntletCI Self-Analysis` | `.github/workflows/ci.yml` `gauntletci-analyze` |
 | `build-and-test (ubuntu-latest)` | `ci.yml` matrix |
 | `build-and-test (windows-latest)` | `ci.yml` matrix |
-| `benchmark-suite` | benchmark workflow on PRs |
+| `benchmark-suite` | `benchmark-suite.yml` (path-filtered PRs only; **not** a required merge check) |
 
 Canonical ruleset JSON: `.github/rulesets/main-update.json`. Re-apply after edits:
 
 ```bash
 gh api --method PUT repos/EricCogen/GauntletCI/rulesets/14756937 --input .github/rulesets/main-update.json
 ```
+
+Only checks that run on **every** PR are required (CI build/test and Self-Analysis). Path-filtered workflows such as `benchmark-suite` stay optional so doc-only PRs can merge.
 
 Repository admins retain ruleset bypass (`bypass_mode: always`). Non-admin merges need all required checks green.
 

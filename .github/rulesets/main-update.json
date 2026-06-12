@@ -46,8 +46,7 @@
         "required_status_checks": [
           { "context": "GauntletCI Self-Analysis" },
           { "context": "build-and-test (ubuntu-latest)" },
-          { "context": "build-and-test (windows-latest)" },
-          { "context": "benchmark-suite" }
+          { "context": "build-and-test (windows-latest)" }
         ]
       }
     },
