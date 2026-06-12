@@ -18,7 +18,7 @@
   <ItemGroup>
     <None Include="..\..\nuget-readme.md" Pack="true" PackagePath="\" />
     <None Include="..\..\README.md" Pack="false" />
-    <None Include="..\..\assets\images\GauntletCI.png" Pack="true" PackagePath="\" />
+    <None Include="..\..\packaging\assets\images\GauntletCI.png" Pack="true" PackagePath="\" />
     <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
   </ItemGroup>
 

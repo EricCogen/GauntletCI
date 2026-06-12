@@ -102,7 +102,7 @@ public class PrSizeBucketClassifierTests
 public class TestFileClassifierTests
 {
     [Theory]
-    [InlineData("src/GauntletCI.Tests/SomeTests.cs")]   // project-name hint: ends with .Tests
+    [InlineData("tests/GauntletCI.Tests/SomeTests.cs")]   // project-name hint: ends with .Tests
     [InlineData("MyApp.Tests/FooTests.cs")]             // project-name hint: ends with .Tests
     [InlineData("tests/integration/BarTest.cs")]        // project-name hint: segment == "tests"
     [InlineData("test/unit/BazTest.cs")]                // project-name hint: segment == "test"

@@ -86,11 +86,17 @@ GauntletCI.slnx
 │   └── GauntletCI.Corpus/      # Corpus pipeline (hydration, labeling, storage)
 │       └── Storage/            # CorpusDb, SchemaInitializer, FixtureIdHelper
 ├── tests/
-│   ├── GauntletCI.Tests/       # xUnit unit tests
+│   ├── GauntletCI.Tests/       # Main xUnit test project
+│   ├── GauntletCI.Cli.Tests/   # CLI-focused tests
+│   ├── GauntletCI.Core.Tests/  # Core-focused tests
 │   └── GauntletCI.Benchmarks/  # Curated fixture benchmark tests
+├── scripts/                    # Corpus, benchmark, and audit automation
+├── design/app-mockup/          # Static UI mockup (app.gauntletci.com)
+├── packaging/assets/images/    # NuGet and marketing brand assets
 ├── data/
 │   └── gauntletci-corpus.db    # SQLite corpus database (fixtures, findings, labels)
 ├── docs/                       # Documentation
+│   └── examples/               # Reference configs (e.g. gauntletci-full.json)
 └── schemas/
     └── gauntletci-schema.json  # JSON Schema for .gauntletci.json (IDE IntelliSense)
 ```

@@ -299,7 +299,7 @@ CreateFinding(file, summary, evidence, whyItMatters, suggestedAction, confidence
         <section>
           <h2 className="text-2xl font-semibold mb-4">Step 5 - Write tests</h2>
           <p className="text-muted-foreground mb-3">
-            Create <code className="bg-muted px-1 rounded text-sm">src/GauntletCI.Tests/Rules/GCI00XXTests.cs</code>.
+            Create <code className="bg-muted px-1 rounded text-sm">tests/GauntletCI.Tests/Rules/GCI00XXTests.cs</code>.
             Cover at minimum: one true positive, one false positive, and one edge case (empty diff, test-file exclusion, etc.).
           </p>
           <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm overflow-x-auto">

@@ -121,10 +121,10 @@ public class GCI0024Tests
     public async Task MemoryStreamInTestFile_ShouldNotFlag()
     {
         var raw = """
-            diff --git a/src/GauntletCI.Tests/FileProcessorTests.cs b/src/GauntletCI.Tests/FileProcessorTests.cs
+            diff --git a/tests/GauntletCI.Tests/FileProcessorTests.cs b/tests/GauntletCI.Tests/FileProcessorTests.cs
             index abc..def 100644
-            --- a/src/GauntletCI.Tests/FileProcessorTests.cs
-            +++ b/src/GauntletCI.Tests/FileProcessorTests.cs
+            --- a/tests/GauntletCI.Tests/FileProcessorTests.cs
+            +++ b/tests/GauntletCI.Tests/FileProcessorTests.cs
             @@ -1,2 +1,4 @@
              public class FileProcessorTests {
             +    var ms = new MemoryStream();
