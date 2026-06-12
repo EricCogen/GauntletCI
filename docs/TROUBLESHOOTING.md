@@ -276,7 +276,7 @@ HTTP 404 usually means the PR was deleted; remove the fixture row or re-point to
 
 ## Merge blocked / bypass required (GitHub rulesets)
 
-The `main` branch ruleset requires **CodeQL**, **code quality**, **Copilot code review**, and these GitHub Actions status checks:
+The `main` branch ruleset requires **CodeQL** (`code_scanning`), **Copilot code review** (advisory; does not block merge), and these GitHub Actions status checks:
 
 | Check context | Workflow job |
 |---------------|--------------|
@@ -313,7 +313,11 @@ The rollup check `CodeQL` (app: `github-advanced-security`) goes **NEUTRAL** whe
 
 3. Re-run Security workflow on the PR (push empty commit or re-run jobs).
 
-**Verify:** `gh api repos/OWNER/REPO/code-scanning/analyses?ref=refs/heads/main --jq '[.[].category] | unique'` should list only `/language:csharp` and `/language:javascript-typescript`, not bare `:codeql`.
+**Verify:** `gh api repos/OWNER/REPO/code-scanning/analyses?ref=refs/heads/main --jq '[.[].category] | unique'` should list only `.github/workflows/security.yml:codeql/language:csharp` and `…/javascript-typescript`, not bare `…:codeql`.
+
+### `code_quality` ruleset blocks merge with no visible check
+
+The `code_quality` rule (GitHub Code Quality product) can block merges while no failing Actions check appears. This repo omits that rule from `.github/rulesets/main-update.json`. Re-enable only after Code Quality is configured and thresholds are understood.
 
 To change required checks, edit the JSON and PUT again, or use GitHub: Settings → Rules → Rulesets → `main`.
 
