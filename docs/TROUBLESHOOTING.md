@@ -303,8 +303,9 @@ GitHub evaluates **rulesets separately from Actions job success**. A green `buil
 |---------|--------------|-----|
 | `mergeStateStatus: BLOCKED`, CodeQL rollup `NEUTRAL` | Stale CodeQL category on `main` | See [CodeQL NEUTRAL](#codeql-status-check-is-neutral-merge-still-blocked) below |
 | BLOCKED, no failing job, `strict_required_status_checks_policy: true` | Head commit behind `main` | Click **Update branch** on the PR (strict policy requires up-to-date head) |
-| BLOCKED, admin user, all rules satisfied | Rulesets can keep `mergeStateStatus: BLOCKED` in the API even when `viewerCanMergeAsAdmin` is true ([Atlantis #4116](https://github.com/runatlantis/atlantis/issues/4116)) | Use **Merge without waiting for requirements** in the UI, or `gh pr merge N --squash --admin`. Non-admin contributors still need `CLEAN`. |
-| BLOCKED, `statusCheckRollup.state: SUCCESS`, CodeQL `success` | `code_scanning` ruleset or strict up-to-date policy | Re-apply ruleset with `strict_required_status_checks_policy: false` in `main-update.json`; confirm CodeQL categories on `main` (see below) |
+| BLOCKED, admin user, all rules satisfied | Leftover `creation`/`update` rules, or API lag while checks finish | Fix ruleset first (see rows above). If `mergeStateStatus` is `CLEAN`, merge normally. Admins can use `gh pr merge N --squash --admin` only when a rule is intentionally unsatisfied. |
+| BLOCKED, `statusCheckRollup.state: SUCCESS`, CodeQL `success` | `creation` / `update` ruleset entries fighting `pull_request` | **Remove** `creation` and `update` from `main-update.json`; `pull_request` already blocks direct pushes. Verified on PR #262 (`CLEAN` + merge without `--admin`). |
+| BLOCKED, `statusCheckRollup.state: SUCCESS`, strict policy | `strict_required_status_checks_policy: true` | Use `false` in `main-update.json` (loose up-to-date) |
 | BLOCKED, invisible rule | Former `code_quality` ruleset entry | Keep `code_quality` out of `main-update.json` until Code Quality is configured |
 
 **Verify merge readiness** (replace `N` with PR number):
