@@ -68,21 +68,34 @@ runs:
         set +e
         COMMIT="${{ inputs.commit }}"
         [ -z "$COMMIT" ] && COMMIT="${{ github.event.pull_request.head.sha || github.sha }}"
-        args="analyze --commit $COMMIT"
+        args="analyze --commit $COMMIT --output json --no-banner"
         [ "${{ inputs.no-llm }}" = "true" ] && args="$args --no-llm"
         [ "${{ inputs.ascii }}" = "true" ]  && args="$args --ascii"
         [ "${{ inputs.inline-comments }}" = "true" ] && args="$args --github-pr-comments"
         [ -n "${{ inputs.sensitivity }}" ] && args="$args --sensitivity ${{ inputs.sensitivity }}"
-        TMPFILE=$(mktemp)
-        set -o pipefail
-        gauntletci $args 2>&1 | tee "$TMPFILE"
+        JSONFILE=$(mktemp)
+        ERRFILE=$(mktemp)
+        gauntletci $args > "$JSONFILE" 2> "$ERRFILE"
         EXIT_CODE=$?
-        set +o pipefail
-        # Approximate count: grep lines matching GCI#### in CLI text output (not JSON-parsed).
-        # For exact counts, run gauntletci with --output json and parse the findings array.
-        FINDINGS=$(grep -cE 'GCI[0-9]{4}' "$TMPFILE" 2>/dev/null || true)
+        cat "$ERRFILE" >&2
+        FINDINGS=0
+        if command -v jq >/dev/null 2>&1 && jq -e . "$JSONFILE" >/dev/null 2>&1; then
+          FINDINGS=$(jq -r '(.Findings // []) | length' "$JSONFILE")
+          if [ "$FINDINGS" -gt 0 ]; then
+            echo "GauntletCI found $FINDINGS issue(s):"
+            jq -r '.Findings[] | "  • [\(.RuleId)] \(.Summary)"' "$JSONFILE"
+          else
+            echo "GauntletCI found no issues."
+          fi
+        elif command -v python3 >/dev/null 2>&1; then
+          FINDINGS=$(python3 -c "import json; print(len(json.load(open('$JSONFILE')).get('Findings', [])))" 2>/dev/null || echo 0)
+          cat "$JSONFILE"
+        else
+          cat "$JSONFILE"
+          FINDINGS=$(grep -cE '"RuleId"' "$JSONFILE" 2>/dev/null || true)
+        fi
         FINDINGS="${FINDINGS:-0}"
-        rm -f "$TMPFILE"
+        rm -f "$JSONFILE" "$ERRFILE"
         echo "findings-count=$FINDINGS" >> "$GITHUB_OUTPUT"
         [ "${{ inputs.fail-on-findings }}" = "true" ] && exit $EXIT_CODE
         exit 0
