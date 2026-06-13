@@ -50,14 +50,18 @@ Ground-truth labels live in the agent corpus at `%USERPROFILE%\.gauntletci\corpu
 | Distinct rules with gold labels | 41 |
 | Rule runs stored | 6,162 |
 | `aggregates` table last updated | 2026-06-13 |
-| Audit snapshot last taken | 2026-04-19 |
+| Audit snapshot last taken | 2026-06-13 |
 
-**Audit snapshot (labeled subset):** tp/fp/fn from human-adjudicated rows in `audit_snapshot_rows`, not raw trigger volume. Snapshot not refreshed this run.
+**Audit snapshot (labeled subset):** tp/fp/fn from `expected_findings` vs latest completed run (`audit_snapshot_rows` snapshot #17).
 
-| Rule | TP | FP | FN | Precision |
-|------|---:|---:|---:|----------:|
-| GCI0004 | 31 | 9 | 0 | 0.775 |
-| GCI0003 | 1 | 0 | 0 | 1.000 |
+| Rule | Labeled | TP | FP | FN | Precision |
+|------|--------:|---:|---:|---:|----------:|
+| GCI0004 | 53 | 31 | 11 | 3 | 0.74 |
+| GCI0003 | 44 | 27 | 9 | 0 | 0.75 |
+| GCI0006 | 29 | 17 | 4 | 0 | 0.81 |
+| GCI0015 | 26 | 11 | 5 | 0 | 0.69 |
+| GCI0024 | 19 | 2 | 7 | 0 | 0.22 |
+| GCI0010 | 19 | 1 | 6 | 1 | 0.14 |
 
 **Gold labels vs latest run** (414 `expected_findings` rows in DB; min 3 labeled pairs per rule):
 
@@ -92,6 +96,8 @@ Ground-truth labels live in the agent corpus at `%USERPROFILE%\.gauntletci\corpu
 2. `gauntletci corpus run-all --tier discovery --db %USERPROFILE%\.gauntletci\corpus.db`
 3. `gauntletci corpus score --db %USERPROFILE%\.gauntletci\corpus.db`
 4. `python scripts/corpus-validation-summary.py` — update this section from the JSON output
+5. `python scripts/corpus-audit-snapshot.py` — refresh `audit_snapshots`
+6. `python scripts/build-rule-audit.py --full-corpus` — regenerate `eval/rule-audit.json`
 
 ---
 
