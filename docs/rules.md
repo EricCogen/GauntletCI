@@ -39,22 +39,57 @@ Sections marked **Status: Not yet implemented** describe planned behavior only. 
 
 ## Corpus validation (agent / internal)
 
-Ground-truth labels live in the agent corpus at `%USERPROFILE%\.gauntletci\corpus.db` (not the empty `./data/gauntletci-corpus.db` shell). As of the last audit snapshot (2026-04-19):
+Ground-truth labels live in the agent corpus at `%USERPROFILE%\.gauntletci\corpus.db` (not the empty `./data/gauntletci-corpus.db` shell).
+
+**Last queried:** 2026-06-13 (`python scripts/corpus-validation-summary.py`).
 
 | Metric | Value |
 |--------|------:|
-| Fixtures | 608 |
+| Fixtures | 608 (606 Discovery, 2 Gold) |
 | Human gold `expected_findings` rows | 414 |
-| Rules with gold labels | ~20 |
+| Distinct rules with gold labels | 41 |
+| Rule runs stored | 5,556 |
+| `aggregates` table last updated | 2026-04-19 |
+| Audit snapshot last taken | 2026-04-19 |
 
-**Latest labeled snapshot (subset):** only rules with measured tp/fp/fn in the snapshot are listed below. Most active rules lack sufficient gold labels for published precision claims.
+**Audit snapshot (labeled subset):** tp/fp/fn from human-adjudicated rows in `audit_snapshot_rows`, not raw trigger volume.
 
-| Rule | TP | FP | FN | Precision (snapshot) |
-|------|---:|---:|---:|---------------------:|
+| Rule | TP | FP | FN | Precision |
+|------|---:|---:|---:|----------:|
 | GCI0004 | 31 | 9 | 0 | 0.775 |
 | GCI0003 | 1 | 0 | 0 | 1.000 |
 
-**Discovery-tier aggregates** (full fixture sweep, April 2026) show GCI0003/GCI0004/GCI0006 with the strongest precision among high-volume rules; GCI0016, GCI0012, and GCI0021 show lower precision and need tuning before Block severity. Re-run `gauntletci corpus analyze --db` after rule changes to refresh metrics.
+**Gold labels vs latest run** (414 `expected_findings` rows; min 3 labeled pairs per rule):
+
+| Rule | TP | FP | FN | Precision |
+|------|---:|---:|---:|----------:|
+| GCI0004 | 34 | 12 | 0 | 0.74 |
+| GCI0003 | 27 | 9 | 0 | 0.75 |
+| GCI0006 | 17 | 4 | 0 | 0.81 |
+| GCI0015 | 11 | 5 | 0 | 0.69 |
+| GCI0010 | 1 | 6 | 0 | 0.14 |
+| GCI0024 | 2 | 7 | 0 | 0.22 |
+
+**Discovery-tier aggregates** (606-fixture sweep; last scored 2026-04-19):
+
+| Rule | Trigger rate | Precision | Recall |
+|------|-------------:|----------:|-------:|
+| GCI0006 | 0.29 | 0.82 | 0.50 |
+| GCI0003 | 0.27 | 0.73 | 0.51 |
+| GCI0004 | 0.25 | 0.68 | 0.75 |
+| GCI0016 | 0.15 | 0.48 | 0.25 |
+| GCI0007 | 0.04 | 1.00 | 1.00 |
+| GCI0010 | 0.04 | 0.88 | 0.11 |
+| GCI0012 | 0.02 | 0.45 | 0.06 |
+| GCI0021 | 0.02 | 0.30 | 0.13 |
+
+**High trigger, low precision (noise candidates):** GCI0001 (0.48 trigger, 0.00 precision in April aggregates — GCI0001 companion-file tuning landed in #264 after this score date), GCI0015, GCI0032, GCI0043.
+
+**Refresh after rule changes:**
+
+1. `gauntletci corpus run-all --tier discovery --db %USERPROFILE%\.gauntletci\corpus.db`
+2. `gauntletci corpus score --db %USERPROFILE%\.gauntletci\corpus.db`
+3. `python scripts/corpus-validation-summary.py` — update this section from the JSON output
 
 ---
 
