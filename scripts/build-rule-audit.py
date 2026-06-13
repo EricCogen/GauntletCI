@@ -152,7 +152,7 @@ def load_corpus_metrics() -> dict[str, dict]:
             WITH latest_run AS (
                 SELECT fixture_id, MAX(id) AS run_id
                 FROM rule_runs
-                WHERE status = 'completed'
+                WHERE UPPER(status) = 'COMPLETED'
                 GROUP BY fixture_id
             )
             SELECT af.rule_id, COUNT(DISTINCT af.fixture_id)
@@ -202,7 +202,7 @@ def load_labeled_classifier_metrics() -> dict[str, dict]:
             WITH latest_run AS (
                 SELECT fixture_id, MAX(id) AS run_id
                 FROM rule_runs
-                WHERE status = 'completed'
+                WHERE UPPER(status) = 'COMPLETED'
                 GROUP BY fixture_id
             ),
             fired AS (
@@ -239,7 +239,7 @@ def load_labeled_classifier_metrics() -> dict[str, dict]:
             WITH latest_run AS (
                 SELECT fixture_id, MAX(id) AS run_id
                 FROM rule_runs
-                WHERE status = 'completed'
+                WHERE UPPER(status) = 'COMPLETED'
                 GROUP BY fixture_id
             ),
             fired AS (
