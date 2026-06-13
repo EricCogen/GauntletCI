@@ -52,7 +52,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: EricCogen/GauntletCI@v2.1.1`;
+      - uses: EricCogen/GauntletCI@v2.1.2`;
 
 const FULL_WORKFLOW = `name: GauntletCI
 
@@ -71,7 +71,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: EricCogen/GauntletCI@v2.1.1
+      - uses: EricCogen/GauntletCI@v2.1.2
         id: gauntlet
         with:
           sensitivity: 'balanced'
@@ -292,7 +292,7 @@ export default function GithubActionPage() {
             always passes.
           </p>
           <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm">
-            <pre className="text-foreground whitespace-pre">{`- uses: EricCogen/GauntletCI@v2.1.1
+            <pre className="text-foreground whitespace-pre">{`- uses: EricCogen/GauntletCI@v2.1.2
   with:
     fail-on-findings: 'false'
     inline-comments: 'true'

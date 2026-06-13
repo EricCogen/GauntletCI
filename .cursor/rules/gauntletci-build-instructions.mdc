@@ -1,6 +1,6 @@
 ---
-description: GauntletCI product architecture and build instructions (from Copilot)
-alwaysApply: true
+description: STALE Copilot-era LLM-only architecture (reference only — not runtime truth)
+alwaysApply: false
 ---
 
 # GauntletCI — Copilot Build Instructions

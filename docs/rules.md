@@ -37,6 +37,27 @@ Sections marked **Status: Not yet implemented** describe planned behavior only. 
 
 ---
 
+## Corpus validation (agent / internal)
+
+Ground-truth labels live in the agent corpus at `%USERPROFILE%\.gauntletci\corpus.db` (not the empty `./data/gauntletci-corpus.db` shell). As of the last audit snapshot (2026-04-19):
+
+| Metric | Value |
+|--------|------:|
+| Fixtures | 608 |
+| Human gold `expected_findings` rows | 414 |
+| Rules with gold labels | ~20 |
+
+**Latest labeled snapshot (subset):** only rules with measured tp/fp/fn in the snapshot are listed below. Most active rules lack sufficient gold labels for published precision claims.
+
+| Rule | TP | FP | FN | Precision (snapshot) |
+|------|---:|---:|---:|---------------------:|
+| GCI0004 | 31 | 9 | 0 | 0.775 |
+| GCI0003 | 1 | 0 | 0 | 1.000 |
+
+**Discovery-tier aggregates** (full fixture sweep, April 2026) show GCI0003/GCI0004/GCI0006 with the strongest precision among high-volume rules; GCI0016, GCI0012, and GCI0021 show lower precision and need tuning before Block severity. Re-run `gauntletci corpus analyze --db` after rule changes to refresh metrics.
+
+---
+
 ## Reviewer Guide
 
 This document is prepared for an independent third-party review of the GauntletCI rule set. The goal of this review is to help us answer three questions honestly:

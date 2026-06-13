@@ -165,7 +165,7 @@ export default function IntegrationsPage() {
       <section>
         <h2 className="text-2xl font-semibold mb-3">GitHub Actions</h2>
         <p className="text-muted-foreground mb-2">
-          The simplest setup uses the published Marketplace action. Add this workflow to analyze every pull request:
+          The simplest setup uses the published composite action from this repository. Add this workflow to analyze every pull request:
         </p>
         <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm overflow-x-auto mb-4">
           <pre className="text-foreground whitespace-pre">{`name: GauntletCI Analysis
@@ -185,7 +185,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: EricCogen/GauntletCI@v2.1.1
+      - uses: EricCogen/GauntletCI@v2.1.2
         with:
           sensitivity: 'balanced'
           inline-comments: 'true'
