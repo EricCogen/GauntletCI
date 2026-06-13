@@ -93,6 +93,23 @@ export default function McpPage() {
         </IntegrationStatusBanner>
 
         <section>
+          <h2 className="text-2xl font-semibold mb-3">Built-in MCP server (CLI)</h2>
+          <p className="text-muted-foreground mb-3 text-sm">
+            If you already have the GauntletCI CLI installed, you can start an MCP server without
+            cloning the separate Node repository:
+          </p>
+          <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm">
+            <span className="text-cyan-400">$</span>{" "}
+            <span className="text-foreground">gauntletci mcp serve</span>
+          </div>
+          <p className="text-muted-foreground mt-3 text-sm">
+            Point your MCP client at that command (stdio). Requires a Pro license for MCP features.
+            The standalone <code className="bg-muted px-1 rounded text-xs">GauntletCI-MCP</code>{" "}
+            repository remains the path for npm distribution once published.
+          </p>
+        </section>
+
+        <section>
           <h2 className="text-2xl font-semibold mb-3">How it works</h2>
           <p className="text-muted-foreground mb-4 text-sm">
             The{" "}

@@ -11,6 +11,6 @@ User-global instructions live in:
 
 Always applied there: verification, writing/editing, engineering rules, GauntletCI user-global, context-mode, context-mode + graphify playbook, and the migration index (`copilot-instructions.mdc`).
 
-Repo-specific rules in this folder add **engineering-rules-consolidated.mdc** (charter, EP/BP invariants, mandatory branch/pre-commit/push gates), GauntletCI build architecture, efficiency playbook, **agent workflow (corpus/todos)**, context-mode detail, and repo validation conventions.
+Repo-specific rules in this folder add **engineering-rules-consolidated.mdc** (charter, EP/BP invariants, mandatory branch/pre-commit/push gates), **gauntletci-build-instructions.mdc** (STALE reference only, not alwaysApply), efficiency playbook, **agent workflow (corpus/todos)**, context-mode detail, and repo validation conventions.
 
 **Master engineering rules (authoritative):** `C:\Users\ericc\.gauntletci\ENGINEERING_RULES_CONSOLIDATED.md`
