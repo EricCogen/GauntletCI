@@ -301,4 +301,10 @@ public sealed class CorpusAutoLabelTests
     {
         Assert.True(Enum.IsDefined(typeof(LabelSource), LabelSource.LlmReview));
     }
+
+    [Fact]
+    public void LabelSource_ContainsManualValue()
+    {
+        Assert.True(Enum.IsDefined(typeof(LabelSource), LabelSource.Manual));
+    }
 }

@@ -141,6 +141,18 @@ public sealed class EvaluationClassifierTests
     }
 
     [Fact]
+    public void Classify_ManualLabel_LabelConfidenceIsTrusted()
+    {
+        var fixture = Fixture();
+        var expected = new[] { Label("GCI0001", shouldTrigger: true, source: LabelSource.Manual) };
+        var actual = new[] { Actual("GCI0001", didTrigger: true) };
+
+        var results = _classifier.Classify(fixture, expected, actual);
+
+        Assert.Equal(LabelConfidence.Trusted, Assert.Single(results).LabelConfidence);
+    }
+
+    [Fact]
     public void Classify_HeuristicLabel_LabelConfidenceIsHeuristic()
     {
         // Arrange

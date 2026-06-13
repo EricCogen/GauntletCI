@@ -7,4 +7,4 @@ public enum PrSizeBucket { Tiny, Small, Medium, Large, Huge }
 
 public enum MergeState { Open, Merged, Closed }
 
-public enum LabelSource { Heuristic, FilePathCorrelation, HumanReview, Seed, LlmReview }
+public enum LabelSource { Heuristic, FilePathCorrelation, HumanReview, Manual, Seed, LlmReview }

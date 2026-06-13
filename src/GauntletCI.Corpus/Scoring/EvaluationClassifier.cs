@@ -47,7 +47,7 @@ public sealed class EvaluationClassifier : IEvaluationClassifier
                     Status = label.ShouldTrigger
                                         ? EvaluationStatus.TruePositive
                                         : EvaluationStatus.FalsePositive,
-                    LabelConfidence = label.LabelSource == LabelSource.HumanReview
+                    LabelConfidence = label.LabelSource is LabelSource.HumanReview or LabelSource.Manual
                                         ? LabelConfidence.Trusted
                                         : LabelConfidence.Heuristic,
                     LabelReason = label.Reason,
@@ -80,7 +80,7 @@ public sealed class EvaluationClassifier : IEvaluationClassifier
                 Status = label.ShouldTrigger
                                     ? EvaluationStatus.FalseNegative
                                     : EvaluationStatus.TrueNegative,
-                LabelConfidence = label.LabelSource == LabelSource.HumanReview
+                LabelConfidence = label.LabelSource is LabelSource.HumanReview or LabelSource.Manual
                                     ? LabelConfidence.Trusted
                                     : LabelConfidence.Heuristic,
                 LabelReason = label.Reason,
