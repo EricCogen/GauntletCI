@@ -6,8 +6,16 @@ import json
 import os
 import re
 import sqlite3
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from corpus_db_read import (
+    compute_labeled_rule_metrics,
+    ensure_read_indexes,
+    fixtures_triggered_latest_run,
+)
 
 REPO = Path(__file__).resolve().parents[1]
 RULES_DIR = REPO / "src" / "GauntletCI.Core" / "Rules" / "Implementations"
@@ -72,6 +80,7 @@ def load_corpus_metrics() -> dict[str, dict]:
 
     con = sqlite3.connect(CORPUS)
     cur = con.cursor()
+    ensure_read_indexes(con)
 
     # Silver aggregates (rule-level precision/recall/usefulness)
     try:
@@ -147,24 +156,9 @@ def load_corpus_metrics() -> dict[str, dict]:
         pass
 
     try:
-        rows = cur.execute(
-            """
-            WITH latest_run AS (
-                SELECT fixture_id, MAX(id) AS run_id
-                FROM rule_runs
-                WHERE UPPER(status) = 'COMPLETED'
-                GROUP BY fixture_id
-            )
-            SELECT af.rule_id, COUNT(DISTINCT af.fixture_id)
-            FROM actual_findings af
-            INNER JOIN latest_run lr ON lr.run_id = af.run_id
-            WHERE af.did_trigger = 1
-            GROUP BY af.rule_id
-            """
-        ).fetchall()
-        for rid, c in rows:
+        for rid, count in fixtures_triggered_latest_run(cur).items():
             rid = normalize_rule_id(rid)
-            stats.setdefault(rid, {})["fixtures_triggered_latest_run"] = int(c)
+            stats.setdefault(rid, {})["fixtures_triggered_latest_run"] = count
     except sqlite3.Error:
         pass
 
@@ -190,94 +184,17 @@ def load_corpus_metrics() -> dict[str, dict]:
 
 
 def load_labeled_classifier_metrics() -> dict[str, dict]:
-    """Heavy join across actual_findings; run only with --full-corpus."""
-    stats: dict[str, dict] = {}
+    """Recompute labeled TP/FP/FN from expected_findings (same logic as audit snapshot)."""
     if not CORPUS.exists():
-        return stats
+        return {}
     con = sqlite3.connect(CORPUS)
-    cur = con.cursor()
+    ensure_read_indexes(con)
     try:
-        rows = cur.execute(
-            """
-            WITH latest_run AS (
-                SELECT fixture_id, MAX(id) AS run_id
-                FROM rule_runs
-                WHERE UPPER(status) = 'COMPLETED'
-                GROUP BY fixture_id
-            ),
-            fired AS (
-                SELECT af.fixture_id, af.rule_id
-                FROM actual_findings af
-                INNER JOIN latest_run lr ON lr.run_id = af.run_id
-                WHERE af.did_trigger = 1
-                GROUP BY af.fixture_id, af.rule_id
-            ),
-            expected AS (
-                SELECT fixture_id, rule_id
-                FROM expected_findings
-                WHERE should_trigger = 1 AND COALESCE(is_inconclusive, 0) = 0
-            )
-            SELECT e.rule_id,
-                   SUM(CASE WHEN f.fixture_id IS NOT NULL THEN 1 ELSE 0 END) AS tp,
-                   SUM(CASE WHEN f.fixture_id IS NULL THEN 1 ELSE 0 END) AS fn
-            FROM expected e
-            LEFT JOIN fired f ON f.fixture_id = e.fixture_id AND f.rule_id = e.rule_id
-            GROUP BY e.rule_id
-            """
-        ).fetchall()
-        for rid, tp, fn in rows:
-            rid = normalize_rule_id(rid)
-            entry = stats.setdefault(rid, {})
-            entry["labeled_tp"] = int(tp or 0)
-            entry["labeled_fn"] = int(fn or 0)
+        labeled = compute_labeled_rule_metrics(con.cursor())
     except sqlite3.Error:
-        pass
-
-    try:
-        rows = cur.execute(
-            """
-            WITH latest_run AS (
-                SELECT fixture_id, MAX(id) AS run_id
-                FROM rule_runs
-                WHERE UPPER(status) = 'COMPLETED'
-                GROUP BY fixture_id
-            ),
-            fired AS (
-                SELECT af.fixture_id, af.rule_id
-                FROM actual_findings af
-                INNER JOIN latest_run lr ON lr.run_id = af.run_id
-                WHERE af.did_trigger = 1
-                GROUP BY af.fixture_id, af.rule_id
-            ),
-            expected AS (
-                SELECT fixture_id, rule_id
-                FROM expected_findings
-                WHERE should_trigger = 1 AND COALESCE(is_inconclusive, 0) = 0
-            )
-            SELECT f.rule_id, COUNT(*) AS fp
-            FROM fired f
-            LEFT JOIN expected e
-              ON e.fixture_id = f.fixture_id AND e.rule_id = f.rule_id
-            WHERE e.fixture_id IS NULL
-            GROUP BY f.rule_id
-            """
-        ).fetchall()
-        for rid, fp in rows:
-            rid = normalize_rule_id(rid)
-            entry = stats.setdefault(rid, {})
-            entry["labeled_fp"] = int(fp or 0)
-            tp = entry.get("labeled_tp", 0)
-            fp = int(fp or 0)
-            fn = entry.get("labeled_fn", 0)
-            if tp + fp:
-                entry["labeled_precision"] = round(tp / (tp + fp), 3)
-            if tp + fn:
-                entry["labeled_recall"] = round(tp / (tp + fn), 3)
-    except sqlite3.Error:
-        pass
-
+        labeled = {}
     con.close()
-    return stats
+    return {normalize_rule_id(rid): metrics for rid, metrics in labeled.items()}
 
 
 def load_fixture_rule_frequency() -> dict[str, int]:
@@ -659,6 +576,7 @@ def main() -> None:
                 "aggregates (precision/recall/usefulness)",
                 "audit_snapshot_rows (labeled tp/fp/fn when snapshot exists)",
                 "fixtures_triggered_latest_run (distinct fixtures, latest completed run)",
+                "corpus_db_read.ensure_read_indexes (agent DB read performance)",
             ],
             "redis_2995_regression": {
                 "adjudicated_defect": "MultiNodeSubscription.RemoveDisconnectedEndpoints inverted IsSubscriberConnected",

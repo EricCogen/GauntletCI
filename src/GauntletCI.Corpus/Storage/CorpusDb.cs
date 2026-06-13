@@ -430,5 +430,9 @@ internal static class SchemaInitializer
             fetched_at_utc          TEXT NOT NULL DEFAULT (datetime('now'))
         )
         """,
+        "CREATE INDEX IF NOT EXISTS idx_actual_findings_run_id ON actual_findings(run_id)",
+        "CREATE INDEX IF NOT EXISTS idx_actual_findings_run_trigger ON actual_findings(run_id, did_trigger)",
+        "CREATE INDEX IF NOT EXISTS idx_rule_runs_fixture_completed ON rule_runs(fixture_id, completed_at_utc)",
+        "CREATE INDEX IF NOT EXISTS idx_expected_findings_fixture_rule ON expected_findings(fixture_id, rule_id)",
     ];
 }

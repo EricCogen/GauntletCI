@@ -24,6 +24,10 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
+Write-Log "Ensuring corpus read indexes"
+python (Join-Path $repo "scripts\corpus_db_read.py") 2>&1 |
+    ForEach-Object { Write-Log $_ }
+
 Write-Log "Starting corpus score"
 dotnet run --project src/GauntletCI.Cli -- corpus score --db $corpus --fixtures ./data/fixtures 2>&1 |
     ForEach-Object { Write-Log $_ }

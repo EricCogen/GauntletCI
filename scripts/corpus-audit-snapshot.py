@@ -4,45 +4,16 @@ from __future__ import annotations
 
 import argparse
 import sqlite3
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from corpus_db_read import compute_labeled_rule_metrics, ensure_read_indexes
 
 
 def compute_rule_rows(cur: sqlite3.Cursor) -> list[dict]:
     """Classify expected_findings vs latest completed run (EvaluationClassifier parity)."""
-    rows = cur.execute(
-        """
-        WITH latest AS (
-            SELECT fixture_id, MAX(id) AS run_id
-            FROM rule_runs
-            WHERE UPPER(status) = 'COMPLETED'
-            GROUP BY fixture_id
-        ),
-        pairs AS (
-            SELECT ef.rule_id,
-                   ef.fixture_id,
-                   ef.should_trigger,
-                   COALESCE(MAX(af.did_trigger), 0) AS did_trigger
-            FROM expected_findings ef
-            INNER JOIN latest lr ON lr.fixture_id = ef.fixture_id
-            LEFT JOIN actual_findings af
-              ON af.fixture_id = ef.fixture_id
-             AND af.rule_id = ef.rule_id
-             AND af.run_id = lr.run_id
-            WHERE COALESCE(ef.is_inconclusive, 0) = 0
-            GROUP BY ef.rule_id, ef.fixture_id, ef.should_trigger
-        )
-        SELECT rule_id,
-               COUNT(*) AS labeled,
-               SUM(CASE WHEN should_trigger = 1 AND did_trigger = 1 THEN 1 ELSE 0 END) AS tp,
-               SUM(CASE WHEN should_trigger = 0 AND did_trigger = 1 THEN 1 ELSE 0 END) AS fp,
-               SUM(CASE WHEN should_trigger = 1 AND did_trigger = 0 THEN 1 ELSE 0 END) AS fn
-        FROM pairs
-        GROUP BY rule_id
-        ORDER BY rule_id
-        """
-    ).fetchall()
-
     usefulness: dict[str, float | None] = {}
     for rule_id, avg in cur.execute(
         "SELECT rule_id, AVG(usefulness) FROM evaluations GROUP BY rule_id"
@@ -50,25 +21,23 @@ def compute_rule_rows(cur: sqlite3.Cursor) -> list[dict]:
         usefulness[rule_id] = round(float(avg), 3) if avg is not None else None
 
     result: list[dict] = []
-    for rule_id, labeled, tp, fp, fn in rows:
-        tp = int(tp or 0)
-        fp = int(fp or 0)
-        fn = int(fn or 0)
-        labeled = int(labeled or 0)
-        precision = round(tp / (tp + fp), 3) if (tp + fp) else None
-        recall = round(tp / (tp + fn), 3) if (tp + fn) else None
+    for rule_id, metrics in compute_labeled_rule_metrics(cur).items():
+        tp = metrics["tp"]
+        fp = metrics["fp"]
+        fn = metrics["fn"]
         result.append(
             {
                 "rule_id": rule_id,
-                "labeled": labeled,
+                "labeled": metrics["labeled"],
                 "tp": tp,
                 "fp": fp,
                 "fn": fn,
-                "precision_score": precision,
-                "recall_score": recall,
+                "precision_score": metrics.get("labeled_precision"),
+                "recall_score": metrics.get("labeled_recall"),
                 "usefulness_score": usefulness.get(rule_id),
             }
         )
+    result.sort(key=lambda row: row["rule_id"])
     return result
 
 
@@ -129,6 +98,7 @@ def main() -> None:
     args = parser.parse_args()
 
     con = sqlite3.connect(args.db)
+    ensure_read_indexes(con)
     con.row_factory = sqlite3.Row
     rows = compute_rule_rows(con.cursor())
 

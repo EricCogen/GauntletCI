@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import sqlite3
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from corpus_db_read import LATEST_RUN_CTE, ensure_read_indexes
 
 
 def main() -> None:
@@ -19,6 +22,7 @@ def main() -> None:
     args = parser.parse_args()
 
     con = sqlite3.connect(args.db)
+    ensure_read_indexes(con)
     con.row_factory = sqlite3.Row
     cur = con.cursor()
 
@@ -90,20 +94,16 @@ def main() -> None:
 
     # Gold-label TP/FP/FN: one verdict per (fixture, rule) on latest run
     gold_metrics = cur.execute(
-        """
-        WITH latest AS (
-            SELECT fixture_id, MAX(id) AS run_id
-            FROM rule_runs
-            GROUP BY fixture_id
-        ),
-        pairs AS (
+        LATEST_RUN_CTE
+        + """
+        , pairs AS (
             SELECT ef.rule_id,
                    ef.fixture_id,
                    ef.should_trigger,
-                   MAX(af.did_trigger) AS did_trigger
+                   COALESCE(MAX(af.did_trigger), 0) AS did_trigger
             FROM expected_findings ef
-            JOIN latest lr ON lr.fixture_id = ef.fixture_id
-            JOIN actual_findings af
+            INNER JOIN latest lr ON lr.fixture_id = ef.fixture_id
+            LEFT JOIN actual_findings af
               ON af.fixture_id = ef.fixture_id
              AND af.rule_id = ef.rule_id
              AND af.run_id = lr.run_id
