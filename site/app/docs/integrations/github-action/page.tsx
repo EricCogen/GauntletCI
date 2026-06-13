@@ -30,7 +30,7 @@ const faqSchema = buildFaqSchema([
   },
   {
     q: "What does the findings-count output contain?",
-    a: "findings-count is a string containing the number of findings GauntletCI produced. It counts lines in the output that match a GCI rule ID pattern. Use it in subsequent steps to conditionally post Slack alerts or upload artifacts.",
+    a: "findings-count is the exact number of findings in the JSON Findings array from gauntletci analyze --output json. Use it in subsequent steps to conditionally post Slack alerts or upload artifacts.",
   },
   {
     q: "Can I pin to a specific GauntletCI tool version?",
