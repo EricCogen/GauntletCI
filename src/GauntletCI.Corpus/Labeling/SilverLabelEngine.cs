@@ -784,6 +784,7 @@ public sealed class SilverLabelEngine
             {
                 if (!overwriteExisting &&
                     (existingLabel.LabelSource == LabelSource.HumanReview ||
+                     existingLabel.LabelSource == LabelSource.Manual ||
                      existingLabel.LabelSource == LabelSource.Seed))
                 {
                     continue;
