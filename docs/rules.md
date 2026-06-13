@@ -27,6 +27,7 @@ Rules do not modify code and do not block merges on their own. They surface info
 
 | Category | Count | Rule IDs |
 |----------|------:|----------|
+| **Implemented** (`IRule` classes in Core) | 39 | All classes under `Rules/Implementations/` |
 | **Active** (emit findings by default) | 37 | GCI0001, GCI0003–GCI0007, GCI0010, GCI0012, GCI0015–GCI0016, GCI0019, GCI0020–GCI0022, GCI0024, GCI0029, GCI0032, GCI0035–GCI0036, GCI0038–GCI0039, GCI0041–GCI0049, GCI0050–GCI0053, GCI0056–GCI0059 |
 | **Implemented, disabled by default** | 2 | GCI0054 (async void — use GCI0016), GCI0055 (regex signatures — use GCI0003) |
 | **Reserved / consolidated** | 3 | GCI0028 (unassigned), GCI0030 (→ GCI0024), GCI0033 (→ GCI0016) |
@@ -65,15 +66,15 @@ This document is prepared for an independent third-party review of the GauntletC
 
 2. **Should any rules be adjusted?** A rule may be detecting the right *category* of risk but using patterns that are too loose (causing false positives), too strict (missing real cases), or calibrated at the wrong confidence level. If the detection logic needs narrowing or the confidence level is wrong, tell us.
 
-3. **Are there important risk categories we have missed?** We maintain 37 active rules today, and the catalog continues to evolve. We do not believe this is exhaustive. If you can identify a class of risk that regularly causes production incidents, security vulnerabilities, or data loss: and that a diff-level static analysis could plausibly detect: we want to add it.
+3. **Are there important risk categories we have missed?** We ship 39 rule implementations today (37 active by default), and the catalog continues to evolve. We do not believe this is exhaustive. If you can identify a class of risk that regularly causes production incidents, security vulnerabilities, or data loss: and that a diff-level static analysis could plausibly detect: we want to add it.
 
 ### What GauntletCI is (and is not)
 
 Understanding these constraints will help you evaluate the rules fairly:
 
 - **It analyzes diffs, not full codebases.** GauntletCI sees only the lines that were added or removed in a pull request. It cannot reason about the overall structure of the codebase, call graphs, or runtime state. A rule that would require reading the entire file or tracing a call chain is out of scope.
-- **It is fully deterministic.** There is no machine learning, no network calls, and no external lookups. Every detection is a text pattern, a structural heuristic, or a count. This is intentional: deterministic rules are auditable, explainable, and fast.
-- **It must complete in under one second per diff.** Rules need to be lightweight. Regex matching on added/removed lines is the primary tool. Rules that require parsing, compiling, or AST traversal are not feasible today.
+- **Core detection is fully deterministic.** There is no machine learning in the rule engine. Optional LLM enrichment and paid integrations (GitHub, webhooks, license check, Shared telemetry) may use the network when you enable them. Every core detection is a text pattern, a structural heuristic, Roslyn diagnostic, or count.
+- **It is designed for fast pre-commit feedback.** Typical small staged diffs complete in seconds. Large diffs or full codebase scans take longer. Rules use diff-line heuristics plus targeted Roslyn parsing on changed C# files (no full solution build).
 - **It is not a replacement for a security scanner or linter.** GauntletCI is a change-risk signal, not a comprehensive static analysis platform. It is meant to surface things a human reviewer might miss at merge time: not to replace SAST tools, dependency auditors, or test coverage tools.
 - **Findings are advisory by default.** No rule automatically blocks a merge. High-confidence findings are *intended* to block, but the enforcement mechanism is up to the team using the tool.
 - **It is primarily focused on C#/.NET.** Some rules are language-agnostic (file naming, diff shape, logging patterns). Most rules target C# idioms. If you have expertise in another stack, note it: we may expand language support later.

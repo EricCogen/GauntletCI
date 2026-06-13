@@ -42,7 +42,7 @@ const faqSchema = {
       "name": "How does GauntletCI compare to SonarQube?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "SonarQube analyzes the entire codebase on a schedule and requires a server, account, and network access. GauntletCI analyzes only the lines that changed in the current diff, runs entirely on the developer's machine in under one second, requires no account or cloud connection, and installs as a pre-commit hook. SonarQube is a full codebase quality platform; GauntletCI is a focused change-risk detector that runs before a commit is ever created."
+        "text": "SonarQube analyzes the entire codebase on a schedule and requires a server, account, and network access. GauntletCI analyzes only the lines that changed in the current diff, runs on the developer's machine in seconds for typical staged changes (no full solution build), requires no account for core detection, and installs as a pre-commit hook. SonarQube is a full codebase quality platform; GauntletCI is a focused change-risk detector that runs before a commit is ever created."
       }
     },
     {
@@ -66,7 +66,7 @@ const faqSchema = {
       "name": "How does GauntletCI compare to CodeQL / GitHub Advanced Security?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "CodeQL performs deep semantic analysis of the full codebase and requires compilation and significant compute time, typically minutes per run. GauntletCI analyzes only the changed diff in under one second with no compilation step, making it suitable as a pre-commit hook in the developer's local workflow. CodeQL is better for periodic deep security audits; GauntletCI is better for fast, continuous feedback on every commit."
+        "text": "CodeQL performs deep semantic analysis of the full codebase and requires compilation and significant compute time, typically minutes per run. GauntletCI analyzes only the changed diff with targeted Roslyn on changed C# files and no full solution build, making it suitable as a pre-commit hook in the developer's local workflow. CodeQL is better for periodic deep security audits; GauntletCI is better for fast, continuous feedback on every commit."
       }
     },
     {
@@ -74,7 +74,7 @@ const faqSchema = {
       "name": "How does GauntletCI compare to Code Climate?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Code Climate is a SaaS platform that analyzes full repositories for maintainability and test coverage trends over time. It requires uploading code to a cloud service. GauntletCI is diff-scoped and focused on change risk rather than codebase health metrics, with core analysis running locally by default. GauntletCI does not require a cloud account, does not transmit code by default, and produces results in under one second, making it a complement to, not a replacement for, Code Climate's longitudinal reporting."
+        "text": "Code Climate is a SaaS platform that analyzes full repositories for maintainability and test coverage trends over time. It requires uploading code to a cloud service. GauntletCI is diff-scoped and focused on change risk rather than codebase health metrics, with core analysis running locally by default. GauntletCI does not require a cloud account, does not transmit code by default, and typically completes in seconds on small staged diffs, making it a complement to, not a replacement for, Code Climate's longitudinal reporting."
       }
     },
     {
@@ -82,7 +82,7 @@ const faqSchema = {
       "name": "Does GauntletCI work in air-gapped or offline environments?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. GauntletCI runs entirely on the local machine. No diff, finding, file path, or telemetry is transmitted. The optional local LLM enrichment feature (--with-llm) uses a locally hosted Ollama model, with no network call. This makes GauntletCI suitable for classified, regulated, or air-gapped environments where cloud-based analysis tools are prohibited."
+        "text": "Yes, for core rule detection. GauntletCI runs on the local machine with no code upload by default. Telemetry is opt-in: Off (default until you choose), Local (stored on disk only), or Shared (anonymous rule signals — no code or diffs). Optional --with-llm uses a locally hosted Ollama model when configured for localhost. Paid integrations (GitHub, webhooks, license check) require network only when you enable them."
       }
     },
     {

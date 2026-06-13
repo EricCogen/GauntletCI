@@ -4,7 +4,7 @@
   "repo": "GauntletCI/regression-fixtures",
   "pr_number": 0,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T21:39:17.099860+00:00",
+  "generated_at_utc": "2026-06-12T13:49:34.925317+00:00",
   "upstream_pr_url": "https://github.com/GauntletCI/regression-fixtures/pull/0",
   "eval_lab_pr_url": null,
   "defects": [
@@ -27,13 +27,16 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 0,
+      "finding_count": 1,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0059": {
-          "caught_ground_truth": false,
-          "evidence": [],
-          "notes": "no_match"
+          "caught_ground_truth": true,
+          "evidence": [
+            "GCI0059",
+            "src/OrderService.cs:0 removed `if (order == null)`; 14 still uses `return order.Total > 0;`."
+          ],
+          "notes": ""
         }
       }
     },

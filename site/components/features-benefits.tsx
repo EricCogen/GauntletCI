@@ -13,19 +13,19 @@ const items = [
   {
     icon: ShieldAlert,
     feature: "Deterministic Change-Risk Detection",
-    what: "37 rules analyze the exact lines added or removed in a diff, not the whole file. Each rule targets a specific class of risk: removed logic without tests, breaking API changes, hardcoded secrets, unsafe casts, missing null guards, and more.",
+    what: "39 built-in rules analyze the exact lines added or removed in a diff, not the whole file. Each rule targets a specific class of risk: removed logic without tests, breaking API changes, hardcoded secrets, unsafe casts, missing null guards, and more.",
     benefit: "A second opinion on every commit that focuses entirely on what changed and why it might fail in production, catching the things that look fine in review but break at runtime.",
   },
   {
     icon: Timer,
-    feature: "Sub-Second Feedback in the Developer Loop",
-    what: "Installs as a pre-commit hook with `gauntletci init`. Before every commit, it runs on the staged diff. No full build required, no network call.",
+    feature: "Fast Feedback in the Developer Loop",
+    what: "Installs as a pre-commit hook with `gauntletci init`. Before every commit, it runs on the staged diff. No full solution build; core detection needs no network.",
     benefit: "Developers catch their own risky changes before they leave the machine, when the fix costs nothing and the context is freshest. Fast enough that it doesn't change how people work.",
   },
   {
     icon: SlidersHorizontal,
     feature: "High Signal, Low Noise",
-    what: "Every rule surfaces up to 3 findings per run. Baseline delta mode snapshots existing findings and suppresses them; subsequent runs show only net-new risks.",
+    what: "Delivery caps rank and limit output (25 findings max by default, with per-rule per-file caps). Baseline delta mode snapshots existing findings and suppresses them; subsequent runs show only net-new risks.",
     benefit: "Teams actually read the output. Alert fatigue is why most static analysis tools get disabled. GauntletCI is designed to be looked at every time because it's almost always relevant.",
   },
   {
@@ -37,7 +37,7 @@ const items = [
   {
     icon: Lock,
     feature: "Core Analysis Runs Locally by Default",
-    what: "Deterministic rule evaluation runs entirely on the machine where the command runs. By default, no diff, finding, or file path is transmitted. Optional telemetry and network integrations are opt-in. Evidence strings for PII and secrets are auto-redacted in output.",
+    what: "Deterministic rule evaluation runs entirely on the machine where the command runs. By default, no diff or finding text is transmitted. Optional telemetry (Off, Local, or Shared) and paid integrations are opt-in. CLI text output redacts PII/secret evidence for select rules (GCI0012, GCI0029).",
     benefit: "Works in air-gapped environments, on proprietary codebases, and in organizations with strict data residency requirements. Local execution is the default and requires no configuration.",
   },
   {

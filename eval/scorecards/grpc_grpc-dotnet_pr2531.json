@@ -4,7 +4,7 @@
   "repo": "grpc/grpc-dotnet",
   "pr_number": 2531,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T21:39:17.099860+00:00",
+  "generated_at_utc": "2026-06-12T13:49:34.923283+00:00",
   "upstream_pr_url": "https://github.com/grpc/grpc-dotnet/pull/2531",
   "eval_lab_pr_url": null,
   "defects": [
@@ -63,7 +63,7 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 1,
+      "finding_count": 2,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0004": {

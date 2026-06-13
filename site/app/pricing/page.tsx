@@ -65,7 +65,7 @@ export default function PricingPage() {
             Simple, transparent pricing
           </h1>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl text-pretty">
-            Start free -- no account, no telemetry, no install gate.
+            Start free -- no account required. Telemetry is opt-in (defaults to Off until you choose).
             Upgrade when your team needs CI enforcement, AI enrichment, or collaboration features.
           </p>
         </div>

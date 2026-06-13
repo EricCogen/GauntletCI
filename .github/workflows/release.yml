@@ -49,6 +49,8 @@ jobs:
         run: dotnet build GauntletCI.slnx --no-restore --configuration Release
 
       - name: Test
+        env:
+          GAUNTLETCI_E2E_STRICT: "1"
         run: dotnet test GauntletCI.slnx --no-build --configuration Release --verbosity normal
 
       - name: Pack tool

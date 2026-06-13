@@ -338,7 +338,7 @@ export default function JellyfinArticle() {
 gauntletci analyze --staged`}</code>
               </pre>
               <ul className="space-y-2">
-                <li>Works locally in <strong className="text-foreground">under 1 second</strong></li>
+                <li>Works locally in <strong className="text-foreground">seconds on typical staged diffs</strong></li>
                 <li>By default, no code leaves your machine</li>
                 <li>Free for personal and internal use</li>
                 <li>Pro/Teams plans for advanced team features</li>

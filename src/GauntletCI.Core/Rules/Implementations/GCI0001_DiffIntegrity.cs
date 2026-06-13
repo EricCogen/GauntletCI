@@ -31,6 +31,19 @@ public class GCI0001_DiffIntegrity : RuleBase
         "Cargo.lock", "go.sum", "composer.lock",
     };
 
+    private static readonly HashSet<string> RoutineCompanionFileNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Dockerfile", "Makefile", "CODEOWNERS", ".gitignore", ".gitattributes", "LICENSE",
+    };
+
+    private static readonly HashSet<string> RoutineCompanionExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".md", ".txt", ".csproj", ".props", ".targets", ".sln", ".slnx", ".slnf",
+        ".yml", ".yaml", ".json", ".editorconfig",
+        ".config", ".resx", ".xaml", ".nuspec", ".proj", ".tt",
+        ".ps1", ".sh", ".cmd", ".cake",
+    };
+
     private static bool IsLockFile(string filePath)
     {
         ArgumentNullException.ThrowIfNull(filePath);
@@ -45,25 +58,14 @@ public class GCI0001_DiffIntegrity : RuleBase
         ArgumentNullException.ThrowIfNull(filePath);
 
         var fileName = Path.GetFileName(filePath);
+        if (RoutineCompanionFileNames.Contains(fileName))
+            return true;
+
+        if (fileName.StartsWith("PublicAPI.", StringComparison.OrdinalIgnoreCase))
+            return true;
+
         var extension = Path.GetExtension(filePath);
-
-        if (extension.Equals(".md", StringComparison.OrdinalIgnoreCase)
-            || extension.Equals(".txt", StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        if (extension.Equals(".csproj", StringComparison.OrdinalIgnoreCase)
-            || extension.Equals(".props", StringComparison.OrdinalIgnoreCase)
-            || extension.Equals(".targets", StringComparison.OrdinalIgnoreCase)
-            || extension.Equals(".sln", StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        if (extension.Equals(".yml", StringComparison.OrdinalIgnoreCase)
-            || extension.Equals(".yaml", StringComparison.OrdinalIgnoreCase)
-            || extension.Equals(".json", StringComparison.OrdinalIgnoreCase)
-            || extension.Equals(".editorconfig", StringComparison.OrdinalIgnoreCase))
-            return true;
-
-        return fileName.StartsWith("PublicAPI.", StringComparison.OrdinalIgnoreCase);
+        return RoutineCompanionExtensions.Contains(extension);
     }
 
     public override Task<List<Finding>> EvaluateAsync(

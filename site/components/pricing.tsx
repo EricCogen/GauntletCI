@@ -17,7 +17,7 @@ interface FeatureRow {
 const features: FeatureRow[] = [
   // Community - included in all tiers
   { label: "Deterministic Change-Risk Detection", community: "check", pro: "check", teams: "check", enterprise: "check" },
-  { label: "Sub-Second Pre-Commit Hook",           community: "check", pro: "check", teams: "check", enterprise: "check" },
+  { label: "Fast Pre-Commit Hook",                   community: "check", pro: "check", teams: "check", enterprise: "check" },
   { label: "Per-Repo Configuration (.gauntletci.json)", community: "check", pro: "check", teams: "check", enterprise: "check" },
   { label: "Core Analysis Runs Locally by Default", community: "check", pro: "check", teams: "check", enterprise: "check" },
   { label: "Evidence String Redaction (PII / Secrets)", community: "check", pro: "check", teams: "check", enterprise: "check" },

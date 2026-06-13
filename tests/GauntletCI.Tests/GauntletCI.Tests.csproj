@@ -25,10 +25,10 @@
   <ItemGroup>
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-    <ProjectReference Include="..\GauntletCI.Core\GauntletCI.Core.csproj" />
-    <ProjectReference Include="..\GauntletCI.Cli\GauntletCI.Cli.csproj" />
-    <ProjectReference Include="..\GauntletCI.Llm\GauntletCI.Llm.csproj" />
-    <ProjectReference Include="..\GauntletCI.Corpus\GauntletCI.Corpus.csproj" />
+    <ProjectReference Include="..\..\src\GauntletCI.Core\GauntletCI.Core.csproj" />
+    <ProjectReference Include="..\..\src\GauntletCI.Cli\GauntletCI.Cli.csproj" />
+    <ProjectReference Include="..\..\src\GauntletCI.Llm\GauntletCI.Llm.csproj" />
+    <ProjectReference Include="..\..\src\GauntletCI.Corpus\GauntletCI.Corpus.csproj" />
   </ItemGroup>
 
 </Project>

@@ -15,7 +15,7 @@ const table = [
   { feature: "Analysis scope",         gauntlet: "Changed diff lines only",           semgrep: "Full file or full repo scan" },
   { feature: "Rule authoring",         gauntlet: "37 built-in, zero config",          semgrep: "Custom YAML patterns required" },
   { feature: "Behavioral drift detection", gauntlet: "Yes - removed logic, API contract changes", semgrep: "Limited - pattern matches only" },
-  { feature: "Pre-commit speed",       gauntlet: "Under 1 second",                     semgrep: "Seconds to minutes (file-scoped)" },
+  { feature: "Pre-commit speed",       gauntlet: "Seconds on typical staged diffs",    semgrep: "Seconds to minutes (file-scoped)" },
   { feature: "False positives on unchanged code", gauntlet: "None - diff-scoped by design", semgrep: "Yes - scans pre-existing issues too" },
   { feature: "Local execution",        gauntlet: "Runs locally by default, no account",  semgrep: "CLI is local; rules registry is cloud" },
   { feature: "Air-gapped support",     gauntlet: "Yes - core engine requires no network", semgrep: "Partial - rule sync needs network" },
@@ -23,7 +23,7 @@ const table = [
   { feature: "LLM enrichment",         gauntlet: "Built-in ONNX, fully offline",       semgrep: "No" },
   { feature: "Baseline delta mode",    gauntlet: "Yes - suppress pre-existing issues", semgrep: "No" },
   { feature: "CI gate + inline comments", gauntlet: "Yes (Teams tier)",                semgrep: "Yes (paid)" },
-  { feature: "Free tier",              gauntlet: "All 37 rules, no account",          semgrep: "Limited free, account required" },
+  { feature: "Free tier",              gauntlet: "All 39 built-in rules, no account", semgrep: "Limited free, account required" },
   { feature: "MCP server",             gauntlet: "Yes (Pro tier) -- AI assistants call GauntletCI directly", semgrep: "No" },
   { feature: "Custom rules",           gauntlet: "Yes -- implement IRule in C#, no YAML", semgrep: "Yes -- YAML patterns (required for all rules)" },
 ];
@@ -108,7 +108,7 @@ export default function SemgrepComparePage() {
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
               No YAML to write. 37 built-in rules cover behavioral drift, security, async safety,
-              data integrity, and architecture violations - all running in under one second with
+              data integrity, and architecture violations - typically completing in seconds on small staged diffs with
               no account or network call required.
             </p>
           </div>
@@ -196,7 +196,7 @@ export default function SemgrepComparePage() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               {[
                 "You want zero-config detection of behavioral and structural risk",
-                "You need pre-commit speed - under one second on every commit",
+                "You need pre-commit speed - fast local feedback on every commit",
                 "You want findings only on what changed, not the entire codebase",
                 "You need core analysis to run locally by default with no account or network dependency",
                 "You work in a .NET / C# codebase and want diff-aware coverage from day one",

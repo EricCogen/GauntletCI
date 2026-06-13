@@ -131,6 +131,15 @@ jobs:
           GAUNTLETCI_LICENSE: ${{ secrets.GAUNTLETCI_LICENSE }}
           GAUNTLETCI_PR_NUMBER: ${{ github.event.pull_request.number }}
           GAUNTLETCI_COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
-        run: >
-          dotnet run --project src/GauntletCI.Cli --no-build --configuration Release --
-          analyze --no-banner --ascii --github-annotations --pr-comment-suggest --repo . --severity warn --sensitivity balanced --no-baseline < pr.diff
+        run: |
+          set -o pipefail
+          set +e
+          dotnet run --project src/GauntletCI.Cli --no-build --configuration Release -- \
+            analyze --no-banner --ascii --github-annotations --pr-comment-suggest --repo . \
+            --severity warn --sensitivity balanced --no-baseline < pr.diff
+          exit_code=$?
+          set -e
+          if [ "$exit_code" -ne 0 ]; then
+            echo "::error::GauntletCI self-analysis reported block-level findings (exit $exit_code). See annotations and PR comments."
+            exit "$exit_code"
+          fi

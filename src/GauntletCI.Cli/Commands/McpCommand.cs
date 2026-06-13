@@ -4,6 +4,7 @@ using GauntletCI.Cli.Licensing;
 using GauntletCI.Cli.Mcp;
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Licensing;
+using GauntletCI.Core.Security;
 using GauntletCI.Llm;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -59,6 +60,13 @@ public static class McpCommand
 
             if (ollamaModel is not null)
             {
+                if (!LlmEndpointValidator.TryValidateMcpOllamaBaseUrl(ollamaUrl, out var ollamaError))
+                {
+                    Console.Error.WriteLine($"[GauntletCI] MCP Ollama URL rejected: {ollamaError}");
+                    ctx.ExitCode = 2;
+                    return;
+                }
+
                 var endpoint = $"{ollamaUrl.TrimEnd('/')}/v1/chat/completions";
                 GauntletTools.SetEngine(new RemoteLlmEngine(endpoint, ollamaModel, "ollama"));
                 Console.Error.WriteLine($"[mcp] LLM enrichment enabled: Ollama model '{ollamaModel}' at {ollamaUrl}");

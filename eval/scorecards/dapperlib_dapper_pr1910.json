@@ -4,7 +4,7 @@
   "repo": "DapperLib/Dapper",
   "pr_number": 1910,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T21:39:17.033296+00:00",
+  "generated_at_utc": "2026-06-12T13:49:34.864567+00:00",
   "upstream_pr_url": "https://github.com/DapperLib/Dapper/pull/1910",
   "eval_lab_pr_url": null,
   "defects": [
@@ -33,7 +33,7 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 5,
+      "finding_count": 4,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0003": {

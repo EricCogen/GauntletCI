@@ -48,13 +48,13 @@ internal static class LlmEngineSelector
                     "Get a license at https://gauntletci.com/pricing");
             }
 
-            var endpoint = ollamaUrl.TrimEnd('/') + "/v1/chat/completions";
-            if (!Uri.TryCreate(endpoint, UriKind.Absolute, out _))
+            if (!LlmEndpointValidator.TryValidateConfigOllamaBaseUrl(ollamaUrl, out var ollamaError))
             {
-                Console.Error.WriteLine($"[GauntletCI] Invalid Ollama URL: {endpoint}. Skipping Ollama engine.");
+                Console.Error.WriteLine($"[GauntletCI] Ollama URL rejected: {ollamaError}. Skipping Ollama engine.");
             }
             else
             {
+                var endpoint = ollamaUrl.TrimEnd('/') + "/v1/chat/completions";
                 var model = config.Llm?.Model ?? LlmDefaults.OllamaModel;
                 var numCtx = config.Llm?.NumCtx ?? 16_384;
                 var maxTok = config.Llm?.MaxCompleteTokens ?? 2_048;

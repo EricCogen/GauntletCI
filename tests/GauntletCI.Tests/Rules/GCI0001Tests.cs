@@ -85,6 +85,65 @@ public class GCI0001Tests
     }
 
     [Fact]
+    public async Task MixedCodeAndBuildScript_ShouldNotFlagMixedScope()
+    {
+        var raw = """
+            diff --git a/src/Foo.cs b/src/Foo.cs
+            index abc..def 100644
+            --- a/src/Foo.cs
+            +++ b/src/Foo.cs
+            @@ -1,1 +1,1 @@
+            -int x = 1;
+            +int x = 2;
+            diff --git a/build.ps1 b/build.ps1
+            index 111..222 100644
+            --- a/build.ps1
+            +++ b/build.ps1
+            @@ -1,1 +1,1 @@
+            -Write-Host old
+            +Write-Host new
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("mixed scope"));
+    }
+
+    [Fact]
+    public async Task MixedCodeAndResxAndSlnx_ShouldNotFlagMixedScope()
+    {
+        var raw = """
+            diff --git a/src/Foo.cs b/src/Foo.cs
+            index abc..def 100644
+            --- a/src/Foo.cs
+            +++ b/src/Foo.cs
+            @@ -1,1 +1,1 @@
+            -int x = 1;
+            +int x = 2;
+            diff --git a/src/App/App.resx b/src/App/App.resx
+            index 111..222 100644
+            --- a/src/App/App.resx
+            +++ b/src/App/App.resx
+            @@ -1,1 +1,1 @@
+            -<root/>
+            +<root updated="true"/>
+            diff --git a/GauntletCI.slnx b/GauntletCI.slnx
+            index 333..444 100644
+            --- a/GauntletCI.slnx
+            +++ b/GauntletCI.slnx
+            @@ -1,1 +1,1 @@
+            -{ "solution": "old" }
+            +{ "solution": "new" }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("mixed scope"));
+    }
+
+    [Fact]
     public async Task CodeWithLockFile_ShouldNotFlagMixedScope()
     {
         var raw = """

@@ -26,7 +26,7 @@ const tableRows = [
   {
     scenario: "Pre-commit feedback before a push",
     winner: "gauntlet",
-    note: "Sub-second local analysis. SonarQube runs post-push in CI.",
+    note: "Fast local analysis on typical staged diffs. SonarQube runs post-push in CI.",
   },
   {
     scenario: "Air-gapped or strict data-residency environments",
@@ -274,7 +274,7 @@ export default function VsSonarQubePage() {
             removed a null guard that protected a hot path is signal.
           </p>
           <p className="text-muted-foreground">
-            Diff-based analysis also means GauntletCI can run in milliseconds before a commit, not
+            Diff-based analysis also means GauntletCI can run in seconds on typical staged diffs before a commit, not
             minutes after a push. Finding a regression pre-commit costs nothing. Finding it in
             production costs everything.
           </p>

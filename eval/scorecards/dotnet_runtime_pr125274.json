@@ -4,7 +4,7 @@
   "repo": "dotnet/runtime",
   "pr_number": 125274,
   "suite_tier": "gold",
-  "generated_at_utc": "2026-05-31T21:39:17.085550+00:00",
+  "generated_at_utc": "2026-06-12T13:49:34.904307+00:00",
   "upstream_pr_url": "https://github.com/dotnet/runtime/pull/125274",
   "eval_lab_pr_url": null,
   "defects": [
@@ -27,7 +27,7 @@
   "tools": [
     {
       "name": "GauntletCI",
-      "finding_count": 0,
+      "finding_count": 1,
       "harvested_at_utc": null,
       "caught_by_defect": {
         "corpus-gci0016": {

@@ -28,7 +28,7 @@ const sources = [
   },
   {
     label: "Corpus audit runner",
-    href: "https://github.com/EricCogen/GauntletCI/blob/main/RunCorpusAudit.csx",
+    href: "https://github.com/EricCogen/GauntletCI/blob/main/scripts/RunCorpusAudit.csx",
     description:
       "Audit script that hydrates corpus fixtures and runs GauntletCI analysis against the local corpus database.",
   },

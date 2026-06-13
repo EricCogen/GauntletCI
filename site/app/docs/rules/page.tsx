@@ -79,8 +79,8 @@ export default function RulesPage() {
           </h1>
           <p className="text-lg text-muted-foreground">
             Every rule targets a specific class of behavioral, security, or
-            structural risk in your diff. Rules run locally in under one second.
-            No rule sends code to any external service.
+            structural risk in your diff. Rules run locally; typical staged diffs complete in seconds.
+            Core detection does not send code to external services unless you enable optional integrations.
           </p>
         </div>
 

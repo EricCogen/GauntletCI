@@ -6,7 +6,7 @@ export function DefinitionBlock() {
           <strong className="text-foreground">GauntletCI</strong> is a local-first Behavioral Change Risk engine for C# and .NET.
           It analyzes pull request diffs to catch breaking changes, behavioral regressions, and unverified logic
           shifts that pass tests and code review. Detection is deterministic, diff-scoped, and designed to run
-          in under one second. Optional offline AI explanations run locally and never send your code to an
+          in seconds on typical staged diffs. Optional offline AI explanations run locally and never send your code to an
           external service.
         </p>
       </div>

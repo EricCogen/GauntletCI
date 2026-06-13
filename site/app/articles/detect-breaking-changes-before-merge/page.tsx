@@ -504,7 +504,7 @@ export default function DetectBreakingChangesPage() {
               Static analysis scoped to the staged diff rather than the entire codebase
               delivers feedback at the only moment when the cost of a fix is minimal: before
               the commit exists. The analysis surface is bounded by the size of the commit, so
-              the check completes in milliseconds regardless of codebase size. GauntletCI
+              the check completes in seconds on typical staged diffs regardless of total codebase size. GauntletCI
               implements this model with deterministic structural rules: every public API
               removal, every serialization contract break, and every unsafe concurrency pattern
               in the diff produces a finding on every run.
@@ -520,10 +520,10 @@ export default function DetectBreakingChangesPage() {
             </p>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="rounded-lg border border-border bg-card/50 p-4">
-                <p className="text-sm font-semibold text-foreground mb-1">Analyzed in milliseconds</p>
+                <p className="text-sm font-semibold text-foreground mb-1">Analyzed in seconds</p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  GauntletCI reads the staged diff, not the entire codebase. Analysis completes
-                  in under a second for typical commits, adding no perceptible friction to the
+                  GauntletCI reads the staged diff, not the entire codebase. Analysis typically
+                  completes in seconds on small staged diffs, adding minimal friction to the
                   development workflow.
                 </p>
               </div>
