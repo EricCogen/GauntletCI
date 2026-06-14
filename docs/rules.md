@@ -98,7 +98,7 @@ Ground-truth labels live in the agent corpus at `%USERPROFILE%\.gauntletci\corpu
 4. `python scripts/corpus-validation-summary.py` — update this section from the JSON output
 5. `python scripts/corpus-audit-snapshot.py` — refresh `audit_snapshots`
 6. `python scripts/build-rule-audit.py --full-corpus` — regenerate `eval/rule-audit.json` (uses `corpus_db_read` indexes; ~10s on agent DB)
-7. `python scripts/check-benchmark-discovery-metrics.py` — benchmark page discovery table vs agent DB (skip in CI with `--skip-if-missing-db`)
+7. `python scripts/corpus-benchmark-discovery-drift.py` — benchmark page discovery table vs agent DB (skip in CI with `--skip-if-missing-db`)
 
 ---
 

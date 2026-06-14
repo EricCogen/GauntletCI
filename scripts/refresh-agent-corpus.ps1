@@ -50,7 +50,7 @@ python (Join-Path $repo "scripts\build-rule-audit.py") --full-corpus 2>&1 |
     ForEach-Object { Write-Log $_ }
 
 Write-Log "Checking benchmark discovery metrics vs corpus DB"
-python (Join-Path $repo "scripts\check-benchmark-discovery-metrics.py") --db $corpus 2>&1 |
+python (Join-Path $repo "scripts\corpus-benchmark-discovery-drift.py") --db $corpus 2>&1 |
     ForEach-Object { Write-Log $_ }
 
 Write-Log "Corpus refresh complete"
