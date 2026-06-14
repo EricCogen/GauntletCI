@@ -49,8 +49,8 @@ Write-Log "Regenerating eval/rule-audit.json"
 python (Join-Path $repo "scripts\build-rule-audit.py") --full-corpus 2>&1 |
     ForEach-Object { Write-Log $_ }
 
-Write-Log "Verifying benchmark discovery metrics vs corpus DB"
-python (Join-Path $repo "scripts\verify-benchmark-discovery-metrics.py") --db $corpus 2>&1 |
+Write-Log "Checking benchmark discovery metrics vs corpus DB"
+python (Join-Path $repo "scripts\check-benchmark-discovery-metrics.py") --db $corpus 2>&1 |
     ForEach-Object { Write-Log $_ }
 
 Write-Log "Corpus refresh complete"
