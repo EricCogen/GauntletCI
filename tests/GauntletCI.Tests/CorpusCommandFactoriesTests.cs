@@ -238,6 +238,18 @@ public class CorpusUtilityFactoryTests
         Assert.NotNull(cmd.Description);
         Assert.NotEmpty(cmd.Description);
     }
+
+    [Fact]
+    public void CreateAuditSnapshot_ReturnsValidCommand()
+    {
+        var cmd = CorpusUtilityFactory.CreateAuditSnapshot();
+
+        Assert.NotNull(cmd);
+        Assert.Equal("audit-snapshot", cmd.Name);
+        Assert.NotNull(cmd.Description);
+        Assert.NotEmpty(cmd.Description);
+        Assert.Contains(cmd.Options, o => o.Name == "dry-run");
+    }
 }
 
 public class CommandFactoryDiTests
@@ -386,6 +398,7 @@ public class CorpusCommandIntegrationTests
         Assert.Contains("errors", subcommands);
         Assert.Contains("rejected-repos", subcommands);
         Assert.Contains("doctor", subcommands);
+        Assert.Contains("audit-snapshot", subcommands);
     }
 
     [Fact]

@@ -434,5 +434,28 @@ internal static class SchemaInitializer
         "CREATE INDEX IF NOT EXISTS idx_actual_findings_run_trigger ON actual_findings(run_id, did_trigger)",
         "CREATE INDEX IF NOT EXISTS idx_rule_runs_fixture_completed ON rule_runs(fixture_id, completed_at_utc)",
         "CREATE INDEX IF NOT EXISTS idx_expected_findings_fixture_rule ON expected_findings(fixture_id, rule_id)",
+        """
+        CREATE TABLE IF NOT EXISTS audit_snapshots (
+            id             INTEGER PRIMARY KEY AUTOINCREMENT,
+            snapped_at_utc TEXT NOT NULL,
+            rules_snapped  INTEGER NOT NULL,
+            notes          TEXT
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS audit_snapshot_rows (
+            id                INTEGER PRIMARY KEY AUTOINCREMENT,
+            snapshot_id       INTEGER NOT NULL REFERENCES audit_snapshots(id),
+            rule_id           TEXT NOT NULL,
+            labeled           INTEGER NOT NULL DEFAULT 0,
+            tp                INTEGER NOT NULL DEFAULT 0,
+            fp                INTEGER NOT NULL DEFAULT 0,
+            fn                INTEGER NOT NULL DEFAULT 0,
+            precision_score   REAL,
+            recall_score      REAL,
+            usefulness_score  REAL
+        )
+        """,
+        "CREATE INDEX IF NOT EXISTS idx_audit_snapshot_rows_snapshot ON audit_snapshot_rows(snapshot_id)",
     ];
 }

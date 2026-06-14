@@ -38,7 +38,8 @@ public static class CorpusCommand
               3. corpus label-all --tier discovery
               4. corpus run-all --tier discovery
               5. corpus score
-              6. corpus report
+              6. corpus audit-snapshot
+              7. corpus report
             """);
 
         // Operations commands
@@ -66,6 +67,7 @@ public static class CorpusCommand
         corpus.AddCommand(utilityFactory.CreateErrors());
         corpus.AddCommand(utilityFactory.CreateRejectedRepos());
         corpus.AddCommand(utilityFactory.CreateDoctor());
+        corpus.AddCommand(utilityFactory.CreateAuditSnapshot());
 
         var issues = new Command("issues", "GitHub Issues corpus operations");
         issues.AddCommand(CreateIssueSearch());

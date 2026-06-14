@@ -42,7 +42,7 @@ python (Join-Path $repo "scripts\corpus-validation-summary.py") --db $corpus 2>&
     ForEach-Object { Write-Log $_ }
 
 Write-Log "Writing audit snapshot"
-python (Join-Path $repo "scripts\corpus-audit-snapshot.py") --db $corpus 2>&1 |
+dotnet run --project src/GauntletCI.Cli -- corpus audit-snapshot --db $corpus 2>&1 |
     ForEach-Object { Write-Log $_ }
 
 Write-Log "Regenerating eval/rule-audit.json"
