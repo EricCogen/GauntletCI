@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { Breadcrumbs } from "@/components/breadcrumbs";
+import discoverySweepDoc from "@eval/benchmark-discovery-sweep.json";
 
 export const metadata: Metadata = {
   title: "The Silver Benchmark | GauntletCI Detection Accuracy",
@@ -58,10 +59,24 @@ interface Rule {
   notableFP?: string;
   ciP?: string;
   ciR?: string;
-  /** Human gold-label precision from agent corpus (414 rows). Not Silver P/R. */
-  agentGoldPrecision?: string;
   status: RuleStatus;
 }
+
+type DiscoverySweepRow = {
+  id: string;
+  name: string;
+  triggerPct: string;
+  goldPrecision?: string;
+  note?: string;
+};
+
+const discoverySweepJune2026 =
+  discoverySweepDoc.discoveryRows as DiscoverySweepRow[];
+
+const agentGoldByRuleId = discoverySweepDoc.ruleCardAgentGold as Record<
+  string,
+  string
+>;
 
 interface NextStep {
   id: string;
@@ -90,6 +105,7 @@ function cardBorderClass(status: RuleStatus): string {
 }
 
 function RuleCard({ rule }: { rule: Rule }) {
+  const agentGoldPrecision = agentGoldByRuleId[rule.id];
   return (
     <div
       className={`rounded-xl border bg-card/30 p-5 space-y-4 transition-colors ${cardBorderClass(rule.status)}`}
@@ -162,13 +178,13 @@ function RuleCard({ rule }: { rule: Rule }) {
               <div className="text-xs text-muted-foreground/60 mt-0.5">F1</div>
             </div>
           </div>
-          {rule.agentGoldPrecision && (
+          {agentGoldPrecision && (
             <p className="text-xs text-muted-foreground/70 leading-relaxed pt-1">
               Agent gold precision{" "}
               <span
-                className={`font-semibold ${metricColor(rule.agentGoldPrecision, 70, 50)}`}
+                className={`font-semibold ${metricColor(agentGoldPrecision, 70, 50)}`}
               >
-                {rule.agentGoldPrecision}
+                {agentGoldPrecision}
               </span>{" "}
               (414 human labels, agent corpus; not comparable to Silver P/R)
             </p>
@@ -273,7 +289,6 @@ const passingRules: Rule[] = [
     },
     ciP: "±3.0%",
     ciR: "±6.6%",
-    agentGoldPrecision: "75%",
     status: "passing",
   },
   {
@@ -288,7 +303,6 @@ const passingRules: Rule[] = [
     triggerPct: "4.0",
     ciP: "±6.7%",
     ciR: "±6.7%",
-    agentGoldPrecision: "74%",
     status: "passing",
   },
   {
@@ -303,7 +317,6 @@ const passingRules: Rule[] = [
     triggerPct: "4.9",
     ciP: "±5.7%",
     ciR: "±11.0%",
-    agentGoldPrecision: "100%",
     status: "passing",
   },
   {
@@ -357,7 +370,6 @@ const passingRules: Rule[] = [
     },
     ciP: "±10.7%",
     ciR: "±13.1%",
-    agentGoldPrecision: "22%",
     status: "passing",
   },
   {
@@ -493,7 +505,6 @@ const inProgressRules: Rule[] = [
     },
     ciP: "±4.6%",
     ciR: "±7.9%",
-    agentGoldPrecision: "81%",
     status: "in-progress",
   },
   {
@@ -616,7 +627,6 @@ const limitedRules: Rule[] = [
     f1: "--",
     triggerPct: "0.0",
     note: "Rule was narrowed from any http:// literal to localhost/private IP only (docs URLs, nuget.org, github.com excluded). The labeler still marks 13 fixtures as positive from the broader original criteria. Rule fires nothing on current corpus.",
-    agentGoldPrecision: "14%",
     ciP: "--",
     ciR: "±11.4%",
     status: "limited",
@@ -693,67 +703,6 @@ const nextSteps: NextStep[] = [
     precision: "50.0%",
     recall: "100%",
     gap: "Precision gap. Only 4 total fires, 2 FPs. Insufficient sample to tune further.",
-  },
-];
-
-/** Discovery-tier trigger rates from June 2026 agent corpus run-all (606 fixtures). Not Silver P/R. */
-const discoverySweepJune2026: Array<{
-  id: string;
-  name: string;
-  triggerPct: string;
-  goldPrecision?: string;
-  note?: string;
-}> = [
-  { id: "GCI0019", name: "Confidence and Evidence", triggerPct: "22%" },
-  {
-    id: "GCI0003",
-    name: "Behavioral Change Detection",
-    triggerPct: "18%",
-    goldPrecision: "75%",
-  },
-  {
-    id: "GCI0006",
-    name: "Edge Case Handling",
-    triggerPct: "12%",
-    goldPrecision: "81%",
-  },
-  {
-    id: "GCI0024",
-    name: "Resource Lifecycle",
-    triggerPct: "9%",
-    goldPrecision: "22%",
-  },
-  {
-    id: "GCI0001",
-    name: "Diff Integrity",
-    triggerPct: "8%",
-    note: "Down from ~48% pre-#264 companion-file fix",
-  },
-  {
-    id: "GCI0016",
-    name: "Async Concurrency Risk",
-    triggerPct: "5%",
-    goldPrecision: "100%",
-  },
-  {
-    id: "GCI0004",
-    name: "Breaking Change Risk",
-    triggerPct: "4%",
-    goldPrecision: "74%",
-  },
-  {
-    id: "GCI0010",
-    name: "Hardcoding and Configuration",
-    triggerPct: "0%",
-    goldPrecision: "14%",
-    note: "Silver card has no P/R; gold labels on agent corpus only",
-  },
-  {
-    id: "GCI0015",
-    name: "Data Integrity Risk",
-    triggerPct: "0%",
-    goldPrecision: "69%",
-    note: "Not on Silver benchmark cards yet",
   },
 ];
 
@@ -1106,14 +1055,23 @@ export default function BenchmarkPage() {
               </a>{" "}
               and{" "}
               <a
+                href="https://github.com/EricCogen/GauntletCI/blob/main/eval/benchmark-discovery-sweep.json"
+                className="text-cyan-400 hover:text-cyan-300 underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                eval/benchmark-discovery-sweep.json
+              </a>{" "}
+              and{" "}
+              <a
                 href="https://github.com/EricCogen/GauntletCI/blob/main/eval/rule-audit.json"
                 className="text-cyan-400 hover:text-cyan-300 underline"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                eval/rule-audit.json (agent audit, not Silver data)
-              </a>
-              .
+                eval/rule-audit.json
+              </a>{" "}
+              (agent corpus metrics; not Silver data).
             </p>
             <div className="rounded-xl border border-border bg-card/20 overflow-hidden">
               <table className="w-full text-sm">
