@@ -55,6 +55,7 @@ public interface ICorpusUtilityFactory : ICommandFactory
     Command CreateErrors();
     Command CreateRejectedRepos();
     Command CreateDoctor();
+    Command CreateAuditSnapshot();
 }
 
 /// <summary>
@@ -102,4 +103,5 @@ internal class CorpusUtilityFactoryImpl : ICorpusUtilityFactory
     public Command CreateErrors() => CorpusUtilityFactory.CreateErrors();
     public Command CreateRejectedRepos() => CorpusUtilityFactory.CreateRejectedRepos();
     public Command CreateDoctor() => CorpusUtilityFactory.CreateDoctor();
+    public Command CreateAuditSnapshot() => CorpusUtilityFactory.CreateAuditSnapshot();
 }

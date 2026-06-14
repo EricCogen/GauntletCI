@@ -2,6 +2,7 @@
 using System.CommandLine;
 using GauntletCI.Corpus;
 using GauntletCI.Corpus.Models;
+using GauntletCI.Corpus.Scoring;
 using GauntletCI.Corpus.Storage;
 
 namespace GauntletCI.Cli.Commands.Factories;
@@ -448,6 +449,74 @@ public static class CorpusUtilityFactory
                         Console.WriteLine("✓ Corpus is healthy");
                     else
                         Console.WriteLine("⚠ Issues detected - review above warnings");
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"[corpus] Error: {ex.Message}");
+                    ctx.ExitCode = 1;
+                }
+            }
+        });
+
+        return cmd;
+    }
+
+    /// <summary>
+    /// Create the 'audit-snapshot' command: persist labeled TP/FP/FN metrics for all rules.
+    /// Command: corpus audit-snapshot [--db] [--notes] [--dry-run]
+    /// </summary>
+    public static Command CreateAuditSnapshot()
+    {
+        var dbOpt = new Option<string>("--db", () => "./data/gauntletci-corpus.db", "Path to corpus SQLite database");
+        var notesOpt = new Option<string>("--notes", () => "post run-all labeled metrics", "Note stored on audit_snapshots.notes");
+        var dryRunOpt = new Option<bool>("--dry-run", () => false, "Print top rows only; do not insert");
+
+        var cmd = new Command(
+            "audit-snapshot",
+            "Insert labeled TP/FP/FN audit snapshot (expected_findings vs latest completed run)");
+        cmd.AddOption(dbOpt);
+        cmd.AddOption(notesOpt);
+        cmd.AddOption(dryRunOpt);
+
+        cmd.SetHandler(async (ctx) =>
+        {
+            var dbPath = ctx.ParseResult.GetValueForOption(dbOpt)!;
+            var notes = ctx.ParseResult.GetValueForOption(notesOpt);
+            var dryRun = ctx.ParseResult.GetValueForOption(dryRunOpt);
+            var ct = ctx.GetCancellationToken();
+
+            var db = new CorpusDb(dbPath);
+            await db.InitializeAsync(ct);
+            using (db)
+            {
+                try
+                {
+                    var rows = await LabeledRuleMetricsReader.ReadAsync(db.Connection, ct);
+                    var usefulness = await LabeledRuleMetricsReader.ReadUsefulnessAsync(db.Connection, ct);
+
+                    Console.WriteLine($"rules_with_labels={rows.Count}");
+
+                    var top = rows
+                        .Where(r => r.Tp > 0 || r.Fp > 0 || r.Fn > 0)
+                        .OrderByDescending(r => r.Fp)
+                        .ThenByDescending(r => r.Fn)
+                        .ThenBy(r => r.Tp)
+                        .Take(8);
+
+                    foreach (var row in top)
+                    {
+                        Console.WriteLine(
+                            $"{row.RuleId,-10} labeled={row.Labeled,3} " +
+                            $"tp={row.Tp,3} fp={row.Fp,3} fn={row.Fn,3} " +
+                            $"prec={row.PrecisionScore?.ToString() ?? string.Empty}");
+                    }
+
+                    if (dryRun)
+                        return;
+
+                    var snapshotId = await AuditSnapshotWriter.InsertAsync(
+                        db.Connection, rows, usefulness, notes, ct);
+                    Console.WriteLine($"snapshot_id={snapshotId} rows={rows.Count}");
                 }
                 catch (Exception ex)
                 {
