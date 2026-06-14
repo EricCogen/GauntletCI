@@ -58,6 +58,8 @@ interface Rule {
   notableFP?: string;
   ciP?: string;
   ciR?: string;
+  /** Human gold-label precision from agent corpus (414 rows). Not Silver P/R. */
+  agentGoldPrecision?: string;
   status: RuleStatus;
 }
 
@@ -160,6 +162,17 @@ function RuleCard({ rule }: { rule: Rule }) {
               <div className="text-xs text-muted-foreground/60 mt-0.5">F1</div>
             </div>
           </div>
+          {rule.agentGoldPrecision && (
+            <p className="text-xs text-muted-foreground/70 leading-relaxed pt-1">
+              Agent gold precision{" "}
+              <span
+                className={`font-semibold ${metricColor(rule.agentGoldPrecision, 70, 50)}`}
+              >
+                {rule.agentGoldPrecision}
+              </span>{" "}
+              (414 human labels, agent corpus; not comparable to Silver P/R)
+            </p>
+          )}
         </div>
 
         {/* Confusion matrix */}
@@ -260,6 +273,7 @@ const passingRules: Rule[] = [
     },
     ciP: "±3.0%",
     ciR: "±6.6%",
+    agentGoldPrecision: "75%",
     status: "passing",
   },
   {
@@ -274,6 +288,7 @@ const passingRules: Rule[] = [
     triggerPct: "4.0",
     ciP: "±6.7%",
     ciR: "±6.7%",
+    agentGoldPrecision: "74%",
     status: "passing",
   },
   {
@@ -288,6 +303,7 @@ const passingRules: Rule[] = [
     triggerPct: "4.9",
     ciP: "±5.7%",
     ciR: "±11.0%",
+    agentGoldPrecision: "100%",
     status: "passing",
   },
   {
@@ -341,6 +357,7 @@ const passingRules: Rule[] = [
     },
     ciP: "±10.7%",
     ciR: "±13.1%",
+    agentGoldPrecision: "22%",
     status: "passing",
   },
   {
@@ -476,6 +493,7 @@ const inProgressRules: Rule[] = [
     },
     ciP: "±4.6%",
     ciR: "±7.9%",
+    agentGoldPrecision: "81%",
     status: "in-progress",
   },
   {
@@ -598,6 +616,7 @@ const limitedRules: Rule[] = [
     f1: "--",
     triggerPct: "0.0",
     note: "Rule was narrowed from any http:// literal to localhost/private IP only (docs URLs, nuget.org, github.com excluded). The labeler still marks 13 fixtures as positive from the broader original criteria. Rule fires nothing on current corpus.",
+    agentGoldPrecision: "14%",
     ciP: "--",
     ciR: "±11.4%",
     status: "limited",
@@ -710,6 +729,32 @@ const discoverySweepJune2026: Array<{
     triggerPct: "8%",
     note: "Down from ~48% pre-#264 companion-file fix",
   },
+  {
+    id: "GCI0016",
+    name: "Async Concurrency Risk",
+    triggerPct: "5%",
+    goldPrecision: "100%",
+  },
+  {
+    id: "GCI0004",
+    name: "Breaking Change Risk",
+    triggerPct: "4%",
+    goldPrecision: "74%",
+  },
+  {
+    id: "GCI0010",
+    name: "Hardcoding and Configuration",
+    triggerPct: "0%",
+    goldPrecision: "14%",
+    note: "Silver card has no P/R; gold labels on agent corpus only",
+  },
+  {
+    id: "GCI0015",
+    name: "Data Integrity Risk",
+    triggerPct: "0%",
+    goldPrecision: "69%",
+    note: "Not on Silver benchmark cards yet",
+  },
 ];
 
 const headToHeadPrioritiesJune2026 = [
@@ -749,7 +794,9 @@ export default function BenchmarkPage() {
             <p className="text-muted-foreground leading-relaxed max-w-3xl">
               This page documents precision and recall for rules calibrated on
               the Silver corpus — not all 37 active rules have Silver labels
-              yet. The numbers reflect labeler rewrites, rule narrowing,
+              yet. Where human gold labels exist on the separate agent corpus,
+              rule cards also show agent gold precision (clearly labeled; not
+              Silver P/R). The numbers reflect labeler rewrites, rule narrowing,
               skip-guard additions, and calibration passes that surfaced
               misalignments between what a rule detects and what its labeler
               measured.
