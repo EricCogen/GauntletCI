@@ -1,0 +1,34 @@
+name: Benchmark Discovery Drift
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "site/app/benchmark/page.tsx"
+      - "scripts/corpus-benchmark-discovery-drift.py"
+      - "scripts/corpus_db_read.py"
+      - "scripts/refresh-agent-corpus.ps1"
+      - "docs/rules.md"
+      - ".github/workflows/benchmark-discovery-drift.yml"
+  push:
+    branches: [main]
+    paths:
+      - "site/app/benchmark/page.tsx"
+      - "scripts/corpus-benchmark-discovery-drift.py"
+      - "scripts/corpus_db_read.py"
+      - "scripts/refresh-agent-corpus.ps1"
+      - "docs/rules.md"
+      - ".github/workflows/benchmark-discovery-drift.yml"
+
+jobs:
+  drift-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Parse benchmark discovery table (skip agent DB in CI)
+        run: python scripts/corpus-benchmark-discovery-drift.py --skip-if-missing-db
