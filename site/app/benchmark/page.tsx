@@ -678,12 +678,38 @@ const nextSteps: NextStep[] = [
 ];
 
 /** Discovery-tier trigger rates from June 2026 agent corpus run-all (606 fixtures). Not Silver P/R. */
-const discoverySweepJune2026 = [
+const discoverySweepJune2026: Array<{
+  id: string;
+  name: string;
+  triggerPct: string;
+  goldPrecision?: string;
+  note?: string;
+}> = [
   { id: "GCI0019", name: "Confidence and Evidence", triggerPct: "22%" },
-  { id: "GCI0003", name: "Behavioral Change Detection", triggerPct: "18%" },
-  { id: "GCI0006", name: "Edge Case Handling", triggerPct: "12%" },
-  { id: "GCI0024", name: "Resource Lifecycle", triggerPct: "9%" },
-  { id: "GCI0001", name: "Diff Integrity", triggerPct: "8%", note: "Down from ~48% pre-#264 companion-file fix" },
+  {
+    id: "GCI0003",
+    name: "Behavioral Change Detection",
+    triggerPct: "18%",
+    goldPrecision: "75%",
+  },
+  {
+    id: "GCI0006",
+    name: "Edge Case Handling",
+    triggerPct: "12%",
+    goldPrecision: "81%",
+  },
+  {
+    id: "GCI0024",
+    name: "Resource Lifecycle",
+    triggerPct: "9%",
+    goldPrecision: "22%",
+  },
+  {
+    id: "GCI0001",
+    name: "Diff Integrity",
+    triggerPct: "8%",
+    note: "Down from ~48% pre-#264 companion-file fix",
+  },
 ];
 
 const headToHeadPrioritiesJune2026 = [
@@ -1012,29 +1038,33 @@ export default function BenchmarkPage() {
             <p className="text-muted-foreground leading-relaxed">
               Silver metrics above come from 618 labeled fixtures. A separate
               agent corpus (606 discovery fixtures, refreshed June 2026) measures
-              raw trigger rate across real OSS diffs without replacing Silver
-              precision/recall. Use it to spot volume and noise candidates before
+              raw trigger rate across real OSS diffs.{" "}
+              <strong className="font-medium text-foreground">
+                Do not compare trigger rates or gold-label precision below to
+                Silver precision/recall in the rule cards above.
+              </strong>{" "}
+              Use the discovery sweep to spot volume and noise candidates before
               Silver labelers catch up.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              Labeled gold metrics (414 adjudicated rows) and full rule audit
-              output live in{" "}
-              <a
-                href="https://github.com/EricCogen/GauntletCI/blob/main/eval/rule-audit.json"
-                className="text-cyan-400 hover:text-cyan-300 underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                eval/rule-audit.json
-              </a>{" "}
-              and the corpus validation section of{" "}
+              Human-adjudicated gold labels (414 rows, agent corpus only) and the
+              internal rule audit JSON are documented in{" "}
               <a
                 href="https://github.com/EricCogen/GauntletCI/blob/main/docs/rules.md#corpus-validation-agent--internal"
                 className="text-cyan-400 hover:text-cyan-300 underline"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                docs/rules.md
+                docs/rules.md (corpus validation)
+              </a>{" "}
+              and{" "}
+              <a
+                href="https://github.com/EricCogen/GauntletCI/blob/main/eval/rule-audit.json"
+                className="text-cyan-400 hover:text-cyan-300 underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                eval/rule-audit.json (agent audit, not Silver data)
               </a>
               .
             </p>
@@ -1044,6 +1074,9 @@ export default function BenchmarkPage() {
                   <tr className="border-b border-border text-left text-muted-foreground">
                     <th className="px-4 py-3 font-medium">Rule</th>
                     <th className="px-4 py-3 font-medium">Discovery trigger rate</th>
+                    <th className="px-4 py-3 font-medium hidden md:table-cell">
+                      Gold-label precision
+                    </th>
                     <th className="px-4 py-3 font-medium hidden sm:table-cell">Note</th>
                   </tr>
                 </thead>
@@ -1052,6 +1085,9 @@ export default function BenchmarkPage() {
                     <tr key={row.id} className="border-b border-border/60 last:border-0">
                       <td className="px-4 py-3 font-mono text-cyan-400/90">{row.id}</td>
                       <td className="px-4 py-3">{row.triggerPct}</td>
+                      <td className="px-4 py-3 hidden md:table-cell text-muted-foreground">
+                        {row.goldPrecision ?? "—"}
+                      </td>
                       <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
                         {row.note ?? row.name}
                       </td>
@@ -1060,6 +1096,11 @@ export default function BenchmarkPage() {
                 </tbody>
               </table>
             </div>
+            <p className="text-xs text-muted-foreground/80">
+              Gold-label precision uses 414 adjudicated expected_findings rows in
+              the agent corpus (June 2026 latest run). Silver benchmark cards use
+              a different fixture set and labeler.
+            </p>
             <p className="text-sm text-muted-foreground">
               Head-to-head tuning priorities (June 2026 audit):{" "}
               {headToHeadPrioritiesJune2026.join(" · ")}
