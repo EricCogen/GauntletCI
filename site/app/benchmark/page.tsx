@@ -677,6 +677,23 @@ const nextSteps: NextStep[] = [
   },
 ];
 
+/** Discovery-tier trigger rates from June 2026 agent corpus run-all (606 fixtures). Not Silver P/R. */
+const discoverySweepJune2026 = [
+  { id: "GCI0019", name: "Confidence and Evidence", triggerPct: "22%" },
+  { id: "GCI0003", name: "Behavioral Change Detection", triggerPct: "18%" },
+  { id: "GCI0006", name: "Edge Case Handling", triggerPct: "12%" },
+  { id: "GCI0024", name: "Resource Lifecycle", triggerPct: "9%" },
+  { id: "GCI0001", name: "Diff Integrity", triggerPct: "8%", note: "Down from ~48% pre-#264 companion-file fix" },
+];
+
+const headToHeadPrioritiesJune2026 = [
+  "GCI0022 Idempotency and Retry Safety",
+  "GCI0024 Resource Lifecycle",
+  "GCI0043 Nullability and Type Safety",
+  "GCI0044 Performance Hotpath Risk",
+  "GCI0046 Pattern Consistency Deviation",
+];
+
 export default function BenchmarkPage() {
   return (
     <>
@@ -984,6 +1001,68 @@ export default function BenchmarkPage() {
               (GCI0032) is more useful in production than a rule at 70%
               precision / 90% recall. The recall gap is an active improvement
               target; the precision floor is treated as a hard constraint.
+            </p>
+          </section>
+
+          {/* 7b. Discovery sweep (agent corpus, June 2026) */}
+          <section className="border-t border-border pt-12 space-y-4">
+            <h2 className="text-2xl font-bold tracking-tight">
+              Discovery sweep (separate corpus)
+            </h2>
+            <p className="text-muted-foreground leading-relaxed">
+              Silver metrics above come from 618 labeled fixtures. A separate
+              agent corpus (606 discovery fixtures, refreshed June 2026) measures
+              raw trigger rate across real OSS diffs without replacing Silver
+              precision/recall. Use it to spot volume and noise candidates before
+              Silver labelers catch up.
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              Labeled gold metrics (414 adjudicated rows) and full rule audit
+              output live in{" "}
+              <a
+                href="https://github.com/EricCogen/GauntletCI/blob/main/eval/rule-audit.json"
+                className="text-cyan-400 hover:text-cyan-300 underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                eval/rule-audit.json
+              </a>{" "}
+              and the corpus validation section of{" "}
+              <a
+                href="https://github.com/EricCogen/GauntletCI/blob/main/docs/rules.md#corpus-validation-agent--internal"
+                className="text-cyan-400 hover:text-cyan-300 underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                docs/rules.md
+              </a>
+              .
+            </p>
+            <div className="rounded-xl border border-border bg-card/20 overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-muted-foreground">
+                    <th className="px-4 py-3 font-medium">Rule</th>
+                    <th className="px-4 py-3 font-medium">Discovery trigger rate</th>
+                    <th className="px-4 py-3 font-medium hidden sm:table-cell">Note</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {discoverySweepJune2026.map((row) => (
+                    <tr key={row.id} className="border-b border-border/60 last:border-0">
+                      <td className="px-4 py-3 font-mono text-cyan-400/90">{row.id}</td>
+                      <td className="px-4 py-3">{row.triggerPct}</td>
+                      <td className="px-4 py-3 text-muted-foreground hidden sm:table-cell">
+                        {row.note ?? row.name}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Head-to-head tuning priorities (June 2026 audit):{" "}
+              {headToHeadPrioritiesJune2026.join(" · ")}
             </p>
           </section>
 
