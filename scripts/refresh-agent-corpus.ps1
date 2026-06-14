@@ -49,6 +49,10 @@ Write-Log "Regenerating eval/rule-audit.json"
 python (Join-Path $repo "scripts\build-rule-audit.py") --full-corpus 2>&1 |
     ForEach-Object { Write-Log $_ }
 
+Write-Log "Exporting benchmark discovery sweep JSON"
+python (Join-Path $repo "scripts\export-benchmark-discovery-sweep.py") --db $corpus 2>&1 |
+    ForEach-Object { Write-Log $_ }
+
 Write-Log "Checking benchmark discovery metrics vs corpus DB"
 python (Join-Path $repo "scripts\corpus-benchmark-discovery-drift.py") --db $corpus 2>&1 |
     ForEach-Object { Write-Log $_ }

@@ -5,7 +5,11 @@ on:
     branches: [main]
     paths:
       - "site/app/benchmark/page.tsx"
+      - "site/tsconfig.json"
+      - "eval/benchmark-discovery-sweep.json"
       - "scripts/corpus-benchmark-discovery-drift.py"
+      - "scripts/export-benchmark-discovery-sweep.py"
+      - "scripts/benchmark_discovery_lib.py"
       - "scripts/corpus_db_read.py"
       - "scripts/refresh-agent-corpus.ps1"
       - "docs/rules.md"
@@ -14,7 +18,11 @@ on:
     branches: [main]
     paths:
       - "site/app/benchmark/page.tsx"
+      - "site/tsconfig.json"
+      - "eval/benchmark-discovery-sweep.json"
       - "scripts/corpus-benchmark-discovery-drift.py"
+      - "scripts/export-benchmark-discovery-sweep.py"
+      - "scripts/benchmark_discovery_lib.py"
       - "scripts/corpus_db_read.py"
       - "scripts/refresh-agent-corpus.ps1"
       - "docs/rules.md"
