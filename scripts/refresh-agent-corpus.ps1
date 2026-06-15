@@ -57,4 +57,8 @@ Write-Log "Checking benchmark discovery metrics vs corpus DB"
 python (Join-Path $repo "scripts\corpus-benchmark-discovery-drift.py") --db $corpus 2>&1 |
     ForEach-Object { Write-Log $_ }
 
+Write-Log "Checking rule audit labeled metrics vs corpus DB"
+python (Join-Path $repo "scripts\corpus-rule-audit-drift.py") --db $corpus 2>&1 |
+    ForEach-Object { Write-Log $_ }
+
 Write-Log "Corpus refresh complete"

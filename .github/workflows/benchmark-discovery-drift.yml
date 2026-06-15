@@ -7,9 +7,13 @@ on:
       - "site/app/benchmark/page.tsx"
       - "site/tsconfig.json"
       - "eval/benchmark-discovery-sweep.json"
+      - "eval/rule-audit.json"
       - "scripts/corpus-benchmark-discovery-drift.py"
+      - "scripts/corpus-rule-audit-drift.py"
       - "scripts/export-benchmark-discovery-sweep.py"
       - "scripts/benchmark_discovery_lib.py"
+      - "scripts/rule_audit_lib.py"
+      - "scripts/build-rule-audit.py"
       - "scripts/corpus_db_read.py"
       - "scripts/refresh-agent-corpus.ps1"
       - "docs/rules.md"
@@ -20,9 +24,13 @@ on:
       - "site/app/benchmark/page.tsx"
       - "site/tsconfig.json"
       - "eval/benchmark-discovery-sweep.json"
+      - "eval/rule-audit.json"
       - "scripts/corpus-benchmark-discovery-drift.py"
+      - "scripts/corpus-rule-audit-drift.py"
       - "scripts/export-benchmark-discovery-sweep.py"
       - "scripts/benchmark_discovery_lib.py"
+      - "scripts/rule_audit_lib.py"
+      - "scripts/build-rule-audit.py"
       - "scripts/corpus_db_read.py"
       - "scripts/refresh-agent-corpus.ps1"
       - "docs/rules.md"
@@ -40,3 +48,6 @@ jobs:
 
       - name: Validate sweep JSON schema (DB compare is local-only)
         run: python scripts/corpus-benchmark-discovery-drift.py --skip-if-missing-db
+
+      - name: Validate rule-audit JSON schema (DB compare is local-only)
+        run: python scripts/corpus-rule-audit-drift.py --skip-if-missing-db
