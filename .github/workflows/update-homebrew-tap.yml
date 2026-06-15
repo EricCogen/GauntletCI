@@ -3,6 +3,12 @@ name: Update Homebrew Tap
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version without leading v (e.g. 2.8.0)"
+        required: true
+        type: string
 
 jobs:
   update-tap:
@@ -10,7 +16,12 @@ jobs:
     steps:
       - name: Resolve version
         id: ver
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "version=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Download checksums
         run: |
@@ -20,58 +31,30 @@ jobs:
             -o checksums.txt
           cat checksums.txt
 
-      - name: Parse SHA256 values
-        id: sha
-        run: |
-          VERSION="${{ steps.ver.outputs.version }}"
-          sha() { grep "$1" checksums.txt | awk '{print $1}'; }
-          echo "osx_arm64=$(sha "gauntletci-osx-arm64-${VERSION}.tar.gz")" >> "$GITHUB_OUTPUT"
-          echo "osx_x64=$(sha "gauntletci-osx-x64-${VERSION}.tar.gz")"     >> "$GITHUB_OUTPUT"
-          echo "linux_arm64=$(sha "gauntletci-linux-arm64-${VERSION}.tar.gz")" >> "$GITHUB_OUTPUT"
-          echo "linux_x64=$(sha "gauntletci-linux-x64-${VERSION}.tar.gz")"  >> "$GITHUB_OUTPUT"
+      - name: Checkout GauntletCI update script
+        uses: actions/checkout@v6
+        with:
+          repository: EricCogen/GauntletCI
+          ref: main
+          path: gauntletci-src
+          sparse-checkout: scripts/update-homebrew-tap-formula.py
+          sparse-checkout-cone-mode: false
 
       - name: Checkout tap repo
         uses: actions/checkout@v6
         with:
           repository: EricCogen/homebrew-gauntletci
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          path: homebrew-tap
 
       - name: Update formula
-        env:
-          VERSION: ${{ steps.ver.outputs.version }}
-          SHA_OSX_ARM64: ${{ steps.sha.outputs.osx_arm64 }}
-          SHA_OSX_X64: ${{ steps.sha.outputs.osx_x64 }}
-          SHA_LINUX_ARM64: ${{ steps.sha.outputs.linux_arm64 }}
-          SHA_LINUX_X64: ${{ steps.sha.outputs.linux_x64 }}
         run: |
-          cat > /tmp/update_formula.py << 'PYEOF'
-          import os, re
-
-          version    = os.environ["VERSION"]
-          sha_map = {
-              "osx-arm64":   os.environ["SHA_OSX_ARM64"],
-              "osx-x64":     os.environ["SHA_OSX_X64"],
-              "linux-arm64": os.environ["SHA_LINUX_ARM64"],
-              "linux-x64":   os.environ["SHA_LINUX_X64"],
-          }
-
-          with open("Formula/gauntletci.rb") as f:
-              content = f.read()
-
-          content = re.sub(r'version "[^"]*"', f'version "{version}"', content)
-
-          for platform, sha in sha_map.items():
-              pattern = rf'(url "[^"]*{re.escape(platform)}[^"]*"\n\s*sha256 ")[^"]*(")'
-              content = re.sub(pattern, rf'\g<1>{sha}\g<2>', content)
-
-          with open("Formula/gauntletci.rb", "w") as f:
-              f.write(content)
-
-          print(open("Formula/gauntletci.rb").read())
-          PYEOF
-          python3 /tmp/update_formula.py
+          python3 ../gauntletci-src/scripts/update-homebrew-tap-formula.py \
+            ../checksums.txt Formula/gauntletci.rb "${{ steps.ver.outputs.version }}"
+        working-directory: homebrew-tap
 
       - name: Commit and push
+        working-directory: homebrew-tap
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

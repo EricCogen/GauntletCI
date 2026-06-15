@@ -3,10 +3,20 @@ name: Submit to winget
 on:
   release:
     types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version without leading v (e.g. 2.8.0)"
+        required: true
+        type: string
 
 # Requires WINGET_TOKEN secret: a PAT with public_repo scope on an account
 # that has forked microsoft/winget-pkgs. The action submits a PR to the fork
 # and then opens a PR to microsoft/winget-pkgs from that fork.
+#
+# First-time setup: EricCogen.GauntletCI is not in winget-pkgs yet. Submit an
+# initial manifest PR manually (see packaging/winget/) before this workflow can
+# auto-bump versions. Until then, expect continue-on-error skips on release.
 jobs:
   winget:
     runs-on: windows-latest

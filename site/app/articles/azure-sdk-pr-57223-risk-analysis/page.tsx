@@ -402,7 +402,7 @@ export default function AzureSDKAnalysisPage() {
             <section className="mb-12">
               <h2 className="text-2xl font-bold mb-4">Methodology & Data</h2>
               <p className="mb-4">
-                This analysis is based on Azure/azure-sdk-for-net PR #57223, which is a publicly available, already-merged PR. GauntletCI 2.8.0-alpha analyzed the full diff.
+                This analysis is based on Azure/azure-sdk-for-net PR #57223, which is a publicly available, already-merged PR. GauntletCI 2.8.0 analyzed the full diff.
               </p>
               <p className="mb-4">
                 <strong>Raw findings:</strong> 40,155 signals across 13 distinct rule types
