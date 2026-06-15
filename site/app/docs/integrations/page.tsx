@@ -185,7 +185,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: EricCogen/GauntletCI@v2.7.1
+      - uses: EricCogen/GauntletCI@v2.8.0
         with:
           sensitivity: 'balanced'
           inline-comments: 'true'

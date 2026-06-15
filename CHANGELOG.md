@@ -9,146 +9,25 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Added - Phase 12B Rule Refinement (Guard Clauses)
-- **GCI0022 (Idempotency & Retry Safety)**: Skip migrations and seed data files
-  - Detects raw INSERT without upsert guard, but this is intentional in Migrations/ and seed configs
-  - Added `IsMigrationOrSeedFile()` guard to exclude .sql migrations, EF migrations, and DataSeeding files
-  - Expected FP reduction: 30-40% (from 131 detections to ~78-92)
+---
 
-- **GCI0029 (PII Logging Leak)**: Skip hashed and transformed data
-  - Detects PII terms in log calls, but many logs encrypt/tokenize before output
-  - Added `IsDataTransformed()` guard to detect Hash, HMAC, Encrypt, Redact, Anonymize patterns
-  - Expected FP reduction: 20-30% (from 340 detections to ~238-272)
-
-- **GCI0039 (External Service Safety)**: Skip injected/factory-managed clients
-  - Detects HTTP calls without CancellationToken, but factory/injected clients handle it at infrastructure level
-  - Added `UsesFactoryManagedClients()` guard: detects IHttpClientFactory, Polly, AddHttpClient patterns
-  - Added `IsInjectedOrStaticClient()` guard: skips _httpClient, _client, injected patterns
-  - Expected FP reduction: 50-60% (from 617 detections to ~247-370)
-
-- **Testing**: +2 new tests for GCI0039 (direct vs injected client scenarios), all 1259 tests passing
-- **Estimated Impact**: ~416 FP reduction across 3 rules, projected corpus precision to 92-95%
-- **Phase 12B Artifacts**: `/docs/PHASE_12B_RULE_REFINEMENTS.md` with detailed analysis
-
-### Added - Phase 11 Ground Truth Baseline (Corpus Re-Labeling Complete)
-- **Phase 11 Execution**: Successfully validated and re-labeled all 264 unmapped detections from 8 post-label rules
-  - **Final Corpus Metrics**: Precision 46.6% (↑ from 10.7%), Recall 58.6% (↑ from 24.6%)
-  - **Absolute Improvement**: +307 fixtures re-labeled, +334% more true positives, 40% fewer false positives
-  - All 7 validated rules now show 100% precision (GCI0032, GCI0038, GCI0010, GCI0042, GCI0043, GCI0044, GCI0045)
-  
-- **Strategy & Validation**:
-  - Validated post-label rules using previous spot-check methodology (100% C#, 100% api-change + contract-change patterns)
-  - Bulk-inserted 264 expected_findings for 8 newly validated post-label rules
-  - Corpus database backup: `data/gauntletci-corpus.db.backup-phase11-20260501-131736`
-  
-- **Phase 11 Artifacts**:
-  - `/docs/PHASE_11_GROUND_TRUTH_BASELINE.md`: Complete validation results, metrics timeline, Phase 12 roadmap
-  - `phase11-corpus-summary.py`: Queries unmapped fixtures per post-label rule
-  - `phase11-validation-tool.py`: Interactive spot-check tool for per-rule validation
-  - `phase11-batch-relabel.py`: Bulk INSERT execution for post-label rule re-labeling
-  
-- **Root Cause Validation**: Confirmed version skew as sole source of corpus precision problem
-  - Feb 2026 corpus labeled with 30 rules, 290 expected findings
-  - Phase 6-8 added 8 new rules + enhanced others (264 new detections, 0 prior labels)
-  - After re-labeling: rules work correctly, corpus now reflects current rule scope
-
-### Added - Phase 10C-B Selective Re-Labeling
-- **GCI0038 Validation**: Spot-checked 10 of 29 unmapped detections - all legitimate (100% TP)
-  - Pattern: 100% C# code, 100% have api-change + contract-change tags, 90%+ tests changed
-  - Assessment: [S] Rule Stricter - detects behavioral changes missed by original corpus labels
-  
-- **GCI0010 Validation**: Spot-checked 10 of 14 unmapped detections - all legitimate (100% TP)
-  - Pattern: 100% configuration changes from hardcoded to dynamic values
-  - Assessment: [S] Rule Stricter - corpus labels predated this refinement
-  
-- **Phase 10C-B Impact**: 43 fixtures re-labeled
-  - Precision: 10.7% → 15.8% (+47% relative)
-  - Recall: 24.6% → 32.4% (+32% relative)
-  - TP increase: 92 → 135, FP decrease: 765 → 722
-  
-- **Phase 10C-B Artifacts**:
-  - `/docs/PHASE_10C_B_RELABEL_RESULTS.md`: Spot-check findings and impact analysis
-  - `phase10c-b-execute-v2.py`: Working Python execution script with UUID ID generation
-  - `phase10c-b-relabel-statements.sql`: SQL statements executed on corpus
-
-### Added - Root Cause Analysis & Documentation
-- **Phase 10 Post-Label Rules Analysis** (`/docs/PHASE_10_POST_LABEL_RULES.md`):
-  - Identified 8 rules added after corpus labeling (Feb 2026)
-  - Timeline: Feb (corpus created) → Mar-Apr (8 new rules added, no corpus update) → May (discovered version skew)
-  - Evidence: All spot-checked samples show consistent pattern of legitimate violations
-  - **Conclusion**: Rules working correctly; problem is outdated corpus labels, not broken implementations
-
-### Added - Phase 10A & 10B Corpus Analysis Tools
-- **Phase 10A**: Built corpus analysis tooling
-  - `phase10-relabel-tool.py`: Batch analysis tool with precision/recall metrics per rule
-  - `phase10-inspect-corpus.py`: Schema inspector for corpus database structure
-  - `corpus-relabel-analysis.csv`: Per-rule metrics (TP, FP, FN, precision, recall)
-  - `/docs/PHASE_10A_CORPUS_ANALYSIS.md`: Baseline findings document
-
-- **Phase 10B**: Comprehensive spot-check analysis
-  - `phase10-spotcheck-analysis.py`: FP/TP pattern analyzer with machine-readable output
-  - `/docs/PHASE_10B_SPOTCHECK_ANALYSIS.md`: Spot-check findings from 30 samples
-
-### Added - Phase 9 Documentation & Case Studies
-- **Case Studies (6 deep-dive articles)**:
-  - **GCI0054**: Async Void Abuse - Fire-and-forget exception handling failures
-  - **GCI0055**: Method Signature Change - Breaking API changes and compatibility
-  - **GCI0045**: Service Locator Anti-Pattern - Hidden dependencies and testability
-  - **GCI0048**: Insecure Random - Cryptographic RNG failures in security contexts
-  - **GCI0039**: Insecure Deserialization - Deserialization RCE vulnerabilities
-  - **GCI0050**: SQL Column Truncation - Silent data loss in schema migrations
-  - Each case study includes: real-world failure incidents, detection patterns, false positive guards, and remediation code
-  - Located in `/docs/case-studies/` with central index `/docs/case-studies/README.md`
-
-### Added - Phase 9B/C Analysis
-- **Corpus Analysis Decision Document** (`/docs/PHASE_9_CORPUS_ANALYSIS_DECISION.md`):
-  - Analyzed corpus database for high-FP rules (GCI0003: 98.6% FP, GCI0004: 78.9% FP)
-  - Identified data quality issues: corpus labels may not align with current rule implementations
-  - Decision: Deferred speculative refinements; focused on documentation value instead
-  - Test coverage (1258 tests, 100% passing) is a more reliable signal than corpus labels
-  - Recommended Phase 10 approach: systematic corpus re-labeling with explicit ground truth baseline
-
-### Added - Phase 8 Test Coverage & Quality Assurance
-- **GCI0053_LockfileChangedWithoutSource**: Added 14 new test cases validating rule fires when lockfile changes lack accompanying source code changes. Covers all supported lock file formats (package-lock.json, yarn.lock, Cargo.lock, go.sum, poetry.lock, pnpm-lock.yaml, packages.lock.json, Pipfile.lock, .lock files). Verifies source language detection works across C#, TypeScript, JavaScript, Python, Go, and Rust.
-- **GCI0048-GCI0050 quality verification**: Confirmed existing test suites (47 total tests across 3 rules) all passing. GCI0048 (Insecure Random in security contexts: 6 tests), GCI0049 (Float/Double equality: 4 tests), GCI0050 (SQL column truncation: 23 tests). Each rule verified to have proper false positive guards and edge case coverage.
-- **GCI0052 intentionally disabled**: Rule requires GITHUB_ACTOR environment variable context not available in generic diffs. Corpus labeler analysis found 84 spurious false negatives attempting to infer actor context from .csproj changes and method signatures.
-- **Phase 8 progress**: Test count increased to 1258 (1244+14 new). All 4 enabled rules (GCI0048, GCI0049, GCI0050, GCI0053) verified working with comprehensive test coverage. Corpus validation completed in Phase 7 applies to all 34 rules including Phase 8 additions.
-
-### Added - Phase 6 & 7 Completion
-- **GCI0054_AsyncVoidAbuse**: New rule detecting public async void methods (fire-and-forget patterns). Fire-and-forget async methods break error handling. Exception: allows async void event handlers (required by event model). Detects methods that can throw exceptions without proper Task-based error propagation.
-- **GCI0055_MethodSignatureChange**: New rule detecting breaking changes to public method signatures. Flags return type changes (e.g., `void` to `Task`), removed parameters, and required parameters without defaults. Prevents breaking API changes in consuming code.
-- **Phase 6 rule refinements** (corpus-driven):
-  - **GCI0010**: Refined to reduce false positives on non-hardcoded config references
-  - **GCI0029**: Reduced FP rate on ubiquitous type property accesses (FullName, Assembly names)
-  - **GCI0032**: Enhanced guard clause detection for defensive programming
-  - **GCI0041**: Added guards for test attribute markers ([SkipLocalsInit], [SkipOn*])
-  - **GCI0045**: Improved delegation wrapper detection (threshold lowered 3->2 methods, inheritance matching)
-  - **GCI0046**: Expanded service locator pattern library (Autofac, CastleWindsor added), bidirectional async detection
-  - **GCI0038**: Reduced false positives with mock/fake pattern guards, infrastructure file exclusions
-  - **GCI0051**: Implemented numeric coercion risk detection
-- **Phase 7 validation**: All 34 rules validated, 1244 tests passing (100% success rate). Corpus analysis completed on all rules.
+## [2.8.0] - 2026-06-15
 
 ### Fixed
-- **Lighthouse CI workflow**: Added `staticDistDir: ./out` to serve the Next.js static export directly instead of trying to connect to localhost. Fixes 404 errors during audit collection.
+- **Agent/benchmark gold metrics**: Export and audit scripts use the latest **completed** run per fixture (`ORDER BY completed_at_utc DESC`), not `MAX(id)` on UUID run IDs.
+- **GitHub Action `findings-count`**: Composite action counts findings from `--output json` via `jq` (with python3/grep fallbacks).
+- **GCI0001 diff integrity**: Routine companion-file allowlist reduces mixed-scope false positives on typical refactors.
+- **Corpus scoring**: `LabelSource.Manual` is honored for gold fixtures (same trust as human review).
 
 ### Added
-- **Auto-parsed /releases page**: `site/lib/parseChangelog.ts` now extracts release metadata from CHANGELOG.md at build time. The releases page dynamically renders all versions, sections, and summaries - no manual duplication required. Sitemap includes /releases with 0.8 priority.
-- **NuGet downloads badge**: Added to README linking to the GauntletCI NuGet package page.
-- **Self-contained binary releases**: `release.yml` now publishes self-contained single-file executables for win-x64, win-arm64, osx-x64, osx-arm64, linux-x64, and linux-arm64, plus a `checksums.txt`, as GitHub release assets alongside the NuGet package.
-- **Homebrew tap**: Created `EricCogen/homebrew-gauntletci` tap. Install with `brew tap EricCogen/gauntletci && brew install gauntletci`. SHA256 values auto-updated after each release via `update-homebrew-tap.yml`.
-- **winget packaging**: Manifests updated to v2.1.0 with correct installer URLs. `submit-winget.yml` auto-submits a PR to `microsoft/winget-pkgs` on each release (requires `WINGET_TOKEN` secret).
-- **`update-homebrew-tap.yml`**: Post-release workflow that downloads `checksums.txt`, parses SHA256 values, and pushes an updated formula to the tap repo (requires `HOMEBREW_TAP_TOKEN` secret).
-- **Extension docs**: Added full documentation pages for VS Code extension, GitHub Action, Azure DevOps task, and MCP server at `/docs/integrations/{vscode,github-action,azure-devops,mcp}`. Each page includes setup instructions, all inputs/settings, UI mockups, and troubleshooting guidance.
-- **Docs sidebar grouped nav**: Split docs sidebar into "Documentation" and "Extensions" groups for easier navigation.
-- **Integrations overview cards**: `/docs/integrations` now opens with extension cards linking to each sub-page before the CI/CD reference content.
-- **Getting Started install options**: Added winget, Homebrew, and manual binary download install options to the Getting Started page alongside the existing `dotnet tool install` command.
+- **Corpus audit snapshot**: `corpus audit-snapshot` CLI, shared `corpus_db_read` read indexes, and faster `build-rule-audit.py --full-corpus`.
+- **Eval drift CI**: Workflow validates `eval/benchmark-discovery-sweep.json` and `eval/rule-audit.json` on relevant PRs.
+- **Dependabot/npm audit**: npm ecosystems for worker, github-app-server, and site; worker esbuild override closes transitive alert chain.
 
-### Added
-- **Custom 404 page**: `not-found.tsx` added with header, footer, and helpful links to Home, Docs, Detections, Pricing, and Benchmark.
-- **GitHub stars badge in site header**: Stars badge (shields.io social style) added to the desktop nav, linking to /stargazers.
+### Changed
+- NuGet dependencies: Microsoft.Data.Sqlite and Microsoft.Extensions.Hosting 10.0.9, Spectre.Console 0.57.0, actions/setup-python v6.
 
-### Fixed
-- **README custom badge link**: First badge (custom endpoint) now links to the GitHub repository instead of displaying as an unlinked image.
+---
 
 ## [2.1.1] - 2026-04-28
 
