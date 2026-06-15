@@ -100,7 +100,7 @@ Ground-truth labels live in the agent corpus at `%USERPROFILE%\.gauntletci\corpu
 3. `gauntletci corpus score --db %USERPROFILE%\.gauntletci\corpus.db`
 4. `python scripts/corpus-validation-summary.py` — update this section from the JSON output
 5. `gauntletci corpus audit-snapshot --db <path>` (or `python scripts/corpus-audit-snapshot.py`) — refresh `audit_snapshots`
-6. `python scripts/build-rule-audit.py --full-corpus` — regenerate `eval/rule-audit.json` (uses `corpus_db_read` indexes; ~10s on agent DB)
+6. `python scripts/build-rule-audit.py --full-corpus` then `python scripts/corpus-rule-audit-drift.py` — regenerate and verify `eval/rule-audit.json` labeled metrics (~10s on agent DB)
 7. `python scripts/export-benchmark-discovery-sweep.py` then `python scripts/corpus-benchmark-discovery-drift.py` — refresh `eval/benchmark-discovery-sweep.json` and verify vs agent DB (CI: `.github/workflows/benchmark-discovery-drift.yml` with `--skip-if-missing-db`)
 
 The public [benchmark page](https://gauntletci.com/benchmark) keeps Silver P/R on rule cards and adds **agent gold precision** (where 414 human labels exist) plus a separate discovery-sweep table. Do not treat those as Silver metrics.
