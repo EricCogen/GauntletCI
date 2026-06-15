@@ -67,6 +67,40 @@ jobs:
       - name: Audit npm dependencies
         run: pnpm audit --audit-level moderate
 
+  npm-audit-worker:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+
+      - run: npm ci
+      - run: npm audit --audit-level moderate
+
+  npm-audit-github-app-server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: github-app-server
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: github-app-server/package-lock.json
+
+      - run: npm ci
+      - run: npm audit --audit-level moderate
+
   dependency-review:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
