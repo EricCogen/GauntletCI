@@ -41,7 +41,7 @@ Sections marked **Status: Not yet implemented** describe planned behavior only. 
 
 Ground-truth labels live in the agent corpus at `%USERPROFILE%\.gauntletci\corpus.db` (not the empty `./data/gauntletci-corpus.db` shell).
 
-**Last queried:** 2026-06-13 (`python scripts/corpus-validation-summary.py` after discovery `run-all` + `corpus score`).
+**Last queried:** 2026-06-15 (`python scripts/corpus-validation-summary.py` after audit-pass2 latest-run query fix + snapshot #18).
 
 | Metric | Value |
 |--------|------:|
@@ -50,30 +50,33 @@ Ground-truth labels live in the agent corpus at `%USERPROFILE%\.gauntletci\corpu
 | Distinct rules with gold labels | 41 |
 | Rule runs stored | 6,162 |
 | `aggregates` table last updated | 2026-06-13 |
-| Audit snapshot last taken | 2026-06-13 |
+| Audit snapshot last taken | 2026-06-15 (snapshot #18) |
 
-**Audit snapshot (labeled subset):** tp/fp/fn from `expected_findings` vs latest completed run (`audit_snapshot_rows` snapshot #17).
+**Latest-run selection:** `rule_runs.id` is a UUID string. Gold metrics and `eval/benchmark-discovery-sweep.json` use the latest **completed** run per fixture (`ORDER BY completed_at_utc DESC, id DESC`). Do not use `MAX(id)` on UUIDs.
+
+**Audit snapshot (labeled subset):** tp/fp/fn from `expected_findings` vs latest completed run (`audit_snapshot_rows` snapshot #18).
 
 | Rule | Labeled | TP | FP | FN | Precision |
 |------|--------:|---:|---:|---:|----------:|
-| GCI0004 | 53 | 31 | 11 | 3 | 0.74 |
-| GCI0003 | 44 | 27 | 9 | 0 | 0.75 |
-| GCI0006 | 29 | 17 | 4 | 0 | 0.81 |
-| GCI0015 | 26 | 11 | 5 | 0 | 0.69 |
-| GCI0024 | 19 | 2 | 7 | 0 | 0.22 |
-| GCI0010 | 19 | 1 | 6 | 1 | 0.14 |
+| GCI0004 | 53 | 6 | 1 | 28 | 0.86 |
+| GCI0003 | 44 | 13 | 1 | 14 | 0.93 |
+| GCI0006 | 29 | 10 | 1 | 7 | 0.91 |
+| GCI0015 | 26 | 1 | 0 | 10 | 1.00 |
+| GCI0016 | 15 | 2 | 0 | 4 | 1.00 |
+| GCI0036 | 16 | 1 | 0 | 3 | 1.00 |
+| GCI0010 | 19 | 0 | 0 | 2 | — |
+| GCI0024 | 19 | 0 | 0 | 2 | — |
 
 **Gold labels vs latest run** (414 `expected_findings` rows in DB; min 3 labeled pairs per rule):
 
 | Rule | TP | FP | FN | Precision |
 |------|---:|---:|---:|----------:|
-| GCI0004 | 31 | 11 | 0 | 0.74 |
-| GCI0003 | 27 | 9 | 0 | 0.75 |
-| GCI0006 | 17 | 4 | 0 | 0.81 |
-| GCI0015 | 11 | 5 | 0 | 0.69 |
-| GCI0010 | 1 | 6 | 0 | 0.14 |
-| GCI0024 | 2 | 7 | 0 | 0.22 |
-| GCI0016 | 6 | 0 | 0 | 1.00 |
+| GCI0004 | 6 | 1 | 28 | 0.86 |
+| GCI0003 | 13 | 1 | 14 | 0.93 |
+| GCI0006 | 10 | 1 | 7 | 0.91 |
+| GCI0015 | 1 | 0 | 10 | 1.00 |
+| GCI0016 | 2 | 0 | 4 | 1.00 |
+| GCI0036 | 1 | 0 | 3 | 1.00 |
 
 **Discovery-tier trigger rates** (606-fixture sweep; scored 2026-06-13). Per-fixture `expected.json` exists on only ~24 fixtures, so `aggregates.precision_score` for Discovery is mostly 0 — use the gold-label table above for labeled precision.
 
@@ -88,7 +91,7 @@ Ground-truth labels live in the agent corpus at `%USERPROFILE%\.gauntletci\corpu
 | GCI0043 | 0.06 |
 | GCI0032 | 0.06 |
 
-**High trigger, low gold precision (noise candidates):** GCI0019 (22% trigger, unlabeled discovery), GCI0010 (0.14 gold precision), GCI0024 (0.22). GCI0001 trigger dropped to 8% post-#264 companion-file fix (was ~48% in April aggregates).
+**High trigger, low gold precision (noise candidates):** GCI0019 (22% trigger, unlabeled discovery). On the latest completed discovery run, GCI0010 and GCI0024 show recall gaps (FN on labeled fixtures, no FP on latest run). Prior aggregate snapshots showed lower precision when stale runs were selected via `MAX(id)` on UUID run IDs (fixed in pass-2 audit).
 
 **Refresh after rule changes:**
 

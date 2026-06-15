@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sqlite3
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -34,6 +35,8 @@ def refresh_metrics(doc: dict, triggers: dict[str, str], gold: dict[str, str]) -
     for rule_id in list(card_gold.keys()):
         if rule_id in gold:
             card_gold[rule_id] = gold[rule_id]
+        else:
+            del card_gold[rule_id]
 
     doc["generatedUtc"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     return doc
@@ -62,6 +65,16 @@ def main() -> None:
     triggers, gold, fixture_count = load_db_metrics(db_path)
     doc = refresh_metrics(doc, triggers, gold)
     doc["fixtureCount"] = fixture_count
+
+    con = sqlite3.connect(db_path)
+    discovery_count = int(
+        con.execute("SELECT COUNT(*) FROM fixtures WHERE tier = 'Discovery'").fetchone()[0]
+    )
+    con.close()
+    doc["corpusNote"] = (
+        f"{fixture_count} total fixtures ({discovery_count} discovery); agent corpus only. "
+        "Regenerate with scripts/export-benchmark-discovery-sweep.py"
+    )
 
     payload = json.dumps(doc, indent=2) + "\n"
     if args.dry_run:
