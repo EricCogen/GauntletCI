@@ -100,8 +100,25 @@ Writes `eval/reports/gold-noise-sweep.json`. Benchmark runs default to `--sensit
 | `competitive-matrix.json` | Subjective axis scores (comparable tools only) |
 | `redis-2995-scorecard.json` | Legacy summary + anchor pointer |
 | `../tests/GauntletCI.Benchmarks/Fixtures/curated/` | In-repo diff regressions (17 asserted); separate from Silver corpus |
+| `benchmark-discovery-sweep.json` | Agent corpus discovery trigger rates + gold precision (not Silver P/R) |
+| `rule-audit.json` | Per-rule audit tags, labeled TP/FP/FN, tuning priorities from agent DB |
 
 CI runs anchor via `redis-benchmark.yml`; gold fixtures with `primary_rules` via `benchmark-suite.yml` (`-CiOnly` until ground truth expands). In-repo curated fixtures run via `dotnet test tests/GauntletCI.Benchmarks --filter Category=Benchmark`.
+
+## Agent corpus metrics (separate from Silver)
+
+The **Silver corpus** (~618 fixtures on the public benchmark page) is not the same database as the **agent corpus** at `%USERPROFILE%\.gauntletci\corpus.db` (608 fixtures, 414 human `expected_findings` labels). Agent metrics power:
+
+| Artifact | Regenerate | Verify vs agent DB |
+|----------|------------|-------------------|
+| `benchmark-discovery-sweep.json` | `python scripts/export-benchmark-discovery-sweep.py` | `python scripts/corpus-benchmark-discovery-drift.py` |
+| `rule-audit.json` | `python scripts/build-rule-audit.py --full-corpus` | `python scripts/corpus-rule-audit-drift.py` |
+
+Full pipeline: `.\scripts\refresh-agent-corpus.ps1` (or numbered steps in `docs/rules.md` corpus validation section).
+
+**Latest-run selection:** gold metrics use the latest **completed** run per fixture (`ORDER BY completed_at_utc DESC`), not `MAX(id)` on UUID run IDs.
+
+CI (`.github/workflows/benchmark-discovery-drift.yml`) validates both JSON schemas on every relevant PR; DB comparison runs locally when the agent corpus is present (`--skip-if-missing-db` in CI).
 
 ## Corpus promotion
 
