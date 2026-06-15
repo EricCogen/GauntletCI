@@ -571,10 +571,12 @@ def main() -> None:
         "eval_notes": {
             "regenerate": "python scripts/build-rule-audit.py",
             "regenerate_full_labeled_metrics": "python scripts/build-rule-audit.py --full-corpus",
+            "verify_drift": "python scripts/corpus-rule-audit-drift.py",
             "corpus_default": "%USERPROFILE%\\.gauntletci\\corpus.db",
             "metrics_sources": [
                 "aggregates (precision/recall/usefulness)",
                 "audit_snapshot_rows (labeled tp/fp/fn when snapshot exists)",
+                "compute_labeled_rule_metrics (latest completed run per fixture)",
                 "fixtures_triggered_latest_run (distinct fixtures, latest completed run)",
                 "corpus_db_read.ensure_read_indexes (agent DB read performance)",
             ],

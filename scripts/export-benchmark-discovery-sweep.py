@@ -73,7 +73,8 @@ def main() -> None:
     con.close()
     doc["corpusNote"] = (
         f"{fixture_count} total fixtures ({discovery_count} discovery); agent corpus only. "
-        "Regenerate with scripts/export-benchmark-discovery-sweep.py"
+        "Regenerate: scripts/export-benchmark-discovery-sweep.py; "
+        "verify: scripts/corpus-benchmark-discovery-drift.py"
     )
 
     payload = json.dumps(doc, indent=2) + "\n"
