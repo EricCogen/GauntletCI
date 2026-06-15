@@ -51,7 +51,7 @@ export default function PrivacyModesPage() {
                 <div>
                   <p className="font-semibold text-foreground mb-1">✓ What's enabled:</p>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li>37 built-in deterministic rules (GCI0001-GCI0037)</li>
+                    <li>37 active deterministic rules (39 implemented in Core; see Rule Reference)</li>
                     <li>Diff-based change detection</li>
                     <li>Local AST analysis (Roslyn syntax trees)</li>
                     <li>Pre-commit hook integration</li>

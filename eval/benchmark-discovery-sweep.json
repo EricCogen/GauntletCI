@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "generatedUtc": "2026-06-14T01:30:02Z",
-  "corpusNote": "606 discovery fixtures; agent corpus only. Regenerate with scripts/export-benchmark-discovery-sweep.py",
+  "generatedUtc": "2026-06-15T14:59:44Z",
+  "corpusNote": "608 total fixtures (606 discovery); agent corpus only. Regenerate with scripts/export-benchmark-discovery-sweep.py",
   "discoveryRows": [
     {
       "id": "GCI0019",
@@ -12,19 +12,18 @@
       "id": "GCI0003",
       "name": "Behavioral Change Detection",
       "triggerPct": "18%",
-      "goldPrecision": "75%"
+      "goldPrecision": "93%"
     },
     {
       "id": "GCI0006",
       "name": "Edge Case Handling",
       "triggerPct": "12%",
-      "goldPrecision": "81%"
+      "goldPrecision": "91%"
     },
     {
       "id": "GCI0024",
       "name": "Resource Lifecycle",
-      "triggerPct": "9%",
-      "goldPrecision": "22%"
+      "triggerPct": "9%"
     },
     {
       "id": "GCI0001",
@@ -42,30 +41,27 @@
       "id": "GCI0004",
       "name": "Breaking Change Risk",
       "triggerPct": "4%",
-      "goldPrecision": "74%"
+      "goldPrecision": "86%"
     },
     {
       "id": "GCI0010",
       "name": "Hardcoding and Configuration",
       "triggerPct": "0%",
-      "goldPrecision": "14%",
       "note": "Silver card has no P/R; gold labels on agent corpus only"
     },
     {
       "id": "GCI0015",
       "name": "Data Integrity Risk",
       "triggerPct": "0%",
-      "goldPrecision": "69%",
+      "goldPrecision": "100%",
       "note": "Not on Silver benchmark cards yet"
     }
   ],
   "ruleCardAgentGold": {
-    "GCI0003": "75%",
-    "GCI0004": "74%",
-    "GCI0006": "81%",
-    "GCI0010": "14%",
-    "GCI0016": "100%",
-    "GCI0024": "22%"
+    "GCI0003": "93%",
+    "GCI0004": "86%",
+    "GCI0006": "91%",
+    "GCI0016": "100%"
   },
   "fixtureCount": 608
 }

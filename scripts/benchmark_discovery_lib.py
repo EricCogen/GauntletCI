@@ -26,7 +26,7 @@ def load_db_metrics(db_path: Path) -> tuple[dict[str, str], dict[str, str], int]
         sys.path.insert(0, str(REPO / "scripts"))
         sys_path_inserted = True
 
-    from corpus_db_read import ensure_read_indexes  # noqa: E402
+    from corpus_db_read import compute_labeled_rule_metrics, ensure_read_indexes  # noqa: E402
 
     con = sqlite3.connect(db_path)
     ensure_read_indexes(con)
@@ -45,40 +45,13 @@ def load_db_metrics(db_path: Path) -> tuple[dict[str, str], dict[str, str], int]
     ).fetchall()
     triggers = {rid: pct_string(rate) for rid, rate in trigger_rows if rate is not None}
 
-    gold_rows = cur.execute(
-        """
-        WITH latest AS (
-            SELECT fixture_id, MAX(id) AS run_id
-            FROM rule_runs
-            GROUP BY fixture_id
-        ),
-        pairs AS (
-            SELECT ef.rule_id,
-                   ef.fixture_id,
-                   ef.should_trigger,
-                   MAX(af.did_trigger) AS did_trigger
-            FROM expected_findings ef
-            JOIN latest lr ON lr.fixture_id = ef.fixture_id
-            JOIN actual_findings af
-              ON af.fixture_id = ef.fixture_id
-             AND af.rule_id = ef.rule_id
-             AND af.run_id = lr.run_id
-            WHERE ef.is_inconclusive = 0
-            GROUP BY ef.rule_id, ef.fixture_id, ef.should_trigger
-        )
-        SELECT rule_id,
-               SUM(CASE WHEN should_trigger = 1 AND did_trigger = 1 THEN 1 ELSE 0 END) AS tp,
-               SUM(CASE WHEN should_trigger = 0 AND did_trigger = 1 THEN 1 ELSE 0 END) AS fp
-        FROM pairs
-        GROUP BY rule_id
-        """
-    ).fetchall()
+    # Same latest-run + LEFT JOIN logic as LabeledRuleMetricsReader / audit-snapshot CLI.
+    labeled = compute_labeled_rule_metrics(cur)
     gold: dict[str, str] = {}
-    for rule_id, tp, fp in gold_rows:
-        tp = int(tp or 0)
-        fp = int(fp or 0)
-        if tp + fp:
-            gold[rule_id] = pct_string(tp / (tp + fp)) or ""
+    for rule_id, entry in labeled.items():
+        precision = entry.get("labeled_precision")
+        if precision is not None:
+            gold[rule_id] = pct_string(precision) or ""
 
     con.close()
     return triggers, gold, fixture_count
