@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const commonQA = [
   {
     question: "What is Behavioral Change Risk?",
@@ -186,9 +188,13 @@ const faqs = [
     myth: "AI finds the bugs.",
     reality: (
       <>
-        The <strong>detection engine is 100% deterministic Roslyn analysis</strong>. It uses a fixed set of 37
-        built-in rules to identify changes. The AI (which runs 100% offline, locally) is only used to <em>explain</em> the
-        finding in plain English so juniors do not have to Google the error code.
+        The <strong>detection engine is 100% deterministic Roslyn analysis</strong> on 37 active
+        rules (39 implemented in Core). No LLM is required for rule evaluation or findings. Optional{" "}
+        <Link href="/docs/privacy-modes" className="text-cyan-400 hover:underline">
+          Local AI or integration modes
+        </Link>{" "}
+        can add plain-English explanations; those modes are off by default and never change which rules
+        fire.
       </>
     ),
   },

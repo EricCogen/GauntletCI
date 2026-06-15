@@ -12,6 +12,9 @@
     "typescript": "^5.5.0",
     "wrangler": "^4.84.1"
   },
+  "overrides": {
+    "esbuild": "0.28.1"
+  },
   "dependencies": {
     "jose": "^5.9.3"
   }

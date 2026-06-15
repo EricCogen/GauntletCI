@@ -38,5 +38,5 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Parse benchmark discovery table (skip agent DB in CI)
+      - name: Validate sweep JSON schema (DB compare is local-only)
         run: python scripts/corpus-benchmark-discovery-drift.py --skip-if-missing-db
