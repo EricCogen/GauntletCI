@@ -207,7 +207,7 @@ export default function AzureDevOpsPage() {
                   ["sensitivity", "balanced", "strict | balanced | permissive. Controls the confidence threshold for findings."],
                   ["failOnBlock", "true", "Set the task result to Failed when any Block-severity finding is produced."],
                   ["workingDirectory", "$(Build.SourcesDirectory)", "Root of the .NET repository. Passed as the working directory for the GauntletCI process."],
-                  ["gauntletciVersion", "latest", "NuGet version to install. Use 'latest' or pin to a specific version such as '2.1.1'."],
+                  ["gauntletciVersion", "latest", "NuGet version to install. Use 'latest' or pin to a specific version such as '2.7.1'."],
                 ].map(([name, def, desc]) => (
                   <tr key={name}>
                     <td className="px-4 py-2 font-mono text-xs text-cyan-400">{name}</td>
