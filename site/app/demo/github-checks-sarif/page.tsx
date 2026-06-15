@@ -36,7 +36,7 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Install GauntletCI
-        run: dotnet tool install -g GauntletCI --version 2.1.1
+        run: dotnet tool install -g GauntletCI --version 2.7.1
 
       - name: Post GitHub Checks annotations
         env:
@@ -71,7 +71,7 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Install GauntletCI
-        run: dotnet tool install -g GauntletCI --version 2.1.1
+        run: dotnet tool install -g GauntletCI --version 2.7.1
 
       - name: Generate SARIF
         run: |
