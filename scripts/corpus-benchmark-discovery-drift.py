@@ -15,6 +15,7 @@ from benchmark_discovery_lib import (  # noqa: E402
     load_db_metrics,
     load_sweep_json,
     sweep_rows_as_map,
+    validate_sweep_json,
 )
 
 
@@ -38,13 +39,22 @@ def main() -> None:
         raise SystemExit(f"Missing sweep JSON: {json_path}")
 
     doc = load_sweep_json(json_path)
+    schema_errors = validate_sweep_json(doc)
+    if schema_errors:
+        for line in schema_errors:
+            print(f"FAIL {line}", file=sys.stderr)
+        raise SystemExit(1)
+
     expected = sweep_rows_as_map(doc)
     card_gold = doc.get("ruleCardAgentGold", {})
 
     db_path = Path(args.db)
     if not db_path.exists():
         if args.skip_if_missing_db:
-            print(f"skip: corpus db not found at {db_path} ({len(expected)} rules in JSON)")
+            print(
+                f"OK sweep JSON schema ({len(expected)} discovery rows, "
+                f"{len(card_gold)} rule-card gold); skip DB compare (no agent corpus in CI)"
+            )
             return
         raise SystemExit(f"Corpus DB not found: {db_path}")
 
