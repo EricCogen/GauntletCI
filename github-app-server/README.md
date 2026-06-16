@@ -30,7 +30,7 @@ The host must have:
 Install GauntletCI on the host:
 
 ```bash
-dotnet tool install -g GauntletCI --version 2.8.0
+dotnet tool install -g GauntletCI --version 2.8.1
 ```
 
 ## Required GitHub App permissions

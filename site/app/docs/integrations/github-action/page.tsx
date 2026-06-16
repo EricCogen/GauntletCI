@@ -34,7 +34,7 @@ const faqSchema = buildFaqSchema([
   },
   {
     q: "Can I pin to a specific GauntletCI tool version?",
-    a: "Yes. Set gauntletci-version to the exact NuGet version you want, such as '2.8.0'. The default is the latest published version.",
+    a: "Yes. Set gauntletci-version to the exact NuGet version you want, such as '2.8.1'. The default is the latest published version.",
   },
 ]);
 
@@ -52,7 +52,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: EricCogen/GauntletCI@v2.8.0`;
+      - uses: EricCogen/GauntletCI@v2.8.1`;
 
 const FULL_WORKFLOW = `name: GauntletCI
 
@@ -71,7 +71,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: EricCogen/GauntletCI@v2.8.0
+      - uses: EricCogen/GauntletCI@v2.8.1
         id: gauntlet
         with:
           sensitivity: 'balanced'
@@ -205,7 +205,7 @@ export default function GithubActionPage() {
                   ["ascii", '"true"', "Use ASCII-only output. Recommended for CI logs - avoids encoding issues."],
                   ["commit", '""', "Commit SHA to analyze. Defaults to the PR head commit (github.event.pull_request.head.sha)."],
                   ["dotnet-version", '"8.0.x"', "The .NET SDK version to install on the runner."],
-                  ["gauntletci-version", '"2.8.0"', "The GauntletCI NuGet tool version to install."],
+                  ["gauntletci-version", '"2.8.1"', "The GauntletCI NuGet tool version to install."],
                 ].map(([name, def, desc]) => (
                   <tr key={name}>
                     <td className="px-4 py-2 font-mono text-xs text-cyan-400">{name}</td>
@@ -292,7 +292,7 @@ export default function GithubActionPage() {
             always passes.
           </p>
           <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm">
-            <pre className="text-foreground whitespace-pre">{`- uses: EricCogen/GauntletCI@v2.8.0
+            <pre className="text-foreground whitespace-pre">{`- uses: EricCogen/GauntletCI@v2.8.1
   with:
     fail-on-findings: 'false'
     inline-comments: 'true'
