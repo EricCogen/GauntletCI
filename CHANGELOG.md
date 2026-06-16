@@ -11,6 +11,14 @@ Versions follow [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [2.8.1] - 2026-06-16
+
+### Fixed
+- **WinGet / package-manager validation**: `gauntletci` with no arguments now exits **0** (shows usage via `--help`) instead of exit code 1. Skips first-run telemetry prompt on bare `--version` / `--help` invocations.
+- **Post-release distribution**: Homebrew tap automation, winget manifest templates, and GitHub App Docker pin aligned to current release workflow (see #308, #309).
+
+---
+
 ## [2.8.0] - 2026-06-15
 
 ### Fixed

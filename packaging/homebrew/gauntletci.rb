@@ -1,7 +1,7 @@
 class Gauntletci < Formula
   desc "Deterministic pre-commit risk detection engine for git diffs"
   homepage "https://gauntletci.com"
-  version "2.8.0"
+  version "2.8.1"
   license "Elastic-2.0"
 
   # SHA256 values are updated automatically via the update-homebrew-tap.yml
