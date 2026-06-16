@@ -205,4 +205,16 @@ public class EndToEndTests
         Assert.Equal(0, exitCode);
         Assert.Matches(@"\d+\.\d+", stdout + stderr);
     }
+
+    [Fact]
+    public async Task NoArgs_ReturnsSuccessAndShowsUsage()
+    {
+        var (dll, skip) = GetCliDll();
+        if (skip) return;
+
+        var (stdout, stderr, exitCode) = await RunCliAsync(dll, string.Empty);
+
+        Assert.Equal(0, exitCode);
+        Assert.Contains("Usage:", stdout + stderr, StringComparison.Ordinal);
+    }
 }
