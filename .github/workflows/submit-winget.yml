@@ -17,6 +17,9 @@ on:
 # Initial package: microsoft/winget-pkgs#388209 (EricCogen.GauntletCI, validated).
 # After that PR merges, add WINGET_TOKEN and set repo variable
 # WINGET_SUBMIT_ENABLED=true so release publishes auto-open version bump PRs.
+#
+# If validation labels disappear on the open PR, push any commit to the fork branch
+# (empty commit is fine) to re-trigger Azure validation. Do not comment @wingetbot help merge.
 jobs:
   winget:
     runs-on: windows-latest
