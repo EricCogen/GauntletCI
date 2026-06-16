@@ -14,9 +14,9 @@ on:
 # that has forked microsoft/winget-pkgs. The action submits a PR to the fork
 # and then opens a PR to microsoft/winget-pkgs from that fork.
 #
-# First-time setup: EricCogen.GauntletCI is not in winget-pkgs yet. Submit an
-# initial manifest PR manually (see packaging/winget/) before this workflow can
-# auto-bump versions. Until then, expect continue-on-error skips on release.
+# Initial package: microsoft/winget-pkgs#388209 (EricCogen.GauntletCI, validated).
+# After that PR merges, add WINGET_TOKEN and set repo variable
+# WINGET_SUBMIT_ENABLED=true so release publishes auto-open version bump PRs.
 jobs:
   winget:
     runs-on: windows-latest

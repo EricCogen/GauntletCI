@@ -184,6 +184,7 @@ jobs:
   submit-winget:
     needs: release
     runs-on: windows-latest
+    # Set WINGET_SUBMIT_ENABLED=true after microsoft/winget-pkgs#388209 merges and WINGET_TOKEN is configured.
     if: vars.WINGET_SUBMIT_ENABLED == 'true'
     continue-on-error: true
     steps:
