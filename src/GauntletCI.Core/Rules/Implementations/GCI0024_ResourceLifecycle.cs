@@ -157,15 +157,22 @@ public class GCI0024_ResourceLifecycle : RuleBase
         for (int j = index - 1; j >= Math.Max(0, index - 3); j--)
         {
             var line = allLines[j];
-            if (line.Kind == DiffLineKind.Removed
-                && line.Content.Contains("new " + typeName, StringComparison.Ordinal)
-                && addedContent.Contains("new " + typeName, StringComparison.Ordinal))
+            if (line.Kind != DiffLineKind.Removed) continue;
+
+            if (!line.Content.Contains("new " + typeName, StringComparison.Ordinal)
+                || !addedContent.Contains("new " + typeName, StringComparison.Ordinal))
             {
-                return true;
+                continue;
             }
 
-            if (line.Kind != DiffLineKind.Added && !string.IsNullOrWhiteSpace(line.Content))
-                break;
+            // using/dispose removed in favor of unguarded allocation: keep the finding.
+            if (line.Content.Contains("using ", StringComparison.Ordinal)
+                || line.Content.Contains(".Dispose()", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         return false;
