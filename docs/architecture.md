@@ -79,24 +79,32 @@ gauntletci analyze [options]
         │                  Each rule runs with a 30-second per-rule timeout.
         │
         ▼
-5. Post-processing          RuleOrchestrator.PostProcess()
-        │                  GCI0019: large-diff warning based on total line count.
-        │                  Severity overrides from config applied to all findings.
-        │                  IgnoreList suppressions applied.
-        │                  When 4+ distinct rules fire, ConsoleReporter emits a
-        │                  compound-risk header note (not a separate finding).
+5. Post-processing          IgnoreList suppressions; IPostProcessor rules (e.g. GCI0019).
+        │                  Per-finding severity from ConfigurationService (json >
+        │                  .editorconfig > DefaultSeverities). Compound-risk header
+        │                  note when 4+ distinct rules fire (display only).
         │
         ▼
-6. LLM enrichment           LlmEngineSelector.ResolveAsync()  [opt-in: --with-llm]
+6. Trust filters            ProvenanceFindingProcessor → SemanticFindingProcessor
+        │                  → DomainFindingProcessor (each may drop or boost findings).
+        │
+        ▼
+7. Delivery                 FindingDeliveryProcessor (coordination boosts, file-level
+        │                  demotion, per-rule/per-file caps, ranked global cap).
+        │                  DeliverySummary counts what was dropped and why.
+        │
+        ▼
+8. LLM enrichment           LlmEngineSelector.ResolveAsync()  [opt-in: --with-llm]
         │                  Enriches High-confidence findings with a natural-language
         │                  explanation via Phi-4 Mini ONNX or a CI endpoint (see below).
         │
         ▼
-7. Output                   ConsoleReporter (text) | JsonSerializer (--output json)
+9. Output                   ConsoleReporter (text) | JsonSerializer (--output json)
         │                  GitHubAnnotationWriter (--github-annotations)
+        │                  SensitivityFilter applied at display/exit time (--sensitivity).
         │
         ▼
-8. Telemetry                TelemetryCollector.CollectAsync()
+10. Telemetry               TelemetryCollector.CollectAsync()
                            Anonymous events written to ~/.gauntletci/telemetry.ndjson.
                            Background HTTP upload in Shared mode only.
 ```
@@ -156,9 +164,90 @@ Rules are configured via `.gauntletci.json`:
 }
 ```
 
-`severity` overrides the rule's default `Confidence` level. Valid values: `"High"`, `"Medium"`, `"Low"`.
+`severity` overrides the rule's effective `RuleSeverity` (Block, Warn, Advisory, Info, or None to disable). Valid string values match `.editorconfig` conventions: `"error"`, `"warning"`, `"suggestion"`, `"none"`, etc.
 
-### Rule interdependencies and self-interference
+Each rule also sets a default `Confidence` (High, Medium, Low) when it calls `CreateFinding(...)`. Confidence and severity are independent dimensions used together in delivery ranking and display filtering (see [Finding trust and delivery](#finding-trust-and-delivery)).
+
+---
+
+## Finding trust and delivery
+
+GauntletCI separates **what a rule detected** from **what the user sees**. Several layers run after rule evaluation; each layer is deterministic and configurable. JSON output (`--output json`) and MCP analyze tools include a `delivery` block with drop counts so hidden findings are not silent.
+
+### Two axes: severity and confidence
+
+| Axis | Set by | Purpose |
+| --- | --- | --- |
+| **Severity** (`RuleSeverity`) | `ConfigurationService` priority chain: `.gauntletci.json` → `.editorconfig` → `DefaultSeverities` | CI gate (`--exit-on`), grouping in console output, delivery ranking |
+| **Confidence** (`Confidence`) | Rule implementation via `CreateFinding(...)`; may be boosted by coordination or semantic witnesses | Delivery ranking; `--sensitivity` display filter; LLM enrichment eligibility |
+
+`SeverityOverride` on a finding (when present) wins over config for that instance.
+
+### Pipeline order (after rules fire)
+
+1. **Ignore list** — `.gauntletci-ignore` suppressions by rule ID and file path.
+2. **Post-processors** — `IPostProcessor` rules (e.g. GCI0019 large-diff synthesis).
+3. **Provenance filter** — `ProvenanceFindingProcessor` drops findings inconsistent with diff provenance (`provenance` config block).
+4. **Semantic witnesses** — `SemanticFindingProcessor` may boost confidence when patch semantics support a finding (`semantics` config block).
+5. **Domain filter** — `DomainFindingProcessor` drops findings outside the classified repo domain profile (`domain` config block).
+6. **Delivery** — `FindingDeliveryProcessor` (see below). Output is the **delivered** finding list stored in `EvaluationResult.Findings`.
+
+LLM enrichment (`--with-llm`) runs **after** delivery, only on `High`-confidence delivered findings.
+
+### Delivery processor (`FindingDeliveryProcessor`)
+
+Controlled by `output.delivery` in `.gauntletci.json` (`FindingDeliveryConfig`). Default: enabled, global max **25**, default **5** findings per (rule, file) group.
+
+Steps (in order):
+
+1. **Coordination boosts** — `FindingCoordinationEngine` raises confidence when compound-risk patterns appear (e.g. GCI0016 present → boost GCI0039/GCI0044; GCI0032 + GCI0003 → boost both). Mutates confidence in a cloned working set only.
+2. **File-level demotion** — For rules in `FileLevelRulesToDemote` (default: GCI0001, GCI0003), file-scoped findings with no line number are dropped when any line-anchored finding exists in the run.
+3. **Per-rule per-file caps** — Groups by `(RuleId, FilePath)`. Within each group, **all Block findings are kept**; remaining slots up to the cap are filled by highest delivery score among non-Block findings. Per-rule overrides exist for noisy rules (e.g. GCI0038, GCI0043 → cap 3).
+4. **Global ranking and cap** — All kept findings sorted by delivery score; global max applied with the same Block-first reservation.
+
+**Delivery score** (higher surfaces first):
+
+```
+severity tier (Block=1000, Warn=100, Advisory=50, Info=10)
++ 50 if line-anchored
++ 10 if file path present
++ confidence tier (High=30, Medium=20, Low=0)
+```
+
+`FindingDeliverySummary` reports `inputCount`, `outputCount`, and drops by cap, demotion, provenance, and domain filter. Console output prints a yellow delivery notice when findings were hidden; JSON/MCP expose the same fields.
+
+Set `output.delivery.enabled: false` to bypass coordination and caps (full raw list after trust filters).
+
+### Display-time sensitivity (`SensitivityFilter`)
+
+Separate from delivery. `--sensitivity` (`strict` | `balanced` | `permissive`, default `balanced`) filters which **delivered** findings appear in console output and count toward `--exit-on`:
+
+| Threshold | Shown |
+| --- | --- |
+| **Strict** | Block + Medium or High confidence only |
+| **Balanced** (default) | All Block; Warn + Medium or High confidence |
+| **Permissive** | All Block and Warn |
+| **Advisory** | Always shown at any threshold |
+| **Info** | Permissive only; use `--verbose` for explicit Info in other modes |
+
+JSON output includes all delivered findings regardless of sensitivity; the CLI applies sensitivity when rendering text and when computing exit codes.
+
+### Evidence promotion (regex → Roslyn)
+
+Several rules use regex only as a **candidate detector**. Before emitting a finding, `RegexEvidencePromotion` confirms the match against Roslyn syntax (comment/string suppression, member access, object creation, `System.IO.File` sync calls, etc.). GCI0006, GCI0010, GCI0024, GCI0048, GCI0049, and GCI0057 use this path when a syntax tree is available. Diff-only mode (no repo path) falls back to regex guards documented per rule.
+
+### Deterministic vs LLM boundary
+
+| Stage | Deterministic | LLM (opt-in) |
+| --- | --- | --- |
+| Rule evaluation | Yes | No |
+| Trust filters and delivery | Yes | No |
+| `--with-llm` explanation text | No | Yes (append-only on High confidence) |
+| Corpus labeling / silver labels | Heuristic | Separate offline path |
+
+Product claims about precision should cite **labeled corpus metrics** (`corpus audit-snapshot`, `LabeledRuleMetricsReader`), not discovery-tier trigger rates alone.
+
+---
 
 Because GauntletCI is analyzed by its own rules during development and in CI, some rules fire on the files that implement other rules. This is called **self-interference**: a rule detecting a pattern inside the implementation of another (or the same) rule.
 
