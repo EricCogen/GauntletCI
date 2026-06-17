@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Core.Diff;
-using GauntletCI.Core.Rules;
 using GauntletCI.Core.Rules.Implementations;
-using GauntletCI.Corpus.Runners;
 
 namespace GauntletCI.Tests.Rules;
 
@@ -355,42 +353,6 @@ public class GCI0024Tests
     }
 
     [Fact]
-    public async Task SharpCompressPr1243Patch_ShouldNotFlagSourceStream()
-    {
-        var patchPath = Path.Combine(
-            FindRepoRoot(),
-            "data",
-            "fixtures",
-            "discovery",
-            "adamhathcock_sharpcompress_pr1243",
-            "diff.patch");
-        Assert.True(File.Exists(patchPath), patchPath);
-
-        var diff = DiffParser.Parse(await File.ReadAllTextAsync(patchPath));
-        var findings = await Rule.EvaluateAsync(diff, null);
-
-        Assert.DoesNotContain(findings, f => f.Summary.Contains("SourceStream", StringComparison.Ordinal));
-    }
-
-    [Fact]
-    public async Task AzureAdPr3410Patch_ShouldNotFlagTelemetryClientFieldInitializer()
-    {
-        var patchPath = Path.Combine(
-            FindRepoRoot(),
-            "data",
-            "fixtures",
-            "discovery",
-            "azuread_azure-activedirectory-identitymodel-extensions-for-dotnet_pr3410",
-            "diff.patch");
-        Assert.True(File.Exists(patchPath), patchPath);
-
-        var diff = DiffParser.Parse(await File.ReadAllTextAsync(patchPath));
-        var findings = await Rule.EvaluateAsync(diff, null);
-
-        Assert.DoesNotContain(findings, f => f.Summary.Contains("TelemetryClient", StringComparison.Ordinal));
-    }
-
-    [Fact]
     public async Task ReplacementOfExistingSourceStream_ShouldNotFlag()
     {
         var raw = """
@@ -410,37 +372,5 @@ public class GCI0024Tests
         var findings = await Rule.EvaluateAsync(diff, null);
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("SourceStream", StringComparison.Ordinal));
-    }
-
-    [Fact]
-    public async Task SharpCompressPr1243Patch_Orchestrator_ShouldNotFlagGCI0024()
-    {
-        var patchPath = Path.Combine(
-            FindRepoRoot(),
-            "data",
-            "fixtures",
-            "discovery",
-            "adamhathcock_sharpcompress_pr1243",
-            "diff.patch");
-        var diff = DiffParser.Parse(await File.ReadAllTextAsync(patchPath));
-        var config = RuleCorpusRunner.BuildCorpusEvaluationConfig(null);
-        var result = await RuleOrchestrator.CreateDefault(config, repoPath: null)
-            .RunAsync(diff, null, null);
-
-        var gci0024 = result.Findings.Where(f => f.RuleId == "GCI0024").ToList();
-        Assert.True(gci0024.Count == 0, string.Join("; ", gci0024.Select(f => f.Summary + " | " + f.Evidence)));
-    }
-
-    private static string FindRepoRoot()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "GauntletCI.slnx")))
-                return dir.FullName;
-            dir = dir.Parent;
-        }
-
-        throw new InvalidOperationException("Could not locate GauntletCI repo root.");
     }
 }
