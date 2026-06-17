@@ -49,6 +49,14 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
     private static readonly string[] EnvironmentNames =
         ["production", "staging", "prod", "dev", "sandbox", "development"];
 
+    private static readonly string[] AuthorityHosts =
+    [
+        "login.microsoftonline.com",
+        "login.microsoft.com",
+        "login.windows.net",
+        "accounts.google.com",
+    ];
+
     private static readonly int[] KnownPorts = [8080, 3306, 5432, 27017, 6379, 1433, 3000, 8443];
 
     public override Task<List<Finding>> EvaluateAsync(
@@ -65,6 +73,7 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
             CheckConnectionString(file, context, findings);
             CheckHardcodedPorts(file, context, findings);
             CheckEnvironmentNames(file, context, findings);
+            CheckHardcodedAuthority(file, context, findings);
         }
 
         AddRoslynFindings(context.StaticAnalysis, findings);
@@ -202,6 +211,34 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         }
     }
 
+    private void CheckHardcodedAuthority(DiffFile file, AnalysisContext context, List<Finding> findings)
+    {
+        if (WellKnownPatterns.IsTestFile(file.NewPath)) return;
+        if (WellKnownPatterns.PerformancePatterns.IsRuleImplementationFile(file.NewPath)) return;
+
+        foreach (var line in file.AddedLines)
+        {
+            var content = line.Content;
+            var trimmed = content.Trim();
+            if (WellKnownPatterns.IsCommentLine(trimmed)) continue;
+            if (trimmed.Contains("[InlineData(", StringComparison.Ordinal) ||
+                trimmed.Contains("[Theory]", StringComparison.Ordinal) ||
+                trimmed.Contains("[MemberData(", StringComparison.Ordinal))
+                continue;
+
+            if (!HasHardcodedLiteral(context, file, line, IsHardcodedAuthorityLiteral))
+                continue;
+
+            findings.Add(CreateFinding(
+                file,
+                summary: "Hardcoded identity authority URL or host in string literal.",
+                evidence: $"Line {line.LineNumber}: {content.Trim()}",
+                whyItMatters: "Authority endpoints should come from configuration so tenants and environments can change without recompilation.",
+                suggestedAction: "Move authority URL or host list to IConfiguration, OpenIdConnect options, or environment-specific settings.",
+                confidence: Confidence.Medium));
+        }
+    }
+
     private static bool HasHardcodedLiteral(
         AnalysisContext context,
         DiffFile file,
@@ -252,6 +289,29 @@ public class GCI0010_HardcodingAndConfiguration : RuleBase
         string.Equals(literal, env, StringComparison.OrdinalIgnoreCase) ||
         string.Equals(literal, $"ASPNETCORE_ENVIRONMENT={env}", StringComparison.OrdinalIgnoreCase) ||
         string.Equals(literal, $"DOTNET_ENVIRONMENT={env}", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsHardcodedAuthorityLiteral(string literal)
+    {
+        var trimmed = literal.Trim();
+        if (trimmed.Contains("://", StringComparison.Ordinal))
+        {
+            if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var uri))
+                return false;
+
+            if (!string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) &&
+                !string.Equals(uri.Scheme, Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            return MatchesAuthorityHost(uri.Host);
+        }
+
+        return MatchesAuthorityHost(trimmed);
+    }
+
+    private static bool MatchesAuthorityHost(string host) =>
+        AuthorityHosts.Any(authority =>
+            host.Equals(authority, StringComparison.OrdinalIgnoreCase) ||
+            host.EndsWith("." + authority, StringComparison.OrdinalIgnoreCase));
 
     private static bool IsLikelyVersionLiteral(string literal)
     {

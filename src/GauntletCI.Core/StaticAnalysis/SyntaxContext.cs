@@ -28,6 +28,13 @@ public sealed class SyntaxContext
     /// <summary>Number of files for which a syntax tree is available.</summary>
     public int TreeCount => _trees.Count;
 
+    /// <summary>Returns <c>true</c> when a syntax tree exists for <paramref name="filePath"/>.</summary>
+    public bool HasSyntaxTreeForFile(string filePath)
+    {
+        ArgumentNullException.ThrowIfNull(filePath);
+        return TryGetTree(filePath, out _);
+    }
+
     /// <summary>
     /// Returns <c>true</c> when Roslyn confirms an <c>ObjectCreationExpression</c>
     /// of type <paramref name="typeName"/> exists on the given line, or when no

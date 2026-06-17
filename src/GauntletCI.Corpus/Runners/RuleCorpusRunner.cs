@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Elastic-2.0
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using GauntletCI.Core.Configuration;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
@@ -15,10 +16,15 @@ namespace GauntletCI.Corpus.Runners;
 /// </summary>
 public sealed class RuleCorpusRunner
 {
+    private static readonly JsonSerializerOptions CorpusConfigCloneOptions = new()
+    {
+        PropertyNameCaseInsensitive = true,
+        DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+    };
+
     private readonly IFixtureStore _store;
     private readonly CorpusDb _db;
     private readonly GauntletConfig? _config;
-    private readonly string? _repoPath;
 
     /// <summary>The run ID from the most recent call to <see cref="RunAsync"/>.</summary>
     public string LastRunId { get; private set; } = string.Empty;
@@ -36,7 +42,7 @@ public sealed class RuleCorpusRunner
         _store = store;
         _db = db;
         _config = config;
-        _repoPath = repoPath;
+        _ = repoPath;
     }
 
     public async Task<IReadOnlyList<ActualFinding>> RunAsync(
@@ -47,7 +53,10 @@ public sealed class RuleCorpusRunner
         LastRunId = runId;
 
         var diff = DiffParser.Parse(diffText);
-        var result = await RuleOrchestrator.CreateDefault(_config, repoPath: _repoPath).RunAsync(diff, null, null, cancellationToken).ConfigureAwait(false);
+        var corpusConfig = BuildCorpusEvaluationConfig(_config);
+        var result = await RuleOrchestrator.CreateDefault(corpusConfig, repoPath: null)
+            .RunAsync(diff, null, null, cancellationToken)
+            .ConfigureAwait(false);
 
         var findings = result.Findings
             .Select(f => new ActualFinding
@@ -75,6 +84,30 @@ public sealed class RuleCorpusRunner
         await _store.SaveActualFindingsAsync(fixtureId, runId, findings, cancellationToken).ConfigureAwait(false);
 
         return findings;
+    }
+
+    /// <summary>
+    /// Corpus metrics measure rule detection, not CLI delivery caps or repo-domain suppression.
+    /// Delivery ranking/global limits and domain gating are disabled so labeled TP/FN are not
+    /// skewed by GauntletCI repo profile (e.g. GCI0024 dropped on ClassLibrary).
+    /// </summary>
+    internal static GauntletConfig BuildCorpusEvaluationConfig(GauntletConfig? source)
+    {
+        GauntletConfig config;
+        if (source is null)
+        {
+            config = new GauntletConfig();
+        }
+        else
+        {
+            config = JsonSerializer.Deserialize<GauntletConfig>(
+                JsonSerializer.Serialize(source, CorpusConfigCloneOptions),
+                CorpusConfigCloneOptions) ?? new GauntletConfig();
+        }
+
+        config.Output.Delivery.Enabled = false;
+        config.Domain.Enabled = false;
+        return config;
     }
 
     // ── DB helpers ────────────────────────────────────────────────────────────
