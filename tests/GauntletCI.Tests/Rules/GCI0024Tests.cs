@@ -281,4 +281,99 @@ public class GCI0024Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("Enumerator"));
     }
+
+    [Fact]
+    public async Task MultiLineConstructorArg_SourceStreamPassedToArchive_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/SharpCompress/Archives/GZip/GZipArchive.Factory.cs b/src/SharpCompress/Archives/GZip/GZipArchive.Factory.cs
+            index abc..def 100644
+            --- a/src/SharpCompress/Archives/GZip/GZipArchive.Factory.cs
+            +++ b/src/SharpCompress/Archives/GZip/GZipArchive.Factory.cs
+            @@ -48,7 +48,7 @@ public static IWritableArchive<GZipWriterOptions> OpenArchive(
+                 return new GZipArchive(
+                     new SourceStream(
+                         fileInfo,
+                         i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
+            -                readerOptions ?? new ReaderOptions()
+            +                readerOptions ?? ReaderOptions.ForFilePath
+                     )
+                 );
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("SourceStream"));
+    }
+
+    [Fact]
+    public async Task FieldInitializerTelemetryClient_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/Handler.cs b/src/Handler.cs
+            index abc..def 100644
+            --- a/src/Handler.cs
+            +++ b/src/Handler.cs
+            @@ -18,3 +18,3 @@ internal partial class Handler
+            -    internal ITelemetryClient _telemetryClient = new TelemetryClient();
+            +    internal ITelemetryClient TelemetryClient = new TelemetryClient();
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("TelemetryClient"));
+    }
+
+    [Fact]
+    public async Task SharpCompressPr1243Patch_ShouldNotFlagFactorySourceStream()
+    {
+        var patchPath = Path.Combine(
+            FindRepoRoot(),
+            "data",
+            "fixtures",
+            "discovery",
+            "adamhathcock_sharpcompress_pr1243",
+            "diff.patch");
+        Assert.True(File.Exists(patchPath), patchPath);
+
+        var diff = DiffParser.Parse(await File.ReadAllTextAsync(patchPath));
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f =>
+            f.Summary.Contains("SourceStream", StringComparison.Ordinal)
+            && f.Evidence.Contains("Factory.cs", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task AzureAdPr3410Patch_ShouldNotFlagTelemetryClientFieldInitializer()
+    {
+        var patchPath = Path.Combine(
+            FindRepoRoot(),
+            "data",
+            "fixtures",
+            "discovery",
+            "azuread_azure-activedirectory-identitymodel-extensions-for-dotnet_pr3410",
+            "diff.patch");
+        Assert.True(File.Exists(patchPath), patchPath);
+
+        var diff = DiffParser.Parse(await File.ReadAllTextAsync(patchPath));
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("TelemetryClient", StringComparison.Ordinal));
+    }
+
+    private static string FindRepoRoot()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null)
+        {
+            if (File.Exists(Path.Combine(dir.FullName, "GauntletCI.slnx")))
+                return dir.FullName;
+            dir = dir.Parent;
+        }
+
+        throw new InvalidOperationException("Could not locate GauntletCI repo root.");
+    }
 }
