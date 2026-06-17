@@ -28,6 +28,10 @@ Write-Log "Ensuring corpus read indexes"
 python (Join-Path $repo "scripts\corpus_db_read.py") 2>&1 |
     ForEach-Object { Write-Log $_ }
 
+Write-Log "Applying corpus label overrides"
+python (Join-Path $repo "scripts\apply-corpus-label-overrides.py") --db $corpus 2>&1 |
+    ForEach-Object { Write-Log $_ }
+
 Write-Log "Starting corpus score"
 dotnet run --project src/GauntletCI.Cli -- corpus score --db $corpus --fixtures ./data/fixtures 2>&1 |
     ForEach-Object { Write-Log $_ }

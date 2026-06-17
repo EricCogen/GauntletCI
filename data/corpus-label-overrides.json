@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Durable expected_findings hygiene applied by scripts/apply-corpus-label-overrides.py",
+  "overrides": [
+    {
+      "fixture_id": "devtoys-app_devtoys_pr1078",
+      "rule_id": "GCI0010",
+      "is_inconclusive": true,
+      "reason": "human_bulk cited demo JWT token string; outside GCI0010 hardcoded authority scope"
+    },
+    {
+      "fixture_id": "azuread_azure-activedirectory-identitymodel-extensions-for-dotnet_pr3410",
+      "rule_id": "GCI0010",
+      "is_inconclusive": true,
+      "reason": "Patch has no login.microsoftonline.com or authority URL in production diff lines; label lacks evidence_excerpt"
+    }
+  ]
+}

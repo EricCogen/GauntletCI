@@ -60,6 +60,9 @@ public class GCI0024_ResourceLifecycle : RuleBase
             var (typeName, isExplicit) = MatchDisposableType(content);
             if (typeName is null) continue;
 
+            // Skip: options/default-only replacement of an existing new Type(...) allocation.
+            if (IsReplacementOfExistingAllocation(allLines, i, typeName, content)) continue;
+
             if (context.Syntax is { } syntax &&
                 !syntax.IsConfirmedObjectCreation(file.NewPath, line.LineNumber, typeName))
                 continue;
@@ -71,11 +74,14 @@ public class GCI0024_ResourceLifecycle : RuleBase
             var trimmed = content.TrimStart();
             if (trimmed.StartsWith("return ", StringComparison.Ordinal)) continue;
 
-            // Skip: `new X(...)` inside a method/constructor call argument: the callee takes
-            // ownership (e.g. services.AddSingleton(new X()), collection.Add(new X())).
-            // Detect by counting unmatched `(` before the `new` keyword: if opens > closes,
-            // we are inside a parameter list.
-            if (IsInsideMethodCallArg(content, typeName)) continue;
+            // Skip: field/property initializer (instance/DI-managed lifetime).
+            if (IsFieldOrPropertyInitializer(content)) continue;
+
+            // Skip: local assigned then passed to ctor/method (callee owns lifetime).
+            if (IsAssignedThenPassedToCallee(allLines, i, content)) continue;
+
+            // Skip: `new X(...)` inside a method/constructor call argument (incl. multi-line).
+            if (IsInsideMethodCallArg(allLines, i, typeName)) continue;
 
             // Skip: `static readonly X = new X()`: process-lifetime singletons are never disposed
             // by design; flagging them produces only noise with no actionable fix.
@@ -140,18 +146,108 @@ public class GCI0024_ResourceLifecycle : RuleBase
         return (null, false);
     }
 
-    // Returns true when the `new TypeName(` pattern appears inside an open method or constructor
-    // call argument list: i.e., there are more `(` than `)` in the text before the `new` keyword.
-    // In that case the callee owns the object's lifetime, so no `using` is expected here.
-    private static bool IsInsideMethodCallArg(string content, string typeName)
+    private static bool IsReplacementOfExistingAllocation(
+        IReadOnlyList<DiffLine> allLines,
+        int index,
+        string typeName,
+        string addedContent)
     {
-        var needle = "new " + typeName;
-        int idx = content.IndexOf(needle, StringComparison.Ordinal);
-        if (idx <= 0) return false;
-        var before = content[..idx];
+        if (index <= 0) return false;
+
+        for (int j = index - 1; j >= Math.Max(0, index - 3); j--)
+        {
+            var line = allLines[j];
+            if (line.Kind != DiffLineKind.Removed) continue;
+
+            if (!line.Content.Contains("new " + typeName, StringComparison.Ordinal)
+                || !addedContent.Contains("new " + typeName, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            // using/dispose removed in favor of unguarded allocation: keep the finding.
+            if (line.Content.Contains("using ", StringComparison.Ordinal)
+                || line.Content.Contains(".Dispose()", StringComparison.Ordinal))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsAssignedThenPassedToCallee(IReadOnlyList<DiffLine> allLines, int index, string content)
+    {
+        var assignMatch = System.Text.RegularExpressions.Regex.Match(
+            content,
+            @"\bvar\s+(\w+)\s*=\s*new\s+");
+        if (!assignMatch.Success) return false;
+
+        var varName = assignMatch.Groups[1].Value;
+        int winEnd = Math.Min(allLines.Count, index + 15);
+        for (int j = index + 1; j < winEnd; j++)
+        {
+            var line = allLines[j];
+            if (line.Kind == DiffLineKind.Removed) continue;
+
+            var next = line.Content;
+            if (next.Contains($"({varName}", StringComparison.Ordinal)
+                || next.Contains($", {varName}", StringComparison.Ordinal)
+                || next.Contains($"{varName},", StringComparison.Ordinal)
+                || next.Contains($" {varName})", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsFieldOrPropertyInitializer(string content)
+    {
+        if (!content.Contains(" = new ", StringComparison.Ordinal)) return false;
+
+        var trimmed = content.TrimStart();
+        return trimmed.StartsWith("private ", StringComparison.Ordinal)
+            || trimmed.StartsWith("internal ", StringComparison.Ordinal)
+            || trimmed.StartsWith("protected ", StringComparison.Ordinal)
+            || trimmed.StartsWith("public ", StringComparison.Ordinal)
+            || trimmed.Contains(" readonly ", StringComparison.Ordinal)
+            || trimmed.Contains(" static ", StringComparison.Ordinal);
+    }
+
+    // Returns true when `new TypeName(` appears inside an open call/ctor argument list.
+    // Looks back across preceding hunk lines (added or context) so multi-line args are covered.
+    private static bool IsInsideMethodCallArg(IReadOnlyList<DiffLine> allLines, int index, string typeName)
+    {
+        const int maxLookback = 8;
         int opens = 0;
         int closes = 0;
-        foreach (char c in before) { if (c == '(') opens++; else if (c == ')') closes++; }
+
+        for (int j = index; j >= Math.Max(0, index - maxLookback); j--)
+        {
+            var line = allLines[j];
+            if (line.Kind == DiffLineKind.Removed) continue;
+
+            var content = line.Content;
+            int end = content.Length;
+            if (j == index)
+            {
+                var needle = "new " + typeName;
+                int idx = content.IndexOf(needle, StringComparison.Ordinal);
+                if (idx < 0) return opens > closes;
+                end = idx;
+            }
+
+            for (int k = 0; k < end; k++)
+            {
+                if (content[k] == '(') opens++;
+                else if (content[k] == ')') closes++;
+            }
+        }
+
         return opens > closes;
     }
 

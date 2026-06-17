@@ -187,7 +187,29 @@ public static class TelemetryConsent
         var json = JsonSerializer.Serialize(_cache, JsonOptions);
         var tmp = ConfigPath + ".tmp";
         File.WriteAllText(tmp, json);
-        File.Move(tmp, ConfigPath, overwrite: true);
+
+        const int maxAttempts = 5;
+        Exception? lastError = null;
+        for (var attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            try
+            {
+                if (File.Exists(ConfigPath))
+                    File.Replace(tmp, ConfigPath, destinationBackupFileName: null, ignoreMetadataErrors: true);
+                else
+                    File.Move(tmp, ConfigPath);
+
+                return;
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                lastError = ex;
+                if (attempt < maxAttempts)
+                    SpinWait.SpinUntil(static () => false, 15 * attempt);
+            }
+        }
+
+        throw lastError ?? new IOException($"Failed to write telemetry config after {maxAttempts} attempts.");
     }
 
     private static TelemetryMode? ParseMode(string? value) => value?.ToLowerInvariant() switch

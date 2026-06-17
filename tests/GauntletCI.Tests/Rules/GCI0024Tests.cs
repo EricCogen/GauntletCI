@@ -281,4 +281,96 @@ public class GCI0024Tests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("Enumerator"));
     }
+
+    [Fact]
+    public async Task MultiLineConstructorArg_SourceStreamPassedToArchive_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/SharpCompress/Archives/GZip/GZipArchive.Factory.cs b/src/SharpCompress/Archives/GZip/GZipArchive.Factory.cs
+            index abc..def 100644
+            --- a/src/SharpCompress/Archives/GZip/GZipArchive.Factory.cs
+            +++ b/src/SharpCompress/Archives/GZip/GZipArchive.Factory.cs
+            @@ -48,7 +48,7 @@ public static IWritableArchive<GZipWriterOptions> OpenArchive(
+                 return new GZipArchive(
+                     new SourceStream(
+                         fileInfo,
+                         i => ArchiveVolumeFactory.GetFilePart(i, fileInfo),
+            -                readerOptions ?? new ReaderOptions()
+            +                readerOptions ?? ReaderOptions.ForFilePath
+                     )
+                 );
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("SourceStream"));
+    }
+
+    [Fact]
+    public async Task FieldInitializerTelemetryClient_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/Handler.cs b/src/Handler.cs
+            index abc..def 100644
+            --- a/src/Handler.cs
+            +++ b/src/Handler.cs
+            @@ -18,3 +18,3 @@ internal partial class Handler
+            -    internal ITelemetryClient _telemetryClient = new TelemetryClient();
+            +    internal ITelemetryClient TelemetryClient = new TelemetryClient();
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("TelemetryClient"));
+    }
+
+    [Fact]
+    public async Task LocalSourceStreamPassedToArchive_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/SharpCompress/Archives/Tar/TarArchive.Factory.cs b/src/SharpCompress/Archives/Tar/TarArchive.Factory.cs
+            index abc..def 100644
+            --- a/src/SharpCompress/Archives/Tar/TarArchive.Factory.cs
+            +++ b/src/SharpCompress/Archives/Tar/TarArchive.Factory.cs
+            @@ -106,10 +106,10 @@ public static IWritableArchive<TarWriterOptions> OpenArchive(
+                 var strms = streams;
+            -    var sourceStream = new SourceStream(
+            +    var sourceStream = new SourceStream(
+                     strms[0],
+                     i => i < strms.Count ? strms[i] : null,
+                     readerOptions ?? ReaderOptions.ForExternalStream
+                 );
+                 var compressionType = TarFactory.GetCompressionType(
+                     sourceStream,
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("SourceStream", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ReplacementOfExistingSourceStream_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/SharpCompress/Archives/Zip/ZipArchive.Factory.cs b/src/SharpCompress/Archives/Zip/ZipArchive.Factory.cs
+            index abc..def 100644
+            --- a/src/SharpCompress/Archives/Zip/ZipArchive.Factory.cs
+            +++ b/src/SharpCompress/Archives/Zip/ZipArchive.Factory.cs
+            @@ -100,7 +100,7 @@ public static IWritableArchive<ZipWriterOptions> OpenArchive(
+                     return new ZipArchive(
+            -            new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions())
+            +            new SourceStream(stream, _ => null, readerOptions ?? ReaderOptions.ForExternalStream)
+                     );
+                 }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("SourceStream", StringComparison.Ordinal));
+    }
 }

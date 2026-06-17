@@ -159,6 +159,7 @@ docs/benchmarks/
 !tests/GauntletCI.Benchmarks/Fixtures/
 /data/*
 !data/corpus-fixtures.csv
+!data/corpus-label-overrides.json
 
 # BenchmarkDotNet artifacts
 BenchmarkDotNet.Artifacts/
