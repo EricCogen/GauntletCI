@@ -8,3 +8,11 @@ namespace GauntletCI.Tests;
 /// </summary>
 [CollectionDefinition("ConsoleOut", DisableParallelization = true)]
 public class ConsoleOutCollection { }
+
+/// <summary>
+/// Serial collection for tests that read/write ~/.gauntletci/config.json via TelemetryConsent.
+/// End-to-end analyze tests also touch this file via InstallId; disable assembly parallelization
+/// while any telemetry test is running to avoid Windows file-lock flakes on CI.
+/// </summary>
+[CollectionDefinition("TelemetrySerial", DisableParallelization = true)]
+public class TelemetrySerialCollection { }
