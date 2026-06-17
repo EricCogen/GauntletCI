@@ -66,11 +66,41 @@ for p in pairs:
             }
         )
 
+def classify_obsolete_fn(text: str, fixture_id: str) -> dict:
+    added = [
+        ln
+        for ln in text.splitlines()
+        if ln.startswith("+") and not ln.startswith("+++") and obs.search(ln)
+    ]
+    removed = [
+        ln
+        for ln in text.splitlines()
+        if ln.startswith("-") and not ln.startswith("---") and obs.search(ln)
+    ]
+    if added or removed:
+        if ".Tests" in text or "/Tests/" in text or "\\Tests\\" in text:
+            reason = "[Obsolete] added/removed in test file; GCI0004 skips test files by design"
+        else:
+            reason = "[Obsolete] added/removed in patch but rule did not fire; needs manual review"
+    else:
+        reason = "[Obsolete] appears only on unchanged context lines; no added/removed Obsolete attribute in patch"
+    return {
+        "fixture_id": fixture_id,
+        "rule_id": "GCI0004",
+        "is_inconclusive": True,
+        "reason": reason,
+    }
+
+obsolete_fn_overrides = []
+for fid in obsolete_fn:
+    text = load_diff(fid)
+    obsolete_fn_overrides.append(classify_obsolete_fn(text, fid))
+
 doc = {
     "scope_mismatch_count": len(scope_mismatch),
     "obsolete_fn_count": len(obsolete_fn),
     "obsolete_fn_fixture_ids": obsolete_fn,
-    "overrides": scope_mismatch,
+    "overrides": scope_mismatch + obsolete_fn_overrides,
 }
 out.write_text(json.dumps(doc, indent=2), encoding="utf-8")
 print(f"Wrote {out}")

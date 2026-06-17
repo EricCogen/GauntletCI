@@ -151,6 +151,36 @@
       "rule_id": "GCI0004",
       "is_inconclusive": true,
       "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "dapperlib_dapper_pr1928",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "[Obsolete] appears only on unchanged context lines; no added/removed Obsolete attribute in patch"
+    },
+    {
+      "fixture_id": "icsharpcode_sharpziplib_pr746",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "[Obsolete] appears only on unchanged context lines; no added/removed Obsolete attribute in patch"
+    },
+    {
+      "fixture_id": "jamesnk_newtonsoft.json_pr1950",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "[Obsolete] appears only on unchanged context lines; no added/removed Obsolete attribute in patch"
+    },
+    {
+      "fixture_id": "jamesnk_newtonsoft.json_pr2980",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "[Obsolete] appears only on unchanged context lines; no added/removed Obsolete attribute in patch"
+    },
+    {
+      "fixture_id": "stackexchange_stackexchange.redis_pr2995",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "[Obsolete] added in StackExchange.Redis.Tests test helper; GCI0004 skips test files by design"
     }
   ]
 }
