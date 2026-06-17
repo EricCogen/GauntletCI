@@ -60,6 +60,9 @@ public class GCI0024_ResourceLifecycle : RuleBase
             var (typeName, isExplicit) = MatchDisposableType(content);
             if (typeName is null) continue;
 
+            // Skip: options/default-only replacement of an existing new Type(...) allocation.
+            if (IsReplacementOfExistingAllocation(allLines, i, typeName, content)) continue;
+
             if (context.Syntax is { } syntax &&
                 !syntax.IsConfirmedObjectCreation(file.NewPath, line.LineNumber, typeName))
                 continue;
@@ -73,6 +76,9 @@ public class GCI0024_ResourceLifecycle : RuleBase
 
             // Skip: field/property initializer (instance/DI-managed lifetime).
             if (IsFieldOrPropertyInitializer(content)) continue;
+
+            // Skip: local assigned then passed to ctor/method (callee owns lifetime).
+            if (IsAssignedThenPassedToCallee(allLines, i, content)) continue;
 
             // Skip: `new X(...)` inside a method/constructor call argument (incl. multi-line).
             if (IsInsideMethodCallArg(allLines, i, typeName)) continue;
@@ -138,6 +144,58 @@ public class GCI0024_ResourceLifecycle : RuleBase
         }
 
         return (null, false);
+    }
+
+    private static bool IsReplacementOfExistingAllocation(
+        IReadOnlyList<DiffLine> allLines,
+        int index,
+        string typeName,
+        string addedContent)
+    {
+        if (index <= 0) return false;
+
+        for (int j = index - 1; j >= Math.Max(0, index - 3); j--)
+        {
+            var line = allLines[j];
+            if (line.Kind == DiffLineKind.Removed
+                && line.Content.Contains("new " + typeName, StringComparison.Ordinal)
+                && addedContent.Contains("new " + typeName, StringComparison.Ordinal))
+            {
+                return true;
+            }
+
+            if (line.Kind != DiffLineKind.Added && !string.IsNullOrWhiteSpace(line.Content))
+                break;
+        }
+
+        return false;
+    }
+
+    private static bool IsAssignedThenPassedToCallee(IReadOnlyList<DiffLine> allLines, int index, string content)
+    {
+        var assignMatch = System.Text.RegularExpressions.Regex.Match(
+            content,
+            @"\bvar\s+(\w+)\s*=\s*new\s+");
+        if (!assignMatch.Success) return false;
+
+        var varName = assignMatch.Groups[1].Value;
+        int winEnd = Math.Min(allLines.Count, index + 15);
+        for (int j = index + 1; j < winEnd; j++)
+        {
+            var line = allLines[j];
+            if (line.Kind == DiffLineKind.Removed) continue;
+
+            var next = line.Content;
+            if (next.Contains($"({varName}", StringComparison.Ordinal)
+                || next.Contains($", {varName}", StringComparison.Ordinal)
+                || next.Contains($"{varName},", StringComparison.Ordinal)
+                || next.Contains($" {varName})", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static bool IsFieldOrPropertyInitializer(string content)

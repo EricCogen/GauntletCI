@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Elastic-2.0
 using GauntletCI.Core.Diff;
+using GauntletCI.Core.Rules;
 using GauntletCI.Core.Rules.Implementations;
+using GauntletCI.Corpus.Runners;
 
 namespace GauntletCI.Tests.Rules;
 
@@ -327,7 +329,33 @@ public class GCI0024Tests
     }
 
     [Fact]
-    public async Task SharpCompressPr1243Patch_ShouldNotFlagFactorySourceStream()
+    public async Task LocalSourceStreamPassedToArchive_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/SharpCompress/Archives/Tar/TarArchive.Factory.cs b/src/SharpCompress/Archives/Tar/TarArchive.Factory.cs
+            index abc..def 100644
+            --- a/src/SharpCompress/Archives/Tar/TarArchive.Factory.cs
+            +++ b/src/SharpCompress/Archives/Tar/TarArchive.Factory.cs
+            @@ -106,10 +106,10 @@ public static IWritableArchive<TarWriterOptions> OpenArchive(
+                 var strms = streams;
+            -    var sourceStream = new SourceStream(
+            +    var sourceStream = new SourceStream(
+                     strms[0],
+                     i => i < strms.Count ? strms[i] : null,
+                     readerOptions ?? ReaderOptions.ForExternalStream
+                 );
+                 var compressionType = TarFactory.GetCompressionType(
+                     sourceStream,
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("SourceStream", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task SharpCompressPr1243Patch_ShouldNotFlagSourceStream()
     {
         var patchPath = Path.Combine(
             FindRepoRoot(),
@@ -341,9 +369,7 @@ public class GCI0024Tests
         var diff = DiffParser.Parse(await File.ReadAllTextAsync(patchPath));
         var findings = await Rule.EvaluateAsync(diff, null);
 
-        Assert.DoesNotContain(findings, f =>
-            f.Summary.Contains("SourceStream", StringComparison.Ordinal)
-            && f.Evidence.Contains("Factory.cs", StringComparison.Ordinal));
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("SourceStream", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -362,6 +388,47 @@ public class GCI0024Tests
         var findings = await Rule.EvaluateAsync(diff, null);
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("TelemetryClient", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task ReplacementOfExistingSourceStream_ShouldNotFlag()
+    {
+        var raw = """
+            diff --git a/src/SharpCompress/Archives/Zip/ZipArchive.Factory.cs b/src/SharpCompress/Archives/Zip/ZipArchive.Factory.cs
+            index abc..def 100644
+            --- a/src/SharpCompress/Archives/Zip/ZipArchive.Factory.cs
+            +++ b/src/SharpCompress/Archives/Zip/ZipArchive.Factory.cs
+            @@ -100,7 +100,7 @@ public static IWritableArchive<ZipWriterOptions> OpenArchive(
+                     return new ZipArchive(
+            -            new SourceStream(stream, _ => null, readerOptions ?? new ReaderOptions())
+            +            new SourceStream(stream, _ => null, readerOptions ?? ReaderOptions.ForExternalStream)
+                     );
+                 }
+            """;
+
+        var diff = DiffParser.Parse(raw);
+        var findings = await Rule.EvaluateAsync(diff, null);
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("SourceStream", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task SharpCompressPr1243Patch_Orchestrator_ShouldNotFlagGCI0024()
+    {
+        var patchPath = Path.Combine(
+            FindRepoRoot(),
+            "data",
+            "fixtures",
+            "discovery",
+            "adamhathcock_sharpcompress_pr1243",
+            "diff.patch");
+        var diff = DiffParser.Parse(await File.ReadAllTextAsync(patchPath));
+        var config = RuleCorpusRunner.BuildCorpusEvaluationConfig(null);
+        var result = await RuleOrchestrator.CreateDefault(config, repoPath: null)
+            .RunAsync(diff, null, null);
+
+        var gci0024 = result.Findings.Where(f => f.RuleId == "GCI0024").ToList();
+        Assert.True(gci0024.Count == 0, string.Join("; ", gci0024.Select(f => f.Summary + " | " + f.Evidence)));
     }
 
     private static string FindRepoRoot()
