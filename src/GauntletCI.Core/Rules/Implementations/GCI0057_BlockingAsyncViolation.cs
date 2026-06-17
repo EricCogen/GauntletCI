@@ -44,13 +44,13 @@ public class GCI0057_BlockingAsyncViolation : RuleBase
             if (WellKnownPatterns.IsTestFile(file.NewPath))
                 continue;
 
-            CheckSyncFileIo(file, findings);
+            CheckSyncFileIo(file, context, findings);
         }
 
         return Task.FromResult(findings);
     }
 
-    private void CheckSyncFileIo(DiffFile file, List<Finding> findings)
+    private void CheckSyncFileIo(DiffFile file, AnalysisContext context, List<Finding> findings)
     {
         var fileName = Path.GetFileName(file.NewPath);
         if (SyncFileIoExemptFiles.Any(f => f.Equals(fileName, StringComparison.OrdinalIgnoreCase)))
@@ -60,17 +60,15 @@ public class GCI0057_BlockingAsyncViolation : RuleBase
 
         foreach (var line in file.AddedLines)
         {
-            if (!SyncFileIoPattern.IsMatch(line.Content))
-                continue;
-
-            if (IsInStringOrComment(line.Content))
-                continue;
-
             var match = SyncFileIoPattern.Match(line.Content);
             if (!match.Success || match.Groups.Count < 2)
                 continue;
 
             var method = match.Groups[1].Value;
+
+            if (!PassesEvidenceValidation(file, line, method, match.Index, context))
+                continue;
+
             var confidence = DetermineFileIoConfidence(allLines, line);
 
             var suggestion = method.Equals("Copy", StringComparison.OrdinalIgnoreCase)
@@ -86,6 +84,24 @@ public class GCI0057_BlockingAsyncViolation : RuleBase
                 confidence: confidence,
                 line: line));
         }
+    }
+
+    private static bool PassesEvidenceValidation(
+        DiffFile file,
+        DiffLine line,
+        string method,
+        int matchIndex,
+        AnalysisContext context)
+    {
+        if (context.Syntax is { } syntax)
+        {
+            if (syntax.IsInCommentOrStringLiteral(file.NewPath, line.LineNumber, matchIndex))
+                return false;
+
+            return syntax.IsConfirmedSystemIoFileSyncInvocation(file.NewPath, line.LineNumber, method);
+        }
+
+        return !IsInStringOrComment(line.Content);
     }
 
     private static Confidence DetermineFileIoConfidence(List<DiffLine> allLines, DiffLine targetLine)
