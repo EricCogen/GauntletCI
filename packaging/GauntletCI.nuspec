@@ -4,7 +4,7 @@
 
     <!-- Identity -->
     <id>GauntletCI</id>
-    <version>2.1.1</version>
+    <version>2.8.1</version>
     <authors>Eric Cogen</authors>
     <owners>Eric Cogen</owners>
 
@@ -35,7 +35,7 @@
 
     <!-- Summary (shown in search results — keep under 160 chars) -->
     <summary>
-      Deterministic .NET pre-commit gate. 42 behavioral-change rules, optional Ollama LLM enrichment,
+      Deterministic .NET pre-commit gate. 37 active behavioral-change rules (39 implementations), optional Ollama LLM enrichment,
       built-in MCP server. Catches unvalidated changes, missing tests, and security risks before merge.
     </summary>
 
@@ -50,7 +50,7 @@
     -->
     <description>
 GauntletCI is a .NET pre-commit and PR integration gate that evaluates diffs against a configurable
-set of 42 behavioral-change rules — catching unvalidated changes, missing tests, and security risks
+set of 37 active behavioral-change rules (39 implementations) — catching unvalidated changes, missing tests, and security risks
 before code is committed or merged.
 
 ## What It Does
@@ -68,7 +68,7 @@ It analyzes only what changed in a diff and fires structured findings when it de
 - Data schema compatibility and idempotency/retry safety gaps
 - Structured logging gaps and rollback safety issues
 
-Each finding includes a rule ID (GCI0001–GCI0042), confidence level (High/Medium/Low), file path,
+Each finding includes a rule ID (GCI0001–GCI0059; 37 active by default), confidence level (High/Medium/Low), file path,
 line number, and a suggested action. High-confidence findings can be optionally enriched with a
 locally running Ollama LLM explanation and expert knowledge citations from a local vector store.
 
@@ -84,7 +84,7 @@ LLM enrichment is optional and additive: deterministic rules fire first, LLM exp
 
 ## Key Features
 
-- **42 built-in rules** covering behavioral change, security, async safety, resource lifecycle,
+- **37 active rules** (39 implementations) covering behavioral change, security, async safety, resource lifecycle,
   architecture discipline, test quality, and more
 - **Optional local LLM enrichment** via Ollama (fully offline — no data leaves your machine)
 - **Expert knowledge distillery** — seed a local SQLite vector store with expert .NET facts

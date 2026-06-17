@@ -2,6 +2,7 @@
 using GauntletCI.Cli.Output;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
+using GauntletCI.Core.Rules.Delivery;
 
 namespace GauntletCI.Tests;
 
@@ -50,6 +51,33 @@ public class ConsoleReporterTests
     {
         var result = ConsoleReporter.MaskEvidenceSnippet("http://example.com/path");
         Assert.Equal("http://example.com/path", result);
+    }
+
+    [Fact]
+    public void BuildDeliveryNotice_GlobalAndPerRuleCaps_ListsBothReasons()
+    {
+        var summary = new FindingDeliverySummary
+        {
+            InputCount = 30,
+            OutputCount = 22,
+            DroppedByGlobalCap = 5,
+            DroppedByPerRuleCap = 3,
+        };
+
+        var notice = ConsoleReporter.BuildDeliveryNotice(summary);
+
+        Assert.NotNull(notice);
+        Assert.Contains("8 finding(s) not shown", notice);
+        Assert.Contains("5 global cap", notice);
+        Assert.Contains("3 per-rule cap", notice);
+        Assert.Contains("30 raw -> 22 delivered", notice);
+    }
+
+    [Fact]
+    public void BuildDeliveryNotice_NoHiddenFindings_ReturnsNull()
+    {
+        var summary = new FindingDeliverySummary { InputCount = 4, OutputCount = 4 };
+        Assert.Null(ConsoleReporter.BuildDeliveryNotice(summary));
     }
 }
 

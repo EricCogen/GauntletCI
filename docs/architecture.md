@@ -112,7 +112,7 @@ public interface IRule
 {
     string Id   { get; }
     string Name { get; }
-    Task<List<Finding>> EvaluateAsync(DiffContext diff, AnalyzerResult? staticAnalysis, CancellationToken ct);
+    Task<List<Finding>> EvaluateAsync(AnalysisContext context, CancellationToken ct = default);
 }
 ```
 
@@ -137,7 +137,7 @@ Adding a new rule requires only dropping a new `IRule` class into the assembly: 
 
 ### Rule IDs
 
-Rules span `GCI0001`-`GCI0053`. `GCI0028` is reserved (never issued).
+39 rule implementations ship in Core; **37 are active by default** (GCI0054 and GCI0055 disabled as duplicates). IDs span `GCI0001`–`GCI0059` with gaps in the sequence. `GCI0028` is reserved (never issued).
 
 ### Per-rule timeout
 

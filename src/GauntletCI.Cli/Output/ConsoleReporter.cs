@@ -2,6 +2,7 @@
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
 using GauntletCI.Core.Rules;
+using GauntletCI.Core.Rules.Delivery;
 using Spectre.Console;
 using System.Linq;
 
@@ -31,6 +32,51 @@ public static class ConsoleReporter
     {
         var idx = evidence.IndexOf(": ", StringComparison.Ordinal);
         return idx >= 0 ? $"{evidence[..(idx + 2)]}[REDACTED]" : evidence;
+    }
+
+    /// <summary>
+    /// Formats delivery cap and demotion summary for console output.
+    /// Returns null when delivery did not hide or reshape findings.
+    /// </summary>
+    public static string? BuildDeliveryNotice(FindingDeliverySummary delivery)
+    {
+        var notShown = delivery.InputCount - delivery.OutputCount;
+        if (notShown <= 0)
+            return null;
+
+        var reasons = new List<string>();
+        if (delivery.DroppedByPerRuleCap > 0)
+            reasons.Add($"{delivery.DroppedByPerRuleCap} per-rule cap");
+        if (delivery.DroppedByGlobalCap > 0)
+            reasons.Add($"{delivery.DroppedByGlobalCap} global cap");
+        if (delivery.DroppedByFileLevelDemotion > 0)
+            reasons.Add($"{delivery.DroppedByFileLevelDemotion} file-level demotion");
+        if (delivery.DroppedByProvenanceFilter > 0)
+            reasons.Add($"{delivery.DroppedByProvenanceFilter} provenance filter");
+        if (delivery.DroppedByDomainFilter > 0)
+            reasons.Add($"{delivery.DroppedByDomainFilter} domain filter");
+
+        var reasonText = reasons.Count > 0 ? string.Join(", ", reasons) : "delivery policy";
+        return $"  Delivery    : {notShown} finding(s) not shown ({reasonText}; {delivery.InputCount} raw -> {delivery.OutputCount} delivered)";
+    }
+
+    private static void WriteDeliverySummary(FindingDeliverySummary delivery)
+    {
+        var notice = BuildDeliveryNotice(delivery);
+        if (notice is not null)
+            AnsiConsole.MarkupLine($"[yellow]{notice}[/]");
+
+        if (delivery.CoordinationBoostsApplied > 0)
+        {
+            AnsiConsole.MarkupLine(
+                $"[dim]  ({delivery.CoordinationBoostsApplied} finding(s) boosted by rule coordination)[/]");
+        }
+
+        if (delivery.SemanticsBoostsApplied > 0)
+        {
+            AnsiConsole.MarkupLine(
+                $"[dim]  ({delivery.SemanticsBoostsApplied} finding(s) boosted by semantic witnesses)[/]");
+        }
     }
 
     /// <summary>
@@ -83,13 +129,8 @@ public static class ConsoleReporter
         if (suppressedBySensitivity > 0)
             AnsiConsole.MarkupLine($"[dim]  ({suppressedBySensitivity} hidden by {sensitivity.ToString().ToLowerInvariant()} sensitivity - use --sensitivity permissive to see all)[/]");
 
-        if (result.DeliverySummary is { } delivery
-            && (delivery.DroppedByGlobalCap > 0 || delivery.DroppedByPerRuleCap > 0))
-        {
-            var dropped = delivery.DroppedByGlobalCap + delivery.DroppedByPerRuleCap;
-            AnsiConsole.MarkupLine(
-                $"[yellow]  Delivery    : {dropped} finding(s) dropped by output caps ({delivery.InputCount} evaluated, {delivery.OutputCount} shown)[/]");
-        }
+        if (result.DeliverySummary is { } delivery)
+            WriteDeliverySummary(delivery);
 
         var distinctRules = filteredFindings
             .Where(f => f.Severity is RuleSeverity.Block or RuleSeverity.Warn)

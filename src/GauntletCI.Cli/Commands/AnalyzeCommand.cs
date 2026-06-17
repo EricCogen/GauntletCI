@@ -481,9 +481,14 @@ public static class AnalyzeCommand
                             {
                                 result.DeliverySummary.InputCount,
                                 result.DeliverySummary.OutputCount,
+                                NotShown = result.DeliverySummary.InputCount - result.DeliverySummary.OutputCount,
                                 result.DeliverySummary.DroppedByGlobalCap,
                                 result.DeliverySummary.DroppedByPerRuleCap,
                                 result.DeliverySummary.DroppedByFileLevelDemotion,
+                                result.DeliverySummary.DroppedByProvenanceFilter,
+                                result.DeliverySummary.DroppedByDomainFilter,
+                                result.DeliverySummary.CoordinationBoostsApplied,
+                                result.DeliverySummary.SemanticsBoostsApplied,
                             },
                         };
                         var json = JsonSerializer.Serialize(jsonResult, new JsonSerializerOptions { WriteIndented = true });

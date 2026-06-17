@@ -127,7 +127,7 @@ export default function IntegrationsPage() {
             {
               href: "/docs/integrations/mcp",
               label: "MCP Server",
-              desc: "Source build available today; npm package distribution is coming soon.",
+              desc: "Built-in via gauntletci mcp serve (Pro). Optional npm wrapper coming soon.",
               tag: "AI",
               status: "Coming soon",
             },

@@ -55,13 +55,18 @@ jobs:
       - name: Build
         run: dotnet build GauntletCI.slnx --no-restore --configuration Release
 
+      - name: Pack GauntletCI tool
+        run: dotnet pack src/GauntletCI.Cli/GauntletCI.Cli.csproj -c Release --no-build -o ./artifacts/nupkg -p:PackageVersion=0.0.0-ci.${{ github.run_number }}
+
+      - name: Install GauntletCI from local pack
+        run: dotnet tool install -g GauntletCI --add-source ./artifacts/nupkg --version 0.0.0-ci.${{ github.run_number }}
+
       - name: Run GauntletCI on last commit
         id: analyze
         run: |
           git diff HEAD~1..HEAD > main.diff
           set +e
-          OUTPUT=$(dotnet run --project src/GauntletCI.Cli --no-build --configuration Release -- \
-            analyze --no-banner --ascii < main.diff 2>&1)
+          OUTPUT=$(gauntletci analyze --no-banner --ascii < main.diff 2>&1)
           EXIT_CODE=$?
           set -e
           FINDINGS=$(echo "$OUTPUT" | grep -oP 'Findings\s+:\s+\K\d+' || echo "0")
@@ -122,6 +127,12 @@ jobs:
       - name: Build
         run: dotnet build GauntletCI.slnx --no-restore --configuration Release
 
+      - name: Pack GauntletCI tool
+        run: dotnet pack src/GauntletCI.Cli/GauntletCI.Cli.csproj -c Release --no-build -o ./artifacts/nupkg -p:PackageVersion=0.0.0-ci.${{ github.run_number }}
+
+      - name: Install GauntletCI from local pack
+        run: dotnet tool install -g GauntletCI --add-source ./artifacts/nupkg --version 0.0.0-ci.${{ github.run_number }}
+
       - name: Generate PR diff
         run: git diff ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }} > pr.diff
 
@@ -134,8 +145,7 @@ jobs:
         run: |
           set -o pipefail
           set +e
-          dotnet run --project src/GauntletCI.Cli --no-build --configuration Release -- \
-            analyze --no-banner --ascii --github-annotations --pr-comment-suggest --repo . \
+          gauntletci analyze --no-banner --ascii --github-annotations --pr-comment-suggest --repo . \
             --severity warn --sensitivity balanced --no-baseline < pr.diff
           exit_code=$?
           set -e
