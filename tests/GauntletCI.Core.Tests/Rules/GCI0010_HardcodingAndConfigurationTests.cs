@@ -96,4 +96,41 @@ public class GCI0010_HardcodingAndConfigurationTests
 
         Assert.DoesNotContain(findings, f => f.Summary.Contains("IP address"));
     }
+
+    [Fact]
+    public async Task AuthorityUrlLiteral_WithSyntaxTree_ShouldFlag()
+    {
+        const string addedLine = "    var authority = \"https://login.microsoftonline.com/tenant/v2.0\";";
+        var diff = CreateDiffAtLine(FilePath, 2, addedLine);
+        var syntax = CreateSyntaxContext(FilePath, addedLine, 2);
+        var findings = await _rule.EvaluateAsync(CreateContext(diff, syntax));
+
+        Assert.Contains(findings, f => f.Summary.Contains("authority"));
+    }
+
+    [Fact]
+    public async Task AuthorityHostInInlineData_ShouldNotFlag()
+    {
+        const string addedLine = "    [InlineData(\"https://login.microsoftonline.com/tenant/v2.0\", \"login.microsoftonline.com\")]";
+        var diff = CreateDiffAtLine(FilePath, 2, addedLine);
+        var syntax = CreateSyntaxContext(FilePath, addedLine, 2);
+        var findings = await _rule.EvaluateAsync(CreateContext(diff, syntax));
+
+        Assert.DoesNotContain(findings, f => f.Summary.Contains("authority"));
+    }
+
+    [Fact]
+    public async Task HardcodedIpLiteral_WithSyntaxTreeForOtherFileOnly_ShouldFlag()
+    {
+        const string addedLine = "    var host = \"192.168.1.100\";";
+        var diff = CreateDiffAtLine(FilePath, 2, addedLine);
+        var otherTree = CSharpSyntaxTree.ParseText(SourceText.From("class Other { }"));
+        var syntax = new SyntaxContext(new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>
+        {
+            ["src/Other.cs"] = otherTree
+        });
+        var findings = await _rule.EvaluateAsync(CreateContext(diff, syntax));
+
+        Assert.Contains(findings, f => f.Summary.Contains("IP address"));
+    }
 }

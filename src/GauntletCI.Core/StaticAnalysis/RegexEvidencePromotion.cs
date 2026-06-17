@@ -57,12 +57,20 @@ public static class RegexEvidencePromotion
         ArgumentNullException.ThrowIfNull(literalPredicate);
 
         if (context.Syntax is { } syntax)
-            return syntax.HasStringLiteralMatching(filePath, line.LineNumber, literalPredicate);
+        {
+            if (syntax.HasSyntaxTreeForFile(filePath))
+                return syntax.HasStringLiteralMatching(filePath, line.LineNumber, literalPredicate);
+
+            if (extractLiteralsWhenNoTree is not null)
+                return extractLiteralsWhenNoTree(line.Content).Any(literalPredicate);
+
+            return false;
+        }
 
         if (extractLiteralsWhenNoTree is not null)
             return extractLiteralsWhenNoTree(line.Content).Any(literalPredicate);
 
-        return true;
+        return false;
     }
 
     private static bool IsWholeLineComment(string content)

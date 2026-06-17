@@ -247,6 +247,8 @@ Several rules use regex only as a **candidate detector**. Before emitting a find
 
 Product claims about precision should cite **labeled corpus metrics** (`corpus audit-snapshot`, `LabeledRuleMetricsReader`), not discovery-tier trigger rates alone.
 
+**Corpus evaluation** (`RuleCorpusRunner`) disables `output.delivery` so labeled TP/FP reflect rule detection, not CLI cap-25 delivery policy.
+
 ---
 
 Because GauntletCI is analyzed by its own rules during development and in CI, some rules fire on the files that implement other rules. This is called **self-interference**: a rule detecting a pattern inside the implementation of another (or the same) rule.
