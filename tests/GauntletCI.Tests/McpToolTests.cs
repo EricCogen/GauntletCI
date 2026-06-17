@@ -55,6 +55,20 @@ public class McpToolTests
         var doc = JsonDocument.Parse(result);
         Assert.True(doc.RootElement.TryGetProperty("hasFindings", out _));
         Assert.True(doc.RootElement.TryGetProperty("findingCount", out _));
+        Assert.True(doc.RootElement.TryGetProperty("delivery", out _));
+    }
+
+    [Fact]
+    public async Task analyze_diff_WithFindings_IncludesDeliveryCounts()
+    {
+        GauntletTools.SetEngine(new NullLlmEngine());
+        var result = await GauntletTools.analyze_diff(CredentialDiff);
+        var doc = JsonDocument.Parse(result);
+        var delivery = doc.RootElement.GetProperty("delivery");
+
+        Assert.True(delivery.TryGetProperty("inputCount", out var input));
+        Assert.True(delivery.TryGetProperty("outputCount", out var output));
+        Assert.True(input.GetInt32() >= output.GetInt32());
     }
 
     [Fact]

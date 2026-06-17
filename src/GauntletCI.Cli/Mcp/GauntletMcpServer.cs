@@ -41,7 +41,7 @@ public static class GauntletTools
         try
         {
             var diff = await DiffParser.FromStagedAsync(repoPath);
-            var result = await RuleOrchestrator.CreateDefault().RunAsync(diff);
+            var result = await McpAnalysisPipeline.RunAsync(diff, repoPath);
             await EnrichHighFindingsAsync(result.Findings);
             return SerializeFindings(result);
         }
@@ -62,7 +62,7 @@ public static class GauntletTools
         try
         {
             var diffContext = DiffParser.Parse(diff);
-            var result = await RuleOrchestrator.CreateDefault().RunAsync(diffContext);
+            var result = await McpAnalysisPipeline.RunAsync(diffContext);
             await EnrichHighFindingsAsync(result.Findings);
             return SerializeFindings(result);
         }
@@ -80,7 +80,7 @@ public static class GauntletTools
         try
         {
             var diff = await DiffParser.FromGitAsync(repo, commit);
-            var result = await RuleOrchestrator.CreateDefault().RunAsync(diff);
+            var result = await McpAnalysisPipeline.RunAsync(diff, repo);
             await EnrichHighFindingsAsync(result.Findings);
             return SerializeFindings(result);
         }
@@ -152,6 +152,15 @@ public static class GauntletTools
         {
             hasFindings = result.HasFindings,
             findingCount = result.Findings.Count,
+            delivery = result.DeliverySummary is null ? null : new
+            {
+                inputCount = result.DeliverySummary.InputCount,
+                outputCount = result.DeliverySummary.OutputCount,
+                notShown = result.DeliverySummary.InputCount - result.DeliverySummary.OutputCount,
+                droppedByPerRuleCap = result.DeliverySummary.DroppedByPerRuleCap,
+                droppedByGlobalCap = result.DeliverySummary.DroppedByGlobalCap,
+                droppedByFileLevelDemotion = result.DeliverySummary.DroppedByFileLevelDemotion,
+            },
             findings = result.Findings.Select(f => new
             {
                 ruleId = f.RuleId,
