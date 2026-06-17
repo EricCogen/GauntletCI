@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 using System.Runtime.InteropServices;
 
 namespace GauntletCI.Core.StaticAnalysis;
@@ -102,6 +103,61 @@ public static class SyntaxGuard
              or SyntaxKind.MultiLineCommentTrivia
              or SyntaxKind.SingleLineDocumentationCommentTrivia
              or SyntaxKind.MultiLineDocumentationCommentTrivia;
+
+    /// <summary>
+    /// Returns <c>true</c> when a plain string literal on the line satisfies <paramref name="predicate"/>.
+    /// </summary>
+    public static bool HasStringLiteralMatching(SyntaxTree tree, int lineNumber, Func<string, bool> predicate)
+    {
+        ArgumentNullException.ThrowIfNull(tree);
+        ArgumentNullException.ThrowIfNull(predicate);
+        var text = tree.GetText();
+        if (lineNumber < 1 || lineNumber > text.Lines.Count) return false;
+
+        var lineSpan = text.Lines[lineNumber - 1].Span;
+        return tree.GetRoot()
+            .DescendantNodes(lineSpan)
+            .OfType<LiteralExpressionSyntax>()
+            .Where(n => n.IsKind(SyntaxKind.StringLiteralExpression))
+            .Any(n => predicate(n.Token.ValueText));
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when <paramref name="columnOffset"/> falls on a
+    /// <see cref="MemberAccessExpressionSyntax"/> whose member name matches <paramref name="memberName"/>.
+    /// </summary>
+    public static bool HasMemberAccessAtPosition(
+        SyntaxTree tree,
+        int lineNumber,
+        string memberName,
+        int columnOffset)
+    {
+        ArgumentNullException.ThrowIfNull(tree);
+        ArgumentNullException.ThrowIfNull(memberName);
+        var text = tree.GetText();
+        if (lineNumber < 1 || lineNumber > text.Lines.Count) return false;
+
+        var line = text.Lines[lineNumber - 1];
+        if (line.Span.IsEmpty) return false;
+        if (columnOffset < 0) columnOffset = 0;
+        var position = line.Start + Math.Min(columnOffset, line.Span.Length - 1);
+
+        for (var node = tree.GetRoot().FindNode(new TextSpan(position, 0)); node is not null; node = node.Parent)
+        {
+            if (node is not MemberAccessExpressionSyntax memberAccess)
+                continue;
+
+            if (!memberAccess.Name.Identifier.Text.Equals(memberName, StringComparison.Ordinal))
+                continue;
+
+            if (!memberAccess.Name.Span.Contains(position))
+                continue;
+
+            return true;
+        }
+
+        return false;
+    }
 
     private static readonly HashSet<string> SystemIoFileSyncMethods = new(StringComparer.OrdinalIgnoreCase)
     {

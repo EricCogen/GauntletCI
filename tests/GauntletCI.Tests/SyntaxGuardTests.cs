@@ -239,6 +239,43 @@ public class SyntaxGuardTests
     }
 
     [Fact]
+    public void HasMemberAccessAtPosition_WhenValueAccessIsLiveCode_ReturnsTrue()
+    {
+        var tree = Parse("var result = maybe.Value;");
+        int valueIndex = "var result = maybe.".Length;
+        Assert.True(SyntaxGuard.HasMemberAccessAtPosition(tree, 1, "Value", valueIndex));
+    }
+
+    [Fact]
+    public void HasMemberAccessAtPosition_WhenValueIsInsideStringLiteral_ReturnsFalse()
+    {
+        var tree = Parse("var hint = \"maybe.Value\";");
+        int valueIndex = tree.GetText().ToString().IndexOf(".Value", StringComparison.Ordinal) + 1;
+        Assert.False(SyntaxGuard.HasMemberAccessAtPosition(tree, 1, "Value", valueIndex));
+    }
+
+    [Fact]
+    public void HasStringLiteralMatching_WhenLiteralMatchesPredicate_ReturnsTrue()
+    {
+        var tree = Parse("var host = \"192.168.1.100\";");
+        Assert.True(SyntaxGuard.HasStringLiteralMatching(tree, 1, l => l.Contains("192.168")));
+    }
+
+    [Fact]
+    public void HasStringLiteralMatching_WhenMatchOnlyInComment_ReturnsFalse()
+    {
+        var tree = Parse("// server at 192.168.1.100");
+        Assert.False(SyntaxGuard.HasStringLiteralMatching(tree, 1, l => l.Contains("192.168")));
+    }
+
+    [Fact]
+    public void SyntaxContext_HasStringLiteralMatching_WhenNoTree_PassesThrough()
+    {
+        var ctx = new SyntaxContext(new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>());
+        Assert.True(ctx.HasStringLiteralMatching("missing.cs", 1, _ => false));
+    }
+
+    [Fact]
     public async Task GCI0057_SuppressesFileReadInsideStringLiteral()
     {
         const string addedLine = "    var hint = \"File.ReadAllText(path)\";";

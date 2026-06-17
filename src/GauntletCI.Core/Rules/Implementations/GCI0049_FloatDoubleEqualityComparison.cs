@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
+using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -33,15 +34,21 @@ public class GCI0049_FloatDoubleEqualityComparison : RuleBase
             foreach (var line in file.AddedLines)
             {
                 var content = line.Content;
-
-                // Skip comment lines (simple prefix check)
                 var trimmed = content.TrimStart();
-                if (trimmed.StartsWith("//") || trimmed.StartsWith("*") || trimmed.StartsWith("/*"))
-                    continue;
+                int operatorIndex = GetFirstOperatorIndex(content);
 
-                // Syntax guard: suppress if the first operator position is inside a comment or string literal.
-                if (context.Syntax?.IsInCommentOrStringLiteral(
-                        file.NewPath, line.LineNumber, GetFirstOperatorIndex(content)) == true)
+                if (!RegexEvidencePromotion.PassesCodeCandidateValidation(
+                        context,
+                        file.NewPath,
+                        line,
+                        operatorIndex,
+                        allowWhenNoSyntaxTree: c =>
+                        {
+                            var t = c.TrimStart();
+                            return !t.StartsWith("//", StringComparison.Ordinal)
+                                && !t.StartsWith("*", StringComparison.Ordinal)
+                                && !t.StartsWith("/*", StringComparison.Ordinal);
+                        }))
                     continue;
 
                 // When the line is an integer zero-guard ternary (e.g. count == 0 ? 0.0 : (double)a/b),

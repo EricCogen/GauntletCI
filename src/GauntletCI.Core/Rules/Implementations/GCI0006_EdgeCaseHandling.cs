@@ -27,15 +27,16 @@ public class GCI0006_EdgeCaseHandling : RuleBase
         var diff = context.Diff;
         var findings = new List<Finding>();
 
-        CheckNullDereferences(diff, findings);
+        CheckNullDereferences(context, findings);
         CheckMissingParameterValidation(diff, findings);
         AddRoslynFindings(context.StaticAnalysis, findings);
 
         return Task.FromResult(findings);
     }
 
-    private void CheckNullDereferences(DiffContext diff, List<Finding> findings)
+    private void CheckNullDereferences(AnalysisContext context, List<Finding> findings)
     {
+        var diff = context.Diff;
         foreach (var file in diff.Files)
         {
             if (WellKnownPatterns.IsTestFile(file.NewPath) || WellKnownPatterns.IsGeneratedFile(file.NewPath)) continue;
@@ -46,11 +47,22 @@ public class GCI0006_EdgeCaseHandling : RuleBase
 
             for (int i = 0; i < addedLines.Count; i++)
             {
-                var content = addedLines[i].Content;
-                if (!HasUnsafeValueAccess(content)) continue;
+                var line = addedLines[i];
+                var content = line.Content;
+                if (!TryGetUnsafeValueAccessIndex(content, out int valueIndex)) continue;
 
                 // Skip comment lines: .Value in a comment is not executable code
                 if (WellKnownPatterns.GuardPatterns.IsCommentLine(content)) continue;
+
+                if (!RegexEvidencePromotion.PassesCodeCandidateValidation(
+                        context,
+                        file.NewPath,
+                        line,
+                        valueIndex,
+                        confirmSemantic: syntax =>
+                            syntax.IsConfirmedMemberAccess(file.NewPath, line.LineNumber, "Value", valueIndex),
+                        allowWhenNoSyntaxTree: c => !WellKnownPatterns.GuardPatterns.IsCommentLine(c)))
+                    continue;
 
                 // Skip expression-bodied property/method declarations: the .Value access IS
                 // the declaration body (e.g. public override object? Value => _inner.Value;)
@@ -223,8 +235,9 @@ public class GCI0006_EdgeCaseHandling : RuleBase
     //   ?.Value   -- null-conditional access preceding .Value
     //   .Value?.  -- null-conditional after .Value (developer handles null result)
     //   .Values   -- a different property; word-boundary check excludes .Values, .ValueOrDefault, etc.
-    private static bool HasUnsafeValueAccess(string content)
+    private static bool TryGetUnsafeValueAccessIndex(string content, out int matchIndex)
     {
+        matchIndex = -1;
         int pos = 0;
         while (pos < content.Length)
         {
@@ -274,8 +287,10 @@ public class GCI0006_EdgeCaseHandling : RuleBase
                 continue;
             }
 
+            matchIndex = idx + 1;
             return true;
         }
+
         return false;
     }
 

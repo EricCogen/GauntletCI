@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using GauntletCI.Core.Analysis;
 using GauntletCI.Core.Diff;
 using GauntletCI.Core.Model;
+using GauntletCI.Core.StaticAnalysis;
 
 namespace GauntletCI.Core.Rules.Implementations;
 
@@ -91,18 +92,14 @@ public class GCI0057_BlockingAsyncViolation : RuleBase
         DiffLine line,
         string method,
         int matchIndex,
-        AnalysisContext context)
-    {
-        if (context.Syntax is { } syntax)
-        {
-            if (syntax.IsInCommentOrStringLiteral(file.NewPath, line.LineNumber, matchIndex))
-                return false;
-
-            return syntax.IsConfirmedSystemIoFileSyncInvocation(file.NewPath, line.LineNumber, method);
-        }
-
-        return !IsInStringOrComment(line.Content);
-    }
+        AnalysisContext context) =>
+        RegexEvidencePromotion.PassesCodeCandidateValidation(
+            context,
+            file.NewPath,
+            line,
+            matchIndex,
+            confirmSemantic: syntax => syntax.IsConfirmedSystemIoFileSyncInvocation(file.NewPath, line.LineNumber, method),
+            allowWhenNoSyntaxTree: content => !IsInStringOrComment(content));
 
     private static Confidence DetermineFileIoConfidence(List<DiffLine> allLines, DiffLine targetLine)
     {
