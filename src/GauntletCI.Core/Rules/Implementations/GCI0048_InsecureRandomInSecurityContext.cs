@@ -60,13 +60,15 @@ public class GCI0048_InsecureRandomInSecurityContext : RuleBase
                 var match = NewRandomRegex.Match(line.Content);
                 if (!match.Success) continue;
 
-                // Syntax guard: suppress if the match position is inside a comment or string literal.
-                if (context.Syntax?.IsInCommentOrStringLiteral(file.NewPath, line.LineNumber, match.Index) == true)
+                if (!RegexEvidencePromotion.PassesCodeCandidateValidation(
+                        context,
+                        file.NewPath,
+                        line,
+                        match.Index,
+                        confirmSemantic: syntax =>
+                            syntax.IsConfirmedObjectCreation(file.NewPath, line.LineNumber, "Random"),
+                        allowWhenNoSyntaxTree: content => !IsAfterLineComment(content, match.Index)))
                     continue;
-
-                // Lightweight fallback for raw-diff analysis (no syntax tree):
-                // suppress when the match falls after a // comment marker on the same line.
-                if (IsAfterLineComment(line.Content, match.Index)) continue;
 
                 // Check ±5 surrounding added lines for security-sensitive identifiers
                 int start = Math.Max(0, i - 5);

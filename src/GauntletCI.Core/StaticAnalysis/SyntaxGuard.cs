@@ -2,6 +2,8 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+using System.Runtime.InteropServices;
 
 namespace GauntletCI.Core.StaticAnalysis;
 
@@ -101,6 +103,164 @@ public static class SyntaxGuard
              or SyntaxKind.MultiLineCommentTrivia
              or SyntaxKind.SingleLineDocumentationCommentTrivia
              or SyntaxKind.MultiLineDocumentationCommentTrivia;
+
+    /// <summary>
+    /// Returns <c>true</c> when a plain string literal on the line satisfies <paramref name="predicate"/>.
+    /// </summary>
+    public static bool HasStringLiteralMatching(SyntaxTree tree, int lineNumber, Func<string, bool> predicate)
+    {
+        ArgumentNullException.ThrowIfNull(tree);
+        ArgumentNullException.ThrowIfNull(predicate);
+        var text = tree.GetText();
+        if (lineNumber < 1 || lineNumber > text.Lines.Count) return false;
+
+        var lineSpan = text.Lines[lineNumber - 1].Span;
+        return tree.GetRoot()
+            .DescendantNodes(lineSpan)
+            .OfType<LiteralExpressionSyntax>()
+            .Where(n => n.IsKind(SyntaxKind.StringLiteralExpression))
+            .Any(n => predicate(n.Token.ValueText));
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when <paramref name="columnOffset"/> falls on a
+    /// <see cref="MemberAccessExpressionSyntax"/> whose member name matches <paramref name="memberName"/>.
+    /// </summary>
+    public static bool HasMemberAccessAtPosition(
+        SyntaxTree tree,
+        int lineNumber,
+        string memberName,
+        int columnOffset)
+    {
+        ArgumentNullException.ThrowIfNull(tree);
+        ArgumentNullException.ThrowIfNull(memberName);
+        var text = tree.GetText();
+        if (lineNumber < 1 || lineNumber > text.Lines.Count) return false;
+
+        var line = text.Lines[lineNumber - 1];
+        if (line.Span.IsEmpty) return false;
+        if (columnOffset < 0) columnOffset = 0;
+        var position = line.Start + Math.Min(columnOffset, line.Span.Length - 1);
+
+        for (var node = tree.GetRoot().FindNode(new TextSpan(position, 0)); node is not null; node = node.Parent)
+        {
+            if (node is not MemberAccessExpressionSyntax memberAccess)
+                continue;
+
+            if (!memberAccess.Name.Identifier.Text.Equals(memberName, StringComparison.Ordinal))
+                continue;
+
+            if (!memberAccess.Name.Span.Contains(position))
+                continue;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private static readonly HashSet<string> SystemIoFileSyncMethods = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "ReadAllText",
+        "ReadAllLines",
+        "WriteAllText",
+        "WriteAllLines",
+        "Copy",
+        "ReadAllBytes",
+        "WriteAllBytes",
+    };
+
+    /// <summary>
+    /// Returns <c>true</c> when the line contains a confirmed <c>System.IO.File</c> synchronous
+    /// method invocation matching <paramref name="methodName"/>.
+    /// Uses syntax structure first, then a lightweight semantic bind when compilation succeeds.
+    /// </summary>
+    public static bool HasSystemIoFileSyncInvocation(SyntaxTree tree, int lineNumber, string methodName)
+    {
+        ArgumentNullException.ThrowIfNull(tree);
+        ArgumentNullException.ThrowIfNull(methodName);
+        if (!SystemIoFileSyncMethods.Contains(methodName))
+            return false;
+
+        var text = tree.GetText();
+        if (lineNumber < 1 || lineNumber > text.Lines.Count)
+            return false;
+
+        var lineSpan = text.Lines[lineNumber - 1].Span;
+        foreach (var invocation in tree.GetRoot().DescendantNodes(lineSpan).OfType<InvocationExpressionSyntax>())
+        {
+            if (invocation.Expression is not MemberAccessExpressionSyntax memberAccess)
+                continue;
+
+            if (!memberAccess.Name.Identifier.Text.Equals(methodName, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (!IsSystemIoFileExpression(memberAccess.Expression))
+                continue;
+
+            if (!IsSemanticallySystemIoFile(tree, invocation))
+                continue;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsSystemIoFileExpression(ExpressionSyntax? expression) =>
+        expression switch
+        {
+            IdentifierNameSyntax { Identifier.Text: "File" } => true,
+            QualifiedNameSyntax qualified when qualified.Right.Identifier.Text == "File" =>
+                IsSystemIoNamespace(qualified.Left),
+            AliasQualifiedNameSyntax aliased => IsSystemIoFileExpression(aliased.Name),
+            MemberAccessExpressionSyntax member when member.Name.Identifier.Text == "File" =>
+                IsSystemIoNamespace(member.Expression),
+            _ => false,
+        };
+
+    private static bool IsSystemIoNamespace(ExpressionSyntax expression)
+    {
+        var text = expression.ToString();
+        return text.Equals("System.IO", StringComparison.Ordinal)
+            || text.EndsWith(".System.IO", StringComparison.Ordinal);
+    }
+
+    private static bool IsSemanticallySystemIoFile(SyntaxTree tree, InvocationExpressionSyntax invocation)
+    {
+        try
+        {
+            var compilation = CreateMiniCompilation(tree);
+            var model = compilation.GetSemanticModel(tree);
+            if (model.GetSymbolInfo(invocation).Symbol is not IMethodSymbol method)
+                return true;
+
+            var containingType = method.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return containingType is "global::System.IO.File" or "System.IO.File";
+        }
+        catch (Exception)
+        {
+            return true;
+        }
+    }
+
+    private static CSharpCompilation CreateMiniCompilation(SyntaxTree tree)
+    {
+        var runtimeDir = RuntimeEnvironment.GetRuntimeDirectory();
+        var references = new List<MetadataReference>();
+        foreach (var dll in new[] { "System.Runtime.dll", "System.Private.CoreLib.dll", "netstandard.dll" })
+        {
+            var path = Path.Combine(runtimeDir, dll);
+            if (File.Exists(path))
+                references.Add(MetadataReference.CreateFromFile(path));
+        }
+
+        return CSharpCompilation.Create(
+            assemblyName: "GauntletCI.SyntaxGuard",
+            syntaxTrees: [tree],
+            references: references,
+            options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+    }
 
     private static string GetSimpleTypeName(TypeSyntax type) => type switch
     {

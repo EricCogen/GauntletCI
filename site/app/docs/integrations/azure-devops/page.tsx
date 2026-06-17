@@ -151,7 +151,7 @@ export default function AzureDevOpsPage() {
               <div className="flex items-start gap-2">
                 <span className="text-muted-foreground/50 text-xs w-5 shrink-0">00:01</span>
                 <span className="text-foreground">
-                  GauntletCI: 3 finding(s) from 42 rules evaluated.
+                  GauntletCI: 3 finding(s) from 37 rules evaluated.
                 </span>
               </div>
               <div className="flex items-start gap-2">

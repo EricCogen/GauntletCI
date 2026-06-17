@@ -87,16 +87,10 @@ export default function McpPage() {
           </p>
         </div>
 
-        <IntegrationStatusBanner title="Coming soon: npm package">
-          The MCP server source repository exists, but the @ericcogen/gauntletci-mcp package is not
-          published to npm yet. Use the clone-and-build path below until the package is released.
-        </IntegrationStatusBanner>
-
         <section>
-          <h2 className="text-2xl font-semibold mb-3">Built-in MCP server (CLI)</h2>
+          <h2 className="text-2xl font-semibold mb-3">Built-in MCP server (recommended)</h2>
           <p className="text-muted-foreground mb-3 text-sm">
-            If you already have the GauntletCI CLI installed, you can start an MCP server without
-            cloning the separate Node repository:
+            The GauntletCI CLI ships a stdio MCP server today. No separate Node repository is required:
           </p>
           <div className="rounded-lg border border-border bg-card p-4 font-mono text-sm">
             <span className="text-cyan-400">$</span>{" "}
@@ -104,10 +98,20 @@ export default function McpPage() {
           </div>
           <p className="text-muted-foreground mt-3 text-sm">
             Point your MCP client at that command (stdio). Requires a Pro license for MCP features.
-            The standalone <code className="bg-muted px-1 rounded text-xs">GauntletCI-MCP</code>{" "}
-            repository remains the path for npm distribution once published.
+            Exposes <code className="bg-muted px-1 rounded text-xs">analyze_staged</code>,{" "}
+            <code className="bg-muted px-1 rounded text-xs">analyze_diff</code>,{" "}
+            <code className="bg-muted px-1 rounded text-xs">analyze_commit</code>,{" "}
+            <code className="bg-muted px-1 rounded text-xs">list_rules</code>, and{" "}
+            <code className="bg-muted px-1 rounded text-xs">audit_stats</code>.
           </p>
         </section>
+
+        <IntegrationStatusBanner title="Optional: npm wrapper (coming soon)">
+          The standalone <code className="bg-muted px-1 rounded text-xs">GauntletCI-MCP</code> Node
+          repository is an optional wrapper for npm distribution. Use{" "}
+          <code className="bg-muted px-1 rounded text-xs">gauntletci mcp serve</code> until{" "}
+          <code className="bg-muted px-1 rounded text-xs">@ericcogen/gauntletci-mcp</code> is published.
+        </IntegrationStatusBanner>
 
         <section>
           <h2 className="text-2xl font-semibold mb-3">How it works</h2>

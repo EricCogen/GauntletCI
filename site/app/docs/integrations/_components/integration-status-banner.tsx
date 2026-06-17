@@ -1,6 +1,8 @@
+import type { ReactNode } from "react";
+
 type IntegrationStatusBannerProps = {
   title: string;
-  children: string;
+  children: ReactNode;
 };
 
 export function IntegrationStatusBanner({ title, children }: IntegrationStatusBannerProps) {

@@ -12,6 +12,9 @@ namespace GauntletCI.Core.StaticAnalysis;
 /// <list type="bullet">
 ///   <item><description><see cref="IsConfirmedObjectCreation"/> returns <c>true</c> (don't suppress: no evidence to filter).</description></item>
 ///   <item><description><see cref="IsInCommentOrStringLiteral"/> returns <c>false</c> (don't suppress: no evidence to suppress).</description></item>
+///   <item><description><see cref="IsConfirmedSystemIoFileSyncInvocation"/> returns <c>true</c> (allow regex candidate when no tree).</description></item>
+///   <item><description><see cref="HasStringLiteralMatching"/> returns <c>true</c> (allow literal candidate when no tree).</description></item>
+///   <item><description><see cref="IsConfirmedMemberAccess"/> returns <c>true</c> (allow regex candidate when no tree).</description></item>
 /// </list>
 /// </para>
 /// </summary>
@@ -47,6 +50,42 @@ public sealed class SyntaxContext
         ArgumentNullException.ThrowIfNull(filePath);
         if (!TryGetTree(filePath, out var tree)) return false;
         return SyntaxGuard.IsInCommentOrStringLiteral(tree!, lineNumber, columnOffset);
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when Roslyn confirms a synchronous <c>System.IO.File</c> invocation
+    /// for <paramref name="methodName"/> on the line, or when no syntax tree is available (pass-through).
+    /// </summary>
+    public bool IsConfirmedSystemIoFileSyncInvocation(string filePath, int lineNumber, string methodName)
+    {
+        ArgumentNullException.ThrowIfNull(filePath);
+        ArgumentNullException.ThrowIfNull(methodName);
+        if (!TryGetTree(filePath, out var tree)) return true;
+        return SyntaxGuard.HasSystemIoFileSyncInvocation(tree!, lineNumber, methodName);
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when a string literal on the line satisfies <paramref name="predicate"/>,
+    /// or when no syntax tree is available (pass-through).
+    /// </summary>
+    public bool HasStringLiteralMatching(string filePath, int lineNumber, Func<string, bool> predicate)
+    {
+        ArgumentNullException.ThrowIfNull(filePath);
+        ArgumentNullException.ThrowIfNull(predicate);
+        if (!TryGetTree(filePath, out var tree)) return true;
+        return SyntaxGuard.HasStringLiteralMatching(tree!, lineNumber, predicate);
+    }
+
+    /// <summary>
+    /// Returns <c>true</c> when Roslyn confirms a member access named <paramref name="memberName"/>
+    /// at <paramref name="columnOffset"/> on the line, or when no syntax tree is available (pass-through).
+    /// </summary>
+    public bool IsConfirmedMemberAccess(string filePath, int lineNumber, string memberName, int columnOffset)
+    {
+        ArgumentNullException.ThrowIfNull(filePath);
+        ArgumentNullException.ThrowIfNull(memberName);
+        if (!TryGetTree(filePath, out var tree)) return true;
+        return SyntaxGuard.HasMemberAccessAtPosition(tree!, lineNumber, memberName, columnOffset);
     }
 
     private bool TryGetTree(string filePath, out SyntaxTree? tree)

@@ -43,6 +43,55 @@ public class SyntaxGuardTests
         Assert.False(SyntaxGuard.HasObjectCreation(tree, 0, "Random"));
     }
 
+    // ── SyntaxGuard.HasSystemIoFileSyncInvocation ─────────────────────────
+
+    [Fact]
+    public void HasSystemIoFileSyncInvocation_WhenSystemIoFileCall_ReturnsTrue()
+    {
+        var tree = Parse("var text = File.ReadAllText(path);");
+        Assert.True(SyntaxGuard.HasSystemIoFileSyncInvocation(tree, 1, "ReadAllText"));
+    }
+
+    [Fact]
+    public void HasSystemIoFileSyncInvocation_WhenQualifiedSystemIoFileCall_ReturnsTrue()
+    {
+        var tree = Parse("var text = System.IO.File.ReadAllText(path);");
+        Assert.True(SyntaxGuard.HasSystemIoFileSyncInvocation(tree, 1, "ReadAllText"));
+    }
+
+    [Fact]
+    public void HasSystemIoFileSyncInvocation_WhenCustomFileType_ReturnsFalse()
+    {
+        const string source = """
+            class LocalFile
+            {
+                public static string ReadAllText(string path) => path;
+            }
+
+            var text = LocalFile.ReadAllText(path);
+            """;
+        var tree = Parse(source);
+        Assert.False(SyntaxGuard.HasSystemIoFileSyncInvocation(tree, 5, "ReadAllText"));
+    }
+
+    [Fact]
+    public void HasSystemIoFileSyncInvocation_WhenNestedShadowFileType_ReturnsFalse()
+    {
+        const string source = """
+            class Store
+            {
+                private class File
+                {
+                    public static string ReadAllText(string path) => path;
+                }
+
+                public void Load() => File.ReadAllText("x");
+            }
+            """;
+        var tree = Parse(source);
+        Assert.False(SyntaxGuard.HasSystemIoFileSyncInvocation(tree, 8, "ReadAllText"));
+    }
+
     // ── SyntaxGuard.IsInCommentOrStringLiteral ────────────────────────────
 
     [Fact]
@@ -186,6 +235,75 @@ public class SyntaxGuardTests
         var diff = MakeDiff("src/Calc.cs", addedLine);
         var rule = new GCI0049_FloatDoubleEqualityComparison(new StubPatternProvider());
         var findings = await rule.EvaluateAsync(diff);
+        Assert.NotEmpty(findings);
+    }
+
+    [Fact]
+    public void HasMemberAccessAtPosition_WhenValueAccessIsLiveCode_ReturnsTrue()
+    {
+        var tree = Parse("var result = maybe.Value;");
+        int valueIndex = "var result = maybe.".Length;
+        Assert.True(SyntaxGuard.HasMemberAccessAtPosition(tree, 1, "Value", valueIndex));
+    }
+
+    [Fact]
+    public void HasMemberAccessAtPosition_WhenValueIsInsideStringLiteral_ReturnsFalse()
+    {
+        var tree = Parse("var hint = \"maybe.Value\";");
+        int valueIndex = tree.GetText().ToString().IndexOf(".Value", StringComparison.Ordinal) + 1;
+        Assert.False(SyntaxGuard.HasMemberAccessAtPosition(tree, 1, "Value", valueIndex));
+    }
+
+    [Fact]
+    public void HasStringLiteralMatching_WhenLiteralMatchesPredicate_ReturnsTrue()
+    {
+        var tree = Parse("var host = \"192.168.1.100\";");
+        Assert.True(SyntaxGuard.HasStringLiteralMatching(tree, 1, l => l.Contains("192.168")));
+    }
+
+    [Fact]
+    public void HasStringLiteralMatching_WhenMatchOnlyInComment_ReturnsFalse()
+    {
+        var tree = Parse("// server at 192.168.1.100");
+        Assert.False(SyntaxGuard.HasStringLiteralMatching(tree, 1, l => l.Contains("192.168")));
+    }
+
+    [Fact]
+    public void SyntaxContext_HasStringLiteralMatching_WhenNoTree_PassesThrough()
+    {
+        var ctx = new SyntaxContext(new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>());
+        Assert.True(ctx.HasStringLiteralMatching("missing.cs", 1, _ => false));
+    }
+
+    [Fact]
+    public async Task GCI0057_SuppressesFileReadInsideStringLiteral()
+    {
+        const string addedLine = "    var hint = \"File.ReadAllText(path)\";";
+        var tree = Parse("// existing\n" + addedLine);
+        var ctx = new SyntaxContext(new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>
+        {
+            ["src/Service.cs"] = tree
+        });
+
+        var diff = MakeDiff("src/Service.cs", addedLine);
+        var rule = new GCI0057_BlockingAsyncViolation(new StubPatternProvider());
+        var findings = await rule.EvaluateAsync(diff, syntax: ctx);
+        Assert.Empty(findings);
+    }
+
+    [Fact]
+    public async Task GCI0057_FiresWhenSystemIoFileReadIsLiveCode()
+    {
+        const string addedLine = "    var text = File.ReadAllText(path);";
+        var tree = Parse("// existing\n" + addedLine);
+        var ctx = new SyntaxContext(new Dictionary<string, Microsoft.CodeAnalysis.SyntaxTree>
+        {
+            ["src/Service.cs"] = tree
+        });
+
+        var diff = MakeDiff("src/Service.cs", addedLine);
+        var rule = new GCI0057_BlockingAsyncViolation(new StubPatternProvider());
+        var findings = await rule.EvaluateAsync(diff, syntax: ctx);
         Assert.NotEmpty(findings);
     }
 

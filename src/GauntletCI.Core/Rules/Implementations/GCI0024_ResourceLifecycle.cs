@@ -33,7 +33,7 @@ public class GCI0024_ResourceLifecycle : RuleBase
 
         foreach (var file in diff.Files)
         {
-            CheckUnguardedDisposables(file, findings);
+            CheckUnguardedDisposables(file, context, findings);
         }
 
         AddRoslynFindings(context.StaticAnalysis, findings);
@@ -41,7 +41,7 @@ public class GCI0024_ResourceLifecycle : RuleBase
         return Task.FromResult(findings);
     }
 
-    private void CheckUnguardedDisposables(DiffFile file, List<Finding> findings)
+    private void CheckUnguardedDisposables(DiffFile file, AnalysisContext context, List<Finding> findings)
     {
         if (WellKnownPatterns.IsTestFile(file.NewPath)) return;
         if (WellKnownPatterns.IsGeneratedFile(file.NewPath)) return;
@@ -59,6 +59,10 @@ public class GCI0024_ResourceLifecycle : RuleBase
 
             var (typeName, isExplicit) = MatchDisposableType(content);
             if (typeName is null) continue;
+
+            if (context.Syntax is { } syntax &&
+                !syntax.IsConfirmedObjectCreation(file.NewPath, line.LineNumber, typeName))
+                continue;
 
             // Defer to the owning rule (GCI0039) rather than double-reporting.
             if (WellKnownPatterns.ResourcePatterns.OwnedByOtherRules.Contains(typeName)) continue;
