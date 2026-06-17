@@ -455,11 +455,14 @@ public sealed class RuleCorpusRunnerTests : IDisposable
         var source = new GauntletConfig();
         source.Output.Delivery.Enabled = true;
         source.Output.Delivery.GlobalMaxFindings = 1;
+        source.Domain.Enabled = true;
 
         var corpus = RuleCorpusRunner.BuildCorpusEvaluationConfig(source);
 
         Assert.False(corpus.Output.Delivery.Enabled);
+        Assert.False(corpus.Domain.Enabled);
         Assert.True(source.Output.Delivery.Enabled);
+        Assert.True(source.Domain.Enabled);
         Assert.Equal(1, source.Output.Delivery.GlobalMaxFindings);
     }
 }

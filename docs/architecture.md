@@ -247,7 +247,7 @@ Several rules use regex only as a **candidate detector**. Before emitting a find
 
 Product claims about precision should cite **labeled corpus metrics** (`corpus audit-snapshot`, `LabeledRuleMetricsReader`), not discovery-tier trigger rates alone.
 
-**Corpus evaluation** (`RuleCorpusRunner`) disables `output.delivery` so labeled TP/FP reflect rule detection, not CLI cap-25 delivery policy.
+**Corpus evaluation** (`RuleCorpusRunner`) disables `output.delivery` and `domain` gating so labeled TP/FP reflect rule detection on the fixture diff, not CLI cap-25 policy or the GauntletCI repo's ClassLibrary profile.
 
 ---
 

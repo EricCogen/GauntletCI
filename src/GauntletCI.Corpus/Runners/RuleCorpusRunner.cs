@@ -25,7 +25,6 @@ public sealed class RuleCorpusRunner
     private readonly IFixtureStore _store;
     private readonly CorpusDb _db;
     private readonly GauntletConfig? _config;
-    private readonly string? _repoPath;
 
     /// <summary>The run ID from the most recent call to <see cref="RunAsync"/>.</summary>
     public string LastRunId { get; private set; } = string.Empty;
@@ -43,7 +42,7 @@ public sealed class RuleCorpusRunner
         _store = store;
         _db = db;
         _config = config;
-        _repoPath = repoPath;
+        _ = repoPath;
     }
 
     public async Task<IReadOnlyList<ActualFinding>> RunAsync(
@@ -55,7 +54,7 @@ public sealed class RuleCorpusRunner
 
         var diff = DiffParser.Parse(diffText);
         var corpusConfig = BuildCorpusEvaluationConfig(_config);
-        var result = await RuleOrchestrator.CreateDefault(corpusConfig, repoPath: _repoPath)
+        var result = await RuleOrchestrator.CreateDefault(corpusConfig, repoPath: null)
             .RunAsync(diff, null, null, cancellationToken)
             .ConfigureAwait(false);
 
@@ -88,8 +87,9 @@ public sealed class RuleCorpusRunner
     }
 
     /// <summary>
-    /// Corpus metrics measure rule detection, not CLI delivery caps. Delivery ranking and
-    /// global limits are disabled so labeled TP/FN are not skewed by cap-25 policy.
+    /// Corpus metrics measure rule detection, not CLI delivery caps or repo-domain suppression.
+    /// Delivery ranking/global limits and domain gating are disabled so labeled TP/FN are not
+    /// skewed by GauntletCI repo profile (e.g. GCI0024 dropped on ClassLibrary).
     /// </summary>
     internal static GauntletConfig BuildCorpusEvaluationConfig(GauntletConfig? source)
     {
@@ -106,6 +106,7 @@ public sealed class RuleCorpusRunner
         }
 
         config.Output.Delivery.Enabled = false;
+        config.Domain.Enabled = false;
         return config;
     }
 
