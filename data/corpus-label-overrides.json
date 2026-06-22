@@ -13,6 +13,174 @@
       "rule_id": "GCI0010",
       "is_inconclusive": true,
       "reason": "Patch has no login.microsoftonline.com or authority URL in production diff lines; label lacks evidence_excerpt"
+    },
+    {
+      "fixture_id": "adamhathcock_sharpcompress_pr1211",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "adamhathcock_sharpcompress_pr1239",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "adamhathcock_sharpcompress_pr1243",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "anglesharp_anglesharp_pr1159",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "apache_logging-log4net_pr201",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "azure_azure-sdk-for-net_pr56468",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "azure_azure-sdk-for-net_pr57949",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "closedxml_closedxml_pr2093",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "devtoys-app_devtoys_pr1078",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "dotnet_efcore_pr38038",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "dotnet_maui_pr34932",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "dotnet_orleans_pr6503",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "dotnet_orleans_pr9983",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "dotnet_reactive_pr2182",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "googleapis_google-api-dotnet-client_pr3135",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "googleapis_google-api-dotnet-client_pr3138",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "googleapis_google-api-dotnet-client_pr3141",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "googleapis_google-api-dotnet-client_pr3142",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "grpc_grpc-dotnet_pr2531",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "jamesnk_newtonsoft.json_pr2424",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "mgravell_pipelines.sockets.unofficial_pr74",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "nunit_nunit_pr5191",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "rabbitmq_rabbitmq-dotnet-client_pr1779",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "human label expects breaking-change signal; GCI0004 scope is [Obsolete] added/removed only (no Obsolete in patch)"
+    },
+    {
+      "fixture_id": "dapperlib_dapper_pr1928",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "[Obsolete] appears only on unchanged context lines; no added/removed Obsolete attribute in patch"
+    },
+    {
+      "fixture_id": "icsharpcode_sharpziplib_pr746",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "[Obsolete] appears only on unchanged context lines; no added/removed Obsolete attribute in patch"
+    },
+    {
+      "fixture_id": "jamesnk_newtonsoft.json_pr1950",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "[Obsolete] appears only on unchanged context lines; no added/removed Obsolete attribute in patch"
+    },
+    {
+      "fixture_id": "jamesnk_newtonsoft.json_pr2980",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "[Obsolete] appears only on unchanged context lines; no added/removed Obsolete attribute in patch"
+    },
+    {
+      "fixture_id": "stackexchange_stackexchange.redis_pr2995",
+      "rule_id": "GCI0004",
+      "is_inconclusive": true,
+      "reason": "[Obsolete] added in StackExchange.Redis.Tests test helper; GCI0004 skips test files by design"
     }
   ]
 }
