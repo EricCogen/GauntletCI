@@ -129,7 +129,7 @@ jobs:
             artifacts/packages/checksums.txt
 
       - name: Upload release checksums
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-checksums
           path: artifacts/packages/checksums.txt
