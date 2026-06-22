@@ -20,7 +20,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
@@ -151,7 +151,7 @@ jobs:
           path: .
 
       - name: Checkout GauntletCI update script
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           path: gauntletci-src
@@ -159,7 +159,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Checkout tap repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: EricCogen/homebrew-gauntletci
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
