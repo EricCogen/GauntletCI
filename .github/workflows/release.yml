@@ -20,7 +20,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v5
@@ -129,7 +129,7 @@ jobs:
             artifacts/packages/checksums.txt
 
       - name: Upload release checksums
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-checksums
           path: artifacts/packages/checksums.txt
@@ -145,13 +145,13 @@ jobs:
     if: vars.HOMEBREW_TAP_ENABLED == 'true'
     steps:
       - name: Download checksums
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-checksums
           path: .
 
       - name: Checkout GauntletCI update script
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
           path: gauntletci-src
@@ -159,7 +159,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Checkout tap repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: EricCogen/homebrew-gauntletci
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
