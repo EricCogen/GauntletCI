@@ -32,7 +32,7 @@ jobs:
           cat checksums.txt
 
       - name: Checkout GauntletCI update script
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: EricCogen/GauntletCI
           ref: main
@@ -41,7 +41,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Checkout tap repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: EricCogen/homebrew-gauntletci
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
